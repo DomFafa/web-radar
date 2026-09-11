@@ -1,0 +1,95 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "web-radar",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "TEST_PROVIDERS": "false",
+    "IMAGE_MODEL": "gpt-image-2.5-sunburst",
+    "TEXT_MODEL": "gpt-5.5"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "web-radar",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "web-radar-private"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "COORDINATOR",
+        "class_name": "Coordinator"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "Coordinator"
+      ]
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "env": {
+    "test": {
+      "name": "web-radar-test",
+      "vars": {
+        "ENVIRONMENT": "test",
+        "TEST_PROVIDERS": "true",
+        "APP_ORIGIN": "http://127.0.0.1:8788",
+        "PRODUCT_RADAR_PARENT_ORIGINS": "http://127.0.0.1:5173,http://127.0.0.1:4178",
+        "IMAGE_MODEL": "gpt-image-2.5-sunburst",
+        "TEXT_MODEL": "gpt-5.5"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "web-radar",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA",
+          "bucket_name": "web-radar-test-private"
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "COORDINATOR",
+            "class_name": "Coordinator"
+          }
+        ]
+      },
+      "assets": {
+        "directory": "./dist",
+        "binding": "ASSETS",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": true
+      }
+    }
+  }
+}

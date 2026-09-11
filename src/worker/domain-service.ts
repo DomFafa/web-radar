@@ -1,0 +1,2198 @@
+import type {
+  Asset,
+  Draft,
+  Inquiry,
+  Job,
+  JobKind,
+  Language,
+  Principal,
+  ProductSnapshot,
+  Project,
+  Release,
+  Scene,
+} from '../shared/model';
+import type { AppEnv } from './env';
+import { testMode } from './env';
+import {
+  ProviderError,
+  type MediaResult,
+  type ProviderSet,
+  type PublishResult,
+} from './provider-contract';
+import { createProviders } from './providers';
+import { renderSite, renderSiteFiles } from '../templates';
+import { prImage, prService } from './product-radar';
+import { DomainStore } from './domain-store';
+import {
+  DomainError,
+  assetReferences,
+  assertPublishable,
+  assertReadyForVideo,
+  assertScriptConfirmed,
+  canManage,
+  defaultDraft,
+  editDraft,
+  expectedVersion,
+  fingerprint,
+  publicAssetReferences,
+  requestId,
+  requireCondition,
+  snapshotSchema,
+  validEmail,
+  validateDraft,
+  videoInputKey,
+} from './domain';
+
+export interface DomainScheduler {
+  schedule(time: number): Promise<void>;
+}
+const now = () => new Date().toISOString();
+const json = (value: unknown, status = 200) =>
+  Response.json(value, { status, headers: { 'Cache-Control': 'no-store' } });
+const maxUpload = 80 * 1024 * 1024;
+const supportedImages = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+const supportedVideos = new Set(['video/mp4', 'video/webm']);
+interface JobInput extends Record<string, unknown> {
+  draft?: Draft;
+  principal?: Principal;
+  sceneId?: string;
+  instructions?: string;
+  releaseId?: string;
+  restoreReleaseId?: string;
+  recipient?: string;
+  inquiryId?: string;
+  offlineEpoch?: string;
+  pollFailures?: number;
+  retryAt?: number;
+  attemptId?: string;
+  publishResult?: PublishResult;
+  publicationStarted?: boolean;
+}
+
+export class DomainService {
+  readonly store: DomainStore;
+  private serial: Promise<unknown> = Promise.resolve();
+  private activeTick: Promise<void> | undefined;
+  constructor(
+    readonly env: AppEnv,
+    readonly scheduler: DomainScheduler,
+    readonly providers: ProviderSet = createProviders(env),
+  ) {
+    this.store = new DomainStore(env.DB);
+  }
+  private lock<T>(operation: () => Promise<T>): Promise<T> {
+    const current = this.serial.then(operation, operation);
+    this.serial = current.catch(() => {});
+    return current;
+  }
+  async fetch(request: Request): Promise<Response> {
+    try {
+      const consistentExport = new URL(request.url).pathname === '/api/admin/export';
+      return !consistentExport && (request.method === 'GET' || request.method === 'HEAD')
+        ? await this.route(request)
+        : await this.lock(() => this.route(request));
+    } catch (e) {
+      if (e instanceof DomainError) return json({ message: e.message, code: e.code }, e.status);
+      if (e instanceof ProviderError) return json({ message: e.message, code: e.code }, 503);
+      if (e instanceof Error && 'status' in e && typeof e.status === 'number')
+        return json({ message: e.message, code: 'upstream_unavailable' }, e.status);
+      return json({ message: '操作暂时失败，请稍后重试。', code: 'internal_error' }, 500);
+    }
+  }
+  private principal(request: Request): Principal {
+    let p: Principal | undefined;
+    try {
+      p = JSON.parse(
+        decodeURIComponent(request.headers.get('X-WR-Principal') ?? 'null'),
+      ) as Principal;
+    } catch {
+      /* Invalid internal principal is rejected below. */
+    }
+    requireCondition(p?.userId && p.workspaceId, 401, 'unauthenticated', '请先登录。');
+    return p;
+  }
+  private async project(id: string, principal: Principal): Promise<Project> {
+    const p = await this.store.one<Project>('projects', id);
+    requireCondition(
+      p && canManage(p, principal),
+      404,
+      'project_not_found',
+      '项目不存在或没有访问权限。',
+    );
+    return p;
+  }
+  private async body(request: Request): Promise<Record<string, unknown>> {
+    requireCondition(
+      Number(request.headers.get('content-length') ?? 0) <= 1024 * 1024,
+      413,
+      'body_too_large',
+      '请求内容过大。',
+    );
+    let body: unknown;
+    try {
+      body = await new Response(this.limitStream(request.body, 1024 * 1024)).json();
+    } catch (e) {
+      if (e instanceof DomainError) throw e;
+      throw new DomainError(400, 'invalid_json', '请求 JSON 无效。');
+    }
+    requireCondition(
+      body && typeof body === 'object' && !Array.isArray(body),
+      400,
+      'invalid_body',
+      '请求内容无效。',
+    );
+    return body as Record<string, unknown>;
+  }
+  private changed(p: Project): Project {
+    return { ...p, version: p.version + 1, updatedAt: now() };
+  }
+  private async route(request: Request): Promise<Response> {
+    const url = new URL(request.url),
+      path = url.pathname
+        .split('/')
+        .filter(Boolean)
+        .map((s) => decodeURIComponent(s)),
+      method = request.method;
+    if (
+      path[0] === 'public' &&
+      path[1] === 'provider-assets' &&
+      path[2] &&
+      (method === 'GET' || method === 'HEAD')
+    )
+      return this.signedAsset(request, path[2]);
+    if (
+      path[0] === 'public' &&
+      path[1] === 'sites' &&
+      path[2] &&
+      (method === 'GET' || method === 'HEAD')
+    )
+      return this.publicSite(request, path[2], path.slice(3));
+    if (
+      path[0] === 'api' &&
+      path[1] === 'public' &&
+      path[2] === 'sites' &&
+      path[3] &&
+      path[4] === 'inquiries' &&
+      method === 'POST'
+    )
+      return this.submitInquiry(request, path[3]);
+    const principal = this.principal(request);
+    if (path[0] === 'internal' && path[1] === 'handoff-project' && method === 'POST') {
+      const b = await this.body(request);
+      return json({
+        project: await this.create(principal, b.requestId, 'Imported website', b.products, true),
+      });
+    }
+    if (path[0] === 'internal' && path[1] === 'check-project' && path[2])
+      return json({ project: await this.project(path[2], principal) });
+    if (path[0] !== 'api') throw new DomainError(404, 'not_found', '接口不存在。');
+    if (path[1] === 'source-products' && method === 'GET') {
+      const offset = Number(url.searchParams.get('offset') ?? 0),
+        limit = Number(url.searchParams.get('limit') ?? 20);
+      requireCondition(
+        Number.isInteger(offset) &&
+          offset >= 0 &&
+          Number.isInteger(limit) &&
+          limit >= 1 &&
+          limit <= 100,
+        400,
+        'invalid_pagination',
+        '分页参数无效。',
+      );
+      return json(await prService(this.env, principal, 'products', { offset, limit }));
+    }
+    if (path[1] === 'admin') return this.admin(request, principal, path.slice(2));
+    if (path[1] !== 'projects') throw new DomainError(404, 'not_found', '接口不存在。');
+    if (path.length === 2) {
+      if (method === 'GET') {
+        const where =
+          principal.systemRole === 'super_admin'
+            ? ''
+            : principal.workspaceRole === 'admin'
+              ? 'owner_id=? OR workspace_id=?'
+              : 'owner_id=?';
+        const values =
+          principal.systemRole === 'super_admin'
+            ? []
+            : principal.workspaceRole === 'admin'
+              ? [principal.userId, principal.workspaceId]
+              : [principal.userId];
+        return json({ projects: await this.store.list<Project>('projects', where, values) });
+      }
+      if (method === 'POST') {
+        const b = await this.body(request);
+        return json({
+          project: await this.create(principal, b.requestId, b.name, b.products, false),
+        });
+      }
+    }
+    const project = await this.project(path[2] ?? '', principal),
+      command = path[3];
+    if (!command && method === 'GET') return json(await this.detail(project, principal));
+    if (!command && method === 'PUT') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      project.draft = editDraft(project.draft, b.draft);
+      await this.validateAssets(project.id, project.draft);
+      if (b.name !== undefined) {
+        requireCondition(
+          typeof b.name === 'string' && b.name.trim().length > 0 && b.name.length <= 200,
+          400,
+          'invalid_name',
+          '项目名称必须为 1–200 个字符。',
+        );
+        project.name = b.name.trim();
+      }
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next });
+    }
+    if (command === 'uploads' && method === 'POST')
+      return json({ asset: await this.upload(request, project) });
+    if (command === 'assets' && path[4] && (method === 'GET' || method === 'HEAD'))
+      return this.assetResponse(request, await this.projectAsset(project.id, path[4]));
+    if (command === 'import' && method === 'POST') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      const ids = this.productIds(b.productIds);
+      requireCondition(
+        project.draft.products.length +
+          ids.filter((id) => !project.draft.products.some((p) => p.source?.id === id)).length <=
+          20,
+        400,
+        'product_limit',
+        '每个网站最多包含 20 个产品。',
+      );
+      const { products } = await prService<{ products: ProductSnapshot[] }>(
+        this.env,
+        principal,
+        'products',
+        { productIds: ids },
+      );
+      this.assertSnapshots(products, ids);
+      return json({ project: await this.importProducts(project, principal, products, false) });
+    }
+    if (command === 'source-check' && method === 'POST') {
+      const changes = await this.sourceChanges(project, principal);
+      await this.env.DB.prepare(
+        'INSERT INTO source_reviews(project_id,user_id,reviewed_at,data) VALUES(?,?,?,?) ON CONFLICT(project_id,user_id) DO UPDATE SET reviewed_at=excluded.reviewed_at,data=excluded.data',
+      )
+        .bind(
+          project.id,
+          principal.userId,
+          Date.now(),
+          JSON.stringify({ version: project.version, changes }),
+        )
+        .run();
+      return json({ changes });
+    }
+    if (command === 'source-apply' && method === 'POST') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      const ids = this.productIds(b.productIds);
+      const reviewRow = await this.env.DB.prepare(
+        'SELECT reviewed_at,data FROM source_reviews WHERE project_id=? AND user_id=?',
+      )
+        .bind(project.id, principal.userId)
+        .first<{ reviewed_at: number; data: string }>();
+      requireCondition(
+        reviewRow && Date.now() - reviewRow.reviewed_at < 3600000,
+        409,
+        'source_review_required',
+        '请先检查并审阅来源差异。',
+      );
+      const reviewed = JSON.parse(reviewRow.data) as {
+        version: number;
+        changes: { productId: string; before: ProductSnapshot; after: ProductSnapshot }[];
+      };
+      const changes = await this.sourceChanges(project, principal);
+      requireCondition(
+        reviewed.version === project.version &&
+          ids.every((id) => {
+            const prior = reviewed.changes.find((c) => c.productId === id),
+              current = changes.find((c) => c.productId === id);
+            return (
+              prior &&
+              current &&
+              prior.before.version === current.before.version &&
+              prior.after.version === current.after.version
+            );
+          }),
+        409,
+        'source_changed',
+        '所选来源差异或当前草稿已变化，请重新检查。',
+      );
+      return json({
+        project: await this.importProducts(
+          project,
+          principal,
+          changes.filter((c) => ids.includes(c.productId)).map((c) => c.after),
+          true,
+        ),
+      });
+    }
+    if (command === 'confirm-script' && method === 'POST') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      requireCondition(
+        project.draft.script.trim() &&
+          project.draft.scenes.length >= (project.draft.duration === 8 ? 3 : 4),
+        400,
+        'script_incomplete',
+        '请补齐脚本及对应分镜描述。',
+      );
+      project.draft.scriptConfirmedRevision = project.draft.scriptRevision;
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next });
+    }
+    if (command === 'confirm-storyboard' && method === 'POST') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      assertScriptConfirmed(project.draft);
+      const draft = {
+        ...project.draft,
+        storyboardConfirmedRevision: project.draft.storyboardRevision,
+      };
+      assertReadyForVideo(draft);
+      await this.validateAssets(project.id, draft);
+      project.draft = draft;
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next });
+    }
+    if (command === 'jobs' && path[4] && path[5] === 'retry' && method === 'POST')
+      return json({ job: await this.retry(project, principal, path[4]) });
+    if (command === 'jobs' && method === 'POST')
+      return json(await this.enqueue(project, principal, await this.body(request)));
+    if (command === 'accept-video' && method === 'POST') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      requireCondition(typeof b.assetId === 'string', 400, 'invalid_asset', '请选择视频。');
+      const asset = await this.projectAsset(project.id, b.assetId);
+      requireCondition(
+        supportedVideos.has(asset.contentType),
+        400,
+        'invalid_video',
+        '选中的素材不是可用视频。',
+      );
+      await this.assertObject(asset);
+      project.draft.heroAssetId = asset.id;
+      project.draft.heroAccepted = true;
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next });
+    }
+    if (command === 'preview' && method === 'GET') {
+      const lang = (url.searchParams.get('lang') ?? 'en') as Language;
+      requireCondition(
+        project.draft.languages.includes(lang),
+        400,
+        'invalid_language',
+        '没有配置这种网站语言。',
+      );
+      const page = url.searchParams.get('page') ?? 'home';
+      requireCondition(
+        ['home', 'catalog', 'detail', 'about', 'contact'].includes(page),
+        400,
+        'invalid_page',
+        '页面不存在。',
+      );
+      return json({
+        html: renderSite(project.draft, {
+          projectId: project.id,
+          lang,
+          page,
+          productId: url.searchParams.get('productId') ?? undefined,
+          assetUrl: (id: string) => `/api/projects/${project.id}/assets/${id}`,
+          inquiryUrl: `/api/public/sites/${project.id}/inquiries`,
+          preview: true,
+        }),
+      });
+    }
+    if ((command === 'publish' || command === 'restore') && method === 'POST')
+      return json({
+        job: await this.publish(
+          project,
+          principal,
+          await this.body(request),
+          command === 'restore',
+        ),
+      });
+    if (command === 'offline' && method === 'POST') {
+      project.offline = true;
+      const next = this.changed(project);
+      const pending = await this.store.list<Job>(
+        'jobs',
+        "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",
+        [project.id],
+      );
+      const statements = [this.store.update('projects', next)];
+      for (const job of pending) {
+        job.input.cancelledByOffline = true;
+        statements.push(this.store.update('jobs', job));
+      }
+      await this.store.batch(statements);
+      return json({ project: next });
+    }
+    if (command === 'inquiries' && method === 'GET')
+      return json({
+        inquiries: await this.store.list<Inquiry>(
+          'inquiries',
+          'project_id=?',
+          [project.id],
+          'created_at DESC',
+        ),
+      });
+    if (command === 'inquiries' && path[4] && path[5] === 'retry' && method === 'POST')
+      return json({ inquiry: await this.retryInquiry(project, path[4]) });
+    throw new DomainError(404, 'not_found', '接口不存在。');
+  }
+  private async detail(project: Project, principal: Principal) {
+    const [assets, jobs, releases, quota] = await Promise.all([
+      this.store.list<Asset>('assets', 'project_id=?', [project.id]),
+      this.store.list<Job>('jobs', 'project_id=?', [project.id], 'created_at DESC'),
+      this.store.list<Release>('releases', 'project_id=?', [project.id], 'created_at DESC'),
+      this.store.quota(principal.userId),
+    ]);
+    return { project, assets, jobs, releases, quota };
+  }
+  private productIds(value: unknown): string[] {
+    requireCondition(
+      Array.isArray(value) &&
+        value.length > 0 &&
+        value.length <= 20 &&
+        value.every((v) => typeof v === 'string' && v.length > 0 && v.length <= 200) &&
+        new Set(value).size === value.length,
+      400,
+      'invalid_products',
+      '请选择 1–20 个不重复的产品。',
+    );
+    return value as string[];
+  }
+  private assertSnapshots(
+    products: unknown,
+    ids?: string[],
+  ): asserts products is ProductSnapshot[] {
+    requireCondition(
+      Array.isArray(products) &&
+        products.length <= 20 &&
+        products.every((p) => snapshotSchema.safeParse(p).success) &&
+        new Set(products.map((p) => p.id)).size === products.length,
+      502,
+      'invalid_source',
+      '来源产品数据无效。',
+    );
+    if (ids)
+      requireCondition(
+        products.length === ids.length && products.every((p, i) => p.id === ids[i]),
+        502,
+        'incomplete_source',
+        '来源没有返回所有已授权产品。',
+      );
+  }
+  private async create(
+    principal: Principal,
+    rawRequestId: unknown,
+    name: unknown,
+    rawProducts: unknown,
+    handoff: boolean,
+  ): Promise<Project> {
+    const rid = requestId(rawRequestId);
+    requireCondition(
+      typeof name === 'string' && name.trim() && name.length <= 200,
+      400,
+      'invalid_name',
+      '请填写有效项目名称。',
+    );
+    const products = rawProducts ?? [];
+    this.assertSnapshots(products);
+    const scope = `create:${principal.userId}`,
+      hash = await fingerprint({
+        name: name.trim(),
+        products,
+        workspaceId: principal.workspaceId,
+        handoff,
+      }),
+      existing = await this.store.idempotent<{ id: string }>(scope, rid, hash);
+    if (existing) return this.project(existing.id, principal);
+    // Snapshot fields are supplied by PR only. Standalone creation re-fetches any selected IDs.
+    let accepted = products;
+    if (products.length && !handoff) {
+      accepted = (
+        await prService<{ products: ProductSnapshot[] }>(this.env, principal, 'products', {
+          productIds: products.map((p) => p.id),
+        })
+      ).products;
+      this.assertSnapshots(
+        accepted,
+        products.map((p) => p.id),
+      );
+    }
+    const p: Project = {
+      id: crypto.randomUUID(),
+      ownerId: principal.userId,
+      workspaceId: principal.workspaceId,
+      name: name.trim(),
+      version: 1,
+      draft: defaultDraft(),
+      createdAt: now(),
+      updatedAt: now(),
+      offline: true,
+    };
+    const assets: Asset[] = [];
+    try {
+      for (const snapshot of accepted) {
+        const asset = await this.importImage(p.id, principal, snapshot);
+        assets.push(asset);
+        p.draft.products.push({
+          id: crypto.randomUUID(),
+          name: snapshot.name,
+          description: snapshot.description,
+          material: snapshot.material,
+          dimensions: snapshot.dimensions,
+          imageAssetId: asset.id,
+          source: snapshot,
+        });
+      }
+      p.draft.primaryProductId = p.draft.products[0]?.id ?? '';
+      await this.store.batch([
+        this.store.insert('projects', p),
+        ...assets.map((a) => this.store.insert('assets', a)),
+        this.store.remember(scope, rid, hash, { id: p.id }),
+      ]);
+    } catch (e) {
+      await Promise.allSettled(assets.map((a) => this.env.MEDIA.delete(a.key)));
+      throw e;
+    }
+    return p;
+  }
+  private async importProducts(
+    project: Project,
+    principal: Principal,
+    snapshots: ProductSnapshot[],
+    apply: boolean,
+  ): Promise<Project> {
+    const draft = structuredClone(project.draft),
+      assets: Asset[] = [];
+    try {
+      for (const snapshot of snapshots) {
+        const existing = draft.products.find((p) => p.source?.id === snapshot.id);
+        if (existing && !apply) continue;
+        const asset = await this.importImage(project.id, principal, snapshot);
+        assets.push(asset);
+        const product = {
+          id: existing?.id ?? crypto.randomUUID(),
+          name: snapshot.name,
+          description: snapshot.description,
+          material: snapshot.material,
+          dimensions: snapshot.dimensions,
+          imageAssetId: asset.id,
+          source: snapshot,
+        };
+        if (existing)
+          draft.products = draft.products.map((p) => (p.id === existing.id ? product : p));
+        else draft.products.push(product);
+      }
+      draft.primaryProductId = draft.primaryProductId || draft.products[0]?.id || '';
+      const adjusted = editDraft(project.draft, draft);
+      adjusted.products = draft.products;
+      project.draft = adjusted;
+      const next = this.changed(project);
+      await this.store.batch([
+        ...assets.map((a) => this.store.insert('assets', a)),
+        this.store.update('projects', next),
+      ]);
+      return next;
+    } catch (e) {
+      await Promise.allSettled(assets.map((a) => this.env.MEDIA.delete(a.key)));
+      throw e;
+    }
+  }
+  private async sourceChanges(project: Project, principal: Principal) {
+    const old = project.draft.products
+      .map((p) => p.source)
+      .filter((s): s is ProductSnapshot => Boolean(s));
+    if (!old.length) return [];
+    const ids = old.map((s) => s.id);
+    const { products } = await prService<{ products: ProductSnapshot[] }>(
+      this.env,
+      principal,
+      'products',
+      { productIds: ids },
+    );
+    this.assertSnapshots(products, ids);
+    return old.flatMap((before) => {
+      const after = products.find((p) => p.id === before.id)!;
+      return before.version === after.version ? [] : [{ productId: before.id, before, after }];
+    });
+  }
+  private async importImage(
+    projectId: string,
+    principal: Principal,
+    snapshot: ProductSnapshot,
+  ): Promise<Asset> {
+    const productId = snapshot.id;
+    const response = await prImage(this.env, principal, productId, snapshot.version);
+    requireCondition(
+      response.ok && response.body,
+      502,
+      'source_image_failed',
+      '来源图片复制失败。',
+    );
+    const contentType = response.headers.get('content-type')?.split(';')[0] ?? '';
+    requireCondition(
+      supportedImages.has(contentType),
+      502,
+      'source_image_type',
+      '来源图片格式不受支持。',
+    );
+    return this.saveAsset(
+      projectId,
+      {
+        body: response.body,
+        contentType,
+        filename: `source-${productId}`,
+        size: Number(response.headers.get('content-length')) || undefined,
+        testMode: false,
+      },
+      'import',
+    );
+  }
+  private async projectAsset(projectId: string, id: string): Promise<Asset> {
+    const asset = await this.store.one<Asset>('assets', id);
+    requireCondition(
+      asset?.projectId === projectId,
+      404,
+      'asset_not_found',
+      '素材不存在或没有权限。',
+    );
+    return asset;
+  }
+  private async assertObject(asset: Asset): Promise<void> {
+    requireCondition(
+      await this.env.MEDIA.head(asset.key),
+      409,
+      'asset_unavailable',
+      '素材文件尚未完整保存，请重新上传。',
+    );
+  }
+  private async validateAssets(projectId: string, draft: Draft): Promise<void> {
+    for (const id of assetReferences(draft)) {
+      const asset = await this.projectAsset(projectId, id);
+      const video = id === draft.heroAssetId;
+      requireCondition(
+        video ? supportedVideos.has(asset.contentType) : supportedImages.has(asset.contentType),
+        400,
+        'asset_type_mismatch',
+        '素材格式与用途不匹配。',
+      );
+    }
+  }
+  private limitStream(
+    body: ReadableStream<Uint8Array> | null,
+    max: number,
+  ): ReadableStream<Uint8Array> | null {
+    if (!body) return null;
+    let bytes = 0;
+    return body.pipeThrough(
+      new TransformStream<Uint8Array, Uint8Array>({
+        transform(chunk, controller) {
+          bytes += chunk.byteLength;
+          if (bytes > max) throw new DomainError(413, 'asset_too_large', '文件超过允许大小。');
+          controller.enqueue(chunk);
+        },
+      }),
+    );
+  }
+  private async saveAsset(
+    projectId: string,
+    media: MediaResult,
+    origin: Asset['origin'],
+    assetId: string = crypto.randomUUID(),
+  ): Promise<Asset> {
+    requireCondition(
+      supportedImages.has(media.contentType) || supportedVideos.has(media.contentType),
+      502,
+      'invalid_media_type',
+      '服务返回的媒体格式不受支持。',
+    );
+    const maximum = supportedVideos.has(media.contentType) ? maxUpload : 20 * 1024 * 1024;
+    requireCondition(
+      !media.size || media.size <= maximum,
+      413,
+      'asset_too_large',
+      '文件超过允许大小。',
+    );
+    const asset: Asset = {
+      id: assetId,
+      projectId,
+      key: `projects/${projectId}/assets/${assetId}`,
+      filename: media.filename.replace(/[^\w.\-\u4e00-\u9fff]/g, '_').slice(0, 200),
+      contentType: media.contentType,
+      size: 0,
+      origin: media.testMode ? 'test' : origin,
+      createdAt: now(),
+    };
+    const options = {
+      httpMetadata: { contentType: asset.contentType },
+      customMetadata: {
+        filename: asset.filename,
+        origin: asset.origin,
+        projectId,
+        createdAt: asset.createdAt,
+      },
+    };
+    try {
+      let result: R2Object | null;
+      if (media.body instanceof Uint8Array) {
+        requireCondition(
+          media.body.byteLength <= maximum,
+          413,
+          'asset_too_large',
+          '文件超过允许大小。',
+        );
+        result = await this.env.MEDIA.put(asset.key, media.body, options);
+      } else result = await this.multipart(asset.key, media.body, maximum, options, media.size);
+      requireCondition(result && result.size > 0, 502, 'empty_media', '没有收到可用的媒体文件。');
+      asset.size = result.size;
+      return asset;
+    } catch (e) {
+      await this.env.MEDIA.delete(asset.key).catch(() => {});
+      throw e;
+    }
+  }
+  private async multipart(
+    key: string,
+    body: ReadableStream<Uint8Array>,
+    maximum: number,
+    options: R2MultipartOptions,
+    expectedSize?: number,
+  ): Promise<R2Object> {
+    // R2.put rejects unknown-length streams. Multipart bounds memory and supports provider chunking.
+    const upload = await this.env.MEDIA.createMultipartUpload(key, options),
+      reader = body.getReader();
+    const partSize = 5 * 1024 * 1024,
+      parts: R2UploadedPart[] = [];
+    let buffer = new Uint8Array(partSize),
+      used = 0,
+      total = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        requireCondition(total <= maximum, 413, 'asset_too_large', '文件超过允许大小。');
+        let offset = 0;
+        while (offset < value.length) {
+          const take = Math.min(partSize - used, value.length - offset);
+          buffer.set(value.subarray(offset, offset + take), used);
+          used += take;
+          offset += take;
+          if (used === partSize) {
+            parts.push(await upload.uploadPart(parts.length + 1, buffer));
+            buffer = new Uint8Array(partSize);
+            used = 0;
+          }
+        }
+      }
+      requireCondition(total > 0, 502, 'empty_media', '没有收到可用的媒体文件。');
+      requireCondition(
+        expectedSize === undefined || expectedSize === total,
+        502,
+        'media_length_mismatch',
+        '媒体下载长度不完整，请恢复原任务重新下载。',
+      );
+      if (used) parts.push(await upload.uploadPart(parts.length + 1, buffer.subarray(0, used)));
+      return await upload.complete(parts);
+    } catch (error) {
+      await Promise.allSettled([reader.cancel(), upload.abort()]);
+      throw error;
+    } finally {
+      reader.releaseLock();
+    }
+  }
+  private async upload(request: Request, project: Project): Promise<Asset> {
+    requireCondition(
+      Number(request.headers.get('content-length') ?? 0) <= maxUpload + 1024 * 1024,
+      413,
+      'asset_too_large',
+      '上传视频不能超过 80MB。',
+    );
+    let data: FormData;
+    try {
+      data = await new Response(this.limitStream(request.body, maxUpload + 1024 * 1024), {
+        headers: { 'content-type': request.headers.get('content-type') ?? '' },
+      }).formData();
+    } catch (e) {
+      if (e instanceof DomainError) throw e;
+      throw new DomainError(400, 'invalid_upload', '请选择有效的图片或视频文件。');
+    }
+    const file = data.get('file');
+    requireCondition(
+      file && typeof file !== 'string' && file.size > 0,
+      400,
+      'invalid_upload',
+      '请选择有效文件。',
+    );
+    const type = file.type.toLowerCase();
+    requireCondition(
+      supportedImages.has(type) || supportedVideos.has(type),
+      400,
+      'invalid_media_type',
+      '支持 PNG、JPEG、WebP、GIF、MP4 和 WebM。',
+    );
+    const magic = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+    requireCondition(
+      this.matchesMagic(type, magic),
+      400,
+      'invalid_media_bytes',
+      '文件内容与声明格式不一致。',
+    );
+    const asset = await this.saveAsset(
+      project.id,
+      {
+        body: file.stream(),
+        contentType: type,
+        filename: file.name,
+        size: file.size,
+        testMode: false,
+      },
+      'upload',
+    );
+    try {
+      await this.store.insert('assets', asset).run();
+    } catch (e) {
+      await this.env.MEDIA.delete(asset.key);
+      throw e;
+    }
+    return asset;
+  }
+  private matchesMagic(type: string, b: Uint8Array): boolean {
+    const word = (start: number, end: number) => String.fromCharCode(...b.slice(start, end));
+    return type === 'image/png'
+      ? b[0] === 137 && word(1, 4) === 'PNG'
+      : type === 'image/jpeg'
+        ? b[0] === 255 && b[1] === 216 && b[2] === 255
+        : type === 'image/webp'
+          ? word(0, 4) === 'RIFF' && word(8, 12) === 'WEBP'
+          : type === 'image/gif'
+            ? word(0, 3) === 'GIF'
+            : type === 'video/mp4'
+              ? word(4, 8) === 'ftyp'
+              : type === 'video/webm'
+                ? b[0] === 26 && b[1] === 69 && b[2] === 223 && b[3] === 163
+                : false;
+  }
+  private async assetResponse(request: Request, asset: Asset): Promise<Response> {
+    const headers = new Headers({
+      'Cache-Control': 'no-store',
+      'Content-Type': asset.contentType,
+      'X-Content-Type-Options': 'nosniff',
+      'Accept-Ranges': 'bytes',
+      'Content-Disposition': `inline; filename="${asset.filename.replace(/[^a-zA-Z0-9._-]/g, '_')}"`,
+    });
+    let range: { offset: number; length: number } | undefined;
+    const requested = request.headers.get('Range');
+    if (requested) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(requested);
+      if (!match || (!match[1] && !match[2]))
+        return new Response(null, {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${asset.size}` },
+        });
+      const start = match[1] ? Number(match[1]) : Math.max(0, asset.size - Number(match[2]));
+      const end =
+        match[1] && match[2] ? Math.min(Number(match[2]), asset.size - 1) : asset.size - 1;
+      if (start >= asset.size || end < start)
+        return new Response(null, {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${asset.size}` },
+        });
+      range = { offset: start, length: end - start + 1 };
+      headers.set('Content-Range', `bytes ${start}-${end}/${asset.size}`);
+    }
+    const object = await this.env.MEDIA.get(asset.key, range ? { range } : undefined);
+    requireCondition(object, 404, 'asset_unavailable', '素材文件不存在。');
+    headers.set('Content-Length', String(range?.length ?? asset.size));
+    return new Response(request.method === 'HEAD' ? null : object.body, {
+      status: range ? 206 : 200,
+      headers,
+    });
+  }
+  private async enqueue(
+    project: Project,
+    principal: Principal,
+    body: Record<string, unknown>,
+  ): Promise<{ job: Job; jobs?: Job[] }> {
+    const rid = requestId(body.requestId),
+      scope = `jobs:${project.id}:${principal.userId}`,
+      hash = await fingerprint(body),
+      remembered = await this.store.idempotent<{ ids: string[] }>(scope, rid, hash);
+    if (remembered) {
+      const jobs = await Promise.all(remembered.ids.map((id) => this.store.one<Job>('jobs', id)));
+      return { job: jobs[0]!, jobs: jobs as Job[] };
+    }
+    expectedVersion(project, body.expectedVersion);
+    const kind = body.kind;
+    requireCondition(
+      kind === 'script' || kind === 'copy' || kind === 'image' || kind === 'video',
+      400,
+      'invalid_job_kind',
+      '不支持的生成任务。',
+    );
+    requireCondition(
+      project.draft.products.length > 0 &&
+        project.draft.products.some((p) => p.id === project.draft.primaryProductId),
+      400,
+      'primary_required',
+      '请先添加产品并选择主产品。',
+    );
+    const instructions = body.instructions ?? '';
+    requireCondition(
+      typeof instructions === 'string' && instructions.length <= 4000,
+      400,
+      'invalid_instructions',
+      '修改要求不能超过 4000 字。',
+    );
+    let scenes: (Scene | undefined)[] = [undefined];
+    if (kind === 'image') {
+      assertScriptConfirmed(project.draft);
+      if (body.sceneId !== undefined) {
+        requireCondition(typeof body.sceneId === 'string', 400, 'invalid_scene', '分镜标识无效。');
+        const scene = project.draft.scenes.find((s) => s.id === body.sceneId);
+        requireCondition(scene, 404, 'scene_not_found', '分镜不存在。');
+        scenes = [scene];
+      } else scenes = project.draft.scenes.filter((s) => !s.imageAssetId);
+      requireCondition(
+        scenes.length > 0,
+        409,
+        'storyboard_complete',
+        '当前分镜均已有图片，可选择单张重做。',
+      );
+    }
+    if (kind === 'video') {
+      assertReadyForVideo(project.draft);
+      await this.validateAssets(project.id, project.draft);
+    }
+    const timestamp = now();
+    const jobs: Job[] = scenes.map((scene) => ({
+      id: crypto.randomUUID(),
+      projectId: project.id,
+      userId: principal.userId,
+      kind,
+      status: 'queued',
+      requestId: rid,
+      input: {
+        draft: structuredClone(project.draft),
+        principal: structuredClone(principal),
+        sceneId: scene?.id,
+        instructions,
+      },
+      inputVersion: project.version,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      attempts: 0,
+      testMode: testMode(this.env),
+    }));
+    const statements = jobs.map((j) => this.store.insert('jobs', j));
+    if (kind === 'image' || kind === 'video') {
+      const quota = await this.store.quota(principal.userId),
+        remaining =
+          kind === 'image'
+            ? quota.imageLimit - quota.imageUsed - quota.imageReserved
+            : quota.videoLimit - quota.videoUsed - quota.videoReserved;
+      requireCondition(
+        remaining >= jobs.length,
+        409,
+        'quota_exhausted',
+        `${kind === 'image' ? '图片' : '视频'}可用额度不足，请联系平台管理员。`,
+      );
+      statements.push(
+        this.env.DB.prepare(
+          `UPDATE quotas SET ${kind}_reserved=${kind}_reserved+? WHERE user_id=?`,
+        ).bind(jobs.length, principal.userId),
+      );
+      for (const j of jobs)
+        statements.push(
+          this.env.DB.prepare(
+            'INSERT INTO quota_ledger(job_id,user_id,kind,state,updated_at) VALUES(?,?,?,?,?)',
+          ).bind(j.id, j.userId, j.kind, 'reserved', timestamp),
+        );
+    }
+    statements.push(this.store.remember(scope, rid, hash, { ids: jobs.map((j) => j.id) }));
+    await this.wake();
+    await this.store.batch(statements);
+    return { job: jobs[0], ...(jobs.length > 1 ? { jobs } : {}) };
+  }
+  private async retry(project: Project, principal: Principal, id: string): Promise<Job> {
+    const job = await this.store.one<Job>('jobs', id);
+    requireCondition(job?.projectId === project.id, 404, 'job_not_found', '任务不存在。');
+    if (job.status === 'succeeded' || job.status === 'queued' || job.status === 'running') {
+      await this.wake();
+      return job;
+    }
+    if ((job.status === 'unknown' || job.status === 'failed') && job.kind === 'publish') {
+      requireCondition(
+        job.attempts < 120,
+        409,
+        'retry_limit',
+        '发布任务已达到重试上限，请检查 Cloudflare 状态。',
+      );
+      const release = await this.store.one<Release>('releases', String(job.input.releaseId));
+      requireCondition(release, 404, 'release_not_found', '发布记录不存在。');
+      job.status = 'queued';
+      job.error = undefined;
+      job.updatedAt = now();
+      job.input.retryAt = 0;
+      release.status = 'pending';
+      release.error = undefined;
+      await this.wake();
+      await this.store.batch([
+        this.store.update('jobs', job),
+        this.store.update('releases', release),
+      ]);
+      return job;
+    }
+    if (job.status === 'unknown') {
+      requireCondition(
+        job.kind === 'video' && job.upstreamId,
+        409,
+        'submission_unknown',
+        '上游提交结果不确定，必须先核实原任务；不能盲目重发。',
+      );
+      job.status = 'running';
+      job.error = undefined;
+      await this.wake();
+      await this.store.update('jobs', job).run();
+      return job;
+    }
+    requireCondition(
+      job.kind !== 'email' && job.kind !== 'publish',
+      409,
+      'retry_via_workflow',
+      '请通过对应发布或询盘操作重试。',
+    );
+    requireCondition(
+      job.attempts < 3,
+      409,
+      'retry_limit',
+      '该任务已达到技术重试上限，请检查失败原因后重新发起。',
+    );
+    if (job.kind === 'image' || job.kind === 'video') {
+      // Restoring the same job never changes its original initiator or immutable inputs.
+      const q = await this.store.quota(job.userId),
+        remaining =
+          job.kind === 'image'
+            ? q.imageLimit - q.imageUsed - q.imageReserved
+            : q.videoLimit - q.videoUsed - q.videoReserved;
+      requireCondition(remaining >= 1, 409, 'quota_exhausted', '原任务发起账号的可用额度不足。');
+      if (job.kind === 'video') {
+        if (job.upstreamId)
+          job.input.priorUpstreamIds = [
+            ...(Array.isArray(job.input.priorUpstreamIds) ? job.input.priorUpstreamIds : []),
+            job.upstreamId,
+          ];
+        job.upstreamId = undefined;
+        job.input.submissionStarted = false;
+        job.input.pollFailures = 0;
+      }
+      job.status = 'queued';
+      job.error = undefined;
+      job.updatedAt = now();
+      await this.wake();
+      await this.store.batch([
+        this.env.DB.prepare(
+          `UPDATE quotas SET ${job.kind}_reserved=${job.kind}_reserved+1 WHERE user_id=?`,
+        ).bind(job.userId),
+        this.env.DB.prepare(
+          'UPDATE quota_ledger SET state=?,updated_at=? WHERE job_id=? AND state=?',
+        ).bind('reserved', now(), job.id, 'released'),
+        this.store.update('jobs', job),
+      ]);
+    } else {
+      job.status = 'queued';
+      job.error = undefined;
+      job.updatedAt = now();
+      await this.wake();
+      await this.store.update('jobs', job).run();
+    }
+    void principal;
+    return job;
+  }
+  private async publish(
+    project: Project,
+    principal: Principal,
+    body: Record<string, unknown>,
+    restore: boolean,
+  ): Promise<Job> {
+    const rid = requestId(body.requestId),
+      scope = `publish:${project.id}:${principal.userId}`,
+      hash = await fingerprint({ body, restore }),
+      prior = await this.store.idempotent<{ id: string }>(scope, rid, hash);
+    if (prior) return (await this.store.one<Job>('jobs', prior.id))!;
+    let draft: Draft, draftVersion: number, restored: Release | undefined;
+    if (restore) {
+      restored = project.previousReleaseId
+        ? await this.store.one<Release>('releases', project.previousReleaseId)
+        : undefined;
+      requireCondition(
+        restored?.status === 'succeeded',
+        409,
+        'no_previous_release',
+        '还没有可恢复的上一成功版本。',
+      );
+      draft = structuredClone(restored.draft);
+      draftVersion = restored.draftVersion;
+    } else {
+      expectedVersion(project, body.expectedVersion);
+      assertPublishable(project.draft);
+      draft = structuredClone(project.draft);
+      draftVersion = project.version;
+    }
+    await this.validateAssets(project.id, draft);
+    for (const id of publicAssetReferences(draft))
+      await this.assertObject(await this.projectAsset(project.id, id));
+    const pending = await this.store.list<Job>(
+      'jobs',
+      "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",
+      [project.id],
+    );
+    requireCondition(
+      !pending.some((j) => !j.input.cancelledByOffline),
+      409,
+      'publish_pending',
+      '已有发布任务正在处理，请先查看其状态。',
+    );
+    const activeRelease = project.publishedReleaseId
+      ? await this.store.one<Release>('releases', project.publishedReleaseId)
+      : undefined;
+    const currentTarget =
+      project.hostingTarget ?? activeRelease?.hostingTarget ?? restored?.hostingTarget;
+    const target = await this.providers.resolveHostingTarget(project.id, currentTarget);
+    requireCondition(
+      !currentTarget ||
+        (target.accountId === currentTarget.accountId &&
+          target.pagesProjectName === currentTarget.pagesProjectName),
+      503,
+      'hosting_target_changed',
+      '此网站已绑定固定的 Cloudflare 账号与 Pages 项目，不能自动改绑。',
+    );
+    project.hostingTarget = structuredClone(target);
+    const release: Release = {
+      id: crypto.randomUUID(),
+      projectId: project.id,
+      draftVersion,
+      draft,
+      hostingTarget: structuredClone(target),
+      createdAt: now(),
+      status: 'pending',
+      testMode: testMode(this.env),
+    };
+    const job: Job = {
+      id: crypto.randomUUID(),
+      projectId: project.id,
+      userId: principal.userId,
+      kind: 'publish',
+      status: 'queued',
+      requestId: rid,
+      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, principal },
+      inputVersion: project.version,
+      createdAt: now(),
+      updatedAt: now(),
+      attempts: 0,
+      testMode: testMode(this.env),
+    };
+    await this.wake();
+    await this.store.batch([
+      this.store.update('projects', project),
+      this.store.insert('releases', release),
+      this.store.insert('jobs', job),
+      this.store.remember(scope, rid, hash, { id: job.id }),
+    ]);
+    return job;
+  }
+  private async publicSite(request: Request, projectId: string, path: string[]): Promise<Response> {
+    const project = await this.store.one<Project>('projects', projectId);
+    if (!project || project.offline || !project.publishedReleaseId)
+      return new Response('Website temporarily unavailable', {
+        status: 503,
+        headers: { 'Cache-Control': 'no-store', 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    const release = await this.store.one<Release>('releases', project.publishedReleaseId);
+    requireCondition(
+      release?.status === 'succeeded',
+      503,
+      'release_unavailable',
+      'Website temporarily unavailable',
+    );
+    if (path[0] === 'assets' && path[1]) {
+      requireCondition(
+        publicAssetReferences(release.draft).includes(path[1]),
+        404,
+        'asset_not_found',
+        'Asset not found',
+      );
+      return this.assetResponse(request, await this.projectAsset(projectId, path[1]));
+    }
+    if (!path.length || path.join('/') === 'index.html')
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: `/public/sites/${projectId}/en/index.html`,
+          'Cache-Control': 'no-store',
+        },
+      });
+    const lang = path[0] as Language;
+    requireCondition(
+      release.draft.languages.includes(lang),
+      404,
+      'page_not_found',
+      'Page not found',
+    );
+    let page: 'home' | 'catalog' | 'detail' | 'about' | 'contact' = 'home',
+      productId: string | undefined;
+    if (path.length === 1 || path[1] === 'index.html') page = 'home';
+    else if (path[1] === 'catalog') page = 'catalog';
+    else if (path[1] === 'products' && path[2]) {
+      page = 'detail';
+      productId = path[2];
+      requireCondition(
+        release.draft.products.some((p) => p.id === productId),
+        404,
+        'page_not_found',
+        'Product not found',
+      );
+    } else if (path[1] === 'about') page = 'about';
+    else if (path[1] === 'contact') page = 'contact';
+    else throw new DomainError(404, 'page_not_found', 'Page not found');
+    const html = renderSite(release.draft, {
+      projectId,
+      lang,
+      page,
+      productId,
+      assetUrl: (id: string) => `${this.origin()}/public/sites/${projectId}/assets/${id}`,
+      inquiryUrl: `/api/public/sites/${projectId}/inquiries`,
+      preview: false,
+    });
+    return new Response(request.method === 'HEAD' ? null : html, {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  }
+  private async submitInquiry(request: Request, projectId: string): Promise<Response> {
+    const body = await this.body(request);
+    if (typeof body.website === 'string' && body.website.trim())
+      return json({ id: 'received', emailStatus: 'queued' });
+    const project = await this.store.one<Project>('projects', projectId);
+    requireCondition(
+      project && !project.offline && project.publishedReleaseId,
+      409,
+      'site_offline',
+      'This website is currently unavailable.',
+    );
+    const release = await this.store.one<Release>('releases', project.publishedReleaseId);
+    requireCondition(
+      release?.status === 'succeeded',
+      409,
+      'site_offline',
+      'This website is currently unavailable.',
+    );
+    const rid = requestId(body.requestId),
+      name = typeof body.name === 'string' ? body.name.trim() : '',
+      email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '',
+      company = typeof body.company === 'string' ? body.company.trim() : '',
+      message = typeof body.message === 'string' ? body.message.trim() : '';
+    requireCondition(
+      name.length >= 1 &&
+        name.length <= 200 &&
+        validEmail(email) &&
+        company.length <= 300 &&
+        message.length >= 1 &&
+        message.length <= 10000,
+      400,
+      'invalid_inquiry',
+      'Please provide your name, a valid email address and a message.',
+    );
+    const productId =
+      body.productId === undefined || body.productId === '' ? undefined : body.productId;
+    requireCondition(
+      productId === undefined ||
+        (typeof productId === 'string' && release.draft.products.some((p) => p.id === productId)),
+      400,
+      'invalid_product',
+      'The selected product is not available.',
+    );
+    const scope = `inquiry:${projectId}`,
+      hash = await fingerprint({ name, email, company, message, productId }),
+      existing = await this.store.idempotent<{ id: string }>(scope, rid, hash);
+    if (existing) {
+      const inquiry = await this.store.one<Inquiry>('inquiries', existing.id);
+      return json({ id: existing.id, emailStatus: inquiry!.emailStatus });
+    }
+    const timestamp = Date.now(),
+      hour = Math.floor(timestamp / 3600000);
+    const ipHash = await fingerprint(request.headers.get('CF-Connecting-IP') ?? 'unknown');
+    const limiterKey = `${projectId}:${ipHash}:${hour}`;
+    const count = await this.env.DB.prepare('SELECT count FROM inquiry_limits WHERE key=?')
+      .bind(limiterKey)
+      .first<{ count: number }>();
+    requireCondition(
+      (count?.count ?? 0) < 20,
+      429,
+      'rate_limited',
+      'Too many submissions. Please try again later.',
+    );
+    const inquiry: Inquiry = {
+      id: crypto.randomUUID(),
+      projectId,
+      requestId: rid,
+      name,
+      email,
+      company,
+      message,
+      productId: productId as string | undefined,
+      siteUrl: project.siteUrl ?? `${this.origin()}/public/sites/${projectId}/en/index.html`,
+      createdAt: now(),
+      emailStatus: 'queued',
+      emailAttempts: 0,
+    };
+    const job: Job = {
+      id: crypto.randomUUID(),
+      projectId,
+      userId: project.ownerId,
+      kind: 'email',
+      status: 'queued',
+      requestId: rid,
+      input: { inquiryId: inquiry.id, recipient: release.draft.company.email },
+      inputVersion: release.draftVersion,
+      createdAt: now(),
+      updatedAt: now(),
+      attempts: 0,
+      testMode: testMode(this.env),
+    };
+    await this.wake();
+    await this.store.batch([
+      this.store.insert('inquiries', inquiry),
+      this.store.insert('jobs', job),
+      this.store.remember(scope, rid, hash, { id: inquiry.id }),
+      this.env.DB.prepare(
+        'INSERT INTO inquiry_limits(key,count,expires_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET count=count+1',
+      ).bind(limiterKey, 1, (hour + 1) * 3600000),
+      this.env.DB.prepare('DELETE FROM inquiry_limits WHERE expires_at<?').bind(timestamp),
+    ]);
+    return json({ id: inquiry.id, emailStatus: inquiry.emailStatus });
+  }
+  private async retryInquiry(project: Project, id: string): Promise<Inquiry> {
+    const inquiry = await this.store.one<Inquiry>('inquiries', id);
+    requireCondition(inquiry?.projectId === project.id, 404, 'inquiry_not_found', '询盘不存在。');
+    if (inquiry.emailStatus === 'sent' || inquiry.emailStatus === 'queued') return inquiry;
+    requireCondition(inquiry.emailAttempts < 3, 409, 'retry_limit', '邮件已达到 3 次尝试上限。');
+    const jobs = await this.store.list<Job>('jobs', "project_id=? AND kind='email'", [project.id]);
+    const job = jobs.find((j) => j.input.inquiryId === id);
+    requireCondition(job, 404, 'job_not_found', '邮件任务不存在。');
+    requireCondition(
+      !this.emailRetryExpired(job, true),
+      409,
+      'delivery_unknown',
+      '邮件结果待核实，服务幂等保护时效已过；请先在发信平台核对，避免重复发送。',
+    );
+    job.status = 'queued';
+    job.error = undefined;
+    job.updatedAt = now();
+    inquiry.emailStatus = 'queued';
+    inquiry.emailError = undefined;
+    await this.wake();
+    await this.store.batch([
+      this.store.update('jobs', job),
+      this.store.update('inquiries', inquiry),
+    ]);
+    return inquiry;
+  }
+  private async admin(request: Request, principal: Principal, path: string[]): Promise<Response> {
+    requireCondition(
+      principal.systemRole === 'super_admin',
+      403,
+      'platform_admin_required',
+      '此操作仅限平台管理员。',
+    );
+    if (!path.length && request.method === 'GET')
+      return json({
+        quotas: await this.store.quotas(),
+        services: this.providers.status(),
+        jobs: await this.store.list<Job>('jobs', '', [], 'created_at DESC'),
+      });
+    if (path[0] === 'jobs' && path[1] && path[2] === 'reconcile' && request.method === 'POST') {
+      const body = await this.body(request);
+      requireCondition(
+        typeof body.upstreamId === 'string' &&
+          body.upstreamId.length >= 1 &&
+          body.upstreamId.length <= 200 &&
+          !/\s/.test(body.upstreamId),
+        400,
+        'invalid_upstream_id',
+        '请填写在视频服务中核实过的原始任务编号。',
+      );
+      const job = await this.store.one<Job>('jobs', path[1]);
+      requireCondition(
+        job?.kind === 'video' && job.status === 'unknown',
+        409,
+        'reconciliation_unavailable',
+        '只有待核实的视频任务可以绑定原任务编号。',
+      );
+      requireCondition(
+        !job.upstreamId || job.upstreamId === body.upstreamId,
+        409,
+        'upstream_id_conflict',
+        '不能替换已保存的上游任务编号。',
+      );
+      job.upstreamId = body.upstreamId;
+      job.status = 'running';
+      job.updatedAt = now();
+      job.error = undefined;
+      job.input.pollFailures = 0;
+      job.input.reconciliation = {
+        userId: principal.userId,
+        at: now(),
+        upstreamId: body.upstreamId,
+      };
+      await this.wake();
+      await this.store.update('jobs', job).run();
+      return json({ job });
+    }
+    if (path[0] === 'quotas' && path[1] && request.method === 'PUT') {
+      const b = await this.body(request);
+      requireCondition(
+        typeof b.imageLimit === 'number' &&
+          Number.isInteger(b.imageLimit) &&
+          b.imageLimit >= 0 &&
+          b.imageLimit <= 1000000 &&
+          typeof b.videoLimit === 'number' &&
+          Number.isInteger(b.videoLimit) &&
+          b.videoLimit >= 0 &&
+          b.videoLimit <= 1000000,
+        400,
+        'invalid_quota',
+        '额度必须为 0–1000000 的整数。',
+      );
+      const q = await this.store.quota(path[1]);
+      requireCondition(
+        b.imageLimit >= q.imageUsed + q.imageReserved &&
+          b.videoLimit >= q.videoUsed + q.videoReserved,
+        409,
+        'quota_below_committed',
+        '新额度不能低于已使用与占用的总量。',
+      );
+      await this.env.DB.prepare(
+        'INSERT INTO quotas(user_id,image_limit,video_limit) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET image_limit=excluded.image_limit,video_limit=excluded.video_limit',
+      )
+        .bind(path[1], b.imageLimit, b.videoLimit)
+        .run();
+      return json({ quota: await this.store.quota(path[1]) });
+    }
+    if (path[0] === 'export' && request.method === 'GET') {
+      const [projects, assets, jobs, releases, inquiries, quotas, ledger, attempts, idempotency] =
+        await Promise.all([
+          this.store.list('projects'),
+          this.store.list('assets'),
+          this.store.list('jobs'),
+          this.store.list('releases'),
+          this.store.list('inquiries'),
+          this.store.quotas(),
+          this.env.DB.prepare('SELECT * FROM quota_ledger').all(),
+          this.env.DB.prepare('SELECT * FROM provider_attempts').all(),
+          this.env.DB.prepare('SELECT * FROM idempotency').all(),
+        ]);
+      return json({
+        format: 'web-radar-business-v1',
+        exportedAt: now(),
+        projects,
+        assets,
+        jobs,
+        releases,
+        inquiries,
+        quotas,
+        quotaLedger: ledger.results,
+        providerAttempts: attempts.results,
+        idempotency: idempotency.results,
+        media: {
+          format: 'R2 immutable objects',
+          count: assets.length,
+          note: 'Copy every listed asset key from the private MEDIA bucket. Export excludes login credentials and secrets.',
+        },
+      });
+    }
+    throw new DomainError(404, 'not_found', '接口不存在。');
+  }
+  private origin(): string {
+    let url: URL;
+    try {
+      url = new URL(this.env.APP_ORIGIN ?? '');
+    } catch {
+      throw new DomainError(503, 'origin_unconfigured', '尚未配置 Web Radar 公开地址。');
+    }
+    requireCondition(
+      url.origin === this.env.APP_ORIGIN &&
+        (url.protocol === 'https:' ||
+          (testMode(this.env) && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))),
+      503,
+      'origin_unconfigured',
+      'Web Radar 公开地址配置无效。',
+    );
+    return url.origin;
+  }
+  private async signingKey(): Promise<CryptoKey> {
+    const secret =
+      this.env.ASSET_SIGNING_KEY ??
+      (testMode(this.env) ? 'web-radar-explicit-local-test-asset-key' : '');
+    requireCondition(
+      secret.length >= 32,
+      503,
+      'asset_signing_unconfigured',
+      '尚未配置素材签名密钥。',
+    );
+    return crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign', 'verify'],
+    );
+  }
+  private async referenceUrl(asset: Asset): Promise<string> {
+    const expires = Date.now() + 6 * 3600000;
+    const data = new TextEncoder().encode(`${asset.id}:${expires}`),
+      signature = new Uint8Array(await crypto.subtle.sign('HMAC', await this.signingKey(), data)),
+      token = Array.from(signature)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    return `${this.origin()}/public/provider-assets/${encodeURIComponent(asset.id)}?expires=${expires}&token=${token}`;
+  }
+  private async signedAsset(request: Request, id: string): Promise<Response> {
+    const url = new URL(request.url),
+      expires = Number(url.searchParams.get('expires')),
+      token = url.searchParams.get('token') ?? '';
+    requireCondition(
+      Number.isSafeInteger(expires) &&
+        expires > Date.now() &&
+        expires <= Date.now() + 24 * 3600000 &&
+        /^[a-f0-9]{64}$/.test(token),
+      403,
+      'invalid_asset_grant',
+      '素材授权无效或已过期。',
+    );
+    const bytes = new Uint8Array(token.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+    requireCondition(
+      await crypto.subtle.verify(
+        'HMAC',
+        await this.signingKey(),
+        bytes,
+        new TextEncoder().encode(`${id}:${expires}`),
+      ),
+      403,
+      'invalid_asset_grant',
+      '素材授权无效或已过期。',
+    );
+    const asset = await this.store.one<Asset>('assets', id);
+    requireCondition(asset, 404, 'asset_not_found', '素材不存在。');
+    return this.assetResponse(request, asset);
+  }
+  private async wake(): Promise<void> {
+    await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 25 : 1000));
+  }
+  async tick(): Promise<void> {
+    if (this.activeTick) return this.activeTick;
+    this.activeTick = this.runTick().finally(() => {
+      this.activeTick = undefined;
+    });
+    return this.activeTick;
+  }
+  private async runTick(): Promise<void> {
+    const selected = await this.lock(() => this.claim());
+    if (!selected) {
+      const next = await this.nextActionTime();
+      if (next !== undefined) await this.scheduler.schedule(next);
+      return;
+    }
+    const { job, recovery } = selected;
+    try {
+      if (recovery && job.kind !== 'video') {
+        if (job.kind === 'publish' && job.input.publishResult) {
+          await this.execute(job);
+          return;
+        }
+        if (job.kind === 'image') {
+          const key = `projects/${job.projectId}/assets/result-${job.id}`,
+            object = await this.env.MEDIA.head(key);
+          if (object?.size && object.httpMetadata?.contentType) {
+            const asset: Asset = {
+              id: `result-${job.id}`,
+              projectId: job.projectId,
+              key,
+              contentType: object.httpMetadata.contentType,
+              size: object.size,
+              filename: object.customMetadata?.filename ?? 'result',
+              origin: (object.customMetadata?.origin as Asset['origin']) ?? 'generated',
+              createdAt: object.customMetadata?.createdAt ?? now(),
+            };
+            await this.finishMedia(job, asset);
+            return;
+          }
+        }
+        if (job.kind === 'email') {
+          if (job.attempts >= 3 || this.emailRetryExpired(job, true))
+            throw new ProviderError(
+              'email_recovery_limit',
+              '邮件状态待核实，已停止自动重发。',
+              true,
+            );
+          await this.lock(async () => {
+            job.status = 'queued';
+            job.updatedAt = now();
+            await this.store.update('jobs', job).run();
+          });
+          return;
+        }
+        await this.fail(
+          job,
+          new ProviderError(
+            'job_interrupted',
+            '任务在结果保存前中断，请核对后重试。',
+            job.kind === 'publish',
+          ),
+        );
+        return;
+      }
+      await this.execute(job);
+    } catch (error) {
+      await this.fail(job, error);
+    }
+  }
+  private async nextActionTime(): Promise<number | undefined> {
+    const jobs = await this.store.list<Job>('jobs', "status IN ('queued','running','unknown')");
+    const occupied = jobs.some(
+      (j) => j.kind === 'video' && (j.status === 'running' || j.status === 'unknown'),
+    );
+    const times: number[] = [];
+    for (const job of jobs) {
+      if (job.status === 'running' && job.kind === 'video' && job.upstreamId)
+        times.push(
+          Math.max(
+            Date.now() + 100,
+            Date.parse(job.updatedAt) + (testMode(this.env) ? 100 : 10000),
+          ),
+        );
+      if (job.status === 'queued' && (job.kind !== 'video' || !occupied))
+        times.push(Math.max(Date.now() + 100, Number(job.input.retryAt ?? 0)));
+    }
+    return times.length ? Math.min(...times) : undefined;
+  }
+  private async claim(): Promise<{ job: Job; recovery: boolean } | undefined> {
+    const running = await this.store.list<Job>('jobs', "status='running'", [], 'created_at ASC');
+    // A running non-video job can only remain here after a prior invocation was interrupted.
+    const interrupted = running.find((j) => j.kind !== 'video');
+    if (interrupted) {
+      await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 100 : 5000));
+      return { job: interrupted, recovery: true };
+    }
+    const video = running.find((j) => j.kind === 'video');
+    if (video) {
+      if (!video.upstreamId) {
+        video.status = video.input.submissionStarted ? 'unknown' : 'failed';
+        video.error = video.input.submissionStarted
+          ? '视频提交结果待核实；没有可靠任务编号，已保留额度与全局位置。'
+          : '视频提交前任务中断，已退回额度。';
+        video.updatedAt = now();
+        await this.store.batch([
+          this.store.update('jobs', video),
+          ...(video.status === 'failed' ? await this.store.settlement(video, false) : []),
+        ]);
+      } else if (testMode(this.env) || Date.now() - Date.parse(video.updatedAt) >= 10000) {
+        await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 100 : 10000));
+        return { job: video, recovery: false };
+      }
+    }
+    const unknownVideos = await this.store.list<Job>('jobs', "kind='video' AND status='unknown'");
+    const queued = await this.store.list<Job>('jobs', "status='queued'", [], 'created_at ASC');
+    const job = queued.find(
+      (j) =>
+        (j.kind !== 'video' || (!video && !unknownVideos.length)) &&
+        Number(j.input.retryAt ?? 0) <= Date.now(),
+    );
+    if (!job) return undefined;
+    await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 100 : 5000));
+    job.status = 'running';
+    job.attempts++;
+    job.updatedAt = now();
+    job.error = undefined;
+    const attemptId = crypto.randomUUID();
+    job.input.attemptId = attemptId;
+    const statements = [
+      this.store.update('jobs', job),
+      this.env.DB.prepare(
+        'INSERT INTO provider_attempts(id,job_id,provider,operation,outcome,created_at) VALUES(?,?,?,?,?,?)',
+      ).bind(
+        attemptId,
+        job.id,
+        job.kind === 'video'
+          ? 'agnes'
+          : job.kind === 'image'
+            ? 'image-2.5'
+            : job.kind === 'email'
+              ? 'resend'
+              : job.kind === 'publish'
+                ? 'cloudflare-pages'
+                : 'text',
+        job.kind,
+        'started',
+        now(),
+      ),
+    ];
+    if (job.kind === 'email') {
+      const inquiry = await this.store.one<Inquiry>('inquiries', String(job.input.inquiryId));
+      requireCondition(inquiry, 404, 'inquiry_not_found', '询盘不存在。');
+      inquiry.emailAttempts = job.attempts;
+      statements.push(this.store.update('inquiries', inquiry));
+    }
+    await this.store.batch(statements);
+    return { job, recovery: false };
+  }
+  private emailRetryExpired(job: Job, previousAttempt = false): boolean {
+    const firstAttempt = job.input.emailFirstAttemptAt;
+    if (!previousAttempt && job.attempts <= 1 && firstAttempt === undefined) return false;
+    // Old jobs lack a first-dispatch marker, so retain the conservative creation-time bound.
+    const startedAt = typeof firstAttempt === 'number' ? firstAttempt : Date.parse(job.createdAt);
+    return !Number.isFinite(startedAt) || Date.now() - startedAt >= 23 * 3600000;
+  }
+  private async verifyJobAccess(job: Job): Promise<Project> {
+    const input = job.input as JobInput;
+    requireCondition(input.principal, 403, 'task_principal_missing', '任务的原始身份缺失。');
+    const result = await prService<{ principal: Principal }>(
+      this.env,
+      input.principal,
+      'context',
+      {},
+    );
+    return this.project(job.projectId, result.principal);
+  }
+  private async execute(job: Job): Promise<void> {
+    const input = job.input as JobInput;
+    // Tracking an already accepted upstream task is recovery, not a new authorized submission.
+    if (job.kind !== 'email' && !(job.kind === 'video' && job.upstreamId))
+      await this.verifyJobAccess(job);
+    if (job.kind === 'script') {
+      const result = await this.providers.script(input.draft!);
+      requireCondition(
+        result.script.trim() &&
+          result.scenes.length >= (input.draft!.duration === 8 ? 3 : 4) &&
+          result.scenes.length <= 8,
+        502,
+        'invalid_script_result',
+        '文字服务没有返回完整脚本与分镜。',
+      );
+      await this.lock(async () => {
+        const p = await this.store.one<Project>('projects', job.projectId);
+        const statements: D1PreparedStatement[] = [];
+        if (p?.version === job.inputVersion) {
+          const candidate = {
+            ...p.draft,
+            script: result.script,
+            scenes: result.scenes.map((s) => ({
+              id: s.id || crypto.randomUUID(),
+              description: s.description,
+              revision: 0,
+            })),
+          };
+          p.draft = editDraft(p.draft, candidate);
+          statements.push(this.store.update('projects', this.changed(p)));
+        }
+        job.input.result = { script: result.script, scenes: result.scenes };
+        await this.succeed(job, statements);
+      });
+      return;
+    }
+    if (job.kind === 'copy') {
+      const result = await this.providers.copy(input.draft!);
+      await this.lock(async () => {
+        const p = await this.store.one<Project>('projects', job.projectId);
+        const statements: D1PreparedStatement[] = [];
+        if (p?.version === job.inputVersion) {
+          const { productTranslations, ...copy } = result;
+          p.draft.copy = copy;
+          for (const product of p.draft.products) {
+            const t = productTranslations?.[product.id];
+            if (t && typeof t === 'object') product.translations = t as typeof product.translations;
+          }
+          p.draft = validateDraft(p.draft);
+          statements.push(this.store.update('projects', this.changed(p)));
+        }
+        job.input.result = result;
+        await this.succeed(job, statements);
+      });
+      return;
+    }
+    if (job.kind === 'image') {
+      const draft = input.draft!,
+        scene = draft.scenes.find((s) => s.id === input.sceneId);
+      requireCondition(scene, 400, 'scene_not_found', '任务分镜不存在。');
+      const primary = draft.products.find((p) => p.id === draft.primaryProductId);
+      const referenceUrls = primary?.imageAssetId
+        ? [await this.referenceUrl(await this.projectAsset(job.projectId, primary.imageAssetId))]
+        : [];
+      const media = await this.providers.image(
+        draft,
+        scene,
+        input.instructions ?? '',
+        referenceUrls,
+      );
+      const asset = await this.saveAsset(job.projectId, media, 'generated', `result-${job.id}`);
+      await this.finishMedia(job, asset);
+      return;
+    }
+    if (job.kind === 'video') {
+      if (!job.upstreamId) {
+        const refs = [];
+        for (const scene of input.draft!.scenes)
+          refs.push(
+            await this.referenceUrl(await this.projectAsset(job.projectId, scene.imageAssetId!)),
+          );
+        // running is persisted before this call. An ambiguous response keeps the single global slot.
+        await this.lock(async () => {
+          job.input.submissionStarted = true;
+          await this.store.update('jobs', job).run();
+        });
+        const submitted = await this.providers.submitVideo(
+          input.draft!,
+          refs,
+          `${job.id}:${job.attempts}`,
+        );
+        requireCondition(
+          typeof submitted.videoId === 'string' && submitted.videoId.length > 0,
+          502,
+          'submission_unknown',
+          '视频服务没有返回可恢复的任务编号。',
+        );
+        await this.lock(async () => {
+          job.upstreamId = submitted.videoId;
+          job.updatedAt = now();
+          await this.store.update('jobs', job).run();
+        });
+        return;
+      }
+      let result;
+      try {
+        result = await this.providers.pollVideo(job.upstreamId);
+      } catch (error) {
+        await this.lock(async () => {
+          const failures = Number(job.input.pollFailures ?? 0) + 1;
+          job.input.pollFailures = failures;
+          job.error = '视频状态查询暂时失败，已保留原任务编号。';
+          job.updatedAt = now();
+          if (failures >= 12) job.status = 'unknown';
+          await this.store.update('jobs', job).run();
+        });
+        return;
+      }
+      if (result.state === 'pending') {
+        await this.lock(async () => {
+          job.updatedAt = now();
+          job.input.pollFailures = 0;
+          if (Date.now() - Date.parse(job.createdAt) > 24 * 3600000) {
+            job.status = 'unknown';
+            job.error = '视频任务已超过 24 小时，需核对上游状态。';
+          }
+          await this.store.update('jobs', job).run();
+        });
+        return;
+      }
+      if (result.state === 'failed')
+        throw new ProviderError('video_failed', result.message ?? '视频任务技术失败，额度已退回。');
+      requireCondition(
+        result.media,
+        502,
+        'video_media_missing',
+        '视频任务完成，但没有收到可保存的结果。',
+      );
+      try {
+        const asset = await this.saveAsset(
+          job.projectId,
+          result.media,
+          'generated',
+          `result-${job.id}`,
+        );
+        await this.finishMedia(job, asset);
+      } catch (error) {
+        // A known successful upstream video can be downloaded again without submitting a new job.
+        await this.lock(async () => {
+          job.error = '视频已生成，但结果保存暂时失败，将继续下载原任务结果。';
+          job.updatedAt = now();
+          const failures = Number(job.input.pollFailures ?? 0) + 1;
+          job.input.pollFailures = failures;
+          if (failures >= 6) job.status = 'unknown';
+          await this.store.update('jobs', job).run();
+        });
+      }
+      return;
+    }
+    if (job.kind === 'publish') {
+      const release = await this.store.one<Release>('releases', input.releaseId!);
+      requireCondition(release, 404, 'release_not_found', '发布快照不存在。');
+      const p = await this.store.one<Project>('projects', job.projectId);
+      requireCondition(
+        p && !job.input.cancelledByOffline,
+        409,
+        'publication_cancelled',
+        '网站下线操作已取消本次发布。',
+      );
+      const previous = p.publishedReleaseId
+        ? await this.store.one<Release>('releases', p.publishedReleaseId)
+        : undefined;
+      requireCondition(
+        !p.publishedReleaseId || previous?.status === 'succeeded',
+        409,
+        'previous_release_unavailable',
+        '上一次已发布快照状态不一致，不能生成发布回退内容。',
+      );
+      const renderOptions = {
+        projectId: job.projectId,
+        assetUrl: (id: string) => `${this.origin()}/public/sites/${job.projectId}/assets/${id}`,
+        inquiryUrl: `/api/public/sites/${job.projectId}/inquiries`,
+        publicBaseUrl: `${this.origin()}/public/sites/${job.projectId}`,
+      };
+      const files = renderSiteFiles(release.draft, renderOptions);
+      const previousPublication = previous
+        ? { releaseId: previous.id, files: renderSiteFiles(previous.draft, renderOptions) }
+        : undefined;
+      let published = input.publishResult;
+      if (!published) {
+        requireCondition(
+          release.hostingTarget &&
+            p.hostingTarget &&
+            release.hostingTarget.accountId === p.hostingTarget.accountId &&
+            release.hostingTarget.pagesProjectName === p.hostingTarget.pagesProjectName,
+          503,
+          'hosting_binding_missing',
+          '发布版本缺少一致的持久化托管绑定，请先核对项目归属。',
+        );
+        await this.lock(async () => {
+          const persisted = await this.store.one<Job>('jobs', job.id);
+          requireCondition(
+            !persisted?.input.cancelledByOffline,
+            409,
+            'publication_cancelled',
+            '网站已下线，本次发布已取消。',
+          );
+          job.input = { ...job.input, ...persisted?.input, publicationStarted: true };
+          await this.store.update('jobs', job).run();
+        });
+        published = await this.providers.publish(
+          job.projectId,
+          release.id,
+          files,
+          previous?.deploymentId,
+          release.hostingTarget,
+          previousPublication,
+        );
+        job.input.publishResult = structuredClone(published);
+        // Preserve the accepted provider result before permission checks or the activation batch.
+        await this.lock(async () => {
+          const persisted = await this.store.one<Job>('jobs', job.id);
+          job.input = {
+            ...job.input,
+            ...persisted?.input,
+            publishResult: structuredClone(published),
+          };
+          await this.store.update('jobs', job).run();
+        });
+      }
+      const accepted = published;
+      await this.verifyJobAccess(job);
+      await this.lock(async () => {
+        const current = (await this.store.one<Project>('projects', job.projectId))!,
+          persisted = (await this.store.one<Job>('jobs', job.id))!;
+        requireCondition(
+          !persisted.input.cancelledByOffline,
+          409,
+          'publication_cancelled',
+          '本次发布期间网站已下线，未激活新版本。',
+        );
+        release.status = 'succeeded';
+        release.deploymentId = accepted.deploymentId;
+        release.url = accepted.url;
+        release.testMode = accepted.testMode;
+        current.previousReleaseId = current.publishedReleaseId;
+        current.publishedReleaseId = release.id;
+        current.siteUrl = accepted.url;
+        current.offline = false;
+        await this.succeed(job, [
+          this.store.update('releases', release),
+          this.store.update('projects', this.changed(current)),
+        ]);
+      });
+      return;
+    }
+    const inquiry = await this.store.one<Inquiry>('inquiries', input.inquiryId!);
+    requireCondition(inquiry, 404, 'inquiry_not_found', '询盘记录不存在。');
+    if (inquiry.emailStatus === 'sent') {
+      await this.lock(() => this.succeed(job, []));
+      return;
+    }
+    if (this.emailRetryExpired(job))
+      throw new ProviderError(
+        'email_idempotency_expired',
+        '邮件重试已超过幂等保护时效，必须先核对原发送结果。',
+        true,
+      );
+    if (job.input.emailFirstAttemptAt === undefined) {
+      job.input.emailFirstAttemptAt = Date.now();
+      await this.lock(async () => {
+        await this.store.update('jobs', job).run();
+      });
+    }
+    // Check at dispatch too: a retry may have waited in the durable queue across the deadline.
+    if (this.emailRetryExpired(job))
+      throw new ProviderError(
+        'email_idempotency_expired',
+        '邮件重试已超过幂等保护时效，必须先核对原发送结果。',
+        true,
+      );
+    await this.providers.email(inquiry, input.recipient!, `wr-inquiry-${inquiry.id}`);
+    await this.lock(async () => {
+      inquiry.emailStatus = 'sent';
+      inquiry.emailAttempts = job.attempts;
+      inquiry.emailError = undefined;
+      await this.succeed(job, [this.store.update('inquiries', inquiry)]);
+    });
+  }
+  private async finishMedia(job: Job, asset: Asset): Promise<void> {
+    await this.lock(async () => {
+      const persisted = await this.store.one<Job>('jobs', job.id);
+      if (persisted?.status === 'succeeded') return;
+      const input = job.input as JobInput,
+        p = await this.store.one<Project>('projects', job.projectId),
+        statements: D1PreparedStatement[] = [];
+      if (!(await this.store.one<Asset>('assets', asset.id)))
+        statements.push(this.store.insert('assets', asset));
+      if (p && input.draft) {
+        if (job.kind === 'image') {
+          const scene = p.draft.scenes.find((s) => s.id === input.sceneId),
+            before = input.draft.scenes.find((s) => s.id === input.sceneId);
+          if (
+            scene &&
+            before &&
+            p.draft.scriptRevision === input.draft.scriptRevision &&
+            scene.revision === before.revision &&
+            scene.description === before.description
+          ) {
+            scene.imageAssetId = asset.id;
+            scene.revision++;
+            p.draft.storyboardRevision++;
+            p.draft.storyboardConfirmedRevision = undefined;
+            p.draft.heroAccepted = false;
+            statements.push(this.store.update('projects', this.changed(p)));
+          }
+        } else if (
+          p.draft.scriptRevision === input.draft.scriptRevision &&
+          p.draft.storyboardRevision === input.draft.storyboardRevision &&
+          videoInputKey(p.draft) === videoInputKey(input.draft)
+        ) {
+          p.draft.heroAssetId = asset.id;
+          p.draft.heroAccepted = false;
+          p.draft.posterAssetId = p.draft.posterAssetId ?? input.draft.scenes[0]?.imageAssetId;
+          statements.push(this.store.update('projects', this.changed(p)));
+        }
+      }
+      job.resultAssetId = asset.id;
+      await this.succeed(job, statements);
+    });
+  }
+  private async succeed(job: Job, statements: D1PreparedStatement[]): Promise<void> {
+    job.status = 'succeeded';
+    job.updatedAt = now();
+    job.error = undefined;
+    statements.push(...(await this.store.settlement(job, true)), this.store.update('jobs', job));
+    if (job.input.attemptId)
+      statements.push(
+        this.env.DB.prepare(
+          'UPDATE provider_attempts SET outcome=?,completed_at=? WHERE id=?',
+        ).bind('succeeded', now(), job.input.attemptId),
+      );
+    await this.store.batch(statements);
+  }
+  private async fail(job: Job, error: unknown): Promise<void> {
+    await this.lock(async () => {
+      const current = await this.store.one<Job>('jobs', job.id);
+      if (current?.status === 'succeeded') return;
+      const cancelledPublication =
+        job.kind === 'publish' &&
+        (Boolean(current?.input.cancelledByOffline) ||
+          (error instanceof DomainError && error.code === 'publication_cancelled'));
+      if (current?.input.cancelledByOffline) job.input.cancelledByOffline = true;
+      const acceptedPublication = job.kind === 'publish' && Boolean(job.input.publishResult);
+      const uncertain = cancelledPublication
+        ? false
+        : acceptedPublication ||
+          (error instanceof ProviderError
+            ? error.uncertain
+            : (job.kind === 'publish' && Boolean(job.input.publicationStarted)) ||
+              (job.kind === 'video' &&
+                !job.upstreamId &&
+                Boolean(job.input.submissionStarted) &&
+                !(error instanceof DomainError)));
+      job.status =
+        uncertain && (job.kind === 'video' || job.kind === 'email' || job.kind === 'publish')
+          ? 'unknown'
+          : 'failed';
+      job.error =
+        error instanceof ProviderError || error instanceof DomainError
+          ? error.message
+          : '任务暂时失败，技术失败额度已退回；请检查服务状态后重试。';
+      job.updatedAt = now();
+      if (
+        job.kind === 'video' &&
+        error instanceof DomainError &&
+        error.code === 'submission_unknown'
+      ) {
+        job.status = 'unknown';
+        job.error = error.message;
+      }
+      const pagesPending =
+        job.kind === 'publish' &&
+        error instanceof ProviderError &&
+        error.code === 'pages_deployment_pending';
+      if (pagesPending && job.attempts < 120) {
+        job.status = 'queued';
+        job.input.retryAt = Date.now() + (testMode(this.env) ? 0 : 15000);
+      }
+      const statements: D1PreparedStatement[] = [this.store.update('jobs', job)];
+      if (job.status === 'failed') statements.push(...(await this.store.settlement(job, false)));
+      if (job.kind === 'email') {
+        const inquiry = await this.store.one<Inquiry>('inquiries', String(job.input.inquiryId));
+        if (inquiry) {
+          inquiry.emailStatus = job.status === 'unknown' ? 'unknown' : 'failed';
+          inquiry.emailAttempts = job.attempts;
+          inquiry.emailError = job.error;
+          statements.push(this.store.update('inquiries', inquiry));
+        }
+      }
+      if (job.kind === 'publish') {
+        const release = await this.store.one<Release>('releases', String(job.input.releaseId));
+        if (release) {
+          release.status = pagesPending || job.status === 'unknown' ? 'pending' : 'failed';
+          release.error = job.error;
+          statements.push(this.store.update('releases', release));
+        }
+      }
+      if (job.input.attemptId)
+        statements.push(
+          this.env.DB.prepare(
+            'UPDATE provider_attempts SET outcome=?,completed_at=? WHERE id=?',
+          ).bind(job.status, now(), job.input.attemptId),
+        );
+      await this.store.batch(statements);
+    });
+  }
+}
