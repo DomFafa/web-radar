@@ -78,21 +78,20 @@ export class DomainStore {
       .bind(JSON.stringify(value), value.id);
   }
   async quota(userId: string): Promise<Quota> {
-    const q = await this.db
-      .prepare('SELECT * FROM quotas WHERE user_id=?')
-      .bind(userId)
-      .first<{
-        user_id: string;
-        image_limit: number;
-        video_limit: number;
-        image_used: number;
-        video_used: number;
-        image_reserved: number;
-        video_reserved: number;
-      }>();
+    const q = await this.db.prepare('SELECT * FROM quotas WHERE user_id=?').bind(userId).first<{
+      user_id: string;
+      unlimited: number;
+      image_limit: number;
+      video_limit: number;
+      image_used: number;
+      video_used: number;
+      image_reserved: number;
+      video_reserved: number;
+    }>();
     return q
       ? {
           userId: q.user_id,
+          unlimited: q.unlimited === 1,
           imageLimit: q.image_limit,
           videoLimit: q.video_limit,
           imageUsed: q.image_used,
@@ -102,6 +101,7 @@ export class DomainStore {
         }
       : {
           userId,
+          unlimited: false,
           imageLimit: 0,
           videoLimit: 0,
           imageUsed: 0,

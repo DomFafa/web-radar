@@ -480,10 +480,9 @@ export function Editor({
   const activeJobs = detail.jobs.filter((job) =>
     ['queued', 'running', 'unknown'].includes(job.status),
   );
-  const availableImages = Math.max(
-    0,
-    detail.quota.imageLimit - detail.quota.imageUsed - detail.quota.imageReserved,
-  );
+  const availableImages = detail.quota.unlimited
+    ? Infinity
+    : Math.max(0, detail.quota.imageLimit - detail.quota.imageUsed - detail.quota.imageReserved);
   const siteReady = staticSiteReady(draft);
   const designsReady = designsConfirmed(draft.siteDesign);
   const buildPending = activeJobs.some((job) => job.kind === 'site-build');
@@ -599,8 +598,8 @@ export function Editor({
               <dl>
                 <dt>页面设计图</dt>
                 <dd>
-                  {availableImages}
-                  <span>张</span>
+                  {detail.quota.unlimited ? '不限额' : availableImages}
+                  {!detail.quota.unlimited && <span>张</span>}
                 </dd>
               </dl>
               <p>

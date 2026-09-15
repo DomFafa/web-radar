@@ -1645,6 +1645,13 @@ textarea::placeholder {
 .script-confirmation-panel {
   scroll-margin-top: 90px;
 }
+.unlimited-quota-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  grid-column: 1 / -1;
+}
 @media (max-width: 700px) {
   .script-confirmation-panel {
     scroll-margin-top: 130px;

@@ -184,6 +184,7 @@ export interface Job {
   testMode: boolean;
 }
 export interface Quota {
+  unlimited?: boolean;
   userId: string;
   imageLimit: number;
   videoLimit: number;

@@ -22,6 +22,7 @@ export function Admin() {
   const [userId, setUserId] = useState(''),
     [imageLimit, setImageLimit] = useState('0'),
     [videoLimit, setVideoLimit] = useState('0');
+  const [unlimited, setUnlimited] = useState(false);
   const [upstreamIds, setUpstreamIds] = useState<Record<string, string>>({});
   async function load() {
     try {
@@ -39,6 +40,7 @@ export function Admin() {
     setError('');
     try {
       await put(`/api/admin/quotas/${encodeURIComponent(userId.trim())}`, {
+        unlimited,
         imageLimit: Number(imageLimit),
         videoLimit: Number(videoLimit),
       });
@@ -136,15 +138,18 @@ export function Admin() {
                           <code>{q.userId}</code>
                         </td>
                         <td>
-                          {q.imageUsed} / {q.imageReserved} / {q.imageLimit}
+                          {q.imageUsed} / {q.imageReserved} /{' '}
+                          {q.unlimited ? '不限额' : q.imageLimit}
                         </td>
                         <td>
-                          {q.videoUsed} / {q.videoReserved} / {q.videoLimit}
+                          {q.videoUsed} / {q.videoReserved} /{' '}
+                          {q.unlimited ? '不限额' : q.videoLimit}
                         </td>
                         <td>
                           <Button
                             onClick={() => {
                               setUserId(q.userId);
+                              setUnlimited(!!q.unlimited);
                               setImageLimit(String(q.imageLimit));
                               setVideoLimit(String(q.videoLimit));
                             }}
@@ -169,12 +174,21 @@ export function Admin() {
                   placeholder="选择上方账号，或填写用户 ID"
                 />
               </Field>
+              <label className="unlimited-quota-option">
+                <input
+                  type="checkbox"
+                  checked={unlimited}
+                  onChange={(e) => setUnlimited(e.target.checked)}
+                />
+                图片与视频不限额（保留用量统计）
+              </label>
               <Field label="图片额度上限">
                 <input
                   type="number"
                   min="0"
                   max="1000000"
                   required
+                  disabled={unlimited}
                   value={imageLimit}
                   onChange={(e) => setImageLimit(e.target.value)}
                 />
@@ -185,6 +199,7 @@ export function Admin() {
                   min="0"
                   max="1000000"
                   required
+                  disabled={unlimited}
                   value={videoLimit}
                   onChange={(e) => setVideoLimit(e.target.value)}
                 />

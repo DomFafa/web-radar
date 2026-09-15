@@ -62,6 +62,7 @@ function database() {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync('migrations/0002_business.sql', 'utf8'));
   db.exec(readFileSync('migrations/0003_source_reviews.sql', 'utf8'));
+  db.exec(readFileSync('migrations/0004_unlimited_quota.sql', 'utf8'));
   class Statement {
     values: unknown[] = [];
     constructor(readonly sql: string) {}
@@ -2031,4 +2032,85 @@ it('still blocks duplicate email dispatch past the deadline if accepted-mail D1 
   } finally {
     clock.mockRestore();
   }
+});
+
+describe('account unlimited generation quota', () => {
+  const setUnlimited = (unlimited: boolean, principal = platform, images = 0, videos = 0) =>
+    request(
+      `/api/admin/quotas/${owner.userId}`,
+      { imageLimit: images, videoLimit: videos, unlimited },
+      principal,
+      'PUT',
+    );
+
+  it('lets only the platform administrator grant unlimited quota', async () => {
+    expect((await setUnlimited(true, owner)).status).toBe(403);
+    expect((await setUnlimited(true, admin)).status).toBe(403);
+    const result = await setUnlimited(true);
+    expect(result.status).toBe(200);
+    expect(result.data.quota).toMatchObject({ unlimited: true, imageLimit: 0, videoLimit: 0 });
+  });
+
+  it('generates a full storyboard with zero finite limits and still records usage', async () => {
+    const project = await scriptReady();
+    await setUnlimited(true);
+    const result = await request(`/api/projects/${project.id}/jobs`, {
+      expectedVersion: project.version,
+      requestId: 'unlimited-images',
+      kind: 'image',
+    });
+    expect(result.status).toBe(200);
+    expect((await get(project)).quota.imageReserved).toBe(3);
+    for (let i = 0; i < 3; i++) await service.tick();
+    expect((await get(project)).quota).toMatchObject({
+      unlimited: true,
+      imageUsed: 3,
+      imageReserved: 0,
+    });
+    expect((await setUnlimited(false)).status).toBe(409);
+    expect((await setUnlimited(false, platform, 3, 0)).status).toBe(200);
+  });
+
+  it('preserves unlimited mode when an older quota form omits the flag', async () => {
+    await setUnlimited(true);
+    await quota(owner, 1, 1);
+    const project = await create();
+    expect((await get(project)).quota.unlimited).toBe(true);
+  });
+
+  it('allows a failed unlimited image to retry without losing quota accounting', async () => {
+    const project = await scriptReady();
+    await setUnlimited(true);
+    const result = await request(`/api/projects/${project.id}/jobs`, {
+      expectedVersion: project.version,
+      requestId: 'unlimited-retry',
+      kind: 'image',
+      sceneId: 's1',
+    });
+    expect(result.status).toBe(200);
+    const image = providers.image;
+    providers.image = async () => {
+      throw new ProviderError('technical_failure', 'Test image failure');
+    };
+    await service.tick();
+    expect((await get(project)).quota).toMatchObject({ imageUsed: 0, imageReserved: 0 });
+    providers.image = image;
+    expect(
+      (await request(`/api/projects/${project.id}/jobs/${result.data.job.id}/retry`, {})).status,
+    ).toBe(200);
+    await service.tick();
+    expect((await get(project)).quota).toMatchObject({ imageUsed: 1, imageReserved: 0 });
+  });
+
+  it('allows video generation with an unlimited account and zero finite video limit', async () => {
+    const project = await videoReady();
+    await setUnlimited(true);
+    const result = await request(`/api/projects/${project.id}/jobs`, {
+      expectedVersion: project.version,
+      requestId: 'unlimited-video',
+      kind: 'video',
+    });
+    expect(result.status).toBe(200);
+    expect((await get(project)).quota).toMatchObject({ unlimited: true, videoReserved: 1 });
+  });
 });

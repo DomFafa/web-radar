@@ -1285,7 +1285,7 @@ export class DomainService {
             ? quota.imageLimit - quota.imageUsed - quota.imageReserved
             : quota.videoLimit - quota.videoUsed - quota.videoReserved;
       requireCondition(
-        remaining >= jobs.length,
+        quota.unlimited || remaining >= jobs.length,
         409,
         'quota_exhausted',
         `${kind === 'image' ? '图片' : '视频'}可用额度不足，请联系平台管理员。`,
@@ -1410,7 +1410,12 @@ export class DomainService {
           job.kind === 'image'
             ? q.imageLimit - q.imageUsed - q.imageReserved
             : q.videoLimit - q.videoUsed - q.videoReserved;
-      requireCondition(remaining >= 1, 409, 'quota_exhausted', '原任务发起账号的可用额度不足。');
+      requireCondition(
+        q.unlimited || remaining >= 1,
+        409,
+        'quota_exhausted',
+        '原任务发起账号的可用额度不足。',
+      );
       if (job.kind === 'video') {
         if (job.upstreamId)
           job.input.priorUpstreamIds = [
@@ -1822,16 +1827,24 @@ export class DomainService {
       );
       const q = await this.store.quota(path[1]);
       requireCondition(
-        b.imageLimit >= q.imageUsed + q.imageReserved &&
-          b.videoLimit >= q.videoUsed + q.videoReserved,
+        b.unlimited === undefined || typeof b.unlimited === 'boolean',
+        400,
+        'invalid_quota',
+        '不限额设置必须为布尔值。',
+      );
+      const unlimited = b.unlimited === undefined ? !!q.unlimited : b.unlimited;
+      requireCondition(
+        unlimited ||
+          (b.imageLimit >= q.imageUsed + q.imageReserved &&
+            b.videoLimit >= q.videoUsed + q.videoReserved),
         409,
         'quota_below_committed',
         '新额度不能低于已使用与占用的总量。',
       );
       await this.env.DB.prepare(
-        'INSERT INTO quotas(user_id,image_limit,video_limit) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET image_limit=excluded.image_limit,video_limit=excluded.video_limit',
+        'INSERT INTO quotas(user_id,image_limit,video_limit,unlimited) VALUES(?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET image_limit=excluded.image_limit,video_limit=excluded.video_limit,unlimited=excluded.unlimited',
       )
-        .bind(path[1], b.imageLimit, b.videoLimit)
+        .bind(path[1], b.imageLimit, b.videoLimit, unlimited ? 1 : 0)
         .run();
       return json({ quota: await this.store.quota(path[1]) });
     }
