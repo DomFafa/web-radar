@@ -1,6 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "web-radar",
+  "account_id": "d2f8f96da9a76e567743cf2ff7ab2fef",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "web-radar.net",
+      "custom_domain": true
+    }
+  ],
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-09-11",
   "compatibility_flags": [
@@ -15,6 +24,9 @@
   "vars": {
     "ENVIRONMENT": "production",
     "TEST_PROVIDERS": "false",
+    "APP_ORIGIN": "https://web-radar.net",
+    "PRODUCT_RADAR_BASE_URL": "https://search-products.online",
+    "PRODUCT_RADAR_PARENT_ORIGINS": "https://search-products.online",
     "IMAGE_MODEL": "gpt-image-2.5-sunburst",
     "TEXT_MODEL": "gpt-5.5"
   },
@@ -22,7 +34,7 @@
     {
       "binding": "DB",
       "database_name": "web-radar",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "cce8ea9d-cd9b-4a35-81bd-0097b12daf93",
       "migrations_dir": "migrations"
     }
   ],
@@ -54,6 +66,7 @@
   "env": {
     "test": {
       "name": "web-radar-test",
+      "routes": [],
       "vars": {
         "ENVIRONMENT": "test",
         "TEST_PROVIDERS": "true",

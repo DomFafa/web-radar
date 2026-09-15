@@ -1,0 +1,30 @@
+[Unit]
+Description=Web Radar screenshot-to-code builder
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=web-radar-builder
+Group=web-radar-builder
+WorkingDirectory=/opt/web-radar-site-builder/current/services/site-builder
+EnvironmentFile=/etc/web-radar-site-builder.env
+Environment=HOME=/var/lib/web-radar-site-builder
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/web-radar-site-builder/current/services/site-builder/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 7002 --workers 1 --no-access-log
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/web-radar-site-builder
+MemoryMax=3G
+CPUQuota=150%
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target
