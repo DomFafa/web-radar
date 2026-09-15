@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ConsultationResult, Draft } from '../../shared/model';
-import { parseSiteBrief } from '../../shared/site-brief';
+import { basePages, parseSiteBrief } from '../../shared/site-brief';
 import type { Secrets } from '../env';
 import { ProviderError } from '../provider-contract';
 import { endpoint, jsonRequest, nonempty, requestJson } from './http';
@@ -19,6 +19,33 @@ const resultSchema = z.union([
   z.object({ question: questionSchema }).strict(),
   z.object({ brief: z.unknown() }).strict(),
 ]);
+
+function briefErrorDetail(error: unknown): string {
+  if (error instanceof z.ZodError) {
+    return error.issues
+      .slice(0, 3)
+      .map((issue) => {
+        const path = issue.path
+          .map((part, index) =>
+            typeof part === 'number'
+              ? `[${part}]`
+              : `${index ? '.' : ''}${/^[a-zA-Z]{1,32}$/.test(String(part)) ? String(part) : '[key]'}`,
+          )
+          .join('');
+        return `${path || 'brief'} (${issue.code})`;
+      })
+      .join('；');
+  }
+  const reasons: Record<string, string> = {
+    'The five base page types are required exactly once': '五个基础页面缺失或页面编号重复',
+    'Page sections must correspond across languages': '不同语言的页面区块数量不一致',
+    'Missing website language copy': '缺少所选语言的网站文案',
+    'Missing approved page content': '缺少所选语言的页面内容',
+    'Missing product translation': '缺少产品译文或产品描述',
+    'Unknown product translation': '译文包含不属于当前项目的产品',
+  };
+  return error instanceof Error ? (reasons[error.message] ?? '') : '';
+}
 
 const suppliedFacts = (draft: Draft) => ({
   company: {
@@ -144,12 +171,30 @@ export async function consult(
       );
     return parsed.data;
   }
+  // The provider sometimes returns a safe informational slug such as "packaging".
+  // Canonicalize only its ID; the full brief must still pass the normal validation.
+  const brief = parsed.data.brief;
+  if (brief && typeof brief === 'object' && 'pages' in brief && Array.isArray(brief.pages)) {
+    for (const page of brief.pages) {
+      if (
+        page &&
+        typeof page === 'object' &&
+        typeof page.id === 'string' &&
+        !basePages.some((id) => id === page.id) &&
+        !page.id.startsWith('extra-') &&
+        page.id.length <= 44 &&
+        /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(page.id)
+      )
+        page.id = `extra-${page.id}`;
+    }
+  }
   try {
     return { brief: parseSiteBrief(parsed.data.brief, draft) };
-  } catch {
+  } catch (error) {
+    const detail = briefErrorDetail(error);
     throw new ProviderError(
       'consultation_invalid_response',
-      '建站访谈返回的方案不完整或包含无效页面',
+      `建站访谈返回的方案不完整或包含无效页面${detail ? `：${detail}` : ''}`,
     );
   }
 }

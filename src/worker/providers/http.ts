@@ -69,10 +69,10 @@ export async function requestJson(
         ? Number(retryAfter) * 1000
         : Math.max(0, Date.parse(retryAfter) - Date.now())
       : undefined;
-    await response.body?.cancel();
+    const detail = await providerErrorDetail(response, init);
     throw new ProviderError(
       `${provider}_http_${response.status}`,
-      `${provider} 服务请求失败（HTTP ${response.status}）`,
+      `${provider} 服务请求失败（HTTP ${response.status}）${detail ? `：${detail}` : ''}`,
       Boolean(options.mutation) &&
         (response.status >= 500 ||
           response.status === 408 ||
@@ -93,6 +93,51 @@ export async function requestJson(
       Boolean(options.mutation),
     );
   }
+}
+
+async function providerErrorDetail(response: Response, init: RequestInit): Promise<string> {
+  const credentials: string[] = [];
+  new Headers(init.headers).forEach((value, name) => {
+    if (/authorization|cookie|key|token|secret/i.test(name)) {
+      credentials.push(value, value.replace(/^(?:Bearer|Basic)\s+/i, ''));
+    }
+  });
+  const redact = (value: unknown, max: number): string => {
+    if (typeof value !== 'string') return '';
+    let text = value;
+    for (const secret of credentials.filter(Boolean))
+      text = text
+        .replaceAll(secret, '[redacted]')
+        .replaceAll(encodeURIComponent(secret), '[redacted]');
+    return text
+      .replace(/https?:\/\/[^\s<>"']+/gi, '[url]')
+      .replace(/\b(?:Bearer|Basic)\s+[^\s,;]+/gi, '[redacted]')
+      .replace(/\bsk-[a-zA-Z0-9_-]+/g, '[redacted]')
+      .replace(
+        /(["']?(?:api[_-]?key|token|secret|password)["']?\s*[:=]\s*)["']?[^\s,;"']+["']?/gi,
+        '$1[redacted]',
+      )
+      .replace(/[\u0000-\u001f\u007f]/g, ' ')
+      .slice(0, max);
+  };
+  const requestId = redact(
+    response.headers.get('x-request-id') ?? response.headers.get('cf-ray'),
+    100,
+  );
+  let detail = '';
+  try {
+    // Error pages and echoed payloads must not become unbounded job records.
+    const data = JSON.parse(new TextDecoder().decode(await limitedBytes(response, 16_384)));
+    const error = data?.error;
+    if (error && typeof error === 'object') {
+      detail = [redact(error.code, 80), redact(error.param, 80), redact(error.message, 600)]
+        .filter(Boolean)
+        .join(' · ');
+    }
+  } catch {
+    // Reading diagnostics must never replace the original HTTP classification.
+  }
+  return [detail, requestId ? `请求编号 ${requestId}` : ''].filter(Boolean).join('；');
 }
 export function jsonRequest(key: string, payload: unknown, idempotencyKey?: string): RequestInit {
   return {

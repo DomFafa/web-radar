@@ -85,6 +85,75 @@ function readyBrief(draft: Draft): SiteBrief {
 }
 
 describe('consultation provider', () => {
+  it('preserves a complete brief when the model omits the extra-page ID prefix', async () => {
+    const draft = consultationDraft();
+    const brief = readyBrief(draft);
+    brief.pages.push({
+      id: 'packaging' as never,
+      label: '包装展示',
+      purpose: 'Show supplied packaging.',
+      content: {
+        en: {
+          title: 'Packaging',
+          sections: [{ heading: 'Packaging', body: 'Supplied packaging only.' }],
+        },
+      },
+    });
+    vi.stubGlobal('fetch', async () =>
+      Response.json({ choices: [{ message: { content: JSON.stringify({ brief }) } }] }),
+    );
+    const result = await consult(
+      { TEXT_API_KEY: 'key', TEXT_API_BASE_URL: 'https://text.example', TEXT_MODEL: 'model' },
+      draft,
+      ['https://media.example/one', 'https://media.example/two', 'https://media.example/logo'],
+      '',
+    );
+    const expected = structuredClone(brief);
+    expected.pages[5].id = 'extra-packaging';
+    expect(result).toEqual({ brief: expected });
+  });
+
+  it.each(['../packaging', 'extra-', 'home', 'extra-packaging'])(
+    'still rejects unsafe or duplicate extra page IDs: %s',
+    async (id) => {
+      const draft = consultationDraft();
+      const brief = readyBrief(draft);
+      const extra = { ...structuredClone(brief.pages[0]), id: 'packaging' as never };
+      brief.pages.push(extra, { ...structuredClone(extra), id: id as never });
+      vi.stubGlobal('fetch', async () =>
+        Response.json({ choices: [{ message: { content: JSON.stringify({ brief }) } }] }),
+      );
+      await expect(
+        consult(
+          { TEXT_API_KEY: 'key', TEXT_API_BASE_URL: 'https://text.example', TEXT_MODEL: 'model' },
+          draft,
+          ['https://media.example/one', 'https://media.example/two', 'https://media.example/logo'],
+          '',
+        ),
+      ).rejects.toMatchObject({ code: 'consultation_invalid_response' });
+    },
+  );
+
+  it('identifies the invalid brief field without displaying the returned content', async () => {
+    const draft = consultationDraft();
+    const brief = readyBrief(draft);
+    brief.pages[1].content.en!.title = '';
+    vi.stubGlobal('fetch', async () =>
+      Response.json({ choices: [{ message: { content: JSON.stringify({ brief }) } }] }),
+    );
+    await expect(
+      consult(
+        { TEXT_API_KEY: 'key', TEXT_API_BASE_URL: 'https://text.example', TEXT_MODEL: 'model' },
+        draft,
+        ['https://media.example/one', 'https://media.example/two', 'https://media.example/logo'],
+        '',
+      ),
+    ).rejects.toMatchObject({
+      code: 'consultation_invalid_response',
+      message: expect.stringContaining('pages[1].content.en.title'),
+    });
+  });
+
   it('sends each original product and logo URL as a labeled vision reference', async () => {
     const draft = consultationDraft();
     const brief = readyBrief(draft);
