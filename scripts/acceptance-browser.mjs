@@ -40,7 +40,7 @@ try {
   await page.screenshot({ path: 'artifacts/browser/editor-basics.png', fullPage: true });
   await page
     .getByRole('navigation', { name: '网站编辑步骤' })
-    .getByRole('button', { name: 'Hero 视频' })
+    .getByRole('button', { name: '首页视频' })
     .click();
   await page.getByRole('button', { name: '12 秒 · 4 张分镜', exact: true }).click();
   await page
@@ -62,7 +62,7 @@ try {
   await page.screenshot({ path: 'artifacts/browser/editor-video.png', fullPage: true });
   await page
     .getByRole('navigation', { name: '网站编辑步骤' })
-    .getByRole('button', { name: '内容编辑' })
+    .getByRole('button', { name: '网站文案' })
     .click();
   await page.getByRole('button', { name: '生成网站文案与译文' }).click();
   await expect(page.getByLabel('首页主标题').first()).toHaveValue('Browser Studio');

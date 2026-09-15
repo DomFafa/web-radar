@@ -59,6 +59,57 @@ export interface Scene {
   imageAssetId?: string;
   revision: number;
 }
+export type BaseDesignPage = 'home' | 'catalog' | 'detail' | 'about' | 'contact';
+export type DesignPage = BaseDesignPage | `extra-${string}`;
+export interface PlannedPage {
+  id: DesignPage;
+  label: string;
+  purpose: string;
+  content: Partial<
+    Record<Language, { title: string; sections: { heading: string; body: string }[] }>
+  >;
+}
+export interface SiteBrief {
+  summary: string;
+  audience: string;
+  goal: string;
+  visualDirection: string;
+  layout: string;
+  brandColor: string;
+  keep: string[];
+  avoid: string[];
+  pages: PlannedPage[];
+  copy: Partial<Record<Language, SiteCopy>>;
+  productTranslations: Record<
+    string,
+    Partial<Record<Language, { name: string; description: string }>>
+  >;
+}
+export interface ConsultationQuestion {
+  id: string;
+  prompt: string;
+  reason: string;
+  options: string[];
+}
+export type ConsultationResult =
+  { question: Omit<ConsultationQuestion, 'id'> } | { brief: SiteBrief };
+export interface SiteConsultation {
+  revision: number;
+  answers: { questionId: string; question: string; answer: string }[];
+  question?: ConsultationQuestion;
+  brief?: SiteBrief;
+  revisionContext?: { brief: SiteBrief; instructions: string };
+  confirmed?: boolean;
+  jobId?: string;
+}
+export interface SiteDesign {
+  revision: number;
+  pageIds?: DesignPage[];
+  pages: Partial<Record<DesignPage, { imageAssetId?: string; jobId?: string }>>;
+  homeConfirmedAssetId?: string;
+  confirmedKey?: string;
+  build?: { jobId: string; artifactKey?: string };
+}
 export interface Draft {
   company: Company;
   products: Product[];
@@ -80,6 +131,8 @@ export interface Draft {
   heroAssetId?: string;
   posterAssetId?: string;
   heroAccepted: boolean;
+  siteDesign?: SiteDesign;
+  consultation?: SiteConsultation;
 }
 export interface HostingTarget {
   accountId: string;
@@ -110,7 +163,8 @@ export interface Asset {
   origin: 'upload' | 'import' | 'generated' | 'test';
   createdAt: string;
 }
-export type JobKind = 'script' | 'copy' | 'image' | 'video' | 'publish' | 'email';
+export type JobKind =
+  'consultation' | 'script' | 'copy' | 'image' | 'video' | 'site-build' | 'publish' | 'email';
 export type JobStatus = 'queued' | 'running' | 'unknown' | 'succeeded' | 'failed';
 export interface Job {
   id: string;

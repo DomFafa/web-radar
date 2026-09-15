@@ -87,11 +87,12 @@ export async function pollVideo(env: Secrets, videoId: string): Promise<VideoRes
       'Agnes 返回未知任务状态，请继续核对原任务',
       true,
     );
-  if (!nonempty(data.metadata?.url, 3000))
+  const resultUrl = nonempty(data.url, 3000) ? data.url : data.metadata?.url;
+  if (!nonempty(resultUrl, 3000))
     throw new ProviderError(
       'video_result_unavailable',
-      'Agnes 已完成但未返回已核验的 metadata.url，可恢复原任务下载',
+      'Agnes 已完成但未返回视频下载地址，可恢复原任务下载',
       true,
     );
-  return { state: 'succeeded', media: await downloadMedia(env, data.metadata.url, 'video') };
+  return { state: 'succeeded', media: await downloadMedia(env, resultUrl, 'video') };
 }

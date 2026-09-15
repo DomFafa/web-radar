@@ -2,10 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import { DomainService } from '../src/worker/domain-service';
+import { testBrief } from './fixtures/site-brief';
 import { defaultDraft } from '../src/worker/domain';
-import { ProviderError, type ProviderSet } from '../src/worker/provider-contract';
+import { fixtureProviders } from '../src/worker/providers/fixtures';
+import {
+  ProviderError,
+  type ProviderSet,
+  type SiteBuildInput,
+} from '../src/worker/provider-contract';
 import type { AppEnv } from '../src/worker/env';
-import type { Principal, Job, Project } from '../src/shared/model';
+import type { Asset, Principal, Job, Project } from '../src/shared/model';
 
 const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403 }));
 vi.mock('../src/worker/product-radar', () => ({
@@ -189,6 +195,16 @@ function mediaBucket() {
 function providerSet(): ProviderSet {
   return {
     status: () => [],
+    consult: async (draft) =>
+      draft.consultation?.answers.length
+        ? { brief: testBrief(draft) }
+        : {
+            question: {
+              prompt: '主要面向哪类客户？',
+              reason: '决定页面的重点',
+              options: ['进口商', '批发商', '零售商', '消费者'],
+            },
+          },
     resolveHostingTarget: async (id, current) =>
       current ?? { accountId: 'LOCAL_TEST', pagesProjectName: `wr-${id}` },
     script: async () => ({
@@ -204,6 +220,13 @@ function providerSet(): ProviderSet {
       filename: 'scene.png',
       testMode: true,
     }),
+    designImage: async () => ({
+      body: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0]),
+      contentType: 'image/png',
+      filename: 'page.png',
+      testMode: true,
+    }),
+    siteBuild: async () => ({ state: 'pending' }),
     submitVideo: async () => ({ videoId: 'upstream' }),
     pollVideo: async () => ({
       state: 'succeeded',
@@ -308,6 +331,479 @@ beforeEach(() => {
 });
 
 describe('durable domain commands', () => {
+  async function designReady(guided = true, productIds = ['one']) {
+    let p = await create();
+    p = (
+      await request(`/api/projects/${p.id}/import`, {
+        expectedVersion: p.version,
+        productIds,
+      })
+    ).data.project;
+    p.draft.company = {
+      ...p.draft.company,
+      name: 'Studio',
+      email: 'contact@example.com',
+      contactName: 'Amy',
+    };
+    p.draft.country = 'US';
+    p.draft.copy.en = {
+      headline: 'Objects',
+      subtitle: 'Made for everyday',
+      about: 'Our studio',
+      cta: 'Contact',
+    };
+    p = (
+      await request(
+        `/api/projects/${p.id}`,
+        { expectedVersion: p.version, draft: p.draft },
+        owner,
+        'PUT',
+      )
+    ).data.project;
+    await quota(owner, 10, 0);
+    if (guided) {
+      await consultJob(p);
+      await service.tick();
+      p = (await get(p)).project;
+      await consultJob(p, { questionId: p.draft.consultation!.question!.id, answer: '进口商' });
+      await service.tick();
+      p = (await get(p)).project;
+      const confirmed = await request(`/api/projects/${p.id}/confirm-brief`, {
+        expectedVersion: p.version,
+      });
+      expect(confirmed.status).toBe(200);
+      p = confirmed.data.project;
+    }
+    return p;
+  }
+  async function consultJob(p: Project, fields: Record<string, unknown> = {}) {
+    return request(`/api/projects/${p.id}/jobs`, {
+      expectedVersion: p.version,
+      requestId: crypto.randomUUID(),
+      kind: 'consultation',
+      ...fields,
+    });
+  }
+  it('collects one question with actual image references and confirms a server-owned brief', async () => {
+    let p = await designReady(false);
+    expect((await designJob(p, 'home')).data.code).toBe('brief_unconfirmed');
+    const original = providers.consult;
+    const seen: string[][] = [];
+    providers.consult = async (draft, refs, instructions) => {
+      seen.push(refs);
+      return original(draft, refs, instructions);
+    };
+    const first = await consultJob(p, { requestId: 'consult-first' });
+    expect(first.status).toBe(200);
+    const again = await consultJob(p, { requestId: 'consult-first' });
+    expect(again.data.job.id).toBe(first.data.job.id);
+    p = (await get(p)).project;
+    expect((await consultJob(p)).data.code).toBe('consultation_in_progress');
+    await service.tick();
+    p = (await get(p)).project;
+    expect(seen[0]).toHaveLength(1);
+    expect(seen[0][0]).toMatch(/assets|reference|data:image/);
+    expect(p.draft.consultation?.question?.options).toHaveLength(4);
+    expect((await consultJob(p, { questionId: 'wrong', answer: '进口商' })).data.code).toBe(
+      'question_changed',
+    );
+    await consultJob(p, { questionId: p.draft.consultation!.question!.id, answer: '进口商' });
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.draft.consultation?.answers[0].answer).toBe('进口商');
+    expect(p.draft.consultation?.brief?.pages).toHaveLength(5);
+    expect(p.draft.consultation?.confirmed).not.toBe(true);
+    expect((await designJob(p, 'home')).data.code).toBe('brief_unconfirmed');
+    p = (await request(`/api/projects/${p.id}/confirm-brief`, { expectedVersion: p.version })).data
+      .project;
+    expect(p.draft.consultation?.confirmed).toBe(true);
+    expect(p.draft.copy.en?.headline).toBe('Objects');
+    expect((await designJob(p, 'home')).status).toBe(200);
+  });
+  it('does not attach a late consultation result after intake edits', async () => {
+    let p = await designReady(false);
+    let release: (() => void) | undefined;
+    const wait = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started: (() => void) | undefined;
+    const entered = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    providers.consult = async (draft) => {
+      started!();
+      await wait;
+      return { brief: testBrief(draft) };
+    };
+    await consultJob(p);
+    const tick = service.tick();
+    await entered;
+    p = (await get(p)).project;
+    p.draft.company.name = 'Changed company';
+    const saved = await request(
+      `/api/projects/${p.id}`,
+      { expectedVersion: p.version, draft: p.draft },
+      owner,
+      'PUT',
+    );
+    expect(saved.status).toBe(200);
+    release!();
+    await tick;
+    expect((await get(p)).project.draft.consultation).toBeUndefined();
+  });
+  it('invalidates approval and designs when a confirmed proposal is revised', async () => {
+    let p = await designReady();
+    await designJob(p, 'home');
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.draft.siteDesign?.pages.home?.imageAssetId).toBeTruthy();
+    expect((await consultJob(p, { instructions: '增加批发说明页' })).status).toBe(200);
+    p = (await get(p)).project;
+    expect(p.draft.consultation?.confirmed).not.toBe(true);
+    expect(p.draft.siteDesign?.pages.home).toBeUndefined();
+  });
+  async function designJob(p: Project, pageId: string) {
+    return request(`/api/projects/${p.id}/jobs`, {
+      expectedVersion: p.version,
+      requestId: crypto.randomUUID(),
+      kind: 'image',
+      pageId,
+    });
+  }
+  it('rejects oversized visible design copy before reserving quota or replacing an existing design', async () => {
+    let p = await designReady();
+    await designJob(p, 'home');
+    await service.tick();
+    p = (await get(p)).project;
+    p.draft.consultation!.brief!.pages[0].content.en!.sections = Array.from({ length: 8 }, () => ({
+      heading: 'Approved heading',
+      body: 'Full approved text. '.repeat(200),
+    }));
+    await service.store.update('projects', p).run();
+    const before = await get(p),
+      quota = await service.store.quota(owner.userId);
+    const call = vi.fn(providers.designImage);
+    providers.designImage = call;
+    const result = await designJob(p, 'home');
+    expect(result.status).toBe(400);
+    expect(result.data.code).toBe('image_design_copy_too_long');
+    expect((await get(p)).project).toEqual(before.project);
+    expect((await get(p)).jobs).toEqual(before.jobs);
+    expect(await service.store.quota(owner.userId)).toEqual(quota);
+    expect(call).not.toHaveBeenCalled();
+  });
+  it('retains a proposed brief and revision request across a follow-up question', async () => {
+    let p = await designReady();
+    const oldBrief = p.draft.consultation!.brief!;
+    providers.consult = async () => ({
+      question: {
+        prompt: '蓝色深浅？',
+        reason: '确定颜色',
+        options: ['浅蓝', '中蓝', '深蓝', '蓝灰'],
+      },
+    });
+    await consultJob(p, { instructions: '保留当前页面，改成蓝色' });
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.draft.consultation?.brief).toBeUndefined();
+    expect(p.draft.consultation?.revisionContext?.brief).toEqual(oldBrief);
+    expect(
+      (await request(`/api/projects/${p.id}/confirm-brief`, { expectedVersion: p.version })).data
+        .code,
+    ).toBe('brief_incomplete');
+    providers.consult = async (draft) => {
+      expect(draft.consultation?.revisionContext?.instructions).toBe('保留当前页面，改成蓝色');
+      expect(draft.consultation?.revisionContext?.brief).toEqual(oldBrief);
+      return { brief: { ...oldBrief, brandColor: '#2244aa' } };
+    };
+    await consultJob(p, { questionId: p.draft.consultation!.question!.id, answer: '深蓝' });
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.draft.consultation?.brief?.brandColor).toBe('#2244aa');
+    expect(p.draft.consultation?.revisionContext).toBeUndefined();
+  });
+  it('requires and builds every approved extra page, including its private preview route', async () => {
+    let p = await designReady(false);
+    providers.consult = async (draft) => ({ brief: testBrief(draft, true) });
+    await consultJob(p);
+    await service.tick();
+    p = (await get(p)).project;
+    p = (await request(`/api/projects/${p.id}/confirm-brief`, { expectedVersion: p.version })).data
+      .project;
+    expect((await designJob(p, 'extra-unapproved')).data.code).toBe('invalid_design_page');
+    await designJob(p, 'home');
+    await service.tick();
+    p = (await get(p)).project;
+    p = (
+      await request(`/api/projects/${p.id}/confirm-design`, {
+        expectedVersion: p.version,
+        target: 'home',
+      })
+    ).data.project;
+    const rest = await designJob(p, 'remaining');
+    expect(rest.data.jobs).toHaveLength(5);
+    for (let i = 0; i < 4; i++) await service.tick();
+    p = (await get(p)).project;
+    expect(
+      (
+        await request(`/api/projects/${p.id}/confirm-design`, {
+          expectedVersion: p.version,
+          target: 'all',
+        })
+      ).data.code,
+    ).toBe('designs_incomplete');
+    await service.tick();
+    p = (await get(p)).project;
+    p = (
+      await request(`/api/projects/${p.id}/confirm-design`, {
+        expectedVersion: p.version,
+        target: 'all',
+      })
+    ).data.project;
+    const fixture = fixtureProviders(env);
+    providers.siteBuild = async (id, input) => {
+      expect(Object.keys(input!.designImages)).toHaveLength(6);
+      return fixture.siteBuild(id, input);
+    };
+    expect(
+      (
+        await request(`/api/projects/${p.id}/jobs`, {
+          expectedVersion: p.version,
+          requestId: 'extra-build',
+          kind: 'site-build',
+        })
+      ).status,
+    ).toBe(200);
+    await service.tick();
+    p = (await get(p)).project;
+    const preview = await request(`/api/projects/${p.id}/preview?lang=en&page=extra-wholesale`);
+    expect(preview.status).toBe(200);
+    expect(preview.data.html).toContain('/en/extra-wholesale/');
+    expect(
+      (await request(`/api/projects/${p.id}/preview?lang=en&page=extra-unapproved`)).status,
+    ).toBe(400);
+  });
+  it('rejects invalid option counts and can retry the same consultation without duplicate answers', async () => {
+    let p = await designReady(false);
+    providers.consult = async () => ({
+      question: { prompt: '问题', reason: '原因', options: ['A', 'B', 'C'] },
+    });
+    const first = await consultJob(p);
+    await service.tick();
+    let detail = await get(p);
+    expect(detail.jobs[0].status).toBe('failed');
+    expect(detail.project.draft.consultation.question).toBeUndefined();
+    providers.consult = providerSet().consult;
+    expect(
+      (await request(`/api/projects/${p.id}/jobs/${first.data.job.id}/retry`, {})).status,
+    ).toBe(200);
+    await service.tick();
+    detail = await get(p);
+    expect(detail.project.draft.consultation.question.options).toHaveLength(4);
+    expect(detail.project.draft.consultation.answers).toHaveLength(0);
+  });
+  it('cancels queued consultation on edited facts before any provider call', async () => {
+    let p = await designReady(false);
+    const call = vi.fn(providers.consult);
+    providers.consult = call;
+    const first = await consultJob(p);
+    p = (await get(p)).project;
+    p.draft.country = 'Germany';
+    await request(
+      `/api/projects/${p.id}`,
+      { expectedVersion: p.version, draft: p.draft },
+      owner,
+      'PUT',
+    );
+    await service.tick();
+    expect(call).not.toHaveBeenCalled();
+    expect(
+      (await request(`/api/projects/${p.id}/jobs/${first.data.job.id}/retry`, {})).data.code,
+    ).toBe('stale_consultation_job');
+  });
+  it('generates homepage first, confirms five designs, and builds without video quota', async () => {
+    let p = await designReady(true, ['one', 'two']);
+    expect((await designJob(p, 'remaining')).data.code).toBe('home_unconfirmed');
+    const home = await designJob(p, 'home');
+    expect(home.status).toBe(200);
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.draft.siteDesign?.pages.home?.imageAssetId).toBeTruthy();
+    expect(
+      (
+        await request(`/api/projects/${p.id}/confirm-design`, {
+          expectedVersion: p.version,
+          target: 'all',
+        })
+      ).data.code,
+    ).toBe('designs_incomplete');
+    p = (
+      await request(`/api/projects/${p.id}/confirm-design`, {
+        expectedVersion: p.version,
+        target: 'home',
+      })
+    ).data.project;
+    const rest = await designJob(p, 'remaining');
+    expect(rest.data.jobs).toHaveLength(4);
+    for (let i = 0; i < 4; i++) await service.tick();
+    p = (await get(p)).project;
+    p = (
+      await request(`/api/projects/${p.id}/confirm-design`, {
+        expectedVersion: p.version,
+        target: 'all',
+      })
+    ).data.project;
+    const build = await request(`/api/projects/${p.id}/jobs`, {
+      expectedVersion: p.version,
+      requestId: 'static-build-1',
+      kind: 'site-build',
+    });
+    expect(build.status).toBe(200);
+    let submittedBuild: SiteBuildInput | undefined;
+    providers.siteBuild = async (id, submitted) => {
+      expect(id).toBe(build.data.job.id);
+      submittedBuild = submitted;
+      return { state: 'pending' };
+    };
+    await service.tick();
+    expect(Object.keys(submittedBuild?.referenceAssets ?? {})).toEqual(
+      p.draft.products.map((product) => product.imageAssetId),
+    );
+    expect(submittedBuild?.referenceAssets?.[p.draft.products[0].imageAssetId!]).toMatch(
+      /^data:image\/png;base64,/,
+    );
+    expect(Object.keys(submittedBuild!.designImages)).toHaveLength(5);
+    const detail = await get(p);
+    expect(detail.quota.imageUsed).toBe(5);
+    expect(detail.quota.videoUsed).toBe(0);
+    expect(detail.jobs.find((j: Job) => j.kind === 'site-build').status).toBe('queued');
+    expect(detail.project.draft.siteDesign.build.jobId).toBe(build.data.job.id);
+    const input = detail.jobs.find((j: Job) => j.kind === 'site-build').input;
+    providers.siteBuild = async () =>
+      fixtureProviders(env).siteBuild(build.data.job.id, {
+        draft: input.draft,
+        designImages: {} as never,
+      });
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.draft.siteDesign?.build?.artifactKey).toBeTruthy();
+    const preview = await request(`/api/projects/${p.id}/preview?lang=en&page=catalog`);
+    expect(preview.status).toBe(200);
+    expect(preview.data.html).toContain(`/api/projects/${p.id}/assets/`);
+    expect(preview.data.html).not.toContain('__WR_ASSET_');
+    providers.publish = async (_id, releaseId, files) => {
+      expect(Object.keys(files).every((path) => path.endsWith('.html'))).toBe(true);
+      expect(files['en/products/index.html']).toContain(
+        `${env.APP_ORIGIN}/public/sites/${p.id}/assets/`,
+      );
+      expect(files['en/products/index.html']).not.toContain('/api/projects/');
+      expect(Object.values(files).join('')).not.toContain('page.png');
+      return { deploymentId: releaseId, url: `https://${p.id}.pages.dev`, testMode: true };
+    };
+    expect(
+      (
+        await request(`/api/projects/${p.id}/publish`, {
+          expectedVersion: p.version,
+          requestId: 'static-publish-1',
+        })
+      ).status,
+    ).toBe(200);
+    await service.tick();
+    p = (await get(p)).project;
+    expect(p.publishedReleaseId).toBeTruthy();
+    p.draft.company.name = 'Changed draft';
+    p = (
+      await request(
+        `/api/projects/${p.id}`,
+        { expectedVersion: p.version, draft: p.draft },
+        owner,
+        'PUT',
+      )
+    ).data.project;
+    expect((await request(`/api/projects/${p.id}/preview`)).data.code).toBe('site_not_built');
+    const publicResponse = await service.fetch(
+      new Request(`http://localhost/public/sites/${p.id}/en/products/`),
+    );
+    expect(publicResponse.status).toBe(200);
+    const publicHtml = await publicResponse.text();
+    expect(publicHtml).toContain('Studio');
+    expect(publicHtml).not.toContain('Changed draft');
+    expect(publicHtml).toContain(`/public/sites/${p.id}/en/products/`);
+  });
+  it('does not attach a late design after product facts change and settles its quota once', async () => {
+    let p = await designReady();
+    await designJob(p, 'home');
+    let finish!: (value: Awaited<ReturnType<ProviderSet['designImage']>>) => void;
+    providers.designImage = () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      });
+    const ticking = service.tick();
+    await vi.waitFor(() => expect(finish).toBeTypeOf('function'));
+    p = (await get(p)).project;
+    p.draft.products[0].name = 'Updated';
+    expect(
+      (
+        await request(
+          `/api/projects/${p.id}`,
+          { expectedVersion: p.version, draft: p.draft },
+          owner,
+          'PUT',
+        )
+      ).status,
+    ).toBe(200);
+    finish(await providerSet().designImage(p.draft, 'home', '', []));
+    await ticking;
+    const detail = await get(p);
+    expect(detail.project.draft.siteDesign.pages.home).toBeUndefined();
+    expect(detail.quota.imageUsed).toBe(1);
+    expect(detail.quota.imageReserved).toBe(0);
+  });
+  it('passes all eight private product images directly to the design provider in reference order', async () => {
+    const p = await designReady(
+      true,
+      Array.from({ length: 8 }, (_, i) => `product-${i}`),
+    );
+    const generate = vi.fn(providerSet().designImage);
+    providers.designImage = generate;
+    await designJob(p, 'home');
+    await service.tick();
+    expect(generate).toHaveBeenCalledOnce();
+    const references = generate.mock.calls[0][3];
+    expect(references).toHaveLength(8);
+    for (let i = 0; i < references.length; i++) {
+      expect(references[i]).toBeInstanceOf(Blob);
+      const reference = references[i] as Blob;
+      const asset = await service.store.one<Asset>('assets', p.draft.products[i].imageAssetId!);
+      expect(reference.type).toBe('image/png');
+      expect(new Uint8Array(await reference.arrayBuffer())).toEqual(
+        bucket.objects.get(asset!.key)!.bytes,
+      );
+    }
+    expect((await get(p)).jobs.find((j: Job) => j.input.pageId === 'home').status).toBe(
+      'succeeded',
+    );
+  });
+  it('cancels obsolete queued designs before spending provider quota', async () => {
+    let p = await designReady();
+    await designJob(p, 'home');
+    p = (await get(p)).project;
+    p.draft.company.description = 'New company facts';
+    await request(
+      `/api/projects/${p.id}`,
+      { expectedVersion: p.version, draft: p.draft },
+      owner,
+      'PUT',
+    );
+    const generate = vi.fn(providerSet().designImage);
+    providers.designImage = generate;
+    await service.tick();
+    expect(generate).not.toHaveBeenCalled();
+    const detail = await get(p);
+    expect(detail.quota.imageUsed).toBe(0);
+    expect(detail.quota.imageReserved).toBe(0);
+    expect(detail.jobs.find((job: Job) => job.input.pageId === 'home').status).toBe('failed');
+  });
   it('idempotently creates same project and rejects changed payload', async () => {
     const body = { name: 'Site', requestId: 'request-create-1' };
     const a = await request('/api/projects', body),
@@ -326,6 +822,35 @@ describe('durable domain commands', () => {
       (await request(`/api/projects/${p.id}`, undefined, { ...admin, workspaceId: 'elsewhere' }))
         .status,
     ).toBe(404);
+  });
+  it('caches private preview derivatives without changing originals, jobs or project permissions', async () => {
+    const p = await create();
+    const uploaded = await uploadAsset(p);
+    const asset = (await service.store.one<Asset>('assets', uploaded.id))!;
+    const original = bucket.objects.get(asset.key)!.bytes.slice();
+    env.SITE_BUILDER_URL = 'http://localhost:7002';
+    env.SITE_BUILDER_KEY = 'internal-test-key';
+    const webp = new TextEncoder().encode('RIFF0000WEBPpreview');
+    const fetcher = vi.fn(async () => new Response(webp, { headers: { 'Content-Type': 'image/webp' } }));
+    vi.stubGlobal('fetch', fetcher);
+    const path = `/api/projects/${p.id}/assets/${asset.id}?variant=preview`;
+    const read = (principal = owner, method = 'GET') => service.fetch(new Request(`http://localhost${path}`, { method, headers: { 'X-WR-Principal': JSON.stringify(principal) } }));
+    try {
+      const first = await read();
+      expect(first.status).toBe(200);
+      expect(first.headers.get('cache-control')).toBe('no-store');
+      expect(new Uint8Array(await first.arrayBuffer())).toEqual(webp);
+      expect((await read()).status).toBe(200);
+      expect(await (await read(owner, 'HEAD')).text()).toBe('');
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      expect((await read({ ...owner, userId: 'other-member' })).status).toBe(404);
+      expect((await read({ ...admin, workspaceId: 'other-workspace' })).status).toBe(404);
+      expect(bucket.objects.get(asset.key)!.bytes).toEqual(original);
+      const detail = await get(p);
+      expect(detail.project.version).toBe(p.version);
+      expect(detail.jobs).toHaveLength(0);
+      expect(detail.assets).toHaveLength(1);
+    } finally { vi.unstubAllGlobals(); }
   });
   it('serializes concurrent saves with one visible version conflict', async () => {
     const p = await create();
@@ -872,6 +1397,67 @@ describe('review and recovery races', () => {
     expect(submissions).toBe(2);
     expect(new Set(keys).size).toBe(2);
     expect((await get(p)).quota).toMatchObject({ videoUsed: 1, videoReserved: 0 });
+  });
+  it('backs off rate-limited video queries without exhausting failures or submitting again', async () => {
+    const p = await videoReady();
+    const submit = vi.spyOn(providers, 'submitVideo');
+    const job = (
+      await request(`/api/projects/${p.id}/jobs`, {
+        expectedVersion: p.version,
+        requestId: 'rate-limited-video',
+        kind: 'video',
+      })
+    ).data.job;
+    await service.tick();
+    const persisted = (await service.store.one<Job>('jobs', job.id))!;
+    persisted.input.pollFailures = 11;
+    await service.store.update('jobs', persisted).run();
+    const poll = vi.fn(async () => {
+      throw Object.assign(new ProviderError('agnes_http_429', 'Rate limited'), {
+        retryAfterMs: 120_000,
+      });
+    });
+    providers.pollVideo = poll;
+    const before = Date.now();
+    await service.tick();
+    const waiting = (await service.store.one<Job>('jobs', job.id))!;
+    expect(waiting.status).toBe('running');
+    expect(waiting.input.pollFailures).toBe(11);
+    expect(Number(waiting.input.nextPollAt)).toBeGreaterThanOrEqual(before + 120_000);
+    // Simulate a restart or another alarm: the persisted cooldown still applies.
+    const schedule = vi.fn(async (_time: number) => {});
+    service = new DomainService(env, { schedule }, providers);
+    await service.tick();
+    expect(poll).toHaveBeenCalledTimes(1);
+    expect(schedule).toHaveBeenCalledWith(waiting.input.nextPollAt);
+    waiting.input.nextPollAt = Date.now() - 1;
+    await service.store.update('jobs', waiting).run();
+    providers.pollVideo = providerSet().pollVideo;
+    await service.tick();
+    expect((await service.store.one<Job>('jobs', job.id))!.status).toBe('succeeded');
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect((await get(p)).quota).toMatchObject({ videoUsed: 1, videoReserved: 0 });
+  });
+  it('clears a stale query error after the same upstream task is pending again', async () => {
+    const p = await videoReady();
+    const job = (
+      await request(`/api/projects/${p.id}/jobs`, {
+        expectedVersion: p.version,
+        requestId: 'recovered-poll',
+        kind: 'video',
+      })
+    ).data.job;
+    await service.tick();
+    const persisted = (await service.store.one<Job>('jobs', job.id))!;
+    persisted.error = 'Previous query failed';
+    persisted.input.pollFailures = 2;
+    await service.store.update('jobs', persisted).run();
+    providers.pollVideo = async () => ({ state: 'pending' });
+    await service.tick();
+    const recovered = (await service.store.one<Job>('jobs', job.id))!;
+    expect(recovered.error).toBeUndefined();
+    expect(recovered.input.pollFailures).toBe(0);
+    expect(recovered.upstreamId).toBe(persisted.upstreamId);
   });
   it('schedules a future alarm for a known upstream task before its next poll is due', async () => {
     const p = await videoReady();

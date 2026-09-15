@@ -1,5 +1,11 @@
 import { z } from 'zod';
 import type { Draft, Principal, Project } from '../shared/model';
+import {
+  consultationSchema,
+  designPageSchema,
+  resetConsultationForEdit,
+} from '../shared/site-brief';
+import { resetDesignForEdit, staticSiteReady } from '../shared/site-design';
 
 export class DomainError extends Error {
   constructor(
@@ -94,6 +100,20 @@ const draftSchema = z.object({
   heroAssetId: id.optional(),
   posterAssetId: id.optional(),
   heroAccepted: z.boolean(),
+  consultation: consultationSchema.optional(),
+  siteDesign: z
+    .object({
+      revision: z.number().int().nonnegative(),
+      pageIds: z.array(designPageSchema).min(5).max(8).optional(),
+      pages: z.record(
+        designPageSchema,
+        z.object({ imageAssetId: id.optional(), jobId: id.optional() }),
+      ),
+      homeConfirmedAssetId: id.optional(),
+      confirmedKey: z.string().max(3000).optional(),
+      build: z.object({ jobId: id, artifactKey: z.string().max(500).optional() }).optional(),
+    })
+    .optional(),
 });
 export function defaultDraft(): Draft {
   return {
@@ -242,6 +262,8 @@ export function editDraft(previous: Draft, input: unknown): Draft {
     next.heroAssetId === previous.heroAssetId &&
     !scriptChanged &&
     !sceneChange;
+  resetConsultationForEdit(previous, next);
+  resetDesignForEdit(previous, next);
   return next;
 }
 export function assertScriptConfirmed(d: Draft): void {
@@ -277,6 +299,7 @@ export function assetReferences(d: Draft): string[] {
         d.posterAssetId,
         ...d.products.map((p) => p.imageAssetId),
         ...d.scenes.map((s) => s.imageAssetId),
+        ...Object.values(d.siteDesign?.pages ?? {}).map((p) => p?.imageAssetId),
       ].filter((v): v is string => Boolean(v)),
     ),
   ];
@@ -286,14 +309,14 @@ export function publicAssetReferences(d: Draft): string[] {
     ...new Set(
       [
         d.company.logoAssetId,
-        d.heroAssetId,
-        d.posterAssetId,
+        !d.siteDesign ? d.heroAssetId : undefined,
+        !d.siteDesign ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),
       ].filter((v): v is string => Boolean(v)),
     ),
   ];
 }
-export function assertPublishable(d: Draft): void {
+export function assertSiteIntakeReady(d: Draft): void {
   requireCondition(
     d.company.name.trim() && d.company.contactName.trim() && validEmail(d.company.email),
     400,
@@ -309,12 +332,9 @@ export function assertPublishable(d: Draft): void {
     'products_incomplete',
     '请提供产品名称、图片并选择主产品。',
   );
-  requireCondition(
-    d.heroAssetId && d.heroAccepted,
-    400,
-    'hero_unconfirmed',
-    '请上传或生成视频，预览后确认选用。',
-  );
+}
+export function assertSiteContentReady(d: Draft): void {
+  assertSiteIntakeReady(d);
   for (const lang of d.languages) {
     const c = d.copy[lang];
     requireCondition(
@@ -335,6 +355,23 @@ export function assertPublishable(d: Draft): void {
         `请补充 ${lang} 产品译文。`,
       );
   }
+}
+export function assertPublishable(d: Draft): void {
+  assertSiteContentReady(d);
+  if (d.siteDesign)
+    requireCondition(
+      staticSiteReady(d),
+      400,
+      'site_unconfirmed',
+      '请确认全部设计稿并生成当前版本的网站。',
+    );
+  else
+    requireCondition(
+      d.heroAssetId && d.heroAccepted,
+      400,
+      'hero_unconfirmed',
+      '请上传或生成视频，预览后确认选用。',
+    );
 }
 export function validEmail(value: string): boolean {
   return (

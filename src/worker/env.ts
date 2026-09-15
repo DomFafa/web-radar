@@ -12,6 +12,8 @@ export interface Secrets {
   IMAGE_API_BASE_URL?: string;
   IMAGE_API_KEY?: string;
   IMAGE_MODEL?: string;
+  SITE_BUILDER_URL?: string;
+  SITE_BUILDER_KEY?: string;
   AGNES_API_BASE_URL?: string;
   AGNES_API_KEY?: string;
   AGNES_MODEL?: string;

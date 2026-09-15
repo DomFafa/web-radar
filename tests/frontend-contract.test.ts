@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { HandoffAttempts, PendingOperations, parentOrigin, validHandoff } from '../src/client/api';
 import { mergeVersions } from '../src/client/merge';
-import { privateAssetId } from '../src/client/Preview';
+import { privateAssetId, rewritePreviewMedia } from '../src/client/Preview';
 
 describe('embedded authorization boundary', () => {
   it('accepts only an exact secure origin or loopback development origin', () => {
@@ -123,10 +123,68 @@ describe('uncertain operation transport outcomes', () => {
 });
 
 describe('private preview asset references', () => {
+  function mediaNode(attributes: Record<string, string>) {
+    const values = new Map(Object.entries(attributes));
+    return {
+      getAttribute: (name: string) => values.get(name) ?? null,
+      setAttribute(name: string, value: string) {
+        values.set(name, value);
+      },
+      removeAttribute(name: string) {
+        values.delete(name);
+      },
+    };
+  }
+
   it('extracts the same-project private asset only and never accepts another project', () => {
     expect(privateAssetId('/api/projects/project-1/assets/asset-1', 'project-1')).toBe('asset-1');
     expect(privateAssetId('/api/projects/project-2/assets/asset-1', 'project-1')).toBeNull();
     expect(privateAssetId('/public/sites/project-1/assets/asset-1', 'project-1')).toBeNull();
     expect(privateAssetId('data:image/png;base64,x', 'project-1')).toBeNull();
+  });
+
+  it.each(['png', 'jpeg', 'webp'])(
+    'preserves inline %s images and posters for iframe decoding',
+    (format) => {
+      const source = `data:image/${format};base64,aW1hZ2U=`;
+      const node = mediaNode({ src: source, poster: source });
+      rewritePreviewMedia(node, 'project-1');
+      for (const attribute of ['src', 'poster']) {
+        expect(node.getAttribute(attribute)).toBe(source);
+        expect(node.getAttribute(`data-wr-${attribute}`)).toBeNull();
+      }
+    },
+  );
+
+  it('keeps private image and poster references on the existing Blob bridge', () => {
+    const node = mediaNode({
+      src: '/api/projects/project-1/assets/photo',
+      poster: '/api/projects/project-1/assets/poster',
+    });
+    rewritePreviewMedia(node, 'project-1');
+    expect(node.getAttribute('src')).toBeNull();
+    expect(node.getAttribute('poster')).toBeNull();
+    expect(node.getAttribute('data-wr-src')).toBe('photo');
+    expect(node.getAttribute('data-wr-poster')).toBe('poster');
+  });
+
+  it.each([
+    '/api/projects/project-2/assets/photo',
+    '/public/sites/project-1/assets/photo',
+    'https://remote.example/photo.webp',
+    'https://remote.example/api/projects/project-1/assets/photo',
+    '//remote.example/api/projects/project-1/assets/photo',
+    'data:image/svg+xml;base64,PHN2Zy8+',
+    'data:text/html;base64,PHNjcmlwdD4=',
+    'data:image/webp;base64,%%%',
+    'javascript:alert(1)',
+  ])('removes unsupported preview media %s without requesting a private asset', (source) => {
+    const node = mediaNode({ src: source, poster: source });
+    rewritePreviewMedia(node, 'project-1');
+    expect(privateAssetId(source, 'project-1')).toBeNull();
+    for (const attribute of ['src', 'poster']) {
+      expect(node.getAttribute(attribute)).toBeNull();
+      expect(node.getAttribute(`data-wr-${attribute}`)).toBeNull();
+    }
   });
 });

@@ -88,7 +88,6 @@ export function Admin() {
   return (
     <>
       <div className="page-heading">
-        <span className="eyebrow">PLATFORM OPERATIONS</span>
         <h1>平台管理</h1>
         <p>配置状态、账号额度与持久任务的统一视图。</p>
       </div>
@@ -219,10 +218,12 @@ export function Admin() {
                         <td>
                           {
                             {
+                              consultation: '需求沟通',
                               script: '脚本',
                               copy: '网站文案',
                               image: '分镜图片',
                               video: '完整视频',
+                              'site-build': '静态网站',
                               publish: '网站发布',
                               email: '询盘邮件',
                             }[job.kind]

@@ -107,7 +107,7 @@ export async function prRequest(
         ...(bearer ? { Authorization: `Bearer ${bearer}` } : { 'X-Web-Radar-Secret': secret }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(15000),
     });
     if (!r.ok) {
@@ -214,7 +214,7 @@ export async function signInAtPr(env: AppEnv, email: string, password: string): 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(15000),
     });
   } catch {

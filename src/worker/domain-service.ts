@@ -1,6 +1,7 @@
 import type {
   Asset,
   Draft,
+  DesignPage,
   Inquiry,
   Job,
   JobKind,
@@ -20,13 +21,34 @@ import {
   type PublishResult,
 } from './provider-contract';
 import { createProviders } from './providers';
+import { validatePageDesignInput } from './providers/image';
+import { privateAssetPreview } from './asset-preview';
 import { renderSite, renderSiteFiles } from '../templates';
 import { prImage, prService } from './product-radar';
 import { DomainStore } from './domain-store';
 import {
+  designPageIds,
+  designKey,
+  homeConfirmed,
+  designsConfirmed,
+  resetDesignForEdit,
+  staticSiteReady,
+} from '../shared/site-design';
+import {
+  briefConfirmed,
+  consultationSchema,
+  parseSiteBrief,
+  plannedPages,
+  resetConsultationForEdit,
+} from '../shared/site-brief';
+import { materializeSiteFiles, siteFilePath, validateSiteFiles } from './static-site';
+import { base64FromBytes, limitedBytes } from './providers/http';
+import {
   DomainError,
   assetReferences,
   assertPublishable,
+  assertSiteContentReady,
+  assertSiteIntakeReady,
   assertReadyForVideo,
   assertScriptConfirmed,
   canManage,
@@ -56,6 +78,7 @@ interface JobInput extends Record<string, unknown> {
   draft?: Draft;
   principal?: Principal;
   sceneId?: string;
+  pageId?: DesignPage;
   instructions?: string;
   releaseId?: string;
   restoreReleaseId?: string;
@@ -63,6 +86,7 @@ interface JobInput extends Record<string, unknown> {
   inquiryId?: string;
   offlineEpoch?: string;
   pollFailures?: number;
+  nextPollAt?: number;
   retryAt?: number;
   attemptId?: string;
   publishResult?: PublishResult;
@@ -249,8 +273,75 @@ export class DomainService {
     }
     if (command === 'uploads' && method === 'POST')
       return json({ asset: await this.upload(request, project) });
-    if (command === 'assets' && path[4] && (method === 'GET' || method === 'HEAD'))
-      return this.assetResponse(request, await this.projectAsset(project.id, path[4]));
+    if (command === 'confirm-brief' && method === 'POST') {
+      const body = await this.body(request);
+      expectedVersion(project, body.expectedVersion);
+      const consultation = project.draft.consultation;
+      requireCondition(
+        consultation?.brief && !consultation.jobId,
+        409,
+        'brief_incomplete',
+        '请先完成需求整理并等待当前任务结束。',
+      );
+      const brief = parseSiteBrief(consultation.brief, project.draft);
+      const before = structuredClone(project.draft);
+      project.draft.copy = structuredClone(brief.copy);
+      for (const product of project.draft.products)
+        product.translations = structuredClone(brief.productTranslations[product.id]);
+      project.draft.brandColor = brief.brandColor;
+      project.draft.direction = `${brief.visualDirection}\n${brief.layout}`;
+      consultation.brief = brief;
+      consultation.confirmed = true;
+      project.draft = validateDraft(project.draft);
+      assertSiteContentReady(project.draft);
+      resetDesignForEdit(before, project.draft);
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next });
+    }
+    if (command === 'confirm-design' && method === 'POST') {
+      const body = await this.body(request);
+      expectedVersion(project, body.expectedVersion);
+      const design = project.draft.siteDesign;
+      requireCondition(
+        body.target === 'home' || body.target === 'all',
+        400,
+        'invalid_design_target',
+        '请选择首页或整组设计稿。',
+      );
+      requireCondition(
+        design?.pages.home?.imageAssetId,
+        409,
+        'home_incomplete',
+        '请先生成首页设计稿。',
+      );
+      if (body.target === 'home') design.homeConfirmedAssetId = design.pages.home.imageAssetId;
+      else {
+        requireCondition(
+          designPageIds(design).every((id) => design.pages[id]?.imageAssetId),
+          409,
+          'designs_incomplete',
+          '请先生成页面清单中的全部设计稿。',
+        );
+        requireCondition(
+          homeConfirmed(design),
+          409,
+          'home_unconfirmed',
+          '请先确认当前首页设计稿。',
+        );
+        design.confirmedKey = designKey(design);
+      }
+      await this.validateAssets(project.id, project.draft);
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next });
+    }
+    if (command === 'assets' && path[4] && (method === 'GET' || method === 'HEAD')) {
+      const asset = await this.projectAsset(project.id, path[4]);
+      return new URL(request.url).searchParams.get('variant') === 'preview'
+        ? privateAssetPreview(request, this.env, asset)
+        : this.assetResponse(request, asset);
+    }
     if (command === 'import' && method === 'POST') {
       const b = await this.body(request);
       expectedVersion(project, b.expectedVersion);
@@ -393,13 +484,13 @@ export class DomainService {
       );
       const page = url.searchParams.get('page') ?? 'home';
       requireCondition(
-        ['home', 'catalog', 'detail', 'about', 'contact'].includes(page),
+        plannedPages(project.draft).includes(page as DesignPage),
         400,
         'invalid_page',
         '页面不存在。',
       );
       return json({
-        html: renderSite(project.draft, {
+        html: await this.renderPage(project.draft, {
           projectId: project.id,
           lang,
           page,
@@ -936,7 +1027,12 @@ export class DomainService {
     expectedVersion(project, body.expectedVersion);
     const kind = body.kind;
     requireCondition(
-      kind === 'script' || kind === 'copy' || kind === 'image' || kind === 'video',
+      kind === 'consultation' ||
+        kind === 'script' ||
+        kind === 'copy' ||
+        kind === 'image' ||
+        kind === 'video' ||
+        kind === 'site-build',
       400,
       'invalid_job_kind',
       '不支持的生成任务。',
@@ -955,8 +1051,161 @@ export class DomainService {
       'invalid_instructions',
       '修改要求不能超过 4000 字。',
     );
+    if (kind === 'consultation') {
+      assertSiteIntakeReady(project.draft);
+      await this.validateAssets(project.id, project.draft);
+      const previous = project.draft.consultation;
+      const active = previous?.jobId
+        ? await this.store.one<Job>('jobs', previous.jobId)
+        : undefined;
+      requireCondition(
+        !active || !['queued', 'running', 'unknown'].includes(active.status),
+        409,
+        'consultation_in_progress',
+        '正在理解资料，请等待当前问题生成。',
+      );
+      requireCondition(
+        body.restart === undefined || typeof body.restart === 'boolean',
+        400,
+        'invalid_restart',
+        '重新整理参数无效。',
+      );
+      const next =
+        body.restart === true || !previous
+          ? ({ revision: (previous?.revision ?? -1) + 1, answers: [] } as NonNullable<
+              Draft['consultation']
+            >)
+          : structuredClone(previous);
+      if (body.answer !== undefined || body.questionId !== undefined) {
+        requireCondition(
+          next.question && body.questionId === next.question.id,
+          409,
+          'question_changed',
+          '问题已更新，请刷新后回答当前问题。',
+        );
+        requireCondition(
+          typeof body.answer === 'string' &&
+            body.answer.trim().length > 0 &&
+            body.answer.length <= 4000,
+          400,
+          'invalid_answer',
+          '请填写不超过 4000 字的回答。',
+        );
+        requireCondition(
+          next.answers.length < 10,
+          409,
+          'consultation_limit',
+          '信息已收集完成，请整理当前需求。',
+        );
+        next.answers.push({
+          questionId: next.question.id,
+          question: next.question.prompt,
+          answer: body.answer.trim(),
+        });
+        next.question = undefined;
+      } else {
+        requireCondition(!next.question, 409, 'answer_required', '请先回答当前问题。');
+        requireCondition(
+          !next.brief || !!instructions.trim(),
+          409,
+          'brief_ready',
+          '需求已整理完成，请确认或填写修改要求。',
+        );
+      }
+      const before = structuredClone(project.draft);
+      if (next.brief && instructions.trim())
+        next.revisionContext = {
+          brief: structuredClone(next.brief),
+          instructions: instructions.trim(),
+        };
+      next.revision++;
+      next.confirmed = false;
+      next.jobId = undefined;
+      project.draft.consultation = next;
+      resetDesignForEdit(before, project.draft);
+    }
     let scenes: (Scene | undefined)[] = [undefined];
-    if (kind === 'image') {
+    let pages: DesignPage[] = [];
+    if (kind === 'image' && body.pageId !== undefined) {
+      requireCondition(
+        briefConfirmed(project.draft),
+        409,
+        'brief_unconfirmed',
+        '请先完成需求提问并确认需求与页面清单。',
+      );
+      assertSiteContentReady(project.draft);
+      const originalImages = new Set(
+        [
+          ...project.draft.products.map((p) => p.imageAssetId),
+          project.draft.company.logoAssetId,
+        ].filter(Boolean),
+      );
+      requireCondition(
+        originalImages.size <= 19,
+        400,
+        'design_references_limit',
+        '产品与 Logo 原图合计最多 19 张，以便同时参考已确认首页。请减少原图后再生成。',
+      );
+      requireCondition(
+        typeof body.pageId === 'string' &&
+          (body.pageId === 'remaining' ||
+            plannedPages(project.draft).includes(body.pageId as DesignPage)),
+        400,
+        'invalid_design_page',
+        '页面类型无效。',
+      );
+      const design = project.draft.siteDesign ?? { revision: 0, pages: {} };
+      design.pageIds = plannedPages(project.draft);
+      if (body.pageId !== 'home')
+        requireCondition(
+          homeConfirmed(design),
+          409,
+          'home_unconfirmed',
+          '请先生成并确认首页设计稿。',
+        );
+      pages =
+        body.pageId === 'remaining'
+          ? plannedPages(project.draft).filter(
+              (id) => id !== 'home' && !design.pages[id]?.imageAssetId,
+            )
+          : [body.pageId as DesignPage];
+      requireCondition(
+        pages.length,
+        409,
+        'designs_complete',
+        '全部设计稿均已生成，可以选择单页重做。',
+      );
+      for (const page of pages) {
+        try {
+          validatePageDesignInput(
+            project.draft,
+            page,
+            instructions,
+            originalImages.size + (page === 'home' ? 0 : 1),
+          );
+        } catch (error) {
+          if (error instanceof ProviderError) throw new DomainError(400, error.code, error.message);
+          throw error;
+        }
+        const id = design.pages[page]?.jobId;
+        const active = id ? await this.store.one<Job>('jobs', id) : undefined;
+        requireCondition(
+          !active || !['queued', 'running', 'unknown'].includes(active.status),
+          409,
+          'design_in_progress',
+          '该页面正在生成，请等待当前任务完成。',
+        );
+      }
+      if (pages.includes('home')) {
+        design.pages = {};
+        design.homeConfirmedAssetId = undefined;
+      }
+      design.confirmedKey = undefined;
+      design.build = undefined;
+      project.draft.siteDesign = design;
+      await this.validateAssets(project.id, project.draft);
+      scenes = pages.map(() => undefined);
+    } else if (kind === 'image') {
       assertScriptConfirmed(project.draft);
       if (body.sceneId !== undefined) {
         requireCondition(typeof body.sceneId === 'string', 400, 'invalid_scene', '分镜标识无效。');
@@ -975,8 +1224,26 @@ export class DomainService {
       assertReadyForVideo(project.draft);
       await this.validateAssets(project.id, project.draft);
     }
+    if (kind === 'site-build') {
+      assertSiteContentReady(project.draft);
+      requireCondition(
+        designsConfirmed(project.draft.siteDesign),
+        409,
+        'designs_unconfirmed',
+        '请先确认当前全部设计稿。',
+      );
+      const oldId = project.draft.siteDesign?.build?.jobId;
+      const old = oldId ? await this.store.one<Job>('jobs', oldId) : undefined;
+      requireCondition(
+        !old || !['queued', 'running', 'unknown'].includes(old.status),
+        409,
+        'build_in_progress',
+        '网站正在生成，请等待当前任务完成。',
+      );
+      await this.validateAssets(project.id, project.draft);
+    }
     const timestamp = now();
-    const jobs: Job[] = scenes.map((scene) => ({
+    const jobs: Job[] = scenes.map((scene, index) => ({
       id: crypto.randomUUID(),
       projectId: project.id,
       userId: principal.userId,
@@ -987,6 +1254,7 @@ export class DomainService {
         draft: structuredClone(project.draft),
         principal: structuredClone(principal),
         sceneId: scene?.id,
+        ...(pages[index] ? { pageId: pages[index] } : {}),
         instructions,
       },
       inputVersion: project.version,
@@ -996,6 +1264,20 @@ export class DomainService {
       testMode: testMode(this.env),
     }));
     const statements = jobs.map((j) => this.store.insert('jobs', j));
+    if (pages.length) {
+      pages.forEach((page, index) => {
+        project.draft.siteDesign!.pages[page] = { jobId: jobs[index].id };
+      });
+      statements.push(this.store.update('projects', this.changed(project)));
+    }
+    if (kind === 'consultation') {
+      project.draft.consultation!.jobId = jobs[0].id;
+      statements.push(this.store.update('projects', this.changed(project)));
+    }
+    if (kind === 'site-build') {
+      project.draft.siteDesign!.build = { jobId: jobs[0].id };
+      statements.push(this.store.update('projects', this.changed(project)));
+    }
     if (kind === 'image' || kind === 'video') {
       const quota = await this.store.quota(principal.userId),
         remaining =
@@ -1032,6 +1314,46 @@ export class DomainService {
       await this.wake();
       return job;
     }
+    if (job.kind === 'consultation') {
+      requireCondition(
+        project.draft.consultation?.jobId === job.id,
+        409,
+        'stale_consultation_job',
+        '资料已更新，请按当前资料重新整理需求。',
+      );
+    }
+    if (job.kind === 'site-build') {
+      requireCondition(
+        job.input.remoteFailed !== true && Date.now() - Date.parse(job.createdAt) < 90 * 60_000,
+        409,
+        'build_retry_new',
+        '该网站构建已结束，请在预览与发布中重新生成网站。',
+      );
+      requireCondition(
+        project.draft.siteDesign?.build?.jobId === job.id &&
+          designsConfirmed(project.draft.siteDesign),
+        409,
+        'stale_design_job',
+        '设计稿已经更新，请重新生成网站。',
+      );
+      job.status = 'queued';
+      job.error = undefined;
+      job.input.retryAt = 0;
+      job.input.pollFailures = 0;
+      job.updatedAt = now();
+      await this.wake();
+      await this.store.update('jobs', job).run();
+      return job;
+    }
+    if (job.kind === 'image' && typeof job.input.pageId === 'string') {
+      const page = job.input.pageId as DesignPage;
+      requireCondition(
+        project.draft.siteDesign?.pages[page]?.jobId === job.id,
+        409,
+        'stale_design_job',
+        '设计资料已更新，请从设计稿页面重新生成。',
+      );
+    }
     if ((job.status === 'unknown' || job.status === 'failed') && job.kind === 'publish') {
       requireCondition(
         job.attempts < 120,
@@ -1063,6 +1385,8 @@ export class DomainService {
       );
       job.status = 'running';
       job.error = undefined;
+      job.input.pollFailures = 0;
+      delete job.input.nextPollAt;
       await this.wake();
       await this.store.update('jobs', job).run();
       return job;
@@ -1250,10 +1574,16 @@ export class DomainService {
       'page_not_found',
       'Page not found',
     );
-    let page: 'home' | 'catalog' | 'detail' | 'about' | 'contact' = 'home',
+    let page: DesignPage = 'home',
       productId: string | undefined;
     if (path.length === 1 || path[1] === 'index.html') page = 'home';
     else if (path[1] === 'catalog') page = 'catalog';
+    else if (
+      release.draft.siteDesign &&
+      path[1] === 'products' &&
+      (!path[2] || path[2] === 'index.html')
+    )
+      page = 'catalog';
     else if (path[1] === 'products' && path[2]) {
       page = 'detail';
       productId = path[2];
@@ -1265,16 +1595,27 @@ export class DomainService {
       );
     } else if (path[1] === 'about') page = 'about';
     else if (path[1] === 'contact') page = 'contact';
+    else if (
+      path[1]?.startsWith('extra-') &&
+      plannedPages(release.draft).includes(path[1] as DesignPage) &&
+      (!path[2] || path[2] === 'index.html') &&
+      path.length <= 3
+    )
+      page = path[1] as DesignPage;
     else throw new DomainError(404, 'page_not_found', 'Page not found');
-    const html = renderSite(release.draft, {
-      projectId,
-      lang,
-      page,
-      productId,
-      assetUrl: (id: string) => `${this.origin()}/public/sites/${projectId}/assets/${id}`,
-      inquiryUrl: `/api/public/sites/${projectId}/inquiries`,
-      preview: false,
-    });
+    const html = await this.renderPage(
+      release.draft,
+      {
+        projectId,
+        lang,
+        page,
+        productId,
+        assetUrl: (id: string) => `${this.origin()}/public/sites/${projectId}/assets/${id}`,
+        inquiryUrl: `/api/public/sites/${projectId}/inquiries`,
+        preview: false,
+      },
+      `/public/sites/${projectId}`,
+    );
     return new Response(request.method === 'HEAD' ? null : html, {
       headers: {
         'Cache-Control': 'no-store',
@@ -1454,6 +1795,7 @@ export class DomainService {
       job.updatedAt = now();
       job.error = undefined;
       job.input.pollFailures = 0;
+      delete job.input.nextPollAt;
       job.input.reconciliation = {
         userId: principal.userId,
         at: now(),
@@ -1620,6 +1962,10 @@ export class DomainService {
     const { job, recovery } = selected;
     try {
       if (recovery && job.kind !== 'video') {
+        if (job.kind === 'site-build') {
+          await this.execute(job);
+          return;
+        }
         if (job.kind === 'publish' && job.input.publishResult) {
           await this.execute(job);
           return;
@@ -1682,7 +2028,8 @@ export class DomainService {
         times.push(
           Math.max(
             Date.now() + 100,
-            Date.parse(job.updatedAt) + (testMode(this.env) ? 100 : 10000),
+            Date.parse(job.updatedAt) + (testMode(this.env) ? 100 : 30_000),
+            Number(job.input.nextPollAt ?? 0),
           ),
         );
       if (job.status === 'queued' && (job.kind !== 'video' || !occupied))
@@ -1710,8 +2057,11 @@ export class DomainService {
           this.store.update('jobs', video),
           ...(video.status === 'failed' ? await this.store.settlement(video, false) : []),
         ]);
-      } else if (testMode(this.env) || Date.now() - Date.parse(video.updatedAt) >= 10000) {
-        await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 100 : 10000));
+      } else if (
+        Number(video.input.nextPollAt ?? 0) <= Date.now() &&
+        (testMode(this.env) || Date.now() - Date.parse(video.updatedAt) >= 30_000)
+      ) {
+        await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 100 : 30_000));
         return { job: video, recovery: false };
       }
     }
@@ -1745,7 +2095,9 @@ export class DomainService {
               ? 'resend'
               : job.kind === 'publish'
                 ? 'cloudflare-pages'
-                : 'text',
+                : job.kind === 'site-build'
+                  ? 'screenshot-to-code'
+                  : 'text',
         job.kind,
         'started',
         now(),
@@ -1783,6 +2135,62 @@ export class DomainService {
     // Tracking an already accepted upstream task is recovery, not a new authorized submission.
     if (job.kind !== 'email' && !(job.kind === 'video' && job.upstreamId))
       await this.verifyJobAccess(job);
+    if (job.kind === 'consultation') {
+      const draft = input.draft!;
+      const latest = await this.store.one<Project>('projects', job.projectId);
+      requireCondition(
+        latest?.draft.consultation?.jobId === job.id &&
+          latest.draft.consultation.revision === draft.consultation?.revision,
+        409,
+        'stale_consultation_job',
+        '资料已更新，旧需求任务已取消。',
+      );
+      const ids = [
+        ...new Set(
+          [...draft.products.map((p) => p.imageAssetId), draft.company.logoAssetId].filter(
+            (id): id is string => !!id,
+          ),
+        ),
+      ];
+      const refs: string[] = [];
+      for (const id of ids)
+        refs.push(await this.referenceUrl(await this.projectAsset(job.projectId, id)));
+      const result = await this.providers.consult(draft, refs, input.instructions ?? '');
+      let candidate: NonNullable<Draft['consultation']>;
+      try {
+        candidate = consultationSchema.parse({
+          ...draft.consultation,
+          jobId: undefined,
+          confirmed: false,
+          question:
+            'question' in result ? { ...result.question, id: crypto.randomUUID() } : undefined,
+          brief: 'brief' in result ? parseSiteBrief(result.brief, draft) : undefined,
+          revisionContext: 'brief' in result ? undefined : draft.consultation?.revisionContext,
+        });
+        if (candidate.answers.length >= 10 && candidate.question) throw new Error('question limit');
+        if (!candidate.question && !candidate.brief) throw new Error('missing result');
+      } catch {
+        throw new ProviderError(
+          'consultation_invalid_response',
+          '需求服务返回的内容不完整，请重试当前任务。',
+        );
+      }
+      await this.lock(async () => {
+        const p = await this.store.one<Project>('projects', job.projectId);
+        const statements: D1PreparedStatement[] = [];
+        if (
+          p?.draft.consultation?.jobId === job.id &&
+          p.draft.consultation.revision === draft.consultation?.revision
+        ) {
+          const before = structuredClone(p.draft);
+          p.draft.consultation = candidate;
+          resetDesignForEdit(before, p.draft);
+          statements.push(this.store.update('projects', this.changed(p)));
+        }
+        await this.succeed(job, statements);
+      });
+      return;
+    }
     if (job.kind === 'script') {
       const result = await this.providers.script(input.draft!);
       requireCondition(
@@ -1820,6 +2228,7 @@ export class DomainService {
         const p = await this.store.one<Project>('projects', job.projectId);
         const statements: D1PreparedStatement[] = [];
         if (p?.version === job.inputVersion) {
+          const before = structuredClone(p.draft);
           const { productTranslations, ...copy } = result;
           p.draft.copy = copy;
           for (const product of p.draft.products) {
@@ -1827,6 +2236,8 @@ export class DomainService {
             if (t && typeof t === 'object') product.translations = t as typeof product.translations;
           }
           p.draft = validateDraft(p.draft);
+          resetConsultationForEdit(before, p.draft);
+          resetDesignForEdit(before, p.draft);
           statements.push(this.store.update('projects', this.changed(p)));
         }
         job.input.result = result;
@@ -1835,6 +2246,48 @@ export class DomainService {
       return;
     }
     if (job.kind === 'image') {
+      if (input.pageId) {
+        const draft = input.draft!;
+        const latest = await this.store.one<Project>('projects', job.projectId);
+        requireCondition(
+          latest?.draft.siteDesign?.pages[input.pageId]?.jobId === job.id &&
+            latest.draft.siteDesign.revision === draft.siteDesign?.revision,
+          409,
+          'stale_design_job',
+          '资料或设计已更新，旧图片任务已取消，预留额度已退回。',
+        );
+        const ids = [
+          ...new Set(
+            [
+              ...(input.pageId !== 'home' ? [draft.siteDesign?.pages.home?.imageAssetId] : []),
+              draft.products.find((p) => p.id === draft.primaryProductId)?.imageAssetId,
+              ...draft.products.map((p) => p.imageAssetId),
+              draft.company.logoAssetId,
+            ].filter((id): id is string => !!id),
+          ),
+        ];
+        // These assets already belong to this project. Read R2 directly so the alarm
+        // does not re-enter its own Coordinator through signed HTTP reference URLs.
+        const refs: Blob[] = [];
+        for (const id of ids) {
+          const asset = await this.projectAsset(job.projectId, id);
+          const object = await this.env.MEDIA.get(asset.key);
+          requireCondition(object, 404, 'asset_not_found', '参考图片不存在，请重新上传。');
+          const bytes = await limitedBytes(new Response(object.body), 20 * 1024 * 1024);
+          refs.push(new Blob([bytes as BlobPart], { type: asset.contentType }));
+        }
+        const media = await this.providers.designImage(
+          draft,
+          input.pageId,
+          input.instructions ?? '',
+          refs,
+        );
+        await this.finishMedia(
+          job,
+          await this.saveAsset(job.projectId, media, 'generated', `result-${job.id}`),
+        );
+        return;
+      }
       const draft = input.draft!,
         scene = draft.scenes.find((s) => s.id === input.sceneId);
       requireCondition(scene, 400, 'scene_not_found', '任务分镜不存在。');
@@ -1887,11 +2340,21 @@ export class DomainService {
         result = await this.providers.pollVideo(job.upstreamId);
       } catch (error) {
         await this.lock(async () => {
-          const failures = Number(job.input.pollFailures ?? 0) + 1;
+          const rateLimited = error instanceof ProviderError && error.code === 'agnes_http_429';
+          const failures = Number(job.input.pollFailures ?? 0) + (rateLimited ? 0 : 1);
           job.input.pollFailures = failures;
-          job.error = '视频状态查询暂时失败，已保留原任务编号。';
+          job.input.nextPollAt =
+            Date.now() +
+            Math.max(60_000, error instanceof ProviderError ? (error.retryAfterMs ?? 0) : 0);
+          job.error = rateLimited
+            ? '视频服务查询限流，稍后自动继续查询原任务。'
+            : `${error instanceof ProviderError ? error.message : '视频状态查询暂时失败'}，已保留原任务编号。`;
           job.updatedAt = now();
-          if (failures >= 12) job.status = 'unknown';
+          if (
+            (!rateLimited && failures >= 12) ||
+            Date.now() - Date.parse(job.createdAt) > 24 * 3600000
+          )
+            job.status = 'unknown';
           await this.store.update('jobs', job).run();
         });
         return;
@@ -1900,6 +2363,8 @@ export class DomainService {
         await this.lock(async () => {
           job.updatedAt = now();
           job.input.pollFailures = 0;
+          delete job.input.nextPollAt;
+          job.error = undefined;
           if (Date.now() - Date.parse(job.createdAt) > 24 * 3600000) {
             job.status = 'unknown';
             job.error = '视频任务已超过 24 小时，需核对上游状态。';
@@ -1937,6 +2402,10 @@ export class DomainService {
       }
       return;
     }
+    if (job.kind === 'site-build') {
+      await this.executeSiteBuild(job);
+      return;
+    }
     if (job.kind === 'publish') {
       const release = await this.store.one<Release>('releases', input.releaseId!);
       requireCondition(release, 404, 'release_not_found', '发布快照不存在。');
@@ -1962,9 +2431,9 @@ export class DomainService {
         inquiryUrl: `/api/public/sites/${job.projectId}/inquiries`,
         publicBaseUrl: `${this.origin()}/public/sites/${job.projectId}`,
       };
-      const files = renderSiteFiles(release.draft, renderOptions);
+      const files = await this.renderFiles(release.draft, renderOptions);
       const previousPublication = previous
-        ? { releaseId: previous.id, files: renderSiteFiles(previous.draft, renderOptions) }
+        ? { releaseId: previous.id, files: await this.renderFiles(previous.draft, renderOptions) }
         : undefined;
       let published = input.publishResult;
       if (!published) {
@@ -2077,7 +2546,16 @@ export class DomainService {
       if (!(await this.store.one<Asset>('assets', asset.id)))
         statements.push(this.store.insert('assets', asset));
       if (p && input.draft) {
-        if (job.kind === 'image') {
+        if (job.kind === 'image' && input.pageId) {
+          const design = p.draft.siteDesign;
+          if (
+            design?.pages[input.pageId]?.jobId === job.id &&
+            design.revision === input.draft.siteDesign?.revision
+          ) {
+            design.pages[input.pageId]!.imageAssetId = asset.id;
+            statements.push(this.store.update('projects', this.changed(p)));
+          }
+        } else if (job.kind === 'image') {
           const scene = p.draft.scenes.find((s) => s.id === input.sceneId),
             before = input.draft.scenes.find((s) => s.id === input.sceneId);
           if (
@@ -2107,6 +2585,164 @@ export class DomainService {
       }
       job.resultAssetId = asset.id;
       await this.succeed(job, statements);
+    });
+  }
+  private async storedSiteFiles(draft: Draft): Promise<Record<string, string>> {
+    requireCondition(
+      staticSiteReady(draft),
+      409,
+      'site_not_built',
+      '请先确认设计稿并生成当前版本的网站。',
+    );
+    const build = draft.siteDesign!.build!;
+    const object = await this.env.MEDIA.get(build.artifactKey!);
+    requireCondition(object, 503, 'site_artifact_missing', '网站文件暂时不可用，请重新生成网站。');
+    const files: unknown = await new Response(object.body).json();
+    validateSiteFiles(files, draft);
+    return files;
+  }
+  private async renderFiles(
+    draft: Draft,
+    options: Parameters<typeof renderSiteFiles>[1],
+  ): Promise<Record<string, string>> {
+    if (!draft.siteDesign) return renderSiteFiles(draft, options);
+    return materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
+      assetUrl: options.assetUrl,
+      inquiryUrl: options.inquiryUrl,
+    });
+  }
+  private async renderPage(
+    draft: Draft,
+    options: Parameters<typeof renderSite>[1],
+    basePath?: string,
+  ): Promise<string> {
+    if (!draft.siteDesign) return renderSite(draft, options);
+    const files = materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
+      assetUrl: options.assetUrl,
+      inquiryUrl: new URL(options.inquiryUrl, this.origin()).href,
+      basePath,
+    });
+    const path = siteFilePath(
+      options.lang ?? 'en',
+      options.page ?? 'home',
+      options.productId ?? draft.primaryProductId,
+    );
+    requireCondition(files[path], 404, 'page_not_found', '页面不存在。');
+    return files[path];
+  }
+  private async executeSiteBuild(job: Job): Promise<void> {
+    const draft = (job.input as JobInput).draft!;
+    const current = await this.store.one<Project>('projects', job.projectId);
+    requireCondition(
+      current?.draft.siteDesign?.build?.jobId === job.id &&
+        designsConfirmed(current.draft.siteDesign),
+      409,
+      'stale_design_job',
+      '设计资料已更新，请按当前版本重新生成网站。',
+    );
+    requireCondition(
+      Date.now() - Date.parse(job.createdAt) < 90 * 60_000,
+      504,
+      'site_build_timeout',
+      '网站构建超过等待时限，请检查生成服务后重新构建。',
+    );
+    let buildInput: import('./provider-contract').SiteBuildInput | undefined;
+    if (!job.input.buildSubmitted) {
+      const designImages = {} as Record<DesignPage, string>;
+      let bytes = 0;
+      const readReference = async (assetId: string) => {
+        const asset = await this.projectAsset(job.projectId, assetId);
+        bytes += asset.size;
+        requireCondition(
+          bytes <= 45 * 1024 * 1024,
+          413,
+          'design_images_large',
+          '设计稿与参考原图总大小超限，请使用较小的图片。',
+        );
+        const object = await this.env.MEDIA.get(asset.key);
+        requireCondition(object, 404, 'design_image_missing', '设计稿图片不存在，请重新生成。');
+        return `data:${asset.contentType};base64,${base64FromBytes(new Uint8Array(await new Response(object.body).arrayBuffer()))}`;
+      };
+      for (const page of designPageIds(draft.siteDesign))
+        designImages[page] = await readReference(draft.siteDesign!.pages[page]!.imageAssetId!);
+      const referenceAssets: Record<string, string> = {};
+      for (const id of new Set(
+        [
+          ...draft.products.map((product) => product.imageAssetId),
+          draft.company.logoAssetId,
+        ].filter(Boolean),
+      ))
+        referenceAssets[id!] = await readReference(id!);
+      buildInput = { draft, designImages, referenceAssets };
+    }
+    let result: import('./provider-contract').SiteBuildResult;
+    try {
+      result = await this.providers.siteBuild(job.id, buildInput);
+    } catch (error) {
+      // Both submit and lookup use the same durable id; retry never creates another paid build.
+      if (
+        error instanceof ProviderError &&
+        !['site_builder_unconfigured', 'site_builder_url', 'site_builder_response'].includes(
+          error.code,
+        )
+      ) {
+        const failures = Number(job.input.pollFailures ?? 0) + 1;
+        job.input.pollFailures = failures;
+        if (failures < 5) {
+          await this.deferSiteBuild(job, '网站服务暂时无法连接，正在查询原构建任务。');
+          return;
+        }
+      }
+      throw error;
+    }
+    job.input.buildSubmitted = true;
+    job.input.pollFailures = 0;
+    if (result.state === 'failed') {
+      job.input.remoteFailed = true;
+      throw new ProviderError(
+        'site_build_failed',
+        result.message || '网站生成失败，请查看设计稿后重新构建。',
+      );
+    }
+    if (result.state === 'pending') {
+      await this.deferSiteBuild(job, result.progress || '正在根据设计稿生成静态网页。');
+      return;
+    }
+    validateSiteFiles(result.files, draft);
+    // Validate the expanded publication, including URLs/CSP, against the actual Pages limit.
+    materializeSiteFiles(result.files, draft, {
+      assetUrl: (id) => `${this.origin()}/public/sites/${job.projectId}/assets/${id}`,
+      inquiryUrl: `/api/public/sites/${job.projectId}/inquiries`,
+    });
+    const artifactKey = `projects/${job.projectId}/sites/${job.id}.json`;
+    await this.env.MEDIA.put(artifactKey, JSON.stringify(result.files), {
+      httpMetadata: { contentType: 'application/json' },
+    });
+    await this.lock(async () => {
+      const p = await this.store.one<Project>('projects', job.projectId);
+      const statements: D1PreparedStatement[] = [];
+      if (p?.draft.siteDesign?.build?.jobId === job.id && designsConfirmed(p.draft.siteDesign)) {
+        p.draft.siteDesign.build.artifactKey = artifactKey;
+        statements.push(this.store.update('projects', this.changed(p)));
+      }
+      job.input.progress = '静态网站已生成，可以预览各个页面。';
+      await this.succeed(job, statements);
+    });
+  }
+  private async deferSiteBuild(job: Job, progress: string): Promise<void> {
+    await this.lock(async () => {
+      job.status = 'queued';
+      job.updatedAt = now();
+      job.input.progress = progress;
+      job.input.retryAt = Date.now() + (testMode(this.env) ? 0 : 15_000);
+      const statements = [this.store.update('jobs', job)];
+      if (job.input.attemptId)
+        statements.push(
+          this.env.DB.prepare(
+            'UPDATE provider_attempts SET outcome=?,completed_at=? WHERE id=?',
+          ).bind('pending', now(), job.input.attemptId),
+        );
+      await this.store.batch(statements);
     });
   }
   private async succeed(job: Job, statements: D1PreparedStatement[]): Promise<void> {

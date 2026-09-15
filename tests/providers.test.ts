@@ -1,6 +1,7 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import type { Draft, Inquiry } from '../src/shared/model';
 import { createProviders } from '../src/worker/providers';
+import { requestJson, downloadMedia } from '../src/worker/providers/http';
 import { createPagesGateway } from '../src/worker/providers/pages';
 const draft = (): Draft => ({
   company: {
@@ -62,7 +63,7 @@ describe('provider boundaries', () => {
     let body: any;
     vi.stubGlobal('fetch', async (_url: unknown, init: RequestInit) => {
       body = JSON.parse(init.body as string);
-      expect(init.redirect).toBe('error');
+      expect(init.redirect).toBe('manual');
       return Response.json({ video_id: 'video_known', task_id: 'wrong_id' });
     });
     const p = createProviders(agnes);
@@ -158,7 +159,7 @@ describe('provider boundaries', () => {
     let sent: any;
     vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
       expect(url).toBe('https://api.resend.com/emails');
-      expect(init.redirect).toBe('error');
+      expect(init.redirect).toBe('manual');
       expect(init.headers).toMatchObject({ 'Idempotency-Key': 'inq-i' });
       sent = JSON.parse(init.body as string);
       return Response.json({ id: 'mail' });
@@ -189,7 +190,7 @@ describe('Pages alias gateway', () => {
     ).default;
     const spy = vi.fn(async (url: string, init: RequestInit) => {
       expect(url).toBe('https://wr.example/public/sites/p/gate/release-one');
-      expect(init.redirect).toBe('error');
+      expect(init.redirect).toBe('manual');
       return new Response('Site offline', { status: 503 });
     });
     vi.stubGlobal('fetch', spy);
@@ -211,27 +212,58 @@ describe('Pages alias gateway', () => {
   });
 });
 describe('resumable upstream operations', () => {
-  it('queries the persisted Agnes video ID without resubmitting or forwarding credentials to media', async () => {
-    const calls: string[] = [];
-    vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
-      calls.push(url);
-      expect(init.redirect).toBe('error');
-      if (url.startsWith('https://apihub.agnes-ai.com/agnesapi?')) {
-        expect(new URL(url).searchParams.get('video_id')).toBe('persisted/video');
-        return Response.json({
-          status: 'completed',
-          metadata: { url: 'https://platform-outputs.agnes-ai.space/final.mp4' },
+  it.each(['url', 'metadata.url'])(
+    'reads completed Agnes %s without resubmitting or forwarding credentials to media',
+    async (field) => {
+      const calls: string[] = [];
+      vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
+        calls.push(url);
+        expect(init.redirect).toBe('manual');
+        if (url.startsWith('https://apihub.agnes-ai.com/agnesapi?')) {
+          expect(new URL(url).searchParams.get('video_id')).toBe('persisted/video');
+          return Response.json({
+            status: 'completed',
+            ...(field === 'url'
+              ? { url: 'https://platform-outputs.agnes-ai.space/final.mp4' }
+              : { metadata: { url: 'https://platform-outputs.agnes-ai.space/final.mp4' } }),
+          });
+        }
+        expect(init.headers).toBeUndefined();
+        return new Response(new Uint8Array([0, 0, 0, 24, 102, 116, 121, 112]), {
+          headers: { 'content-type': 'video/mp4' },
         });
-      }
-      expect(init.headers).toBeUndefined();
-      return new Response(new Uint8Array([0, 0, 0, 24, 102, 116, 121, 112]), {
-        headers: { 'content-type': 'video/mp4' },
       });
+      const result = await createProviders(agnes).pollVideo('persisted/video');
+      expect(result.state).toBe('succeeded');
+      expect(result.media?.testMode).toBe(false);
+      expect(calls.some((u) => u.endsWith('/v1/videos'))).toBe(false);
+    },
+  );
+  it('retains status-query Retry-After without accepting or resubmitting a video', async () => {
+    const fetch = vi.fn(
+      async () =>
+        new Response('rate limited', {
+          status: 429,
+          headers: { 'Retry-After': '120' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetch);
+    await expect(createProviders(agnes).pollVideo('persisted-video')).rejects.toMatchObject({
+      code: 'agnes_http_429',
+      retryAfterMs: 120_000,
+      uncertain: false,
     });
-    const result = await createProviders(agnes).pollVideo('persisted/video');
-    expect(result.state).toBe('succeeded');
-    expect(result.media?.testMode).toBe(false);
-    expect(calls.some((u) => u.endsWith('/v1/videos'))).toBe(false);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it('rejects an untrusted top-level video URL before downloading', async () => {
+    const fetch = vi.fn(async () =>
+      Response.json({ status: 'completed', url: 'http://127.0.0.1/private' }),
+    );
+    vi.stubGlobal('fetch', fetch);
+    await expect(createProviders(agnes).pollVideo('persisted-video')).rejects.toMatchObject({
+      code: 'unsafe_media_url',
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
   it('does not classify a timed out video acceptance as safe to retry', async () => {
     vi.stubGlobal('fetch', async () => {
@@ -320,6 +352,7 @@ describe('Pages direct upload transaction', () => {
     pending?: boolean;
     failOpen?: boolean;
     existingRelease?: boolean;
+    existingReleasePage?: number;
   }) {
     const projectId = 'project-one';
     const name =
@@ -336,7 +369,7 @@ describe('Pages direct upload transaction', () => {
     const calls: string[] = [];
     vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
       calls.push(url);
-      expect(init.redirect).toBe('error');
+      expect(init.redirect).toBe('manual');
       let result: any;
       if (url === root)
         result = {
@@ -351,20 +384,33 @@ describe('Pages direct upload transaction', () => {
             ]),
           ),
         };
-      else if (url.includes('/deployments?'))
-        result = handlers?.existingRelease
-          ? [
-              {
-                id: 'accepted',
-                deployment_trigger: {
-                  metadata: { commit_message: 'Web Radar release release-one' },
-                },
-                latest_stage: { name: 'deploy', status: 'success' },
-                uses_functions: true,
-              },
-            ]
-          : [];
-      else if (url.endsWith('/upload-token')) result = { jwt: 'upload-jwt' };
+      else if (url.includes('/deployments?')) {
+        const params = new URL(url).searchParams;
+        if (Number(params.get('per_page')) > 25)
+          return Response.json(
+            {
+              success: false,
+              errors: [{ code: 8000024, message: 'Invalid list options provided.' }],
+            },
+            { status: 400 },
+          );
+        const page = Number(params.get('page') || 1);
+        result =
+          page < (handlers?.existingReleasePage ?? 1)
+            ? Array.from({ length: 25 }, (_, i) => ({ id: `other-${page}-${i}` }))
+            : handlers?.existingRelease
+              ? [
+                  {
+                    id: 'accepted',
+                    deployment_trigger: {
+                      metadata: { commit_message: 'Web Radar release release-one' },
+                    },
+                    latest_stage: { name: 'deploy', status: 'success' },
+                    uses_functions: true,
+                  },
+                ]
+              : [];
+      } else if (url.endsWith('/upload-token')) result = { jwt: 'upload-jwt' };
       else if (url.endsWith('/pages/assets/upload')) {
         expect(init.headers).toMatchObject({ Authorization: 'Bearer upload-jwt' });
         uploads.push(JSON.parse(init.body as string));
@@ -408,6 +454,20 @@ describe('Pages direct upload transaction', () => {
       include: ['/*'],
       exclude: [],
     });
+  });
+  it('finds an accepted release on a later API page without creating another deployment', async () => {
+    const ctx = await setup({ existingRelease: true, existingReleasePage: 3 });
+    const result = await createProviders(env).publish(
+      ctx.projectId,
+      'release-one',
+      { 'index.html': 'approved' },
+      undefined,
+      ctx.target,
+    );
+    expect(result.deploymentId).toBe('accepted');
+    expect(ctx.calls.filter((url) => url.includes('/deployments?'))).toHaveLength(3);
+    expect(ctx.forms).toHaveLength(0);
+    expect(ctx.uploads).toHaveLength(0);
   });
   it('refuses a fail-open project before uploading any artifact', async () => {
     const ctx = await setup({ failOpen: true });
@@ -472,4 +532,46 @@ describe('Pages direct upload transaction', () => {
     expect(ctx.uploads).toHaveLength(0);
     expect(ctx.forms).toHaveLength(0);
   });
+});
+
+describe('provider redirect boundary', () => {
+  it.each([301, 302, 303, 307, 308])(
+    'rejects HTTP %s without following to another origin',
+    async (status) => {
+      const upstream = vi.fn(
+        async (_url: unknown, _init?: RequestInit) =>
+          new Response(null, {
+            status,
+            headers: {
+              Location: 'https://other.example.test/collect',
+              'Content-Type': 'image/png',
+            },
+          }),
+      );
+      vi.stubGlobal('fetch', upstream);
+      await expect(
+        requestJson(
+          'https://provider.example.test/generate',
+          {
+            method: 'POST',
+            headers: { Authorization: 'Bearer test-key' },
+            body: '{}',
+          },
+          { mutation: true },
+        ),
+      ).rejects.toMatchObject({ uncertain: true });
+      expect(upstream).toHaveBeenCalledTimes(1);
+      expect(upstream.mock.calls[0][1]?.redirect).toBe('manual');
+      upstream.mockClear();
+      await expect(
+        downloadMedia(
+          { PROVIDER_MEDIA_ORIGINS: 'https://media.example.test' },
+          'https://media.example.test/image',
+          'image',
+        ),
+      ).rejects.toMatchObject({ code: 'media_invalid_response' });
+      expect(upstream).toHaveBeenCalledTimes(1);
+      expect(upstream.mock.calls[0][1]?.redirect).toBe('manual');
+    },
+  );
 });

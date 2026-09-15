@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "wrangler dev --port 8788",
     "dev:ui": "vite --host 127.0.0.1",
+    "dev:builder": "node scripts/start-site-builder.mjs",
     "dev:test": "wrangler dev --env test --port 8788",
     "build": "vite build",
     "typecheck": "tsc --noEmit",

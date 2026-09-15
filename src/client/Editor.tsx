@@ -3,6 +3,7 @@ import type {
   Asset,
   Company,
   Draft,
+  DesignPage,
   Inquiry,
   Job,
   Language,
@@ -12,8 +13,6 @@ import type {
   Project,
   ProjectDetail,
   ServiceStatus,
-  SiteCopy,
-  TemplateId,
 } from '../shared/model';
 import { api, ApiError, errorMessage, post, put, requestId, PendingOperations } from './api';
 import {
@@ -31,6 +30,16 @@ import {
 } from './components';
 import { mergeVersions } from './merge';
 import { SitePreview } from './Preview';
+import { PageDesign } from './PageDesign';
+import { BriefStep, ConsultationStep } from './GuidedSteps';
+import {
+  designLabels,
+  designsConfirmed,
+  resetDesignForEdit,
+  staticSiteReady,
+} from '../shared/site-design';
+import { briefConfirmed, plannedPages, resetConsultationForEdit } from '../shared/site-brief';
+import { draftChecklist, nextDraftStep, workflowSteps } from './workflow';
 
 const languageNames: Record<Language, string> = {
   en: 'English · 英语',
@@ -40,20 +49,15 @@ const languageNames: Record<Language, string> = {
   pt: 'Português · 葡萄牙语',
   it: 'Italiano · 意大利语',
 };
-const tabs = [
-  ['basics', '资料与产品', 'folder'],
-  ['style', '网站风格', 'grid'],
-  ['video', 'Hero 视频', 'play'],
-  ['content', '内容编辑', 'edit'],
-  ['publish', '预览与发布', 'globe'],
-  ['inquiries', '客户询盘', 'mail'],
-] as const;
+const tabs = [...workflowSteps, ['inquiries', '客户询盘', 'mail']] as const;
 type Tab = (typeof tabs)[number][0];
 type SourceChange = { productId: string; before: ProductSnapshot; after: ProductSnapshot };
 const jobKinds: Record<string, string> = {
+  consultation: '需求沟通',
   script: '脚本生成',
   copy: '文案与译文',
-  image: '分镜图片',
+  image: '图片生成',
+  'site-build': '静态网站生成',
   video: '完整视频',
   publish: '网站发布',
   email: '询盘邮件',
@@ -64,12 +68,14 @@ export function Editor({
   principal,
   services,
   testMode,
+  embedded = false,
   onBack,
 }: {
   projectId: string;
   principal: Principal;
   services: ServiceStatus[];
   testMode: boolean;
+  embedded?: boolean;
   onBack: () => void;
 }) {
   const [detail, setDetail] = useState<ProjectDetail | null>(null),
@@ -90,7 +96,6 @@ export function Editor({
   const [sourceChanges, setSourceChanges] = useState<SourceChange[] | null>(null),
     [applyIds, setApplyIds] = useState<string[]>([]),
     [previewOpen, setPreviewOpen] = useState(false);
-  const [videoTab, setVideoTab] = useState<'generate' | 'upload'>('generate');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [releaseAction, setReleaseAction] = useState<'publish' | 'restore' | 'offline' | null>(
     null,
@@ -130,6 +135,7 @@ export function Editor({
         if (active) {
           setDetail(next);
           install(next.project);
+          setTab(nextDraftStep(next.project.draft));
         }
       })
       .catch((error) => {
@@ -149,6 +155,9 @@ export function Editor({
     return () => clearInterval(timer);
   }, [refresh]);
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [tab]);
+  useEffect(() => {
     const prevent = (event: BeforeUnloadEvent) => {
       if (dirtyRef.current) {
         event.preventDefault();
@@ -162,6 +171,8 @@ export function Editor({
     setProject((current) => {
       if (!current) return current;
       const next = { ...current, draft: updater(current.draft) };
+      resetConsultationForEdit(baseRef.current?.draft ?? current.draft, next.draft);
+      resetDesignForEdit(baseRef.current?.draft ?? current.draft, next.draft);
       projectRef.current = next;
       const changed =
         JSON.stringify({ name: next.name, draft: next.draft }) !==
@@ -260,11 +271,11 @@ export function Editor({
     await refresh();
   }
   async function generate(
-    kind: 'script' | 'copy' | 'image' | 'video',
-    sceneId?: string,
+    kind: 'image' | 'site-build',
+    pageId?: DesignPage | 'remaining',
     instructions?: string,
   ) {
-    const key = `job:${kind}:${sceneId || 'all'}`;
+    const key = `job:${kind}:${pageId || 'all'}`;
     await action(
       key,
       async () => {
@@ -275,7 +286,7 @@ export function Editor({
           actionRequests.current.body(key, {
             expectedVersion: saved.version,
             kind,
-            ...(sceneId ? { sceneId } : {}),
+            ...(pageId ? { pageId } : {}),
             ...(instructions ? { instructions } : {}),
           }),
         );
@@ -283,6 +294,34 @@ export function Editor({
         await refresh();
       },
       '任务已提交。你可以离开页面，稍后回来查看进度。',
+    );
+  }
+  async function consult(
+    input: {
+      questionId?: string;
+      answer?: string;
+      instructions?: string;
+      restart?: boolean;
+    } = {},
+  ) {
+    const key = 'job:consultation';
+    await action(
+      key,
+      async () => {
+        const saved = await save();
+        if (dirtyRef.current) throw new Error('保存期间又有新的修改，请先保存当前内容再继续。');
+        await post(
+          `${endpoint}/jobs`,
+          actionRequests.current.body(key, {
+            expectedVersion: saved.version,
+            kind: 'consultation',
+            ...input,
+          }),
+        );
+        actionRequests.current.complete(key);
+        await refresh();
+      },
+      '已提交需求沟通任务，进度会保存在项目中。',
     );
   }
   async function upload(file: File, apply: (asset: Asset) => void) {
@@ -438,71 +477,37 @@ export function Editor({
       </div>
     );
   const draft = project.draft;
-  const base = baseRef.current?.draft;
-  const unchangedScriptInputs =
-    !!base &&
-    draft.script === base.script &&
-    draft.direction === base.direction &&
-    draft.duration === base.duration &&
-    draft.template === base.template &&
-    draft.primaryProductId === base.primaryProductId &&
-    JSON.stringify(draft.products) === JSON.stringify(base.products);
-  const scriptConfirmed =
-    !!draft.script.trim() &&
-    draft.scriptConfirmedRevision === draft.scriptRevision &&
-    unchangedScriptInputs;
-  const storyboardConfirmed =
-    draft.scenes.length >= (draft.duration === 8 ? 3 : 4) &&
-    draft.scenes.every((scene) => scene.imageAssetId) &&
-    draft.storyboardConfirmedRevision === draft.storyboardRevision &&
-    scriptConfirmed &&
-    JSON.stringify(draft.scenes) === JSON.stringify(base?.scenes);
   const activeJobs = detail.jobs.filter((job) =>
     ['queued', 'running', 'unknown'].includes(job.status),
   );
   const availableImages = Math.max(
-      0,
-      detail.quota.imageLimit - detail.quota.imageUsed - detail.quota.imageReserved,
-    ),
-    availableVideos = Math.max(
-      0,
-      detail.quota.videoLimit - detail.quota.videoUsed - detail.quota.videoReserved,
-    );
-  const publicationMissing = [
-    !draft.company.name.trim() && '公司名称',
-    !draft.company.email.trim() && '联系邮箱',
-    !draft.company.contactName.trim() && '联系人英文名',
-    !draft.country.trim() && '销售国家 / 市场',
-    !draft.products.length && '至少一个产品',
-    draft.products.some((product) => !product.name.trim() || !product.imageAssetId) &&
-      '所有产品的名称与图片',
-    !draft.primaryProductId && '主产品',
-    !draft.heroAssetId && 'Hero 视频',
-    !draft.heroAccepted && '视频选用确认',
-    ...draft.languages
-      .filter(
-        (lang) =>
-          !draft.copy[lang]?.headline?.trim() ||
-          !draft.copy[lang]?.subtitle?.trim() ||
-          !draft.copy[lang]?.cta?.trim() ||
-          !draft.copy[lang]?.about?.trim(),
-      )
-      .map((lang) => `${languageNames[lang]}网站文案`),
-  ].filter(Boolean) as string[];
+    0,
+    detail.quota.imageLimit - detail.quota.imageUsed - detail.quota.imageReserved,
+  );
+  const siteReady = staticSiteReady(draft);
+  const designsReady = designsConfirmed(draft.siteDesign);
+  const buildPending = activeJobs.some((job) => job.kind === 'site-build');
+  const builderConfigured = services.some(
+    (service) => service.name === 'site-builder' && service.configured,
+  );
+  const checklist = draftChecklist(draft);
+  const basicsReady = checklist
+    .filter((item) => item.step === 'basics')
+    .every((item) => item.ready);
+  const consultationActive = activeJobs.some((job) => job.kind === 'consultation');
+  const briefReady = briefConfirmed(draft);
+  const pagePlan = plannedPages(draft);
+  const publicationMissing = checklist.filter((item) => !item.ready).map((item) => item.label);
   const stepDone: Record<Tab, boolean> = {
-    basics:
-      !!draft.company.name &&
-      !!draft.company.email &&
-      !!draft.company.contactName &&
-      draft.products.length > 0,
-    style: !!draft.template,
-    video: !!draft.heroAccepted,
-    content: !!draft.copy.en?.headline,
+    basics: basicsReady,
+    consultation: !!draft.consultation?.brief,
+    brief: briefReady,
+    design: designsReady,
     publish: !!project.publishedReleaseId && !project.offline,
     inquiries: false,
   };
   return (
-    <div className="editor-shell">
+    <div className={`editor-shell ${embedded ? 'is-embedded' : ''}`}>
       <header className="editor-topbar">
         <div className="editor-brand">
           <Button
@@ -530,10 +535,15 @@ export function Editor({
             <i />
             {dirty ? '有未保存修改' : `已保存 · V${project.version}`}
           </span>
-          <Button onClick={saveClick} busy={busy === 'save'} disabled={!dirty || !!busy}>
+          <Button
+            kind="primary"
+            onClick={saveClick}
+            busy={busy === 'save'}
+            disabled={!dirty || !!busy}
+          >
             保存草稿
           </Button>
-          <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
+          <Button onClick={openPreview} busy={busy === 'preview'} disabled={!!busy || !siteReady}>
             <Icon name="eye" />
             整站预览
           </Button>
@@ -541,14 +551,13 @@ export function Editor({
       </header>
       <div className="editor-body">
         <aside className="editor-sidebar">
-          <div className="editor-sidebar-caption">
-            WEBSITE WORKSPACE<span>搭建你的网站</span>
-          </div>
+          <div className="editor-sidebar-caption">网站搭建</div>
           <nav aria-label="网站编辑步骤">
-            {tabs.map(([id, label, icon], index) => (
+            {workflowSteps.map(([id, label, icon], index) => (
               <button
                 key={id}
                 className={tab === id ? 'active' : ''}
+                aria-current={tab === id ? 'step' : undefined}
                 onClick={() => {
                   setTab(id);
                   setError('');
@@ -567,22 +576,31 @@ export function Editor({
               </button>
             ))}
           </nav>
+          <nav className="editor-management" aria-label="网站管理">
+            <button
+              className={tab === 'inquiries' ? 'active' : ''}
+              aria-current={tab === 'inquiries' ? 'page' : undefined}
+              onClick={() => {
+                setTab('inquiries');
+                setError('');
+                setNotice('');
+              }}
+            >
+              <Icon name="mail" size={16} />
+              <span>客户询盘</span>
+            </button>
+          </nav>
           <div className="editor-sidebar-bottom">
             <div className="quota-card">
               <div>
                 <Icon name="spark" />
-                <strong>你的可用额度</strong>
+                <strong>可用生成额度</strong>
               </div>
               <dl>
-                <dt>分镜图片</dt>
+                <dt>页面设计图</dt>
                 <dd>
                   {availableImages}
                   <span>张</span>
-                </dd>
-                <dt>完整视频</dt>
-                <dd>
-                  {availableVideos}
-                  <span>条</span>
                 </dd>
               </dl>
               <p>
@@ -590,10 +608,8 @@ export function Editor({
                 <br />
                 技术失败自动退回
               </p>
-              {(detail.quota.imageReserved > 0 || detail.quota.videoReserved > 0) && (
-                <small>
-                  处理中预留：图片 {detail.quota.imageReserved} · 视频 {detail.quota.videoReserved}
-                </small>
+              {detail.quota.imageReserved > 0 && (
+                <small>处理中预留：图片 {detail.quota.imageReserved}</small>
               )}
             </div>
             <div className="editor-owner">
@@ -637,9 +653,9 @@ export function Editor({
           {tab === 'basics' && (
             <>
               <SectionTitle
-                eyebrow="01 / FOUNDATION"
-                title="先把好产品，介绍清楚。"
-                description="真实资料是好网站的起点。先填基础信息，随时保存，稍后继续。"
+                eyebrow="第 1 步 / 共 5 步"
+                title="资料与产品"
+                description="填写公司资料、销售市场与产品，选择一个主产品用于网站首页。"
               />
               <section className="panel">
                 <div className="panel-title">
@@ -799,7 +815,7 @@ export function Editor({
                             >
                               <span />
                               {draft.primaryProductId === product.id
-                                ? '主产品 · 视频主角'
+                                ? '主产品 · 首页展示'
                                 : '设为主产品'}
                             </button>
                             {product.source && (
@@ -949,573 +965,13 @@ export function Editor({
                   </Field>
                 </div>
               </section>
-              <StepFooter
-                hint="资料可以稍后完善，先找一个适合你的风格。"
-                next="选择网站风格"
-                onNext={() => setTab('style')}
-              />
-            </>
-          )}
-          {tab === 'style' && (
-            <>
-              <SectionTitle
-                eyebrow="02 / VISUAL DIRECTION"
-                title="给品牌，一个鲜明的样子。"
-                description="三套原创模板，保留成熟布局。风格不限制产品类目。"
-              />
-              <div className="template-grid">
-                {(
-                  [
-                    {
-                      id: 'natural',
-                      name: '温暖自然',
-                      en: 'WARM & NATURAL',
-                      title: 'Naturally,\nbetter together.',
-                      description: '温暖留白、柔和大地色与细腻衬线字，讲述产品背后的用心。',
-                      tags: '家居 · 玩具 · 生活方式',
-                    },
-                    {
-                      id: 'technology',
-                      name: '现代科技',
-                      en: 'MODERN & PRECISE',
-                      title: 'Designed for\nwhat comes next.',
-                      description: '利落网格、克制暗色与清晰信息层级，呈现产品的精密与效率。',
-                      tags: '电子 · 工具 · 创新产品',
-                    },
-                    {
-                      id: 'explorer',
-                      name: '户外探索',
-                      en: 'BOLD & EXPLORING',
-                      title: 'Ready for\nthe outside.',
-                      description: '开阔构图、鲜明对比与大幅画面，让产品走向更宽广的场景。',
-                      tags: '户外 · 运动 · 探索装备',
-                    },
-                  ] as const
-                ).map((template) => (
-                  <button
-                    key={template.id}
-                    className={`template-card ${draft.template === template.id ? 'selected' : ''}`}
-                    onClick={() => patch({ template: template.id as TemplateId })}
-                  >
-                    <div className={`template-preview ${template.id}`}>
-                      <span className="template-nav">
-                        YOUR BRAND <i>ABOUT &nbsp; PRODUCTS &nbsp; CONTACT</i>
-                      </span>
-                      <div className="template-hero-visual">
-                        <span>
-                          {template.title.split('\n').map((line, index) => (
-                            <span key={index}>
-                              {line}
-                              <br />
-                            </span>
-                          ))}
-                        </span>
-                        <div className="template-sculpture" />
-                        <span className="template-play">
-                          <Icon name="play" size={22} />
-                        </span>
-                      </div>
-                      <div className="template-bottom">
-                        <strong>{template.en}</strong>
-                        <i />
-                        <i />
-                        <i />
-                      </div>
-                    </div>
-                    <div className="template-description">
-                      <div>
-                        <span className="eyebrow">{template.en}</span>
-                        <h3>{template.name}</h3>
-                      </div>
-                      <span className="template-choice">
-                        {draft.template === template.id ? <Icon name="check" size={15} /> : null}
-                      </span>
-                      <p>{template.description}</p>
-                      <small>风格参考：{template.tags}</small>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <Notice>
-                所有模板都包含动态视频首页、产品目录、产品详情、公司介绍与联系询盘。你可以修改内容和品牌色，模板布局保持一致。
-              </Notice>
-              <StepFooter
-                hint="风格会影响视频脚本与网站氛围，建议先选定再生成。"
-                next="准备 Hero 视频"
-                onNext={() => setTab('video')}
-              />
-            </>
-          )}
-          {tab === 'video' && (
-            <>
-              <SectionTitle
-                eyebrow="03 / MOTION & STORY"
-                title="用一段好画面，让产品开场。"
-                description="从已确认的脚本到整组分镜，最后生成一条完整视频。也可以直接上传已有视频。"
-              />
-              <div className="video-methods">
-                <button
-                  className={videoTab === 'generate' ? 'active' : ''}
-                  onClick={() => setVideoTab('generate')}
-                >
-                  <Icon name="spark" />
-                  <div>
-                    <strong>用 AI 制作视频</strong>
-                    <span>方向 → 脚本 → 分镜 → 视频</span>
-                  </div>
-                  {videoTab === 'generate' && <Icon name="check" />}
-                </button>
-                <button
-                  className={videoTab === 'upload' ? 'active' : ''}
-                  onClick={() => setVideoTab('upload')}
-                >
-                  <Icon name="upload" />
-                  <div>
-                    <strong>上传已有视频</strong>
-                    <span>跳过 AI，直接预览与选用</span>
-                  </div>
-                  {videoTab === 'upload' && <Icon name="check" />}
-                </button>
-              </div>
-              {videoTab === 'generate' ? (
-                <>
-                  <section className="panel">
-                    <div className="panel-title">
-                      <span className="section-index">01</span>
-                      <h3>主产品与创作方向</h3>
-                    </div>
-                    <div className="form-grid">
-                      <Field label="视频主产品">
-                        <select
-                          value={draft.primaryProductId}
-                          onChange={(e) => patch({ primaryProductId: e.target.value })}
-                        >
-                          <option value="">请选择主产品</option>
-                          {draft.products.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name || '未命名产品'}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="完整视频时长">
-                        <div className="segmented">
-                          <button
-                            className={draft.duration === 8 ? 'selected' : ''}
-                            onClick={() => patch({ duration: 8 })}
-                          >
-                            8 秒 · 至少 3 张分镜
-                          </button>
-                          <button
-                            className={draft.duration === 12 ? 'selected' : ''}
-                            onClick={() => patch({ duration: 12 })}
-                          >
-                            12 秒 · 4 张分镜
-                          </button>
-                        </div>
-                      </Field>
-                      <Field
-                        className="full-width"
-                        label="创作方向"
-                        hint="描述使用场景、镜头变化、想保留的产品特征与不希望出现的内容。"
-                      >
-                        <textarea
-                          rows={3}
-                          value={draft.direction}
-                          onChange={(e) => patch({ direction: e.target.value })}
-                          placeholder="例如：自然光下的桌面场景，从产品细节平滑过渡到使用画面；保持产品配色和结构，适合首页静音循环。"
-                        />
-                      </Field>
-                    </div>
-                    <div className="section-action">
-                      <small>
-                        模板：
-                        {
-                          { natural: '温暖自然', technology: '现代科技', explorer: '户外探索' }[
-                            draft.template
-                          ]
-                        }
-                      </small>
-                      <Button
-                        kind="primary"
-                        onClick={() => generate('script')}
-                        disabled={
-                          !!busy ||
-                          !draft.primaryProductId ||
-                          activeJobs.some((j) => j.kind === 'script')
-                        }
-                        busy={busy === 'job:script:all'}
-                      >
-                        <Icon name="spark" />
-                        {draft.script ? '重新生成脚本' : '生成视频脚本'}
-                      </Button>
-                    </div>
-                  </section>
-                  <section className="panel">
-                    <div className="panel-title">
-                      <span className="section-index">02</span>
-                      <h3>脚本确认</h3>
-                      <span className={`pill ${scriptConfirmed ? 'green' : 'muted'}`}>
-                        {scriptConfirmed ? '当前脚本已确认' : '等待确认'}
-                      </span>
-                    </div>
-                    <Field
-                      label="可编辑的视频脚本"
-                      hint="确认前可自由修改；改变脚本或视频输入后，需要重新确认。"
-                    >
-                      <textarea
-                        className="script-editor"
-                        rows={7}
-                        value={draft.script}
-                        onChange={(e) => patch({ script: e.target.value })}
-                        placeholder="生成的脚本会显示在这里。你可以修改文字，并检查下方的分镜描述后确认。"
-                      />
-                    </Field>
-                    <div className="section-action">
-                      <p>分镜跟随脚本节奏，不固定每张图的出现秒数。</p>
-                      <Button
-                        onClick={() =>
-                          action(
-                            'confirm-script',
-                            () => command('confirm-script'),
-                            '当前脚本已确认，可以生成分镜。',
-                          )
-                        }
-                        disabled={!!busy || !draft.script.trim()}
-                        busy={busy === 'confirm-script'}
-                      >
-                        <Icon name="check" />
-                        保存并确认脚本
-                      </Button>
-                    </div>
-                  </section>
-                  <section className="panel">
-                    <div className="panel-title">
-                      <span className="section-index">03</span>
-                      <h3>整组分镜</h3>
-                      <span>
-                        {draft.scenes.filter((s) => s.imageAssetId).length} /{' '}
-                        {draft.scenes.length || (draft.duration === 8 ? 3 : 4)} 张已就绪
-                      </span>
-                      <div className="panel-title-actions">
-                        <Button
-                          onClick={() => generate('image')}
-                          disabled={
-                            !!busy || !scriptConfirmed || activeJobs.some((j) => j.kind === 'image')
-                          }
-                          busy={busy === 'job:image:all'}
-                        >
-                          <Icon name="spark" />
-                          生成缺少的分镜
-                        </Button>
-                      </div>
-                    </div>
-                    {!draft.scenes.length ? (
-                      <Empty icon="image" title="确认脚本后，开始分镜制作">
-                        8 秒至少 3 张，12 秒 4 张。每张生成图片计 1 次额度。
-                      </Empty>
-                    ) : (
-                      <div className="scene-grid">
-                        {draft.scenes.map((scene, index) => (
-                          <SceneCard
-                            key={scene.id}
-                            projectId={project.id}
-                            scene={scene}
-                            index={index}
-                            disabled={
-                              !!busy ||
-                              activeJobs.some(
-                                (j) => j.kind === 'image' && j.input.sceneId === scene.id,
-                              )
-                            }
-                            onDescription={(description) =>
-                              update((d) => ({
-                                ...d,
-                                scenes: d.scenes.map((s) =>
-                                  s.id === scene.id ? { ...s, description } : s,
-                                ),
-                              }))
-                            }
-                            onRegenerate={(instructions) =>
-                              generate('image', scene.id, instructions)
-                            }
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <div className="section-action">
-                      <p>
-                        {storyboardConfirmed
-                          ? '当前整组分镜已确认。'
-                          : '检查产品一致性、画面顺序和整体节奏。重做任意一张后需要再次确认整组。'}
-                      </p>
-                      <Button
-                        onClick={() =>
-                          action(
-                            'confirm-storyboard',
-                            () => command('confirm-storyboard'),
-                            '当前整组分镜已确认，可以生成完整视频。',
-                          )
-                        }
-                        disabled={
-                          !!busy ||
-                          !scriptConfirmed ||
-                          !draft.scenes.length ||
-                          draft.scenes.some((s) => !s.imageAssetId)
-                        }
-                        busy={busy === 'confirm-storyboard'}
-                      >
-                        <Icon name="check" />
-                        确认当前整组分镜
-                      </Button>
-                    </div>
-                  </section>
-                  <section className="panel video-generate-panel">
-                    <div>
-                      <span className="eyebrow">ONE COMPLETE FILM</span>
-                      <h3>让整组分镜，成为一条完整视频。</h3>
-                      <p>Agnes 一次提交全部已确认分镜。全平台同时生成一条，其余自动排队。</p>
-                      <small>关闭页面不影响任务；状态不确定时先核对，不重复提交。</small>
-                    </div>
-                    <Button
-                      kind="primary"
-                      onClick={() => generate('video')}
-                      disabled={
-                        !!busy ||
-                        !storyboardConfirmed ||
-                        !scriptConfirmed ||
-                        activeJobs.some((j) => j.kind === 'video') ||
-                        availableVideos < 1
-                      }
-                      busy={busy === 'job:video:all'}
-                    >
-                      <Icon name="play" />
-                      生成 {draft.duration} 秒视频 · 1 次
-                    </Button>
-                  </section>
-                </>
-              ) : (
-                <section className="panel">
-                  <div className="video-upload-zone">
-                    <Icon name="upload" size={36} />
-                    <h3>你的画面，直接上场。</h3>
-                    <p>上传可播放的 MP4 或 WebM 视频。建议横向 16:9，适合静音循环。</p>
-                    <UploadButton
-                      label="选择并上传视频"
-                      accept="video/mp4,video/webm"
-                      disabled={!!busy}
-                      onFile={(file) => upload(file, () => {})}
-                    />
-                    <small>上传已有素材不扣生成额度；上传完成后仍需预览并确认选用。</small>
-                  </div>
-                </section>
-              )}
               <section className="panel">
                 <div className="panel-title">
-                  <span className="section-index">04</span>
-                  <h3>预览与选用</h3>
-                  <span>{draft.heroAccepted ? '已选定首页视频' : '尚未确认视频'}</span>
-                </div>
-                {detail.assets.filter((a) => a.contentType.startsWith('video/')).length === 0 ? (
-                  <Empty icon="play" title="视频完成后，会出现在这里">
-                    先看一遍产品外观、画面变化与循环衔接，再确认用作网站 Hero。
-                  </Empty>
-                ) : (
-                  <div className="video-results">
-                    {detail.assets
-                      .filter((a) => a.contentType.startsWith('video/'))
-                      .map((asset) => (
-                        <div
-                          className={`video-result ${draft.heroAssetId === asset.id && draft.heroAccepted ? 'selected' : ''}`}
-                          key={asset.id}
-                        >
-                          <AssetView projectId={project.id} assetId={asset.id} video />
-                          <div>
-                            <strong>{asset.filename}</strong>
-                            <small>
-                              {dateTime(asset.createdAt)} · {(asset.size / 1024 / 1024).toFixed(1)}{' '}
-                              MB {asset.origin === 'test' && '· 测试素材'}
-                            </small>
-                            <Button
-                              onClick={() =>
-                                action(
-                                  'accept-video',
-                                  () => command('accept-video', { assetId: asset.id }),
-                                  '视频已确认选用，网站将使用这条 Hero 视频。',
-                                )
-                              }
-                              disabled={!!busy}
-                              kind={
-                                draft.heroAssetId === asset.id && draft.heroAccepted
-                                  ? 'secondary'
-                                  : 'primary'
-                              }
-                            >
-                              <Icon
-                                name={
-                                  draft.heroAssetId === asset.id && draft.heroAccepted
-                                    ? 'check'
-                                    : 'play'
-                                }
-                              />
-                              {draft.heroAssetId === asset.id && draft.heroAccepted
-                                ? '当前已选用'
-                                : '已预览，确认选用'}
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-                <div className="poster-row">
-                  <div>
-                    <strong>视频海报图</strong>
-                    <p>用于加载和减少动态效果时的回退；正常发布仍需可用视频。</p>
-                    <UploadButton
-                      label="上传海报图"
-                      accept="image/jpeg,image/png,image/webp"
-                      disabled={!!busy}
-                      onFile={(file) => upload(file, (asset) => patch({ posterAssetId: asset.id }))}
-                    />
-                  </div>
-                  <AssetView projectId={project.id} assetId={draft.posterAssetId} alt="视频海报" />
-                </div>
-              </section>
-              <JobList
-                jobs={detail.jobs.filter((j) => ['script', 'image', 'video'].includes(j.kind))}
-                busy={busy}
-                onRetry={(job) =>
-                  action(
-                    `retry:${job.id}`,
-                    async () => {
-                      await post(`${endpoint}/jobs/${job.id}/retry`);
-                      await refresh();
-                    },
-                    '已请求恢复原任务。',
-                  )
-                }
-              />
-              <StepFooter
-                hint="视频确认后，完善网站文案与品牌细节。"
-                next="编辑网站内容"
-                onNext={() => setTab('content')}
-              />
-            </>
-          )}
-          {tab === 'content' && (
-            <>
-              <SectionTitle
-                eyebrow="04 / WORDS & DETAILS"
-                title="把你的品牌，写进每一处。"
-                description="编辑网站文案、品牌色与社交链接。所有语言共用同一条已确认视频。"
-              />
-              <section className="panel">
-                <div className="panel-title">
-                  <span className="section-index">A</span>
-                  <h3>网站文案与译文</h3>
-                  <div className="panel-title-actions">
-                    <Button
-                      kind="primary"
-                      onClick={() => generate('copy')}
-                      disabled={
-                        !!busy || !draft.company.name || activeJobs.some((j) => j.kind === 'copy')
-                      }
-                      busy={busy === 'job:copy:all'}
-                    >
-                      <Icon name="spark" />
-                      生成网站文案与译文
-                    </Button>
-                  </div>
-                </div>
-                <Notice>仅依据已提供的公司与产品资料。请检查事实和译文，再发布给访客。</Notice>
-                {draft.languages.map((lang) => (
-                  <CopyEditor
-                    key={lang}
-                    lang={lang}
-                    copy={draft.copy[lang] || { headline: '', subtitle: '', about: '', cta: '' }}
-                    onChange={(copy) =>
-                      update((d) => ({ ...d, copy: { ...d.copy, [lang]: copy } }))
-                    }
-                  />
-                ))}
-              </section>
-              {draft.languages.length > 1 && (
-                <section className="panel">
-                  <SectionTitle
-                    title="产品译文"
-                    description="第二语言的产品标题和描述。材质与尺寸使用已确认规格。"
-                  />
-                  {draft.products.map((product) => (
-                    <div className="product-translation" key={product.id}>
-                      <h4>{product.name || '未命名产品'}</h4>
-                      {draft.languages
-                        .filter((l) => l !== 'en')
-                        .map((lang) => (
-                          <div className="form-grid" key={lang}>
-                            <Field label={`${languageNames[lang]} · 名称`}>
-                              <input
-                                value={product.translations?.[lang]?.name || ''}
-                                onChange={(e) =>
-                                  productChange(product.id, {
-                                    translations: {
-                                      ...product.translations,
-                                      [lang]: {
-                                        name: e.target.value,
-                                        description:
-                                          product.translations?.[lang]?.description || '',
-                                      },
-                                    },
-                                  })
-                                }
-                              />
-                            </Field>
-                            <Field label={`${languageNames[lang]} · 介绍`}>
-                              <textarea
-                                rows={2}
-                                value={product.translations?.[lang]?.description || ''}
-                                onChange={(e) =>
-                                  productChange(product.id, {
-                                    translations: {
-                                      ...product.translations,
-                                      [lang]: {
-                                        name: product.translations?.[lang]?.name || '',
-                                        description: e.target.value,
-                                      },
-                                    },
-                                  })
-                                }
-                              />
-                            </Field>
-                          </div>
-                        ))}
-                    </div>
-                  ))}
-                </section>
-              )}
-              <section className="panel">
-                <div className="panel-title">
-                  <span className="section-index">B</span>
-                  <h3>品牌细节</h3>
+                  <span className="section-index">D</span>
+                  <h3>工作台与社交链接</h3>
+                  <span>社交链接会显示在网站联系信息中</span>
                 </div>
                 <div className="form-grid">
-                  <Field label="品牌色" hint="应用到模板按钮与强调色">
-                    <div className="color-input">
-                      <input
-                        type="color"
-                        value={
-                          /^#[0-9a-fA-F]{6}$/.test(draft.brandColor) ? draft.brandColor : '#345a43'
-                        }
-                        onChange={(e) => patch({ brandColor: e.target.value })}
-                      />
-                      <input
-                        aria-label="品牌色十六进制"
-                        value={draft.brandColor}
-                        onChange={(e) => patch({ brandColor: e.target.value })}
-                        pattern="#[0-9a-fA-F]{6}"
-                        maxLength={7}
-                      />
-                    </div>
-                  </Field>
                   <Field label="项目名称" hint="只显示在工作台，不作为网站标题">
                     <input
                       value={project.name}
@@ -1553,8 +1009,27 @@ export function Editor({
                   </Field>
                 </div>
               </section>
+              <StepFooter
+                hint="AI 会结合产品图片和这些资料，一次只确认一个设计问题。"
+                next="开始需求沟通"
+                onNext={() => setTab('consultation')}
+              />
+            </>
+          )}
+          {tab === 'consultation' && (
+            <>
+              <ConsultationStep
+                draft={draft}
+                disabled={!!busy}
+                basicsReady={basicsReady}
+                active={consultationActive}
+                onStart={() => consult()}
+                onAnswer={(questionId, answer) => consult({ questionId, answer })}
+                onRestart={() => consult({ restart: true })}
+                onNext={() => setTab('brief')}
+              />
               <JobList
-                jobs={detail.jobs.filter((j) => j.kind === 'copy')}
+                jobs={detail.jobs.filter((job) => job.kind === 'consultation')}
                 busy={busy}
                 onRetry={(job) =>
                   action(`retry:${job.id}`, async () => {
@@ -1563,23 +1038,84 @@ export function Editor({
                   })
                 }
               />
-              <StepFooter
-                hint="准备好后，预览所有页面与语言，确认再发布。"
-                next="预览与发布"
+            </>
+          )}
+          {tab === 'design' && (
+            <>
+              <PageDesign
+                projectId={project.id}
+                draft={draft}
+                jobs={detail.jobs}
+                disabled={!!busy}
+                contentReady={briefReady}
+                availableImages={availableImages}
+                imageConfigured={services.some(
+                  (service) => service.name === 'image' && service.configured,
+                )}
+                onBackToBrief={() => setTab('brief')}
+                onGenerate={(page, instructions) => generate('image', page, instructions)}
+                onConfirm={(target) =>
+                  action(
+                    `confirm-design:${target}`,
+                    () => command('confirm-design', { target }),
+                    target === 'home'
+                      ? '首页风格已确认，可以生成其余页面。'
+                      : `${pagePlan.length} 张设计稿已确认，可以生成网站。`,
+                  )
+                }
                 onNext={() => setTab('publish')}
+              />
+              <JobList
+                jobs={detail.jobs.filter((job) => job.kind === 'image' && !!job.input.pageId)}
+                busy={busy}
+                onRetry={(job) =>
+                  action(`retry:${job.id}`, async () => {
+                    await post(`${endpoint}/jobs/${job.id}/retry`);
+                    await refresh();
+                  })
+                }
+              />
+            </>
+          )}
+          {tab === 'brief' && (
+            <>
+              <BriefStep
+                draft={draft}
+                disabled={!!busy}
+                active={consultationActive}
+                onRevise={(instructions) => consult({ instructions })}
+                onConfirm={() =>
+                  action(
+                    'confirm-brief',
+                    () => command('confirm-brief'),
+                    '网站方案已确认，可以开始页面设计。',
+                  )
+                }
+                onBack={() => setTab('consultation')}
+                onNext={() => setTab('design')}
+              />
+              <JobList
+                jobs={detail.jobs.filter((job) => job.kind === 'consultation')}
+                busy={busy}
+                onRetry={(job) =>
+                  action(`retry:${job.id}`, async () => {
+                    await post(`${endpoint}/jobs/${job.id}/retry`);
+                    await refresh();
+                  })
+                }
               />
             </>
           )}
           {tab === 'publish' && (
             <>
               <SectionTitle
-                eyebrow="05 / READY FOR THE WORLD"
-                title="检查一遍，然后面向世界。"
+                eyebrow="第 5 步 / 共 5 步"
+                title="预览与发布"
                 description="草稿与线上版本各自保存。只有发布成功，公开网站才会更新。"
               />
               <section className="publication-hero">
                 <div>
-                  <span className="eyebrow">YOUR WEBSITE</span>
+                  <span className="eyebrow">网站概况</span>
                   <h3>{draft.company.name || project.name}</h3>
                   <p>
                     {project.siteUrl ? (
@@ -1593,12 +1129,9 @@ export function Editor({
                   </p>
                   <div className="publication-pills">
                     <span className="pill light">
-                      {
-                        { natural: '温暖自然', technology: '现代科技', explorer: '户外探索' }[
-                          draft.template
-                        ]
-                      }
+                      {draft.consultation?.brief?.visualDirection || '已确认设计方向'}
                     </span>
+                    <span className="pill light">{pagePlan.length} 类页面</span>
                     <span className="pill light">{draft.products.length} 个产品</span>
                     <span className="pill light">
                       {draft.languages.map((l) => l.toUpperCase()).join(' + ')}
@@ -1606,54 +1139,74 @@ export function Editor({
                     {testMode && <span className="pill light">测试发布</span>}
                   </div>
                 </div>
-                <Button onClick={openPreview} disabled={!!busy} busy={busy === 'preview'}>
+                <Button
+                  onClick={openPreview}
+                  disabled={!!busy || !siteReady}
+                  busy={busy === 'preview'}
+                >
                   <Icon name="eye" />
                   打开私有整站预览
                 </Button>
               </section>
               <section className="panel">
                 <SectionTitle
+                  title="生成静态网站"
+                  description={`将确认过的 ${pagePlan.length} 张设计稿转成真实页面，填入产品和公司资料，然后检查电脑与手机预览。`}
+                />
+                {!builderConfigured && (
+                  <Notice tone="warning">
+                    网站生成服务尚未连接。管理员配置后即可从设计稿生成网站。
+                  </Notice>
+                )}
+                {!designsReady && <Notice>请先到“页面设计稿”确认全部 {pagePlan.length} 张设计稿。</Notice>}
+                <Button
+                  kind="primary"
+                  disabled={!!busy || !designsReady || buildPending || !builderConfigured}
+                  busy={busy === 'job:site-build:all'}
+                  onClick={() => generate('site-build')}
+                >
+                  <Icon name="spark" />
+                  {buildPending ? '网站生成中…' : siteReady ? '重新生成网站' : '从设计稿生成网站'}
+                </Button>
+                {siteReady && (
+                  <p className="muted">当前版本的网站已生成，请预览所有页面后再发布。</p>
+                )}
+              </section>
+              <JobList
+                jobs={detail.jobs.filter((job) => job.kind === 'site-build')}
+                busy={busy}
+                onRetry={(job) =>
+                  action(`retry:${job.id}`, async () => {
+                    await post(`${endpoint}/jobs/${job.id}/retry`);
+                    await refresh();
+                  })
+                }
+              />
+              <section className="panel">
+                <SectionTitle
                   title="发布前检查"
-                  description="预览首页、目录、产品详情、公司介绍与联系页面，检查所有网站语言。"
+                  description={`预览方案中的全部 ${pagePlan.length} 类页面，检查所有网站语言。`}
                 />
                 <div className="publish-checklist">
-                  {[
-                    [
-                      '公司与联系资料',
-                      !!draft.company.name && !!draft.company.email && !!draft.company.contactName,
-                      '访客联系你时使用这些真实信息',
-                    ],
-                    [
-                      '产品与主产品',
-                      draft.products.length > 0 && !!draft.primaryProductId,
-                      `${draft.products.length} 个产品，最多 20 个`,
-                    ],
-                    [
-                      'Hero 视频已人工选用',
-                      !!draft.heroAssetId && draft.heroAccepted,
-                      '检查产品一致性、画面变化和循环衔接',
-                    ],
-                    [
-                      '各语言网站文案',
-                      draft.languages.every((l) => draft.copy[l]?.headline && draft.copy[l]?.about),
-                      '包含网站标题、介绍与联系按钮',
-                    ],
-                  ].map(([label, ok, description]) => (
-                    <div key={String(label)}>
-                      <span className={`check-circle ${ok ? 'complete' : ''}`}>
-                        <Icon name={ok ? 'check' : 'clock'} size={15} />
+                  {checklist.map((item) => (
+                    <button key={item.id} onClick={() => setTab(item.step)}>
+                      <span className={`check-circle ${item.ready ? 'complete' : ''}`}>
+                        <Icon name={item.ready ? 'check' : 'clock'} size={15} />
                       </span>
-                      <div>
-                        <strong>{label}</strong>
-                        <small>{description}</small>
-                      </div>
-                      <span>{ok ? '已准备' : '待完善'}</span>
-                    </div>
+                      <span className="checklist-copy">
+                        <strong>{item.label}</strong>
+                        <small>{item.detail}</small>
+                      </span>
+                      <span className={item.ready ? 'ready' : 'pending'}>
+                        {item.ready ? '已准备' : '去完善'}
+                      </span>
+                      <Icon name="arrow" size={14} />
+                    </button>
                   ))}
                 </div>
                 {publicationMissing.length > 0 && (
                   <Notice tone="warning">
-                    仍需完善：{publicationMissing.join('、')}。服务端会在发布时校验全部要求。
+                    仍需完善：{publicationMissing.join('、')}。点击上方对应项继续编辑。
                   </Notice>
                 )}
                 <div className="publish-actions">
@@ -1742,8 +1295,8 @@ export function Editor({
           {tab === 'inquiries' && (
             <>
               <SectionTitle
-                eyebrow="06 / NEW CONNECTIONS"
-                title="每一次询盘，都是新的可能。"
+                eyebrow="网站管理"
+                title="客户询盘"
                 description={`询盘完整内容发送到 ${draft.company.email || '你填写的公司联系邮箱'}，后台独立保存记录。`}
                 actions={
                   <Button onClick={loadInquiries}>
@@ -1819,13 +1372,19 @@ export function Editor({
               )}
             </>
           )}
-          {activeJobs.length > 0 && tab !== 'video' && (
+          {activeJobs.length > 0 && tab !== 'design' && (
             <div className="background-job">
               <span className="spinner" />
               {activeJobs.length} 个任务在后台处理{' '}
               <button
                 onClick={() =>
-                  setTab(activeJobs.some((j) => j.kind === 'publish') ? 'publish' : 'video')
+                  setTab(
+                    activeJobs.some((j) => j.kind === 'publish' || j.kind === 'site-build')
+                      ? 'publish'
+                      : activeJobs.some((j) => j.kind === 'consultation')
+                        ? 'consultation'
+                        : 'design',
+                  )
                 }
               >
                 查看进度
@@ -1833,10 +1392,6 @@ export function Editor({
               </button>
             </div>
           )}
-          <footer className="editor-footer">
-            <span>WEB RADAR STUDIO</span>
-            <span>真实的产品 · 你确认的故事</span>
-          </footer>
         </main>
       </div>
       {sourceOpen && (
@@ -2184,101 +1739,6 @@ function StepFooter({ hint, next, onNext }: { hint: string; next: string; onNext
     </div>
   );
 }
-function CopyEditor({
-  lang,
-  copy,
-  onChange,
-}: {
-  lang: Language;
-  copy: SiteCopy;
-  onChange: (copy: SiteCopy) => void;
-}) {
-  return (
-    <div className="copy-editor">
-      <h4>
-        <span>{lang.toUpperCase()}</span>
-        {languageNames[lang]}
-        {lang === 'en' && <small>基础语言</small>}
-      </h4>
-      <div className="form-grid">
-        <Field label="首页主标题">
-          <input
-            value={copy.headline}
-            onChange={(e) => onChange({ ...copy, headline: e.target.value })}
-            placeholder="A clear headline for your brand"
-          />
-        </Field>
-        <Field label="联系按钮文字">
-          <input
-            value={copy.cta}
-            onChange={(e) => onChange({ ...copy, cta: e.target.value })}
-            placeholder="Get in touch"
-          />
-        </Field>
-        <Field className="full-width" label="首页副标题">
-          <textarea
-            rows={2}
-            value={copy.subtitle}
-            onChange={(e) => onChange({ ...copy, subtitle: e.target.value })}
-          />
-        </Field>
-        <Field className="full-width" label="公司介绍正文">
-          <textarea
-            rows={4}
-            value={copy.about}
-            onChange={(e) => onChange({ ...copy, about: e.target.value })}
-          />
-        </Field>
-      </div>
-    </div>
-  );
-}
-function SceneCard({
-  projectId,
-  scene,
-  index,
-  disabled,
-  onDescription,
-  onRegenerate,
-}: {
-  projectId: string;
-  scene: Draft['scenes'][number];
-  index: number;
-  disabled: boolean;
-  onDescription: (value: string) => void;
-  onRegenerate: (instructions: string) => void;
-}) {
-  const [instructions, setInstructions] = useState('');
-  return (
-    <article className="scene-card">
-      <div className="scene-cover">
-        <AssetView projectId={projectId} assetId={scene.imageAssetId} alt={`分镜 ${index + 1}`} />
-        <span>SCENE {String(index + 1).padStart(2, '0')}</span>
-      </div>
-      <div className="scene-fields">
-        <Field label="镜头内容">
-          <textarea
-            rows={4}
-            value={scene.description}
-            onChange={(e) => onDescription(e.target.value)}
-          />
-        </Field>
-        <Field label="单张修改要求">
-          <textarea
-            rows={2}
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="想调整哪里？仅重做这一张"
-          />
-        </Field>
-        <Button disabled={disabled} onClick={() => onRegenerate(instructions)}>
-          <Icon name="refresh" size={15} />
-          {scene.imageAssetId ? '重做此分镜 · 1 次' : '生成此分镜 · 1 次'}
-        </Button>
-      </div>
-    </article>
-  );
-}
 function JobList({
   jobs,
   busy,
@@ -2314,7 +1774,9 @@ function JobList({
               </span>
               <div>
                 <strong>
-                  {jobKinds[job.kind]}
+                  {job.input.pageId
+                    ? `${(designLabels as Record<string, string>)[job.input.pageId as string] || job.input.pageId}设计稿`
+                    : jobKinds[job.kind]}
                   {job.testMode && <span className="inline-test">测试</span>}
                 </strong>
                 <small>
@@ -2322,6 +1784,9 @@ function JobList({
                   {job.upstreamId ? `上游任务 ${job.upstreamId}` : `任务 ${job.id.slice(0, 12)}`}
                 </small>
                 {job.error && <p className="error-text">{job.error}</p>}
+                {job.kind === 'site-build' && typeof job.input.progress === 'string' && (
+                  <p>{job.input.progress}</p>
+                )}
                 {job.status === 'unknown' && (
                   <p>上游结果待核对。恢复将查询原任务，不重新提交视频。</p>
                 )}

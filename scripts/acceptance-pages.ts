@@ -68,7 +68,8 @@ let gateway = makeGateway(release.id);
 const environment = {
   ASSETS: {
     fetch: async (request: Request) => {
-      const path = new URL(request.url).pathname.slice(1);
+      const requested = new URL(request.url).pathname.slice(1);
+      const path = requested.endsWith('/') ? `${requested}index.html` : requested;
       assets.push(path);
       const html = files[path];
       return new Response(request.method === 'HEAD' ? null : (html ?? 'Not found'), {

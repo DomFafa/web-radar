@@ -95,7 +95,7 @@ await fs.mkdir('artifacts/frontend-races', { recursive: true });
 await page.screenshot({ path: 'artifacts/frontend-races/account-switch.png' });
 // Reset only our own unsaved field, then exercise a real mutation with its response held.
 await frame.getByLabel('公司英文名称', { exact: false }).fill('SAVED REVIEW COMPANY');
-await frame.getByRole('button', { name: 'Hero 视频', exact: false }).click();
+await frame.getByRole('button', { name: '首页视频', exact: false }).click();
 let release;
 const waiting = new Promise((r) => (release = r));
 let received;

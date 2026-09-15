@@ -25,7 +25,7 @@ function upstream(active = true) {
   const fetch = vi.fn(async (url: string, init: RequestInit) => {
     const parsed = new URL(url);
     expect(parsed.origin).toBe(appOrigin);
-    expect(init.redirect).toBe('error');
+    expect(init.redirect).toBe('manual');
     expect(init.cache).toBe('no-store');
     const headers = new Headers(init.headers);
     expect(headers.has('authorization')).toBe(false);
@@ -76,8 +76,8 @@ describe('generated Pages gateway with immutable static artifacts', () => {
       fake.env,
     );
     expect(response.status).toBe(200);
-    expect(await response.text()).toContain('/__wr_previous/en/index.html');
-    expect(fake.events).toEqual(['gate', 'gate', 'assets:/__wr_previous/en/index.html']);
+    expect(await response.text()).toContain('/__wr_previous/en/');
+    expect(fake.events).toEqual(['gate', 'gate', 'assets:/__wr_previous/en/']);
     expect(
       (await worker.fetch(new Request('https://stable.pages.dev/de/contact/index.html'), fake.env))
         .status,
@@ -108,6 +108,56 @@ describe('generated Pages gateway with immutable static artifacts', () => {
     ).toBe(404);
   });
 
+  it('serves Pages directory URLs after canonical HTML redirects while restricting them to published files', async () => {
+    const source = createPagesGateway(appOrigin, projectId, releaseId, undefined, {
+      current: ['en/index.html', 'en/catalog/index.html', 'en/products/product-one/index.html'],
+      previous: [],
+    });
+    const worker = (
+      await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
+    ).default;
+    const fake = upstream();
+    for (const path of ['/en/', '/en/catalog/', '/en/products/product-one/']) {
+      expect(
+        (await worker.fetch(new Request('https://stable.pages.dev' + path), fake.env)).status,
+      ).toBe(200);
+      expect(
+        (
+          await worker.fetch(
+            new Request('https://stable.pages.dev' + path, { method: 'HEAD' }),
+            fake.env,
+          )
+        ).status,
+      ).toBe(200);
+    }
+    for (const path of ['/en/missing/', '/__wr_previous/en/', '/de/', '/en/products/product-two/'])
+      expect(
+        (await worker.fetch(new Request('https://stable.pages.dev' + path), fake.env)).status,
+      ).toBe(404);
+  });
+  it('keeps previous snapshot HTML redirects from exposing its internal asset directory', async () => {
+    const source = createPagesGateway(appOrigin, projectId, 'release-new', releaseId, {
+      current: ['en/index.html'],
+      previous: ['en/index.html'],
+    });
+    const worker = (
+      await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
+    ).default;
+    const fake = upstream();
+    fake.env.ASSETS.fetch = vi.fn(async (request) => {
+      const path = new URL(request.url).pathname;
+      return path.endsWith('/index.html')
+        ? new Response(null, { status: 308, headers: { Location: path.slice(0, -10) } })
+        : new Response('<h1>Previous approved homepage</h1>');
+    });
+    const response = await worker.fetch(
+      new Request('https://stable.pages.dev/en/index.html'),
+      fake.env,
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.has('location')).toBe(false);
+    expect(await response.text()).toContain('Previous approved homepage');
+  });
   it('selects the new snapshot only after activation and never exposes previous-only paths', async () => {
     const source = createPagesGateway(appOrigin, projectId, releaseId, 'release-older', {
       current: ['en/index.html'],
@@ -261,7 +311,7 @@ describe('generated Pages gateway with immutable static artifacts', () => {
   it('fails closed on unavailable, unexpected or redirected gate responses', async () => {
     const worker = await gateway();
     const fake = upstream();
-    for (const status of [200, 401, 503]) {
+    for (const status of [200, 301, 302, 307, 308, 401, 503]) {
       vi.stubGlobal('fetch', async () => new Response(null, { status }));
       const response = await worker.fetch(
         new Request('https://published.pages.dev/en/index.html'),
@@ -355,3 +405,31 @@ describe('generated Pages gateway with immutable static artifacts', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 });
+
+it.each([301, 302, 303, 307, 308])(
+  'does not forward HTTP %s inquiry redirects to the browser',
+  async (status) => {
+    const worker = await gateway();
+    const upstream = vi.fn(async (url: string, _init: RequestInit) =>
+      url.endsWith(gatePath)
+        ? new Response(null, { status: 204 })
+        : new Response(null, {
+            status,
+            headers: { Location: 'https://other.example.test/collect' },
+          }),
+    );
+    vi.stubGlobal('fetch', upstream);
+    const response = await worker.fetch(
+      new Request(`https://published.pages.dev${inquiryPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      }),
+      {},
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.has('location')).toBe(false);
+    expect(upstream).toHaveBeenCalledTimes(2);
+    expect(upstream.mock.calls.every(([, init]) => init.redirect === 'manual')).toBe(true);
+  },
+);

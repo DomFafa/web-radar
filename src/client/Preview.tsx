@@ -1,20 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Language, Project } from '../shared/model';
+import type { DesignPage, Language, Project } from '../shared/model';
+import { pageLabel, plannedPages } from '../shared/site-brief';
 import { api, errorMessage, privateAssetBlob, requestId } from './api';
 import { Button, Icon, Notice } from './components';
 import { labels } from '../templates/labels';
 
-type Page = 'home' | 'catalog' | 'detail' | 'about' | 'contact';
-const pages: Record<Page, string> = {
-  home: '首页',
-  catalog: '产品目录',
-  detail: '产品详情',
-  about: '公司介绍',
-  contact: '联系询盘',
-};
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 export function privateAssetId(value: string, projectId: string): string | null {
+  if (!value.startsWith('/api/projects/')) return null;
   try {
     const url = new URL(value, 'https://preview.invalid');
     const match = url.pathname.match(/^\/api\/projects\/([^/]+)\/assets\/([^/]+)$/);
@@ -26,9 +20,27 @@ export function privateAssetId(value: string, projectId: string): string | null 
   }
 }
 
+export function rewritePreviewMedia(
+  node: {
+    getAttribute(name: string): string | null;
+    setAttribute(name: string, value: string): void;
+    removeAttribute(name: string): void;
+  },
+  projectId: string,
+) {
+  for (const attribute of ['src', 'poster']) {
+    const value = node.getAttribute(attribute) || '';
+    if (/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) continue;
+    const id = privateAssetId(value, projectId);
+    node.removeAttribute(attribute);
+    if (id) node.setAttribute(`data-wr-${attribute}`, id);
+  }
+}
+
 export function SitePreview({ project, onClose }: { project: Project; onClose: () => void }) {
+  const pages = plannedPages(project.draft);
   const [lang, setLang] = useState<Language>('en'),
-    [page, setPage] = useState<Page>('home'),
+    [page, setPage] = useState<DesignPage>('home'),
     [productId, setProductId] = useState(
       project.draft.primaryProductId || project.draft.products[0]?.id || '',
     );
@@ -90,13 +102,7 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
       );
       if (!active) return;
       media.current = items;
-      targets.forEach((node) => {
-        for (const attribute of ['src', 'poster']) {
-          const id = privateAssetId(node.getAttribute(attribute) || '', project.id);
-          node.removeAttribute(attribute);
-          if (id) node.setAttribute(`data-wr-${attribute}`, id);
-        }
-      });
+      targets.forEach((node) => rewritePreviewMedia(node, project.id));
       doc.querySelectorAll('form').forEach((form) => {
         form.removeAttribute('action');
         form
@@ -195,7 +201,7 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
       }
       if (event.data.type !== 'wr:preview-navigate') return;
       const next = event.data;
-      if (!(next.page in pages)) return;
+      if (!pages.includes(next.page)) return;
       if (next.lang && project.draft.languages.includes(next.lang)) setLang(next.lang);
       if (next.productId && project.draft.products.some((product) => product.id === next.productId))
         setProductId(next.productId);
@@ -203,7 +209,7 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
     };
     window.addEventListener('message', receive);
     return () => window.removeEventListener('message', receive);
-  }, [project]);
+  }, [project, pages]);
   return (
     <div className="preview-overlay" role="dialog" aria-modal="true" aria-label="私有整站预览">
       <div className="preview-toolbar">
@@ -229,11 +235,11 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
           <select
             aria-label="预览页面"
             value={page}
-            onChange={(e) => setPage(e.target.value as Page)}
+            onChange={(e) => setPage(e.target.value as DesignPage)}
           >
-            {Object.entries(pages).map(([id, label]) => (
+            {pages.map((id) => (
               <option key={id} value={id}>
-                {label}
+                {pageLabel(project.draft, id)}
               </option>
             ))}
           </select>
@@ -286,7 +292,7 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
         ) : (
           <iframe
             ref={frame}
-            title={`${pages[page]} ${lang} 私有预览`}
+            title={`${pageLabel(project.draft, page)} ${lang} 私有预览`}
             sandbox="allow-scripts"
             srcDoc={html}
           />

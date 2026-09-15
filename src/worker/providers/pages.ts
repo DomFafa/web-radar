@@ -29,12 +29,12 @@ export function createPagesGateway(
         return respond('Method not allowed', 405);
       try {
         let gate = await fetch(${JSON.stringify(gateUrl)}, {
-          method: 'GET', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(15000)
+          method: 'GET', redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(15000)
         });
         let usePrevious = false;
         if (gate.status === 404 && ${JSON.stringify(previousGateUrl)}) {
           gate = await fetch(${JSON.stringify(previousGateUrl)}, {
-            method: 'GET', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(15000)
+            method: 'GET', redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(15000)
           });
           usePrevious = gate.status === 204;
         }
@@ -43,10 +43,15 @@ export function createPagesGateway(
         if (!isInquiry && (incoming.pathname === '/' || incoming.pathname === '/index.html'))
           return new Response(null, {status: 302, headers: {Location: '/en/index.html', 'Cache-Control': 'no-store'}});
         const publicFiles = ${JSON.stringify(publicFiles ?? null)};
-        if (!isInquiry && publicFiles && !(usePrevious ? publicFiles.previous : publicFiles.current).includes(incoming.pathname.slice(1)))
+        const publicPath = incoming.pathname.slice(1);
+        const artifactPath = publicPath.endsWith('/') ? publicPath + 'index.html' : publicPath;
+        if (!isInquiry && publicFiles && !(usePrevious ? publicFiles.previous : publicFiles.current).includes(artifactPath))
           return respond('Page not found', 404);
+        const previousPath = incoming.pathname.endsWith('/index.html')
+          ? incoming.pathname.slice(0, -'index.html'.length)
+          : incoming.pathname;
         const assetRequest = usePrevious
-          ? new Request(new URL('/__wr_previous' + incoming.pathname, incoming.origin), request)
+          ? new Request(new URL('/__wr_previous' + previousPath, incoming.origin), request)
           : request;
         const headers = new Headers();
         let body;
@@ -87,10 +92,14 @@ export function createPagesGateway(
         }
         const response = isInquiry
           ? await fetch(target.href, {
-            method: request.method, headers, body, redirect: 'error', cache: 'no-store',
+            method: request.method, headers, body, redirect: 'manual', cache: 'no-store',
             signal: AbortSignal.timeout(15000)
           })
           : await env.ASSETS.fetch(assetRequest);
+        if (isInquiry && response.status >= 300 && response.status < 400) {
+          await response.body?.cancel();
+          return respond('Website temporarily unavailable', 503);
+        }
         const out = new Response(response.body, response);
         out.headers.set('Cache-Control', 'no-store');
         out.headers.delete('Set-Cookie');
@@ -278,12 +287,17 @@ export async function publishPages(
     );
   const stableUrl = `https://${name}.pages.dev`;
   const marker = `Web Radar release ${releaseId}`;
-  const deployments = await cf(`${root}/deployments?per_page=100`);
-  if (!Array.isArray(deployments))
-    throw new ProviderError('pages_invalid_response', 'Cloudflare 部署列表格式无效');
-  let deployment = deployments.find(
-    (d: any) => d.deployment_trigger?.metadata?.commit_message === marker,
-  );
+  let deployment: any;
+  // Pages rejects per_page=100. Keep the existing 100-deployment lookup window in valid pages.
+  for (let page = 1; page <= 4; page++) {
+    const deployments = await cf(`${root}/deployments?per_page=25&page=${page}`);
+    if (!Array.isArray(deployments))
+      throw new ProviderError('pages_invalid_response', 'Cloudflare 部署列表格式无效');
+    deployment = deployments.find(
+      (d: any) => d.deployment_trigger?.metadata?.commit_message === marker,
+    );
+    if (deployment || deployments.length < 25) break;
+  }
   if (
     deployment?.latest_stage?.status === 'failure' ||
     deployment?.latest_stage?.status === 'canceled'

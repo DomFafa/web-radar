@@ -12,10 +12,20 @@ export class ApiError extends Error {
 
 // The WR session deliberately lives only in this module's memory, including in embeds.
 let session = '';
+type AssetVariant = 'original' | 'preview';
+const assetCache = new Map<string, { blob: Blob; expires: number }>();
+const assetReads = new Map<string, { promise: Promise<Blob>; controller: AbortController }>();
+function clearAssets() {
+  assetCache.clear();
+  for (const read of assetReads.values()) read.controller.abort();
+  assetReads.clear();
+}
 export function setSession(value: string) {
+  if (session !== value) clearAssets();
   session = value;
 }
 export function clearSession() {
+  clearAssets();
   session = '';
 }
 
@@ -53,19 +63,72 @@ export type SessionResult = {
   target?: 'project' | 'browse';
 };
 
-export async function privateAssetBlob(projectId: string, assetId: string): Promise<Blob> {
-  const response = await fetch(
-    `/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}`,
-    {
-      headers: { Authorization: `Bearer ${session}` },
-      cache: 'no-store',
-    },
+export async function privateAssetBlob(
+  projectId: string,
+  assetId: string,
+  variant: AssetVariant = 'original',
+): Promise<Blob> {
+  const path = `/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}${variant === 'preview' ? '?variant=preview' : ''}`;
+  const cached = assetCache.get(path);
+  if (cached && cached.expires > Date.now()) {
+    assetCache.delete(path);
+    assetCache.set(path, cached);
+    return cached.blob;
+  }
+  assetCache.delete(path);
+  const pending = assetReads.get(path);
+  if (pending) return pending.promise;
+  const token = session;
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(new Error('素材加载超时，请重试。')),
+    variant === 'preview' ? 30_000 : 120_000,
   );
-  if (!response.ok) throw new ApiError('私有素材暂时无法读取，请重新登录后重试。', response.status);
-  return response.blob();
+  const promise = (async () => {
+    try {
+      const response = await fetch(path, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        if (response.status === 401 && session === token && token)
+          window.dispatchEvent(new CustomEvent('wr:session-expired'));
+        throw new ApiError(
+          response.status === 401 ? '登录已过期，请重新登录。' : '图片读取失败，请重试。',
+          response.status,
+        );
+      }
+      const blob = await response.blob();
+      if (controller.signal.aborted || session !== token) throw new Error('登录状态已变化。');
+      // Private images stay only in this session's memory, bounded to 32 MB and five minutes.
+      if (blob.type.startsWith('image/') && blob.size <= 8 * 1024 * 1024) {
+        assetCache.set(path, { blob, expires: Date.now() + 5 * 60 * 1000 });
+        let bytes = [...assetCache.values()].reduce((sum, entry) => sum + entry.blob.size, 0);
+        for (const [key, entry] of assetCache) {
+          if (bytes <= 32 * 1024 * 1024 && assetCache.size <= 60) break;
+          assetCache.delete(key);
+          bytes -= entry.blob.size;
+        }
+      }
+      return blob;
+    } catch (error) {
+      if (controller.signal.aborted) throw controller.signal.reason;
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      if (assetReads.get(path)?.controller === controller) assetReads.delete(path);
+    }
+  })();
+  assetReads.set(path, { promise, controller });
+  return promise;
 }
-export async function privateAsset(projectId: string, assetId: string): Promise<string> {
-  return URL.createObjectURL(await privateAssetBlob(projectId, assetId));
+export async function privateAsset(
+  projectId: string,
+  assetId: string,
+  variant: AssetVariant = 'original',
+): Promise<string> {
+  return URL.createObjectURL(await privateAssetBlob(projectId, assetId, variant));
 }
 
 export function parentOrigin(value: string | null): string | null {

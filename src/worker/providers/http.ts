@@ -45,15 +45,15 @@ export async function limitedBytes(response: Response, max: number): Promise<Uin
 export async function requestJson(
   url: string,
   init: RequestInit = {},
-  options: { mutation?: boolean; maxBytes?: number; provider?: string } = {},
+  options: { mutation?: boolean; maxBytes?: number; provider?: string; timeoutMs?: number } = {},
 ): Promise<any> {
   const provider = options.provider ?? 'provider';
   let response: Response;
   try {
     response = await fetch(url, {
       ...init,
-      redirect: 'error',
-      signal: AbortSignal.timeout(45_000),
+      redirect: 'manual',
+      signal: AbortSignal.timeout(options.timeoutMs ?? 45_000),
     });
   } catch {
     throw new ProviderError(
@@ -63,11 +63,21 @@ export async function requestJson(
     );
   }
   if (!response.ok) {
+    const retryAfter = response.headers.get('retry-after');
+    const retryAfterMs = retryAfter
+      ? /^\d+$/.test(retryAfter)
+        ? Number(retryAfter) * 1000
+        : Math.max(0, Date.parse(retryAfter) - Date.now())
+      : undefined;
     await response.body?.cancel();
     throw new ProviderError(
       `${provider}_http_${response.status}`,
       `${provider} 服务请求失败（HTTP ${response.status}）`,
-      Boolean(options.mutation) && (response.status >= 500 || response.status === 408),
+      Boolean(options.mutation) &&
+        (response.status >= 500 ||
+          response.status === 408 ||
+          (response.status >= 300 && response.status < 400)),
+      Number.isFinite(retryAfterMs) ? retryAfterMs : undefined,
     );
   }
   try {
@@ -116,7 +126,7 @@ export async function downloadMedia(
   const approved = mediaUrl(env, url);
   let response: Response;
   try {
-    response = await fetch(approved, { redirect: 'error', signal: AbortSignal.timeout(90_000) });
+    response = await fetch(approved, { redirect: 'manual', signal: AbortSignal.timeout(90_000) });
   } catch {
     throw new ProviderError('media_download_failed', '生成结果下载失败，可以恢复原任务下载');
   }

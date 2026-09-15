@@ -27,6 +27,7 @@ import {
 } from './components';
 import { Editor } from './Editor';
 import { Admin } from './Admin';
+import { nextDraftStep, projectStatus, workflowSteps } from './workflow';
 
 type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: string[] };
 const embedded = window.location.pathname === '/embed/product-radar';
@@ -165,10 +166,11 @@ export default function App() {
           principal={editorPrincipal}
           services={config?.services || []}
           testMode={!!config?.testMode}
+          embedded={embedded}
           onBack={() => setSelected(null)}
         />
       ) : !needsLogin ? (
-        <div className="app-shell">
+        <div className={`app-shell ${embedded ? 'is-embedded' : ''}`}>
           <aside className="sidebar">
             <a
               className="brand-link"
@@ -180,33 +182,28 @@ export default function App() {
             >
               <Brand />
             </a>
-            <div className="workspace-label">你的工作空间</div>
-            <div className="workspace-switch">
-              <span>{principal.workspaceName.slice(0, 1) || 'W'}</span>
-              <div>
-                <strong>{principal.workspaceName}</strong>
-                <small>{principal.workspaceRole === 'admin' ? '工作区管理员' : '工作区成员'}</small>
-              </div>
-            </div>
+            <div className="workspace-label">网站管理</div>
             <nav aria-label="工作台导航">
               <button
                 className={view === 'projects' ? 'active' : ''}
+                aria-current={view === 'projects' ? 'page' : undefined}
                 onClick={() => setView('projects')}
               >
                 <Icon name="grid" />
-                网站项目<span>01</span>
+                网站项目
               </button>
               <button
                 className={view === 'services' ? 'active' : ''}
+                aria-current={view === 'services' ? 'page' : undefined}
                 onClick={() => setView('services')}
               >
                 <Icon name="globe" />
                 服务状态
-                <Icon name="external" size={13} />
               </button>
               {principal.systemRole === 'super_admin' && (
                 <button
                   className={view === 'admin' ? 'active' : ''}
+                  aria-current={view === 'admin' ? 'page' : undefined}
                   onClick={() => setView('admin')}
                 >
                   <Icon name="settings" />
@@ -215,38 +212,32 @@ export default function App() {
               )}
             </nav>
             <div className="sidebar-bottom">
-              <div className="quiet-card">
-                <Icon name="lock" />
-                <strong>从草稿，到正式网站</strong>
-                <p>
-                  内容在你确认发布之后，
-                  <br />
-                  才会对访客可见。
-                </p>
-              </div>
-              <div className="account">
-                <span className="avatar">{principal.displayName.slice(0, 1).toUpperCase()}</span>
-                <div>
-                  <strong>{principal.displayName}</strong>
-                  <small>{principal.email}</small>
-                </div>
-                {!embedded && (
-                  <button onClick={signOut} aria-label="退出登录">
-                    <Icon name="logout" size={16} />
-                  </button>
-                )}
-              </div>
+              <span className="muted">Web Radar · 网站管理</span>
             </div>
           </aside>
           <main className="workspace-main">
+            <header className="workspace-header">
+              <div>
+                <span>工作区</span>
+                <strong>{principal.workspaceName}</strong>
+              </div>
+              <div className="workspace-account">
+                <span className="avatar">{principal.displayName.slice(0, 1).toUpperCase()}</span>
+                <span>{principal.displayName}</span>
+                {!embedded && (
+                  <Button kind="quiet" onClick={signOut} aria-label="退出登录">
+                    <Icon name="logout" size={16} />
+                  </Button>
+                )}
+              </div>
+            </header>
             {view === 'projects' ? (
-              <Projects principal={principal} onOpen={setSelected} />
+              <Projects onOpen={setSelected} />
             ) : view === 'admin' ? (
               <Admin />
             ) : (
               <>
                 <div className="page-heading">
-                  <span className="eyebrow">CONNECTIONS</span>
                   <h1>服务状态</h1>
                   <p>接入由平台管理员配置。客户无需填写 AI 密钥。</p>
                 </div>
@@ -330,60 +321,16 @@ function Login({
     }
   }
   return (
-    <div className={`login-page ${compact ? 'compact' : ''}`}>
+    <div className={`login-page ${compact ? 'compact' : ''} ${embedded ? 'is-embedded' : ''}`}>
       {!compact && (
-        <section className="login-story">
+        <header className="login-brand">
           <Brand />
-          <div className="login-story-content">
-            <span className="eyebrow">FROM PRODUCT TO PRESENCE</span>
-            <h1>
-              好产品，
-              <br />
-              值得一个
-              <br />
-              <em>好网站。</em>
-            </h1>
-            <p>
-              把你的产品与故事，
-              <br />
-              变成面向世界的品牌网站。
-            </p>
-            <div className="login-art" aria-hidden="true">
-              <div className="art-browser">
-                <div className="art-browser-toolbar">
-                  <i />
-                  <i />
-                  <i />
-                  <span>YOUR NEXT CHAPTER</span>
-                </div>
-                <div className="art-hero">
-                  <span>
-                    Made for
-                    <br />
-                    <em>what’s next.</em>
-                  </span>
-                  <div className="art-orbit" />
-                  <i className="art-play">▷</i>
-                  <small>YOUR BRAND · YOUR STORY</small>
-                </div>
-                <div className="art-lines">
-                  <i />
-                  <i />
-                  <i />
-                </div>
-              </div>
-              <div className="art-caption">一份资料 · 三种风格 · 面向世界</div>
-            </div>
-          </div>
-          <footer>
-            WEB RADAR <span>A workspace for your next chapter.</span>
-          </footer>
-        </section>
+          <span>网站管理工作台</span>
+        </header>
       )}
       <section className="login-form-area">
         <div className="login-form">
-          <span className="eyebrow">YOUR WEBSITE STARTS HERE</span>
-          <h2>{embedded ? '正在连接你的工作空间' : '欢迎回来'}</h2>
+          <h2>{embedded ? '正在连接网站工作区' : '登录 Web Radar'}</h2>
           <p>
             {embedded
               ? '通过 Product Radar 安全验证身份后，继续同一份网站草稿。'
@@ -429,7 +376,7 @@ function Login({
                 />
               </Field>
               <Button type="submit" kind="primary" busy={loading} className="login-submit">
-                进入工作室
+                登录
                 <Icon name="arrow" />
               </Button>
               <div className="login-note">
@@ -468,7 +415,7 @@ function Login({
   );
 }
 
-function Projects({ principal, onOpen }: { principal: Principal; onOpen: (id: string) => void }) {
+function Projects({ onOpen }: { onOpen: (id: string) => void }) {
   const [projects, setProjects] = useState<Project[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
@@ -476,13 +423,24 @@ function Projects({ principal, onOpen }: { principal: Principal; onOpen: (id: st
     [name, setName] = useState(''),
     [creating, setCreating] = useState(false),
     [filter, setFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'offline'>(
+    'all',
+  );
   const createRequest = useRef(requestId());
-  useEffect(() => {
-    api<{ projects: Project[] }>('/api/projects')
-      .then((result) => setProjects(result.projects))
-      .catch((error) => setError(errorMessage(error)))
-      .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setProjects((await api<{ projects: Project[] }>('/api/projects')).projects);
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   }, []);
+  useEffect(() => {
+    void load();
+  }, [load]);
   async function create(event: FormEvent) {
     event.preventDefault();
     setCreating(true);
@@ -500,82 +458,71 @@ function Projects({ principal, onOpen }: { principal: Principal; onOpen: (id: st
       setCreating(false);
     }
   }
-  const filtered = projects.filter((p) =>
-    `${p.name} ${p.draft.company.name}`.toLowerCase().includes(filter.toLowerCase()),
+  const filtered = projects.filter(
+    (project) =>
+      (statusFilter === 'all' || projectStatus(project) === statusFilter) &&
+      `${project.name} ${project.draft.company.name}`
+        .toLowerCase()
+        .includes(filter.trim().toLowerCase()),
   );
-  const published = projects.filter((p) => p.publishedReleaseId && !p.offline).length;
+  const statusLabels = {
+    all: '全部',
+    draft: '草稿',
+    published: '已发布',
+    offline: '已下线',
+  } as const;
   return (
     <>
-      <header className="dashboard-header">
-        <div className="breadcrumb">
-          工作台<span>/</span>网站项目
-        </div>
-        <span className="workspace-status">
-          <i />
-          你的内容，仅授权成员可见
-        </span>
-      </header>
       <div className="page-heading dashboard-title">
         <div>
-          <span className="eyebrow">YOUR DIGITAL SHOWROOM</span>
-          <h1>
-            让好产品，<em>被世界看见。</em>
-          </h1>
-          <p>早上好，{principal.displayName}。从这里继续你的品牌故事。</p>
+          <h1>网站项目</h1>
+          <p>准备公司与产品资料，编辑网站内容，预览确认后发布。</p>
         </div>
-        <Button
-          kind="primary"
-          onClick={() => {
-            setName('');
-            setCreateOpen(true);
-          }}
-        >
-          <Icon name="plus" />
-          创建网站
-        </Button>
-      </div>
-      <div className="overview-strip">
-        <div>
-          <span>全部网站</span>
-          <strong>
-            {String(projects.length).padStart(2, '0')}
-            <small>个项目</small>
-          </strong>
-        </div>
-        <div>
-          <span>已发布</span>
-          <strong>
-            {String(published).padStart(2, '0')}
-            <small>向世界开放</small>
-          </strong>
-        </div>
-        <div>
-          <span>制作中</span>
-          <strong>
-            {String(projects.length - published).padStart(2, '0')}
-            <small>值得期待</small>
-          </strong>
-        </div>
-        <div className="overview-message">
-          <Icon name="globe" size={33} />
-          <p>
-            英文起步，连接全球。
-            <br />
-            <span>可再添加一种网站语言。</span>
-          </p>
+        <div className="title-actions">
+          <Button onClick={load} busy={loading} aria-label="刷新网站列表">
+            <Icon name="refresh" />
+            刷新
+          </Button>
+          <Button
+            kind="primary"
+            onClick={() => {
+              setName('');
+              setCreateOpen(true);
+            }}
+          >
+            <Icon name="plus" />
+            创建网站
+          </Button>
         </div>
       </div>
       {error && <Notice tone="error">{error}</Notice>}
       <div className="project-list-heading">
-        <h2>
-          我的网站 <span>{projects.length}</span>
-        </h2>
+        <div className="project-filters" role="group" aria-label="按发布状态筛选">
+          {(Object.entries(statusLabels) as [keyof typeof statusLabels, string][]).map(
+            ([id, label]) => (
+              <button
+                key={id}
+                aria-pressed={statusFilter === id}
+                onClick={() => setStatusFilter(id)}
+              >
+                {label}
+                <span>
+                  {loading
+                    ? '—'
+                    : id === 'all'
+                      ? projects.length
+                      : projects.filter((p) => projectStatus(p) === id).length}
+                </span>
+              </button>
+            ),
+          )}
+        </div>
         <input
           type="search"
           aria-label="搜索网站"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="搜索网站名称…"
+          placeholder="搜索项目或公司名称"
         />
       </div>
       {loading ? (
@@ -584,67 +531,71 @@ function Projects({ principal, onOpen }: { principal: Principal; onOpen: (id: st
           正在读取网站项目…
         </div>
       ) : projects.length === 0 ? (
-        <div className="first-project">
-          <div className="first-project-copy">
-            <span className="eyebrow">START SOMETHING GOOD</span>
-            <h2>
-              下一个好故事，
-              <br />
-              从你的产品开始。
-            </h2>
-            <p>
-              上传产品、选择风格，做一个有动态视频
-              <br />
-              封面的外贸公司网站。每一步都能预览、调整。
-            </p>
-            <Button kind="primary" onClick={() => setCreateOpen(true)}>
-              创建第一个网站
-              <Icon name="arrow" />
-            </Button>
-            <small>已有 Product Radar 产品？进入项目后直接导入。</small>
-          </div>
-          <div className="first-project-art" aria-hidden="true">
-            <div className="mini-site natural">
-              <span className="mini-nav">
-                YOUR BRAND <i>☰</i>
-              </span>
-              <h3>
-                A little closer
-                <br />
-                to nature.
-              </h3>
-              <div className="mini-form" />
-              <small>Thoughtfully made. Naturally yours.</small>
-            </div>
-            <div className="floating-note">
-              <Icon name="play" />
-              动态视频 Hero
-            </div>
-          </div>
+        <div className="project-empty">
+          <Empty
+            icon="folder"
+            title="还没有网站项目"
+            action={
+              <Button
+                kind="primary"
+                onClick={() => {
+                  setName('');
+                  setCreateOpen(true);
+                }}
+              >
+                <Icon name="plus" />
+                创建第一个网站
+              </Button>
+            }
+          >
+            创建项目后，填写公司资料并上传产品，也可以导入 Product Radar 产品。
+          </Empty>
         </div>
       ) : filtered.length === 0 ? (
-        <Empty title="没有找到匹配的网站">试试其他名称。</Empty>
+        <div className="project-empty">
+          <Empty
+            title="没有符合条件的网站"
+            action={
+              <Button
+                onClick={() => {
+                  setFilter('');
+                  setStatusFilter('all');
+                }}
+              >
+                清除筛选
+              </Button>
+            }
+          >
+            调整发布状态或搜索名称后重试。
+          </Empty>
+        </div>
       ) : (
         <div className="project-grid">
           {filtered.map((project) => (
             <button key={project.id} className="project-card" onClick={() => onOpen(project.id)}>
               <div className={`project-cover ${project.draft.template}`}>
-                {project.draft.posterAssetId || project.draft.products[0]?.imageAssetId ? (
+                {project.draft.siteDesign?.pages.home?.imageAssetId ||
+                project.draft.posterAssetId ||
+                project.draft.products[0]?.imageAssetId ? (
                   <AssetView
                     projectId={project.id}
-                    assetId={project.draft.posterAssetId || project.draft.products[0]?.imageAssetId}
+                    assetId={
+                      project.draft.siteDesign?.pages.home?.imageAssetId ||
+                      project.draft.posterAssetId ||
+                      project.draft.products[0]?.imageAssetId
+                    }
                     alt={project.name}
                   />
                 ) : (
                   <div className="project-cover-art">
                     <div className="cover-orbit" />
-                    <span>{project.draft.company.name || 'Your next chapter.'}</span>
+                    <span>{project.draft.company.name || '尚未添加产品图片'}</span>
                   </div>
                 )}
                 <span
                   className={`pill ${project.publishedReleaseId && !project.offline ? 'green' : 'light'}`}
                 >
-                  {!project.publishedReleaseId ? '草稿' : project.offline ? '已下线' : '已发布'}
+                  {statusLabels[projectStatus(project)]}
                 </span>
                 <div className="cover-open">
                   <Icon name="arrow" />
@@ -662,24 +613,21 @@ function Projects({ principal, onOpen }: { principal: Principal; onOpen: (id: st
                       ]
                     }
                   </span>
-                  <time>{dateTime(project.updatedAt)}</time>
+                  <time dateTime={project.updatedAt}>{dateTime(project.updatedAt)}</time>
+                </div>
+                <div className="project-next">
+                  <span>
+                    {projectStatus(project) === 'published'
+                      ? '编辑网站'
+                      : `继续：${workflowSteps.find(([id]) => id === nextDraftStep(project.draft))?.[1]}`}
+                  </span>
+                  <Icon name="arrow" size={15} />
                 </div>
               </div>
             </button>
           ))}
-          <button className="new-project-card" onClick={() => setCreateOpen(true)}>
-            <span>
-              <Icon name="plus" size={27} />
-            </span>
-            <strong>创建新网站</strong>
-            <small>另一个故事，另一种可能。</small>
-          </button>
         </div>
       )}
-      <div className="workspace-footer">
-        <Brand />
-        <span>Built around your products. Made for your business.</span>
-      </div>
       {createOpen && (
         <Modal title="创建网站项目" onClose={() => setCreateOpen(false)}>
           <form onSubmit={create}>

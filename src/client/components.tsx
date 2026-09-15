@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { privateAsset } from './api';
 import type { ServiceStatus } from '../shared/model';
 
@@ -16,10 +16,7 @@ export function Brand() {
   return (
     <span className="brand">
       <Mark />
-      <span>
-        web<span className="brand-radar">radar</span>
-        <small>WEBSITE STUDIO</small>
-      </span>
+      <span className="brand-wordmark">Web Radar</span>
     </span>
   );
 }
@@ -151,7 +148,12 @@ export function Button({
   busy?: boolean;
 }) {
   return (
-    <button {...props} disabled={props.disabled || busy} className={`button ${kind} ${className}`}>
+    <button
+      {...props}
+      aria-busy={busy || undefined}
+      disabled={props.disabled || busy}
+      className={`button ${kind} ${className}`}
+    >
       {busy && <span className="spinner" />}
       {children}
     </button>
@@ -294,6 +296,9 @@ export function AssetView({
   className = '',
   alt = '产品图片',
   onUrl,
+  variant = 'original',
+  lazy = false,
+  onOpen,
 }: {
   projectId: string;
   assetId?: string;
@@ -301,16 +306,40 @@ export function AssetView({
   className?: string;
   alt?: string;
   onUrl?: (url: string) => void;
+  variant?: 'original' | 'preview';
+  lazy?: boolean;
+  onOpen?: () => void;
 }) {
+  const container = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(!lazy);
+  const [attempt, setAttempt] = useState(0);
   const [url, setUrl] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    if (visible || !lazy) return;
+    if (!('IntersectionObserver' in window)) {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    if (container.current) observer.observe(container.current);
+    return () => observer.disconnect();
+  }, [lazy, visible]);
   useEffect(() => {
     let active = true;
     let objectUrl = '';
     setUrl('');
-    setError(false);
-    if (assetId)
-      privateAsset(projectId, assetId)
+    setError('');
+    if (assetId && (visible || !lazy))
+      privateAsset(projectId, assetId, variant)
         .then((next) => {
           objectUrl = next;
           if (active) {
@@ -318,26 +347,42 @@ export function AssetView({
             onUrl?.(next);
           } else URL.revokeObjectURL(next);
         })
-        .catch(() => {
-          if (active) setError(true);
+        .catch((failure: unknown) => {
+          if (active)
+            setError(failure instanceof Error ? failure.message : '图片读取失败，请重试。');
         });
     return () => {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [projectId, assetId]);
+  }, [projectId, assetId, variant, visible, lazy, attempt]);
   return (
-    <div className={`asset-view ${className}`}>
+    <div ref={container} className={`asset-view ${className}`}>
       {url ? (
         video ? (
           <video src={url} controls playsInline preload="metadata" />
+        ) : onOpen ? (
+          <button type="button" className="asset-open" onClick={onOpen} aria-label={`放大${alt}`}>
+            <img src={url} alt={alt} />
+          </button>
         ) : (
           <img src={url} alt={alt} />
         )
       ) : (
         <span className="asset-placeholder">
           <Icon name={video ? 'play' : 'image'} size={25} />
-          <small>{error ? '素材读取失败' : assetId ? '正在载入' : '添加图片'}</small>
+          <small>
+            {error || (assetId ? (visible || !lazy ? '正在载入' : '滚动查看') : '添加图片')}
+          </small>
+          {error && (
+            <button
+              type="button"
+              className="asset-retry"
+              onClick={() => setAttempt((value) => value + 1)}
+            >
+              重新加载
+            </button>
+          )}
         </span>
       )}
     </div>

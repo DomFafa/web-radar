@@ -92,7 +92,8 @@ export function createIntegrationApp() {
     const supplied = c.req.header('X-Web-Radar-Secret') ?? '';
     if ((await sha256(supplied)) !== (await sha256(config.secret)))
       throw new ApiError(401, 'integration_key_invalid', '集成凭据无效。');
-    const parsed = handoffSchema.safeParse(await jsonBody(c.req.raw));
+    // Imported products carry their full design context; match the project body's 1 MiB limit.
+    const parsed = handoffSchema.safeParse(await jsonBody(c.req.raw, 1024 * 1024));
     if (!parsed.success) throw new ApiError(400, 'invalid_handoff', '建站授权内容有误。');
     const payload = parsed.data;
     assertParent(c.env, payload.parentOrigin);

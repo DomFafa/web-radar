@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { testDb } from './helpers/db';
 import { createAuthApp, mintSession } from '../src/worker/auth';
 import { createIntegrationApp } from '../src/worker/integration';
-import { prService, validateOrigin } from '../src/worker/product-radar';
+import { prService, signInAtPr, testProduct, validateOrigin } from '../src/worker/product-radar';
 import type { AppEnv } from '../src/worker/env';
 import type { Principal } from '../src/shared/model';
 const p: Principal = {
@@ -71,6 +71,42 @@ function exchange(app: ReturnType<typeof createIntegrationApp>, body: unknown) {
   );
 }
 describe('integration grants', () => {
+  it('preserves a batch of eight products with complete design context through authorization', async () => {
+    const app = createIntegrationApp();
+    const products = Array.from({ length: 8 }, (_, index) => ({
+      ...testProduct(),
+      id: `product-${index}`,
+      image: { sourceProductId: `product-${index}`, contentType: null },
+      conditions: {
+        keep: ['original product structure'],
+        source: { notes: 'Approved reference context. '.repeat(2500) },
+        change: ['background only'],
+      },
+    }));
+    const body = { ...payload(), intent: 'create', products };
+    const bytes = new TextEncoder().encode(JSON.stringify(body)).byteLength;
+    expect(bytes).toBeGreaterThan(256 * 1024);
+    expect(bytes).toBeLessThan(1024 * 1024);
+    const issued = await issue(app, body);
+    expect(issued.status).toBe(200);
+    const grant = (await issued.json()) as any;
+    const row = await env.DB.prepare('SELECT payload FROM handoffs WHERE request_id=?')
+      .bind(body.requestId)
+      .first<{ payload: string }>();
+    expect(JSON.parse(row!.payload).products).toEqual(products);
+    const exchanged = await exchange(app, { ...grant, parentOrigin: body.parentOrigin });
+    expect(exchanged.status).toBe(200);
+    expect(((await exchanged.json()) as any).projectId).toBe('project-1');
+  });
+  it('rejects oversized handoffs before validating the upstream account', async () => {
+    const app = createIntegrationApp();
+    const product = testProduct();
+    product.conditions = { source: { notes: 'x'.repeat(1024 * 1024) } };
+    const response = await issue(app, { ...payload(), intent: 'create', products: [product] });
+    expect(response.status).toBe(413);
+    expect(await response.json()).toMatchObject({ code: 'body_too_large' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it('recovers an unconsumed code, rejects changed payload and consumes once', async () => {
     const app = createIntegrationApp();
     const b = payload();
@@ -163,8 +199,30 @@ describe('session and network boundary', () => {
       ).status,
     ).toBe(404);
     await prService(env, p, 'context', {});
-    expect(vi.mocked(fetch).mock.calls[0][1]?.redirect).toBe('error');
+    expect(vi.mocked(fetch).mock.calls[0][1]?.redirect).toBe('manual');
   });
+  it.each([301, 302, 303, 307, 308])(
+    'rejects HTTP %s without forwarding credentials',
+    async (status) => {
+      const upstream = vi.fn(
+        async (_url: unknown, _init?: RequestInit) =>
+          new Response(null, {
+            status,
+            headers: { Location: 'https://other.example.test/collect' },
+          }),
+      );
+      vi.stubGlobal('fetch', upstream);
+      await expect(prService(env, p, 'context')).rejects.toMatchObject({ status: 502 });
+      expect(upstream).toHaveBeenCalledTimes(1);
+      expect(upstream.mock.calls[0][1]?.redirect).toBe('manual');
+      upstream.mockClear();
+      await expect(signInAtPr(env, 'a@example.test', 'test-password')).rejects.toMatchObject({
+        status: 502,
+      });
+      expect(upstream).toHaveBeenCalledTimes(1);
+      expect(upstream.mock.calls[0][1]?.redirect).toBe('manual');
+    },
+  );
   it('validates exact safe origins', () => {
     expect(validateOrigin('https://example.test')).toBe('https://example.test');
     expect(() => validateOrigin('https://example.test/path')).toThrow();
