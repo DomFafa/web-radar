@@ -65,6 +65,7 @@ const allTabLabels: Record<Tab, string> = {
 };
 type SourceChange = { productId: string; before: ProductSnapshot; after: ProductSnapshot };
 const jobKinds: Record<string, string> = {
+  clone: '设计稿生成',
   consultation: '需求沟通',
   script: '脚本生成',
   copy: '文案与译文',
@@ -456,8 +457,8 @@ export function Editor({
     setBusy('clone-generate');
     busyRef.current = 'clone-generate';
     try {
-      patch({ buildBranch: 'clone', cloneConfig: config });
-      return await command('clone/generate', { cloneConfig: config });
+      patch({ buildBranch: 'clone', cloneConfig: { ...projectRef.current?.draft.cloneConfig, ...config } });
+      return await command('clone/start', { cloneConfig: config, requestId: requestId(), autoPublish: true });
     } finally {
       setBusy('');
       busyRef.current = '';
@@ -1220,7 +1221,7 @@ export function Editor({
               <StepFooter
                 hint={
                   draft.buildBranch === 'clone'
-                    ? '进入 100% 像素级克隆配置与 AI 逆向生成流程。'
+                    ? '进入设计稿配置与视觉生成流程。'
                     : draft.buildBranch === 'custom'
                       ? 'AI 会结合产品图片和这些资料，一次只确认一个设计问题。'
                       : '选择精选模版后，系统将秒级自动拼装并呈现可交付的电脑与手机端预览。'
@@ -1267,6 +1268,7 @@ export function Editor({
           )}
           {tab === 'clone-generate' && (
             <CloneEditor
+              testMode={testMode}
               projectId={project.id}
               draft={draft}
               onUpdateDraft={(patchObj) => patch(patchObj)}
@@ -1391,7 +1393,7 @@ export function Editor({
                   <div className="publication-pills">
                     <span className="pill light">
                       {draft.buildBranch === 'clone'
-                        ? '100% 像素级克隆还原'
+                        ? '设计稿还原'
                         : draft.buildBranch !== 'custom'
                           ? `精选模版 · ${draft.template.toUpperCase()}`
                           : draft.consultation?.brief?.visualDirection || '已确认设计方向'}
@@ -1418,14 +1420,14 @@ export function Editor({
                 <section className="panel">
                   <div className="panel-title">
                     <span className="section-index">✓</span>
-                    <h3>100% 像素级克隆代码已就绪</h3>
+                    <h3>{draft.cloneConfig?.generatedHtml ? '设计稿页面代码已保存' : '请先按设计稿生成页面'}</h3>
                     <span>
                       {draft.cloneConfig?.targetUrl ? `参考网址：${draft.cloneConfig.targetUrl}` : '设计稿高保真还原'}
                       {draft.cloneConfig?.generatedAt && ` · 生成于 ${new Date(draft.cloneConfig.generatedAt).toLocaleTimeString()}`}
                     </span>
                   </div>
                   <p className="muted" style={{ margin: '12px 0 16px' }}>
-                    已深度融合目标站点结构与您填写的公司资料、产品矩阵，并完成像素级复刻。点击上方【打开私有整站预览】即可自由切换桌面与手机视口交互查阅，确认无误后即可在下方一键发布上线。
+                    生成状态只表示代码已保存，不代表视觉还原已通过验收。请打开私有整站预览，对照设计图检查桌面、手机、产品图片与联系方式后再发布。
                   </p>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
@@ -2109,7 +2111,7 @@ function JobList({
               >
                 {statusNames[job.status]}
               </span>
-              {['failed', 'unknown'].includes(job.status) && (
+              {job.kind !== 'clone' && ['failed', 'unknown'].includes(job.status) && (
                 <Button disabled={!!busy} onClick={() => onRetry(job)}>
                   恢复 / 重试
                 </Button>

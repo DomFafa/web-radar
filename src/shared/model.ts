@@ -137,6 +137,7 @@ export interface CloneUiImage {
   assetId: string;
   name: string;
   role: CloneUiImageRole;
+  roleSource?: 'auto' | 'manual';
 }
 export interface CloneScrapedData {
   title?: string;
@@ -145,7 +146,20 @@ export interface CloneScrapedData {
   navLinks?: Array<{ href: string; text: string }>;
   sampleText?: string;
 }
+export interface CloneTaskProgress {
+  phase: 'queued' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
+  imagesRead: number;
+  imageCount: number;
+  outputCharacters: number;
+  estimatedSeconds: number;
+  elapsedMs: number;
+  activeSince?: string;
+  pauseRequested?: boolean;
+  publishJobId?: string;
+  url?: string;
+}
 export interface CloneConfig {
+  taskId?: string;
   targetUrl?: string;
   scrapedData?: CloneScrapedData;
   uiImages?: CloneUiImage[];
@@ -153,6 +167,14 @@ export interface CloneConfig {
   model?: string;
   status?: 'idle' | 'scraping' | 'generating' | 'ready' | 'error';
   generatedHtml?: string;
+  generatedFiles?: Record<string, string>;
+  generation?: {
+    mode: 'vision' | 'reference-rebuild' | 'fixture';
+    model?: string;
+    imageCount: number;
+    pageCount: number;
+    visuallyVerified: boolean;
+  };
   generatedAt?: string;
   error?: string;
 }
@@ -214,9 +236,10 @@ export interface Asset {
   createdAt: string;
 }
 export type JobKind =
-  'consultation' | 'script' | 'copy' | 'image' | 'video' | 'site-build' | 'publish' | 'email';
-export type JobStatus = 'queued' | 'running' | 'unknown' | 'succeeded' | 'failed';
+  'consultation' | 'script' | 'copy' | 'image' | 'video' | 'site-build' | 'publish' | 'email' | 'clone';
+export type JobStatus = 'queued' | 'running' | 'unknown' | 'succeeded' | 'failed' | 'paused' | 'cancelled';
 export interface Job {
+  cloneProgress?: CloneTaskProgress;
   id: string;
   projectId: string;
   userId: string;

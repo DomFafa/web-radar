@@ -193,3 +193,27 @@ Worker 回退使用上面记录的旧版本。复刻服务更新可回退 `curre
 - 发布后：线上健康检查正常；JS/CSS 与本地构建逐字节一致；模板缩略图及两个参考视频可读取；未登录 me 为 401，生产测试登录为 404。真实浏览器登录页正常、无 JavaScript 错误。
 - 本次未使用正式账号执行付费模型生成或发布客户网站。线上登录后的业务流程由本地隔离回归覆盖，不将其声明为正式环境端到端验收。
 - 部署日志、前后版本快照、资源哈希及浏览器截图：`artifacts/deploy-20260916/`；此前功能回归记录：`artifacts/session-review/README.md`。
+
+### 2026-09-16 — Design reconstruction correction
+
+- Latest production Worker version: `c6521b26-1cb3-4c27-acc2-041f51e81c7d` on `https://web-radar.net`, deployed with `--keep-vars`.
+- Client bundle: `/assets/index-D7CRmbzc.js`; CSS: `/assets/index-DagSt_t8.css`.
+- `npm run check`: 20 test files / 299 tests passed, plus TypeScript and Vite build.
+- Local project `af8c295b-48f0-487b-8796-19469e44d50b`: direct reference reconstruction published as release `14cedaa1-1502-481a-aaf4-7db7979f3626`, current project version 20. This is a **local test release**, not a Cloudflare-hosted customer site.
+- Anonymous browser checks: five page types at 1536 and 390 px, no broken/private media URLs or horizontal overflow, navigation works. Private editor previews and correct 5-page / 8-artwork classification passed.
+- Live model verification was separately authorized but timed out; it was not treated as successful visual generation. See `docs/clone-fidelity-repair.md` for the cause, validation boundaries and repeatable repair scripts.
+
+### 2026-09-16 视觉接口连接及上传进度修复
+
+本地入口现为 `npm run dev:test`（测试环境）或 `npm run dev`，自动接入系统/环境 HTTP 代理，数据仍保存在 `.wrangler/state`。避免直接运行旧 `wrangler dev` 命令绕过出站适配。线上使用 Cloudflare 自身出站网络，修复的重定向参数同样适用。
+上传进度基于浏览器传输字节与服务端完成确认，支持部分成功保留及失败重试。本次不需要数据库迁移，不重新生成或覆盖已有发布网站。
+
+部署版本：`d5885456-690a-4552-a452-ade821f67c16`。构建：`index-M3SRmWnK.js` / `index-DagSt_t8.css`。验证：308 项单元测试、真实 workerd 模拟生成与官方接口连通性、浏览器上传部分失败/保留/重试均通过；本地用户项目重启前后数据与版本一致。
+
+### 2026-09-16 后台设计生成任务
+
+设计生成与自动发布改为持久化后台任务，接口先返回任务 ID。界面每两秒同步阶段、图片读取数、流式输出字符数，显示执行耗时和估计剩余区间。支持暂停、继续、停止和刷新恢复。模型执行中暂停会在结果保存后生效；继续读取检查点，不再次调用模型。发布已提交后不可暂停/停止。
+
+本次复用现有 jobs 表，无结构迁移。验证：317 项测试通过；隔离真实浏览器验证了运行/暂停/停止时刷新、恢复后不重复调用模型及无人值守自动发布。构建资源：`index-DJzQDzUU.js`。
+
+后台任务功能线上版本：`510d87fc-5b58-43e8-a6a7-19a8e22561cb`。

@@ -138,7 +138,7 @@ try {
       sent.push({ path: new URL(r.url()).pathname, body: r.postDataJSON() });
   });
   for (let i = 0; i < 2; i++) {
-    await page.getByRole('button', { name: /(?:开始|重新) 100% 像素级/ }).click();
+    await page.getByRole('button', { name: /按设计稿生成并部署/ }).click();
     await page.waitForFunction(
       () =>
         !!document

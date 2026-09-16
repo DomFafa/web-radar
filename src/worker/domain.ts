@@ -1,3 +1,4 @@
+import { normalizeCloneImages } from '../shared/clone';
 import { z } from 'zod';
 import type { Draft, Principal, Project } from '../shared/model';
 import {
@@ -140,6 +141,7 @@ const draftSchema = z.object({
     .optional(),
   cloneConfig: z
     .object({
+      taskId: z.string().optional(),
       targetUrl: z.string().max(2000).optional(),
       scrapedData: z
         .object({
@@ -157,12 +159,22 @@ const draftSchema = z.object({
             assetId: id,
             name: z.string().max(200),
             role: z.enum(['home', 'catalog', 'detail', 'about', 'contact', 'asset']),
+            roleSource: z.enum(['auto', 'manual']).optional(),
           }),
         )
         .optional(),
       instructions: z.string().max(5000).optional(),
       status: z.enum(['idle', 'scraping', 'generating', 'ready', 'error']).optional(),
+      model: z.string().max(100).optional(),
       generatedHtml: z.string().optional(),
+      generatedFiles: z.record(z.string(), z.string()).optional(),
+      generation: z.object({
+        mode: z.enum(['vision', 'reference-rebuild', 'fixture']),
+        model: z.string().max(100).optional(),
+        imageCount: z.number().int().nonnegative(),
+        pageCount: z.number().int().nonnegative(),
+        visuallyVerified: z.boolean(),
+      }).optional(),
       generatedAt: z.string().optional(),
       error: z.string().max(2000).optional(),
     })
@@ -375,6 +387,7 @@ export function publicAssetReferences(d: Draft): string[] {
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),
+        ...(d.buildBranch === 'clone' ? normalizeCloneImages(d.cloneConfig?.uiImages).filter(img => img.role === 'asset').map(img => img.assetId) : []),
       ].filter((v): v is string => Boolean(v)),
     ),
   ];
@@ -422,10 +435,10 @@ export function assertSiteContentReady(d: Draft): void {
 export function assertPublishable(d: Draft): void {
   if (d.buildBranch === 'clone') {
     requireCondition(
-      Boolean(d.cloneConfig?.generatedHtml || d.cloneConfig?.status === 'ready'),
+      Boolean(d.cloneConfig?.generatedHtml?.trim()),
       400,
       'clone_not_ready',
-      '请先完成 100% 像素级克隆生成后再发布。',
+      '请先生成可用的页面代码后再发布。',
     );
     return;
   }

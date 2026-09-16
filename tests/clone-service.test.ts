@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { guessCloneImageRole, normalizeCloneImages } from '../src/shared/clone';
+import { publicAssetReferences, validateDraft } from '../src/worker/domain';
+import { generateCloneBundle, buildCloneFiles, renderCloneFiles } from '../src/worker/clone-service';
 import { defaultDraft } from '../src/worker/domain';
 import { cloneWorkflowSteps, getWorkflowSteps, draftChecklist } from '../src/client/workflow';
 import {
@@ -57,12 +60,9 @@ describe('100% 像素级克隆与还原模式 (Clone Workflow)', () => {
 
     const prompt = buildClonePrompt('Senseng Toy Store', config, 'Senseng Industrial');
 
-    expect(prompt).toContain('100% 像素级高保真克隆专家');
-    expect(prompt).toContain('四大核心视觉解析与防畸变铁律');
-    expect(prompt).toContain('导航菜单栏必须 100% 完整常驻显示且下划线精确居中');
-    expect(prompt).toContain('Hero 展台必须为一体化完整场景大图，严禁散装碎拼');
-    expect(prompt).toContain('首页商品卡片严禁硬塞规格文字');
-    expect(prompt).toContain('按钮形态与图标几何防畸变');
+    expect(prompt).toContain('VISUAL SOURCE OF TRUTH');
+    expect(prompt).toContain('Artwork images are assets, NOT page layouts');
+    expect(prompt).toContain('no Tailwind CDN');
     expect(prompt).toContain('https://squishytoys.store');
     expect(prompt).toContain('Senseng Squishy Toys');
     expect(prompt).toContain('index.jpg');
@@ -87,6 +87,7 @@ describe('100% 像素级克隆与还原模式 (Clone Workflow)', () => {
     const env: AppEnv = {
       ENVIRONMENT: 'test',
       TEST_PROVIDERS: 'true',
+      CLONE_TEST_FIXTURE: 'true',
     } as unknown as AppEnv;
 
     const html = await generateCloneSite(env, project, {
@@ -95,7 +96,7 @@ describe('100% 像素级克隆与还原模式 (Clone Workflow)', () => {
 
     expect(html).toContain('<!DOCTYPE html>');
     expect(html).toContain('Clone Test Site');
-    expect(html).toContain('100% 像素级克隆与还原模式');
+    expect(html).toContain('TEST FIXTURE');
   });
 
   it('syncDraftDataIntoHtml strictly synchronizes company details, contacts and products into HTML', () => {
@@ -185,3 +186,85 @@ describe('100% 像素级克隆与还原模式 (Clone Workflow)', () => {
   });
 });
 
+
+function projectFixture(): Project {
+  const draft = defaultDraft();
+  draft.buildBranch = 'clone';
+  draft.company.name = 'Senseng';
+  draft.products = [{ id: 'p1', name: 'Cat <one>', description: 'Product one', material: '', dimensions: '', imageAssetId: 'photo1' }, { id: 'p2', name: 'Penguin', description: 'Product two', material: '', dimensions: '', imageAssetId: 'photo2' }];
+  draft.primaryProductId = 'p1';
+  draft.languages = ['en'];
+  return { id: 'clone-test', ownerId: 'owner', workspaceId: 'workspace', name: 'Clone', version: 1, draft, createdAt: '', updatedAt: '', offline: true };
+}
+function modelOutput() {
+  const body = '<header><a href="/en/products/index.html" data-wr-page="catalog">Products</a></header><main><h1>Reference layout</h1><img src="__WR_ASSET_photo1__" alt="Cat"></main>';
+  return { css: 'body{margin:0;color:#073b91}', pages: { en: {
+    home: body, catalog: body, about: body, contact: body,
+    detail: '<header>Product details</header><main><h1>{{product.name}}</h1><img src="{{product.image}}" alt="{{product.name}}"><p>{{product.description}}</p></main>',
+  } } };
+}
+afterEach(() => vi.unstubAllGlobals());
+
+describe('design reconstruction integrity', () => {
+  it('classifies numbered product photos separately and repairs legacy guesses while preserving manual choices', () => {
+    expect(guessCloneImageRole('products-1.jpg')).toBe('asset');
+    expect(guessCloneImageRole('product-page.jpg')).toBe('catalog');
+    expect(guessCloneImageRole('product-detail.jpg')).toBe('detail');
+    const images = [{ id: '1', assetId: '1', name: 'products-1.jpg', role: 'catalog' as const }];
+    expect(normalizeCloneImages(images)[0].role).toBe('asset');
+    expect(normalizeCloneImages([{ ...images[0], roleSource: 'manual' }])[0].role).toBe('catalog');
+  });
+  it('never returns demo HTML without a provider or an explicit test fixture switch', async () => {
+    await expect(generateCloneBundle({ ENVIRONMENT: 'test', TEST_PROVIDERS: 'true' } as AppEnv, projectFixture(), {})).rejects.toMatchObject({ code: 'clone_provider_missing' });
+    await expect(generateCloneBundle({ ENVIRONMENT: 'production', CLONE_TEST_FIXTURE: 'true' } as AppEnv, projectFixture(), {})).rejects.toMatchObject({ code: 'clone_provider_missing' });
+  });
+  it('sends all 13 images at high detail to the configured provider with the selected model', async () => {
+    const project = projectFixture();
+    const images = Array.from({ length: 13 }, (_, i) => ({ id: String(i), assetId: `ref-${i}`, name: i === 0 ? 'index.jpg' : `products-${i}.jpg`, role: i === 0 ? 'home' as const : 'asset' as const }));
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(modelOutput()) } }] })));
+    vi.stubGlobal('fetch', fetchMock);
+    const bundle = await generateCloneBundle({ TEXT_API_KEY: 'test-key', TEXT_API_BASE_URL: 'https://provider.example/v1' } as AppEnv, project, { model: 'selected-model', uiImages: images }, async () => 'data:image/jpeg;base64,YWJj');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://provider.example/v1/chat/completions');
+    expect(fetchMock.mock.calls[0][1].redirect).toBe('manual');
+    const request = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(request.model).toBe('selected-model');
+    expect(request.messages[1].content.filter((x: { type: string }) => x.type === 'image_url')).toHaveLength(13);
+    expect(bundle.generation).toMatchObject({ mode: 'vision', imageCount: 13, model: 'selected-model', visuallyVerified: false });
+    expect(bundle.generatedFiles['en/products/p1/index.html']).toContain('Cat &lt;one&gt;');
+    expect(bundle.generatedFiles['en/products/p2/index.html']).toContain('Penguin');
+    expect(bundle.generatedFiles['en/products/p2/index.html']).not.toContain('__WR_ASSET_photo1__');
+  });
+  it('fails on unreadable references before calling the model, and never silently drops images', async () => {
+    const fetchMock = vi.fn(); vi.stubGlobal('fetch', fetchMock);
+    await expect(generateCloneBundle({ OPENAI_API_KEY: 'test-key' } as AppEnv, projectFixture(), { uiImages: [{ id: '1', assetId: 'missing', name: 'index.jpg', role: 'home' }] }, async () => null)).rejects.toMatchObject({ code: 'clone_image_unreadable' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it.each([302, 404, 503])('does not follow redirects or switch endpoints/models after HTTP %s', async status => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('model unavailable', { status })); vi.stubGlobal('fetch', fetchMock);
+    await expect(generateCloneBundle({ OPENAI_API_KEY: 'test-key' } as AppEnv, projectFixture(), { uiImages: [{ id: '1', assetId: 'reference', name: 'index.jpg', role: 'home' }] }, async () => 'data:image/png;base64,YWJj')).rejects.toMatchObject({ code: 'clone_provider_error' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+  it('rejects incomplete output instead of publishing a truncated or single-page result', () => {
+    expect(() => buildCloneFiles({ css: 'body{}', pages: { en: { home: '<main>Missing pages</main>' } } }, projectFixture().draft)).toThrow();
+  });
+  it('keeps selected model/provenance and maps media and navigation for anonymous published routes', () => {
+    const draft = projectFixture().draft;
+    draft.cloneConfig = { model: 'selected-model', uiImages: [{ id: '1', assetId: 'design1', name: 'index.jpg', role: 'home' }, { id: '2', assetId: 'art1', name: 'hero.jpg', role: 'asset' }], generatedFiles: buildCloneFiles(modelOutput(), draft), generation: { mode: 'vision', model: 'selected-model', imageCount: 2, pageCount: 6, visuallyVerified: false } };
+    expect(validateDraft(draft).cloneConfig?.model).toBe('selected-model');
+    expect(publicAssetReferences(draft)).toContain('art1');
+    expect(publicAssetReferences(draft)).not.toContain('design1');
+    const files = renderCloneFiles(draft, { projectId: 'clone-test', assetUrl: id => `https://example.com/public/sites/clone-test/assets/${id}`, inquiryUrl: '/api/public/sites/clone-test/inquiries', basePath: '/public/sites/clone-test' });
+    expect(files['en/index.html']).toContain('https://example.com/public/sites/clone-test/assets/photo1');
+    expect(files['en/index.html']).toContain('href="/public/sites/clone-test/en/products/index.html"');
+    expect(files['en/index.html']).not.toContain('/api/projects/');
+  });
+  it('fixes legacy private image URLs without exposing arbitrary design assets', () => {
+    const draft = projectFixture().draft;
+    draft.cloneConfig = { generatedHtml: '<html><body><img src="/api/projects/clone-test/assets/photo1"><img src="/api/projects/clone-test/assets/design1"></body></html>' };
+    const html = renderCloneFiles(draft, { projectId: 'clone-test', assetUrl: id => `/public/assets/${id}`, inquiryUrl: '/inquiries' })['en/index.html'];
+    expect(html).toContain('/public/assets/photo1');
+    expect(html).not.toContain('design1');
+    expect(html).not.toContain('/api/projects/');
+  });
+});

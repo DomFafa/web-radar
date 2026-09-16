@@ -424,6 +424,8 @@ export const dateTime = (value: string) =>
     minute: '2-digit',
   });
 export const statusNames: Record<string, string> = {
+  paused: '已暂停',
+  cancelled: '已停止',
   queued: '等待处理',
   running: '处理中',
   unknown: '等待核对',

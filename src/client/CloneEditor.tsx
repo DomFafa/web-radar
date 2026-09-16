@@ -1,10 +1,13 @@
-import { useState, useRef } from 'react';
+import { CloneTaskPanel } from './CloneTaskPanel';
+import { useState, useRef, useEffect } from 'react';
+import { guessCloneImageRole, normalizeCloneImages } from '../shared/clone';
 import type { CloneConfig, CloneUiImage, CloneUiImageRole, Draft, Project, Job, ProjectDetail } from '../shared/model';
-import { api, post } from './api';
+import { api, post, upload } from './api';
 import { AssetView, Button, Notice } from './components';
 
 interface CloneEditorProps {
   projectId: string;
+  testMode: boolean;
   onGenerate: (config: CloneConfig) => Promise<Project>;
   onPublish: (project: Project) => Promise<Job>;
   draft: Draft;
@@ -25,6 +28,7 @@ const ROLE_LABELS: Record<CloneUiImageRole, string> = {
 
 export function CloneEditor({
   projectId,
+  testMode,
   onGenerate,
   onPublish,
   draft,
@@ -42,7 +46,7 @@ export function CloneEditor({
 
   const [targetUrl, setTargetUrl] = useState(cloneConfig.targetUrl || '');
   const [instructions, setInstructions] = useState(cloneConfig.instructions || '');
-  const [uiImages, setUiImages] = useState<CloneUiImage[]>(cloneConfig.uiImages || []);
+  const [uiImages, setUiImages] = useState<CloneUiImage[]>(normalizeCloneImages(cloneConfig.uiImages));
   const [scrapedData, setScrapedData] = useState(cloneConfig.scrapedData);
   const [selectedModel, setSelectedModel] = useState<string>(cloneConfig.model || 'gpt-6-astra');
 
@@ -51,9 +55,13 @@ export function CloneEditor({
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const uploadBusy = useRef(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    name: string; completed: number; total: number; percent: number; processing: boolean;
+  } | null>(null);
 
-  const [generating, setGenerating] = useState(cloneConfig.status === 'generating');
-  const [genStep, setGenStep] = useState(1);
+  const [generating, setGenerating] = useState(false);
+  const [generationInfo, setGenerationInfo] = useState(cloneConfig.generation);
   const [genError, setGenError] = useState(cloneConfig.error || '');
   const [isSuccess, setIsSuccess] = useState(
     Boolean(cloneConfig.generatedHtml || cloneConfig.status === 'ready'),
@@ -64,6 +72,11 @@ export function CloneEditor({
   const [deployError, setDeployError] = useState<string>('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const launching = useRef(false);
+  useEffect(() => {
+    setGenerationInfo(cloneConfig.generation);
+    setIsSuccess(Boolean(cloneConfig.generatedHtml));
+  }, [cloneConfig.generatedAt, cloneConfig.generation]);
 
   // Sync state up to project draft
   function syncConfig(updated: Partial<CloneConfig>) {
@@ -102,54 +115,53 @@ export function CloneEditor({
     }
   }
 
-  // Handle mockup image upload
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  async function handleFileUpload(files: File[]) {
+    if (!files.length || uploadBusy.current || generating) return;
+    uploadBusy.current = true;
     setUploading(true);
     setUploadError('');
-
+    const totalBytes = files.reduce((sum, file) => sum + file.size, 0) || 1;
+    let completedBytes = 0;
+    let completed = 0;
+    let currentName = '';
+    const newImages = [...uiImages];
     try {
-      const newImages: CloneUiImage[] = [...uiImages];
-      for (const file of Array.from(files)) {
+      for (const file of files) {
+        currentName = file.name;
+        const updateProgress = (fraction: number) => setUploadProgress({
+          name: file.name, completed, total: files.length,
+          // Completion is confirmed by the server, not just the last transmitted byte.
+          percent: Math.min(99, Math.floor((completedBytes + file.size * fraction) / totalBytes * 100)),
+          processing: fraction === 1,
+        });
+        updateProgress(0);
         const form = new FormData();
         form.append('file', file);
-        const uploadResult = await api<{ asset: { id: string } }>(
-          `/api/projects/${encodeURIComponent(projectId)}/uploads`,
-          {
-            method: 'POST',
-            body: form,
-          },
+        const result = await upload<{ asset: { id: string } }>(
+          `/api/projects/${encodeURIComponent(projectId)}/uploads`, form, updateProgress,
         );
-        // Automatically guess role based on file name
-        let role: CloneUiImageRole = 'asset';
-        const lower = file.name.toLowerCase();
-        if (/index|home|main/i.test(lower)) role = 'home';
-        else if (/catalog|products|list|shop/i.test(lower)) role = 'catalog';
-        else if (/detail|product|item/i.test(lower)) role = 'detail';
-        else if (/about/i.test(lower)) role = 'about';
-        else if (/contact/i.test(lower)) role = 'contact';
-
         newImages.push({
-          id: Math.random().toString(36).slice(2, 10),
-          assetId: uploadResult.asset.id,
-          name: file.name,
-          role,
+          id: crypto.randomUUID(), assetId: result.asset.id, name: file.name,
+          role: guessCloneImageRole(file.name), roleSource: 'auto',
         });
+        completed++;
+        completedBytes += file.size;
+        setUiImages([...newImages]);
+        syncConfig({ uiImages: [...newImages] });
       }
-      setUiImages(newImages);
-      syncConfig({ uiImages: newImages });
+      setUploadProgress({ name: '', completed, total: files.length, percent: 100, processing: false });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '图片上传失败。';
-      setUploadError(msg);
+      setUploadError(`${currentName}：${msg} 已保留本次成功上传的 ${completed} 张图片；可重新选择未完成的图片。`);
     } finally {
+      uploadBusy.current = false;
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
   function handleRoleChange(imageId: string, newRole: CloneUiImageRole) {
-    const next = uiImages.map((img) => (img.id === imageId ? { ...img, role: newRole } : img));
+    const next = uiImages.map((img) => (img.id === imageId ? { ...img, role: newRole, roleSource: 'manual' as const } : img));
     setUiImages(next);
     syncConfig({ uiImages: next });
   }
@@ -167,17 +179,14 @@ export function CloneEditor({
       return;
     }
 
+    if (launching.current) return;
+    launching.current = true;
     setGenerating(true);
     setGenError('');
     setIsSuccess(false);
-    setGenStep(1);
     setDeploying(false);
     setDeployedUrl('');
     setDeployError('');
-
-    const stepInterval = setInterval(() => {
-      setGenStep((prev) => (prev < 4 ? prev + 1 : prev));
-    }, 4500);
 
     try {
       const payloadConfig: CloneConfig = {
@@ -188,46 +197,19 @@ export function CloneEditor({
         model: selectedModel,
       };
 
-      const generated = await onGenerate(payloadConfig);
-      clearInterval(stepInterval);
-      setGenStep(4);
-      setIsSuccess(true);
-
-      // Automatically trigger deployment to Cloudflare Pages
-      setDeploying(true);
-      try {
-        const job = await onPublish(generated);
-        // Only this job's release confirms success; an older siteUrl is not completion.
-        for (let i = 0; i < 30; i++) {
-          await new Promise((r) => setTimeout(r, 2000));
-          const latest = await api<ProjectDetail>(`/api/projects/${encodeURIComponent(projectId)}`);
-          const currentJob = latest.jobs.find(item => item.id === job.id);
-          if (currentJob?.status === 'failed') throw new Error(currentJob.error || '发布失败，请在发布页重试。');
-          const release = latest.releases.find(item => item.id === currentJob?.input.releaseId);
-          if (currentJob?.status === 'succeeded' && release?.status === 'succeeded' && release.url) {
-            setDeployedUrl(release.url);
-            break;
-          }
-          if (i === 29) setDeployError('发布任务仍在处理中，可前往发布页查看进度。');
-        }
-        if (onRefresh) await onRefresh();
-      } catch (depErr: unknown) {
-        const dmsg = depErr instanceof Error ? depErr.message : '自动发布任务排队中';
-        setDeployError(dmsg);
-      } finally {
-        setDeploying(false);
-      }
+      await onGenerate(payloadConfig);
+      // The server now owns generation and publication; polling survives reloads.
     } catch (err: unknown) {
-      clearInterval(stepInterval);
       const msg = err instanceof Error ? err.message : '像素级克隆生成失败，请稍后重试。';
       setGenError(msg);
-
-    } finally {
       setGenerating(false);
+    } finally {
+      launching.current = false;
     }
   }
 
   return (
+    <>
     <fieldset disabled={generating || uploading} className="clone-editor" style={{ maxWidth: '1100px', width: '100%', minWidth: 0, border: 0, margin: '0 auto', padding: '1.5rem 0' }}>
       {/* Mode Header */}
       <div
@@ -255,7 +237,7 @@ export function CloneEditor({
                 letterSpacing: '0.05em',
               }}
             >
-              100% 像素级克隆与还原模式
+              设计稿还原模式
             </span>
             <span
               style={{
@@ -267,14 +249,14 @@ export function CloneEditor({
                 color: '#fff',
               }}
             >
-              OPENAI VISION POWERED
+              DESIGN TO WEBSITE
             </span>
           </div>
           <h2 style={{ fontSize: '22px', fontWeight: 800, margin: 0 }}>
-            🎯 目标网站/设计稿 1:1 像素级复刻
+            🎯 按设计稿重建网站
           </h2>
           <p style={{ margin: '8px 0 0', opacity: 0.9, fontSize: '13px', maxWidth: '680px' }}>
-            输入您喜欢的竞品或参考网站 URL，或上传 Figma/原型设计图，AI 将 1:1 像素级逆向还原全站结构、Hero 展台、商品列表、导航交互与视觉规范。
+            上传每个页面的设计图和独立产品素材，按参考布局生成可编辑的网站。生成后请对照预览检查，还原程度以实际页面为准。
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -303,7 +285,7 @@ export function CloneEditor({
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ color: '#10b981', fontWeight: 800 }}>✓</span>
             <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
-              已自动同步企业资料与商品（将 100% 注入新网站）：
+              将使用当前企业资料与商品：
             </span>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -366,7 +348,7 @@ export function CloneEditor({
             </h3>
           </div>
           <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#64748b' }}>
-            输入需要 1:1 像素级克隆的目标站点地址，系统将自动嗅探抓取网站标题、导航链接、栏目排版与主体内容。
+            网址用于提取标题、导航和文本。需要还原视觉布局时，请同时上传页面截图；抓取文字不等于读取网页设计。
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <input
@@ -416,7 +398,7 @@ export function CloneEditor({
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                  ✅ 已成功解析目标站点结构
+                  ✅ 已提取网页文字与导航
                 </div>
                 <button
                   onClick={() => {
@@ -488,7 +470,7 @@ export function CloneEditor({
             </span>
           </div>
           <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#64748b' }}>
-            支持同时拖入或多选页面设计图（index、products、product-detail、contact 等）及商品展台图。AI 将根据 Vision 视觉模型 1:1 精确复刻图片中的所有像素级排版细节。
+            支持多选页面设计图（index、product-page、product-detail、contact 等）与独立商品图片。请确认页面角色；products-1、products-2 等编号图片会识别为素材，所有上传图片都会参与生成。
           </p>
 
           <input
@@ -496,18 +478,28 @@ export function CloneEditor({
             type="file"
             multiple
             accept="image/*"
-            onChange={handleFileUpload}
+            onChange={(e) => void handleFileUpload(Array.from(e.target.files || []))}
             style={{ display: 'none' }}
           />
 
           <div
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => { if (!uploadBusy.current && !generating) fileInputRef.current?.click(); }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); void handleFileUpload(Array.from(e.dataTransfer.files)); }}
+            role="button"
+            tabIndex={uploading || generating ? -1 : 0}
+            aria-disabled={uploading || generating}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && !uploadBusy.current && !generating) {
+                e.preventDefault(); fileInputRef.current?.click();
+              }
+            }}
             style={{
               border: '2px dashed #cbd5e1',
               borderRadius: '12px',
               padding: '24px',
               textAlign: 'center',
-              cursor: 'pointer',
+              cursor: uploading ? 'wait' : 'pointer',
               background: '#f8fafc',
               transition: 'background 0.2s',
             }}
@@ -522,6 +514,21 @@ export function CloneEditor({
               支持 PNG、JPG、WEBP 格式高保真效果图
             </div>
           </div>
+
+          {uploadProgress && (
+            <div style={{ marginTop: '14px', color: '#475569', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
+                <span role="status" aria-live="polite">
+                  {uploadError ? '上传中断' : !uploading ? '上传完成' : uploadProgress.processing ? '图片已传输，正在保存…' : '正在上传图片…'}
+                  {' '}已完成 {uploadProgress.completed} / {uploadProgress.total} 张
+                </span>
+                <strong style={{ color: '#4f46e5' }}>{uploadProgress.percent}%</strong>
+              </div>
+              <progress aria-label="图片上传总进度" value={uploadProgress.percent} max={100}
+                style={{ width: '100%', height: '10px', accentColor: '#6366f1', display: 'block' }} />
+              {uploading && <div style={{ marginTop: '8px', overflowWrap: 'anywhere', color: '#64748b' }}>{uploadProgress.name}</div>}
+            </div>
+          )}
 
           {uploadError && (
             <div style={{ marginTop: '12px' }}>
@@ -646,7 +653,7 @@ export function CloneEditor({
               setInstructions(e.target.value);
               syncConfig({ instructions: e.target.value });
             }}
-            placeholder={`例如：\n100% 像素级还原参考设计稿的布局结构、配色与商品展台。\n将品牌名称设为「${draft.company.name || '我的品牌'}」，联系方式设为「${draft.company.email || 'contact@brand.com'}」。\n首页商品卡片保持紧凑纯净，点击后平滑跳转或展开商品详情。`}
+            placeholder={`例如：\n保留参考设计稿的布局结构、配色与商品展台。\n将品牌名称设为「${draft.company.name || '我的品牌'}」，联系方式设为「${draft.company.email || 'contact@brand.com'}」。\n首页商品卡片保持紧凑纯净，点击后平滑跳转或展开商品详情。`}
             style={{
               width: '100%',
               padding: '12px 14px',
@@ -684,7 +691,7 @@ export function CloneEditor({
             }}
           >
             <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>
-              🤖 视觉逆向与生图/代码模型:
+              🤖 视觉分析与代码生成模型：
             </span>
             <select
               value={selectedModel}
@@ -712,6 +719,12 @@ export function CloneEditor({
               <option value="gpt-4o">🛠️ GPT-4o (兼容模式)</option>
             </select>
           </div>
+
+          {generationInfo && <p style={{ fontSize: '13px', color: '#475569', textAlign: 'left' }}>
+            {generationInfo.mode === 'fixture' ? '测试演示：没有调用视觉模型，不代表设计还原结果。' : generationInfo.mode === 'reference-rebuild' ? '按设计稿直接重建的页面，未调用视觉模型。' : `实际模型：${generationInfo.model}；读取 ${generationInfo.imageCount} 张图片。`}
+            {' '}{generationInfo.pageCount} 个页面文件。{generationInfo.visuallyVerified ? '已进行人工视觉检查。' : '尚未进行视觉验收。'}
+          </p>}
+          {!generationInfo && isSuccess && <Notice tone="warning">这是旧版生成结果，缺少视觉生成记录。请检查页面是否使用了设计图后再发布。</Notice>}
 
           {genError && (
             <div style={{ marginBottom: '16px', textAlign: 'left' }}>
@@ -745,12 +758,12 @@ export function CloneEditor({
                 <span style={{ fontSize: '28px' }}>🚀</span>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontWeight: 800, fontSize: '15px' }}>
-                    100% 像素级生成完成，且已自动部署至 Cloudflare！
+                    {deployedUrl ? (testMode ? '页面已生成，并已发布到本地测试站点' : '页面已生成，并已完成发布') : '页面代码已生成，发布状态请查看下方'}
                   </div>
                   <div style={{ fontSize: '13px', opacity: 0.9, marginTop: '3px' }}>
                     {deployedUrl ? (
                       <span>
-                        线上访问地址:{' '}
+                        {testMode ? '本地测试地址：' : '网站地址：'}{' '}
                         <a
                           href={deployedUrl}
                           target="_blank"
@@ -765,9 +778,9 @@ export function CloneEditor({
                         </a>
                       </span>
                     ) : deploying ? (
-                      <span>正在向 Cloudflare Pages 同步发布中，请稍候…</span>
+                      <span>正在发布，请稍候…</span>
                     ) : (
-                      <span>已成功生成全站独立代码并同步至部署管线。</span>
+                      <span>代码已保存。请先检查预览；生成完成不代表视觉还原已通过验证。</span>
                     )}
                   </div>
                 </div>
@@ -792,7 +805,7 @@ export function CloneEditor({
                       boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
                     }}
                   >
-                    🌐 打开线上网站 ↗
+                    🌐 打开网站 ↗
                   </a>
                 )}
                 <Button
@@ -807,74 +820,7 @@ export function CloneEditor({
           )}
 
           {generating ? (
-            <div style={{ padding: '24px 0' }}>
-              <div
-                style={{
-                  display: 'inline-block',
-                  width: '40px',
-                  height: '40px',
-                  border: '4px solid #e2e8f0',
-                  borderTopColor: '#6366f1',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  marginBottom: '16px',
-                }}
-              />
-              <div
-                style={{ fontWeight: 700, fontSize: '16px', color: '#1e293b', marginBottom: '8px' }}
-              >
-                OpenAI {selectedModel} 像素级逆向生成与自动部署中...
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '16px',
-                  marginTop: '12px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: genStep >= 1 ? '#4f46e5' : '#94a3b8',
-                    fontWeight: genStep === 1 ? 700 : 500,
-                  }}
-                >
-                  ① 目标站点与设计图解析
-                </span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: genStep >= 2 ? '#4f46e5' : '#94a3b8',
-                    fontWeight: genStep === 2 ? 700 : 500,
-                  }}
-                >
-                  ② 深度视觉分析
-                </span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: genStep >= 3 ? '#4f46e5' : '#94a3b8',
-                    fontWeight: genStep === 3 ? 700 : 500,
-                  }}
-                >
-                  ③ 像素级代码逆向
-                </span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: genStep >= 4 ? '#4f46e5' : '#94a3b8',
-                    fontWeight: genStep === 4 ? 700 : 500,
-                  }}
-                >
-                  ④ 自动部署至 Cloudflare
-                </span>
-              </div>
-            </div>
+            <p style={{ color: '#64748b' }}>后台任务执行中，可在下方查看进度、暂停或停止。</p>
           ) : (
             <Button
               kind="primary"
@@ -890,12 +836,14 @@ export function CloneEditor({
               }}
             >
               {isSuccess
-                ? '🔄 重新 100% 像素级逆向生成并部署'
-                : '🎯 开始 100% 像素级克隆生成并部署 (OpenAI Vision)'}
+                ? '🔄 重新按设计稿生成并部署'
+                : '🎯 按设计稿生成并部署'}
             </Button>
           )}
         </div>
       </div>
     </fieldset>
+    <CloneTaskPanel projectId={projectId} onState={active => { if (!launching.current) setGenerating(active); }} onFinished={onRefresh} />
+    </>
   );
 }

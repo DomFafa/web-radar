@@ -67,6 +67,38 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   return response.json() as Promise<T>;
 }
 
+/** XHR exposes actual upload bytes; fetch does not expose upload progress. */
+export function upload<T>(path: string, body: FormData, onProgress: (fraction: number) => void): Promise<T> {
+  const epoch = sessionEpoch;
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', path);
+    xhr.timeout = 5 * 60 * 1000;
+    if (session) xhr.setRequestHeader('Authorization', `Bearer ${session}`);
+    // Same-origin cookies are included by XHR. The browser supplies the multipart boundary.
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0)
+        onProgress(Math.min(1, Math.max(0, event.loaded / event.total)));
+    };
+    xhr.upload.onload = () => onProgress(1);
+    xhr.onerror = () => reject(new ApiError('图片上传连接中断，请检查网络后重试。', 0));
+    xhr.ontimeout = () => reject(new ApiError('图片上传超时，请重试。', 0));
+    xhr.onabort = () => reject(new ApiError('图片上传已取消。', 0));
+    xhr.onload = () => {
+      let result;
+      try { result = JSON.parse(xhr.responseText); } catch {
+        reject(new ApiError('上传接口返回了无效响应，请重试。', xhr.status)); return;
+      }
+      if (xhr.status < 200 || xhr.status >= 300) {
+        if (xhr.status === 401 && epoch === sessionEpoch && expiredCode(result?.code))
+          window.dispatchEvent(new CustomEvent('wr:session-expired'));
+        reject(new ApiError(result?.message || `上传失败（${xhr.status}）`, xhr.status, result?.code));
+      } else resolve(result as T);
+    };
+    xhr.send(body);
+  });
+}
+
 export function post<T>(path: string, body: unknown = {}) {
   return api<T>(path, { method: 'POST', body: JSON.stringify(body) });
 }

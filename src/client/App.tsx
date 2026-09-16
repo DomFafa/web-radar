@@ -940,10 +940,10 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
               >
                 <div style={{ fontSize: '20px', marginBottom: '6px' }}>🎯</div>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: createMode === 'clone' ? '#4f46e5' : '#1e293b' }}>
-                  100% 像素级克隆还原
+                  按设计稿还原
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
-                  输入目标网址或上传原型设计稿，OpenAI Vision 1:1 像素级复刻
+                  输入目标网址或上传原型设计稿，按页面参考生成网站
                 </div>
               </div>
             </div>

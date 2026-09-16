@@ -21,12 +21,12 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: 'senseng-clean',
     name: 'Senseng 经典工贸',
     englishName: 'Senseng Clean Trade',
-    tagline: '100% 还原 webimg 原案；高雅明亮排版，强化货架视觉与批发询盘',
+    tagline: '参考 webimg 原案；高雅明亮排版，强化货架视觉与批发询盘',
     category: 'consumer',
     industries: ['跨境工贸', '消费玩具', '日用百货', '家居收纳', '快消品'],
-    features: ['100% 像素级还原', '左文右图 Hero 展位', '8宫格品类橱窗', '快速询盘表单'],
+    features: ['按设计图重建', '左文右图 Hero 展位', '8宫格品类橱窗', '快速询盘表单'],
     accentColor: '#089ced',
-    badge: '100% 还原设计图 · 首选模版',
+    badge: '参考设计图 · 首选模版',
     previewImg: '/templates/previews/senseng-clean.jpg',
   },
   {
@@ -193,8 +193,7 @@ export function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 10 套精心设计的高保真行业模版（含 100%
-            还原、动态全屏视频、SaaS、金融、咨询等）。选中后将自动灌注你的公司与产品数据。
+            共提供 10 套精心设计的高保真行业模版（含经典工贸、动态全屏视频、SaaS、金融、咨询等）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>
 
@@ -208,7 +207,7 @@ export function TemplateSelector({
               onClick={onSwitchToClone}
               style={{ color: '#4f46e5', fontWeight: 700 }}
             >
-              <span>🎯 切换为 100% 像素级克隆</span>
+              <span>🎯 切换为 设计稿还原</span>
             </Button>
           )}
           <Button kind="quiet" onClick={onSwitchToCustom}>
@@ -242,11 +241,10 @@ export function TemplateSelector({
             <span style={{ fontSize: '28px' }}>🎯</span>
             <div>
               <div style={{ fontSize: '15px', fontWeight: 800, color: '#1e1b4b' }}>
-                没有看中现成模版？试试「100% 像素级克隆与还原模式」
+                没有看中现成模版？试试「设计稿还原模式」
               </div>
               <div style={{ fontSize: '12px', color: '#4338ca', marginTop: '3px' }}>
-                输入您心仪的竞品网站 URL 或上传整套高保真设计稿，OpenAI Vision 将 1:1
-                像素级复刻全站视觉与架构！
+                上传整套页面设计图与产品素材，参考网址可补充文字内容；生成后对照预览检查布局与图片。
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import { DomainService } from '../src/worker/domain-service';
@@ -183,6 +183,7 @@ function mediaBucket() {
       const bytes = o.bytes.slice(offset, r?.length ? offset + r.length : undefined);
       return {
         body: new Response(bytes).body,
+        arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
         size: o.bytes.length,
         httpMetadata: { contentType: o.contentType },
         range: r ? { offset, length: bytes.length } : undefined,
@@ -325,6 +326,7 @@ beforeEach(() => {
     MEDIA: bucket,
     ENVIRONMENT: 'test',
     TEST_PROVIDERS: 'true',
+    CLONE_TEST_FIXTURE: 'true',
     APP_ORIGIN: 'http://localhost',
   } as unknown as AppEnv;
   providers = providerSet();
@@ -2178,5 +2180,108 @@ describe('template tryout and clone version chain', () => {
     expect(publish.data.job.inputVersion).toBe(generated.data.project.version);
     const retry = await request(`/api/projects/${p.id}/publish`, body);
     expect(retry.data.job.id).toBe(publish.data.job.id);
+  });
+});
+
+it('serves clone catalog paths and keeps its independent documents through save and publish', async () => {
+  const p = await create();
+  const generated = await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version, cloneConfig: { targetUrl: 'https://example.com', model: 'selected-model' } });
+  const draft = generated.data.project.draft;
+  expect(draft.cloneConfig.model).toBe('selected-model');
+  expect(draft.cloneConfig.generation.mode).toBe('fixture');
+  draft.cloneConfig.generatedFiles['en/products/index.html'] = '<!DOCTYPE html><html><head><title>Catalog</title></head><body><h1>Independent catalog</h1></body></html>';
+  const saved = await request(`/api/projects/${p.id}`, { expectedVersion: generated.data.project.version, draft }, owner, 'PUT');
+  expect(saved.status).toBe(200);
+  const published = await request(`/api/projects/${p.id}/publish`, { expectedVersion: saved.data.project.version, requestId: crypto.randomUUID() });
+  expect(published.status).toBe(200);
+  for (let i=0;i<3;i++) await service.tick();
+  const page = await service.fetch(new Request(`http://localhost/public/sites/${p.id}/en/products/index.html`));
+  expect(page.status).toBe(200);
+  expect(await page.text()).toContain('Independent catalog');
+});
+
+it('keeps the last usable clone documents when regeneration fails', async () => {
+  const p = await create();
+  const generated = await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version, cloneConfig: { targetUrl: 'https://example.com' } });
+  const previous = generated.data.project;
+  env.CLONE_TEST_FIXTURE = 'false';
+  const failed = await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: previous.version, cloneConfig: { targetUrl: 'https://example.org', model: 'selected-model' } });
+  expect(failed.status).toBe(503);
+  expect(failed.data.code).toBe('clone_provider_missing');
+  const saved = (await get(p)).project;
+  expect(saved.draft.cloneConfig.status).toBe('error');
+  expect(saved.draft.cloneConfig.generatedFiles).toEqual(previous.draft.cloneConfig.generatedFiles);
+  expect(saved.draft.cloneConfig.generatedHtml).toBe(previous.draft.cloneConfig.generatedHtml);
+  expect(saved.version).toBe(previous.version + 1);
+});
+
+
+describe('persistent clone tasks', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  async function start(p: Project, autoPublish = false) {
+    return request(`/api/projects/${p.id}/clone/start`, { expectedVersion: p.version, requestId: crypto.randomUUID(), autoPublish, cloneConfig: p.draft.cloneConfig || {} });
+  }
+  async function state(p: Project) { return (await request(`/api/projects/${p.id}/clone/task`)).data; }
+  async function visionProject() {
+    env.CLONE_TEST_FIXTURE = 'false'; env.OPENAI_API_KEY = 'test-only';
+    const p = await create(); const asset: Asset = { id: 'reference', projectId: p.id, key: 'test-ref', filename: 'index.png', contentType: 'image/png', size: 9, origin: 'upload', createdAt: new Date().toISOString() };
+    await service.store.insert('assets', asset).run(); await bucket.put(asset.key, new Uint8Array([137,80,78,71,13,10,26,10,0]));
+    p.draft.cloneConfig = { uiImages: [{ id:'one',assetId:asset.id,name:'index.png',role:'home' }] };
+    return p;
+  }
+  const response = () => Response.json({ choices: [{finish_reason:'stop',message:{content:JSON.stringify({css:'body{margin:0}',pages:{en:Object.fromEntries(['home','catalog','detail','about','contact'].map(k=>[k,'<main><h1>Reference page</h1><p>This is a sufficiently complete layout used for the asynchronous generation regression test.</p></main>']))}})}}] });
+  it('persists queued state before returning, deduplicates submission and survives a new service instance', async () => {
+    const p = await create(); const created = await start(p); expect(created.status).toBe(202);
+    expect(created.data.job.status).toBe('queued');
+    expect((await start(p)).data.job.id).toBe(created.data.job.id);
+    service = new DomainService(env, {schedule:async()=>{}},providers);
+    expect((await state(p)).job.id).toBe(created.data.job.id);
+    await service.tick(); expect((await state(p)).job.status).toBe('succeeded');
+    expect((await get(p)).project.draft.cloneConfig.generatedHtml).toBeTruthy();
+  });
+  it('pauses before execution, stays paused across restart, and resumes without losing inputs', async () => {
+    const p = await create(); const created = await start(p); const taskId = created.data.job.id;
+    expect((await request(`/api/projects/${p.id}/clone/pause`,{taskId})).data.job.status).toBe('paused');
+    service = new DomainService(env, {schedule:async()=>{}},providers); await service.tick();
+    expect((await state(p)).job.status).toBe('paused');
+    await request(`/api/projects/${p.id}/clone/resume`,{taskId}); await service.tick();
+    expect((await state(p)).job.status).toBe('succeeded');
+  });
+  it('returns live progress during a pending model call and checkpoints a requested pause for no-cost resume', async () => {
+    const p = await visionProject(); let release!: (r:Response)=>void;
+    const fetcher = vi.fn(()=>new Promise<Response>(resolve=>{release=resolve}));vi.stubGlobal('fetch',fetcher);
+    const created=await start(p);const taskId=created.data.job.id;const running=service.tick();
+    await vi.waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
+    const progress=await state(p);expect(progress.job.cloneProgress).toMatchObject({phase:'model',imagesRead:1,imageCount:1});
+    const pause=await request(`/api/projects/${p.id}/clone/pause`,{taskId});expect(pause.data.job.cloneProgress.pauseRequested).toBe(true);
+    release(response());await running;expect((await state(p)).job.status).toBe('paused');
+    service=new DomainService(env,{schedule:async()=>{}},providers);
+    await request(`/api/projects/${p.id}/clone/resume`,{taskId});await service.tick();
+    expect((await state(p)).job.status).toBe('succeeded');expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('stops a running call, aborts its request and refuses late results or stale controls', async () => {
+    const p=await visionProject();let release!:(r:Response)=>void;let signal!:AbortSignal;
+    const fetcher=vi.fn((_url,options)=>{signal=options.signal;return new Promise<Response>(resolve=>{release=resolve})});vi.stubGlobal('fetch',fetcher);
+    const created=await start(p);const taskId=created.data.job.id;const running=service.tick();
+    await vi.waitFor(()=>expect(fetcher).toHaveBeenCalled());
+    const stopped=await request(`/api/projects/${p.id}/clone/stop`,{taskId});expect(stopped.data.job.status).toBe('cancelled');expect(signal.aborted).toBe(true);
+    release(response());await running;expect((await get(p)).project.draft.cloneConfig.generatedHtml).toBeUndefined();
+    expect((await state(p)).job.status).toBe('cancelled');
+    expect((await request(`/api/projects/${p.id}/jobs/${taskId}/retry`,{})).status).toBe(409);
+    expect((await request(`/api/projects/${p.id}/clone/resume`,{taskId:'foreign'})).status).toBe(409);
+    expect((await request(`/api/projects/${p.id}/clone/stop`,{taskId},{...owner,userId:'stranger'})).status).toBe(404);
+  });
+  it('does not permit draft saves to clobber active task state and auto-publishes with no client follow-up', async () => {
+    const p=await create();const created=await start(p,true);
+    expect((await request(`/api/projects/${p.id}`,{expectedVersion:created.data.project.version,draft:p.draft},owner,'PUT')).status).toBe(409);
+    await service.tick();const result=await state(p);
+    expect(result.job.status).toBe('succeeded');expect(result.publication.status).toBe('succeeded');
+    expect(result.url).toBeTruthy();expect((await get(p)).jobs.filter((job:Job)=>job.kind==='publish')).toHaveLength(1);
+  });
+  it('does not automatically repeat a possibly billed call after worker interruption', async () => {
+    const p=await create();const created=await start(p);const job=await service.store.one<Job>('jobs',created.data.job.id);
+    job!.status='running';await service.store.update('jobs',job!).run();
+    service=new DomainService(env,{schedule:async()=>{}},providers);await service.tick();
+    expect((await state(p)).job.status).toBe('failed');expect((await state(p)).job.error).toContain('未自动重复调用');
   });
 });

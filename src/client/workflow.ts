@@ -106,7 +106,7 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
         id: 'clone-generate',
         label: 'OpenAI 像素级生成',
         detail: isGenerated
-          ? '已完成 100% 像素级高保真还原生成'
+          ? '页面代码已生成，请对照设计图检查'
           : '调用 GPT-4o 视觉模型进行像素级逆向与代码生成',
         step: 'clone-generate',
         ready: isGenerated,
