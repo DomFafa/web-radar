@@ -12,3 +12,5 @@ artifacts/
 __pycache__/
 .pytest_cache/
 services/site-builder/data/
+data/
+TRANSFER_*

@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --port 8788",
+    "dev": "node scripts/start-dev.mjs",
     "dev:ui": "vite --host 127.0.0.1",
     "dev:builder": "node scripts/start-site-builder.mjs",
-    "dev:test": "wrangler dev --env test --port 8788",
+    "dev:test": "node scripts/start-dev.mjs --env test",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -30,6 +30,7 @@
     "@vitejs/plugin-react": "6.1.1",
     "prettier": "^3.9.6",
     "typescript": "7.0.2",
+    "undici": "7.29.0",
     "vite": "8.3.0",
     "vitest": "5.0.0",
     "wrangler": "4.131.1"

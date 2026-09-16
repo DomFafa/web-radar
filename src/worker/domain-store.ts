@@ -77,6 +77,35 @@ export class DomainStore {
       .prepare(`UPDATE ${table} SET data=? WHERE id=?`)
       .bind(JSON.stringify(value), value.id);
   }
+  delete(table: Table, id: string): D1PreparedStatement {
+    return this.db.prepare(`DELETE FROM ${table} WHERE id=?`).bind(id);
+  }
+  deleteByProject(
+    table: 'assets' | 'jobs' | 'releases' | 'inquiries',
+    projectId: string,
+  ): D1PreparedStatement {
+    return this.db.prepare(`DELETE FROM ${table} WHERE project_id=?`).bind(projectId);
+  }
+  deleteProjectStatements(projectId: string): D1PreparedStatement[] {
+    return [
+      this.db
+        .prepare(
+          'DELETE FROM quota_ledger WHERE job_id IN (SELECT id FROM jobs WHERE project_id=?)',
+        )
+        .bind(projectId),
+      this.db
+        .prepare(
+          'DELETE FROM provider_attempts WHERE job_id IN (SELECT id FROM jobs WHERE project_id=?)',
+        )
+        .bind(projectId),
+      this.db.prepare('DELETE FROM source_reviews WHERE project_id=?').bind(projectId),
+      this.db.prepare('DELETE FROM inquiries WHERE project_id=?').bind(projectId),
+      this.db.prepare('DELETE FROM releases WHERE project_id=?').bind(projectId),
+      this.db.prepare('DELETE FROM assets WHERE project_id=?').bind(projectId),
+      this.db.prepare('DELETE FROM jobs WHERE project_id=?').bind(projectId),
+      this.db.prepare('DELETE FROM projects WHERE id=?').bind(projectId),
+    ];
+  }
   async quota(userId: string): Promise<Quota> {
     const q = await this.db.prepare('SELECT * FROM quotas WHERE user_id=?').bind(userId).first<{
       user_id: string;

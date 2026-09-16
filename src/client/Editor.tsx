@@ -1,7 +1,10 @@
+import { liveJob } from './task-polling';
+import { samePublishedDraft } from '../shared/publication';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type {
   Asset,
   Company,
+  CloneConfig,
   Draft,
   DesignPage,
   Inquiry,
@@ -39,7 +42,9 @@ import {
   staticSiteReady,
 } from '../shared/site-design';
 import { briefConfirmed, plannedPages, resetConsultationForEdit } from '../shared/site-brief';
-import { draftChecklist, nextDraftStep, workflowSteps } from './workflow';
+import { draftChecklist, getWorkflowSteps, nextDraftStep, type WorkflowStep } from './workflow';
+import { TemplateSelector } from './TemplateSelector';
+import { CloneEditor } from './CloneEditor';
 
 const languageNames: Record<Language, string> = {
   en: 'English · 英语',
@@ -49,10 +54,20 @@ const languageNames: Record<Language, string> = {
   pt: 'Português · 葡萄牙语',
   it: 'Italiano · 意大利语',
 };
-const tabs = [...workflowSteps, ['inquiries', '客户询盘', 'mail']] as const;
-type Tab = (typeof tabs)[number][0];
+type Tab = WorkflowStep | 'inquiries';
+const allTabLabels: Record<Tab, string> = {
+  basics: '资料与产品',
+  template: '选择模版',
+  'clone-generate': '像素级生成',
+  consultation: '需求沟通',
+  brief: '网站方案',
+  design: '页面设计稿',
+  publish: '预览与发布',
+  inquiries: '客户询盘',
+};
 type SourceChange = { productId: string; before: ProductSnapshot; after: ProductSnapshot };
 const jobKinds: Record<string, string> = {
+  clone: '设计稿生成',
   consultation: '需求沟通',
   script: '脚本生成',
   copy: '文案与译文',
@@ -80,7 +95,35 @@ export function Editor({
 }) {
   const [detail, setDetail] = useState<ProjectDetail | null>(null),
     [project, setProject] = useState<Project | null>(null),
-    [tab, setTab] = useState<Tab>('basics');
+    [tab, setTab] = useState<Tab>(() => {
+      try {
+        const q = new URL(window.location.href).searchParams.get('tab') as Tab | null;
+        if (
+          q &&
+          [
+            'basics',
+            'template',
+            'clone-generate',
+            'consultation',
+            'brief',
+            'design',
+            'publish',
+            'inquiries',
+          ].includes(q)
+        ) {
+          return q;
+        }
+      } catch {}
+      return 'basics';
+    });
+
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  }, [tab]);
   const [dirty, setDirty] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
@@ -96,6 +139,7 @@ export function Editor({
   const [sourceChanges, setSourceChanges] = useState<SourceChange[] | null>(null),
     [applyIds, setApplyIds] = useState<string[]>([]),
     [previewOpen, setPreviewOpen] = useState(false);
+  const [previewProject, setPreviewProject] = useState<Project | null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [releaseAction, setReleaseAction] = useState<'publish' | 'restore' | 'offline' | null>(
     null,
@@ -120,6 +164,7 @@ export function Editor({
   const refresh = useCallback(
     async (force = false) => {
       const next = await api<ProjectDetail>(endpoint);
+      if (projectRef.current && next.project.version < projectRef.current.version) return next;
       setDetail(next);
       if (force || !dirtyRef.current) {
         install(next.project);
@@ -135,7 +180,22 @@ export function Editor({
         if (active) {
           setDetail(next);
           install(next.project);
-          setTab(nextDraftStep(next.project.draft));
+          const q = new URL(window.location.href).searchParams.get('tab') as Tab | null;
+          const valid =
+            q &&
+            [
+              'basics',
+              'template',
+              'clone-generate',
+              'consultation',
+              'brief',
+              'design',
+              'publish',
+              'inquiries',
+            ].includes(q);
+          if (!valid) {
+            setTab(nextDraftStep(next.project.draft));
+          }
         }
       })
       .catch((error) => {
@@ -145,14 +205,26 @@ export function Editor({
       active = false;
     };
   }, [endpoint, install]);
+  const hasLiveJobs = !!detail?.jobs.some(liveJob);
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (!busyRef.current)
-        void refresh().catch((error) => {
+    if (!hasLiveJobs) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      if (!busyRef.current && !document.hidden)
+        await refresh().catch((error) => {
           if (error instanceof ApiError && error.status !== 401) setError(errorMessage(error));
         });
-    }, 5000);
-    return () => clearInterval(timer);
+      if (!cancelled) timer = setTimeout(poll, 5000);
+    };
+    timer = setTimeout(poll, 5000);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [refresh, hasLiveJobs]);
+  useEffect(() => {
+    const sync = () => { if (!document.hidden && !busyRef.current) void refresh().catch(() => {}); };
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', sync);
+    return () => { window.removeEventListener('focus', sync); document.removeEventListener('visibilitychange', sync); };
   }, [refresh]);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -168,19 +240,17 @@ export function Editor({
     return () => window.removeEventListener('beforeunload', prevent);
   }, []);
   function update(updater: (draft: Draft) => Draft) {
-    setProject((current) => {
-      if (!current) return current;
-      const next = { ...current, draft: updater(current.draft) };
-      resetConsultationForEdit(baseRef.current?.draft ?? current.draft, next.draft);
-      resetDesignForEdit(baseRef.current?.draft ?? current.draft, next.draft);
-      projectRef.current = next;
-      const changed =
-        JSON.stringify({ name: next.name, draft: next.draft }) !==
-        JSON.stringify({ name: baseRef.current?.name, draft: baseRef.current?.draft });
-      setDirty(changed);
-      dirtyRef.current = changed;
-      return next;
-    });
+    const current = projectRef.current;
+    if (!current) return;
+    const next = { ...current, draft: updater(current.draft) };
+    resetConsultationForEdit(baseRef.current?.draft ?? current.draft, next.draft);
+    resetDesignForEdit(baseRef.current?.draft ?? current.draft, next.draft);
+    projectRef.current = next;
+    const changed = JSON.stringify({ name: next.name, draft: next.draft }) !==
+      JSON.stringify({ name: baseRef.current?.name, draft: baseRef.current?.draft });
+    dirtyRef.current = changed;
+    setDirty(changed);
+    setProject(next);
   }
   function patch(fields: Partial<Draft>) {
     update((draft) => ({ ...draft, ...fields }));
@@ -196,7 +266,7 @@ export function Editor({
       ),
     }));
   }
-  async function save(): Promise<Project> {
+  async function save(retry = true): Promise<Project> {
     const snapshot = projectRef.current;
     if (!snapshot) throw new Error('项目尚未载入。');
     if (!dirtyRef.current) return snapshot;
@@ -209,14 +279,22 @@ export function Editor({
       if (projectRef.current === snapshot) install(result.project);
       else {
         baseRef.current = result.project;
-        setProject((current) =>
-          current ? { ...current, version: result.project.version } : result.project,
-        );
+        const local = projectRef.current;
+        const next = local ? { ...local, version: result.project.version } : result.project;
+        projectRef.current = next;
+        setProject(next);
       }
       return result.project;
     } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
+      if (error instanceof ApiError && error.code === 'version_conflict') {
         const next = await api<ProjectDetail>(endpoint);
+        const merged = mergeVersions(baseRef.current || snapshot, projectRef.current || snapshot, next.project);
+        if (retry && !merged.conflicts.length) {
+          baseRef.current = next.project;
+          projectRef.current = merged.value;
+          setProject(merged.value);
+          return save(false);
+        }
         setConflict(next.project);
         setChoices({});
       }
@@ -242,7 +320,7 @@ export function Editor({
     }
   }
   async function saveClick() {
-    await action('save', save, '草稿已保存。线上网站保持当前发布版本。');
+    await action('save', () => save(), '草稿已保存。线上网站保持当前发布版本。');
   }
   async function command(path: string, body: Record<string, unknown> = {}) {
     const saved = await save();
@@ -269,6 +347,7 @@ export function Editor({
       setDirty(true);
     }
     await refresh();
+    return result.project;
   }
   async function generate(
     kind: 'image' | 'site-build',
@@ -387,6 +466,25 @@ export function Editor({
       return () => clearInterval(timer);
     }
   }, [tab, endpoint]);
+  async function generateClone(config: CloneConfig): Promise<Project> {
+    if (busyRef.current) throw new Error('当前操作尚未完成，请稍后重试。');
+    setBusy('clone-generate');
+    busyRef.current = 'clone-generate';
+    try {
+      patch({ buildBranch: 'clone', cloneConfig: { ...projectRef.current?.draft.cloneConfig, ...config } });
+      return await command('clone/start', { cloneConfig: config, requestId: requestId(), autoPublish: config.autoPublish !== false });
+    } finally {
+      setBusy('');
+      busyRef.current = '';
+    }
+  }
+  async function publishClone(generated: Project): Promise<Job> {
+    // Publish exactly the version returned by generation; never a stale prop or a later edit.
+    return post<{ job: Job }>(`${endpoint}/publish`, {
+      expectedVersion: generated.version,
+      requestId: requestId(),
+    }).then(result => result.job);
+  }
   async function openPreview() {
     await action('preview', async () => {
       await save();
@@ -477,6 +575,8 @@ export function Editor({
       </div>
     );
   const draft = project.draft;
+  const onlineRelease = detail.releases.find(release => release.id === project.publishedReleaseId && release.status === 'succeeded');
+  const alreadyPublished = !project.offline && !!onlineRelease && samePublishedDraft(draft, onlineRelease.draft);
   const activeJobs = detail.jobs.filter((job) =>
     ['queued', 'running', 'unknown'].includes(job.status),
   );
@@ -497,8 +597,13 @@ export function Editor({
   const briefReady = briefConfirmed(draft);
   const pagePlan = plannedPages(draft);
   const publicationMissing = checklist.filter((item) => !item.ready).map((item) => item.label);
+  const currentWorkflowSteps = getWorkflowSteps(draft);
   const stepDone: Record<Tab, boolean> = {
     basics: basicsReady,
+    template: Boolean(draft.templateConfirmed),
+    'clone-generate': Boolean(
+      draft.cloneConfig?.generatedHtml || draft.cloneConfig?.status === 'ready',
+    ),
     consultation: !!draft.consultation?.brief,
     brief: briefReady,
     design: designsReady,
@@ -550,9 +655,11 @@ export function Editor({
       </header>
       <div className="editor-body">
         <aside className="editor-sidebar">
-          <div className="editor-sidebar-caption">网站搭建</div>
+          <div className="editor-sidebar-caption">
+            {draft.buildBranch === 'custom' ? 'AI 定制建站 (5步)' : '极速模版建站 (3步)'}
+          </div>
           <nav aria-label="网站编辑步骤">
-            {workflowSteps.map(([id, label, icon], index) => (
+            {currentWorkflowSteps.map(([id, label, icon], index) => (
               <button
                 key={id}
                 className={tab === id ? 'active' : ''}
@@ -624,7 +731,7 @@ export function Editor({
           <div className="editor-breadcrumb">
             {project.name}
             <span>/</span>
-            {tabs.find((t) => t[0] === tab)?.[1]}
+            {allTabLabels[tab]}
             <span className="private-tag">
               <Icon name="lock" size={12} />
               私有草稿
@@ -652,15 +759,15 @@ export function Editor({
           {tab === 'basics' && (
             <>
               <SectionTitle
-                eyebrow="第 1 步 / 共 5 步"
+                eyebrow={draft.buildBranch === 'custom' ? '第 1 步 / 共 5 步' : '第 1 步 / 共 3 步'}
                 title="资料与产品"
                 description="填写公司资料、销售市场与产品，选择一个主产品用于网站首页。"
               />
               <section className="panel">
                 <div className="panel-title">
                   <span className="section-index">A</span>
-                  <h3>公司资料</h3>
-                  <span>用于网站介绍与客户联系</span>
+                  <h3>公司资料与外贸实力</h3>
+                  <span>用于海外买家建信、网站介绍与即时客户联系</span>
                 </div>
                 <div className="form-grid">
                   <Field label="公司英文名称" required>
@@ -703,6 +810,62 @@ export function Editor({
                         工厂 / Manufacturing
                       </button>
                     </div>
+                  </Field>
+                  <Field label="品牌标语 / Slogan" hint="网站首页首屏吸睛主标题">
+                    <input
+                      value={draft.company.slogan || ''}
+                      onChange={(e) => company({ slogan: e.target.value })}
+                      placeholder="例如：Your Trusted Global OEM Partner"
+                      maxLength={160}
+                    />
+                  </Field>
+                  <Field label="成立年份 / 行业经验">
+                    <input
+                      value={draft.company.establishedYear || ''}
+                      onChange={(e) => company({ establishedYear: e.target.value })}
+                      placeholder="例如：Since 2012 或 12+ Years Experience"
+                      maxLength={60}
+                    />
+                  </Field>
+                  <Field label="WhatsApp" hint="海外采购商首选即时沟通，支持一键发起会话">
+                    <input
+                      value={draft.company.whatsapp || ''}
+                      onChange={(e) => company({ whatsapp: e.target.value })}
+                      placeholder="例如：+86 13800000000"
+                      maxLength={60}
+                    />
+                  </Field>
+                  <Field label="联系电话 / Phone">
+                    <input
+                      value={draft.company.phone || ''}
+                      onChange={(e) => company({ phone: e.target.value })}
+                      placeholder="例如：+86 755 88888888"
+                      maxLength={60}
+                    />
+                  </Field>
+                  <Field className="full-width" label="公司或工厂实际地址 / Address" hint="海外买家核验真实工厂/实体信誉的核心项">
+                    <input
+                      value={draft.company.address || ''}
+                      onChange={(e) => company({ address: e.target.value })}
+                      placeholder="例如：Building 4, High-Tech Industrial Park, Shenzhen, Guangdong, China"
+                      maxLength={240}
+                    />
+                  </Field>
+                  <Field className="full-width" label="核心资质与认证 / Certifications" hint="逗号分隔，如：ISO9001, CE, RoHS, BSCI, FDA">
+                    <input
+                      value={draft.company.certifications || ''}
+                      onChange={(e) => company({ certifications: e.target.value })}
+                      placeholder="例如：ISO9001, CE, RoHS, FCC"
+                      maxLength={200}
+                    />
+                  </Field>
+                  <Field className="full-width" label="定制与交付实力 / Capabilities" hint="如：OEM/ODM、月产能、现货样品支持">
+                    <input
+                      value={draft.company.capabilities || ''}
+                      onChange={(e) => company({ capabilities: e.target.value })}
+                      placeholder="例如：OEM/ODM Available, 50,000 pcs monthly capacity, Free samples"
+                      maxLength={240}
+                    />
                   </Field>
                   <Field
                     className="full-width"
@@ -982,6 +1145,14 @@ export function Editor({
                       maxLength={120}
                     />
                   </Field>
+                  <Field label="LinkedIn">
+                    <input
+                      type="url"
+                      value={draft.company.linkedin || ''}
+                      onChange={(e) => company({ linkedin: e.target.value })}
+                      placeholder="https://linkedin.com/company/yourbrand"
+                    />
+                  </Field>
                   <Field label="Facebook">
                     <input
                       type="url"
@@ -1008,12 +1179,121 @@ export function Editor({
                   </Field>
                 </div>
               </section>
+
+              {/* 建站流程分支选择 (克隆还原模式由创建项目时指定，底部不展示模式切换) */}
+              {draft.buildBranch !== 'clone' && (
+                <section className="branch-selection-panel">
+                  <div className="panel-title">
+                    <span className="section-index">E</span>
+                    <h3>建站流程模式</h3>
+                    <span>可根据交付时间要求或个性化需要自由选择</span>
+                  </div>
+                  <div className="branch-grid">
+                    <div
+                      className={`branch-card ${draft.buildBranch !== 'custom' ? 'active' : ''}`}
+                      onClick={() => patch({ buildBranch: 'template' })}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="branch-card-header">
+                        <span className="branch-title">
+                          <Icon name="palette" size={16} />
+                          极速模版建站
+                        </span>
+                        <span className="branch-badge">推荐 · 共 3 步</span>
+                      </div>
+                      <p className="branch-desc">
+                        从精选行业高保真模板中挑选心仪风格与配色，系统秒级自动组装全站页面，立即进入预览与发布。省时高效，所见即所得。
+                      </p>
+                      <div className="branch-steps-preview">
+                        <span>01 资料与产品</span> → <span>02 选择模版</span> → <span>03 预览与发布</span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`branch-card ${draft.buildBranch === 'custom' ? 'active' : ''}`}
+                      onClick={() => patch({ buildBranch: 'custom' })}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="branch-card-header">
+                        <span className="branch-title">
+                          <Icon name="spark" size={16} />
+                          AI 智能深度定制
+                        </span>
+                        <span className="branch-badge">高阶 · 共 5 步</span>
+                      </div>
+                      <p className="branch-desc">
+                        通过 AI 交互问答深挖品牌定位，由大模型生成量身定制的网站策划案与页面设计图，再由代码模型组装。适合追求独特创意的用户。
+                      </p>
+                      <div className="branch-steps-preview">
+                        <span>01 资料</span> → <span>02 沟通</span> → <span>03 方案</span> → <span>04 设计稿</span> → <span>05 发布</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
               <StepFooter
-                hint="AI 会结合产品图片和这些资料，一次只确认一个设计问题。"
-                next="开始需求沟通"
-                onNext={() => setTab('consultation')}
+                hint={
+                  draft.buildBranch === 'clone'
+                    ? '进入设计稿配置与视觉生成流程。'
+                    : draft.buildBranch === 'custom'
+                      ? 'AI 会结合产品图片和这些资料，一次只确认一个设计问题。'
+                      : '选择精选模版后，系统将秒级自动拼装并呈现可交付的电脑与手机端预览。'
+                }
+                next={
+                  draft.buildBranch === 'clone'
+                    ? '下一步：像素级生成'
+                    : draft.buildBranch === 'custom'
+                      ? '下一步：需求沟通'
+                      : '下一步：选择网站模版'
+                }
+                onNext={() =>
+                  setTab(
+                    draft.buildBranch === 'clone'
+                      ? 'clone-generate'
+                      : draft.buildBranch === 'custom'
+                        ? 'consultation'
+                        : 'template',
+                  )
+                }
               />
             </>
+          )}
+          {tab === 'template' && (
+            <TemplateSelector
+              onPreview={(template) => {
+                const current = projectRef.current!;
+                setPreviewProject({ ...current, draft: { ...current.draft, buildBranch: 'template', template: template.id, brandColor: template.accentColor, cloneConfig: undefined, siteDesign: undefined } });
+                setPreviewOpen(true);
+              }}
+              draft={draft}
+              onUpdateDraft={(patchObj) => patch(patchObj)}
+              onProceedToPublish={() => setTab('publish')}
+              onBackToBasics={() => setTab('basics')}
+              onSwitchToCustom={() => {
+                patch({ buildBranch: 'custom' });
+                setTab('consultation');
+              }}
+              onSwitchToClone={() => {
+                patch({ buildBranch: 'clone' });
+                setTab('clone-generate');
+              }}
+            />
+          )}
+          {tab === 'clone-generate' && (
+            <CloneEditor
+              testMode={testMode}
+              projectId={project.id}
+              draft={draft}
+              onUpdateDraft={(patchObj) => patch(patchObj)}
+              onProceedToPublish={() => setTab('publish')}
+              onBackToBasics={() => setTab('basics')}
+              onRefresh={refresh}
+              onGenerate={generateClone}
+              onPublish={publishClone}
+            />
           )}
           {tab === 'consultation' && (
             <>
@@ -1108,7 +1388,7 @@ export function Editor({
           {tab === 'publish' && (
             <>
               <SectionTitle
-                eyebrow="第 5 步 / 共 5 步"
+                eyebrow={draft.buildBranch === 'custom' ? '第 5 步 / 共 5 步' : '第 3 步 / 共 3 步'}
                 title="预览与发布"
                 description="草稿与线上版本各自保存。只有发布成功，公开网站才会更新。"
               />
@@ -1128,7 +1408,11 @@ export function Editor({
                   </p>
                   <div className="publication-pills">
                     <span className="pill light">
-                      {draft.consultation?.brief?.visualDirection || '已确认设计方向'}
+                      {draft.buildBranch === 'clone'
+                        ? '设计稿还原'
+                        : draft.buildBranch !== 'custom'
+                          ? `精选模版 · ${draft.template.toUpperCase()}`
+                          : draft.consultation?.brief?.visualDirection || '已确认设计方向'}
                     </span>
                     <span className="pill light">{pagePlan.length} 类页面</span>
                     <span className="pill light">{draft.products.length} 个产品</span>
@@ -1147,30 +1431,78 @@ export function Editor({
                   打开私有整站预览
                 </Button>
               </section>
-              <section className="panel">
-                <SectionTitle
-                  title="生成静态网站"
-                  description={`将确认过的 ${pagePlan.length} 张设计稿转成真实页面，填入产品和公司资料，然后检查电脑与手机预览。`}
-                />
-                {!builderConfigured && (
-                  <Notice tone="warning">
-                    网站生成服务尚未连接。管理员配置后即可从设计稿生成网站。
-                  </Notice>
-                )}
-                {!designsReady && <Notice>请先到“页面设计稿”确认全部 {pagePlan.length} 张设计稿。</Notice>}
-                <Button
-                  kind="primary"
-                  disabled={!!busy || !designsReady || buildPending || !builderConfigured}
-                  busy={busy === 'job:site-build:all'}
-                  onClick={() => generate('site-build')}
-                >
-                  <Icon name="spark" />
-                  {buildPending ? '网站生成中…' : siteReady ? '重新生成网站' : '从设计稿生成网站'}
-                </Button>
-                {siteReady && (
-                  <p className="muted">当前版本的网站已生成，请预览所有页面后再发布。</p>
-                )}
-              </section>
+
+              {draft.buildBranch === 'clone' ? (
+                <section className="panel">
+                  <div className="panel-title">
+                    <span className="section-index">✓</span>
+                    <h3>{draft.cloneConfig?.generatedHtml ? '设计稿页面代码已保存' : '请先按设计稿生成页面'}</h3>
+                    <span>
+                      {draft.cloneConfig?.targetUrl ? `参考网址：${draft.cloneConfig.targetUrl}` : '设计稿高保真还原'}
+                      {draft.cloneConfig?.generatedAt && ` · 生成于 ${new Date(draft.cloneConfig.generatedAt).toLocaleTimeString()}`}
+                    </span>
+                  </div>
+                  <p className="muted" style={{ margin: '12px 0 16px' }}>
+                    生成状态只表示代码已保存，不代表视觉还原已通过验收。请打开私有整站预览，对照设计图检查桌面、手机、产品图片与联系方式后再发布。
+                  </p>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
+                      <Icon name="eye" />
+                      立即预览全真网站
+                    </Button>
+                    <Button kind="quiet" onClick={() => setTab('clone-generate')}>
+                      <Icon name="spark" />
+                      调整素材与重新生成
+                    </Button>
+                  </div>
+                </section>
+              ) : draft.buildBranch !== 'custom' ? (
+                <section className="panel">
+                  <div className="panel-title">
+                    <span className="section-index">✓</span>
+                    <h3>模版极速渲染已就绪</h3>
+                    <span>模版：{draft.template.toUpperCase()} · 品牌色：{draft.brandColor}</span>
+                  </div>
+                  <p className="muted" style={{ margin: '12px 0 16px' }}>
+                    公司资料、产品矩阵与询盘表单已实时拼装完毕。点击上方【打开私有整站预览】即可自由切换桌面与手机视口交互查阅全部页面，确认无误后即可在下方一键发布上线。
+                  </p>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
+                      <Icon name="eye" />
+                      立即预览电脑与手机效果
+                    </Button>
+                    <Button kind="quiet" onClick={() => setTab('template')}>
+                      <Icon name="palette" />
+                      更换模版与配色
+                    </Button>
+                  </div>
+                </section>
+              ) : (
+                <section className="panel">
+                  <SectionTitle
+                    title="生成静态网站"
+                    description={`将确认过的 ${pagePlan.length} 张设计稿转成真实页面，填入产品和公司资料，然后检查电脑与手机预览。`}
+                  />
+                  {!builderConfigured && (
+                    <Notice tone="warning">
+                      网站生成服务尚未连接。管理员配置后即可从设计稿生成网站。
+                    </Notice>
+                  )}
+                  {!designsReady && <Notice>请先到“页面设计稿”确认全部 {pagePlan.length} 张设计稿。</Notice>}
+                  <Button
+                    kind="primary"
+                    disabled={!!busy || !designsReady || buildPending || !builderConfigured}
+                    busy={busy === 'job:site-build:all'}
+                    onClick={() => generate('site-build')}
+                  >
+                    <Icon name="spark" />
+                    {buildPending ? '网站生成中…' : siteReady ? '重新生成网站' : '从设计稿生成网站'}
+                  </Button>
+                  {siteReady && (
+                    <p className="muted">当前版本的网站已生成，请预览所有页面后再发布。</p>
+                  )}
+                </section>
+              )}
               <JobList
                 jobs={detail.jobs.filter((job) => job.kind === 'site-build')}
                 busy={busy}
@@ -1208,6 +1540,7 @@ export function Editor({
                     仍需完善：{publicationMissing.join('、')}。点击上方对应项继续编辑。
                   </Notice>
                 )}
+                {alreadyPublished && <Notice tone="success">当前页面内容已发布，无需重复发布。修改页面后可发布更新。</Notice>}
                 <div className="publish-actions">
                   <Button
                     kind="primary"
@@ -1215,11 +1548,12 @@ export function Editor({
                     disabled={
                       !!busy ||
                       publicationMissing.length > 0 ||
+                      alreadyPublished ||
                       activeJobs.some((j) => j.kind === 'publish')
                     }
                   >
                     <Icon name="globe" />
-                    {project.publishedReleaseId ? '发布当前草稿' : '发布网站'}
+                    {alreadyPublished ? '当前内容已上线' : project.publishedReleaseId ? '发布草稿更新' : '发布网站'}
                   </Button>
                   <Button
                     onClick={() => setReleaseAction('restore')}
@@ -1265,7 +1599,7 @@ export function Editor({
                           <small>
                             {dateTime(release.createdAt)} · {release.id}
                           </small>
-                          {release.error && <p className="error-text">{release.error}</p>}
+                          {release.status !== 'succeeded' && release.error && <p className="error-text">{release.error}</p>}
                         </div>
                         <span
                           className={`pill ${release.status === 'succeeded' ? 'green' : release.status === 'failed' ? 'red' : 'muted'}`}
@@ -1634,7 +1968,7 @@ export function Editor({
           </div>
         </Modal>
       )}
-      {previewOpen && <SitePreview project={project} onClose={() => setPreviewOpen(false)} />}
+      {previewOpen && <SitePreview project={previewProject || project} draftPreview={!!previewProject} onClose={() => { setPreviewOpen(false); setPreviewProject(null); }} />}
       {releaseAction && (
         <Modal
           title={
@@ -1795,7 +2129,7 @@ function JobList({
               >
                 {statusNames[job.status]}
               </span>
-              {['failed', 'unknown'].includes(job.status) && (
+              {job.kind !== 'clone' && ['failed', 'unknown'].includes(job.status) && (
                 <Button disabled={!!busy} onClick={() => onRetry(job)}>
                   恢复 / 重试
                 </Button>

@@ -1,5 +1,10 @@
+import { samePublishedDraft } from '../shared/publication';
+import { CloneTasks } from './clone-tasks';
+import { ApiError } from './http';
+import { normalizeCloneImages } from '../shared/clone';
 import type {
   Asset,
+  CloneConfig,
   Draft,
   DesignPage,
   Inquiry,
@@ -12,6 +17,7 @@ import type {
   Release,
   Scene,
 } from '../shared/model';
+import { scrapeTargetUrl, generateCloneBundle, renderCloneFiles } from './clone-service';
 import type { AppEnv } from './env';
 import { testMode } from './env';
 import {
@@ -95,6 +101,7 @@ interface JobInput extends Record<string, unknown> {
 
 export class DomainService {
   readonly store: DomainStore;
+  private readonly clones: CloneTasks;
   private serial: Promise<unknown> = Promise.resolve();
   private activeTick: Promise<void> | undefined;
   constructor(
@@ -103,6 +110,16 @@ export class DomainService {
     readonly providers: ProviderSet = createProviders(env),
   ) {
     this.store = new DomainStore(env.DB);
+    this.clones = new CloneTasks(env, this.store, {
+      lock: operation => this.lock(operation), wake: () => this.wake(),
+      validate: project => this.validateAssets(project.id, project.draft),
+      image: async (projectId, assetId) => {
+        const asset = await this.projectAsset(projectId, assetId);
+        const object = await this.env.MEDIA.get(asset.key);
+        return object ? `data:${asset.contentType};base64,${Buffer.from(await object.arrayBuffer()).toString('base64')}` : null;
+      },
+      publish: (project, principal, rid) => this.publish(project, principal, { requestId: rid, expectedVersion: project.version }, false),
+    });
   }
   private lock<T>(operation: () => Promise<T>): Promise<T> {
     const current = this.serial.then(operation, operation);
@@ -116,10 +133,11 @@ export class DomainService {
         ? await this.route(request)
         : await this.lock(() => this.route(request));
     } catch (e) {
-      if (e instanceof DomainError) return json({ message: e.message, code: e.code }, e.status);
+      if (e instanceof DomainError || e instanceof ApiError) return json({ message: e.message, code: e.code }, e.status);
       if (e instanceof ProviderError) return json({ message: e.message, code: e.code }, 503);
       if (e instanceof Error && 'status' in e && typeof e.status === 'number')
         return json({ message: e.message, code: 'upstream_unavailable' }, e.status);
+      console.error('Domain-service unhandled error:', e);
       return json({ message: '操作暂时失败，请稍后重试。', code: 'internal_error' }, 500);
     }
   }
@@ -146,15 +164,17 @@ export class DomainService {
     return p;
   }
   private async body(request: Request): Promise<Record<string, unknown>> {
+    // Generated multipage documents may be up to 8 MB; ordinary commands stay bounded at 1 MB.
+    const limit = request.method === 'PUT' && /^\/api\/projects\/[^/]+$/.test(new URL(request.url).pathname) ? 9 * 1024 * 1024 : 1024 * 1024;
     requireCondition(
-      Number(request.headers.get('content-length') ?? 0) <= 1024 * 1024,
+      Number(request.headers.get('content-length') ?? 0) <= limit,
       413,
       'body_too_large',
       '请求内容过大。',
     );
     let body: unknown;
     try {
-      body = await new Response(this.limitStream(request.body, 1024 * 1024)).json();
+      body = await new Response(this.limitStream(request.body, limit)).json();
     } catch (e) {
       if (e instanceof DomainError) throw e;
       throw new DomainError(400, 'invalid_json', '请求 JSON 无效。');
@@ -241,22 +261,41 @@ export class DomainService {
             : principal.workspaceRole === 'admin'
               ? [principal.userId, principal.workspaceId]
               : [principal.userId];
-        return json({ projects: await this.store.list<Project>('projects', where, values) });
+        return json({
+          projects: await this.store.list<Project>(
+            'projects', where, values,
+            "json_extract(data, '$.updatedAt') DESC, json_extract(data, '$.createdAt') DESC, id DESC",
+          ),
+        });
       }
       if (method === 'POST') {
         const b = await this.body(request);
         return json({
-          project: await this.create(principal, b.requestId, b.name, b.products, false),
+          project: await this.create(principal, b.requestId, b.name, b.products, false, b.buildBranch),
         });
       }
+    }
+    if (path[2] === 'batch-delete' && method === 'POST') {
+      const b = await this.body(request);
+      const rawIds = Array.isArray(b.ids) ? b.ids : Array.isArray(b.projectIds) ? b.projectIds : [];
+      const ids = rawIds.filter((x: unknown): x is string => typeof x === 'string');
+      const count = await this.batchDeleteProjects(ids, principal);
+      return json({ ok: true, deletedCount: count });
     }
     const project = await this.project(path[2] ?? '', principal),
       command = path[3];
     if (!command && method === 'GET') return json(await this.detail(project, principal));
+    if (!command && method === 'DELETE') {
+      await this.deleteProject(project.id, principal);
+      return json({ ok: true, deletedId: project.id });
+    }
     if (!command && method === 'PUT') {
+      await this.clones.assertEditable(project);
       const b = await this.body(request);
       expectedVersion(project, b.expectedVersion);
+      const taskId = project.draft.cloneConfig?.taskId;
       project.draft = editDraft(project.draft, b.draft);
+      if (taskId && project.draft.cloneConfig) project.draft.cloneConfig.taskId = taskId;
       await this.validateAssets(project.id, project.draft);
       if (b.name !== undefined) {
         requireCondition(
@@ -336,11 +375,96 @@ export class DomainService {
       await this.store.update('projects', next).run();
       return json({ project: next });
     }
+    if (command === 'clone' && path[4] === 'task' && method === 'GET')
+      return json(await this.clones.status(project));
+    if (command === 'clone' && path[4] === 'start' && method === 'POST')
+      return json(await this.clones.start(project, principal, await this.body(request)), 202);
+    if (command === 'clone' && ['pause', 'resume', 'stop'].includes(path[4]) && method === 'POST')
+      return json(await this.clones.control(project, await this.body(request), path[4]));
+    if (command === 'clone' && path[4] === 'scrape' && method === 'POST') {
+      const b = await this.body(request);
+      requireCondition(
+        typeof b.url === 'string' && b.url.trim(),
+        400,
+        'invalid_url',
+        '请输入网址。',
+      );
+      const scraped = await scrapeTargetUrl(b.url.trim());
+      return json({ scraped });
+    }
+    if (command === 'clone' && path[4] === 'generate' && method === 'POST') {
+      await this.clones.assertEditable(project);
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      const cloneConfig = validateDraft({ ...project.draft, cloneConfig: { ...project.draft.cloneConfig, ...(b.cloneConfig as CloneConfig | undefined) } }).cloneConfig as CloneConfig;
+      cloneConfig.uiImages = normalizeCloneImages(cloneConfig.uiImages);
+      await this.validateAssets(project.id, { ...project.draft, cloneConfig });
+      requireCondition(
+        Boolean(
+          cloneConfig?.targetUrl?.trim() ||
+            (cloneConfig?.uiImages && cloneConfig.uiImages.length > 0),
+        ),
+        400,
+        'missing_clone_source',
+        '请提供目标网站 URL 或上传至少一张设计稿。',
+      );
+      project.draft.buildBranch = 'clone';
+      project.draft.cloneConfig = {
+        ...cloneConfig,
+        status: 'generating',
+      };
+      const getImageBase64 = async (assetId: string) => {
+        try {
+          const asset = await this.projectAsset(project.id, assetId);
+          const obj = await this.env.MEDIA.get(asset.key);
+          if (!obj) return null;
+          const ab = await obj.arrayBuffer();
+          const b64 = Buffer.from(ab).toString('base64');
+          return `data:${asset.contentType};base64,${b64}`;
+        } catch {
+          return null;
+        }
+      };
+
+      try {
+        const generated = await generateCloneBundle(
+          this.env,
+          project,
+          cloneConfig,
+          getImageBase64,
+        );
+        project.draft.cloneConfig = {
+          ...cloneConfig,
+          status: 'ready',
+          ...generated,
+          generatedAt: new Date().toISOString(),
+          error: undefined,
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        project.draft.cloneConfig = {
+          ...cloneConfig,
+          status: 'error',
+          error: msg,
+        };
+        const next = this.changed(project);
+        await this.store.update('projects', next).run();
+        throw err;
+      }
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next, generatedHtml: project.draft.cloneConfig.generatedHtml });
+    }
     if (command === 'assets' && path[4] && (method === 'GET' || method === 'HEAD')) {
       const asset = await this.projectAsset(project.id, path[4]);
-      return new URL(request.url).searchParams.get('variant') === 'preview'
-        ? privateAssetPreview(request, this.env, asset)
-        : this.assetResponse(request, asset);
+      if (new URL(request.url).searchParams.get('variant') === 'preview') {
+        try {
+          return await privateAssetPreview(request, this.env, asset);
+        } catch {
+          return this.assetResponse(request, asset);
+        }
+      }
+      return this.assetResponse(request, asset);
     }
     if (command === 'import' && method === 'POST') {
       const b = await this.body(request);
@@ -474,23 +598,27 @@ export class DomainService {
       await this.store.update('projects', next).run();
       return json({ project: next });
     }
-    if (command === 'preview' && method === 'GET') {
+    if (command === 'preview' && (method === 'GET' || method === 'POST')) {
+      const draft = method === 'POST'
+        ? validateDraft({ ...((await this.body(request)).draft as Draft), buildBranch: 'template', cloneConfig: undefined, siteDesign: undefined })
+        : project.draft;
+      if (method === 'POST') await this.validateAssets(project.id, draft);
       const lang = (url.searchParams.get('lang') ?? 'en') as Language;
       requireCondition(
-        project.draft.languages.includes(lang),
+        draft.languages.includes(lang),
         400,
         'invalid_language',
         '没有配置这种网站语言。',
       );
       const page = url.searchParams.get('page') ?? 'home';
       requireCondition(
-        plannedPages(project.draft).includes(page as DesignPage),
+        plannedPages(draft).includes(page as DesignPage),
         400,
         'invalid_page',
         '页面不存在。',
       );
       return json({
-        html: await this.renderPage(project.draft, {
+        html: await this.renderPage(draft, {
           projectId: project.id,
           lang,
           page,
@@ -546,7 +674,37 @@ export class DomainService {
       this.store.list<Release>('releases', 'project_id=?', [project.id], 'created_at DESC'),
       this.store.quota(principal.userId),
     ]);
-    return { project, assets, jobs, releases, quota };
+    return { project, assets, jobs: jobs.map(job => job.kind === 'clone' ? this.clones.publicJob(job) : job), releases: releases.map(release => release.status === 'succeeded' ? { ...release, error: undefined } : release), quota };
+  }
+  private async deleteProject(id: string, principal: Principal): Promise<void> {
+    const p = await this.store.one<Project>('projects', id);
+    requireCondition(p && canManage(p, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
+    await this.store.batch(this.store.deleteProjectStatements(id));
+    if (this.env.MEDIA) {
+      try {
+        const listed = await this.env.MEDIA.list({ prefix: `projects/${id}/` });
+        const keys = listed.objects.map((o) => o.key);
+        if (keys.length > 0) {
+          await this.env.MEDIA.delete(keys);
+        }
+      } catch {
+        // Storage cleanup is non-blocking
+      }
+    }
+  }
+  private async batchDeleteProjects(ids: string[], principal: Principal): Promise<number> {
+    requireCondition(Array.isArray(ids) && ids.length > 0, 400, 'invalid_ids', '请提供要删除的项目 ID 列表。');
+    requireCondition(ids.length <= 1000, 400, 'batch_limit_exceeded', '一次最多批量删除 1000 个项目。');
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await this.deleteProject(id, principal);
+        count++;
+      } catch {
+        // Skip projects not permitted or already removed
+      }
+    }
+    return count;
   }
   private productIds(value: unknown): string[] {
     requireCondition(
@@ -588,6 +746,7 @@ export class DomainService {
     name: unknown,
     rawProducts: unknown,
     handoff: boolean,
+    rawBuildBranch?: unknown,
   ): Promise<Project> {
     const rid = requestId(rawRequestId);
     requireCondition(
@@ -620,13 +779,23 @@ export class DomainService {
         products.map((p) => p.id),
       );
     }
+    const initialDraft = defaultDraft();
+    if (rawBuildBranch === 'clone') {
+      initialDraft.buildBranch = 'clone';
+      initialDraft.cloneConfig = {
+        targetUrl: '',
+        instructions: '',
+        uiImages: [],
+        status: 'idle',
+      };
+    }
     const p: Project = {
       id: crypto.randomUUID(),
       ownerId: principal.userId,
       workspaceId: principal.workspaceId,
       name: name.trim(),
       version: 1,
-      draft: defaultDraft(),
+      draft: initialDraft,
       createdAt: now(),
       updatedAt: now(),
       offline: true,
@@ -977,7 +1146,7 @@ export class DomainService {
   }
   private async assetResponse(request: Request, asset: Asset): Promise<Response> {
     const headers = new Headers({
-      'Cache-Control': 'no-store',
+      'Cache-Control': 'public, max-age=31536000, immutable',
       'Content-Type': asset.contentType,
       'X-Content-Type-Options': 'nosniff',
       'Accept-Ranges': 'bytes',
@@ -1310,6 +1479,7 @@ export class DomainService {
   private async retry(project: Project, principal: Principal, id: string): Promise<Job> {
     const job = await this.store.one<Job>('jobs', id);
     requireCondition(job?.projectId === project.id, 404, 'job_not_found', '任务不存在。');
+    requireCondition(job.kind !== 'clone', 409, 'clone_retry_via_task', '请在设计稿生成页面继续暂停的任务，或重新开始生成。');
     if (job.status === 'succeeded' || job.status === 'queued' || job.status === 'running') {
       await this.wake();
       return job;
@@ -1479,6 +1649,10 @@ export class DomainService {
       draft = structuredClone(project.draft);
       draftVersion = project.version;
     }
+    if (draft.buildBranch === 'clone') {
+      requireCondition(testMode(this.env) || draft.cloneConfig?.generation?.mode !== 'fixture', 400, 'clone_fixture_only', '演示页面不能发布到生产环境，请使用真实设计生成。');
+      if (draft.cloneConfig?.generatedFiles) validateSiteFiles(draft.cloneConfig.generatedFiles, draft);
+    }
     await this.validateAssets(project.id, draft);
     for (const id of publicAssetReferences(draft))
       await this.assertObject(await this.projectAsset(project.id, id));
@@ -1487,15 +1661,25 @@ export class DomainService {
       "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",
       [project.id],
     );
-    requireCondition(
-      !pending.some((j) => !j.input.cancelledByOffline),
-      409,
-      'publish_pending',
-      '已有发布任务正在处理，请先查看其状态。',
-    );
     const activeRelease = project.publishedReleaseId
       ? await this.store.one<Release>('releases', project.publishedReleaseId)
       : undefined;
+    if (!restore) {
+      const samePending = pending.find(job => !job.input.cancelledByOffline && job.input.draft && samePublishedDraft(draft, job.input.draft as Draft));
+      if (samePending) {
+        await this.store.remember(scope, rid, hash, { id: samePending.id }).run();
+        return samePending;
+      }
+      if (!project.offline && activeRelease?.status === 'succeeded' && samePublishedDraft(draft, activeRelease.draft)) {
+        const jobs = await this.store.list<Job>('jobs', "project_id=? AND kind='publish' AND status='succeeded'", [project.id], 'created_at DESC');
+        const existing = jobs.find(job => job.input.releaseId === activeRelease.id);
+        if (existing) {
+          await this.store.remember(scope, rid, hash, { id: existing.id }).run();
+          return existing;
+        }
+      }
+    }
+    requireCondition(!pending.some(job => !job.input.cancelledByOffline), 409, 'publish_pending', '已有发布任务正在处理，请先查看其状态。');
     const currentTarget =
       project.hostingTarget ?? activeRelease?.hostingTarget ?? restored?.hostingTarget;
     const target = await this.providers.resolveHostingTarget(project.id, currentTarget);
@@ -1584,7 +1768,7 @@ export class DomainService {
     if (path.length === 1 || path[1] === 'index.html') page = 'home';
     else if (path[1] === 'catalog') page = 'catalog';
     else if (
-      release.draft.siteDesign &&
+      (release.draft.siteDesign || release.draft.cloneConfig?.generatedFiles) &&
       path[1] === 'products' &&
       (!path[2] || path[2] === 'index.html')
     )
@@ -1960,7 +2144,7 @@ export class DomainService {
   }
   async tick(): Promise<void> {
     if (this.activeTick) return this.activeTick;
-    this.activeTick = this.runTick().finally(() => {
+    this.activeTick = (async () => { await this.clones.tick(); await this.runTick(); })().finally(() => {
       this.activeTick = undefined;
     });
     return this.activeTick;
@@ -2031,7 +2215,7 @@ export class DomainService {
     }
   }
   private async nextActionTime(): Promise<number | undefined> {
-    const jobs = await this.store.list<Job>('jobs', "status IN ('queued','running','unknown')");
+    const jobs = await this.store.list<Job>('jobs', "kind!='clone' AND status IN ('queued','running','unknown')");
     const occupied = jobs.some(
       (j) => j.kind === 'video' && (j.status === 'running' || j.status === 'unknown'),
     );
@@ -2051,7 +2235,7 @@ export class DomainService {
     return times.length ? Math.min(...times) : undefined;
   }
   private async claim(): Promise<{ job: Job; recovery: boolean } | undefined> {
-    const running = await this.store.list<Job>('jobs', "status='running'", [], 'created_at ASC');
+    const running = await this.store.list<Job>('jobs', "kind!='clone' AND status='running'", [], 'created_at ASC');
     // A running non-video job can only remain here after a prior invocation was interrupted.
     const interrupted = running.find((j) => j.kind !== 'video');
     if (interrupted) {
@@ -2079,7 +2263,7 @@ export class DomainService {
       }
     }
     const unknownVideos = await this.store.list<Job>('jobs', "kind='video' AND status='unknown'");
-    const queued = await this.store.list<Job>('jobs', "status='queued'", [], 'created_at ASC');
+    const queued = await this.store.list<Job>('jobs', "kind!='clone' AND status='queued'", [], 'created_at ASC');
     const job = queued.find(
       (j) =>
         (j.kind !== 'video' || (!video && !unknownVideos.length)) &&
@@ -2502,6 +2686,7 @@ export class DomainService {
           '本次发布期间网站已下线，未激活新版本。',
         );
         release.status = 'succeeded';
+        release.error = undefined;
         release.deploymentId = accepted.deploymentId;
         release.url = accepted.url;
         release.testMode = accepted.testMode;
@@ -2618,7 +2803,10 @@ export class DomainService {
     draft: Draft,
     options: Parameters<typeof renderSiteFiles>[1],
   ): Promise<Record<string, string>> {
-    if (!draft.siteDesign) return renderSiteFiles(draft, options);
+    if (draft.buildBranch === 'clone' && draft.cloneConfig?.generatedHtml) {
+      return renderCloneFiles(draft, options);
+    }
+    if (draft.buildBranch === 'template' || !draft.siteDesign) return renderSiteFiles(draft, options);
     return materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
       assetUrl: options.assetUrl,
       inquiryUrl: options.inquiryUrl,
@@ -2629,7 +2817,13 @@ export class DomainService {
     options: Parameters<typeof renderSite>[1],
     basePath?: string,
   ): Promise<string> {
-    if (!draft.siteDesign) return renderSite(draft, options);
+    if (draft.buildBranch === 'clone' && draft.cloneConfig?.generatedHtml) {
+      const files = renderCloneFiles(draft, { ...options, basePath });
+      const key = siteFilePath(options.lang, options.page, options.productId ?? draft.primaryProductId);
+      requireCondition(files[key], 404, 'page_not_found', '页面不存在。');
+      return files[key];
+    }
+    if (draft.buildBranch === 'template' || !draft.siteDesign) return renderSite(draft, options);
     const files = materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
       assetUrl: options.assetUrl,
       inquiryUrl: new URL(options.inquiryUrl, this.origin()).href,

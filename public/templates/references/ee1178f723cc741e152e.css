@@ -1,0 +1,27 @@
+.widget_categories_list .categories_list_columns { display: flex; flex-wrap: wrap; }
+.widget_categories_list .categories_list_columns .categories_list_item { display: inline-block; vertical-align: top; width: 100%; height: 100%; box-sizing: border-box; }
+.widget_categories_list .categories_list_item { text-align: center; position: relative; }
+.widget_categories_list .categories_list_count { display: inline-block; margin-left: 0.5em; }
+.widget_categories_list .categories_list_link { position: absolute; z-index: 1; inset: 0px; }
+.widget_categories_list .sc_button_size_small .sc_button_icon { font-size: 1.4em; }
+.widget_categories_list .categories_list_style_1 .categories_list_title { margin: 0.5em 0px 0px; transition: color 0.3s, background-color 0.3s, border-color 0.3s; }
+.widget_categories_list .categories_list_style_1 .categories_list_item:hover .categories_list_title { color: rgb(239, 167, 88); }
+.widget_categories_list .categories_list_style_1 .categories_list_image { vertical-align: top; height: 3em; line-height: 3em; }
+.widget_categories_list .categories_list_style_1 .categories_list_image img { display: inline-block; vertical-align: middle; width: auto; max-height: 3em; }
+.widget_categories_list .categories_list_style_1 .categories_list_icon { display: inline-block; vertical-align: middle; font-size: 3em; line-height: 1em; color: rgb(239, 167, 88); transition: color 0.3s; }
+.widget_categories_list .categories_list_style_2 .categories_list_image img { width: 100%; }
+.widget_categories_list .categories_list_style_2 .categories_list_count { display: block; margin-left: 0px; }
+.widget_categories_list .categories_list_style_2 .categories_list_image::after { content: " "; display: block; position: absolute; z-index: 1; inset: 0px; background: rgba(0, 0, 0, 0.5); transition: background-color 0.3s; pointer-events: none; }
+.widget_categories_list .categories_list_style_2 .categories_list_item:hover .categories_list_image::after { background-color: rgba(0, 0, 0, 0.1); }
+.widget_categories_list .categories_list_style_2 .categories_list_title { position: absolute; z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: color 0.3s, background-color 0.3s, border-color 0.3s; box-sizing: border-box; width: 40%; font-weight: 300; margin: 0px; padding: 1.5em 1em; background-color: rgba(255, 255, 255, 0.8); box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 10px 0px; }
+.widget_categories_list .categories_list_style_2 .categories_list_item:hover .categories_list_title { color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); }
+.widget_categories_list .categories_list_style_2 .categories_list_icon { display: inline-block; vertical-align: middle; width: 1.2em; height: 1.2em; line-height: 1.2em; text-align: center; margin-right: 0.3em; }
+.widget_categories_list .categories_list_style_3 .categories_list_item { overflow: hidden; background-color: rgb(250, 250, 250); position: relative; }
+.widget_categories_list .categories_list_style_3 .categories_list_info, .widget_categories_list .categories_list_style_3 .categories_list_image { float: left; width: 50%; height: 14em; background-position: center center; background-repeat: no-repeat; background-size: cover; }
+.widget_categories_list .categories_list_style_3 .categories_list_info { position: relative; }
+.widget_categories_list .categories_list_style_3 .categories_list_info .wrap_in { position: absolute; z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 94%; box-sizing: border-box; margin: 0px; padding: 0px; }
+.widget_categories_list .categories_list_style_3 .categories_list_count { display: block; margin-left: 0px; }
+.widget_categories_list .categories_list_style_3 .categories_list_title { font-weight: 300; margin: 0.3em 0px; text-transform: none; transition: color 0.3s, background-color 0.3s, border-color 0.3s; }
+.widget_categories_list .categories_list_style_3 .categories_list_item:hover .categories_list_title, .widget_categories_list .categories_list_style_3 .categories_list_item:hover .categories_list_icon { color: rgb(239, 167, 88); }
+.widget_categories_list .categories_list_style_3 .categories_list_icon { display: inline-block; vertical-align: middle; font-size: 2em; width: 1em; height: 1em; line-height: 1em; text-align: center; transition: color 0.3s; }
+.widget_categories_list .categories_list_style_3 img.categories_list_icon { max-height: 1em; width: auto; }

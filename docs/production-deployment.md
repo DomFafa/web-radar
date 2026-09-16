@@ -180,3 +180,54 @@ Worker 回退使用上面记录的旧版本。复刻服务更新可回退 `curre
 - `npm run check`通过类型检查、230项测试和构建。正式账号浏览器原项目与已保存设计图/放大预览正常，无脚本错误；本轮新图仅为独立供应商验收，没有代用户在线创建/确认新设计或发布客户网站。
 - 窄包只更改页面设计输入与任务前预检。30项绑定、运行时与部署设置、现有HTML/JS/CSS均保留；实际代码下载hash校验和正式health通过。Wrangler在成功部署后的非版本设置同步发生网络错误，已用实际部署/代码/配置读取核实，无重复部署。
 - 完整证据及边界见 `artifacts/page-design-budget-20260914/acceptance.md`；包含来源资料的文件仅存Git忽略私有目录。图生站还原、Hero独立背景素材和整单自动恢复未在此补丁中改动。
+
+
+## 会话恢复、模板试览与克隆发布版本修复
+
+2026-09-16（Asia/Shanghai）。按用户要求先验证本地部署，再部署到正式域名。
+
+- 本地入口：http://127.0.0.1:8788（明确标记测试环境）；线上：https://web-radar.net（testMode:false）。
+- 当前 Worker 版本：`f421b5a4-20eb-4ef6-943f-38d54be5a2f9`，100% 流量。前一版本：`5e0d9d9e-a4fd-465a-a686-bd7b79c44268`。
+- 包含 HttpOnly 会话恢复与续期、10 套模板只读试览、克隆生成与发布版本衔接及无冲突的并发保存合并。
+- 发布前：类型检查、289 项测试、生产构建与隔离浏览器回归通过；连续两次测试克隆生成发布完成。正式 D1 无待执行迁移。
+- 发布后：线上健康检查正常；JS/CSS 与本地构建逐字节一致；模板缩略图及两个参考视频可读取；未登录 me 为 401，生产测试登录为 404。真实浏览器登录页正常、无 JavaScript 错误。
+- 本次未使用正式账号执行付费模型生成或发布客户网站。线上登录后的业务流程由本地隔离回归覆盖，不将其声明为正式环境端到端验收。
+- 部署日志、前后版本快照、资源哈希及浏览器截图：`artifacts/deploy-20260916/`；此前功能回归记录：`artifacts/session-review/README.md`。
+
+### 2026-09-16 — Design reconstruction correction
+
+- Latest production Worker version: `c6521b26-1cb3-4c27-acc2-041f51e81c7d` on `https://web-radar.net`, deployed with `--keep-vars`.
+- Client bundle: `/assets/index-D7CRmbzc.js`; CSS: `/assets/index-DagSt_t8.css`.
+- `npm run check`: 20 test files / 299 tests passed, plus TypeScript and Vite build.
+- Local project `af8c295b-48f0-487b-8796-19469e44d50b`: direct reference reconstruction published as release `14cedaa1-1502-481a-aaf4-7db7979f3626`, current project version 20. This is a **local test release**, not a Cloudflare-hosted customer site.
+- Anonymous browser checks: five page types at 1536 and 390 px, no broken/private media URLs or horizontal overflow, navigation works. Private editor previews and correct 5-page / 8-artwork classification passed.
+- Live model verification was separately authorized but timed out; it was not treated as successful visual generation. See `docs/clone-fidelity-repair.md` for the cause, validation boundaries and repeatable repair scripts.
+
+### 2026-09-16 视觉接口连接及上传进度修复
+
+本地入口现为 `npm run dev:test`（测试环境）或 `npm run dev`，自动接入系统/环境 HTTP 代理，数据仍保存在 `.wrangler/state`。避免直接运行旧 `wrangler dev` 命令绕过出站适配。线上使用 Cloudflare 自身出站网络，修复的重定向参数同样适用。
+上传进度基于浏览器传输字节与服务端完成确认，支持部分成功保留及失败重试。本次不需要数据库迁移，不重新生成或覆盖已有发布网站。
+
+部署版本：`d5885456-690a-4552-a452-ade821f67c16`。构建：`index-M3SRmWnK.js` / `index-DagSt_t8.css`。验证：308 项单元测试、真实 workerd 模拟生成与官方接口连通性、浏览器上传部分失败/保留/重试均通过；本地用户项目重启前后数据与版本一致。
+
+### 2026-09-16 后台设计生成任务
+
+设计生成与自动发布改为持久化后台任务，接口先返回任务 ID。界面每两秒同步阶段、图片读取数、流式输出字符数，显示执行耗时和估计剩余区间。支持暂停、继续、停止和刷新恢复。模型执行中暂停会在结果保存后生效；继续读取检查点，不再次调用模型。发布已提交后不可暂停/停止。
+
+本次复用现有 jobs 表，无结构迁移。验证：317 项测试通过；隔离真实浏览器验证了运行/暂停/停止时刷新、恢复后不重复调用模型及无人值守自动发布。构建资源：`index-DJzQDzUU.js`。
+
+后台任务功能线上版本：`510d87fc-5b58-43e8-a6a7-19a8e22561cb`。
+
+### 2026-09-16 任务结束、发布一致性与智能完善
+
+- 任务结束后停止生成状态和项目详情的定时查询；新任务、恢复操作和重新聚焦页面可重新同步状态。暂停期间不持续查询。
+- 生成完成后的状态统一由任务面板展示。可选择自动发布或仅生成预览；已上线的相同内容不再创建重复发布任务/记录。成功发布清除中间错误，并兼容隐藏旧成功记录残留的处理中提示。
+- 图生站增加智能完善/忠实还原选项。智能完善优先保留首屏与品牌视觉，依据已有产品和品牌资料补充有用内容，明确禁止虚构认证、评价和数据。品牌微调指令优先应用，实际优化说明随生成结果保存。修改选项或指令需重新生成才影响页面。
+- 类型检查、324 项测试、生产构建通过。真实 workerd 与 Chrome 的隔离模拟模型回归验证任务刷新/暂停/恢复/停止、自动发布、完成后停止查询和相同内容发布去重。没有额外付费模型调用，未将模拟输出视为视觉还原验收。
+- 本地构建资源：`index-DeT_r0L_.js` / `index-DagSt_t8.css`。无数据库结构迁移，不重新生成已有客户网站。
+- 仅生成预览的浏览器补充回归通过：不新增发布记录，完成后停止查询。线上部署版本：`c575d6a1-5106-4fd5-b7af-7a8cb4a05c54`；上一版本：`510d87fc-5b58-43e8-a6a7-19a8e22561cb`。部署使用 `--keep-vars` 保留线上配置。
+- 部署后线上健康正常（`testMode:false`），JS/CSS 与本地构建逐字节一致；未登录接口 401、生产测试登录 404、模板图片和视频资源可访问。业务流程在隔离本地环境验证，未用正式账号再次生成客户网站。
+
+### 2026-09-16 项目列表时间排序
+
+项目列表接口按卡片显示的 `updatedAt` 倒序返回；时间相同时依次按创建时间、项目 ID 排序。筛选与搜索保留该顺序，无数据迁移。类型检查、74 项服务测试、构建及本地现有项目排序检查通过。线上版本：`990c41b6-dad8-4b55-a482-fd0f7eec86ec`，前一版本：`c575d6a1-5106-4fd5-b7af-7a8cb4a05c54`。

@@ -10,8 +10,17 @@ export class ApiError extends Error {
   }
 }
 
-// The WR session deliberately lives only in this module's memory, including in embeds.
-let session = '';
+// Standalone login uses an HttpOnly cookie; embeds retain their tab-scoped bearer.
+let session = (() => {
+  try {
+    return sessionStorage.getItem('wr_session') || '';
+  } catch {
+    return '';
+  }
+})();
+let sessionEpoch = 0;
+const expiredCode = (code?: string) =>
+  ['session_required', 'session_expired', 'test_session_invalid'].includes(code || '');
 type AssetVariant = 'original' | 'preview';
 const assetCache = new Map<string, { blob: Blob; expires: number }>();
 const assetReads = new Map<string, { promise: Promise<Blob>; controller: AbortController }>();
@@ -21,15 +30,25 @@ function clearAssets() {
   assetReads.clear();
 }
 export function setSession(value: string) {
+  sessionEpoch++;
   if (session !== value) clearAssets();
   session = value;
+  try {
+    if (value) sessionStorage.setItem('wr_session', value);
+    else sessionStorage.removeItem('wr_session');
+  } catch {}
 }
 export function clearSession() {
   clearAssets();
   session = '';
+  sessionEpoch++;
+  try {
+    sessionStorage.removeItem('wr_session');
+  } catch {}
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const epoch = sessionEpoch;
   const headers = new Headers(options.headers);
   if (session) headers.set('Authorization', `Bearer ${session}`);
   if (options.body && !(options.body instanceof FormData))
@@ -37,7 +56,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const response = await fetch(path, { ...options, headers, cache: 'no-store' });
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as { message?: string; code?: string };
-    if (response.status === 401 && session)
+    if (response.status === 401 && epoch === sessionEpoch && expiredCode(body.code))
       window.dispatchEvent(new CustomEvent('wr:session-expired'));
     throw new ApiError(
       body.message || `请求失败（${response.status}）`,
@@ -46,6 +65,38 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     );
   }
   return response.json() as Promise<T>;
+}
+
+/** XHR exposes actual upload bytes; fetch does not expose upload progress. */
+export function upload<T>(path: string, body: FormData, onProgress: (fraction: number) => void): Promise<T> {
+  const epoch = sessionEpoch;
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', path);
+    xhr.timeout = 5 * 60 * 1000;
+    if (session) xhr.setRequestHeader('Authorization', `Bearer ${session}`);
+    // Same-origin cookies are included by XHR. The browser supplies the multipart boundary.
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0)
+        onProgress(Math.min(1, Math.max(0, event.loaded / event.total)));
+    };
+    xhr.upload.onload = () => onProgress(1);
+    xhr.onerror = () => reject(new ApiError('图片上传连接中断，请检查网络后重试。', 0));
+    xhr.ontimeout = () => reject(new ApiError('图片上传超时，请重试。', 0));
+    xhr.onabort = () => reject(new ApiError('图片上传已取消。', 0));
+    xhr.onload = () => {
+      let result;
+      try { result = JSON.parse(xhr.responseText); } catch {
+        reject(new ApiError('上传接口返回了无效响应，请重试。', xhr.status)); return;
+      }
+      if (xhr.status < 200 || xhr.status >= 300) {
+        if (xhr.status === 401 && epoch === sessionEpoch && expiredCode(result?.code))
+          window.dispatchEvent(new CustomEvent('wr:session-expired'));
+        reject(new ApiError(result?.message || `上传失败（${xhr.status}）`, xhr.status, result?.code));
+      } else resolve(result as T);
+    };
+    xhr.send(body);
+  });
 }
 
 export function post<T>(path: string, body: unknown = {}) {
@@ -79,6 +130,7 @@ export async function privateAssetBlob(
   const pending = assetReads.get(path);
   if (pending) return pending.promise;
   const token = session;
+  const epoch = sessionEpoch;
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(new Error('素材加载超时，请重试。')),
@@ -87,12 +139,13 @@ export async function privateAssetBlob(
   const promise = (async () => {
     try {
       const response = await fetch(path, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         cache: 'no-store',
         signal: controller.signal,
       });
       if (!response.ok) {
-        if (response.status === 401 && session === token && token)
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        if (response.status === 401 && epoch === sessionEpoch && expiredCode(body.code))
           window.dispatchEvent(new CustomEvent('wr:session-expired'));
         throw new ApiError(
           response.status === 401 ? '登录已过期，请重新登录。' : '图片读取失败，请重试。',

@@ -114,6 +114,15 @@ export function Icon({ name, size = 18 }: { name: string; size?: number }) {
         <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z" />
       </>
     ),
+    palette: (
+      <>
+        <circle cx="13.5" cy="6.5" r="1" />
+        <circle cx="17.5" cy="10.5" r="1" />
+        <circle cx="8.5" cy="7.5" r="1" />
+        <circle cx="6.5" cy="12.5" r="1" />
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.4-.4-.8-.4-1.2 0-.9.8-1.7 1.7-1.7H16c3.3 0 6-2.7 6-6 0-5.5-4.5-9.3-10-9.3Z" />
+      </>
+    ),
     lock: (
       <>
         <rect x="5" y="10" width="14" height="11" rx="2" />
@@ -415,6 +424,8 @@ export const dateTime = (value: string) =>
     minute: '2-digit',
   });
 export const statusNames: Record<string, string> = {
+  paused: '已暂停',
+  cancelled: '已停止',
   queued: '等待处理',
   running: '处理中',
   unknown: '等待核对',

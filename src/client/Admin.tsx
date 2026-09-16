@@ -233,6 +233,7 @@ export function Admin() {
                         <td>
                           {
                             {
+                              clone: '设计稿生成',
                               consultation: '需求沟通',
                               script: '脚本',
                               copy: '网站文案',

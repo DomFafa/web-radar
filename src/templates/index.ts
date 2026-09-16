@@ -1,6 +1,18 @@
 import type { Draft, Language, Product } from '../shared/model';
 import { labels } from './labels';
 import { styles } from './styles';
+import { themeStyles } from './themes/styles';
+import { buildThemeContext } from './themes/types';
+import { renderSensengHome, renderSensengPage } from './themes/senseng';
+import { isReferenceTemplate, renderReferencePage } from './themes/reference';
+import { renderSaasHome } from './themes/saasAutomation';
+import { renderFintechHome } from './themes/fintechPlatform';
+import { renderMarketingHome } from './themes/digitalMarketing';
+import { renderAccountingHome } from './themes/portoAccounting';
+import { renderCraftoHome } from './themes/craftoCorporate';
+import { renderToysHome } from './themes/junoToys';
+import { renderAiAgencyHome } from './themes/corpoxAiAgency';
+import { renderConsultingHome } from './themes/corpoxConsulting';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -40,19 +52,17 @@ const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
   const ui = labels[lang];
-  const template = ['natural', 'technology', 'explorer'].includes(draft.template)
-    ? draft.template
-    : 'natural';
+  const template = draft.template || 'senseng-clean';
   const page = ['home', 'catalog', 'detail', 'about', 'contact'].includes(options.page)
     ? options.page
     : 'home';
+  const company = draft.company;
   const copy = draft.copy[lang] ?? {
-    headline: draft.company.name,
-    subtitle: '',
-    about: lang === 'en' ? draft.company.description : '',
+    headline: company.slogan || company.name,
+    subtitle: company.description || '',
+    about: lang === 'en' ? company.description : '',
     cta: ui.discover,
   };
-  const company = draft.company;
   const depth = page === 'home' ? '' : page === 'detail' ? '../../' : '../';
   const path = (p: string) => `${depth}${p}`;
   const navPath = (p: string) => (p === 'home' ? 'index.html' : `${p}/index.html`);
@@ -90,25 +100,63 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
   const aboutText = copy.about || '';
   const story = `<section class="story wrap">${mainProduct ? `<div class="story-visual">${asset(mainProduct.imageAssetId) ? `<img src="${esc(asset(mainProduct.imageAssetId))}" alt="${esc(translate(mainProduct).name)}" loading="lazy">` : ''}</div>` : ''}<div><span class="eyebrow">${esc(ui.about)}</span><h2>${esc(company.name)}</h2>${aboutText ? `<p>${esc(aboutText)}</p>` : ''}<a class="text-link" href="${path('about/index.html')}" ${navAttrs('about')}>${esc(ui.about)} ↗</a></div></section>`;
   let content = '';
-  if (page === 'home')
-    content = `${hero}<section class="chapter wrap"><div class="section-top"><div><span class="eyebrow">${esc(ui.products)}</span><h2>${esc(ui.catalog)}</h2></div><a class="text-link" href="catalog/index.html" ${navAttrs('catalog')}>${esc(ui.allProducts)} ↗</a></div>${cards(draft.products.slice(0, template === 'explorer' ? 4 : 3))}</section>${story}${contactBand}`;
+  if (page === 'home') {
+    const ctx = buildThemeContext(draft, options);
+    switch (template) {
+      case 'senseng-clean':
+        content = renderSensengHome(ctx, false);
+        break;
+      case 'senseng-video':
+        content = renderSensengHome(ctx, true);
+        break;
+      case 'saas-automation':
+        content = renderSaasHome(ctx);
+        break;
+      case 'fintech-platform':
+        content = renderFintechHome(ctx);
+        break;
+      case 'digital-marketing':
+        content = renderMarketingHome(ctx);
+        break;
+      case 'porto-accounting':
+        content = renderAccountingHome(ctx);
+        break;
+      case 'crafto-corporate':
+        content = renderCraftoHome(ctx);
+        break;
+      case 'juno-toys':
+        content = renderToysHome(ctx);
+        break;
+      case 'corpox-ai-agency':
+        content = renderAiAgencyHome(ctx);
+        break;
+      case 'corpox-consulting':
+        content = renderConsultingHome(ctx);
+        break;
+      default:
+        content = `${hero}<section class="chapter wrap"><div class="section-top"><div><span class="eyebrow">${esc(ui.products)}</span><h2>${esc(ui.catalog)}</h2></div><a class="text-link" href="catalog/index.html" ${navAttrs('catalog')}>${esc(ui.allProducts)} ↗</a></div>${cards(draft.products.slice(0, template === 'explorer' ? 4 : 3))}</section>${story}${contactBand}`;
+        break;
+    }
+  }
   if (page === 'catalog')
     content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(company.name)}</span><h1>${esc(ui.catalog)}</h1></header><section class="chapter" style="padding-top:0">${cards(draft.products)}</section></div>${contactBand}`;
   if (page === 'about')
-    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.about)}</span><h1>${esc(company.name)}</h1><p>${esc(company.type === 'factory' ? ui.factory : ui.trader)}</p></header>${aboutText ? `<div class="about-full">${esc(aboutText)}</div>` : ''}</div>${hero}${contactBand}`;
+    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.about)}</span><h1>${esc(company.name)}</h1><p>${esc(company.type === 'factory' ? ui.factory : ui.trader)}</p></header>${aboutText ? `<div class="about-full">${esc(aboutText)}</div>` : ''}${company.establishedYear || company.certifications || company.capabilities ? `<div class="about-highlights grid" style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">${company.establishedYear ? `<div style="background:rgba(0,0,0,0.02);padding:16px;border-radius:8px;border:1px solid #e5e7eb"><h4 style="margin:0 0 6px;font-size:13px;color:var(--brand)">ESTABLISHED</h4><p style="margin:0;font-weight:600">${esc(company.establishedYear)}</p></div>` : ''}${company.certifications ? `<div style="background:rgba(0,0,0,0.02);padding:16px;border-radius:8px;border:1px solid #e5e7eb"><h4 style="margin:0 0 6px;font-size:13px;color:var(--brand)">CERTIFICATIONS</h4><p style="margin:0;font-weight:600">${esc(company.certifications)}</p></div>` : ''}${company.capabilities ? `<div style="background:rgba(0,0,0,0.02);padding:16px;border-radius:8px;border:1px solid #e5e7eb"><h4 style="margin:0 0 6px;font-size:13px;color:var(--brand)">CAPABILITIES</h4><p style="margin:0;font-weight:600">${esc(company.capabilities)}</p></div>` : ''}</div>` : ''}</div>${hero}${contactBand}`;
   if (page === 'detail') {
     const p = draft.products.find((item) => item.id === options.productId);
     content = p
       ? `<section class="detail wrap">${img(p)}<div><a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>← ${esc(ui.back)}</a><h1>${esc(translate(p).name)}</h1>${translate(p).description ? `<p>${esc(translate(p).description)}</p>` : ''}<dl class="specs">${p.material ? `<div><dt>${esc(ui.material)}</dt><dd>${esc(p.material)}</dd></div>` : ''}${p.dimensions ? `<div><dt>${esc(ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd></div>` : ''}</dl><a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)}>${esc(ui.inquire)} ↗</a></div></section><section class="chapter wrap"><div class="section-top"><h2>${esc(ui.related)}</h2></div>${cards(draft.products.filter((item) => item.id !== p.id).slice(0, 3))}</section>`
       : `<section class="chapter wrap"><h1>${esc(ui.noProducts)}</h1></section>`;
   }
-  if (page === 'contact')
-    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.contact)}</span><h1>${esc(ui.conversation)}</h1><p>${esc(ui.contactIntro)}</p></header><section class="contact-layout"><div class="contact-details"><h3>${esc(company.contactName)}</h3><p>${esc(company.name)}</p><p>${esc(ui.emailDirect)}<br><a class="text-link" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p></div><form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" class="form-grid"><label class="field">${esc(ui.name)}<input name="name" autocomplete="name" required maxlength="120"></label><label class="field">${esc(ui.email)}<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label class="field full">${esc(ui.company)} (${esc(ui.optional)})<input name="company" autocomplete="organization" maxlength="200"></label><label class="field full">${esc(ui.product)} (${esc(ui.optional)})<select name="productId"><option value="">—</option>${draft.products.map((p) => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(translate(p).name)}</option>`).join('')}</select></label><label class="field full">${esc(ui.message)}<textarea name="message" required maxlength="5000" rows="5"></textarea></label><div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit"${options.preview ? ' disabled' : ''}>${esc(ui.send)} ↗</button><p class="form-status" role="status" aria-live="polite"></p></form></section></div>`;
-  const socials = (['facebook', 'instagram', 'x'] as const)
+  if (page === 'contact') {
+    const waDigits = (company.whatsapp || '').replace(/[^0-9]/g, '');
+    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.contact)}</span><h1>${esc(ui.conversation)}</h1><p>${esc(ui.contactIntro)}</p></header><section class="contact-layout"><div class="contact-details"><h3>${esc(company.contactName)}</h3><p><strong>${esc(company.name)}</strong></p><p>${esc(ui.emailDirect)}<br><a class="text-link" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p>${company.phone ? `<p style="margin-top:12px">Phone<br><a class="text-link" href="tel:${esc(company.phone)}">${esc(company.phone)}</a></p>` : ''}${waDigits ? `<p style="margin-top:12px">WhatsApp<br><a class="text-link" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(waDigits)}">+${esc(waDigits)} (Chat Now ↗)</a></p>` : ''}${company.address ? `<p style="margin-top:12px">Address<br><span>${esc(company.address)}</span></p>` : ''}</div><form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" class="form-grid"><label class="field">${esc(ui.name)}<input name="name" autocomplete="name" required maxlength="120"></label><label class="field">${esc(ui.email)}<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label class="field full">${esc(ui.company)} (${esc(ui.optional)})<input name="company" autocomplete="organization" maxlength="200"></label><label class="field full">${esc(ui.product)} (${esc(ui.optional)})<select name="productId"><option value="">—</option>${draft.products.map((p) => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(translate(p).name)}</option>`).join('')}</select></label><label class="field full">${esc(ui.message)}<textarea name="message" required maxlength="5000" rows="5"></textarea></label><div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit"${options.preview ? ' disabled' : ''}>${esc(ui.send)} ↗</button><p class="form-status" role="status" aria-live="polite"></p></form></section></div>`;
+  }
+  const socials = (['linkedin', 'facebook', 'instagram', 'x'] as const)
     .map((k) => {
-      const url = safeUrl(company[k]);
+      const url = safeUrl(company[k] || '');
       return url
-        ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${k === 'x' ? 'X' : k === 'facebook' ? 'Facebook' : 'Instagram'}</a>`
+        ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${k === 'linkedin' ? 'LinkedIn' : k === 'x' ? 'X' : k === 'facebook' ? 'Facebook' : 'Instagram'}</a>`
         : '';
     })
     .join('');
@@ -122,7 +170,14 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
   const logo = asset(company.logoAssetId);
   const brand = logo ? `<img src="${esc(logo)}" alt="${esc(company.name)}">` : esc(company.name);
   const script = `(()=>{const motion=matchMedia('(prefers-reduced-motion: reduce)'),v=document.getElementById('hero-video'),toggle=document.getElementById('video-toggle');const labels=${json({ pause: ui.pause, play: ui.play, sending: ui.sending, sent: ui.sent, failed: ui.failed, send: ui.send })};function update(){document.body.classList.toggle('reduced-motion',motion.matches);if(v){v.muted=true;if(motion.matches)v.pause();else v.play().catch(()=>{});}if(toggle){toggle.textContent=v&&v.paused?'▶':'Ⅱ';toggle.setAttribute('aria-label',v&&v.paused?labels.play:labels.pause);}}motion.addEventListener('change',update);update();toggle?.addEventListener('click',()=>{if(!v)return;if(v.paused){document.body.classList.remove('reduced-motion');v.play().catch(()=>{});}else v.pause();toggle.textContent=v.paused?'▶':'Ⅱ';toggle.setAttribute('aria-label',v.paused?labels.play:labels.pause);});const form=document.getElementById('inquiry');if(form&&!${Boolean(options.preview)}){const p=new URL(location.href).searchParams.get('productId');if(p&&Array.from(form.productId.options).some(o=>o.value===p))form.productId.value=p;let requestId=crypto.randomUUID();let submitted='';form.addEventListener('submit',async event=>{event.preventDefault();if(!form.reportValidity())return;const button=form.querySelector('button[type=submit]'),status=form.querySelector('[role=status]');button.disabled=true;button.textContent=labels.sending;const fields=Object.fromEntries(new FormData(form));const serialized=JSON.stringify(fields);if(submitted&&submitted!==serialized)requestId=crypto.randomUUID();submitted=serialized;try{const response=await fetch(form.action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...fields,requestId})});if(!response.ok)throw Error();status.textContent=labels.sent;form.reset();requestId=crypto.randomUUID();submitted='';}catch{status.textContent=labels.failed;}finally{button.disabled=false;button.textContent=labels.send+' ↗';}});}})();`;
-  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}<a class="skip" href="#main">${esc(ui.skip)}</a><header class="wrap nav"><a class="brand" href="${path('index.html')}" ${navAttrs('home')}>${brand}</a><nav aria-label="${esc(ui.menu)}">${navLink('home', ui.home)}${navLink('catalog', ui.catalog)}${navLink('about', ui.about)}${navLink('contact', ui.contact)}</nav><div class="languages" aria-label="${esc(ui.language)}">${languageLinks}</div></header><main id="main">${content}</main><footer class="footer wrap"><div class="footer-top"><a class="brand" href="${path('index.html')}" ${navAttrs('home')}>${esc(company.name)}</a><div class="socials">${socials}</div><a class="text-link" href="mailto:${esc(company.email)}">${esc(company.email)}</a></div><div class="footer-bottom"><span>© ${new Date().getUTCFullYear()} ${esc(company.name)}</span><span>${esc(ui.rights)}</span></div></footer><script>${script}</script></body></html>`;
+  const isSenseng = template === 'senseng-clean' || template === 'senseng-video';
+  if (isSenseng) {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderSensengPage(ctx, template === 'senseng-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (isReferenceTemplate(template)) return renderReferencePage(draft, { ...options, page }, content, script);
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}<a class="skip" href="#main">${esc(ui.skip)}</a><header class="wrap nav"><a class="brand" href="${path('index.html')}" ${navAttrs('home')}>${brand}</a><nav aria-label="${esc(ui.menu)}">${navLink('home', ui.home)}${navLink('catalog', ui.catalog)}${navLink('about', ui.about)}${navLink('contact', ui.contact)}</nav><div class="languages" aria-label="${esc(ui.language)}">${languageLinks}</div></header><main id="main">${content}</main><footer class="footer wrap"><div class="footer-top"><a class="brand" href="${path('index.html')}" ${navAttrs('home')}>${esc(company.name)}</a><div class="socials">${socials}</div><a class="text-link" href="mailto:${esc(company.email)}">${esc(company.email)}</a></div><div class="footer-bottom"><span>© ${new Date().getUTCFullYear()} ${esc(company.name)}</span><span>${esc(ui.rights)}</span></div></footer><script>${script}</script></body></html>`;
 }
 export function renderSiteFiles(
   draft: Draft,

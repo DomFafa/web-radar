@@ -1,0 +1,22 @@
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/templates/references/9a061fd2c1c02ed22aaf.ttf") format('truetype');
+}
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/templates/references/90ec0cb0d37ed6a98535.ttf") format('truetype');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-display: swap;
+  src: url("/templates/references/98b910f0208e132f8fc6.ttf") format('truetype');
+}

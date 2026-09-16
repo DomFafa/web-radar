@@ -6,6 +6,7 @@ export interface Secrets {
   APP_ORIGIN?: string;
   ENVIRONMENT?: string;
   TEST_PROVIDERS?: string;
+  CLONE_TEST_FIXTURE?: string;
   TEXT_API_BASE_URL?: string;
   TEXT_API_KEY?: string;
   TEXT_MODEL?: string;
@@ -27,6 +28,7 @@ export interface Secrets {
   RESEND_API_KEY?: string;
   MAIL_FROM?: string;
   ASSET_SIGNING_KEY?: string;
+  OPENAI_API_KEY?: string;
 }
 export type AppEnv = Secrets & Pick<Cloudflare.Env, 'DB' | 'MEDIA' | 'COORDINATOR' | 'ASSETS'>;
 export type HonoEnv = {

@@ -1,0 +1,4 @@
+
+    @keyframes logos-enter { from { transform: translateY(40px); filter: blur(4px); opacity: 0; } to { transform: translateY(0); filter: blur(0); opacity: 1; } }
+    @keyframes logos-exit { from { transform: translateY(0); filter: blur(0); opacity: 1; } to { transform: translateY(-40px); filter: blur(4px); opacity: 0; } }
+  

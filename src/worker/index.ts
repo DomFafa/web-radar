@@ -18,6 +18,11 @@ app.use('*', async (c, next) => {
   c.header('Referrer-Policy', 'no-referrer');
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   const path = c.req.path;
+  // Published template pages can use these public fonts, masks and images from their own domain.
+  if (path.startsWith('/templates/')) {
+    c.header('Access-Control-Allow-Origin', '*');
+    c.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
   if (path.startsWith('/api/') || path.startsWith('/preview/'))
     c.header('Cache-Control', 'no-store');
   if (!path.startsWith('/public/')) {

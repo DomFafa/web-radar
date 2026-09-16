@@ -1,0 +1,22 @@
+html, body, div, span, applet, object, iframe, video, audio, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, input, textarea, button, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, address, section { font-family: inherit; font-size: 100%; line-height: inherit; font-weight: inherit; font-style: inherit; outline: 0px; overflow-wrap: break-word; }
+applet, object, iframe, video, audio, fieldset, form, label, legend, input, textarea, button, table, caption, tbody, tfoot, thead, tr, th, td { border: 0px; }
+html { font-size: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+html:not(.edit-post-visual-editor) { height: 100%; overflow-x: hidden; overflow-y: scroll !important; }
+html:not(.edit-post-visual-editor), body:not(.edit-post-visual-editor) { margin: 0px; padding: 0px; width: 100%; }
+div.ui-widget, div.ui-widget .ui-widget, div.ui-widget .ui-widget-header, div.ui-widget .ui-widget-content, div.ui-accordion .ui-accordion-header, div.ui-widget button, div.ui-widget input, div.ui-widget select, div.ui-widget textarea, div.ui-state-default, div.ui-widget-content .ui-state-default, div.ui-widget-header .ui-state-default { font-family: inherit; font-size: 1em; line-height: inherit; }
+div.ui-widget, div.ui-widget .ui-widget, div.ui-widget .ui-widget-header, div.ui-widget .ui-widget-content, div.ui-accordion .ui-accordion-header, div.ui-state-default, div.ui-widget-content .ui-state-default, div.ui-widget-header .ui-state-default { color: inherit; background: none; border-style: none; border-radius: 0px; }
+div.ui-datepicker { background-color: rgb(255, 255, 255); }
+div.ui-accordion .ui-accordion-header { padding: 0px; }
+div.ui-accordion .ui-accordion-header-icon { display: none; }
+div.ui-tabs, div.ui-tabs .ui-tabs-panel, div.ui-tabs .ui-tabs-nav { padding: 0px; }
+div.ui-tabs .ui-tabs-nav li { float: none; margin: 0px; }
+div.ui-tabs .ui-tabs-nav .ui-tabs-anchor { float: none; }
+.rounded_none { border-radius: 0px; }
+.rounded_tiny { border-radius: 4px; }
+.rounded_small { border-radius: 6px; }
+.rounded_medium { border-radius: 10px; }
+.rounded_large { border-radius: 15px; }
+.rounded { border-radius: 50%; }
+.overflow_hidden { overflow: hidden !important; }
+.overflow_x_hidden { overflow-x: hidden !important; }
+.overflow_y_hidden { overflow-y: hidden !important; }
