@@ -1,3 +1,4 @@
+import { samePublishedDraft } from '../shared/publication';
 import { CloneTasks } from './clone-tasks';
 import { ApiError } from './http';
 import { normalizeCloneImages } from '../shared/clone';
@@ -260,7 +261,12 @@ export class DomainService {
             : principal.workspaceRole === 'admin'
               ? [principal.userId, principal.workspaceId]
               : [principal.userId];
-        return json({ projects: await this.store.list<Project>('projects', where, values) });
+        return json({
+          projects: await this.store.list<Project>(
+            'projects', where, values,
+            "json_extract(data, '$.updatedAt') DESC, json_extract(data, '$.createdAt') DESC, id DESC",
+          ),
+        });
       }
       if (method === 'POST') {
         const b = await this.body(request);
@@ -668,7 +674,7 @@ export class DomainService {
       this.store.list<Release>('releases', 'project_id=?', [project.id], 'created_at DESC'),
       this.store.quota(principal.userId),
     ]);
-    return { project, assets, jobs: jobs.map(job => job.kind === 'clone' ? this.clones.publicJob(job) : job), releases, quota };
+    return { project, assets, jobs: jobs.map(job => job.kind === 'clone' ? this.clones.publicJob(job) : job), releases: releases.map(release => release.status === 'succeeded' ? { ...release, error: undefined } : release), quota };
   }
   private async deleteProject(id: string, principal: Principal): Promise<void> {
     const p = await this.store.one<Project>('projects', id);
@@ -1655,15 +1661,25 @@ export class DomainService {
       "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",
       [project.id],
     );
-    requireCondition(
-      !pending.some((j) => !j.input.cancelledByOffline),
-      409,
-      'publish_pending',
-      '已有发布任务正在处理，请先查看其状态。',
-    );
     const activeRelease = project.publishedReleaseId
       ? await this.store.one<Release>('releases', project.publishedReleaseId)
       : undefined;
+    if (!restore) {
+      const samePending = pending.find(job => !job.input.cancelledByOffline && job.input.draft && samePublishedDraft(draft, job.input.draft as Draft));
+      if (samePending) {
+        await this.store.remember(scope, rid, hash, { id: samePending.id }).run();
+        return samePending;
+      }
+      if (!project.offline && activeRelease?.status === 'succeeded' && samePublishedDraft(draft, activeRelease.draft)) {
+        const jobs = await this.store.list<Job>('jobs', "project_id=? AND kind='publish' AND status='succeeded'", [project.id], 'created_at DESC');
+        const existing = jobs.find(job => job.input.releaseId === activeRelease.id);
+        if (existing) {
+          await this.store.remember(scope, rid, hash, { id: existing.id }).run();
+          return existing;
+        }
+      }
+    }
+    requireCondition(!pending.some(job => !job.input.cancelledByOffline), 409, 'publish_pending', '已有发布任务正在处理，请先查看其状态。');
     const currentTarget =
       project.hostingTarget ?? activeRelease?.hostingTarget ?? restored?.hostingTarget;
     const target = await this.providers.resolveHostingTarget(project.id, currentTarget);
@@ -2670,6 +2686,7 @@ export class DomainService {
           '本次发布期间网站已下线，未激活新版本。',
         );
         release.status = 'succeeded';
+        release.error = undefined;
         release.deploymentId = accepted.deploymentId;
         release.url = accepted.url;
         release.testMode = accepted.testMode;

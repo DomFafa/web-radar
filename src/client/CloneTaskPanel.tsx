@@ -1,3 +1,4 @@
+import { needsClonePolling } from './task-polling';
 import { useEffect, useRef, useState } from 'react';
 import type { Job } from '../shared/model';
 import { api, post } from './api';
@@ -14,16 +15,21 @@ const duration = (seconds: number) =>
     : `${Math.floor(seconds / 60)} 分 ${Math.round(seconds % 60)} 秒`;
 export function CloneTaskPanel({
   projectId,
+  taskId,
+  onOpenPublish,
   onState,
   onFinished,
 }: {
   projectId: string;
+  taskId?: string;
+  onOpenPublish?: () => void;
   onState: (active: boolean) => void;
   onFinished?: () => Promise<unknown>;
 }) {
   const [state, setState] = useState<TaskState>({ job: null });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [revision, setRevision] = useState(0);
   const [clock, setClock] = useState(Date.now());
   const callbacks = useRef({ onState, onFinished });
   callbacks.current = { onState, onFinished };
@@ -33,11 +39,13 @@ export function CloneTaskPanel({
     let cancelled = false,
       timer: ReturnType<typeof setTimeout>;
     const read = async () => {
+      let keepPolling = false;
       try {
         const next = await api<TaskState>(endpoint + '/task');
         if (cancelled) return;
         setState(next);
         setError('');
+        keepPolling = needsClonePolling(next);
         const active =
           !!next.job &&
           (['queued', 'running', 'paused'].includes(next.job.status) ||
@@ -50,22 +58,31 @@ export function CloneTaskPanel({
           next.job &&
           !['running', 'queued', 'paused'].includes(next.job.status)
         )
-          void callbacks.current.onFinished?.();
+          void callbacks.current.onFinished?.().catch(() => {});
         lastState.current = key;
       } catch {
+        keepPolling = true;
         if (!cancelled) setError('暂时无法同步任务状态，正在重连。后台任务不会因页面断线而停止。');
       } finally {
-        if (!cancelled) timer = setTimeout(read, 2000);
+        if (!cancelled && keepPolling) timer = setTimeout(read, 2000);
       }
     };
     void read();
-    const ticker = setInterval(() => setClock(Date.now()), 1000);
+    const resync = () => { if (!document.hidden) { clearTimeout(timer); setRevision(value => value + 1); } };
+    window.addEventListener('focus', resync);
+    document.addEventListener('visibilitychange', resync);
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      clearInterval(ticker);
+      window.removeEventListener('focus', resync);
+      document.removeEventListener('visibilitychange', resync);
     };
-  }, [endpoint]);
+  }, [endpoint, taskId, revision]);
+  useEffect(() => {
+    if (!state.job?.cloneProgress?.activeSince) return;
+    const timer = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [state.job?.cloneProgress?.activeSince]);
   async function control(action: 'pause' | 'resume' | 'stop') {
     if (!state.job || busy) return;
     setBusy(true);
@@ -73,6 +90,7 @@ export function CloneTaskPanel({
     try {
       const result = await post<{ job: Job }>(endpoint + '/' + action, { taskId: state.job.id });
       setState({ job: result.job });
+      setRevision(value => value + 1);
       callbacks.current.onState(['queued', 'running', 'paused'].includes(result.job.status));
       if (action === 'stop') await callbacks.current.onFinished?.();
     } catch (error) {
@@ -104,7 +122,7 @@ export function CloneTaskPanel({
     model: progress.outputCharacters ? '正在接收页面代码' : '等待模型分析与响应',
     validating: '正在校验页面',
     publishing: '正在发布网站',
-    done: '生成任务已完成',
+    done: state.publication?.status === 'succeeded' ? '页面已生成并发布上线' : '页面代码已生成，待预览与发布',
   };
   return (
     <section
@@ -139,7 +157,7 @@ export function CloneTaskPanel({
           fontSize: 13,
         }}
       >
-        {(['reading', 'model', 'validating', 'publishing'] as const).map((value, index) => (
+        {(['reading', 'model', 'validating', 'publishing'] as const).filter(value => value !== 'publishing' || progress.autoPublish !== false).map((value, index) => (
           <span
             key={value}
             style={{
@@ -199,6 +217,7 @@ export function CloneTaskPanel({
             停止
           </Button>
         )}
+        {job.status === 'succeeded' && onOpenPublish && <Button onClick={onOpenPublish}>预览与发布管理</Button>}
         {state.url && (
           <a href={state.url} target="_blank" rel="noreferrer">
             打开网站 ↗

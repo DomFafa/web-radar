@@ -1,3 +1,5 @@
+import { liveJob } from './task-polling';
+import { samePublishedDraft } from '../shared/publication';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type {
   Asset,
@@ -203,14 +205,26 @@ export function Editor({
       active = false;
     };
   }, [endpoint, install]);
+  const hasLiveJobs = !!detail?.jobs.some(liveJob);
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (!busyRef.current)
-        void refresh().catch((error) => {
+    if (!hasLiveJobs) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      if (!busyRef.current && !document.hidden)
+        await refresh().catch((error) => {
           if (error instanceof ApiError && error.status !== 401) setError(errorMessage(error));
         });
-    }, 5000);
-    return () => clearInterval(timer);
+      if (!cancelled) timer = setTimeout(poll, 5000);
+    };
+    timer = setTimeout(poll, 5000);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [refresh, hasLiveJobs]);
+  useEffect(() => {
+    const sync = () => { if (!document.hidden && !busyRef.current) void refresh().catch(() => {}); };
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', sync);
+    return () => { window.removeEventListener('focus', sync); document.removeEventListener('visibilitychange', sync); };
   }, [refresh]);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -458,7 +472,7 @@ export function Editor({
     busyRef.current = 'clone-generate';
     try {
       patch({ buildBranch: 'clone', cloneConfig: { ...projectRef.current?.draft.cloneConfig, ...config } });
-      return await command('clone/start', { cloneConfig: config, requestId: requestId(), autoPublish: true });
+      return await command('clone/start', { cloneConfig: config, requestId: requestId(), autoPublish: config.autoPublish !== false });
     } finally {
       setBusy('');
       busyRef.current = '';
@@ -561,6 +575,8 @@ export function Editor({
       </div>
     );
   const draft = project.draft;
+  const onlineRelease = detail.releases.find(release => release.id === project.publishedReleaseId && release.status === 'succeeded');
+  const alreadyPublished = !project.offline && !!onlineRelease && samePublishedDraft(draft, onlineRelease.draft);
   const activeJobs = detail.jobs.filter((job) =>
     ['queued', 'running', 'unknown'].includes(job.status),
   );
@@ -1524,6 +1540,7 @@ export function Editor({
                     仍需完善：{publicationMissing.join('、')}。点击上方对应项继续编辑。
                   </Notice>
                 )}
+                {alreadyPublished && <Notice tone="success">当前页面内容已发布，无需重复发布。修改页面后可发布更新。</Notice>}
                 <div className="publish-actions">
                   <Button
                     kind="primary"
@@ -1531,11 +1548,12 @@ export function Editor({
                     disabled={
                       !!busy ||
                       publicationMissing.length > 0 ||
+                      alreadyPublished ||
                       activeJobs.some((j) => j.kind === 'publish')
                     }
                   >
                     <Icon name="globe" />
-                    {project.publishedReleaseId ? '发布当前草稿' : '发布网站'}
+                    {alreadyPublished ? '当前内容已上线' : project.publishedReleaseId ? '发布草稿更新' : '发布网站'}
                   </Button>
                   <Button
                     onClick={() => setReleaseAction('restore')}
@@ -1581,7 +1599,7 @@ export function Editor({
                           <small>
                             {dateTime(release.createdAt)} · {release.id}
                           </small>
-                          {release.error && <p className="error-text">{release.error}</p>}
+                          {release.status !== 'succeeded' && release.error && <p className="error-text">{release.error}</p>}
                         </div>
                         <span
                           className={`pill ${release.status === 'succeeded' ? 'green' : release.status === 'failed' ? 'red' : 'muted'}`}

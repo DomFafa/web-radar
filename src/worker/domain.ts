@@ -142,6 +142,8 @@ const draftSchema = z.object({
   cloneConfig: z
     .object({
       taskId: z.string().optional(),
+      enhancementMode: z.enum(['faithful', 'smart']).optional(),
+      autoPublish: z.boolean().optional(),
       targetUrl: z.string().max(2000).optional(),
       scrapedData: z
         .object({
@@ -174,6 +176,7 @@ const draftSchema = z.object({
         imageCount: z.number().int().nonnegative(),
         pageCount: z.number().int().nonnegative(),
         visuallyVerified: z.boolean(),
+        improvements: z.array(z.string().max(300)).max(8).optional(),
       }).optional(),
       generatedAt: z.string().optional(),
       error: z.string().max(2000).optional(),

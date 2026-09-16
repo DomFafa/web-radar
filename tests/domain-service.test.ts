@@ -1718,14 +1718,11 @@ describe('durable hosting identity and activation recovery', () => {
     });
     expect(detail.releases[0].status).toBe('pending');
     expect(detail.project.publishedReleaseId).toBeUndefined();
-    expect(
-      (
-        await request(`/api/projects/${p.id}/publish`, {
-          expectedVersion: p.version,
-          requestId: 'must-not-replace-release',
-        })
-      ).status,
-    ).toBe(409);
+    const duplicate = await request(`/api/projects/${p.id}/publish`, {
+      expectedVersion: p.version, requestId: 'must-not-replace-release',
+    });
+    expect(duplicate.status).toBe(200);
+    expect(duplicate.data.job.id).toBe(queued.data.job.id);
     await env.DB.exec('DROP TRIGGER reject_activation');
     service = new DomainService(env, { schedule: async () => {} }, providers);
     providers.publish = async () => {
@@ -2283,5 +2280,34 @@ describe('persistent clone tasks', () => {
     job!.status='running';await service.store.update('jobs',job!).run();
     service=new DomainService(env,{schedule:async()=>{}},providers);await service.tick();
     expect((await state(p)).job.status).toBe('failed');expect((await state(p)).job.error).toContain('未自动重复调用');
+  });
+});
+
+
+describe('publication result consistency', () => {
+  it('reuses the online content after a metadata-only save but publishes real content changes', async () => {
+    let p = await publishable(); p.draft.buildBranch='template';
+    p=(await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project;
+    const publish = vi.fn(providers.publish); providers.publish = publish;
+    const first = await request(`/api/projects/${p.id}/publish`, {expectedVersion:p.version,requestId:'first-content'});
+    await service.tick();p=(await get(p)).project;
+    // Activation advances project.version even though the page content is unchanged.
+    const repeat=await request(`/api/projects/${p.id}/publish`,{expectedVersion:p.version,requestId:'second-click'});
+    expect(repeat.data.job.id).toBe(first.data.job.id);expect((await get(p)).releases).toHaveLength(1);
+    expect(publish).toHaveBeenCalledTimes(1);
+    p.draft.company.name='Changed company';
+    p=(await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project;
+    const changed=await request(`/api/projects/${p.id}/publish`,{expectedVersion:p.version,requestId:'changed-content'});
+    expect(changed.status,JSON.stringify(changed.data)).toBe(200);expect(changed.data.job.id).not.toBe(first.data.job.id);await service.tick();expect(publish).toHaveBeenCalledTimes(2);
+  });
+  it('clears a pending Cloudflare notice on successful activation and hides stale historical notices', async () => {
+    const p=await publishable(); const original=providers.publish;
+    providers.publish=vi.fn().mockRejectedValueOnce(new ProviderError('pages_deployment_pending','Cloudflare 发布仍在处理中',true)).mockImplementation(original);
+    const first=await request(`/api/projects/${p.id}/publish`,{expectedVersion:p.version,requestId:'pending-success'});
+    await service.tick();expect((await get(p)).releases[0].error).toContain('仍在处理中');
+    await service.tick();const detail=await get(p);expect(detail.releases[0].status).toBe('succeeded');expect(detail.releases[0].error).toBeUndefined();
+    const release=detail.releases[0];release.error='Old stale pending warning';await service.store.update('releases',release).run();
+    expect((await get(p)).releases[0].error).toBeUndefined();
+    expect(detail.jobs.find((j:Job)=>j.id===first.data.job.id).error).toBeUndefined();
   });
 });

@@ -147,6 +147,7 @@ export interface CloneScrapedData {
   sampleText?: string;
 }
 export interface CloneTaskProgress {
+  autoPublish?: boolean;
   phase: 'queued' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
   imagesRead: number;
   imageCount: number;
@@ -159,6 +160,8 @@ export interface CloneTaskProgress {
   url?: string;
 }
 export interface CloneConfig {
+  enhancementMode?: 'faithful' | 'smart';
+  autoPublish?: boolean;
   taskId?: string;
   targetUrl?: string;
   scrapedData?: CloneScrapedData;
@@ -174,6 +177,7 @@ export interface CloneConfig {
     imageCount: number;
     pageCount: number;
     visuallyVerified: boolean;
+    improvements?: string[];
   };
   generatedAt?: string;
   error?: string;

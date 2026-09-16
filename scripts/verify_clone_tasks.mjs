@@ -29,6 +29,7 @@ try {
         calls++;
         const input = await request.json();
         assert.equal(input.stream, true);
+      if (calls === 1) { assert.ok(input.messages[1].content[0].text.includes('SMART COMPLETION MODE')); assert.ok(input.messages[1].content[0].text.includes('保留第一屏，补充采购流程')); }
         const body =
           '<header>Test reference</header><main><h1>Persistent task test</h1><p>This mock provider only tests task behavior, not visual fidelity or a paid model.</p></main>';
         const content = JSON.stringify({
@@ -109,8 +110,12 @@ try {
     .locator('.clone-editor input[type=file]')
     .setInputFiles('artifacts/clone-fidelity/references/index.jpg');
   await page.getByText('已上传 1 个页面/素材文件').waitFor();
+  assert.equal(await page.getByLabel('页面完善方式').inputValue(), 'smart');
+  await page.locator('.clone-editor textarea').last().fill('保留第一屏，补充采购流程与联系方式。');
   await page.getByRole('button', { name: '🎯 按设计稿生成并部署', exact: true }).click();
   const panel = page.getByRole('region', { name: '设计生成任务进度' });
+  let statusRequests = 0;
+  page.on('request', request => { const path = new URL(request.url()).pathname; if (request.method() === 'GET' && [`/api/projects/${project.id}`, `/api/projects/${project.id}/clone/task`].includes(path)) statusRequests++; });
   await panel.getByRole('button', { name: '暂停', exact: true }).waitFor();
   await panel.getByText(/已耗时/).waitFor();
   await page.reload();
@@ -126,6 +131,19 @@ try {
   await panel.getByRole('link', { name: '打开网站 ↗' }).waitFor({ timeout: 45000 });
   assert.equal(calls, callsBefore);
   await panel.screenshot({ path: 'artifacts/task-review/completed.png' });
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  const atCompletion = statusRequests;
+  await new Promise(resolve => setTimeout(resolve, 8000));
+  assert.equal(statusRequests, atCompletion, 'completed task and project must stop polling');
+  await panel.getByRole('button', {name:'预览与发布管理'}).click();
+  assert.equal(await page.getByRole('button',{name:'当前内容已上线',exact:true}).isDisabled(), true);
+  const latest = await (await context.request.get(origin+'/api/projects/'+project.id)).json();
+  assert.equal(latest.releases.length,1);
+  const duplicate = await context.request.post(origin+'/api/projects/'+project.id+'/publish',{data:{expectedVersion:latest.project.version,requestId:crypto.randomUUID()}});
+  assert.equal(duplicate.status(),200);
+  assert.equal((await (await context.request.get(origin+'/api/projects/'+project.id)).json()).releases.length,1);
+  await page.goto(url);
+
   // A new run can be stopped while output is arriving, and stays stopped after reload.
   await page.getByRole('button', { name: '🔄 重新按设计稿生成并部署', exact: true }).click();
   await panel.getByRole('button', { name: '停止', exact: true }).waitFor();
@@ -134,9 +152,19 @@ try {
   await page.reload();
   await panel.getByRole('heading', { name: '任务已停止', exact: true }).waitFor();
   await panel.screenshot({ path: 'artifacts/task-review/stopped-after-reload.png' });
+  // Preview-only generation must save the result without creating another deployment.
+  await page.getByLabel('生成完成后自动发布').uncheck();
+  await page.getByRole('button', { name: '🔄 重新生成页面并预览', exact: true }).click();
+  await panel.getByRole('heading', { name: '页面代码已生成，待预览与发布', exact: true }).waitFor({ timeout: 45000 });
+  assert.equal((await (await context.request.get(origin+'/api/projects/'+project.id)).json()).releases.length, 1);
+  assert.equal(await panel.getByRole('link', { name: '打开网站 ↗' }).count(), 0);
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  const afterPreview = statusRequests;
+  await new Promise(resolve => setTimeout(resolve, 6000));
+  assert.equal(statusRequests, afterPreview, 'preview-only completion must stop polling');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication.',
+    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded.',
   );
 } finally {
   for (const timer of timers) clearInterval(timer);

@@ -46,6 +46,8 @@ export function CloneEditor({
 
   const [targetUrl, setTargetUrl] = useState(cloneConfig.targetUrl || '');
   const [instructions, setInstructions] = useState(cloneConfig.instructions || '');
+  const [enhancementMode, setEnhancementMode] = useState<'faithful' | 'smart'>(cloneConfig.enhancementMode || 'smart');
+  const [autoPublish, setAutoPublish] = useState(cloneConfig.autoPublish !== false);
   const [uiImages, setUiImages] = useState<CloneUiImage[]>(normalizeCloneImages(cloneConfig.uiImages));
   const [scrapedData, setScrapedData] = useState(cloneConfig.scrapedData);
   const [selectedModel, setSelectedModel] = useState<string>(cloneConfig.model || 'gpt-6-astra');
@@ -87,6 +89,8 @@ export function CloneEditor({
       uiImages,
       scrapedData,
       model: selectedModel,
+      enhancementMode,
+      autoPublish,
       ...updated,
     };
     onUpdateDraft({
@@ -195,6 +199,8 @@ export function CloneEditor({
         uiImages,
         instructions: instructions.trim() || undefined,
         model: selectedModel,
+      enhancementMode,
+      autoPublish,
       };
 
       await onGenerate(payloadConfig);
@@ -637,6 +643,19 @@ export function CloneEditor({
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}
         >
+          <label style={{ display: 'block', marginBottom: 16, color: '#334155', fontWeight: 600 }}>
+            页面完善方式
+            <select aria-label="页面完善方式" value={enhancementMode} onChange={event => {
+              const value = event.target.value as 'faithful' | 'smart'; setEnhancementMode(value); syncConfig({ enhancementMode: value });
+            }} style={{ display: 'block', width: '100%', marginTop: 8, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }}>
+              <option value="smart">智能完善：保留风格，补足内容与页面层次</option>
+              <option value="faithful">忠实还原：以设计图为准</option>
+            </select>
+          </label>
+          <p style={{ color: '#64748b', fontSize: 13 }}>
+            {enhancementMode === 'smart' ? '设计图内容偏少时，根据已有产品与品牌资料补充产品展示、选购说明、合作流程或联系引导，调整段落节奏与页面层次。不会用空白拉长页面，也不会编造资质和客户评价。' : '保留设计图的布局和内容密度；仅按下方明确指令调整。'}
+            下方微调指令优先，例如“保留第一屏，补充产品分类与采购流程”。修改指令后需重新生成页面才会生效。
+          </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{ fontSize: '18px' }}>✍️</span>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>
@@ -720,10 +739,16 @@ export function CloneEditor({
             </select>
           </div>
 
+          <label style={{ display: 'block', textAlign: 'left', marginBottom: 16, color: '#475569' }}>
+            <input type="checkbox" checked={autoPublish} onChange={event => { setAutoPublish(event.target.checked); syncConfig({ autoPublish: event.target.checked }); }} />
+            {' '}生成完成后自动发布
+            <small style={{ display: 'block', marginTop: 6 }}>{autoPublish ? '成功后会直接上线并写入同一条发布记录，无需再次点击发布。' : '生成后先预览，确认页面后再到发布页上线。'}</small>
+          </label>
           {generationInfo && <p style={{ fontSize: '13px', color: '#475569', textAlign: 'left' }}>
             {generationInfo.mode === 'fixture' ? '测试演示：没有调用视觉模型，不代表设计还原结果。' : generationInfo.mode === 'reference-rebuild' ? '按设计稿直接重建的页面，未调用视觉模型。' : `实际模型：${generationInfo.model}；读取 ${generationInfo.imageCount} 张图片。`}
             {' '}{generationInfo.pageCount} 个页面文件。{generationInfo.visuallyVerified ? '已进行人工视觉检查。' : '尚未进行视觉验收。'}
           </p>}
+          {!!generationInfo?.improvements?.length && <div style={{ textAlign: 'left', color: '#475569', fontSize: 13 }}><strong>本次页面优化</strong><ul>{generationInfo.improvements.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
           {!generationInfo && isSuccess && <Notice tone="warning">这是旧版生成结果，缺少视觉生成记录。请检查页面是否使用了设计图后再发布。</Notice>}
 
           {genError && (
@@ -738,7 +763,7 @@ export function CloneEditor({
             </div>
           )}
 
-          {isSuccess && !generating && (
+          {isSuccess && !generating && !cloneConfig.taskId && (
             <div
               style={{
                 marginBottom: '20px',
@@ -836,14 +861,14 @@ export function CloneEditor({
               }}
             >
               {isSuccess
-                ? '🔄 重新按设计稿生成并部署'
-                : '🎯 按设计稿生成并部署'}
+                ? (autoPublish ? '🔄 重新按设计稿生成并部署' : '🔄 重新生成页面并预览')
+                : (autoPublish ? '🎯 按设计稿生成并部署' : '🎯 生成页面并预览')}
             </Button>
           )}
         </div>
       </div>
     </fieldset>
-    <CloneTaskPanel projectId={projectId} onState={active => { if (!launching.current) setGenerating(active); }} onFinished={onRefresh} />
+    <CloneTaskPanel projectId={projectId} taskId={cloneConfig.taskId} onOpenPublish={onProceedToPublish} onState={active => { if (!launching.current) setGenerating(active); }} onFinished={onRefresh} />
     </>
   );
 }

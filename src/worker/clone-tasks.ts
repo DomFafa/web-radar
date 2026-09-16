@@ -101,6 +101,7 @@ export class CloneTasks {
       attempts: 0,
       testMode: testMode(this.env),
       cloneProgress: {
+        autoPublish: body.autoPublish === true,
         phase: 'queued',
         imagesRead: 0,
         imageCount,

@@ -268,3 +268,12 @@ describe('design reconstruction integrity', () => {
     expect(html).not.toContain('/api/projects/');
   });
 });
+
+it('smart completion assesses sparse pages, uses grounded additions, and prioritizes owner instructions', () => {
+  const prompt=buildClonePrompt('Test',{enhancementMode:'smart',instructions:'保留第一屏，补充采购流程。'},projectFixture().draft);
+  expect(prompt).toContain('SMART COMPLETION MODE');expect(prompt).toContain('assess the content density');
+  expect(prompt).toContain('Do not impose a fixed minimum pixel height');expect(prompt).toContain('保留第一屏，补充采购流程。');
+  expect(prompt).toContain('Owner instructions below take precedence');expect(prompt).toContain('improvements');
+  expect(prompt).not.toContain('FAITHFUL RECONSTRUCTION MODE');
+  expect(buildClonePrompt('Test',{enhancementMode:'faithful'},projectFixture().draft)).toContain('FAITHFUL RECONSTRUCTION MODE');
+});
