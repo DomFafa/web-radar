@@ -1,0 +1,6 @@
+@media (max-width: 1023px) {
+  .widget_categories_list .categories_list_style_2 .categories_list_title { width: 60%; }
+}
+@media (max-width: 767px) {
+  .widget_categories_list .categories_list_style_2 .categories_list_title { width: 50%; }
+}

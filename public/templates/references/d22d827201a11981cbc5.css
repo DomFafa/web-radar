@@ -1,0 +1,6 @@
+@font-face { font-family: qw_extension_icons; src: url("/templates/references/47fce907788afc764f11.woff2") format("woff2"), url("/templates/references/886915d19cf01968f4cd.woff") format("woff"), url("/templates/references/d2f3608b47ad41a4edff.ttf") format("truetype"); font-weight: normal; font-style: normal; }
+[class^="qw_extension_icon-"]::before, [class*=" qw_extension_icon-"]::before { font-family: qw_extension_icons; font-style: normal; font-weight: normal; display: inline-block; text-decoration: inherit; width: 1em; margin-right: 0.2em; text-align: center; font-variant: normal; text-transform: none; line-height: 1em; margin-left: 0.2em; -webkit-font-smoothing: antialiased; }
+.qw_extension_icon-qw-resize::before { content: ""; }
+.qw_extension_icon-qw-arrow::before { content: ""; }
+.qw_extension_icon-qw-arrow-2::before { content: ""; }
+.qw_extension_icon-right-arrow-modern::before { content: ""; }

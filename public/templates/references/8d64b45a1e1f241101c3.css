@@ -1,0 +1,5 @@
+@media (max-width: 1279px) {
+  .trx_addons_mouse_helper { display: none; }
+  .trx_addons_hide_cursor, .trx_addons_hide_cursor *, [data-mouse-helper-hide-cursor="1"], [data-mouse-helper-hide-cursor="1"] * { cursor: unset !important; }
+  [data-mouse-helper="highlight"] { border-radius: 0px; background-size: 130vw 130vh !important; background-position: center center !important; }
+}

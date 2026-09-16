@@ -2113,4 +2113,70 @@ describe('account unlimited generation quota', () => {
     expect(result.status).toBe(200);
     expect((await get(project)).quota).toMatchObject({ unlimited: true, videoReserved: 1 });
   });
+
+  it('supports single project deletion and batch project deletion', async () => {
+    const p1 = await create('P1');
+    const p2 = await create('P2');
+    const p3 = await create('P3');
+
+    const delRes = await request(`/api/projects/${p1.id}`, undefined, owner, 'DELETE');
+    expect(delRes.status).toBe(200);
+    const getRes = await request(`/api/projects/${p1.id}`);
+    expect(getRes.status).toBe(404);
+
+    const batchRes = await request(
+      '/api/projects/batch-delete',
+      { ids: [p2.id, p3.id] },
+      owner,
+      'POST',
+    );
+    expect(batchRes.status).toBe(200);
+    expect(batchRes.data.ok).toBe(true);
+    expect(batchRes.data.deletedCount).toBe(2);
+
+    expect((await request(`/api/projects/${p2.id}`)).status).toBe(404);
+    expect((await request(`/api/projects/${p3.id}`)).status).toBe(404);
+  });
+});
+
+describe('template tryout and clone version chain', () => {
+  it('renders an unsaved template with product data without modifying the saved project', async () => {
+    const p = await create();
+    const draft = structuredClone(p.draft);
+    draft.template = 'senseng-clean';
+    draft.company.name = 'Unsaved preview company';
+    draft.products = [{ id: 'preview-item', name: 'Preview item', description: 'Preview only', material: '', dimensions: '' }];
+    const preview = await request(`/api/projects/${p.id}/preview`, { draft });
+    expect(preview.status).toBe(200);
+    expect(preview.data.html).toContain('Unsaved preview company');
+    expect(preview.data.html).toContain('Preview item');
+    const saved = (await get(p)).project;
+    expect(saved).toEqual(p);
+  });
+  it('rejects foreign private assets in template previews', async () => {
+    const p = await create();
+    const draft = structuredClone(p.draft);
+    draft.company.logoAssetId = 'foreign-asset';
+    const preview = await request(`/api/projects/${p.id}/preview`, { draft });
+    expect(preview.status).toBeGreaterThanOrEqual(400);
+    expect((await get(p)).project.version).toBe(p.version);
+  });
+  it('generates then publishes the returned version, while rejecting a genuinely stale version', async () => {
+    const p = await create();
+    const generated = await request(`/api/projects/${p.id}/clone/generate`, {
+      expectedVersion: p.version,
+      cloneConfig: { targetUrl: 'https://example.com' },
+    });
+    expect(generated.status).toBe(200);
+    expect(generated.data.project.version).toBe(p.version + 1);
+    expect(generated.data.project.draft.cloneConfig.status).toBe('ready');
+    const stale = await request(`/api/projects/${p.id}/publish`, { expectedVersion: p.version, requestId: crypto.randomUUID() });
+    expect(stale.status).toBe(409);
+    const body = { expectedVersion: generated.data.project.version, requestId: crypto.randomUUID() };
+    const publish = await request(`/api/projects/${p.id}/publish`, body);
+    expect(publish.status).toBe(200);
+    expect(publish.data.job.inputVersion).toBe(generated.data.project.version);
+    const retry = await request(`/api/projects/${p.id}/publish`, body);
+    expect(retry.data.job.id).toBe(publish.data.job.id);
+  });
 });

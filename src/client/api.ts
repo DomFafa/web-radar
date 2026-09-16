@@ -10,8 +10,17 @@ export class ApiError extends Error {
   }
 }
 
-// The WR session deliberately lives only in this module's memory, including in embeds.
-let session = '';
+// Standalone login uses an HttpOnly cookie; embeds retain their tab-scoped bearer.
+let session = (() => {
+  try {
+    return sessionStorage.getItem('wr_session') || '';
+  } catch {
+    return '';
+  }
+})();
+let sessionEpoch = 0;
+const expiredCode = (code?: string) =>
+  ['session_required', 'session_expired', 'test_session_invalid'].includes(code || '');
 type AssetVariant = 'original' | 'preview';
 const assetCache = new Map<string, { blob: Blob; expires: number }>();
 const assetReads = new Map<string, { promise: Promise<Blob>; controller: AbortController }>();
@@ -21,15 +30,25 @@ function clearAssets() {
   assetReads.clear();
 }
 export function setSession(value: string) {
+  sessionEpoch++;
   if (session !== value) clearAssets();
   session = value;
+  try {
+    if (value) sessionStorage.setItem('wr_session', value);
+    else sessionStorage.removeItem('wr_session');
+  } catch {}
 }
 export function clearSession() {
   clearAssets();
   session = '';
+  sessionEpoch++;
+  try {
+    sessionStorage.removeItem('wr_session');
+  } catch {}
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const epoch = sessionEpoch;
   const headers = new Headers(options.headers);
   if (session) headers.set('Authorization', `Bearer ${session}`);
   if (options.body && !(options.body instanceof FormData))
@@ -37,7 +56,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const response = await fetch(path, { ...options, headers, cache: 'no-store' });
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as { message?: string; code?: string };
-    if (response.status === 401 && session)
+    if (response.status === 401 && epoch === sessionEpoch && expiredCode(body.code))
       window.dispatchEvent(new CustomEvent('wr:session-expired'));
     throw new ApiError(
       body.message || `请求失败（${response.status}）`,
@@ -79,6 +98,7 @@ export async function privateAssetBlob(
   const pending = assetReads.get(path);
   if (pending) return pending.promise;
   const token = session;
+  const epoch = sessionEpoch;
   const controller = new AbortController();
   const timer = setTimeout(
     () => controller.abort(new Error('素材加载超时，请重试。')),
@@ -87,12 +107,13 @@ export async function privateAssetBlob(
   const promise = (async () => {
     try {
       const response = await fetch(path, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         cache: 'no-store',
         signal: controller.signal,
       });
       if (!response.ok) {
-        if (response.status === 401 && session === token && token)
+        const body = (await response.json().catch(() => ({}))) as { code?: string };
+        if (response.status === 401 && epoch === sessionEpoch && expiredCode(body.code))
           window.dispatchEvent(new CustomEvent('wr:session-expired'));
         throw new ApiError(
           response.status === 401 ? '登录已过期，请重新登录。' : '图片读取失败，请重试。',

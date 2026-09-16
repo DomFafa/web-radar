@@ -277,6 +277,9 @@ describe('handoff recovery', () => {
       env,
     );
     expect(r.status).toBe(200);
+    expect(r.headers.get('Set-Cookie')).toContain('__Host-wr_session=');
+    expect(r.headers.get('Set-Cookie')).toContain('HttpOnly; SameSite=Lax');
+    expect(r.headers.get('Set-Cookie')).toContain('; Secure');
     const text = await r.text();
     expect(text).not.toContain('pr-access-test');
     expect(text).not.toContain('pr-refresh-test');
@@ -329,5 +332,41 @@ describe('test identities fail closed in production', () => {
       status: 403,
     });
     expect(fetch).toHaveBeenCalledOnce();
+  });
+});
+
+describe('persistent rolling sessions', () => {
+  it('survives the former 15-minute timeout and renews after activity', async () => {
+    const session = await mintSession(env, p);
+    const rows = await env.DB.prepare('SELECT * FROM sessions').all<{ created_at: number }>();
+    const start = rows.results[0].created_at;
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(start + 2 * 24 * 60 * 60 * 1000);
+    try {
+      const response = await createAuthApp().request('/me', { headers: { Authorization: `Bearer ${session.token}` } }, env);
+      expect(response.status).toBe(200);
+      const row = await env.DB.prepare('SELECT expires_at FROM sessions').first<{ expires_at: number }>();
+      expect(row!.expires_at).toBe(start + 9 * 24 * 60 * 60 * 1000);
+    } finally { clock.mockRestore(); }
+  });
+  it('does not revive idle-expired sessions or extend beyond the absolute deadline', async () => {
+    const session = await mintSession(env, p);
+    await env.DB.prepare('UPDATE sessions SET expires_at=?').bind(Date.now() - 1).run();
+    const app = createAuthApp();
+    const headers = { Authorization: `Bearer ${session.token}` };
+    expect((await app.request('/me', { headers }, env)).status).toBe(401);
+    await env.DB.prepare('UPDATE sessions SET expires_at=?, created_at=?')
+      .bind(Date.now() + 86400000, Date.now() - 31 * 86400000).run();
+    expect((await app.request('/me', { headers }, env)).status).toBe(401);
+  });
+  it('restores HttpOnly cookie sessions, enforces origin, and revokes on logout', async () => {
+    const session = await mintSession(env, p);
+    const app = createAuthApp();
+    const Cookie = `__Host-wr_session=${session.token}`;
+    expect((await app.request('https://wr.example.test/me', { headers: { Cookie } }, env)).status).toBe(200);
+    expect((await app.request('https://wr.example.test/sign-out', { method: 'POST', headers: { Cookie, Origin: 'https://evil.test' } }, env)).status).toBe(403);
+    const logout = await app.request('https://wr.example.test/sign-out', { method: 'POST', headers: { Cookie, Origin: 'https://wr.example.test' } }, env);
+    expect(logout.status).toBe(200);
+    expect(logout.headers.get('Set-Cookie')).toContain('Max-Age=0');
+    expect((await app.request('https://wr.example.test/me', { headers: { Cookie } }, env)).status).toBe(401);
   });
 });

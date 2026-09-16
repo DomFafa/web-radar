@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import type { Principal, Project, ServiceStatus } from '../shared/model';
+import type { Principal, Project, ServiceStatus, TemplateId } from '../shared/model';
 import {
   api,
   post,
@@ -33,22 +33,79 @@ type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: st
 const embedded = window.location.pathname === '/embed/product-radar';
 const embedOrigin = parentOrigin(new URLSearchParams(window.location.search).get('parentOrigin'));
 
+const TEMPLATE_PREVIEWS: Record<string, string> = {
+  'senseng-clean': '/templates/previews/senseng-clean.jpg',
+  'senseng-video': '/templates/previews/senseng-video.jpg',
+  'saas-automation': '/templates/previews/saas-automation.jpg',
+  'fintech-platform': '/templates/previews/fintech-platform.jpg',
+  'digital-marketing': '/templates/previews/digital-marketing.jpg',
+  'porto-accounting': '/templates/previews/porto-accounting.jpg',
+  'crafto-corporate': '/templates/previews/crafto-corporate.jpg',
+  'juno-toys': '/templates/previews/juno-toys.jpg',
+  'corpox-ai-agency': '/templates/previews/corpox-ai-agency.jpg',
+  'corpox-consulting': '/templates/previews/corpox-consulting.jpg',
+  natural: '/templates/previews/senseng-clean.jpg',
+  technology: '/templates/previews/saas-automation.jpg',
+  explorer: '/templates/previews/crafto-corporate.jpg',
+};
+
 export default function App() {
   const [config, setConfig] = useState<Config | null>(null),
     [configError, setConfigError] = useState('');
+  const [restoring, setRestoring] = useState(true);
   const [principal, setPrincipal] = useState<Principal | null>(null),
-    [selected, setSelected] = useState<string | null>(null);
-  const [view, setView] = useState<'projects' | 'admin' | 'services'>('projects'),
+    [selected, setSelected] = useState<string | null>(() => {
+      try {
+        return new URL(window.location.href).searchParams.get('project');
+      } catch {
+        return null;
+      }
+    });
+  const [view, setView] = useState<'projects' | 'admin' | 'services'>(() => {
+      try {
+        const v = new URL(window.location.href).searchParams.get('view');
+        if (v === 'admin' || v === 'services') return v;
+      } catch {}
+      return 'projects';
+    }),
     [embedError, setEmbedError] = useState('');
   const [authBusy, setAuthBusy] = useState(false),
     [sessionMessage, setSessionMessage] = useState('');
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
+
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (selected) {
+        url.searchParams.set('project', selected);
+      } else {
+        url.searchParams.delete('project');
+        url.searchParams.delete('tab');
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  }, [selected]);
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (view !== 'projects') {
+        url.searchParams.set('view', view);
+      } else {
+        url.searchParams.delete('view');
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  }, [view]);
   const exchanging = useRef(new HandoffAttempts());
-  const expires = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const authEpoch = useRef(0);
   const previousActor = useRef<string | null>(null);
   const expire = useCallback(() => {
+    authEpoch.current++;
     clearSession();
+    try {
+      sessionStorage.removeItem('wr_principal');
+    } catch {}
     setPrincipal(null);
     setSessionMessage('登录已过期，请重新验证身份。当前页面的编辑内容仍保留。');
     if (embedded && embedOrigin)
@@ -69,15 +126,16 @@ export default function App() {
         setLastPrincipal(null);
       }
       previousActor.current = actor;
-      setSession(result.token);
+      authEpoch.current++;
+      setSession(embedded ? result.token : '');
       setPrincipal(result.principal);
+      try {
+        sessionStorage.setItem('wr_principal', JSON.stringify(result.principal));
+      } catch {}
       setSessionMessage('');
       setEmbedError('');
       if (result.projectId) setSelected(result.projectId);
-      if (expires.current) clearTimeout(expires.current);
-      const expireAt = new Date(result.expiresAt).getTime();
-      if (Number.isFinite(expireAt))
-        expires.current = setTimeout(expire, Math.max(0, expireAt - Date.now()));
+
     },
     [expire],
   );
@@ -90,6 +148,44 @@ export default function App() {
     window.addEventListener('wr:session-expired', expire);
     return () => window.removeEventListener('wr:session-expired', expire);
   }, [expire]);
+  useEffect(() => {
+    let active = true;
+    const epoch = authEpoch.current;
+    api<{ principal: Principal }>('/api/auth/me')
+      .then(result => {
+        if (!active || authEpoch.current !== epoch) return;
+        previousActor.current = `${result.principal.userId}:${result.principal.workspaceId}`;
+        setPrincipal(result.principal);
+        setSessionMessage('');
+      })
+      .catch(error => {
+        if (active) setSessionMessage(error.status === 401 ? '' : errorMessage(error));
+      })
+      .finally(() => { if (active) setRestoring(false); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!principal) return;
+    let pending = false;
+    const refreshSession = async () => {
+      if (pending || document.visibilityState === 'hidden') return;
+      pending = true;
+      const epoch = authEpoch.current;
+      try {
+        const result = await api<{ principal: Principal }>('/api/auth/me');
+        if (authEpoch.current === epoch) setPrincipal(result.principal);
+      } catch { /* Only a confirmed session error clears login via the API event. */ }
+      finally { pending = false; }
+    };
+    const timer = setInterval(refreshSession, 5 * 60 * 1000);
+    window.addEventListener('focus', refreshSession);
+    document.addEventListener('visibilitychange', refreshSession);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', refreshSession);
+      document.removeEventListener('visibilitychange', refreshSession);
+    };
+  }, [principal?.userId, principal?.workspaceId]);
   useEffect(() => {
     if (!embedded || !config) return;
     if (!embedOrigin || window.parent === window || !config.parentOrigins?.includes(embedOrigin)) {
@@ -139,9 +235,14 @@ export default function App() {
       await post('/api/auth/sign-out');
     } finally {
       clearSession();
+      try {
+        sessionStorage.removeItem('wr_principal');
+      } catch {}
       setPrincipal(null);
       setSelected(null);
-      if (expires.current) clearTimeout(expires.current);
+      authEpoch.current++;
+      previousActor.current = null;
+      setLastPrincipal(null);
     }
   }
   const [lastPrincipal, setLastPrincipal] = useState<Principal | null>(null);
@@ -150,6 +251,7 @@ export default function App() {
   }, [principal]);
   const editorPrincipal = principal || lastPrincipal;
   const needsLogin = !principal;
+  if (restoring) return <div className="preview-loading"><span className="spinner" />正在恢复登录状态…</div>;
   return (
     <>
       {config?.testMode && (
@@ -420,12 +522,17 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false),
+    [createMode, setCreateMode] = useState<'template' | 'clone'>('template'),
     [name, setName] = useState(''),
     [creating, setCreating] = useState(false),
     [filter, setFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'offline'>(
     'all',
   );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const createRequest = useRef(requestId());
   const load = useCallback(async () => {
     setLoading(true);
@@ -448,6 +555,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     try {
       const result = await post<{ project: Project }>('/api/projects', {
         name: name.trim(),
+        buildBranch: createMode,
         requestId: createRequest.current,
       });
       createRequest.current = requestId();
@@ -458,6 +566,59 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
       setCreating(false);
     }
   }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(filtered.map((p) => p.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const deleteSingle = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await api(`/api/projects/${encodeURIComponent(deleteTarget.id)}`, { method: 'DELETE' });
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deleteTarget.id);
+        return next;
+      });
+      setDeleteTarget(null);
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const deleteBatch = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await post('/api/projects/batch-delete', { ids: Array.from(selectedIds) });
+      setSelectedIds(new Set());
+      setBatchDeleteOpen(false);
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setDeleting(false);
+    }
+  };
   const filtered = projects.filter(
     (project) =>
       (statusFilter === 'all' || projectStatus(project) === statusFilter) &&
@@ -570,68 +731,223 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
           </Empty>
         </div>
       ) : (
-        <div className="project-grid">
-          {filtered.map((project) => (
-            <button key={project.id} className="project-card" onClick={() => onOpen(project.id)}>
-              <div className={`project-cover ${project.draft.template}`}>
-                {project.draft.siteDesign?.pages.home?.imageAssetId ||
-                project.draft.posterAssetId ||
-                project.draft.products[0]?.imageAssetId ? (
-                  <AssetView
-                    projectId={project.id}
-                    assetId={
-                      project.draft.siteDesign?.pages.home?.imageAssetId ||
-                      project.draft.posterAssetId ||
-                      project.draft.products[0]?.imageAssetId
-                    }
-                    alt={project.name}
-                  />
-                ) : (
-                  <div className="project-cover-art">
-                    <div className="cover-orbit" />
-                    <span>{project.draft.company.name || '尚未添加产品图片'}</span>
-                  </div>
-                )}
-                <span
-                  className={`pill ${project.publishedReleaseId && !project.offline ? 'green' : 'light'}`}
-                >
-                  {statusLabels[projectStatus(project)]}
+        <>
+          {/* Batch Actions Toolbar */}
+          <div className="projects-batch-bar">
+            <div className="projects-batch-left">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  className="project-select-checkbox"
+                  checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  onChange={(e) => (e.target.checked ? selectAll() : deselectAll())}
+                />
+                <span>全选当前筛选列表 ({filtered.length})</span>
+              </label>
+              {selectedIds.size > 0 && (
+                <span style={{ color: '#4f46e5', fontWeight: 700 }}>
+                  已选中 {selectedIds.size} 项
                 </span>
-                <div className="cover-open">
-                  <Icon name="arrow" />
+              )}
+            </div>
+            <div className="projects-batch-right">
+              {selectedIds.size > 0 && (
+                <>
+                  <Button kind="quiet" onClick={deselectAll}>
+                    取消选择
+                  </Button>
+                  <Button
+                    kind="danger"
+                    onClick={() => setBatchDeleteOpen(true)}
+                    busy={deleting}
+                    style={{
+                      background: '#ef4444',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.25)',
+                    }}
+                  >
+                    🗑️ 批量删除 ({selectedIds.size})
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="project-grid">
+            {filtered.map((project) => (
+              <div
+                key={project.id}
+                className="project-card"
+                onClick={() => onOpen(project.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onOpen(project.id);
+                  }
+                }}
+                style={{ cursor: 'pointer', position: 'relative' }}
+              >
+                <div className={`project-cover ${project.draft.template}`}>
+                  {/* Selection Checkbox Overlay */}
+                  <div
+                    className="project-card-select-overlay"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      className="project-select-checkbox"
+                      checked={selectedIds.has(project.id)}
+                      onChange={() => toggleSelect(project.id)}
+                      aria-label={`选择 ${project.name}`}
+                    />
+                  </div>
+
+                  {/* Single Delete Button Overlay */}
+                  <div
+                    className="project-card-delete-overlay"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget(project);
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="project-card-delete-btn"
+                      title={`删除「${project.name}」`}
+                      aria-label={`删除「${project.name}」`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {project.draft.siteDesign?.pages.home?.imageAssetId ||
+                  project.draft.posterAssetId ||
+                  project.draft.products.find((p) => p.imageAssetId)?.imageAssetId ? (
+                    <AssetView
+                      projectId={project.id}
+                      assetId={
+                        project.draft.siteDesign?.pages.home?.imageAssetId ||
+                        project.draft.posterAssetId ||
+                        project.draft.products.find((p) => p.imageAssetId)?.imageAssetId
+                      }
+                      alt={project.name}
+                    />
+                  ) : TEMPLATE_PREVIEWS[project.draft.template] ? (
+                    <img
+                      src={TEMPLATE_PREVIEWS[project.draft.template]}
+                      alt={project.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div className="project-cover-art">
+                      <div className="cover-orbit" />
+                      <span>{project.draft.company.name || '尚未添加产品图片'}</span>
+                    </div>
+                  )}
+                  <span
+                    className={`pill ${project.publishedReleaseId && !project.offline ? 'green' : 'light'}`}
+                  >
+                    {statusLabels[projectStatus(project)]}
+                  </span>
+                  <div className="cover-open">
+                    <Icon name="arrow" />
+                  </div>
+                </div>
+                <div className="project-info">
+                  <h3>{project.name}</h3>
+                  <p>{project.draft.company.name || '尚未填写公司名称'}</p>
+                  <div>
+                    <span>
+                      {project.draft.products.length} 个产品 ·{' '}
+                      {
+                        ({
+                          natural: '现代典雅',
+                          technology: '先锋科技',
+                          explorer: '硬核工业',
+                          'senseng-clean': 'Senseng 经典工贸',
+                          'senseng-video': 'Senseng 全屏视频',
+                          'saas-automation': 'SaaS 智能自动化',
+                          'fintech-platform': '金融资产管理平台',
+                          'digital-marketing': '数字营销增长机构',
+                          'porto-accounting': 'Porto 经典财税会计',
+                          'crafto-corporate': 'Crafto 现代企业集团',
+                          'juno-toys': 'Juno 儿童童趣玩具',
+                          'corpox-ai-agency': 'Corpox AI 智能工坊',
+                          'corpox-consulting': 'Corpox 顶级战略咨询',
+                        } as Record<TemplateId, string>)[project.draft.template] || '专业模版'
+                      }
+                    </span>
+                    <time dateTime={project.updatedAt}>{dateTime(project.updatedAt)}</time>
+                  </div>
+                  <div className="project-next">
+                    <span>
+                      {projectStatus(project) === 'published'
+                        ? '编辑网站'
+                        : `继续：${workflowSteps.find(([id]) => id === nextDraftStep(project.draft))?.[1]}`}
+                    </span>
+                    <Icon name="arrow" size={15} />
+                  </div>
                 </div>
               </div>
-              <div className="project-info">
-                <h3>{project.name}</h3>
-                <p>{project.draft.company.name || '尚未填写公司名称'}</p>
-                <div>
-                  <span>
-                    {project.draft.products.length} 个产品 ·{' '}
-                    {
-                      { natural: '温暖自然', technology: '现代科技', explorer: '户外探索' }[
-                        project.draft.template
-                      ]
-                    }
-                  </span>
-                  <time dateTime={project.updatedAt}>{dateTime(project.updatedAt)}</time>
-                </div>
-                <div className="project-next">
-                  <span>
-                    {projectStatus(project) === 'published'
-                      ? '编辑网站'
-                      : `继续：${workflowSteps.find(([id]) => id === nextDraftStep(project.draft))?.[1]}`}
-                  </span>
-                  <Icon name="arrow" size={15} />
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
       {createOpen && (
         <Modal title="创建网站项目" onClose={() => setCreateOpen(false)}>
           <form onSubmit={create}>
-            <p className="muted">给这个项目起一个好辨认的名字。它只在工作台显示，稍后可以修改。</p>
+            <p className="muted" style={{ marginBottom: '16px' }}>
+              请选择建站模式，并为该项目命名：
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              <div
+                onClick={() => setCreateMode('template')}
+                style={{
+                  border: createMode === 'template' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                  background: createMode === 'template' ? 'rgba(79, 70, 229, 0.05)' : '#ffffff',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: createMode === 'template' ? '0 0 0 2px rgba(79, 70, 229, 0.15)' : 'none',
+                }}
+              >
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>⚡</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: createMode === 'template' ? '#4f46e5' : '#1e293b' }}>
+                  行业模版极速建站
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
+                  10 套精选工贸与出海高保真模版，即时呈现电脑与手机端效果
+                </div>
+              </div>
+
+              <div
+                onClick={() => setCreateMode('clone')}
+                style={{
+                  border: createMode === 'clone' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                  background: createMode === 'clone' ? 'rgba(79, 70, 229, 0.05)' : '#ffffff',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: createMode === 'clone' ? '0 0 0 2px rgba(79, 70, 229, 0.15)' : 'none',
+                }}
+              >
+                <div style={{ fontSize: '20px', marginBottom: '6px' }}>🎯</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: createMode === 'clone' ? '#4f46e5' : '#1e293b' }}>
+                  100% 像素级克隆还原
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
+                  输入目标网址或上传原型设计稿，OpenAI Vision 1:1 像素级复刻
+                </div>
+              </div>
+            </div>
+
             <Field label="项目名称" required>
               <input
                 autoFocus
@@ -639,7 +955,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                 onChange={(e) => setName(e.target.value)}
                 maxLength={120}
                 required
-                placeholder="例如：春季户外系列官网"
+                placeholder={createMode === 'clone' ? '例如：Senseng 像素级克隆官网' : '例如：春季户外系列官网'}
               />
             </Field>
             {error && <Notice tone="error">{error}</Notice>}
@@ -653,6 +969,74 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
               </Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Single Project Delete Modal */}
+      {deleteTarget && (
+        <Modal title="确认删除网站项目" onClose={() => setDeleteTarget(null)}>
+          <div style={{ padding: '8px 0' }}>
+            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#1e293b', margin: 0 }}>
+              确定要删除项目 <strong>「{deleteTarget.name}」</strong> 吗？
+            </p>
+            <p style={{ fontSize: '13px', color: '#dc2626', marginTop: '10px', lineHeight: '1.5' }}>
+              ⚠️ 此操作将永久删除该项目及其所有的草稿、关联素材、发布快照与数据库记录，无法恢复。
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '24px',
+              }}
+            >
+              <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                取消
+              </Button>
+              <Button
+                kind="danger"
+                onClick={deleteSingle}
+                busy={deleting}
+                style={{ background: '#ef4444', color: '#ffffff', fontWeight: 700 }}
+              >
+                确认删除
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Batch Delete Modal */}
+      {batchDeleteOpen && (
+        <Modal title="确认批量删除项目" onClose={() => setBatchDeleteOpen(false)}>
+          <div style={{ padding: '8px 0' }}>
+            <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#1e293b', margin: 0 }}>
+              确定要批量删除选中的 <strong>{selectedIds.size}</strong> 个网站项目吗？
+            </p>
+            <p style={{ fontSize: '13px', color: '#dc2626', marginTop: '10px', lineHeight: '1.5' }}>
+              ⚠️ 此操作将永久清理这些项目的所有草稿、关联素材与发布快照，无法恢复。
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '24px',
+              }}
+            >
+              <Button onClick={() => setBatchDeleteOpen(false)} disabled={deleting}>
+                取消
+              </Button>
+              <Button
+                kind="danger"
+                onClick={deleteBatch}
+                busy={deleting}
+                style={{ background: '#ef4444', color: '#ffffff', fontWeight: 700 }}
+              >
+                确认批量删除 ({selectedIds.size})
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
     </>

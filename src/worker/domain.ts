@@ -48,12 +48,22 @@ const source = z.object({
 });
 export const snapshotSchema = source;
 const draftSchema = z.object({
+  buildBranch: z.enum(['template', 'custom', 'clone']).optional(),
+  templateConfirmed: z.boolean().optional(),
   company: z.object({
     name: short,
     email: short,
     contactName: short,
     type: z.enum(['trader', 'factory']),
     description: text,
+    phone: short.optional().default(''),
+    whatsapp: short.optional().default(''),
+    address: text.optional().default(''),
+    slogan: short.optional().default(''),
+    establishedYear: short.optional().default(''),
+    certifications: text.optional().default(''),
+    capabilities: text.optional().default(''),
+    linkedin: short.optional().default(''),
     facebook: short,
     instagram: short,
     x: short,
@@ -77,7 +87,21 @@ const draftSchema = z.object({
   category: short,
   country: short,
   languages: z.array(language).min(1).max(2),
-  template: z.enum(['natural', 'technology', 'explorer']),
+  template: z.enum([
+    'natural',
+    'technology',
+    'explorer',
+    'senseng-clean',
+    'senseng-video',
+    'saas-automation',
+    'fintech-platform',
+    'digital-marketing',
+    'porto-accounting',
+    'crafto-corporate',
+    'juno-toys',
+    'corpox-ai-agency',
+    'corpox-consulting',
+  ]),
   brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   copy: z.partialRecord(language, copy),
   duration: z.union([z.literal(8), z.literal(12)]),
@@ -114,6 +138,35 @@ const draftSchema = z.object({
       build: z.object({ jobId: id, artifactKey: z.string().max(500).optional() }).optional(),
     })
     .optional(),
+  cloneConfig: z
+    .object({
+      targetUrl: z.string().max(2000).optional(),
+      scrapedData: z
+        .object({
+          title: z.string().max(500).optional(),
+          description: z.string().max(2000).optional(),
+          headings: z.array(z.string().max(200)).optional(),
+          navLinks: z.array(z.object({ href: z.string(), text: z.string() })).optional(),
+          sampleText: z.string().max(5000).optional(),
+        })
+        .optional(),
+      uiImages: z
+        .array(
+          z.object({
+            id: z.string(),
+            assetId: id,
+            name: z.string().max(200),
+            role: z.enum(['home', 'catalog', 'detail', 'about', 'contact', 'asset']),
+          }),
+        )
+        .optional(),
+      instructions: z.string().max(5000).optional(),
+      status: z.enum(['idle', 'scraping', 'generating', 'ready', 'error']).optional(),
+      generatedHtml: z.string().optional(),
+      generatedAt: z.string().optional(),
+      error: z.string().max(2000).optional(),
+    })
+    .optional(),
 });
 export function defaultDraft(): Draft {
   return {
@@ -123,6 +176,14 @@ export function defaultDraft(): Draft {
       contactName: '',
       type: 'trader',
       description: '',
+      phone: '',
+      whatsapp: '',
+      address: '',
+      slogan: '',
+      establishedYear: '',
+      certifications: '',
+      capabilities: '',
+      linkedin: '',
       facebook: '',
       instagram: '',
       x: '',
@@ -300,17 +361,19 @@ export function assetReferences(d: Draft): string[] {
         ...d.products.map((p) => p.imageAssetId),
         ...d.scenes.map((s) => s.imageAssetId),
         ...Object.values(d.siteDesign?.pages ?? {}).map((p) => p?.imageAssetId),
+        ...(d.cloneConfig?.uiImages?.map((img) => img.assetId) ?? []),
       ].filter((v): v is string => Boolean(v)),
     ),
   ];
 }
 export function publicAssetReferences(d: Draft): string[] {
+  const usesHero = !d.siteDesign || (d.buildBranch === 'template' && ['natural', 'technology', 'explorer', 'senseng-video'].includes(d.template));
   return [
     ...new Set(
       [
         d.company.logoAssetId,
-        !d.siteDesign ? d.heroAssetId : undefined,
-        !d.siteDesign ? d.posterAssetId : undefined,
+        usesHero ? d.heroAssetId : undefined,
+        usesHero ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),
       ].filter((v): v is string => Boolean(v)),
     ),
@@ -357,6 +420,25 @@ export function assertSiteContentReady(d: Draft): void {
   }
 }
 export function assertPublishable(d: Draft): void {
+  if (d.buildBranch === 'clone') {
+    requireCondition(
+      Boolean(d.cloneConfig?.generatedHtml || d.cloneConfig?.status === 'ready'),
+      400,
+      'clone_not_ready',
+      '请先完成 100% 像素级克隆生成后再发布。',
+    );
+    return;
+  }
+  if (d.buildBranch === 'template') {
+    assertSiteIntakeReady(d);
+    requireCondition(
+      draftSchema.shape.template.options.includes(d.template),
+      400,
+      'template_unselected',
+      '请先选择网站模版。',
+    );
+    return;
+  }
   assertSiteContentReady(d);
   if (d.siteDesign)
     requireCondition(

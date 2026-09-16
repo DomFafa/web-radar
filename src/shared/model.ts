@@ -25,7 +25,20 @@ export interface ProductSnapshot {
   factsOrigin: 'generated-concept';
 }
 export type Language = 'en' | 'de' | 'fr' | 'es' | 'pt' | 'it';
-export type TemplateId = 'natural' | 'technology' | 'explorer';
+export type TemplateId =
+  | 'natural'
+  | 'technology'
+  | 'explorer'
+  | 'senseng-clean'
+  | 'senseng-video'
+  | 'saas-automation'
+  | 'fintech-platform'
+  | 'digital-marketing'
+  | 'porto-accounting'
+  | 'crafto-corporate'
+  | 'juno-toys'
+  | 'corpox-ai-agency'
+  | 'corpox-consulting';
 export interface Product {
   id: string;
   name: string;
@@ -42,6 +55,14 @@ export interface Company {
   contactName: string;
   type: 'trader' | 'factory';
   description: string;
+  phone?: string;
+  whatsapp?: string;
+  address?: string;
+  slogan?: string;
+  establishedYear?: string;
+  certifications?: string;
+  capabilities?: string;
+  linkedin?: string;
   facebook: string;
   instagram: string;
   x: string;
@@ -110,7 +131,35 @@ export interface SiteDesign {
   confirmedKey?: string;
   build?: { jobId: string; artifactKey?: string };
 }
+export type CloneUiImageRole = 'home' | 'catalog' | 'detail' | 'about' | 'contact' | 'asset';
+export interface CloneUiImage {
+  id: string;
+  assetId: string;
+  name: string;
+  role: CloneUiImageRole;
+}
+export interface CloneScrapedData {
+  title?: string;
+  description?: string;
+  headings?: string[];
+  navLinks?: Array<{ href: string; text: string }>;
+  sampleText?: string;
+}
+export interface CloneConfig {
+  targetUrl?: string;
+  scrapedData?: CloneScrapedData;
+  uiImages?: CloneUiImage[];
+  instructions?: string;
+  model?: string;
+  status?: 'idle' | 'scraping' | 'generating' | 'ready' | 'error';
+  generatedHtml?: string;
+  generatedAt?: string;
+  error?: string;
+}
+
 export interface Draft {
+  buildBranch?: 'template' | 'custom' | 'clone';
+  templateConfirmed?: boolean;
   company: Company;
   products: Product[];
   primaryProductId: string;
@@ -133,6 +182,7 @@ export interface Draft {
   heroAccepted: boolean;
   siteDesign?: SiteDesign;
   consultation?: SiteConsultation;
+  cloneConfig?: CloneConfig;
 }
 export interface HostingTarget {
   accountId: string;

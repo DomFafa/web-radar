@@ -1,5 +1,6 @@
 import type {
   Asset,
+  CloneConfig,
   Draft,
   DesignPage,
   Inquiry,
@@ -12,6 +13,7 @@ import type {
   Release,
   Scene,
 } from '../shared/model';
+import { scrapeTargetUrl, generateCloneSite, syncDraftDataIntoHtml } from './clone-service';
 import type { AppEnv } from './env';
 import { testMode } from './env';
 import {
@@ -120,6 +122,7 @@ export class DomainService {
       if (e instanceof ProviderError) return json({ message: e.message, code: e.code }, 503);
       if (e instanceof Error && 'status' in e && typeof e.status === 'number')
         return json({ message: e.message, code: 'upstream_unavailable' }, e.status);
+      console.error('Domain-service unhandled error:', e);
       return json({ message: '操作暂时失败，请稍后重试。', code: 'internal_error' }, 500);
     }
   }
@@ -246,13 +249,24 @@ export class DomainService {
       if (method === 'POST') {
         const b = await this.body(request);
         return json({
-          project: await this.create(principal, b.requestId, b.name, b.products, false),
+          project: await this.create(principal, b.requestId, b.name, b.products, false, b.buildBranch),
         });
       }
+    }
+    if (path[2] === 'batch-delete' && method === 'POST') {
+      const b = await this.body(request);
+      const rawIds = Array.isArray(b.ids) ? b.ids : Array.isArray(b.projectIds) ? b.projectIds : [];
+      const ids = rawIds.filter((x: unknown): x is string => typeof x === 'string');
+      const count = await this.batchDeleteProjects(ids, principal);
+      return json({ ok: true, deletedCount: count });
     }
     const project = await this.project(path[2] ?? '', principal),
       command = path[3];
     if (!command && method === 'GET') return json(await this.detail(project, principal));
+    if (!command && method === 'DELETE') {
+      await this.deleteProject(project.id, principal);
+      return json({ ok: true, deletedId: project.id });
+    }
     if (!command && method === 'PUT') {
       const b = await this.body(request);
       expectedVersion(project, b.expectedVersion);
@@ -336,11 +350,87 @@ export class DomainService {
       await this.store.update('projects', next).run();
       return json({ project: next });
     }
+    if (command === 'clone' && path[4] === 'scrape' && method === 'POST') {
+      const b = await this.body(request);
+      requireCondition(
+        typeof b.url === 'string' && b.url.trim(),
+        400,
+        'invalid_url',
+        '请输入网址。',
+      );
+      const scraped = await scrapeTargetUrl(b.url.trim());
+      return json({ scraped });
+    }
+    if (command === 'clone' && path[4] === 'generate' && method === 'POST') {
+      const b = await this.body(request);
+      expectedVersion(project, b.expectedVersion);
+      const cloneConfig = (b.cloneConfig ?? project.draft.cloneConfig) as CloneConfig;
+      requireCondition(
+        Boolean(
+          cloneConfig?.targetUrl?.trim() ||
+            (cloneConfig?.uiImages && cloneConfig.uiImages.length > 0),
+        ),
+        400,
+        'missing_clone_source',
+        '请提供目标网站 URL 或上传至少一张设计稿。',
+      );
+      project.draft.buildBranch = 'clone';
+      project.draft.cloneConfig = {
+        ...cloneConfig,
+        status: 'generating',
+      };
+      const getImageBase64 = async (assetId: string) => {
+        try {
+          const asset = await this.projectAsset(project.id, assetId);
+          const obj = await this.env.MEDIA.get(asset.key);
+          if (!obj) return null;
+          const ab = await obj.arrayBuffer();
+          const b64 = Buffer.from(ab).toString('base64');
+          return `data:${asset.contentType};base64,${b64}`;
+        } catch {
+          return null;
+        }
+      };
+
+      try {
+        const generatedHtml = await generateCloneSite(
+          this.env,
+          project,
+          cloneConfig,
+          getImageBase64,
+        );
+        project.draft.cloneConfig = {
+          ...cloneConfig,
+          status: 'ready',
+          generatedHtml,
+          generatedAt: new Date().toISOString(),
+          error: undefined,
+        };
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        project.draft.cloneConfig = {
+          ...cloneConfig,
+          status: 'error',
+          error: msg,
+        };
+        const next = this.changed(project);
+        await this.store.update('projects', next).run();
+        throw err;
+      }
+      const next = this.changed(project);
+      await this.store.update('projects', next).run();
+      return json({ project: next, generatedHtml: project.draft.cloneConfig.generatedHtml });
+    }
     if (command === 'assets' && path[4] && (method === 'GET' || method === 'HEAD')) {
       const asset = await this.projectAsset(project.id, path[4]);
-      return new URL(request.url).searchParams.get('variant') === 'preview'
-        ? privateAssetPreview(request, this.env, asset)
-        : this.assetResponse(request, asset);
+      if (new URL(request.url).searchParams.get('variant') === 'preview') {
+        try {
+          return await privateAssetPreview(request, this.env, asset);
+        } catch {
+          return this.assetResponse(request, asset);
+        }
+      }
+      return this.assetResponse(request, asset);
     }
     if (command === 'import' && method === 'POST') {
       const b = await this.body(request);
@@ -474,23 +564,27 @@ export class DomainService {
       await this.store.update('projects', next).run();
       return json({ project: next });
     }
-    if (command === 'preview' && method === 'GET') {
+    if (command === 'preview' && (method === 'GET' || method === 'POST')) {
+      const draft = method === 'POST'
+        ? validateDraft({ ...((await this.body(request)).draft as Draft), buildBranch: 'template', cloneConfig: undefined, siteDesign: undefined })
+        : project.draft;
+      if (method === 'POST') await this.validateAssets(project.id, draft);
       const lang = (url.searchParams.get('lang') ?? 'en') as Language;
       requireCondition(
-        project.draft.languages.includes(lang),
+        draft.languages.includes(lang),
         400,
         'invalid_language',
         '没有配置这种网站语言。',
       );
       const page = url.searchParams.get('page') ?? 'home';
       requireCondition(
-        plannedPages(project.draft).includes(page as DesignPage),
+        plannedPages(draft).includes(page as DesignPage),
         400,
         'invalid_page',
         '页面不存在。',
       );
       return json({
-        html: await this.renderPage(project.draft, {
+        html: await this.renderPage(draft, {
           projectId: project.id,
           lang,
           page,
@@ -548,6 +642,36 @@ export class DomainService {
     ]);
     return { project, assets, jobs, releases, quota };
   }
+  private async deleteProject(id: string, principal: Principal): Promise<void> {
+    const p = await this.store.one<Project>('projects', id);
+    requireCondition(p && canManage(p, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
+    await this.store.batch(this.store.deleteProjectStatements(id));
+    if (this.env.MEDIA) {
+      try {
+        const listed = await this.env.MEDIA.list({ prefix: `projects/${id}/` });
+        const keys = listed.objects.map((o) => o.key);
+        if (keys.length > 0) {
+          await this.env.MEDIA.delete(keys);
+        }
+      } catch {
+        // Storage cleanup is non-blocking
+      }
+    }
+  }
+  private async batchDeleteProjects(ids: string[], principal: Principal): Promise<number> {
+    requireCondition(Array.isArray(ids) && ids.length > 0, 400, 'invalid_ids', '请提供要删除的项目 ID 列表。');
+    requireCondition(ids.length <= 1000, 400, 'batch_limit_exceeded', '一次最多批量删除 1000 个项目。');
+    let count = 0;
+    for (const id of ids) {
+      try {
+        await this.deleteProject(id, principal);
+        count++;
+      } catch {
+        // Skip projects not permitted or already removed
+      }
+    }
+    return count;
+  }
   private productIds(value: unknown): string[] {
     requireCondition(
       Array.isArray(value) &&
@@ -588,6 +712,7 @@ export class DomainService {
     name: unknown,
     rawProducts: unknown,
     handoff: boolean,
+    rawBuildBranch?: unknown,
   ): Promise<Project> {
     const rid = requestId(rawRequestId);
     requireCondition(
@@ -620,13 +745,23 @@ export class DomainService {
         products.map((p) => p.id),
       );
     }
+    const initialDraft = defaultDraft();
+    if (rawBuildBranch === 'clone') {
+      initialDraft.buildBranch = 'clone';
+      initialDraft.cloneConfig = {
+        targetUrl: '',
+        instructions: '',
+        uiImages: [],
+        status: 'idle',
+      };
+    }
     const p: Project = {
       id: crypto.randomUUID(),
       ownerId: principal.userId,
       workspaceId: principal.workspaceId,
       name: name.trim(),
       version: 1,
-      draft: defaultDraft(),
+      draft: initialDraft,
       createdAt: now(),
       updatedAt: now(),
       offline: true,
@@ -977,7 +1112,7 @@ export class DomainService {
   }
   private async assetResponse(request: Request, asset: Asset): Promise<Response> {
     const headers = new Headers({
-      'Cache-Control': 'no-store',
+      'Cache-Control': 'public, max-age=31536000, immutable',
       'Content-Type': asset.contentType,
       'X-Content-Type-Options': 'nosniff',
       'Accept-Ranges': 'bytes',
@@ -2618,7 +2753,18 @@ export class DomainService {
     draft: Draft,
     options: Parameters<typeof renderSiteFiles>[1],
   ): Promise<Record<string, string>> {
-    if (!draft.siteDesign) return renderSiteFiles(draft, options);
+    if (draft.buildBranch === 'clone' && draft.cloneConfig?.generatedHtml) {
+      const html = syncDraftDataIntoHtml(draft.cloneConfig.generatedHtml, draft, options.projectId);
+      return {
+        'index.html': html,
+        'en/index.html': html,
+        'zh/index.html': html,
+        'es/index.html': html,
+        'ar/index.html': html,
+        'ru/index.html': html,
+      };
+    }
+    if (draft.buildBranch === 'template' || !draft.siteDesign) return renderSiteFiles(draft, options);
     return materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
       assetUrl: options.assetUrl,
       inquiryUrl: options.inquiryUrl,
@@ -2629,7 +2775,10 @@ export class DomainService {
     options: Parameters<typeof renderSite>[1],
     basePath?: string,
   ): Promise<string> {
-    if (!draft.siteDesign) return renderSite(draft, options);
+    if (draft.buildBranch === 'clone' && draft.cloneConfig?.generatedHtml) {
+      return syncDraftDataIntoHtml(draft.cloneConfig.generatedHtml, draft);
+    }
+    if (draft.buildBranch === 'template' || !draft.siteDesign) return renderSite(draft, options);
     const files = materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
       assetUrl: options.assetUrl,
       inquiryUrl: new URL(options.inquiryUrl, this.origin()).href,

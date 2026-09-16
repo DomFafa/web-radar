@@ -27,6 +27,7 @@ export interface Secrets {
   RESEND_API_KEY?: string;
   MAIL_FROM?: string;
   ASSET_SIGNING_KEY?: string;
+  OPENAI_API_KEY?: string;
 }
 export type AppEnv = Secrets & Pick<Cloudflare.Env, 'DB' | 'MEDIA' | 'COORDINATOR' | 'ASSETS'>;
 export type HonoEnv = {

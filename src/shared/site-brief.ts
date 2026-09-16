@@ -118,6 +118,7 @@ export function parseSiteBrief(input: unknown, draft: Draft): SiteBrief {
   return result;
 }
 export function plannedPages(draft: Draft): DesignPage[] {
+  if (draft.buildBranch === 'template') return [...basePages];
   return draft.consultation?.brief?.pages.map((p) => p.id) ?? [...basePages];
 }
 export function pageLabel(draft: Draft, page: DesignPage): string {

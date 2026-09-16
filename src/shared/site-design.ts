@@ -54,5 +54,14 @@ export function designsConfirmed(design?: SiteDesign): boolean {
   );
 }
 export function staticSiteReady(draft: Draft): boolean {
-  return designsConfirmed(draft.siteDesign) && !!draft.siteDesign?.build?.artifactKey;
+  if (draft.buildBranch === 'clone') {
+    return !!draft.cloneConfig?.generatedHtml || draft.cloneConfig?.status === 'ready';
+  }
+  if (draft.buildBranch === 'template') {
+    return !!draft.template;
+  }
+  if (draft.siteDesign) {
+    return designsConfirmed(draft.siteDesign) && !!draft.siteDesign?.build?.artifactKey;
+  }
+  return false;
 }

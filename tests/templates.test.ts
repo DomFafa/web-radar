@@ -149,3 +149,111 @@ it('keeps brand-colored text controls readable for light and dark brand colors',
   expect(renderSite({ ...draft(), brandColor: '#ffffff' }, opts)).toContain('--brand-ink:#17261c');
   expect(renderSite({ ...draft(), brandColor: '#000000' }, opts)).toContain('--brand-ink:#ffffff');
 });
+describe('10 professional preset templates', () => {
+  const all10Templates: Draft['template'][] = [
+    'senseng-clean',
+    'senseng-video',
+    'saas-automation',
+    'fintech-platform',
+    'digital-marketing',
+    'porto-accounting',
+    'crafto-corporate',
+    'juno-toys',
+    'corpox-ai-agency',
+    'corpox-consulting',
+  ];
+
+  it('renders each of the 10 templates with unique composition and data-template attribute', () => {
+    const outputs = all10Templates.map((template) => renderSite({ ...draft(), template }, opts));
+    for (let i = 0; i < outputs.length; i++) {
+      expect(outputs[i]).toContain(`data-template="${all10Templates[i]}"`);
+      expect(outputs[i]).toContain('<!doctype html>');
+      expect(outputs[i]).toContain('data-wr-page="home"');
+      expect(outputs[i]).toContain('data-wr-page="catalog"');
+    }
+    // All 10 templates produce distinct HTML outputs
+    expect(new Set(outputs).size).toBe(10);
+  });
+
+  it('verifies specialized features for each template', () => {
+    const d = draft();
+
+    // Template 1: 100% webimg senseng clean
+    const t1 = renderSite({ ...d, template: 'senseng-clean' }, opts);
+    expect(t1).toContain('Sensory & Character Showcase');
+    expect(t1).toContain('Shelf-ready squishy lines');
+
+    // Template 2: senseng fullscreen video variant
+    const t2 = renderSite({ ...d, template: 'senseng-video' }, opts);
+    expect(t2).toContain('hero-scroll-cue');
+    expect(t2).toContain('<video id="hero-video"');
+
+    // References retain their actual visual structures and use project images.
+    const landmarks = {
+      'saas-automation': 'hero-video',
+      'fintech-platform': 'financial-management-platform-header',
+      'digital-marketing': 'ns-img-291',
+      'porto-accounting': 'header-body',
+      'crafto-corporate': 'wr-crafto-hero',
+      'juno-toys': 'wr-juno-hero',
+      'corpox-ai-agency': 'ai-agency-demo-banner',
+      'corpox-consulting': 'wr-consulting-hero',
+    };
+    for (const [template, landmark] of Object.entries(landmarks)) {
+      const html = renderSite({ ...d, template: template as Draft['template'] }, opts);
+      expect(html).toContain(landmark);
+      expect(html).toContain('https://media.example/product');
+      expect(html).toContain('data-wr-bound-product="true"');
+      expect(html).toContain('products/p-one/index.html');
+      expect(html).toContain('https://wr.example/templates/references/');
+      expect(html).not.toContain('__WR_');
+      expect(html).not.toMatch(/<script[^>]+src=/);
+      expect(html).not.toMatch(/ on(?:click|load|error)=/);
+    }
+  });
+});
+
+describe('reference template product and route integration', () => {
+  const templates = [
+    'saas-automation',
+    'fintech-platform',
+    'digital-marketing',
+    'porto-accounting',
+    'crafto-corporate',
+    'juno-toys',
+    'corpox-ai-agency',
+    'corpox-consulting',
+  ] as const;
+  for (const template of templates) {
+    it(`${template} uses the selected primary image and exports every page`, () => {
+      const d = draft();
+      d.template = template;
+      d.products.push({
+        id: 'primary / <item>',
+        name: '<Primary product>',
+        description: 'Details',
+        material: '',
+        dimensions: '',
+        imageAssetId: 'primary',
+      });
+      d.primaryProductId = 'primary / <item>';
+      const html = renderSite(d, { ...opts, preview: true });
+      expect(html).toMatch(
+        /<img[^>]*data-wr-product-slot="0"[^>]*src="https:\/\/media.example\/primary"|<img[^>]*src="https:\/\/media.example\/primary"[^>]*data-wr-product-slot="0"/,
+      );
+      expect(html).toContain('&lt;Primary product&gt;');
+      expect(html).not.toContain('<Primary product>');
+      const files = renderSiteFiles(d, {
+        ...opts,
+        publicBaseUrl: 'https://wr.example/public/sites/project',
+      });
+      for (const page of ['catalog', 'about', 'contact']) {
+        expect(files[`en/${page}/index.html`]).toContain('wr-inner');
+        expect(files[`en/${page}/index.html`]).toContain('data-wr-page="catalog"');
+      }
+      expect(files['en/contact/index.html']).toContain('id="inquiry"');
+      expect(files['en/contact/index.html']).toContain(opts.inquiryUrl);
+      expect(html).toContain('primary%20%2F%20%3Citem%3E/index.html');
+    });
+  }
+});

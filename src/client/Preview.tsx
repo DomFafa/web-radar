@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DesignPage, Language, Project } from '../shared/model';
 import { pageLabel, plannedPages } from '../shared/site-brief';
-import { api, errorMessage, privateAssetBlob, requestId } from './api';
+import { api, post, errorMessage, privateAssetBlob, requestId } from './api';
 import { Button, Icon, Notice } from './components';
 import { labels } from '../templates/labels';
+import { referenceInteractions } from '../templates/themes/referenceInteractions';
 
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
@@ -30,14 +31,30 @@ export function rewritePreviewMedia(
 ) {
   for (const attribute of ['src', 'poster']) {
     const value = node.getAttribute(attribute) || '';
-    if (/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value)) continue;
+    if (!value || /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value))
+      continue;
     const id = privateAssetId(value, projectId);
-    node.removeAttribute(attribute);
-    if (id) node.setAttribute(`data-wr-${attribute}`, id);
+    if (id) {
+      node.removeAttribute(attribute);
+      node.setAttribute(`data-wr-${attribute}`, id);
+    } else if (value.startsWith('/templates/')) {
+      // Keep template assets intact
+      continue;
+    } else {
+      node.removeAttribute(attribute);
+    }
   }
 }
 
-export function SitePreview({ project, onClose }: { project: Project; onClose: () => void }) {
+export function SitePreview({
+  project,
+  onClose,
+  draftPreview = false,
+}: {
+  project: Project;
+  onClose: () => void;
+  draftPreview?: boolean;
+}) {
   const pages = plannedPages(project.draft);
   const [lang, setLang] = useState<Language>('en'),
     [page, setPage] = useState<DesignPage>('home'),
@@ -77,9 +94,10 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
         page,
         ...(page === 'detail' ? { productId } : {}),
       });
-      const result = await api<{ html: string }>(
-        `/api/projects/${encodeURIComponent(project.id)}/preview?${query}`,
-      );
+      const path = `/api/projects/${encodeURIComponent(project.id)}/preview?${query}`;
+      const result = draftPreview
+        ? await post<{ html: string }>(path, { draft: project.draft })
+        : await api<{ html: string }>(path);
       const doc = new DOMParser().parseFromString(result.html, 'text/html');
       // Only trusted template styling and our tiny navigation bridge run inside the sandbox.
       doc
@@ -112,11 +130,12 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
       const nonce = requestId().replaceAll('-', '');
       const csp = doc.createElement('meta');
       csp.httpEquiv = 'Content-Security-Policy';
-      csp.content = `default-src 'none'; img-src blob: data:; media-src blob:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src data:; base-uri 'none'; form-action 'none'`;
+      csp.content = `default-src 'none'; img-src blob: data: https: http: 'self'; media-src blob: data: https: http: 'self'; style-src 'unsafe-inline' ${window.location.origin}; script-src 'nonce-${nonce}'; font-src data: https: ${window.location.origin}; base-uri 'none'; form-action 'none'`;
       doc.head.insertBefore(csp, doc.head.firstChild);
       const bridge = doc.createElement('script');
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `
+        (${referenceInteractions.toString()})();
         const video = document.getElementById('hero-video');
         const toggle = document.getElementById('video-toggle');
         const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -183,7 +202,7 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
       active = false;
       media.current = [];
     };
-  }, [project.id, project.version, lang, page, productId, retry]);
+  }, [project.id, project.version, project.draft, draftPreview, lang, page, productId, retry]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -218,7 +237,9 @@ export function SitePreview({ project, onClose }: { project: Project; onClose: (
             <Icon name="lock" />
           </span>
           <strong>私有整站预览</strong>
-          <span className="muted">V{project.version}</span>
+          <span className="muted">
+            {draftPreview ? '模版试览 · 未保存' : `V${project.version}`}
+          </span>
         </div>
         <div className="preview-route-controls">
           <select

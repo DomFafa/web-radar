@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { defaultDraft } from '../src/worker/domain';
+import { assertPublishable, defaultDraft, publicAssetReferences } from '../src/worker/domain';
 import { designKey } from '../src/shared/site-design';
 import type { DesignPage, Draft, Project, SiteBrief } from '../src/shared/model';
 import {
   draftChecklist,
+  getWorkflowSteps,
   nextDraftStep,
   projectStatus,
   workflowSteps,
@@ -205,4 +206,40 @@ describe('guided website workflow readiness', () => {
       'offline',
     );
   });
+
+  it('supports the fast 3-step template branch', () => {
+    const draft = suppliedDraft();
+    draft.buildBranch = 'template';
+    // 检查步骤定义为 3 步
+    const steps = getWorkflowSteps(draft);
+    expect(steps.map((s) => s[0])).toEqual(['basics', 'template', 'publish']);
+
+    // 资料完成后推进到 template
+    expect(nextDraftStep(draft)).toBe('template');
+
+    // 模版选择就绪后，直接进入 publish，无需 AI 绘图或构建
+    draft.template = 'technology';
+    draft.templateConfirmed = true;
+    const items = draftChecklist(draft);
+    expect(items.map((i) => i.id)).toEqual(['company', 'market', 'products', 'template', 'build']);
+    expect(nextDraftStep(draft)).toBe('publish');
+  });
+});
+
+
+it('uses the selected preset when a previous custom design is still saved', () => {
+  const draft = suppliedDraft();
+  draft.buildBranch = 'template';
+  draft.template = 'juno-toys';
+  draft.templateConfirmed = true;
+  draft.siteDesign = { revision: 1, pages: {} } as Draft['siteDesign'];
+  expect(getWorkflowSteps(draft).map(step => step[0])).toEqual(['basics', 'template', 'publish']);
+  expect(nextDraftStep(draft)).toBe('publish');
+  expect(() => assertPublishable(draft)).not.toThrow();
+  expect(draft.siteDesign).toBeDefined();
+  draft.heroAssetId = 'chosen-video';
+  draft.template = 'senseng-video';
+  expect(publicAssetReferences(draft)).toContain('chosen-video');
+  draft.template = 'juno-toys';
+  expect(publicAssetReferences(draft)).not.toContain('chosen-video');
 });
