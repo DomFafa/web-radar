@@ -233,6 +233,10 @@ export function WebsiteConnections({
     };
   }, [root, published]);
   useEffect(() => {
+    if (data && (!account || !data.accounts.some((a) => a.id === account)))
+      setAccount(data.defaultCloudflareAccountId ?? '');
+  }, [data, account]);
+  useEffect(() => {
     setZones([]);
     setZoneId('');
     setLoadingZones(false);
@@ -402,7 +406,11 @@ export function WebsiteConnections({
                   .map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.label}
-                      {a.scope === 'global' ? '（后台共享）' : '（本网站）'}
+                      {a.scope === 'global'
+                        ? '（后台共享）'
+                        : a.scope === 'environment'
+                          ? ''
+                          : '（本网站）'}
                     </option>
                   ))}
               </select>

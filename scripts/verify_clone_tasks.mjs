@@ -228,10 +228,17 @@ try {
   await connections.getByText('网站发信账号已保存，仅影响新询盘。',{exact:true}).waitFor();
   await page.reload();
   assert.equal(await connections.getByLabel('询盘发信账号').inputValue(),saved.id);
+  await connections.getByLabel('域名',{exact:true}).selectOption('zone-test');
+  assert.equal(await connections.getByLabel('Cloudflare 账号',{exact:true}).inputValue(),'environment-cloudflare:LOCAL_TEST');
+  assert.equal((await (await context.request.get(settingsRoot)).json()).accounts.some(a=>a.scope==='environment'),true);
   await connections.getByText('使用新的 Cloudflare API Token',{exact:true}).click();
   await connections.getByLabel('账号名称').fill('Browser DNS');
   await connections.getByLabel('Cloudflare API Token',{exact:true}).fill('isolated-dns-token');
   await connections.getByRole('button',{name:'保存账号',exact:true}).click();
+  await connections.getByText('账号已保存到本网站，可以选择域名绑定。',{exact:true}).waitFor();
+  await connections.getByLabel('域名',{exact:true}).selectOption('zone-test');
+  assert.notEqual(await connections.getByLabel('Cloudflare 账号',{exact:true}).inputValue(),'environment-cloudflare:LOCAL_TEST');
+  await connections.getByLabel('Cloudflare 账号',{exact:true}).selectOption('environment-cloudflare:LOCAL_TEST');
   await connections.getByLabel('域名',{exact:true}).selectOption('zone-test');
   await connections.getByLabel('主机名',{exact:true}).fill('site-'+project.id.slice(0,8));
   await connections.getByRole('button',{name:'绑定域名',exact:true}).click();

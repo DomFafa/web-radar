@@ -316,3 +316,73 @@ it('does not send live email or mutate real domains in local demonstration mode'
   ).toEqual({ id: 'test-email-inq', testMode: true });
   expect(calls.some((c) => c.url.includes('resend'))).toBe(false);
 });
+
+it('offers and uses existing hosting credentials without saving another API token', async () => {
+  await settings.remove(cloudflareId, 'global');
+  const data = await settings.settings(project);
+  expect(data.defaultCloudflareAccountId).toBe('environment-cloudflare:account1');
+  expect(data.accounts).toHaveLength(1);
+  expect(JSON.stringify(data)).not.toContain('pages-account-secret');
+  expect((await settings.zones(data.defaultCloudflareAccountId!, project.id))[0].name).toBe(
+    'example.com',
+  );
+  await settings.bind(project, {
+    credentialId: data.defaultCloudflareAccountId,
+    zoneId: 'zone1',
+    hostname: 'www.example.com',
+  });
+  expect(
+    calls
+      .filter((c) => c.method === 'POST')
+      .every((c) => c.authorization === 'Bearer pages-account-secret'),
+  ).toBe(true);
+  const ref = await env.DB.prepare('SELECT secret,scope FROM provider_accounts WHERE id=?')
+    .bind(data.defaultCloudflareAccountId)
+    .first();
+  expect(ref).toEqual({ secret: '', scope: 'environment' });
+  env.CLOUDFLARE_API_TOKEN = 'rotated-existing-secret';
+  await settings.unbind(project, 'www.example.com');
+  expect(
+    calls
+      .filter((c) => c.method === 'DELETE')
+      .every((c) => c.authorization === 'Bearer rotated-existing-secret'),
+  ).toBe(true);
+  expect(records).toHaveLength(0);
+});
+it('limits the environment option to the project hosting account and its zones', async () => {
+  env.CLOUDFLARE_HOSTING_ACCOUNTS = JSON.stringify([
+    { accountId: 'account1', apiToken: 'first-configured-key' },
+    { accountId: 'account2', apiToken: 'second-configured-key' },
+  ]);
+  await expect(settings.zones('environment-cloudflare:account2', project.id)).rejects.toMatchObject(
+    { code: 'provider_not_found' },
+  );
+  await expect(settings.zones('environment-cloudflare:account1', 'missing')).rejects.toMatchObject({
+    code: 'project_not_found',
+  });
+  project.hostingTarget!.accountId = 'account2';
+  await env.DB.prepare('UPDATE projects SET data=? WHERE id=?')
+    .bind(JSON.stringify(project), project.id)
+    .run();
+  expect((await settings.settings(project)).defaultCloudflareAccountId).toBe(
+    'environment-cloudflare:account2',
+  );
+  expect(await settings.zones('environment-cloudflare:account2', project.id)).toEqual([]);
+  await expect(
+    settings.bind(project, {
+      credentialId: 'environment-cloudflare:account2',
+      zoneId: 'zone1',
+      hostname: 'www.example.com',
+    }),
+  ).rejects.toMatchObject({ status: 400 });
+});
+it('predicts the configured account for an unpublished project and keeps manual accounts selectable', async () => {
+  delete project.hostingTarget;
+  delete project.publishedReleaseId;
+  const data = await settings.settings(project);
+  expect(data.defaultCloudflareAccountId).toBe('environment-cloudflare:account1');
+  expect(data.accounts.some((a) => a.id === cloudflareId)).toBe(true);
+  delete env.CLOUDFLARE_API_TOKEN;
+  expect((await settings.settings(project)).defaultCloudflareAccountId).toBe(null);
+  expect((await settings.settings(project)).accounts.some((a) => a.id === cloudflareId)).toBe(true);
+});

@@ -3,7 +3,7 @@ import type { Project } from '../shared/model';
 import type { ProviderAccount, CloudflareZone } from '../shared/provider-settings';
 import { DomainError, requireCondition } from './domain';
 import { requestJson } from './providers/http';
-import { hostingAccounts } from './providers/pages';
+import { hostingAccounts, resolveHostingTarget } from './providers/pages';
 import { sendInquiry } from './providers/email';
 import type { Inquiry } from '../shared/model';
 
@@ -45,6 +45,37 @@ export class ProviderSettings {
   constructor(private env: AppEnv) {}
   private get db() {
     return this.env.DB;
+  }
+  private async environmentCloudflare(project: Project) {
+    const target = await resolveHostingTarget(this.env, project.id, project.hostingTarget);
+    const account = hostingAccounts(this.env).find((a) => a.accountId === target.accountId)!;
+    return {
+      id: `environment-cloudflare:${account.accountId}`,
+      token: account.apiToken,
+      accountId: account.accountId,
+    };
+  }
+  private async cloudflareCredential(id: string, projectId?: string) {
+    if (id.startsWith('environment-cloudflare:')) {
+      const record = projectId
+        ? await this.db
+            .prepare('SELECT data FROM projects WHERE id=?')
+            .bind(projectId)
+            .first<{ data: string }>()
+        : null;
+      requireCondition(record, 404, 'project_not_found', '项目不存在。');
+      const account = await this.environmentCloudflare(JSON.parse(record.data) as Project);
+      requireCondition(
+        account.id === id,
+        404,
+        'provider_not_found',
+        '该账号不是此网站配置的 Cloudflare 账号。',
+      );
+      return account;
+    }
+    const row = await this.row(id, projectId);
+    check(row.kind === 'cloudflare', '请选择 Cloudflare 账号。');
+    return { id: row.id, token: await this.token(row), accountId: undefined };
   }
   private async key() {
     check(this.env.ASSET_SIGNING_KEY, '尚未配置凭据加密密钥。');
@@ -215,11 +246,28 @@ export class ProviderSettings {
     throw new DomainError(400, 'too_many_zones', '该 Token 可访问域名过多，请缩小授权范围。');
   }
   async zones(id: string, projectId?: string) {
-    const row = await this.row(id, projectId);
-    check(row.kind === 'cloudflare', '请选择 Cloudflare 账号。');
-    return this.zonesWithToken(await this.token(row));
+    const credential = await this.cloudflareCredential(id, projectId);
+    const zones = await this.zonesWithToken(credential.token);
+    return credential.accountId ? zones.filter((z) => z.accountId === credential.accountId) : zones;
   }
   async settings(project: Project) {
+    const accounts = await this.list(project.id);
+    let defaultCloudflareAccountId: string | null = null;
+    try {
+      const configured = await this.environmentCloudflare(project);
+      defaultCloudflareAccountId = configured.id;
+      accounts.unshift({
+        id: configured.id,
+        kind: 'cloudflare',
+        scope: 'environment',
+        label: '网站已配置的 Cloudflare 账号（默认）',
+        isDefault: false,
+        createdAt: project.createdAt,
+      });
+    } catch {
+      /* Keep manually saved accounts available when hosting configuration is missing. */
+    }
+
     const delivery = await this.db
       .prepare('SELECT resend_account_id FROM project_delivery_settings WHERE project_id=?')
       .bind(project.id)
@@ -229,7 +277,8 @@ export class ProviderSettings {
       .bind(project.id)
       .all<BindingRow>();
     return {
-      accounts: await this.list(project.id),
+      accounts,
+      defaultCloudflareAccountId,
       resendAccountId: delivery?.resend_account_id ?? null,
       environmentEmail: !!(this.env.RESEND_API_KEY && this.env.MAIL_FROM),
       published: !!project.publishedReleaseId,
@@ -304,11 +353,13 @@ export class ProviderSettings {
         typeof body.hostname === 'string',
       '请选择账号、域名并填写主机名。',
     );
-    const row = await this.row(body.credentialId, project.id),
-      token = await this.token(row);
-    check(row.kind === 'cloudflare', '账号类型无效。');
+    const row = await this.cloudflareCredential(body.credentialId, project.id),
+      token = row.token;
     const zone = (await this.zonesWithToken(token)).find((z) => z.id === body.zoneId);
-    check(zone, '所选域名不在此 Token 的授权范围内。');
+    check(
+      zone && (!row.accountId || zone.accountId === row.accountId),
+      '所选域名不在此账号的授权范围内。',
+    );
     const hostname = body.hostname.trim().toLowerCase().replace(/\.$/, '');
     check(
       hostname.length <= 253 &&
@@ -351,6 +402,14 @@ export class ProviderSettings {
       'dns_conflict',
       '该主机名已有冲突 DNS 记录，请使用空闲子域名或先在 Cloudflare 处理原记录。',
     );
+    // Persist only a reference for the FK; environment tokens stay exclusively in Worker secrets.
+    if (row.accountId)
+      await this.db
+        .prepare(
+          "INSERT OR IGNORE INTO provider_accounts(id,kind,scope,label,secret,mail_from,is_default,created_at) VALUES(?,'cloudflare','environment',?,'',NULL,0,?)",
+        )
+        .bind(row.id, '网站已配置的 Cloudflare 账号', new Date().toISOString())
+        .run();
     if (!existing)
       await this.db
         .prepare(
@@ -406,8 +465,8 @@ export class ProviderSettings {
   async unbind(project: Project, hostname: string) {
     const binding = await this.binding(project.id, hostname),
       pages = this.pages(project),
-      row = await this.row(binding.credential_id, project.id),
-      token = await this.token(row);
+      credential = await this.cloudflareCredential(binding.credential_id, project.id),
+      token = credential.token;
     const domains = (await this.cf(pages.token, pages.path)).result as any[];
     if (domains.some((d) => d.name === hostname))
       await this.cf(pages.token, pages.path + '/' + enc(hostname), 'DELETE');

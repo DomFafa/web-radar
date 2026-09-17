@@ -23,6 +23,7 @@ export interface DomainBinding {
 }
 export interface SiteConnections {
   accounts: ProviderAccount[];
+  defaultCloudflareAccountId: string | null;
   domains: DomainBinding[];
   resendAccountId: string | null;
   environmentEmail: boolean;
