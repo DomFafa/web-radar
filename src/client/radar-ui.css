@@ -1901,6 +1901,34 @@ textarea::placeholder {
   min-width: 0;
   padding: 24px 0 48px;
 }
+.template-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 24px;
+}
+.template-category-filters button {
+  padding: 8px 18px;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.template-category-filters button:hover {
+  border-color: var(--forest);
+}
+.template-category-filters button[aria-pressed='true'] {
+  background: var(--lime);
+  color: #4338ca;
+  border-color: var(--forest);
+}
+.template-category-filters button:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
 .template-step-header {
   display: flex;
   justify-content: space-between;

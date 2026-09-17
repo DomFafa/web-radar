@@ -317,24 +317,12 @@ export function TemplateSelector({
       )}
 
       {/* 分类筛选 Tab 栏 */}
-      <div style={{ display: 'flex', gap: '10px', margin: '20px 0 24px', flexWrap: 'wrap' }}>
+      <div className="template-category-filters" role="group" aria-label="模板分类">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
             type="button"
-            className={`filter-pill ${selectedCategory === cat.id ? 'active' : ''}`}
-            style={{
-              padding: '8px 18px',
-              borderRadius: '9999px',
-              border:
-                selectedCategory === cat.id ? '1px solid var(--accent)' : '1px solid var(--border)',
-              background: selectedCategory === cat.id ? 'var(--accent)' : 'var(--panel)',
-              color: selectedCategory === cat.id ? '#ffffff' : 'var(--text)',
-              fontWeight: 600,
-              fontSize: '0.88rem',
-              cursor: 'pointer',
-              transition: 'all .2s',
-            }}
+            aria-pressed={selectedCategory === cat.id}
             onClick={() => setSelectedCategory(cat.id)}
           >
             {cat.label}
