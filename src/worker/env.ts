@@ -1,5 +1,6 @@
 import type { Principal } from '../shared/model';
 export interface Secrets {
+  TEMPLATE_GUIDES_API_KEY?: string; // Read-only internal template specifications; not a project/session credential.
   PRODUCT_RADAR_BASE_URL?: string;
   PRODUCT_RADAR_INTEGRATION_SECRET?: string;
   PRODUCT_RADAR_PARENT_ORIGINS?: string;

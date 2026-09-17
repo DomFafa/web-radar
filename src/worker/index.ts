@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import type { HonoEnv } from './env';
 import { testMode } from './env';
 import { createAuthApp, authenticate } from './auth';
+import { createTemplateGuidesApp } from './template-guides/api';
 import { createIntegrationApp } from './integration';
 import { ApiError, errorResponse } from './http';
 import { integrationConfig, parentOrigins, isLoopback } from './product-radar';
@@ -71,6 +72,7 @@ app.get('/api/config', async (c) => {
   });
 });
 app.route('/api/auth', createAuthApp());
+app.route('/api/internal/template-guides', createTemplateGuidesApp());
 app.route('/api/integrations/product-radar', createIntegrationApp());
 app.route('/public/sites', createPublicApp());
 app.all('/public/*', async (c) => {

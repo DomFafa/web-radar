@@ -40,3 +40,7 @@ POST /api/public/sites/:id/inquiries {requestId,name,email,company,message,produ
 
 ## Shared provider interface (media implementer owns)
 `createProviders(env)` returns object described in `src/worker/provider-contract.ts` (root creates). Jobs are durable in coordinator; adapters perform a single external operation. File assets are R2 keys; providers return bytes/streams only to be saved by coordinator before success. Publish adapter uploads trusted generated artifacts, activates only after provider success; alias gateway must check live state on every request.
+
+## Internal AI template guides
+
+`GET /api/internal/template-guides` and `GET /api/internal/template-guides/:templateId` return ten versioned, server-only generation specifications. Requires a dedicated read-only `TEMPLATE_GUIDES_API_KEY` Bearer token or a platform-admin session; ordinary users/workspace admins are denied. JSON/Markdown documents, input requirements, image/video/copy bindings and output schema are documented in [template-guides-api.md](template-guides-api.md). This credential has no project, model, upload or publishing rights.
