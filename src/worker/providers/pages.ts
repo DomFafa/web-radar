@@ -121,7 +121,7 @@ const digest = async (value: string) =>
 export const pagesProjectName = async (projectId: string): Promise<string> =>
   `wr-${await digest(projectId)}`;
 
-function hostingAccounts(env: Secrets): { accountId: string; apiToken: string }[] {
+export function hostingAccounts(env: Secrets): { accountId: string; apiToken: string }[] {
   let value: unknown;
   if (env.CLOUDFLARE_HOSTING_ACCOUNTS?.trim()) {
     try {

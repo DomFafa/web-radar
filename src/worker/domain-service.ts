@@ -1,3 +1,4 @@
+import { ProviderSettings, withStoredEmailStatus } from './provider-settings';
 import { backupManifest } from './backup-manifest';
 import { listProjectSummaries } from './project-queries';
 import { hasCloneOutput, preserveCloneOutput } from '../shared/clone-output';
@@ -252,6 +253,19 @@ export class DomainService {
       );
       return json(await prService(this.env, principal, 'products', { offset, limit }));
     }
+    if (path[1] === 'admin' && path[2] === 'provider-accounts') {
+      requireCondition(principal.systemRole === 'super_admin', 403, 'admin_required', '仅平台管理员可以管理共享账号。');
+      const settings = new ProviderSettings(this.env);
+      if (method === 'GET' && !path[3]) return json({ accounts: await settings.list(), environmentEmail: !!(this.env.RESEND_API_KEY && this.env.MAIL_FROM) });
+      if (method === 'POST' && !path[3]) return json({ account: await settings.add(await this.body(request), 'global') });
+      if (method === 'PUT' && path[3] === 'default') {
+        const b = await this.body(request);
+        requireCondition(b.id === null || typeof b.id === 'string', 400, 'invalid_account', '账号无效。');
+        await settings.setDefault(b.id as string | null); return json({ok:true});
+      }
+      if (method === 'DELETE' && path[3]) { await settings.remove(path[3], 'global'); return json({ok:true}); }
+      throw new DomainError(404, 'not_found', '接口不存在。');
+    }
     if (path[1] === 'admin') return this.admin(request, principal, path.slice(2));
     if (path[1] !== 'projects') throw new DomainError(404, 'not_found', '接口不存在。');
     if (path.length === 2) {
@@ -274,6 +288,18 @@ export class DomainService {
     }
     const project = await this.project(path[2] ?? '', principal),
       command = path[3];
+    if (command === 'connections') {
+      const settings = new ProviderSettings(this.env);
+      if (method === 'GET' && !path[4]) return json(await settings.settings(project));
+      if (method === 'POST' && path[4] === 'accounts') return json({ account: await settings.add(await this.body(request), project.id) });
+      if (method === 'DELETE' && path[4] === 'accounts' && path[5]) { await settings.remove(path[5], project.id); return json({ok:true}); }
+      if (method === 'GET' && path[4] === 'zones' && path[5]) return json({ zones: await settings.zones(path[5], project.id) });
+      if (method === 'PUT' && path[4] === 'email') { await settings.selectEmail(project.id, (await this.body(request)).accountId); return json({ok:true}); }
+      if (method === 'POST' && path[4] === 'domains' && !path[5]) return json(await settings.bind(project, await this.body(request)));
+      if (method === 'POST' && path[4] === 'domains' && path[5] && path[6] === 'refresh') return json(await settings.refresh(project, path[5]));
+      if (method === 'DELETE' && path[4] === 'domains' && path[5]) { await settings.unbind(project,path[5]); return json({ok:true}); }
+      throw new DomainError(404, 'not_found', '接口不存在。');
+    }
     if (!command && method === 'GET') return json(await this.detail(project, principal));
     if (command === 'history' && method === 'GET') return json(await this.history(project, url));
     if (!command && method === 'DELETE') {
@@ -700,7 +726,13 @@ export class DomainService {
   private async deleteProject(id: string, principal: Principal): Promise<void> {
     const p = await this.store.one<Project>('projects', id);
     requireCondition(p && canManage(p, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
-    await this.store.batch(this.store.deleteProjectStatements(id));
+    const domains = await this.env.DB.prepare('SELECT count(*) AS n FROM project_domains WHERE project_id=?').bind(id).first<{n:number}>();
+    requireCondition(!domains?.n, 409, 'domains_bound', '请先解除该网站的自定义域名，再删除网站。');
+    await this.store.batch([
+      this.env.DB.prepare('DELETE FROM project_delivery_settings WHERE project_id=?').bind(id),
+      ...this.store.deleteProjectStatements(id),
+      this.env.DB.prepare('DELETE FROM provider_accounts WHERE scope=?').bind(id),
+    ]);
     if (this.env.MEDIA) {
       try {
         const listed = await this.env.MEDIA.list({ prefix: `projects/${id}/` });
@@ -1936,7 +1968,7 @@ export class DomainService {
       kind: 'email',
       status: 'queued',
       requestId: rid,
-      input: { inquiryId: inquiry.id, recipient: release.draft.company.email },
+      input: { inquiryId: inquiry.id, recipient: release.draft.company.email, resendAccountId: await new ProviderSettings(this.env).emailAccount(projectId) },
       inputVersion: release.draftVersion,
       createdAt: now(),
       updatedAt: now(),
@@ -1991,7 +2023,7 @@ export class DomainService {
     if (!path.length && request.method === 'GET')
       return json({
         quotas: await this.store.quotas(),
-        services: this.providers.status(),
+        services: await withStoredEmailStatus(this.env, this.providers.status()),
         jobs: (await this.store.list<Job>('jobs', '', [], 'created_at DESC', 100)).map(job => this.publicHistoryJob(job)),
       });
     if (path[0] === 'metrics' && request.method === 'GET') {
@@ -2782,7 +2814,9 @@ export class DomainService {
         '邮件重试已超过幂等保护时效，必须先核对原发送结果。',
         true,
       );
-    await this.providers.email(inquiry, input.recipient!, `wr-inquiry-${inquiry.id}`);
+    const mailAccount = typeof job.input.resendAccountId === 'string' ? job.input.resendAccountId : 'environment';
+    if (mailAccount === 'environment') await this.providers.email(inquiry, input.recipient!, `wr-inquiry-${inquiry.id}`);
+    else await new ProviderSettings(this.env).email(mailAccount, inquiry, input.recipient!, `wr-inquiry-${inquiry.id}`);
     await this.lock(async () => {
       inquiry.emailStatus = 'sent';
       inquiry.emailAttempts = job.attempts;

@@ -1,3 +1,4 @@
+import { ProviderAccounts } from './ProviderAccounts';
 import { useEffect, useState } from 'react';
 import type { Job, Quota, ServiceStatus } from '../shared/model';
 import { api, errorMessage, post, put } from './api';
@@ -103,6 +104,7 @@ export function Admin() {
       </div>
       {error && <Notice tone="error">{error}</Notice>}
       {notice && <Notice tone="success">{notice}</Notice>}
+      <ProviderAccounts />
       {metrics && (
         <section className="panel">
           <SectionTitle

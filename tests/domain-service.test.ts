@@ -64,6 +64,7 @@ function database() {
   db.exec(readFileSync('migrations/0003_source_reviews.sql', 'utf8'));
   db.exec(readFileSync('migrations/0004_unlimited_quota.sql', 'utf8'));
   db.exec(readFileSync('migrations/0005_project_summary_indexes.sql', 'utf8'));
+  db.exec(readFileSync('migrations/0006_provider_accounts.sql', 'utf8'));
   class Statement {
     values: unknown[] = [];
     constructor(readonly sql: string) {}
@@ -2396,4 +2397,25 @@ it('exposes bounded operational aggregates only to platform administrators', asy
   expect((await request('/api/admin/metrics')).status).toBe(403);
   const metrics=await request('/api/admin/metrics',undefined,platform);
   expect(metrics.status).toBe(200);expect(metrics.data.jobs).toEqual([]);expect(metrics.data.attempts).toEqual([]);
+});
+
+it('freezes the selected Resend account when an inquiry is queued, across default changes and retries', async () => {
+  env.ASSET_SIGNING_KEY = 'test-only-credential-encryption-key';
+  const { ProviderSettings } = await import('../src/worker/provider-settings');
+  const settings = new ProviderSettings(env);
+  const first = await settings.add({kind:'resend',label:'First',apiKey:'re_first_mock_key',mailFrom:'first@example.com'},'global');
+  const second = await settings.add({kind:'resend',label:'Second',apiKey:'re_second_mock_key',mailFrom:'second@example.com'},'global');
+  await settings.setDefault(first.id);
+  const p = await publishNow(await publishable());
+  const result = await request(`/api/public/sites/${p.id}/inquiries`, {requestId:'pinned-mail-account',name:'Buyer',email:'buyer@example.net',company:'',message:'Hello'});
+  expect(result.status).toBe(200);
+  await settings.setDefault(second.id);
+  await settings.selectEmail(p.id,second.id);
+  const send = vi.spyOn(settings.constructor.prototype,'email').mockResolvedValue({id:'mock-sent',testMode:false});
+  try {
+    await service.tick();
+    expect(send).toHaveBeenCalledWith(first.id,expect.objectContaining({id:result.data.id}),'sales@example.com',expect.any(String));
+    const job=(await get(p)).jobs.find((j:Job)=>j.kind==='email');
+    expect(job.input.resendAccountId).toBe(first.id);
+  } finally {send.mockRestore();}
 });

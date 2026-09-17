@@ -12,11 +12,15 @@ let calls = 0,
   worker,
   browser;
 const timers = new Set();
+const connectionDomains = [], connectionRecords = [];
 try {
   worker = await unstable_startWorker({
     config: 'wrangler.jsonc',
     env: 'test',
     bindings: {
+      CONNECTIONS_TEST_NETWORK: { type: 'plain_text', value: 'mock' },
+      ASSET_SIGNING_KEY: { type: 'secret_text', value: 'isolated-credential-encryption-key' },
+      CLOUDFLARE_HOSTING_ACCOUNTS: { type: 'secret_text', value: JSON.stringify([{accountId:'LOCAL_TEST',apiToken:'isolated-pages-token'}]) },
       OPENAI_API_KEY: { type: 'secret_text', value: 'isolated-test-key' },
       SITE_BUILDER_URL: { type: 'plain_text', value: 'https://renderer.test' },
       SITE_BUILDER_KEY: { type: 'secret_text', value: 'isolated-render-key' },
@@ -30,6 +34,18 @@ try {
       watch: false,
       logLevel: 'error',
       outboundService: async (request) => {
+        if (new URL(request.url).hostname === 'api.cloudflare.com') {
+          const u=new URL(request.url), method=request.method;
+          const body=method==='POST'?await request.json():null;
+          let result=[];
+          if(u.pathname.endsWith('/zones'))return Response.json({success:true,result:[{id:'zone-test',name:'example.test',status:'active',account:{id:'LOCAL_TEST',name:'Test account'}}],result_info:{total_pages:1}});
+          if(u.pathname.endsWith('/dns_records')){if(method==='POST'){result={...body,id:'record-test'};connectionRecords.push(result);}else result=connectionRecords;}
+          else if(u.pathname.endsWith('/dns_records/record-test')){connectionRecords.length=0;result={id:'record-test'};}
+          else if(u.pathname.endsWith('/domains')){if(method==='POST'){result={...body,status:'pending'};connectionDomains.push(result);}else result=connectionDomains;}
+          else if(u.pathname.includes('/domains/')){if(method==='DELETE')connectionDomains.length=0;result={status:'active'};}
+          else throw Error('Unexpected Cloudflare fixture path');
+          return Response.json({success:true,result});
+        }
         // No external model requests. Exercise the actual worker + streaming parser against this isolated fixture.
         if (new URL(request.url).hostname === 'renderer.test') {
           assert.equal(new URL(request.url).pathname,'/v1/clone-quality');
@@ -188,6 +204,52 @@ try {
   const afterPreview = statusRequests;
   await new Promise(resolve => setTimeout(resolve, 6000));
   assert.equal(statusRequests, afterPreview, 'preview-only completion must stop polling');
+  // Real browser + worker checks for encrypted shared credentials and per-site connections.
+  const adminContext=await browser.newContext({viewport:{width:1440,height:1100}});
+  assert.equal((await adminContext.request.post(origin+'/api/auth/test-login',{data:{identity:'platform'}})).status(),200);
+  const adminPage=await adminContext.newPage();
+  await adminPage.goto(origin+'/?view=admin');
+  await adminPage.getByText('添加 Cloudflare / Resend 账号',{exact:true}).click();
+  const accountForm=adminPage.locator('.provider-account-form');
+  await accountForm.getByLabel('服务',{exact:true}).selectOption('resend');
+  await accountForm.getByLabel('账号名称').fill('Browser Resend '+project.id);
+  await accountForm.getByLabel('Resend API Key').fill('re_isolated_fixture_never_sent');
+  await accountForm.getByLabel('已验证的发信地址').fill('Site <hello@example.test>');
+  await accountForm.getByRole('button',{name:'保存账号',exact:true}).click();
+  const mailRow=adminPage.locator('.provider-account-row').filter({hasText:'Browser Resend '+project.id});
+  await mailRow.getByRole('button',{name:'设为默认',exact:true}).click();
+  await mailRow.getByText(/默认发信账号/).waitFor();
+  await page.goto(origin+'/?project='+project.id+'&tab=publish');
+  const connections=page.locator('section.panel').filter({has:page.getByRole('heading',{name:'域名绑定与询盘邮件',exact:true})});
+  const settingsRoot=origin+'/api/projects/'+project.id+'/connections';
+  const saved=(await (await context.request.get(settingsRoot)).json()).accounts.find(a=>a.label==='Browser Resend '+project.id);
+  assert.ok(saved&&!('secret' in saved)&&!('apiKey' in saved));
+  await connections.getByLabel('询盘发信账号').selectOption(saved.id);
+  await connections.getByText('网站发信账号已保存，仅影响新询盘。',{exact:true}).waitFor();
+  await page.reload();
+  assert.equal(await connections.getByLabel('询盘发信账号').inputValue(),saved.id);
+  await connections.getByText('使用新的 Cloudflare API Token',{exact:true}).click();
+  await connections.getByLabel('账号名称').fill('Browser DNS');
+  await connections.getByLabel('Cloudflare API Token',{exact:true}).fill('isolated-dns-token');
+  await connections.getByRole('button',{name:'保存账号',exact:true}).click();
+  await connections.getByLabel('域名',{exact:true}).selectOption('zone-test');
+  await connections.getByLabel('主机名',{exact:true}).fill('site-'+project.id.slice(0,8));
+  await connections.getByRole('button',{name:'绑定域名',exact:true}).click();
+  await connections.getByText('已生效',{exact:true}).waitFor();
+  await page.reload();
+  await connections.getByText('已生效',{exact:true}).waitFor();
+  await connections.screenshot({path:'artifacts/task-review/site-connections-desktop.png'});
+  await page.setViewportSize({width:390,height:1100});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await connections.screenshot({path:'artifacts/task-review/site-connections-mobile.png'});
+  page.once('dialog',dialog=>dialog.accept());
+  await connections.getByRole('button',{name:'解绑',exact:true}).click();
+  await connections.getByText('域名已解绑；仅清理本应用创建且未被修改的 DNS 记录。',{exact:true}).waitFor();
+  assert.equal(connectionDomains.length,0);assert.equal(connectionRecords.length,0);
+  await connections.getByLabel('询盘发信账号').selectOption('');
+  await connections.getByText('网站发信账号已保存，仅影响新询盘。',{exact:true}).waitFor();
+  assert.equal((await adminContext.request.delete(origin+'/api/admin/provider-accounts/'+saved.id)).status(),200);
+  await adminContext.close();
   assert.deepEqual(errors, []);
   console.log(
     'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded.',

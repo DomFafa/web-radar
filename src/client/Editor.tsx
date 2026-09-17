@@ -1,3 +1,4 @@
+import { WebsiteConnections } from './ProviderAccounts';
 import { ProjectHistory } from './ProjectHistory';
 import { UploadProgress, type UploadState } from './UploadProgress';
 import { hasCloneOutput } from '../shared/clone-output';
@@ -1610,6 +1611,7 @@ export function Editor({
                   恢复历史版本会保留当前草稿、账号额度和询盘。下线后网址暂不可用，并停止接收新询盘。
                 </small>
               </section>
+              <WebsiteConnections projectId={projectId} published={!!project.publishedReleaseId} />
               <section className="panel">
                 <SectionTitle title="发布记录" actions={<Button onClick={() => setHistoryOpen(true)}>查看全部历史</Button>} />
                 {detail.releases.length === 0 ? (

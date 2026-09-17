@@ -5461,3 +5461,18 @@ td > .pill {
 .upload-progress p { margin: 0; }
 .upload-progress button { justify-self: start; }
 .project-pagination { display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 24px; }
+
+.provider-account-form { display: grid; gap: 16px; padding-top: 18px; }
+.provider-accounts-list { margin: 18px 0; }
+.provider-account-row { display: flex; gap: 16px; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #e2e8f0; }
+.provider-account-row p { margin: 6px 0; overflow-wrap: anywhere; }
+.provider-account-row .button-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.connections-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 20px; }
+.panel details { margin-top: 20px; }
+.panel summary { cursor: pointer; font-weight: 600; }
+@media (max-width: 760px) { .connections-grid { grid-template-columns: 1fr; } .provider-account-row { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) {
+  .panel .section-title { flex-wrap: wrap; }
+  .panel .section-title > div { min-width: 0; max-width: 100%; }
+  .panel .section-title .title-actions { flex-wrap: wrap; }
+}

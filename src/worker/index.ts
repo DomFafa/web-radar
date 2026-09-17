@@ -1,3 +1,4 @@
+import { withStoredEmailStatus } from './provider-settings';
 import { Hono } from 'hono';
 import type { HonoEnv } from './env';
 import { testMode } from './env';
@@ -43,7 +44,7 @@ app.use('*', async (c, next) => {
 app.get('/api/health', (c) =>
   c.json({ ok: true, service: 'web-radar', testMode: testMode(c.env) }),
 );
-app.get('/api/config', (c) => {
+app.get('/api/config', async (c) => {
   let configured = false,
     origins: string[] = [];
   try {
@@ -63,7 +64,7 @@ app.get('/api/config', (c) => {
         mode: testMode(c.env) ? 'test' : configured ? 'live' : 'unconfigured',
         detail: configured ? '账号衔接已配置，实际连通性待登录核验。' : '账号衔接尚未配置。',
       },
-      ...createProviders(c.env).status(),
+      ...(await withStoredEmailStatus(c.env, createProviders(c.env).status())),
     ],
   });
 });

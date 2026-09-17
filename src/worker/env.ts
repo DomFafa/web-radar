@@ -6,6 +6,7 @@ export interface Secrets {
   APP_ORIGIN?: string;
   ENVIRONMENT?: string;
   TEST_PROVIDERS?: string;
+  CONNECTIONS_TEST_NETWORK?: string; // Only enabled by the isolated browser harness with mocked outbound fetch.
   CLONE_TEST_FIXTURE?: string;
   TEXT_API_BASE_URL?: string;
   TEXT_API_KEY?: string;
