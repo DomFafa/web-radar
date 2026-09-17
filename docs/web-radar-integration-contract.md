@@ -25,7 +25,7 @@ interface ProductSnapshot {
   seriesName: string; designDirection: string;
   conditions: Record<string, unknown>; // keep reference/change instructions and provenance
   image: { sourceProductId: string; contentType: string | null };
-  factsOrigin: 'generated-concept';
+  factsOrigin: 'generated-concept' | 'product-set';
 }
 ```
 

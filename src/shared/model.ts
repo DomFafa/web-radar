@@ -8,6 +8,7 @@ export interface Principal {
   workspaceRole: 'admin' | 'member';
   workspaceName: string;
 }
+export const productFactsOrigins = ['generated-concept', 'product-set'] as const;
 export interface ProductSnapshot {
   source: 'product-radar';
   id: string;
@@ -22,7 +23,7 @@ export interface ProductSnapshot {
   designDirection: string;
   conditions: Record<string, unknown>;
   image: { sourceProductId: string; contentType: string | null };
-  factsOrigin: 'generated-concept';
+  factsOrigin: (typeof productFactsOrigins)[number];
 }
 export type Language = 'en' | 'de' | 'fr' | 'es' | 'pt' | 'it';
 export type TemplateId =

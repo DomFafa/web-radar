@@ -1759,7 +1759,7 @@ export function Editor({
                     <p>{p.description}</p>
                     <small>
                       {p.material} {p.dimensions} ·{' '}
-                      {p.factsOrigin === 'generated-concept' ? '生成概念，请核实产品事实' : ''}
+                      {p.factsOrigin === 'product-set' ? '产品套图，请核实产品事实' : '生成概念，请核实产品事实'}
                     </small>
                   </div>
                   <span className="pill muted">

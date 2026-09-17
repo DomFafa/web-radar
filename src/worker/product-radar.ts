@@ -1,3 +1,4 @@
+import { productFactsOrigins } from '../shared/model';
 import { z } from 'zod';
 import type { Principal, ProductSnapshot } from '../shared/model';
 import type { AppEnv } from './env';
@@ -30,7 +31,7 @@ export const snapshotSchema = z.object({
     sourceProductId: z.string().min(1).max(200),
     contentType: z.string().nullable(),
   }),
-  factsOrigin: z.literal('generated-concept'),
+  factsOrigin: z.enum(productFactsOrigins),
 });
 export function isLoopback(host: string): boolean {
   return ['localhost', '127.0.0.1', '[::1]'].includes(host);

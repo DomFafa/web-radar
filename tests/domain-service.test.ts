@@ -13,7 +13,7 @@ import {
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Principal, Job, Project } from '../src/shared/model';
 
-const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403 }));
+const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'generated-concept' }));
 vi.mock('../src/worker/product-radar', () => ({
   prService: async (_e: unknown, p: Principal, path: string, body: { productIds?: string[] }) =>
     path === 'context'
@@ -37,7 +37,7 @@ vi.mock('../src/worker/product-radar', () => ({
             designDirection: '',
             conditions: { keep: ['shape'] },
             image: { sourceProductId: id, contentType: 'image/png' },
-            factsOrigin: 'generated-concept',
+            factsOrigin: sourceState.factsOrigin,
           })),
           total: body.productIds?.length ?? 0,
         },
@@ -324,6 +324,7 @@ async function videoReady() {
 
 beforeEach(() => {
   sourceState.version = 'v1';
+  sourceState.factsOrigin = 'generated-concept';
   sourceState.revoked = false;
   sourceState.failureStatus = 403;
   bucket = mediaBucket();
@@ -2478,4 +2479,21 @@ it('accepts scoped background video but rejects foreign videos and conflicting i
   expect((await save({...project.draft,banners:[{...base,videoAssetId:image.id}]})).status).toBe(400);
   expect((await save({...project.draft,banners:[base],company:{...project.draft.company,logoAssetId:video.id}})).status).toBe(400);
   expect((await save({...project.draft,banners:[base]})).status).toBe(200);
+});
+
+it('saves imported product-set projects without dropping source facts or media',async()=>{
+ sourceState.factsOrigin='product-set';
+ const p=await create();
+ const imported=await request(`/api/projects/${p.id}/import`,{expectedVersion:p.version,productIds:['set-1','set-2','set-3','set-4','set-5']});
+ expect(imported.status).toBe(200);
+ const original=imported.data.project;
+ const draft=structuredClone(original.draft);draft.company.name='Updated brand';
+ const saved=await request(`/api/projects/${p.id}`,{expectedVersion:original.version,draft},owner,'PUT');
+ expect(saved.status).toBe(200);
+ expect(saved.data.project.draft.products).toEqual(original.draft.products);
+ expect(saved.data.project.draft.products.every((p:any)=>p.source.factsOrigin==='product-set'&&p.imageAssetId)).toBe(true);
+ const tampered=structuredClone(saved.data.project.draft);tampered.products[0].source.factsOrigin='generated-concept';
+ const edited=await request(`/api/projects/${p.id}`,{expectedVersion:saved.data.project.version,draft:tampered},owner,'PUT');
+ expect(edited.status).toBe(200);expect(edited.data.project.draft.products[0].source.factsOrigin).toBe('product-set');
+ expect((await get(p)).project.draft.company.name).toBe('Updated brand');
 });

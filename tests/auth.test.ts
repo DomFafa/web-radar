@@ -370,3 +370,12 @@ describe('persistent rolling sessions', () => {
     expect((await app.request('https://wr.example.test/me', { headers: { Cookie } }, env)).status).toBe(401);
   });
 });
+
+it('accepts product-set snapshots from the authenticated upstream and rejects unknown provenance',async()=>{
+ const product={...testProduct(),factsOrigin:'product-set'};
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({products:[product],total:1})));
+ const result=await prService<{products:typeof product[]}>(env,p,'products',{productIds:[product.id]});
+ expect(result.products[0].factsOrigin).toBe('product-set');
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({products:[{...product,factsOrigin:'unknown-source'}],total:1})));
+ await expect(prService(env,p,'products',{productIds:[product.id]})).rejects.toMatchObject({code:'invalid_products'});
+});

@@ -1,3 +1,4 @@
+import { productFactsOrigins } from '../shared/model';
 import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
@@ -47,7 +48,7 @@ const source = z.object({
   designDirection: text,
   conditions: z.record(z.string(), z.unknown()),
   image: z.object({ sourceProductId: id, contentType: z.string().nullable() }),
-  factsOrigin: z.literal('generated-concept'),
+  factsOrigin: z.enum(productFactsOrigins),
 });
 export const snapshotSchema = source;
 const draftSchema = z.object({
@@ -243,7 +244,25 @@ export function defaultDraft(): Draft {
 }
 export function validateDraft(input: unknown): Draft {
   const result = draftSchema.safeParse(input);
-  requireCondition(result.success, 400, 'invalid_draft', '项目资料格式无效或超出长度限制。');
+  if (!result.success) {
+    const labels: Record<string, string> = {
+      name: '名称', email: '联系邮箱', contactName: '联系人', description: '介绍',
+      instructions: '品牌定制与微调指令', targetUrl: '参考网址', factsOrigin: '产品来源类型',
+      phone: '联系电话', whatsapp: 'WhatsApp', address: '地址', slogan: '品牌介绍',
+      material: '材质', dimensions: '尺寸', title: '标题', alt: '图片说明',
+      products: '产品列表', languages: '网站语言', banners: 'Banner 配置',
+    };
+    const details = result.error.issues.slice(0, 3).map(issue => {
+      const field = labels[String(issue.path.at(-1))] || '资料字段';
+      const prefix = issue.path[0] === 'products' && typeof issue.path[1] === 'number'
+        ? `第 ${issue.path[1] + 1} 个产品的` : '';
+      const reason = issue.code === 'too_big'
+        ? `最多允许 ${issue.maximum} ${issue.origin === 'string' ? '个字符' : issue.origin === 'array' ? '项' : ''}`
+        : '格式不正确或缺少必要信息';
+      return `${prefix}${field}${reason}`;
+    });
+    throw new DomainError(400, 'invalid_draft', `无法保存：${details.join('；')}。`);
+  }
   const d = result.data;
   if (d.banners !== undefined) d.banners = pageBanners(d);
   requireCondition(
