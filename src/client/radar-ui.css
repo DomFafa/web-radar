@@ -1897,8 +1897,8 @@ textarea::placeholder {
 }
 
 .template-selector-container {
-  max-width: 1080px;
-  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
   padding: 24px 0 48px;
 }
 .template-step-header {
