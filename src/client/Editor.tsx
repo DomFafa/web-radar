@@ -1163,9 +1163,9 @@ export function Editor({
                   <div className="panel-title">
                     <span className="section-index">E</span>
                     <h3>建站流程模式</h3>
-                    <span>可根据交付时间要求或个性化需要自由选择</span>
+                    <span>选择模板，填写资料后预览并发布</span>
                   </div>
-                  <div className="branch-grid">
+                  <div className="branch-grid" style={{ gridTemplateColumns: '1fr' }}>
                     <div
                       className={`branch-card ${draft.buildBranch !== 'custom' ? 'active' : ''}`}
                       onClick={() => patch({ buildBranch: 'template' })}
@@ -1184,27 +1184,6 @@ export function Editor({
                       </p>
                       <div className="branch-steps-preview">
                         <span>01 资料与产品</span> → <span>02 选择模版</span> → <span>03 预览与发布</span>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`branch-card ${draft.buildBranch === 'custom' ? 'active' : ''}`}
-                      onClick={() => patch({ buildBranch: 'custom' })}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="branch-card-header">
-                        <span className="branch-title">
-                          <Icon name="spark" size={16} />
-                          AI 智能深度定制
-                        </span>
-                        <span className="branch-badge">高阶 · 共 5 步</span>
-                      </div>
-                      <p className="branch-desc">
-                        通过 AI 交互问答深挖品牌定位，由大模型生成量身定制的网站策划案与页面设计图，再由代码模型组装。适合追求独特创意的用户。
-                      </p>
-                      <div className="branch-steps-preview">
-                        <span>01 资料</span> → <span>02 沟通</span> → <span>03 方案</span> → <span>04 设计稿</span> → <span>05 发布</span>
                       </div>
                     </div>
                   </div>
@@ -1249,10 +1228,6 @@ export function Editor({
               onUpdateDraft={(patchObj) => patch(patchObj)}
               onProceedToPublish={() => void goTo('publish')}
               onBackToBasics={() => void goTo('basics')}
-              onSwitchToCustom={() => {
-                patch({ buildBranch: 'custom' });
-                void goTo('consultation');
-              }}
               onSwitchToClone={() => {
                 patch({ buildBranch: 'clone' });
                 void goTo('clone-generate');

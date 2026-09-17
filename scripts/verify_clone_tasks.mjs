@@ -357,7 +357,7 @@ try {
   }
   await videoPage.close();
   await page.getByLabel('预览页面',{exact:true}).selectOption('about');
-  await mediaFrame.locator('[data-wr-banner-image]').first().waitFor();
+  await mediaFrame.locator('[data-wr-slide]').nth(2).waitFor();
   assert.equal(await mediaFrame.locator('[data-wr-slide]').count(),3);
   await page.mouse.move(0,0);
   await mediaFrame.locator('[data-wr-banner-status]').filter({hasText:'2 / 3'}).waitFor({timeout:8000});
@@ -442,11 +442,34 @@ try {
   await connections.getByText('网站发信账号已保存，仅影响新询盘。',{exact:true}).waitFor();
   assert.equal((await adminContext.request.delete(origin+'/api/admin/provider-accounts/'+saved.id)).status(),200);
   await adminContext.close();
+  // Template media instructions cover every visible preset, with no new custom-AI entry.
+  const templateResponse=await context.request.post(origin+'/api/projects',{data:{name:'Template media checklist',requestId:crypto.randomUUID(),buildBranch:'template'}});
+  const templateProject=(await templateResponse.json()).project;
+  await page.setViewportSize({width:1440,height:1100});
+  await page.goto(origin+'/?project='+templateProject.id+'&tab=basics');
+  await page.getByLabel('公司 / 品牌名称',{exact:true}).waitFor();
+  assert.equal(await page.getByText('AI 智能深度定制',{exact:true}).count(),0);
+  await page.goto(origin+'/?project='+templateProject.id+'&tab=template');
+  await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'Senseng 经典工贸',exact:true})}).click();
+  await page.locator('.template-media-guide').waitFor();
+  assert.equal(await page.locator('.template-media-card').count(),10);
+  assert.equal(await page.getByRole('button',{name:/切换为 AI/}).count(),0);
+  await page.locator('.template-media-guide summary').click();
+  assert.ok((await page.locator('.template-slot-sizes').innerText()).includes('1536 × 1024'));
+  await page.locator('.template-media-guide').screenshot({path:'artifacts/task-review/template-media-desktop.png'});
+  await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'SaaS 智能自动化',exact:true})}).click();
+  await page.getByRole('heading',{name:'SaaS 智能自动化 · 素材准备清单',exact:true}).waitFor();
+  assert.ok((await page.locator('.template-media-guide').innerText()).includes('内置 1 段视频'));
+  await page.setViewportSize({width:390,height:1100});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.locator('.template-media-guide').screenshot({path:'artifacts/task-review/template-media-mobile.png'});
+  await page.locator('.template-card').first().screenshot({path:'artifacts/task-review/template-media-card-mobile.png'});
   // Only a URL is entered; screenshots, pages and images are collected automatically.
   await page.goto(origin);
   await page.getByRole('button',{name:'创建网站',exact:true}).click();
   const createDialog=page.getByRole('dialog');
-  assert.equal(await createDialog.getByRole('radio').count(),3);
+  assert.equal(await createDialog.getByRole('radio').count(),2);
+  assert.equal(await createDialog.getByText('AI 定制建站',{exact:true}).count(),0);
   await createDialog.getByRole('radio',{name:/网址 \/ 设计稿建站/}).check();
   await createDialog.getByLabel('参考网址',{exact:true}).fill('https://reference.example.com/');
   await createDialog.screenshot({path:'artifacts/task-review/url-create.png'});
@@ -477,7 +500,7 @@ try {
   await page.screenshot({path:'artifacts/task-review/url-publication-check.png'});
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
+    'PASS: ten template media checklists match their layouts; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];

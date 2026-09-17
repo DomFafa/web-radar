@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Draft, TemplateId } from '../shared/model';
 import { Button, Icon } from './components';
+import { templateMediaRequirements } from '../shared/template-media';
 
 export interface TemplateDefinition {
   id: TemplateId;
@@ -166,7 +167,6 @@ export function TemplateSelector({
   onUpdateDraft,
   onProceedToPublish,
   onBackToBasics,
-  onSwitchToCustom,
   onSwitchToClone,
   onPreview,
 }: {
@@ -174,11 +174,12 @@ export function TemplateSelector({
   onUpdateDraft: (patch: Partial<Draft>) => void;
   onProceedToPublish: () => void;
   onBackToBasics: () => void;
-  onSwitchToCustom: () => void;
   onSwitchToClone?: () => void;
   onPreview: (template: TemplateDefinition) => void;
 }) {
   const currentTemplate = draft.template || 'senseng-clean';
+  const media = templateMediaRequirements[currentTemplate];
+  const selectedTemplate = TEMPLATES.find((template) => template.id === currentTemplate);
   const currentColor = draft.brandColor || '#089ced';
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -193,7 +194,8 @@ export function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 10 套精心设计的高保真行业模版（含经典工贸、动态全屏视频、SaaS、金融、咨询等）。选中后将自动灌注你的公司与产品数据。
+            共提供 10
+            套精心设计的高保真行业模版（含经典工贸、动态全屏视频、SaaS、金融、咨询等）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>
 
@@ -210,10 +212,6 @@ export function TemplateSelector({
               <span>🎯 切换为 设计稿还原</span>
             </Button>
           )}
-          <Button kind="quiet" onClick={onSwitchToCustom}>
-            <Icon name="spark" size={14} />
-            切换为 AI 智能定制 (5步)
-          </Button>
         </div>
       </div>
 
@@ -257,6 +255,67 @@ export function TemplateSelector({
         </div>
       )}
 
+      {media && (
+        <section className="template-media-guide" aria-label="当前模板素材清单">
+          <h3>{selectedTemplate?.name} · 素材准备清单</h3>
+          <p>
+            产品主图每款 1
+            张，已有产品图片会自动使用；同一图片可以复用到多个展示位置。以下为建议尺寸（宽 ×
+            高，单位 px），无需按展示位置重复上传。
+          </p>
+          <dl className="template-media-summary">
+            <div>
+              <dt>产品图片</dt>
+              <dd>
+                建议 {media.productCount} 张不同产品主图 · {media.productSize}
+              </dd>
+              <small>按实际产品数量准备，少于建议数量也可使用模板。</small>
+            </div>
+            <div>
+              <dt>首页 Banner（选填）</dt>
+              <dd>{media.bannerSize} · 1 张；轮播 2–12 张</dd>
+              <small>{media.bannerNote} 多图保持相同比例。</small>
+            </div>
+            <div>
+              <dt>视频背景（选填）</dt>
+              <dd>{media.videos ? `内置 ${media.videos} 段视频；无需额外上传` : '默认无需视频'}</dd>
+              <small>
+                自定义全屏背景：每组 1 段 MP4 / WebM，建议 1920 × 1080（16:9），另备 1
+                张同尺寸封面。超宽屏可用 2560 × 1440，边缘预留裁切空间。
+              </small>
+            </div>
+            <div>
+              <dt>品牌素材（选填）</dt>
+              <dd>Logo 1 张 · 建议 600 × 200；网站图标 1 张 · 建议 512 × 512</dd>
+              <small>图片支持 PNG / JPEG / WebP；透明 Logo 优先 PNG。网站图标也支持 ICO。</small>
+            </div>
+          </dl>
+          <details key={currentTemplate}>
+            <summary>
+              查看模板展示图的数量与原始尺寸（
+              {media.slots.reduce((sum, slot) => sum + slot.count, 0)} 处）
+            </summary>
+            <p>
+              这些位置由产品主图自动填充；没有产品图片时使用内置示例图。尺寸用于了解原设计比例，不是分别上传的入口。装饰图与背景已内置。
+            </p>
+            <ul className="template-slot-sizes">
+              {media.slots.map((slot) => (
+                <li key={`${slot.width}-${slot.height}`}>
+                  <strong>{slot.count} 处</strong>
+                  <span>
+                    {slot.width} × {slot.height} px
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
+          <p className="template-media-help">
+            产品图在「资料与产品」上传；替换首页或独立页面的背景、轮播及视频，在「页面 Banner /
+            视频」设置。背景上的文字与按钮由页面呈现，建议上传不带文字的素材。
+          </p>
+        </section>
+      )}
+
       {/* 分类筛选 Tab 栏 */}
       <div style={{ display: 'flex', gap: '10px', margin: '20px 0 24px', flexWrap: 'wrap' }}>
         {CATEGORIES.map((cat) => (
@@ -286,9 +345,10 @@ export function TemplateSelector({
       {/* 模版卡片选择区域 */}
       <div
         className="template-cards-grid"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))' }}
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))' }}
       >
         {filteredTemplates.map((tmpl) => {
+          const requirements = templateMediaRequirements[tmpl.id];
           const isSelected = currentTemplate === tmpl.id;
           return (
             <div
@@ -397,6 +457,23 @@ export function TemplateSelector({
                     </span>
                   ))}
                 </div>
+
+                {requirements && (
+                  <div className="template-media-card" aria-label={`${tmpl.name}素材要求`}>
+                    <strong>图片 / 视频准备</strong>
+                    <span>
+                      产品图：建议 {requirements.productCount} 张 · {requirements.productSize}
+                    </span>
+                    <span>Banner：选填 1 张 · {requirements.bannerSize}</span>
+                    <span>
+                      视频：
+                      {requirements.videos
+                        ? `已内置 ${requirements.videos} 段 · 可用 1920 × 1080 替换首页背景`
+                        : '默认 0 段；可自行添加全屏背景'}
+                    </span>
+                    <small>选中模板查看完整清单；产品图会自动复用。</small>
+                  </div>
+                )}
 
                 <ul className="template-feature-list">
                   {tmpl.features.map((feat) => (

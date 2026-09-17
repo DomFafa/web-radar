@@ -523,7 +523,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false),
-    [createMode, setCreateMode] = useState<'template' | 'clone' | 'custom'>('template'),
+    [createMode, setCreateMode] = useState<'template' | 'clone'>('template'),
     [name, setName] = useState(''),
     [creating, setCreating] = useState(false),
     [filter, setFilter] = useState('');
@@ -898,7 +898,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
             </p>
 
             <div className="create-mode-options" role="radiogroup" aria-label="建站方式">
-              {([['template','模板建站','选择现成风格，填入公司和产品资料。'],['clone','网址 / 设计稿建站','输入网址自动分析重建，或上传设计稿。'],['custom','AI 定制建站','确认需求、网站方案和设计稿后生成。']] as const).map(([id,title,description])=><label key={id} className={createMode===id?'selected':''}><input type="radio" name="create-mode" checked={createMode===id} onChange={()=>setCreateMode(id)}/><strong>{title}</strong><small>{description}</small></label>)}
+              {([['template','模板建站','选择现成风格，填入公司和产品资料。'],['clone','网址 / 设计稿建站','输入网址自动分析重建，或上传设计稿。']] as const).map(([id,title,description])=><label key={id} className={createMode===id?'selected':''}><input type="radio" name="create-mode" checked={createMode===id} onChange={()=>setCreateMode(id)}/><strong>{title}</strong><small>{description}</small></label>)}
             </div>
             {createMode==='clone'&&<Field label="参考网址" hint="输入网址即可开始；有设计图也可以创建后上传。"><input aria-label="参考网址" type="url" value={createUrl} onChange={e=>setCreateUrl(e.target.value)} placeholder="https://example.com" maxLength={2000}/></Field>}
             <Field label="项目名称（选填）" hint="仅用于工作台管理，留空自动命名。">
