@@ -125,6 +125,7 @@ export function CloneTaskPanel({
   const phase = complete ? 'done' : publishing ? 'publishing' : progress.phase;
   const titles = {
     queued: '任务已排队',
+    capturing: `正在分析参考网页，已采集 ${progress.imagesRead} 张截图`,
     reading: `正在读取设计图 ${progress.imagesRead} / ${progress.imageCount}`,
     model: progress.outputCharacters ? '正在接收页面代码' : '等待模型分析与响应',
     validating: '正在校验页面',
@@ -195,14 +196,14 @@ export function CloneTaskPanel({
             ·{' '}
             {remaining > 0
               ? `预计还需 ${duration(remaining * 0.6)}～${duration(remaining * 1.4)}`
-              : '已超过初步预估，仍在等待模型，最长等待 10 分钟'}
+              : '已超过初步预估，任务仍在处理中'}
             （估算）
           </>
         )}
         {publishing && ' · 发布耗时取决于托管服务'}
       </p>
       <p style={{ fontSize: 13, color: '#64748b' }}>
-        已读取 {progress.imagesRead} / {progress.imageCount} 张图片 · 已接收{' '}
+        {phase === 'capturing' ? `已采集 ${progress.imagesRead} 张截图，正在收集页面和素材` : `已读取 ${progress.imagesRead} / ${progress.imageCount} 张图片`} · 已接收{' '}
         {progress.outputCharacters.toLocaleString()} 字符
       </p>
       {active && phase === 'model' && (

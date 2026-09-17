@@ -1,3 +1,4 @@
+import { withSiteContacts } from '../shared/site-contacts';
 import { bannerPageFromPath } from '../shared/banner-config';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language } from '../shared/model';
@@ -94,7 +95,7 @@ export function materializeSiteFiles(
   ).origin;
   const policy = `default-src 'none'; img-src 'self' ${origin} data:; media-src 'self' ${origin}; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' ${origin}; font-src data:; form-action 'self' ${origin}; base-uri 'none'`;
   for (const [key, html] of Object.entries(files)) {
-    result[key] = sanitizeGeneratedHtml(html, options.inquiryUrl)
+    result[key] = sanitizeGeneratedHtml(withSiteContacts(html,draft), options.inquiryUrl)
       .replace(/__WR_ASSET_([^<>"\s]+?)__/g, (_, id) => escape(options.assetUrl(id)))
       .replaceAll('__WR_INQUIRY__', escape(options.inquiryUrl))
       .replace(

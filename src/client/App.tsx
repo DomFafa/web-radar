@@ -523,7 +523,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false),
-    [createMode, setCreateMode] = useState<'template' | 'clone'>('template'),
+    [createMode, setCreateMode] = useState<'template' | 'clone' | 'custom'>('template'),
     [name, setName] = useState(''),
     [creating, setCreating] = useState(false),
     [filter, setFilter] = useState('');
@@ -534,6 +534,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [createUrl,setCreateUrl]=useState('');
   const createRequest = useRef(requestId());
   const [page, setPage] = useState(1), [total, setTotal] = useState(0);
   const [counts, setCounts] = useState({all:0,draft:0,published:0,offline:0});
@@ -558,7 +559,8 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     setError('');
     try {
       const result = await post<{ project: Project }>('/api/projects', {
-        name: name.trim(),
+        name: name.trim() || (createMode==='clone' && createUrl ? new URL(createUrl).hostname : '未命名网站'),
+        targetUrl:createMode==='clone'?createUrl.trim():undefined,
         buildBranch: createMode,
         requestId: createRequest.current,
       });
@@ -892,60 +894,19 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
         <Modal title="创建网站项目" onClose={() => setCreateOpen(false)}>
           <form onSubmit={create}>
             <p className="muted" style={{ marginBottom: '16px' }}>
-              请选择建站模式，并为该项目命名：
+              选择建站方式，即可开始创建：
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-              <div
-                onClick={() => setCreateMode('template')}
-                style={{
-                  border: createMode === 'template' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                  background: createMode === 'template' ? 'rgba(79, 70, 229, 0.05)' : '#ffffff',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: createMode === 'template' ? '0 0 0 2px rgba(79, 70, 229, 0.15)' : 'none',
-                }}
-              >
-                <div style={{ fontSize: '20px', marginBottom: '6px' }}>⚡</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: createMode === 'template' ? '#4f46e5' : '#1e293b' }}>
-                  行业模版极速建站
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
-                  10 套精选工贸与出海高保真模版，即时呈现电脑与手机端效果
-                </div>
-              </div>
-
-              <div
-                onClick={() => setCreateMode('clone')}
-                style={{
-                  border: createMode === 'clone' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                  background: createMode === 'clone' ? 'rgba(79, 70, 229, 0.05)' : '#ffffff',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: createMode === 'clone' ? '0 0 0 2px rgba(79, 70, 229, 0.15)' : 'none',
-                }}
-              >
-                <div style={{ fontSize: '20px', marginBottom: '6px' }}>🎯</div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: createMode === 'clone' ? '#4f46e5' : '#1e293b' }}>
-                  按设计稿还原
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', lineHeight: '1.4' }}>
-                  输入目标网址或上传原型设计稿，按页面参考生成网站
-                </div>
-              </div>
+            <div className="create-mode-options" role="radiogroup" aria-label="建站方式">
+              {([['template','模板建站','选择现成风格，填入公司和产品资料。'],['clone','网址 / 设计稿建站','输入网址自动分析重建，或上传设计稿。'],['custom','AI 定制建站','确认需求、网站方案和设计稿后生成。']] as const).map(([id,title,description])=><label key={id} className={createMode===id?'selected':''}><input type="radio" name="create-mode" checked={createMode===id} onChange={()=>setCreateMode(id)}/><strong>{title}</strong><small>{description}</small></label>)}
             </div>
-
-            <Field label="项目名称" required>
+            {createMode==='clone'&&<Field label="参考网址" hint="输入网址即可开始；有设计图也可以创建后上传。"><input aria-label="参考网址" type="url" value={createUrl} onChange={e=>setCreateUrl(e.target.value)} placeholder="https://example.com" maxLength={2000}/></Field>}
+            <Field label="项目名称（选填）" hint="仅用于工作台管理，留空自动命名。">
               <input
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={120}
-                required
                 placeholder={createMode === 'clone' ? '例如：Senseng 像素级克隆官网' : '例如：春季户外系列官网'}
               />
             </Field>

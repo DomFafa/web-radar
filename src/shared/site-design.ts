@@ -1,3 +1,4 @@
+import { designCompany, siteContacts } from './site-contacts';
 import { hasCloneOutput } from './clone-output';
 import type { BaseDesignPage, DesignPage, Draft, SiteDesign } from './model';
 
@@ -11,7 +12,7 @@ export const designLabels: Record<BaseDesignPage, string> = {
 };
 export const siteInputKey = (d: Draft) =>
   JSON.stringify({
-    company: { ...d.company, faviconAssetId: undefined },
+    company: designCompany(d.company),
     products: d.products,
     primaryProductId: d.primaryProductId,
     category: d.category,
@@ -27,7 +28,20 @@ export const siteInputKey = (d: Draft) =>
 export function resetDesignForEdit(previous: Draft, next: Draft): void {
   next.siteDesign = previous.siteDesign
     ? siteInputKey(previous) === siteInputKey(next)
-      ? structuredClone(previous.siteDesign)
+      ? {
+          ...structuredClone(previous.siteDesign),
+          build: previous.siteDesign.build
+            ? {
+                ...previous.siteDesign.build,
+                contacts:
+                  previous.siteDesign.build.contacts ??
+                  (JSON.stringify(siteContacts(previous.company)) !==
+                  JSON.stringify(siteContacts(next.company))
+                    ? siteContacts(previous.company)
+                    : undefined),
+              }
+            : undefined,
+        }
       : { revision: previous.siteDesign.revision + 1, pages: {} }
     : undefined;
 }

@@ -267,6 +267,10 @@ async function create(name = 'Site') {
   return (await request('/api/projects', { name, requestId: crypto.randomUUID() })).data
     .project as Project;
 }
+async function brandedClone() {
+ const p=await create();p.draft.company.name='Preview Brand';p.draft.company.email='sales@example.com';
+ return (await request(`/api/projects/${p.id}`, {expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project as Project;
+}
 async function quota(who = owner, images = 5, videos = 5) {
   return request(
     `/api/admin/quotas/${who.userId}`,
@@ -2183,7 +2187,7 @@ describe('template tryout and clone version chain', () => {
     expect((await get(p)).project.version).toBe(p.version);
   });
   it('generates then publishes the returned version, while rejecting a genuinely stale version', async () => {
-    const p = await create();
+    const p = await brandedClone();
     const generated = await request(`/api/projects/${p.id}/clone/generate`, {
       expectedVersion: p.version,
       cloneConfig: { targetUrl: 'https://example.com' },
@@ -2203,7 +2207,7 @@ describe('template tryout and clone version chain', () => {
 });
 
 it('serves clone catalog paths and keeps its independent documents through save and publish', async () => {
-  const p = await create();
+  const p = await brandedClone();
   const generated = await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version, cloneConfig: { targetUrl: 'https://example.com', model: 'selected-model' } });
   const draft = generated.data.project.draft;
   expect(draft.cloneConfig.model).toBe('selected-model');
@@ -2246,7 +2250,7 @@ describe('persistent clone tasks', () => {
   async function state(p: Project) { return (await request(`/api/projects/${p.id}/clone/task`)).data; }
   async function visionProject() {
     env.CLONE_TEST_FIXTURE = 'false'; env.OPENAI_API_KEY = 'test-only';
-    const p = await create(); const asset: Asset = { id: 'reference', projectId: p.id, key: 'test-ref', filename: 'index.png', contentType: 'image/png', size: 9, origin: 'upload', createdAt: new Date().toISOString() };
+    const p = await brandedClone(); const asset: Asset = { id: 'reference', projectId: p.id, key: 'test-ref', filename: 'index.png', contentType: 'image/png', size: 9, origin: 'upload', createdAt: new Date().toISOString() };
     await service.store.insert('assets', asset).run(); await bucket.put(asset.key, new Uint8Array([137,80,78,71,13,10,26,10,0]));
     p.draft.cloneConfig = { uiImages: [{ id:'one',assetId:asset.id,name:'index.png',role:'home' }] };
     return p;
@@ -2295,7 +2299,7 @@ describe('persistent clone tasks', () => {
     expect((await request(`/api/projects/${p.id}/clone/stop`,{taskId},{...owner,userId:'stranger'})).status).toBe(404);
   });
   it('does not permit draft saves to clobber active task state and auto-publishes with no client follow-up', async () => {
-    const p=await create();const created=await start(p,true);
+    const p=await brandedClone();const created=await start(p,true);
     expect((await request(`/api/projects/${p.id}`,{expectedVersion:created.data.project.version,draft:p.draft},owner,'PUT')).status).toBe(409);
     await service.tick();await service.tick();const result=await state(p);
     expect(result.job.status).toBe('succeeded');expect(result.publication.status).toBe('succeeded');

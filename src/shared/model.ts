@@ -130,7 +130,7 @@ export interface SiteDesign {
   pages: Partial<Record<DesignPage, { imageAssetId?: string; jobId?: string }>>;
   homeConfirmedAssetId?: string;
   confirmedKey?: string;
-  build?: { jobId: string; artifactKey?: string };
+  build?: { jobId: string; artifactKey?: string; contacts?: Pick<Company, 'email' | 'phone' | 'whatsapp'> };
 }
 export type CloneUiImageRole = 'home' | 'catalog' | 'detail' | 'about' | 'contact' | 'asset';
 export interface CloneUiImage {
@@ -149,7 +149,7 @@ export interface CloneScrapedData {
 }
 export interface CloneTaskProgress {
   autoPublish?: boolean;
-  phase: 'queued' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
+  phase: 'queued' | 'capturing' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
   imagesRead: number;
   imageCount: number;
   outputCharacters: number;
@@ -161,6 +161,7 @@ export interface CloneTaskProgress {
   url?: string;
 }
 export interface CloneConfig {
+  referenceCapture?: {url:string;contextKey:string;assets:{assetId:string;url:string;contentType:string}[];pageCount:number;screenshotCount:number;warnings:string[];capturedAt:string};
   artifact?: { key: string; sha256: string; bytes: number; pageCount: number };
   enhancementMode?: 'faithful' | 'smart';
   autoPublish?: boolean;
@@ -174,6 +175,7 @@ export interface CloneConfig {
   generatedHtml?: string;
   generatedFiles?: Record<string, string>;
   generation?: {
+    contacts?: Pick<Company, 'email' | 'phone' | 'whatsapp'>;
     mode: 'vision' | 'reference-rebuild' | 'fixture';
     model?: string;
     imageCount: number;

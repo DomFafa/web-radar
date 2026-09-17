@@ -102,6 +102,11 @@ export function Editor({
 }) {
   const [seoReport, setSeoReport] = useState<(SeoReport & {version:number; origin:string|null; needsPublish:boolean}) | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const saveInFlight=useRef<Promise<Project>|null>(null);
+  const autoSaveFailed=useRef<Project|null>(null);
+  const [publishSection,setPublishSection]=useState<'content'|'check'|'manage'>('content');
+
   const [uploadState, setUploadState] = useState<UploadState | null>(null);
   const uploadController = useRef<AbortController | null>(null);
   useEffect(() => () => uploadController.current?.abort(), []);
@@ -130,12 +135,13 @@ export function Editor({
     });
 
   useEffect(() => {
+    if(!project)return;
     try {
       const url = new URL(window.location.href);
       url.searchParams.set('tab', tab);
       window.history.replaceState({}, '', url.toString());
     } catch {}
-  }, [tab]);
+  }, [tab,project?.id]);
   const [dirty, setDirty] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
@@ -251,6 +257,15 @@ export function Editor({
     window.addEventListener('beforeunload', prevent);
     return () => window.removeEventListener('beforeunload', prevent);
   }, []);
+  useEffect(()=>{
+    if(!dirty||!project||busy||conflict||autoSaveFailed.current===project||detail?.jobs.some(j=>j.kind==='clone'&&['queued','running','paused'].includes(j.status)))return;
+    const timer=setTimeout(()=>{
+      if(busyRef.current)return;
+      void save().catch(error=>{autoSaveFailed.current=projectRef.current;setError('自动保存失败，修改仍保留在当前页面：'+errorMessage(error));});
+    },1500);
+    return ()=>clearTimeout(timer);
+  },[project,dirty,busy,conflict,detail?.jobs]);
+  async function goTo(next:Tab){await action('navigate',async()=>{await save();if(dirtyRef.current)throw new Error('仍有未保存修改，请稍后继续。');setTab(next);});}
   function update(updater: (draft: Draft) => Draft) {
     const current = projectRef.current;
     if (!current) return;
@@ -278,7 +293,13 @@ export function Editor({
       ),
     }));
   }
-  async function save(retry = true): Promise<Project> {
+  async function save(): Promise<Project> {
+    if(saveInFlight.current){await saveInFlight.current;if(dirtyRef.current)return save();return projectRef.current!;}
+    setSaving(true);
+    const request=saveSnapshot();saveInFlight.current=request;
+    try{return await request;}finally{saveInFlight.current=null;setSaving(false);}
+  }
+  async function saveSnapshot(retry = true): Promise<Project> {
     const snapshot = projectRef.current;
     if (!snapshot) throw new Error('项目尚未载入。');
     if (!dirtyRef.current) return snapshot;
@@ -305,7 +326,7 @@ export function Editor({
           baseRef.current = next.project;
           projectRef.current = merged.value;
           setProject(merged.value);
-          return save(false);
+          return saveSnapshot(false);
         }
         setConflict(next.project);
         setChoices({});
@@ -508,7 +529,7 @@ export function Editor({
     busyRef.current = 'clone-generate';
     try {
       patch({ buildBranch: 'clone', cloneConfig: { ...projectRef.current?.draft.cloneConfig, ...config } });
-      return await command('clone/start', { cloneConfig: config, requestId: requestId(), autoPublish: config.autoPublish !== false });
+      return await command('clone/start', { cloneConfig: config, requestId: requestId(), autoPublish: config.autoPublish === true });
     } finally {
       setBusy('');
       busyRef.current = '';
@@ -681,7 +702,7 @@ export function Editor({
         <div className="editor-top-actions">
           <span className={`save-state ${dirty ? 'unsaved' : ''}`}>
             <i />
-            {dirty ? '有未保存修改' : `已保存 · V${project.version}`}
+            {saving ? '保存中…' : dirty ? '待自动保存' : `已保存 · V${project.version}`}
           </span>
           <Button
             kind="primary"
@@ -700,7 +721,7 @@ export function Editor({
       <div className="editor-body">
         <aside className="editor-sidebar">
           <div className="editor-sidebar-caption">
-            {draft.buildBranch === 'custom' ? 'AI 定制建站 (5步)' : '极速模版建站 (3步)'}
+            {draft.buildBranch === 'clone' ? '网址 / 设计稿建站' : draft.buildBranch === 'custom' ? 'AI 定制建站 (5步)' : '模板建站 (3步)'}
           </div>
           <nav aria-label="网站编辑步骤">
             {currentWorkflowSteps.map(([id, label, icon], index) => (
@@ -709,9 +730,7 @@ export function Editor({
                 className={tab === id ? 'active' : ''}
                 aria-current={tab === id ? 'step' : undefined}
                 onClick={() => {
-                  setTab(id);
-                  setError('');
-                  setNotice('');
+                  void goTo(id);
                 }}
               >
                 <span className="step-number">
@@ -806,7 +825,7 @@ export function Editor({
               <SectionTitle
                 eyebrow={draft.buildBranch === 'custom' ? '第 1 步 / 共 5 步' : '第 1 步 / 共 3 步'}
                 title="资料与产品"
-                description="填写公司资料、销售市场与产品，选择一个主产品用于网站首页。"
+                description={draft.buildBranch==='clone'?'这些信息可在生成预览后补充；发布前填写公司 / 品牌名称和联系邮箱。':'先填写公司名称、联系邮箱与产品，再选择目标市场。品牌图片和补充资料可稍后完善。'}
               />
               <section className="panel">
                 <div className="panel-title">
@@ -814,8 +833,9 @@ export function Editor({
                   <h3>公司与联系资料</h3>
                   <span>先填写基本信息，再补充品牌与业务资料</span>
                 </div>
+                {draft.buildBranch==='custom' && draft.siteDesign?.build?.artifactKey && <Notice>邮箱、电话、WhatsApp、Banner 和网站图标可直接修改后预览。公司介绍、产品或设计方向变更会重置设计确认，需要重新生成；已发布版本仍保留。</Notice>}
                 <CompanyFields value={draft.company} disabled={!!busy} onChange={company} />
-                <div className="brand-upload-grid">
+                <details className="optional-setup"><summary>Logo 与网站图标（选填）</summary><div className="brand-upload-grid">
                 <div className="logo-upload-row">
                   <AssetView
                     projectId={project.id}
@@ -856,10 +876,11 @@ export function Editor({
                     )}
                   </div>
                 </div>
-                </div>
+                </div></details>
               </section>
+              <details className="optional-setup"><summary>页面 Banner / 视频（选填，也可在预览后设置）</summary>
               <BannerEditor projectId={project.id} draft={draft} disabled={!!busy}
-                onChange={banners => patch({banners,banner:undefined})} onUpload={uploadBanner} />
+                onChange={banners => patch({banners,banner:undefined})} onUpload={uploadBanner} /></details>
               <section className="panel">
                 <div className="panel-title">
                   <span className="section-index">B</span>
@@ -1082,7 +1103,7 @@ export function Editor({
                   </Field>
                 </div>
               </section>
-              <section className="panel">
+              <details className="panel optional-setup"><summary>项目名称与社交链接（选填）</summary>
                 <div className="panel-title">
                   <span className="section-index">D</span>
                   <h3>工作台与社交链接</h3>
@@ -1093,7 +1114,8 @@ export function Editor({
                     <input
                       value={project.name}
                       onChange={(e) => {
-                        setProject({ ...project, name: e.target.value });
+                        const next={ ...projectRef.current!, name: e.target.value };
+                        projectRef.current=next;setProject(next);
                         setDirty(true);
                         dirtyRef.current = true;
                       }}
@@ -1133,7 +1155,7 @@ export function Editor({
                     />
                   </Field>
                 </div>
-              </section>
+              </details>
 
               {/* 建站流程分支选择 (克隆还原模式由创建项目时指定，底部不展示模式切换) */}
               {draft.buildBranch !== 'clone' && (
@@ -1205,7 +1227,7 @@ export function Editor({
                       : '下一步：选择网站模版'
                 }
                 onNext={() =>
-                  setTab(
+                  void goTo(
                     draft.buildBranch === 'clone'
                       ? 'clone-generate'
                       : draft.buildBranch === 'custom'
@@ -1225,15 +1247,15 @@ export function Editor({
               }}
               draft={draft}
               onUpdateDraft={(patchObj) => patch(patchObj)}
-              onProceedToPublish={() => setTab('publish')}
-              onBackToBasics={() => setTab('basics')}
+              onProceedToPublish={() => void goTo('publish')}
+              onBackToBasics={() => void goTo('basics')}
               onSwitchToCustom={() => {
                 patch({ buildBranch: 'custom' });
-                setTab('consultation');
+                void goTo('consultation');
               }}
               onSwitchToClone={() => {
                 patch({ buildBranch: 'clone' });
-                setTab('clone-generate');
+                void goTo('clone-generate');
               }}
             />
           )}
@@ -1243,8 +1265,8 @@ export function Editor({
               projectId={project.id}
               draft={draft}
               onUpdateDraft={(patchObj) => patch(patchObj)}
-              onProceedToPublish={() => setTab('publish')}
-              onBackToBasics={() => setTab('basics')}
+              onProceedToPublish={() => void goTo('publish')}
+              onBackToBasics={() => void goTo('basics')}
               onRefresh={refresh}
               onGenerate={generateClone}
               onPublish={publishClone}
@@ -1387,6 +1409,10 @@ export function Editor({
                 </Button>
               </section>
 
+              <div className="segmented publication-tabs" role="group" aria-label="发布工作区">
+                {([['content','内容与预览'],['check','发布检查'],['manage','上线管理']] as const).map(([id,label])=><button key={id} aria-pressed={publishSection===id} className={publishSection===id?'selected':''} onClick={()=>setPublishSection(id)}>{label}</button>)}
+              </div>
+              {publishSection==='content' && <>
               {draft.buildBranch === 'clone' ? (
                 <section className="panel">
                   <div className="panel-title">
@@ -1468,6 +1494,11 @@ export function Editor({
                   })
                 }
               />
+              <BannerEditor projectId={project.id} draft={draft} disabled={!!busy}
+                onChange={banners=>patch({banners,banner:undefined})} onUpload={uploadBanner}/>
+              <Button kind="primary" onClick={()=>setPublishSection('check')}>检查并发布网站 <Icon name="arrow"/></Button>
+              </>}
+              {publishSection==='check' && <>
               <section className="panel">
                 <SectionTitle
                   title="发布前检查"
@@ -1533,8 +1564,6 @@ export function Editor({
                   恢复历史版本会保留当前草稿、账号额度和询盘。下线后网址暂不可用，并停止接收新询盘。
                 </small>
               </section>
-              <BannerEditor projectId={project.id} draft={draft} disabled={!!busy}
-                onChange={banners => patch({banners,banner:undefined})} onUpload={uploadBanner} />
               <section className="panel seo-panel">
                 <div className="panel-title"><h3>SEO 发布检查</h3><span>覆盖全部语言与页面</span></div>
                 <p className="muted">发布时生成 canonical、hreflang、站点地图、分享信息及真实资料的结构化数据。已激活的自定义域名优先作为搜索入口，多个域名时使用最早添加且已激活的绑定。</p>
@@ -1548,6 +1577,8 @@ export function Editor({
                   {seoReport.needsPublish && <Button disabled={!!busy} onClick={() => setReleaseAction('publish')}>发布 SEO 更新</Button>}
                 </>}
               </section>
+              </>}
+              {publishSection==='manage' && <>
               <WebsiteConnections projectId={projectId} published={!!project.publishedReleaseId} />
               <section className="panel">
                 <SectionTitle title="发布记录" actions={<Button onClick={() => setHistoryOpen(true)}>查看全部历史</Button>} />
@@ -1594,6 +1625,7 @@ export function Editor({
                   })
                 }
               />
+              </>}
             </>
           )}
           {tab === 'inquiries' && (

@@ -1,3 +1,4 @@
+import { designCompany } from './site-contacts';
 import { z } from 'zod';
 import type { DesignPage, Draft, SiteBrief } from './model';
 
@@ -141,7 +142,7 @@ export function briefConfirmed(draft: Draft): boolean {
 }
 export function consultationInputKey(draft: Draft): string {
   return JSON.stringify({
-    company: { ...draft.company, faviconAssetId: undefined },
+    company: designCompany(draft.company),
     products: draft.products.map(({ translations: _translations, ...product }) => product),
     primaryProductId: draft.primaryProductId,
     category: draft.category,

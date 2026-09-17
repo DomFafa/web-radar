@@ -1,3 +1,4 @@
+import { siteContacts } from '../shared/site-contacts';
 import { bannerAssets } from '../shared/banner-config';
 import { auditSeo, withPublicationMetadata, SEO_POLICY_VERSION, type PublicationMetadata } from './site-metadata';
 import { ProviderSettings, withStoredEmailStatus } from './provider-settings';
@@ -277,7 +278,7 @@ export class DomainService {
       if (method === 'POST') {
         const b = await this.body(request);
         return json({
-          project: await this.create(principal, b.requestId, b.name, b.products, false, b.buildBranch),
+          project: await this.create(principal, b.requestId, b.name, b.products, false, b.buildBranch, b.targetUrl),
         });
       }
     }
@@ -326,6 +327,8 @@ export class DomainService {
       expectedVersion(project, b.expectedVersion);
       const taskId = project.draft.cloneConfig?.taskId;
       const incoming = b.draft as Draft;
+      const generation=project.draft.cloneConfig?.generation;
+      if(generation&&!generation.contacts)generation.contacts=siteContacts(project.draft.company);
       if (incoming?.cloneConfig) incoming.cloneConfig = preserveCloneOutput(project.draft.cloneConfig, incoming.cloneConfig);
       project.draft = editDraft(project.draft, incoming);
       if (hasCloneOutput(project.draft.cloneConfig)) project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, project.draft.cloneConfig!);
@@ -814,6 +817,7 @@ export class DomainService {
     rawProducts: unknown,
     handoff: boolean,
     rawBuildBranch?: unknown,
+    rawTargetUrl?: unknown,
   ): Promise<Project> {
     const rid = requestId(rawRequestId);
     requireCondition(
@@ -829,7 +833,7 @@ export class DomainService {
         name: name.trim(),
         products,
         workspaceId: principal.workspaceId,
-        handoff,
+        handoff,rawBuildBranch,rawTargetUrl,
       }),
       existing = await this.store.idempotent<{ id: string }>(scope, rid, hash);
     if (existing) return this.project(existing.id, principal);
@@ -847,10 +851,13 @@ export class DomainService {
       );
     }
     const initialDraft = defaultDraft();
+    if(rawBuildBranch==='custom') initialDraft.buildBranch='custom';
     if (rawBuildBranch === 'clone') {
       initialDraft.buildBranch = 'clone';
       initialDraft.cloneConfig = {
-        targetUrl: '',
+        targetUrl: typeof rawTargetUrl==='string'?rawTargetUrl.trim().slice(0,2000):'',
+        enhancementMode:typeof rawTargetUrl==='string' && rawTargetUrl.trim()?'faithful':'smart',
+        autoPublish:false,
         instructions: '',
         uiImages: [],
         status: 'idle',
@@ -1007,11 +1014,12 @@ export class DomainService {
   private async validateAssets(projectId: string, draft: Draft): Promise<void> {
     const bannerMedia = bannerAssets(draft);
     const imageRefs = new Set(assetReferences({...draft, heroAssetId:undefined,
+      cloneConfig:draft.cloneConfig?{...draft.cloneConfig,referenceCapture:draft.cloneConfig.referenceCapture?{...draft.cloneConfig.referenceCapture,assets:draft.cloneConfig.referenceCapture.assets.filter(a=>!a.contentType.startsWith('video/'))}:undefined}:undefined,
       banners:draft.banners?.map(b=>({...b,videoAssetId:undefined})),
     }));
     for (const id of assetReferences(draft)) {
       const asset = await this.projectAsset(projectId, id);
-      const video = id === draft.heroAssetId || bannerMedia.videos.includes(id);
+      const video = id === draft.heroAssetId || bannerMedia.videos.includes(id) || !!draft.cloneConfig?.referenceCapture?.assets.some(a=>a.assetId===id&&a.contentType.startsWith('video/'));
       const image = supportedImages.has(asset.contentType) ||
         (id === draft.company.faviconAssetId && !bannerMedia.images.includes(id) && supportedIcons.has(asset.contentType));
       requireCondition(
@@ -3052,6 +3060,7 @@ export class DomainService {
       const statements: D1PreparedStatement[] = [];
       if (p?.draft.siteDesign?.build?.jobId === job.id && designsConfirmed(p.draft.siteDesign)) {
         p.draft.siteDesign.build.artifactKey = artifactKey;
+        p.draft.siteDesign.build.contacts = siteContacts(draft.company);
         statements.push(this.store.update('projects', this.changed(p)));
       }
       job.input.progress = '静态网站已生成，可以预览各个页面。';

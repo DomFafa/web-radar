@@ -32,11 +32,12 @@ describe('100% 像素级克隆与还原模式 (Clone Workflow)', () => {
     };
 
     const checklist = draftChecklist(draft);
-    expect(checklist.length).toBe(3);
-    expect(checklist.every((c) => c.ready)).toBe(true);
-    expect(checklist[0].id).toBe('clone-source');
-    expect(checklist[1].id).toBe('clone-generate');
-    expect(checklist[2].id).toBe('build');
+    expect(checklist.length).toBe(4);
+    expect(checklist[0].ready).toBe(false);
+    expect(checklist.slice(1).every((c) => c.ready)).toBe(true);
+    expect(checklist[1].id).toBe('clone-source');
+    expect(checklist[2].id).toBe('clone-generate');
+    expect(checklist[3].id).toBe('build');
   });
 
   it('buildClonePrompt includes 4 core anti-distortion rules and vision guidance', () => {

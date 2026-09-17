@@ -49,8 +49,8 @@ export function CloneEditor({
 
   const [targetUrl, setTargetUrl] = useState(cloneConfig.targetUrl || '');
   const [instructions, setInstructions] = useState(cloneConfig.instructions || '');
-  const [enhancementMode, setEnhancementMode] = useState<'faithful' | 'smart'>(cloneConfig.enhancementMode || 'smart');
-  const [autoPublish, setAutoPublish] = useState(cloneConfig.autoPublish !== false);
+  const [enhancementMode, setEnhancementMode] = useState<'faithful' | 'smart'>(cloneConfig.enhancementMode || (cloneConfig.targetUrl ? 'faithful' : 'smart'));
+  const [autoPublish, setAutoPublish] = useState(cloneConfig.autoPublish === true);
   const [uiImages, setUiImages] = useState<CloneUiImage[]>(normalizeCloneImages(cloneConfig.uiImages));
   const [scrapedData, setScrapedData] = useState(cloneConfig.scrapedData);
   const [selectedModel, setSelectedModel] = useState<string>(cloneConfig.model || 'gpt-6-astra');
@@ -85,6 +85,8 @@ export function CloneEditor({
     setGenerationInfo(cloneConfig.generation);
     setIsSuccess(hasCloneOutput(cloneConfig));
   }, [cloneConfig.generatedAt, cloneConfig.generation, cloneConfig.artifact]);
+
+  useEffect(() => {setUiImages(normalizeCloneImages(cloneConfig.uiImages));}, [cloneConfig.generatedAt]);
 
   // Sync state up to project draft
   function syncConfig(updated: Partial<CloneConfig>) {
@@ -192,8 +194,8 @@ export function CloneEditor({
 
   // Handle clone generation via OpenAI
   async function handleGenerate() {
-    if (!targetUrl.trim() && uiImages.length === 0) {
-      setGenError('请至少输入目标网站 URL 或上传一张页面设计稿。');
+    if (!targetUrl.trim() && !uiImages.some(i=>i.role!=='asset')) {
+      setGenError('请输入参考网址，或上传并标注至少一张页面设计图。');
       return;
     }
 
@@ -233,6 +235,7 @@ export function CloneEditor({
     <>
     {transfer && <UploadProgress state={transfer} onCancel={() => uploadController.current?.abort()} />}
     <fieldset disabled={generating || uploading} className="clone-editor" style={{ maxWidth: '1100px', width: '100%', minWidth: 0, border: 0, margin: '0 auto', padding: '1.5rem 0' }}>
+      {cloneConfig.referenceCapture && <div className="notice">已自动采集 {cloneConfig.referenceCapture.screenshotCount} 张截图、{cloneConfig.referenceCapture.assets.length} 个素材。{cloneConfig.referenceCapture.warnings.join('；')} 生成完成后请对照参考网站预览。</div>}
       {/* Mode Header */}
       <div
         style={{
@@ -366,20 +369,22 @@ export function CloneEditor({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <span style={{ fontSize: '18px' }}>🌐</span>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>
-              目标参考网站 URL (可选)
+              参考网址
             </h3>
           </div>
           <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#64748b' }}>
-            网址用于提取标题、导航和文本。需要还原视觉布局时，请同时上传页面截图；抓取文字不等于读取网页设计。
+            只需输入公开网址，系统自动采集电脑与手机截图、主要内页和可用素材，再由模型分析重建。也可直接上传设计图。
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <input
               type="url"
               placeholder="例如: https://squishytoys.store 或 https://example.com"
+              aria-label="参考网址"
               value={targetUrl}
               onChange={(e) => {
                 setTargetUrl(e.target.value);
-                syncConfig({ targetUrl: e.target.value });
+                setEnhancementMode('faithful');
+                syncConfig({ targetUrl: e.target.value, enhancementMode:'faithful' });
               }}
               style={{
                 flex: 1,
@@ -397,7 +402,7 @@ export function CloneEditor({
               disabled={!targetUrl.trim() || scraping}
               style={{ minWidth: '130px' }}
             >
-              {scraping ? '嗅探中...' : '⚡ 实时嗅探抓取'}
+              {scraping ? '嗅探中...' : '读取文字摘要（选填）'}
             </Button>
           </div>
 
@@ -878,8 +883,8 @@ export function CloneEditor({
               }}
             >
               {isSuccess
-                ? (autoPublish ? '🔄 重新按设计稿生成并部署' : '🔄 重新生成页面并预览')
-                : (autoPublish ? '🎯 按设计稿生成并部署' : '🎯 生成页面并预览')}
+                ? (autoPublish ? '🔄 重新生成并发布' : '🔄 重新生成页面并预览')
+                : (autoPublish ? '🎯 生成并发布网站' : '🎯 生成页面并预览')}
             </Button>
           )}
         </div>

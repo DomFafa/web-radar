@@ -117,3 +117,61 @@ export async function fetchReferenceHtml(value: string): Promise<string> {
   }
   throw new ApiError(502, 'reference_redirects', '参考网站跳转过多，请使用最终页面网址。');
 }
+
+/** Bounded public fetch; redirects are revalidated and credentials are never forwarded. */
+export async function fetchPublicReference(value: string, maximum: number, signal?: AbortSignal) {
+  let url = new URL(value);
+  const timeout = AbortSignal.any([AbortSignal.timeout(20000), ...(signal ? [signal] : [])]);
+  for (let hop = 0; hop < 4; hop++) {
+    await assertPublicReference(url, undefined, timeout);
+    const response = await fetch(url, {
+      redirect: 'manual',
+      signal: timeout,
+      headers: { 'User-Agent': 'WebRadar-Reference/1.0' },
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      await response.body?.cancel();
+      const location = response.headers.get('location');
+      if (!location) break;
+      url = new URL(location, url);
+      continue;
+    }
+    if (!response.ok) {
+      await response.body?.cancel();
+      throw new ApiError(
+        502,
+        'reference_fetch_failed',
+        `参考页面或素材返回 HTTP ${response.status}。`,
+      );
+    }
+    const reader = response.body?.getReader();
+    if (!reader) throw new ApiError(502, 'reference_empty', '参考内容为空。');
+    const parts: Uint8Array[] = [];
+    let size = 0;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.length;
+        if (size > maximum)
+          throw new ApiError(413, 'reference_large', '参考内容超出采集大小限制。');
+        parts.push(value);
+      }
+    } finally {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const part of parts) {
+      bytes.set(part, offset);
+      offset += part.length;
+    }
+    return {
+      url: url.href,
+      bytes,
+      type: (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase(),
+    };
+  }
+  throw new ApiError(502, 'reference_redirects', '参考地址跳转过多。');
+}

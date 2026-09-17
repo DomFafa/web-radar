@@ -18,8 +18,8 @@ export const customWorkflowSteps = [
 ] as const;
 
 export const cloneWorkflowSteps = [
-  ['basics', '克隆与素材', 'folder'],
-  ['clone-generate', '像素级生成', 'spark'],
+  ['basics', '品牌与产品（可后补）', 'folder'],
+  ['clone-generate', '网址 / 设计稿生成', 'spark'],
   ['publish', '预览与发布', 'globe'],
 ] as const;
 
@@ -85,12 +85,13 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
   if (draft.buildBranch === 'clone') {
     const hasTarget = Boolean(
       draft.cloneConfig?.targetUrl?.trim() ||
-        (draft.cloneConfig?.uiImages && draft.cloneConfig.uiImages.length > 0),
+        draft.cloneConfig?.uiImages?.some(image=>image.role !== 'asset'),
     );
     const isGenerated = Boolean(
       hasCloneOutput(draft.cloneConfig),
     );
     return [
+      {...basicItems[0],detail:'生成预览可留空；发布前填写名称和联系邮箱'},
       {
         id: 'clone-source',
         label: '目标站点或设计稿',
@@ -104,10 +105,10 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
       },
       {
         id: 'clone-generate',
-        label: 'OpenAI 像素级生成',
+        label: '页面生成',
         detail: isGenerated
           ? '页面代码已生成，请对照设计图检查'
-          : '调用 GPT-4o 视觉模型进行像素级逆向与代码生成',
+          : '由所选模型分析参考页面并生成代码',
         step: 'clone-generate',
         ready: isGenerated,
       },
@@ -179,6 +180,7 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
 }
 
 export function nextDraftStep(draft: Draft): WorkflowStep {
+  if(draft.buildBranch==='clone'&&!hasCloneOutput(draft.cloneConfig))return 'clone-generate';
   return draftChecklist(draft).find((item) => !item.ready)?.step ?? 'publish';
 }
 

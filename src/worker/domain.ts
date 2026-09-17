@@ -153,12 +153,13 @@ const draftSchema = z.object({
       ),
       homeConfirmedAssetId: id.optional(),
       confirmedKey: z.string().max(3000).optional(),
-      build: z.object({ jobId: id, artifactKey: z.string().max(500).optional() }).optional(),
+      build: z.object({ jobId: id, artifactKey: z.string().max(500).optional(), contacts:z.object({email:short,phone:short,whatsapp:short}).optional() }).optional(),
     })
     .optional(),
   cloneConfig: z
     .object({
       artifact: z.object({ key: z.string().max(500), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: z.number().int().positive().max(9 * 1024 * 1024), pageCount: z.number().int().nonnegative() }).optional(),
+      referenceCapture: z.object({url:z.string().max(2000),contextKey:z.string().max(500),assets:z.array(z.object({assetId:id,url:z.string().max(3000),contentType:z.string().max(100)})).max(24),pageCount:z.number().int().max(5),screenshotCount:z.number().int().max(10),warnings:z.array(z.string().max(300)).max(20),capturedAt:z.string()}).optional(),
       taskId: z.string().optional(),
       enhancementMode: z.enum(['faithful', 'smart']).optional(),
       autoPublish: z.boolean().optional(),
@@ -189,6 +190,7 @@ const draftSchema = z.object({
       generatedHtml: z.string().optional(),
       generatedFiles: z.record(z.string(), z.string()).optional(),
       generation: z.object({
+        contacts:z.object({email:short,phone:short,whatsapp:short}).optional(),
         mode: z.enum(['vision', 'reference-rebuild', 'fixture']),
         model: z.string().max(100).optional(),
         imageCount: z.number().int().nonnegative(),
@@ -390,6 +392,7 @@ export function assetReferences(d: Draft): string[] {
   return [
     ...new Set(
       [
+        ...(d.cloneConfig?.referenceCapture?.assets.map(a=>a.assetId) ?? []),
         d.company.logoAssetId,
         d.company.faviconAssetId,
         ...bannerAssets(d).images,
@@ -409,6 +412,7 @@ export function publicAssetReferences(d: Draft): string[] {
   return [
     ...new Set(
       [
+        ...(d.buildBranch === 'clone' ? d.cloneConfig?.referenceCapture?.assets.map(a=>a.assetId) ?? [] : []),
         d.company.logoAssetId,
         d.company.faviconAssetId,
         ...bannerAssets(d,true).images,
@@ -463,6 +467,7 @@ export function assertSiteContentReady(d: Draft): void {
 }
 export function assertPublishable(d: Draft): void {
   if (d.buildBranch === 'clone') {
+    requireCondition(d.company.name.trim() && validEmail(d.company.email),400,'company_incomplete','发布前请填写公司 / 品牌名称和有效联系邮箱。');
     requireCondition(
       Boolean(d.cloneConfig?.artifact || d.cloneConfig?.generatedHtml?.trim()),
       400,

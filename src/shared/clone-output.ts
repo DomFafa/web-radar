@@ -11,6 +11,7 @@ export function preserveCloneOutput(
   if (!next) return next;
   const result = { ...next };
   for (const key of [
+    'referenceCapture',
     'artifact',
     'generatedHtml',
     'generatedFiles',

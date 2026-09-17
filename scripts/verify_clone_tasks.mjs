@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { unstable_startWorker } from 'wrangler';
 import { chromium } from '@playwright/test';
@@ -13,11 +13,16 @@ let calls = 0,
   browser;
 const timers = new Set();
 const connectionDomains = [], connectionRecords = [];
+const referenceJpeg=await readFile('public/templates/senseng/products-1.jpg');
+const referenceHtml='<html><head><style>body{margin:0;background:#eaf8ff}</style></head><body><h1>URL Reference</h1><img src="/hero.jpg"><a href="/about">About</a><a href="/contact">Contact</a><a href="/products">Products</a></body></html>';
+let referenceSnapshots=0,referenceModelCalls=0;
 try {
   worker = await unstable_startWorker({
     config: 'wrangler.jsonc',
     env: 'test',
     bindings: {
+      CLOUDFLARE_ACCOUNT_ID: {type:'plain_text',value:'LOCAL_TEST'},
+      CLOUDFLARE_API_TOKEN: {type:'secret_text',value:'isolated-reference-token'},
       CONNECTIONS_TEST_NETWORK: { type: 'plain_text', value: 'mock' },
       ASSET_SIGNING_KEY: { type: 'secret_text', value: 'isolated-credential-encryption-key' },
       CLOUDFLARE_HOSTING_ACCOUNTS: { type: 'secret_text', value: JSON.stringify([{accountId:'LOCAL_TEST',apiToken:'isolated-pages-token'}]) },
@@ -34,10 +39,13 @@ try {
       watch: false,
       logLevel: 'error',
       outboundService: async (request) => {
+        if(new URL(request.url).hostname==='cloudflare-dns.com')return Response.json({Answer:[{type:1,data:'93.184.216.34'}]});
+        if(new URL(request.url).hostname==='reference.example.com')return new URL(request.url).pathname==='/hero.jpg'?new Response(referenceJpeg,{headers:{'content-type':'image/jpeg'}}):new Response(referenceHtml,{headers:{'content-type':'text/html'}});
         if (new URL(request.url).hostname === 'api.cloudflare.com') {
           const u=new URL(request.url), method=request.method;
           const body=method==='POST'?await request.json():null;
           let result=[];
+          if(u.pathname.endsWith('/browser-rendering/snapshot')){referenceSnapshots++;return Response.json({success:true,result:{content:referenceHtml,screenshot:referenceJpeg.toString('base64')}});}
           if(u.pathname.endsWith('/zones'))return Response.json({success:true,result:[{id:'zone-test',name:'example.test',status:'active',account:{id:'LOCAL_TEST',name:'Test account'}}],result_info:{total_pages:1}});
           if(u.pathname.endsWith('/dns_records')){if(method==='POST'){result={...body,id:'record-test'};connectionRecords.push(result);}else result=connectionRecords;}
           else if(u.pathname.endsWith('/dns_records/record-test')){connectionRecords.length=0;result={id:'record-test'};}
@@ -58,10 +66,13 @@ try {
         const input = await request.json();
         assert.equal(input.stream, true);
       if (calls === 1) { assert.ok(input.messages[1].content[0].text.includes('SMART COMPLETION MODE')); assert.ok(input.messages[1].content[0].text.includes('保留第一屏，补充采购流程')); }
-        const body =
+        const referenceContext=input.messages[1].content.find(item=>item.type==='text'&&item.text.includes('URL RECONSTRUCTION:'));
+        let image='';
+        if(referenceContext){referenceModelCalls++;assert.ok(referenceContext.text.includes('URL Reference'));const token=referenceContext.text.match(/__WR_ASSET_[^" ]+__/)[0];image=`<img alt="Imported reference hero" src="${token}">`;}
+        const body = image+
           '<header>Test reference</header><main><h1>Persistent task test</h1><p>This mock provider only tests task behavior, not visual fidelity or a paid model.</p><form data-wr-inquiry><input aria-label="Preview email" type="email" name="email" required><button type="submit">Preview submit</button></form></main>';
         const content = JSON.stringify({
-          css: 'body{margin:0}',
+          css: 'body{margin:0}img{max-width:100%;height:auto}',
           pages: {
             en: Object.fromEntries(
               ['home', 'catalog', 'detail', 'about', 'contact'].map((k) => [k, body]),
@@ -142,14 +153,15 @@ try {
   await page.getByLabel('经营背景（选填）',{exact:true}).fill('Established in 2012');
   await page.getByLabel('资质与合规说明（选填）',{exact:true}).fill('Certification applies to the supplied product only.');
   await page.getByLabel('定制与交付能力（选填）',{exact:true}).fill('Packaging customization; lead time confirmed per order.');
-  await page.getByRole('button',{name:'保存草稿',exact:true}).click();
-  await page.getByText('草稿已保存。线上网站保持当前发布版本。',{exact:true}).waitFor();
+  await page.getByText(/^已保存 · V/).waitFor();
+  await page.waitForFunction(()=>!document.body.innerText.includes('待自动保存')&&!document.body.innerText.includes('保存中…'));
   await page.reload();
   assert.equal(await page.getByLabel('公司 / 品牌名称',{exact:true}).inputValue(),'Form regression brand');
   assert.equal(await page.getByLabel('业务联系人（选填）',{exact:true}).inputValue(),'');
   assert.equal(await page.getByLabel('业务类型',{exact:true}).inputValue(),'factory');
   await page.locator('.company-strengths summary').click();
   assert.equal(await page.getByLabel('经营背景（选填）',{exact:true}).inputValue(),'Established in 2012');
+  await page.getByText('页面 Banner / 视频（选填，也可在预览后设置）',{exact:true}).click();
   const targetLabels=await page.locator('.banner-targets').innerText();
   assert.ok(targetLabels.includes('首页')&&targetLabels.includes('产品列表页')&&targetLabels.includes('关于页'));
   assert.ok(!targetLabels.includes('详情')&&!targetLabels.includes('产品：'));
@@ -165,7 +177,9 @@ try {
   await page.getByText('已上传 1 个页面/素材文件').waitFor();
   assert.equal(await page.getByLabel('页面完善方式').inputValue(), 'smart');
   await page.locator('.clone-editor textarea').last().fill('保留第一屏，补充采购流程与联系方式。');
-  await page.getByRole('button', { name: '🎯 按设计稿生成并部署', exact: true }).click();
+  assert.equal(await page.getByLabel('生成完成后自动发布').isChecked(),false);
+  await page.getByLabel('生成完成后自动发布').check();
+  await page.getByRole('button', { name: '🎯 生成并发布网站', exact: true }).click();
   const panel = page.getByRole('region', { name: '设计生成任务进度' });
   let statusRequests = 0;
   page.on('request', request => { const path = new URL(request.url()).pathname; if (request.method() === 'GET' && [`/api/projects/${project.id}`, `/api/projects/${project.id}/clone/task`].includes(path)) statusRequests++; });
@@ -189,7 +203,9 @@ try {
   await new Promise(resolve => setTimeout(resolve, 8000));
   assert.equal(statusRequests, atCompletion, 'completed task and project must stop polling');
   await panel.getByRole('button', {name:'预览与发布管理'}).click();
+  await page.getByRole('button',{name:'发布检查',exact:true}).click();
   assert.equal(await page.getByRole('button',{name:'当前内容已上线',exact:true}).isDisabled(), true);
+  await page.getByRole('button',{name:'内容与预览',exact:true}).click();
   let inquiryRequests=0;
   page.on('request',request=>{if(request.method()==='POST'&&request.url().includes('/inquiries'))inquiryRequests++;});
   await page.getByRole('button',{name:'整站预览',exact:true}).click();
@@ -212,7 +228,7 @@ try {
   await page.goto(url);
 
   // A new run can be stopped while output is arriving, and stays stopped after reload.
-  await page.getByRole('button', { name: '🔄 重新按设计稿生成并部署', exact: true }).click();
+  await page.getByRole('button', { name: '🔄 重新生成并发布', exact: true }).click();
   await panel.getByRole('button', { name: '停止', exact: true }).waitFor();
   await panel.getByRole('button', { name: '停止', exact: true }).click();
   await panel.getByRole('heading', { name: '任务已停止', exact: true }).waitFor();
@@ -237,6 +253,7 @@ try {
   await bannerPanel.getByLabel('展示方式',{exact:true}).waitFor();
   await bannerPanel.getByLabel('展示方式',{exact:true}).selectOption('image');
   await bannerPanel.getByLabel('图片 1 的说明（Alt）',{exact:true}).fill('Uploaded Senseng product display');
+  await page.getByRole('button',{name:'发布检查',exact:true}).click();
   await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
   await page.locator('.seo-panel').getByText(/已检查/).waitFor();
   await page.reload();
@@ -254,9 +271,11 @@ try {
   await bannerPanel.screenshot({path:'artifacts/task-review/banner-editor-mobile.png'});
   await page.setViewportSize({width:1440,height:1100});
   assert.equal(calls,modelCallsBeforeBanner);
+  await page.getByRole('button',{name:'发布检查',exact:true}).click();
   await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
   await page.locator('.seo-panel').getByText(/已检查/).waitFor();
   await page.locator('.seo-panel').screenshot({path:'artifacts/task-review/seo-report.png'});
+  await page.getByRole('button',{name:'内容与预览',exact:true}).click();
   const bannerDraft=(await (await context.request.get(origin+'/api/projects/'+project.id)).json()).project.draft;
   const layoutPage=await context.newPage();
   await layoutPage.goto(origin);
@@ -297,6 +316,7 @@ try {
   await secondGroup.getByLabel('替换背景视频',{exact:true}).waitFor({timeout:60000});
   await secondGroup.getByLabel('上传视频封面（建议）',{exact:true}).setInputFiles('public/templates/senseng/video-poster.jpg');
   await secondGroup.getByLabel('替换视频封面',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'发布检查',exact:true}).click();
   await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
   await page.locator('.seo-panel').getByText(/已检查/).waitFor();
   await page.reload();
@@ -382,6 +402,7 @@ try {
   await mailRow.getByRole('button',{name:'设为默认',exact:true}).click();
   await mailRow.getByText(/默认发信账号/).waitFor();
   await page.goto(origin+'/?project='+project.id+'&tab=publish');
+  await page.getByRole('button',{name:'上线管理',exact:true}).click();
   const connections=page.locator('section.panel').filter({has:page.getByRole('heading',{name:'域名绑定与询盘邮件',exact:true})});
   const settingsRoot=origin+'/api/projects/'+project.id+'/connections';
   const saved=(await (await context.request.get(settingsRoot)).json()).accounts.find(a=>a.label==='Browser Resend '+project.id);
@@ -389,6 +410,7 @@ try {
   await connections.getByLabel('询盘发信账号').selectOption(saved.id);
   await connections.getByText('网站发信账号已保存，仅影响新询盘。',{exact:true}).waitFor();
   await page.reload();
+  await page.getByRole('button',{name:'上线管理',exact:true}).click();
   assert.equal(await connections.getByLabel('询盘发信账号').inputValue(),saved.id);
   await connections.getByLabel('域名',{exact:true}).selectOption('zone-test');
   assert.equal(await connections.getByLabel('Cloudflare 账号',{exact:true}).inputValue(),'environment-cloudflare:LOCAL_TEST');
@@ -406,6 +428,7 @@ try {
   await connections.getByRole('button',{name:'绑定域名',exact:true}).click();
   await connections.getByText('已生效',{exact:true}).waitFor();
   await page.reload();
+  await page.getByRole('button',{name:'上线管理',exact:true}).click();
   await connections.getByText('已生效',{exact:true}).waitFor();
   await connections.screenshot({path:'artifacts/task-review/site-connections-desktop.png'});
   await page.setViewportSize({width:390,height:1100});
@@ -419,9 +442,42 @@ try {
   await connections.getByText('网站发信账号已保存，仅影响新询盘。',{exact:true}).waitFor();
   assert.equal((await adminContext.request.delete(origin+'/api/admin/provider-accounts/'+saved.id)).status(),200);
   await adminContext.close();
+  // Only a URL is entered; screenshots, pages and images are collected automatically.
+  await page.goto(origin);
+  await page.getByRole('button',{name:'创建网站',exact:true}).click();
+  const createDialog=page.getByRole('dialog');
+  assert.equal(await createDialog.getByRole('radio').count(),3);
+  await createDialog.getByRole('radio',{name:/网址 \/ 设计稿建站/}).check();
+  await createDialog.getByLabel('参考网址',{exact:true}).fill('https://reference.example.com/');
+  await createDialog.screenshot({path:'artifacts/task-review/url-create.png'});
+  await createDialog.getByRole('button',{name:'创建并开始',exact:true}).click();
+  await page.locator('.clone-editor').waitFor();
+  const urlProjectId=new URL(page.url()).searchParams.get('project');
+  assert.ok(urlProjectId);
+  assert.equal(await page.getByLabel('参考网址',{exact:true}).inputValue(),'https://reference.example.com/');
+  assert.equal(await page.getByLabel('页面完善方式').inputValue(),'faithful');
+  assert.equal(await page.getByLabel('生成完成后自动发布').isChecked(),false);
+  await page.getByRole('button',{name:'🎯 生成页面并预览',exact:true}).click();
+  await panel.getByRole('heading',{name:'页面代码已生成，待预览与发布',exact:true}).waitFor({timeout:60000});
+  assert.equal(referenceSnapshots,5);assert.equal(referenceModelCalls,1);
+  let urlProject=(await(await context.request.get(origin+'/api/projects/'+urlProjectId)).json());
+  assert.equal(urlProject.releases.length,0);assert.equal(urlProject.project.draft.company.name,'');
+  assert.equal(urlProject.project.draft.cloneConfig.referenceCapture.assets.length,1);
+  await page.reload();
+  await page.getByText(/已自动采集/).waitFor();
+  await panel.getByRole('button',{name:'预览与发布管理'}).click();
+  await page.getByRole('button',{name:'打开私有整站预览',exact:true}).click();
+  const referenceFrame=page.frameLocator('iframe[title$="私有预览"]');
+  await referenceFrame.getByAltText('Imported reference hero').waitFor();
+  assert.equal(await referenceFrame.getByAltText('Imported reference hero').evaluate(i=>i.complete&&i.naturalWidth>0),true);
+  await page.screenshot({path:'artifacts/task-review/url-preview.png'});
+  await page.getByRole('button',{name:'关闭预览',exact:true}).click();
+  await page.getByRole('button',{name:'发布检查',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'发布网站',exact:true}).isDisabled(),true);
+  await page.screenshot({path:'artifacts/task-review/url-publication-check.png'});
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
+    'PASS: URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];
