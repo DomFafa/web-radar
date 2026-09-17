@@ -1,3 +1,4 @@
+import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { siteContacts } from '../shared/site-contacts';
 import { bannerAssets } from '../shared/banner-config';
 import { auditSeo, withPublicationMetadata, SEO_POLICY_VERSION, type PublicationMetadata } from './site-metadata';
@@ -330,7 +331,12 @@ export class DomainService {
       const generation=project.draft.cloneConfig?.generation;
       if(generation&&!generation.contacts)generation.contacts=siteContacts(project.draft.company);
       if (incoming?.cloneConfig) incoming.cloneConfig = preserveCloneOutput(project.draft.cloneConfig, incoming.cloneConfig);
-      project.draft = editDraft(project.draft, incoming);
+      const updatedDraft = editDraft(project.draft, incoming);
+      if (updatedDraft.buildBranch !== project.draft.buildBranch && buildMode(updatedDraft) !== buildMode(project.draft)) {
+        const jobs = await this.store.list<Job>('jobs', "project_id=? AND status IN ('queued','running','paused','unknown')", [project.id]);
+        requireCondition(!jobs.some(blocksModeChange), 409, 'mode_change_task_active', '生成或发布任务尚未结束，请先等待任务结束或停止生成任务再切换建站方式。');
+      }
+      project.draft = updatedDraft;
       if (hasCloneOutput(project.draft.cloneConfig)) project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, project.draft.cloneConfig!);
       if (taskId && project.draft.cloneConfig) project.draft.cloneConfig.taskId = taskId;
       await this.validateAssets(project.id, project.draft);
@@ -851,7 +857,7 @@ export class DomainService {
       );
     }
     const initialDraft = defaultDraft();
-    if(rawBuildBranch==='custom') initialDraft.buildBranch='custom';
+    if (rawBuildBranch === 'template' || rawBuildBranch === 'custom') initialDraft.buildBranch = rawBuildBranch;
     if (rawBuildBranch === 'clone') {
       initialDraft.buildBranch = 'clone';
       initialDraft.cloneConfig = {

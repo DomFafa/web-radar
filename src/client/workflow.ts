@@ -1,3 +1,4 @@
+import { buildMode, withBuildMode } from '../shared/build-mode';
 import { hasCloneOutput } from '../shared/clone-output';
 import type { Draft, Project } from '../shared/model';
 import { designsConfirmed, staticSiteReady } from '../shared/site-design';
@@ -30,10 +31,10 @@ export type WorkflowStep =
   | (typeof cloneWorkflowSteps)[number][0];
 
 export function getWorkflowSteps(draft?: Draft) {
-  if (draft?.buildBranch === 'clone') {
+  if (buildMode(draft) === 'clone') {
     return cloneWorkflowSteps;
   }
-  return draft?.buildBranch === 'template'
+  return buildMode(draft) === 'template'
     ? templateWorkflowSteps
     : customWorkflowSteps;
 }
@@ -47,6 +48,7 @@ export type ChecklistItem = {
 };
 
 export function draftChecklist(draft: Draft): ChecklistItem[] {
+  draft = withBuildMode(draft);
   const email = draft.company.email;
   const legacyArtifactReady = staticSiteReady(draft) && !draft.consultation;
   const pages = plannedPages(draft);
@@ -180,10 +182,16 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
 }
 
 export function nextDraftStep(draft: Draft): WorkflowStep {
+  draft = withBuildMode(draft);
   if(draft.buildBranch==='clone'&&!hasCloneOutput(draft.cloneConfig))return 'clone-generate';
   return draftChecklist(draft).find((item) => !item.ready)?.step ?? 'publish';
 }
 
 export function projectStatus(project: Pick<Project, 'offline' | 'publishedReleaseId'>): 'draft' | 'published' | 'offline' {
   return !project.publishedReleaseId ? 'draft' : project.offline ? 'offline' : 'published';
+}
+
+export function resolveWorkflowTab(draft: Draft, tab: string | null): WorkflowStep | "inquiries" {
+  if (tab === "inquiries") return tab;
+  return getWorkflowSteps(draft).find(([id]) => id === tab)?.[0] ?? nextDraftStep(draft);
 }

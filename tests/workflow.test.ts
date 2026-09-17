@@ -1,3 +1,4 @@
+import { buildMode, withBuildMode, blocksModeChange } from '../src/shared/build-mode';
 import { describe, expect, it } from 'vitest';
 import { assertPublishable, defaultDraft, publicAssetReferences } from '../src/worker/domain';
 import { designKey } from '../src/shared/site-design';
@@ -5,6 +6,7 @@ import type { DesignPage, Draft, Project, SiteBrief } from '../src/shared/model'
 import {
   draftChecklist,
   getWorkflowSteps,
+  resolveWorkflowTab,
   nextDraftStep,
   projectStatus,
   workflowSteps,
@@ -54,6 +56,7 @@ function briefFor(draft: Draft, extras: DesignPage[] = []): SiteBrief {
 
 function suppliedDraft(): Draft {
   const draft = defaultDraft();
+  draft.buildBranch = 'custom';
   draft.company = {
     ...draft.company,
     name: 'Studio',
@@ -112,7 +115,7 @@ describe('guided website workflow readiness', () => {
   it('directs an empty project through source information, consultation, and brief approval', () => {
     expect(nextDraftStep(defaultDraft())).toBe('basics');
     expect(
-      draftChecklist(defaultDraft())
+      draftChecklist({ ...defaultDraft(), buildBranch: 'custom' })
         .filter((item) => !item.ready)
         .map((item) => item.id),
     ).toEqual(['company', 'market', 'products', 'consultation', 'brief', 'design', 'build']);
@@ -249,4 +252,40 @@ it('company checklist matches optional contact requirements', () => {
  expect(draftChecklist(draft).find(item=>item.id==='company')?.ready).toBe(true);
  draft.company.email='invalid';
  expect(draftChecklist(draft).find(item=>item.id==='company')?.ready).toBe(false);
+});
+
+
+describe('mode selection and legacy draft recovery', () => {
+  it('uses three template steps for an unmarked draft, with matching readiness', () => {
+    const draft = defaultDraft();
+    expect(buildMode(draft)).toBe('template');
+    expect(getWorkflowSteps(draft).map(([id]) => id)).toEqual(['basics', 'template', 'publish']);
+    expect(draftChecklist(draft).map(i => i.id)).not.toContain('consultation');
+    expect(withBuildMode(draft).buildBranch).toBe('template');
+    expect(draft.buildBranch).toBeUndefined();
+  });
+  it('retains explicit and historical custom work while an explicit switch wins', () => {
+    const draft = readyDraft();
+    delete draft.buildBranch;
+    expect(buildMode(draft)).toBe('custom');
+    expect(getWorkflowSteps(draft)).toHaveLength(5);
+    expect(buildMode({ ...draft, buildBranch: 'template' })).toBe('template');
+    expect(buildMode({ ...defaultDraft(), buildBranch: 'custom' })).toBe('custom');
+    expect(buildMode({ ...defaultDraft(), cloneConfig: { targetUrl: 'https://example.com' } })).toBe('clone');
+  });
+  it('rejects stale steps from another mode while preserving valid navigation', () => {
+    const draft = { ...defaultDraft(), buildBranch: 'template' as const };
+    expect(resolveWorkflowTab(draft, 'brief')).toBe('basics');
+    expect(resolveWorkflowTab(draft, 'clone-generate')).toBe('basics');
+    expect(resolveWorkflowTab(draft, 'template')).toBe('template');
+    expect(resolveWorkflowTab(draft, 'inquiries')).toBe('inquiries');
+    expect(resolveWorkflowTab({ ...draft, buildBranch: 'clone' }, 'template')).toBe('clone-generate');
+  });
+  it('holds switching during generation/publication, including paused tasks, but not email', () => {
+    expect(blocksModeChange({ kind: 'clone', status: 'paused' })).toBe(true);
+    expect(blocksModeChange({ kind: 'publish', status: 'running' })).toBe(true);
+    expect(blocksModeChange({ kind: 'image', status: 'unknown' })).toBe(true);
+    expect(blocksModeChange({ kind: 'clone', status: 'succeeded' })).toBe(false);
+    expect(blocksModeChange({ kind: 'email', status: 'running' })).toBe(false);
+  });
 });

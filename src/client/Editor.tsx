@@ -1,3 +1,4 @@
+import { blocksModeChange, withBuildMode } from '../shared/build-mode';
 import { CompanyFields } from './CompanyFields';
 import { BannerEditor, editableBanners, type BannerUploadSlot } from './BannerEditor';
 import type { SeoReport } from '../worker/site-metadata';
@@ -49,7 +50,7 @@ import {
   staticSiteReady,
 } from '../shared/site-design';
 import { briefConfirmed, plannedPages, resetConsultationForEdit } from '../shared/site-brief';
-import { draftChecklist, getWorkflowSteps, nextDraftStep, type WorkflowStep } from './workflow';
+import { draftChecklist, getWorkflowSteps, resolveWorkflowTab, type WorkflowStep } from './workflow';
 import { TemplateSelector } from './TemplateSelector';
 import { CloneEditor } from './CloneEditor';
 
@@ -103,6 +104,7 @@ export function Editor({
   const [seoReport, setSeoReport] = useState<(SeoReport & {version:number; origin:string|null; needsPublish:boolean}) | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [cloneActivity, setCloneActivity] = useState(false);
   const saveInFlight=useRef<Promise<Project>|null>(null);
   const autoSaveFailed=useRef<Project|null>(null);
   const [publishSection,setPublishSection]=useState<'content'|'check'|'manage'>('content');
@@ -173,6 +175,7 @@ export function Editor({
   const endpoint = `/api/projects/${encodeURIComponent(projectId)}`;
 
   const install = useCallback((next: Project) => {
+    next = { ...next, draft: withBuildMode(next.draft) };
     setProject(next);
     projectRef.current = next;
     baseRef.current = next;
@@ -199,21 +202,7 @@ export function Editor({
           setDetail(next);
           install(next.project);
           const q = new URL(window.location.href).searchParams.get('tab') as Tab | null;
-          const valid =
-            q &&
-            [
-              'basics',
-              'template',
-              'clone-generate',
-              'consultation',
-              'brief',
-              'design',
-              'publish',
-              'inquiries',
-            ].includes(q);
-          if (!valid) {
-            setTab(nextDraftStep(next.project.draft));
-          }
+          setTab(resolveWorkflowTab(next.project.draft, q));
         }
       })
       .catch((error) => {
@@ -223,6 +212,9 @@ export function Editor({
       active = false;
     };
   }, [endpoint, install]);
+  useEffect(() => {
+    if (project) setTab(current => resolveWorkflowTab(project.draft, current));
+  }, [project?.id, project?.draft.buildBranch]);
   const hasLiveJobs = !!detail?.jobs.some(liveJob);
   useEffect(() => {
     if (!hasLiveJobs) return;
@@ -266,6 +258,33 @@ export function Editor({
     return ()=>clearTimeout(timer);
   },[project,dirty,busy,conflict,detail?.jobs]);
   async function goTo(next:Tab){await action('navigate',async()=>{await save();if(dirtyRef.current)throw new Error('仍有未保存修改，请稍后继续。');setTab(next);});}
+  async function switchBuildMode(mode: 'template' | 'clone') {
+    await action('switch-mode', async () => {
+      await save();
+      if (dirtyRef.current) throw new Error('仍有未保存修改，请稍后重试。');
+      const latest = await refresh();
+      if (latest.jobs.some(blocksModeChange)) throw new Error('请先等待生成或发布任务结束；暂停中的生成任务需先停止，再切换建站方式。');
+      const snapshot = projectRef.current!;
+      if (snapshot.draft.buildBranch !== mode || latest.project.draft.buildBranch !== mode) {
+        const result = await put<{ project: Project }>(endpoint, {
+          expectedVersion: snapshot.version, name: snapshot.name,
+          draft: { ...snapshot.draft, buildBranch: mode },
+        });
+        if (projectRef.current === snapshot) install(result.project);
+        else {
+          // Keep edits typed during this request, while accepting the server's version and mode.
+          baseRef.current = result.project;
+          const next = { ...projectRef.current!, version: result.project.version, draft: { ...projectRef.current!.draft, buildBranch: mode } };
+          projectRef.current = next;
+          setProject(next);
+          dirtyRef.current = true;
+          setDirty(true);
+        }
+      }
+      setSeoReport(null);
+      setTab(mode === 'template' ? 'template' : 'clone-generate');
+    }, '建站方式已保存，资料与素材已保留。');
+  }
   function update(updater: (draft: Draft) => Draft) {
     const current = projectRef.current;
     if (!current) return;
@@ -800,6 +819,14 @@ export function Editor({
               私有草稿
             </span>
           </div>
+          <section className="build-mode-switcher" aria-label="建站方式切换">
+            <div><strong>建站方式</strong><p>{draft.buildBranch === 'custom' ? '当前为已有定制项目（5步）。' : '模板与网址 / 设计稿可随时切换。'} 切换会保存资料与素材，线上版本在重新发布后更新。</p></div>
+            <div className="build-mode-options">
+              <Button aria-pressed={draft.buildBranch === 'template'} kind={draft.buildBranch === 'template' ? 'primary' : undefined} disabled={!!busy || saving || cloneActivity || !!uploadState || detail.jobs.some(blocksModeChange)} onClick={() => void switchBuildMode('template')}>模板建站</Button>
+              <Button aria-pressed={draft.buildBranch === 'clone'} kind={draft.buildBranch === 'clone' ? 'primary' : undefined} disabled={!!busy || saving || cloneActivity || !!uploadState || detail.jobs.some(blocksModeChange)} onClick={() => void switchBuildMode('clone')}>网址 / 设计稿建站</Button>
+            </div>
+            {detail.jobs.some(blocksModeChange) && <small>生成或发布任务结束后可切换；暂停中的生成任务请先停止。</small>}
+          </section>
           {services.some((service) => service.mode === 'unconfigured') && (
             <details className="editor-services">
               <summary>部分服务尚未接通 · 点击查看</summary>
@@ -1157,39 +1184,6 @@ export function Editor({
                 </div>
               </details>
 
-              {/* 建站流程分支选择 (克隆还原模式由创建项目时指定，底部不展示模式切换) */}
-              {draft.buildBranch !== 'clone' && (
-                <section className="branch-selection-panel">
-                  <div className="panel-title">
-                    <span className="section-index">E</span>
-                    <h3>建站流程模式</h3>
-                    <span>选择模板，填写资料后预览并发布</span>
-                  </div>
-                  <div className="branch-grid" style={{ gridTemplateColumns: '1fr' }}>
-                    <div
-                      className={`branch-card ${draft.buildBranch !== 'custom' ? 'active' : ''}`}
-                      onClick={() => patch({ buildBranch: 'template' })}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="branch-card-header">
-                        <span className="branch-title">
-                          <Icon name="palette" size={16} />
-                          极速模版建站
-                        </span>
-                        <span className="branch-badge">推荐 · 共 3 步</span>
-                      </div>
-                      <p className="branch-desc">
-                        从精选行业高保真模板中挑选心仪风格与配色，系统秒级自动组装全站页面，立即进入预览与发布。省时高效，所见即所得。
-                      </p>
-                      <div className="branch-steps-preview">
-                        <span>01 资料与产品</span> → <span>02 选择模版</span> → <span>03 预览与发布</span>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              )}
-
               <StepFooter
                 hint={
                   draft.buildBranch === 'clone'
@@ -1228,14 +1222,12 @@ export function Editor({
               onUpdateDraft={(patchObj) => patch(patchObj)}
               onProceedToPublish={() => void goTo('publish')}
               onBackToBasics={() => void goTo('basics')}
-              onSwitchToClone={() => {
-                patch({ buildBranch: 'clone' });
-                void goTo('clone-generate');
-              }}
+              onSwitchToClone={() => void switchBuildMode('clone')}
             />
           )}
           {tab === 'clone-generate' && (
             <CloneEditor
+              onActivityChange={setCloneActivity}
               testMode={testMode}
               projectId={project.id}
               draft={draft}

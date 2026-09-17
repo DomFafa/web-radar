@@ -2497,3 +2497,44 @@ it('saves imported product-set projects without dropping source facts or media',
  expect(edited.status).toBe(200);expect(edited.data.project.draft.products[0].source.factsOrigin).toBe('product-set');
  expect((await get(p)).project.draft.company.name).toBe('Updated brand');
 });
+
+
+describe('persisted website creation modes', () => {
+  it.each(['template','clone','custom'])('persists explicitly requested %s mode through create and reload', async mode => {
+    const result = await request('/api/projects', { name: 'Mode regression', requestId: crypto.randomUUID(), buildBranch: mode });
+    expect(result.status).toBe(200);
+    expect(result.data.project.draft.buildBranch).toBe(mode);
+    expect((await get(result.data.project)).project.draft.buildBranch).toBe(mode);
+  });
+  it('switches modes without deleting company details, products or clone input', async () => {
+    const created = await request('/api/projects', { name: 'Switch regression', requestId: crypto.randomUUID(), buildBranch: 'clone', targetUrl: 'https://example.com' });
+    let p = created.data.project as Project;
+    p.draft.company.name = 'Retained brand';
+    p.draft.cloneConfig!.instructions = 'Keep original first screen';
+    p.draft.products = [{ id:'p1', name:'Retained product', description:'Real facts', material:'', dimensions:'' }];
+    p.draft.primaryProductId = 'p1';
+    for (const mode of ['template','clone'] as const) {
+      const result = await request(`/api/projects/${p.id}`, { expectedVersion:p.version, draft:{...p.draft,buildBranch:mode} }, owner, 'PUT');
+      expect(result.status).toBe(200);
+      p = result.data.project;
+      expect(p.draft.buildBranch).toBe(mode);
+      expect(p.draft.company.name).toBe('Retained brand');
+      expect(p.draft.products[0].name).toBe('Retained product');
+      expect(p.draft.cloneConfig?.targetUrl).toBe('https://example.com');
+      expect(p.draft.cloneConfig?.instructions).toBe('Keep original first screen');
+    }
+  });
+  it('rejects mode changes while a server generation task is pending', async () => {
+    let p = (await request('/api/projects', { name:'Busy mode', requestId:crypto.randomUUID(), buildBranch:'template' })).data.project as Project;
+    p.draft.products = [{id:'p1',name:'Product',description:'Facts',material:'',dimensions:''}];
+    p.draft.primaryProductId = 'p1';
+    p = (await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project;
+    const queued = await request(`/api/projects/${p.id}/jobs`,{expectedVersion:p.version,requestId:crypto.randomUUID(),kind:'script'});
+    expect(queued.status).toBe(200);
+    p = (await get(p)).project;
+    const result = await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:{...p.draft,buildBranch:'clone'}},owner,'PUT');
+    expect(result.status).toBe(409);
+    expect(result.data.code).toBe('mode_change_task_active');
+    expect((await get(p)).project.draft.buildBranch).toBe('template');
+  });
+});

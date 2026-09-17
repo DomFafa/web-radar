@@ -9,6 +9,7 @@ import { api, post, upload } from './api';
 import { AssetView, Button, Notice } from './components';
 
 interface CloneEditorProps {
+  onActivityChange?: (active: boolean) => void;
   projectId: string;
   testMode: boolean;
   onGenerate: (config: CloneConfig) => Promise<Project>;
@@ -30,6 +31,7 @@ const ROLE_LABELS: Record<CloneUiImageRole, string> = {
 };
 
 export function CloneEditor({
+  onActivityChange,
   projectId,
   testMode,
   onGenerate,
@@ -79,6 +81,11 @@ export function CloneEditor({
   const [deployedUrl, setDeployedUrl] = useState<string>('');
   const [deployError, setDeployError] = useState<string>('');
 
+  useEffect(() => {
+    onActivityChange?.(uploading || scraping || generating || deploying);
+    return () => onActivityChange?.(false);
+  }, [uploading, scraping, generating, deploying, onActivityChange]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const launching = useRef(false);
   useEffect(() => {
@@ -102,7 +109,6 @@ export function CloneEditor({
       ...updated,
     };
     onUpdateDraft({
-      buildBranch: 'clone',
       cloneConfig: nextConfig,
     });
   }
