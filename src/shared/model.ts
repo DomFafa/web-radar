@@ -186,6 +186,22 @@ export interface CloneConfig {
   error?: string;
 }
 
+export type BannerTarget = DesignPage | `product:${string}`;
+export interface PageBanner {
+  id: string;
+  targets: BannerTarget[];
+  kind: 'images' | 'video';
+  slides: { assetId: string; alt: string }[];
+  videoAssetId?: string;
+  posterAssetId?: string;
+  mode: 'background' | 'image';
+  fit: 'cover' | 'contain';
+  position: 'top' | 'center' | 'bottom';
+  contrast: 'light' | 'dark' | 'none';
+  height: 'auto' | 'screen';
+  autoplay: boolean;
+  interval: number;
+}
 export interface Draft {
   buildBranch?: 'template' | 'custom' | 'clone';
   templateConfirmed?: boolean;
@@ -206,6 +222,7 @@ export interface Draft {
   scenes: Scene[];
   storyboardRevision: number;
   storyboardConfirmedRevision?: number;
+  banners?: PageBanner[];
   banner?: { contrast?: 'light' | 'dark' | 'none'; assetId: string; alt: string; mode: 'background' | 'image'; fit: 'cover' | 'contain'; position: 'top' | 'center' | 'bottom' };
   heroAssetId?: string;
   posterAssetId?: string;

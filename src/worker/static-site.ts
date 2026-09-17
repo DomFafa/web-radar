@@ -1,3 +1,4 @@
+import { bannerPageFromPath } from '../shared/banner-config';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
@@ -91,7 +92,7 @@ export function materializeSiteFiles(
     asset ? options.assetUrl(asset) : options.inquiryUrl,
     'https://preview.invalid',
   ).origin;
-  const policy = `default-src 'none'; img-src 'self' ${origin} data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' ${origin}; font-src data:; form-action 'self' ${origin}; base-uri 'none'`;
+  const policy = `default-src 'none'; img-src 'self' ${origin} data:; media-src 'self' ${origin}; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' ${origin}; font-src data:; form-action 'self' ${origin}; base-uri 'none'`;
   for (const [key, html] of Object.entries(files)) {
     result[key] = sanitizeGeneratedHtml(html, options.inquiryUrl)
       .replace(/__WR_ASSET_([^<>"\s]+?)__/g, (_, id) => escape(options.assetUrl(id)))
@@ -113,5 +114,5 @@ export function materializeSiteFiles(
     'site_page_large',
     '生成的网页超过发布大小限制，请简化设计后重新生成。',
   );
-  return Object.fromEntries(Object.entries(result).map(([path, html]) => [path, withBanner(withFavicon(html, draft, options.assetUrl), draft, options.assetUrl, /^[a-z]{2}\/index\.html$/.test(path))]));
+  return Object.fromEntries(Object.entries(result).map(([path, html]) => [path, withBanner(withFavicon(html, draft, options.assetUrl), draft, options.assetUrl, bannerPageFromPath(path) ?? false)]));
 }

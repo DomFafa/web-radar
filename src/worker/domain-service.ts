@@ -1,3 +1,4 @@
+import { bannerAssets } from '../shared/banner-config';
 import { auditSeo, withPublicationMetadata, SEO_POLICY_VERSION, type PublicationMetadata } from './site-metadata';
 import { ProviderSettings, withStoredEmailStatus } from './provider-settings';
 import { backupManifest } from './backup-manifest';
@@ -1004,18 +1005,22 @@ export class DomainService {
     );
   }
   private async validateAssets(projectId: string, draft: Draft): Promise<void> {
+    const bannerMedia = bannerAssets(draft);
+    const imageRefs = new Set(assetReferences({...draft, heroAssetId:undefined,
+      banners:draft.banners?.map(b=>({...b,videoAssetId:undefined})),
+    }));
     for (const id of assetReferences(draft)) {
       const asset = await this.projectAsset(projectId, id);
-      const video = id === draft.heroAssetId;
+      const video = id === draft.heroAssetId || bannerMedia.videos.includes(id);
+      const image = supportedImages.has(asset.contentType) ||
+        (id === draft.company.faviconAssetId && !bannerMedia.images.includes(id) && supportedIcons.has(asset.contentType));
       requireCondition(
-        video ? supportedVideos.has(asset.contentType) : supportedImages.has(asset.contentType) ||
-          (id === draft.company.faviconAssetId && supportedIcons.has(asset.contentType)),
-        400,
-        'asset_type_mismatch',
-        '素材格式与用途不匹配。',
+        (!video || supportedVideos.has(asset.contentType)) && (!imageRefs.has(id) || image),
+        400, 'asset_type_mismatch', '素材格式与用途不匹配。',
       );
     }
   }
+
   private limitStream(
     body: ReadableStream<Uint8Array> | null,
     max: number,

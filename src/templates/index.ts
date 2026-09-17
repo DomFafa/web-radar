@@ -52,7 +52,7 @@ function segment(id: string): string {
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
-  return withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, options.page === 'home');
+  return withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
 }
 function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';

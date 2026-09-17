@@ -1,3 +1,5 @@
+import type { BannerTarget } from '../shared/model';
+import { bannerAssets } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
 import { z } from 'zod';
 import type { Draft, Principal, Project } from '../shared/model';
@@ -123,6 +125,19 @@ const draftSchema = z.object({
     .max(8),
   storyboardRevision: z.number().int().nonnegative(),
   storyboardConfirmedRevision: z.number().int().nonnegative().optional(),
+  banners: z.array(z.object({
+    id, targets: z.array((z.union([designPageSchema,z.string().startsWith('product:').min(9).max(210)]) as z.ZodType<BannerTarget>)).max(30),
+    kind:z.enum(['images','video']), slides:z.array(z.object({assetId:id,alt:z.string().max(300)})).max(12),
+    videoAssetId:id.optional(), posterAssetId:id.optional(), mode:z.enum(['background','image']),
+    fit:z.enum(['cover','contain']), position:z.enum(['top','center','bottom']), contrast:z.enum(['light','dark','none']),
+    height:z.enum(['auto','screen']), autoplay:z.boolean(), interval:z.number().int().min(3).max(30),
+  })).max(20).superRefine((banners,ctx)=>{
+    const targets=new Set<string>(), ids=new Set<string>();
+    for(const banner of banners) {
+      if(ids.has(banner.id))ctx.addIssue({code:'custom',message:'Banner ID 重复'}); ids.add(banner.id);
+      for(const target of banner.targets) { if(targets.has(target))ctx.addIssue({code:'custom',message:'同一页面不能重复指定 Banner'}); targets.add(target); }
+    }
+  }).optional(),
   banner: z.object({ contrast: z.enum(['light','dark','none']).optional(), assetId: id, alt: z.string().max(300), mode: z.enum(['background', 'image']), fit: z.enum(['cover', 'contain']), position: z.enum(['top', 'center', 'bottom']) }).optional(),
   heroAssetId: id.optional(),
   posterAssetId: id.optional(),
@@ -376,7 +391,8 @@ export function assetReferences(d: Draft): string[] {
       [
         d.company.logoAssetId,
         d.company.faviconAssetId,
-        d.banner?.assetId,
+        ...bannerAssets(d).images,
+        ...bannerAssets(d).videos,
         d.heroAssetId,
         d.posterAssetId,
         ...d.products.map((p) => p.imageAssetId),
@@ -394,7 +410,8 @@ export function publicAssetReferences(d: Draft): string[] {
       [
         d.company.logoAssetId,
         d.company.faviconAssetId,
-        d.banner?.assetId,
+        ...bannerAssets(d,true).images,
+        ...bannerAssets(d,true).videos,
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),

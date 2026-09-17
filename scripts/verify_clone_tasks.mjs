@@ -211,7 +211,7 @@ try {
   await bannerPanel.locator('input[type=file]').setInputFiles('public/templates/senseng/hero-right.jpg');
   await bannerPanel.getByLabel('展示方式',{exact:true}).waitFor();
   await bannerPanel.getByLabel('展示方式',{exact:true}).selectOption('image');
-  await bannerPanel.getByLabel('图片说明（Alt）',{exact:true}).fill('Uploaded Senseng product display');
+  await bannerPanel.getByLabel('图片 1 的说明（Alt）',{exact:true}).fill('Uploaded Senseng product display');
   await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
   await page.locator('.seo-panel').getByText(/已检查/).waitFor();
   await page.reload();
@@ -236,7 +236,7 @@ try {
   const layoutPage=await context.newPage();
   await layoutPage.goto(origin);
   for(const template of ['natural','technology','explorer','senseng-clean','senseng-video','saas-automation','fintech-platform','digital-marketing','porto-accounting','crafto-corporate','juno-toys','corpox-ai-agency','corpox-consulting']){
-    const result=await context.request.post(origin+'/api/projects/'+project.id+'/preview?lang=en&page=home',{data:{draft:{...bannerDraft,template,banner:{...bannerDraft.banner,mode:'background'}}}});
+    const result=await context.request.post(origin+'/api/projects/'+project.id+'/preview?lang=en&page=home',{data:{draft:{...bannerDraft,template,banners:bannerDraft.banners.map(b=>({...b,mode:'background'}))}}});
     assert.equal(result.status(),200,template);
     const {html}=await result.json();
     for(const width of [390,2560]){
@@ -255,6 +255,91 @@ try {
     }
   }
   await layoutPage.close();
+  // A shared image carousel on inner pages, plus an independent full-screen homepage video.
+  const firstGroup=bannerPanel.getByRole('article',{name:'Banner 配置 1',exact:true});
+  await firstGroup.getByLabel('首页',{exact:true}).uncheck();
+  await firstGroup.getByLabel('关于页',{exact:true}).check();
+  await firstGroup.getByLabel('联系页',{exact:true}).check();
+  await firstGroup.getByLabel('上传 Banner 图片（可多选）',{exact:true}).setInputFiles(['public/templates/senseng/products-1.jpg','public/templates/senseng/products-2.jpg']);
+  await firstGroup.getByLabel('图片 3 的说明（Alt）',{exact:true}).waitFor();
+  await firstGroup.getByLabel('轮播间隔（秒）',{exact:true}).selectOption('3');
+  await bannerPanel.getByRole('button',{name:'添加 Banner 配置',exact:true}).click();
+  const secondGroup=bannerPanel.getByRole('article',{name:'Banner 配置 2',exact:true});
+  await secondGroup.getByLabel('首页',{exact:true}).check();
+  await secondGroup.getByLabel('媒体类型',{exact:true}).selectOption('video');
+  await secondGroup.getByLabel('文字可读性',{exact:true}).selectOption('dark');
+  await secondGroup.getByLabel('上传背景视频',{exact:true}).setInputFiles('public/templates/senseng/hero-video.mp4');
+  await secondGroup.getByLabel('替换背景视频',{exact:true}).waitFor({timeout:60000});
+  await secondGroup.getByLabel('上传视频封面（建议）',{exact:true}).setInputFiles('public/templates/senseng/video-poster.jpg');
+  await secondGroup.getByLabel('替换视频封面',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
+  await page.locator('.seo-panel').getByText(/已检查/).waitFor();
+  await page.reload();
+  assert.equal(await secondGroup.getByLabel('媒体类型',{exact:true}).inputValue(),'video');
+  await page.getByRole('button',{name:'整站预览',exact:true}).click();
+  const mediaFrame=page.frameLocator('iframe[title$="私有预览"]');
+  await mediaFrame.locator('[data-wr-banner-video]').waitFor();
+  await mediaFrame.locator('[data-wr-banner-video]').evaluate(v=>new Promise(resolve=>{if(v.readyState>=2)return resolve(true);v.addEventListener('loadeddata',()=>resolve(true),{once:true});}));
+  assert.equal(await mediaFrame.locator('[data-wr-banner-video]').evaluate(v=>v.muted&&v.videoWidth>0),true);
+  await mediaFrame.getByRole('button',{name:'Pause banner',exact:true}).click();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-video]').evaluate(v=>v.paused),true);
+  await page.screenshot({path:'artifacts/task-review/banner-video-preview.png'});
+  await mediaFrame.getByRole('button',{name:'Play banner',exact:true}).click();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-video]').evaluate(v=>v.paused),false);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await mediaFrame.getByRole('button',{name:'Play banner',exact:true}).waitFor();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-video]').evaluate(v=>v.paused),true);
+  await mediaFrame.getByRole('button',{name:'Play banner',exact:true}).click();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-video]').evaluate(v=>v.paused),false);
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  const mediaDraft=(await (await context.request.get(origin+'/api/projects/'+project.id)).json()).project.draft;
+  const videoPage=await context.newPage();
+  await videoPage.goto(origin);
+  for(const template of ['natural','senseng-clean','senseng-video','saas-automation']){
+    const result=await context.request.post(origin+'/api/projects/'+project.id+'/preview?lang=en&page=home',{data:{draft:{...mediaDraft,template}}});
+    assert.equal(result.status(),200);
+    const {html}=await result.json();
+    for(const width of [390,2560]){
+      await videoPage.setViewportSize({width,height:900});
+      await videoPage.setContent(html,{waitUntil:'domcontentloaded'});
+      const geometry=await videoPage.locator('[data-wr-banner-video]').evaluate(v=>{
+        const r=v.getBoundingClientRect();return {x:r.x,width:r.width,height:r.height,viewport:innerWidth,fit:getComputedStyle(v).objectFit};
+      });
+      assert.ok(Math.abs(geometry.x)<3&&Math.abs(geometry.width-geometry.viewport)<3,template+' video must cover full viewport width: '+JSON.stringify(geometry));
+      assert.ok(geometry.height>=900,template+' video must cover viewport height');
+      assert.equal(geometry.fit,'cover');
+    }
+  }
+  await videoPage.close();
+  await page.getByLabel('预览页面',{exact:true}).selectOption('about');
+  await mediaFrame.locator('[data-wr-banner-image]').first().waitFor();
+  assert.equal(await mediaFrame.locator('[data-wr-slide]').count(),3);
+  await page.mouse.move(0,0);
+  await mediaFrame.locator('[data-wr-banner-status]').filter({hasText:'2 / 3'}).waitFor({timeout:8000});
+  await mediaFrame.getByRole('button',{name:'Pause banner',exact:true}).click();
+  const pausedSlide=await mediaFrame.locator('[data-wr-banner-status]').innerText();
+  await page.mouse.move(0,0);
+  await new Promise(resolve=>setTimeout(resolve,3300));
+  assert.equal(await mediaFrame.locator('[data-wr-banner-status]').innerText(),pausedSlide);
+  await mediaFrame.getByRole('button',{name:'Previous banner',exact:true}).click();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-status]').innerText(),'1 / 3');
+  await mediaFrame.getByRole('button',{name:'Next banner',exact:true}).click();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-status]').innerText(),'2 / 3');
+  await mediaFrame.getByRole('button',{name:'Previous banner',exact:true}).click();
+  assert.equal(await mediaFrame.locator('[data-wr-banner-status]').innerText(),'1 / 3');
+  await page.getByLabel('预览页面',{exact:true}).selectOption('contact');
+  await mediaFrame.getByRole('button',{name:'Next banner',exact:true}).waitFor();
+  assert.equal(await mediaFrame.locator('[data-wr-slide]').count(),3);
+  await page.getByLabel('预览页面',{exact:true}).selectOption('catalog');
+  await mediaFrame.locator('h1').waitFor();
+  assert.equal(await mediaFrame.locator('[data-wr-banner=custom]').count(),0);
+  await page.getByRole('button',{name:'关闭预览',exact:true}).click();
+  await page.setViewportSize({width:390,height:1100});
+  await secondGroup.screenshot({path:'artifacts/task-review/banner-config-video-mobile.png'});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.setViewportSize({width:1440,height:1100});
+  assert.equal(calls,modelCallsBeforeBanner);
+
 
   // Real browser + worker checks for encrypted shared credentials and per-site connections.
   const adminContext=await browser.newContext({viewport:{width:1440,height:1100}});
@@ -311,7 +396,7 @@ try {
   await adminContext.close();
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; SEO audit and credential/domain controls pass.',
+    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];

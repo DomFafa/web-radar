@@ -1,3 +1,4 @@
+import { bannerPageFromPath, selectedBanner } from '../shared/banner-config';
 import { parse, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import type { Draft } from '../shared/model';
 import { labels } from '../templates/labels';
@@ -161,8 +162,11 @@ export function withPublicationMetadata(
     add('meta', { name: 'twitter:card', content: 'summary_large_image' });
     add('meta', { name: 'twitter:title', content: title });
     add('meta', { name: 'twitter:description', content: description });
+    const bannerPage = bannerPageFromPath(path);
+    const pageBanner = context.draft && bannerPage ? selectedBanner(context.draft,bannerPage.page,bannerPage.productId) : undefined;
+    const bannerImage = pageBanner?.kind === 'video' ? pageBanner.posterAssetId : pageBanner?.slides[0]?.assetId;
     const imageId =
-      product?.imageAssetId || context.draft?.banner?.assetId || context.draft?.company.logoAssetId;
+      product?.imageAssetId || bannerImage || context.draft?.company.logoAssetId;
     const image = imageId && context.assetUrl ? context.assetUrl(imageId) : undefined;
     if (image && /^https:\/\//.test(image)) {
       add('meta', { property: 'og:image', content: image });

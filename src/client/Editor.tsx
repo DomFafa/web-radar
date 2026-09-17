@@ -1,3 +1,4 @@
+import { BannerEditor, editableBanners, type BannerUploadSlot } from './BannerEditor';
 import type { SeoReport } from '../worker/site-metadata';
 import { WebsiteConnections } from './ProviderAccounts';
 import { ProjectHistory } from './ProjectHistory';
@@ -435,6 +436,25 @@ export function Editor({
       },
       '素材已上传，请保存草稿或确认选用。',
     );
+  }
+  async function uploadBanner(id: string, slot: BannerUploadSlot, files: File[]) {
+    await action('upload-banner', async () => {
+      const existing=editableBanners(projectRef.current!.draft).find(b=>b.id===id);
+      if(!existing) throw new Error('Banner 配置已变化，请重试。');
+      if(slot==='slides' && existing.slides.length+files.length>12) throw new Error('每组最多 12 张图片，请减少选择的文件。');
+      const controller=new AbortController();uploadController.current=controller;
+      try {
+        for(const [index,file] of files.entries()) {
+          if(controller.signal.aborted) throw new DOMException('已取消上传','AbortError');
+          const form=new FormData();form.append('file',file);
+          const name=`${index+1}/${files.length} · ${file.name}`,startedAt=Date.now();
+          setUploadState({name,fraction:0,startedAt});
+          const {asset}=await uploadAsset<{asset:Asset}>(`${endpoint}/uploads`,form,fraction=>setUploadState({name,fraction,startedAt}),controller.signal);
+          setDetail(current=>current?{...current,assets:[...current.assets,asset]}:current);
+          update(draft=>({...draft,banner:undefined,banners:editableBanners(draft).map(b=>b.id!==id?b:slot==='slides'?{...b,slides:[...b.slides,{assetId:asset.id,alt:''}]}:slot==='video'?{...b,videoAssetId:asset.id}:{...b,posterAssetId:asset.id})}));
+        }
+      } finally {setUploadState(null);uploadController.current=null;}
+    }, '媒体已上传并加入 Banner，请保存草稿；已成功上传的文件会保留。');
   }
   async function getSources(offset = 0) {
     await action('sources', async () => {
@@ -947,9 +967,8 @@ export function Editor({
                 </div>
                 </div>
               </section>
-              <BannerEditor projectId={project.id} banner={draft.banner} disabled={!!busy}
-                onChange={banner => patch({banner})}
-                onUpload={file => upload(file, asset => patch({banner: {...(projectRef.current?.draft.banner ?? {alt:'', mode:'background' as const, fit:'cover' as const, position:'center' as const, contrast:'light' as const}), assetId:asset.id}}))} />
+              <BannerEditor projectId={project.id} draft={draft} disabled={!!busy}
+                onChange={banners => patch({banners,banner:undefined})} onUpload={uploadBanner} />
               <section className="panel">
                 <div className="panel-title">
                   <span className="section-index">B</span>
@@ -1623,9 +1642,8 @@ export function Editor({
                   恢复历史版本会保留当前草稿、账号额度和询盘。下线后网址暂不可用，并停止接收新询盘。
                 </small>
               </section>
-              <BannerEditor projectId={project.id} banner={draft.banner} disabled={!!busy}
-                onChange={banner => patch({banner})}
-                onUpload={file => upload(file, asset => patch({banner: {...(projectRef.current?.draft.banner ?? {alt:'', mode:'background' as const, fit:'cover' as const, position:'center' as const, contrast:'light' as const}), assetId:asset.id}}))} />
+              <BannerEditor projectId={project.id} draft={draft} disabled={!!busy}
+                onChange={banners => patch({banners,banner:undefined})} onUpload={uploadBanner} />
               <section className="panel seo-panel">
                 <div className="panel-title"><h3>SEO 发布检查</h3><span>覆盖全部语言与页面</span></div>
                 <p className="muted">发布时生成 canonical、hreflang、站点地图、分享信息及真实资料的结构化数据。已激活的自定义域名优先作为搜索入口，多个域名时使用最早添加且已激活的绑定。</p>
@@ -2095,40 +2113,6 @@ export function Editor({
   }
 }
 
-
-function BannerEditor({ projectId, banner, disabled, onUpload, onChange }: {
-  projectId: string; banner: Draft['banner']; disabled: boolean;
-  onUpload: (file: File) => void; onChange: (banner: Draft['banner']) => void;
-}) {
-  return <section className="panel banner-editor">
-    <div className="panel-title"><h3>首页 Banner / Hero 图片</h3><span>选填 · 随时更换</span></div>
-    <p className="muted">制作前可上传自己的图片；生成后也可直接替换。保存后预览，重新发布才会更新线上网站，无需重新生成页面。</p>
-    <div className="logo-upload-row">
-      <AssetView projectId={projectId} assetId={banner?.assetId} alt={banner?.alt || '首页 Banner 预览'} />
-      <div><UploadButton label={banner ? '替换 Banner 图片' : '上传 Banner 图片'} accept="image/png,image/jpeg,image/webp" disabled={disabled} onFile={onUpload} />
-        {banner && <Button kind="quiet" disabled={disabled} onClick={() => onChange(undefined)}>恢复原始 Banner</Button>}
-        <p className="muted">建议横向高清图，支持 PNG、JPEG、WebP。首屏背景模式保留原有标题与按钮；整张图片模式适合已包含文字的设计成品图。</p>
-      </div>
-    </div>
-    {banner && <div className="form-grid">
-      <Field label="展示方式"><select aria-label="展示方式" disabled={disabled} value={banner.mode} onChange={e => onChange({...banner, mode:e.target.value as 'background' | 'image'})}>
-        <option value="background">首屏背景 · 保留标题与按钮</option><option value="image">整张图片 · 按原始比例展示</option>
-      </select></Field>
-      {banner.mode === 'background' && <>
-        <Field label="图片填充"><select aria-label="图片填充" disabled={disabled} value={banner.fit} onChange={e => onChange({...banner, fit:e.target.value as 'cover' | 'contain'})}>
-          <option value="cover">铺满区域（可能裁切）</option><option value="contain">完整显示（可能留边）</option>
-        </select></Field>
-        <Field label="文字可读性"><select aria-label="文字可读性" disabled={disabled} value={banner.contrast || 'none'} onChange={e => onChange({...banner, contrast:e.target.value as 'light' | 'dark' | 'none'})}>
-          <option value="light">浅色遮罩 · 深色文字</option><option value="dark">深色遮罩 · 浅色文字</option><option value="none">原始颜色 · 无遮罩</option>
-        </select></Field>
-        <Field label="画面重点位置"><select aria-label="画面重点位置" disabled={disabled} value={banner.position} onChange={e => onChange({...banner, position:e.target.value as 'top' | 'center' | 'bottom'})}>
-          <option value="top">顶部</option><option value="center">居中</option><option value="bottom">底部</option>
-        </select></Field>
-      </>}
-      <Field label="图片说明（Alt）" hint="描述图片内容；纯装饰图片可留空。"><input aria-label="图片说明（Alt）" disabled={disabled} maxLength={300} value={banner.alt} onChange={e => onChange({...banner, alt:e.target.value})} /></Field>
-    </div>}
-  </section>;
-}
 
 function UploadButton({
   label,

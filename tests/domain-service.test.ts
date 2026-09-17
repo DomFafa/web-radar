@@ -2464,3 +2464,14 @@ it('refreshes SEO after a domain change once and retains publication idempotency
   expect((await request(`/api/projects/${project.id}/seo`)).data.needsPublish).toBe(false);
   const again=await start();expect(again.data.job.id).toBe(second.data.job.id);
 });
+
+it('accepts scoped background video but rejects foreign videos and conflicting image uses', async () => {
+  const project=await create(),other=await create();
+  const video=await uploadAsset(project,'video/mp4'),foreign=await uploadAsset(other,'video/mp4'),image=await uploadAsset(project);
+  const base={id:'hero',targets:['home','contact'],kind:'video',slides:[],videoAssetId:video.id,posterAssetId:image.id,mode:'background',fit:'cover',position:'center',contrast:'dark',height:'screen',autoplay:true,interval:5};
+  const save=(draft:unknown)=>request(`/api/projects/${project.id}`,{expectedVersion:project.version,draft},owner,'PUT');
+  expect((await save({...project.draft,banners:[{...base,videoAssetId:foreign.id}]})).status).toBe(404);
+  expect((await save({...project.draft,banners:[{...base,videoAssetId:image.id}]})).status).toBe(400);
+  expect((await save({...project.draft,banners:[base],company:{...project.draft.company,logoAssetId:video.id}})).status).toBe(400);
+  expect((await save({...project.draft,banners:[base]})).status).toBe(200);
+});

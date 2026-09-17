@@ -1,3 +1,4 @@
+import { bannerRuntime } from '../shared/banner-runtime';
 import { useEffect, useRef, useState } from 'react';
 import type { DesignPage, Language, Project } from '../shared/model';
 import { pageLabel, plannedPages } from '../shared/site-brief';
@@ -134,6 +135,7 @@ export function SitePreview({
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `
         (${referenceInteractions.toString()})();
+        ${bannerRuntime}
         for (const search of document.querySelectorAll('[data-product-search]')) search.addEventListener('input', () => {
           for (const card of document.querySelectorAll('[data-product-card]')) card.hidden = !(card.dataset.productName || card.textContent).toLowerCase().includes(search.value.toLowerCase());
         });
@@ -182,6 +184,7 @@ export function SitePreview({
               if (url) node.setAttribute(attribute, url);
             }
           });
+          document.dispatchEvent(new Event('wr:banner-media-ready'));
           if (video) video.load();
           respectMotion();
         });
