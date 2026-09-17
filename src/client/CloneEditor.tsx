@@ -1,3 +1,6 @@
+import { CloneQualityReport } from './CloneQualityReport';
+import { UploadProgress, type UploadState } from './UploadProgress';
+import { hasCloneOutput } from '../shared/clone-output';
 import { CloneTaskPanel } from './CloneTaskPanel';
 import { useState, useRef, useEffect } from 'react';
 import { guessCloneImageRole, normalizeCloneImages } from '../shared/clone';
@@ -6,6 +9,7 @@ import { api, post, upload } from './api';
 import { AssetView, Button, Notice } from './components';
 
 interface CloneEditorProps {
+  onActivityChange?: (active: boolean) => void;
   projectId: string;
   testMode: boolean;
   onGenerate: (config: CloneConfig) => Promise<Project>;
@@ -27,6 +31,7 @@ const ROLE_LABELS: Record<CloneUiImageRole, string> = {
 };
 
 export function CloneEditor({
+  onActivityChange,
   projectId,
   testMode,
   onGenerate,
@@ -46,8 +51,8 @@ export function CloneEditor({
 
   const [targetUrl, setTargetUrl] = useState(cloneConfig.targetUrl || '');
   const [instructions, setInstructions] = useState(cloneConfig.instructions || '');
-  const [enhancementMode, setEnhancementMode] = useState<'faithful' | 'smart'>(cloneConfig.enhancementMode || 'smart');
-  const [autoPublish, setAutoPublish] = useState(cloneConfig.autoPublish !== false);
+  const [enhancementMode, setEnhancementMode] = useState<'faithful' | 'smart'>(cloneConfig.enhancementMode || (cloneConfig.targetUrl ? 'faithful' : 'smart'));
+  const [autoPublish, setAutoPublish] = useState(cloneConfig.autoPublish === true);
   const [uiImages, setUiImages] = useState<CloneUiImage[]>(normalizeCloneImages(cloneConfig.uiImages));
   const [scrapedData, setScrapedData] = useState(cloneConfig.scrapedData);
   const [selectedModel, setSelectedModel] = useState<string>(cloneConfig.model || 'gpt-6-astra');
@@ -55,6 +60,9 @@ export function CloneEditor({
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState('');
 
+  const [transfer, setTransfer] = useState<UploadState | null>(null);
+  const uploadController = useRef<AbortController | null>(null);
+  useEffect(() => () => uploadController.current?.abort(), []);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const uploadBusy = useRef(false);
@@ -66,19 +74,26 @@ export function CloneEditor({
   const [generationInfo, setGenerationInfo] = useState(cloneConfig.generation);
   const [genError, setGenError] = useState(cloneConfig.error || '');
   const [isSuccess, setIsSuccess] = useState(
-    Boolean(cloneConfig.generatedHtml || cloneConfig.status === 'ready'),
+    hasCloneOutput(cloneConfig),
   );
 
   const [deploying, setDeploying] = useState(false);
   const [deployedUrl, setDeployedUrl] = useState<string>('');
   const [deployError, setDeployError] = useState<string>('');
 
+  useEffect(() => {
+    onActivityChange?.(uploading || scraping || generating || deploying);
+    return () => onActivityChange?.(false);
+  }, [uploading, scraping, generating, deploying, onActivityChange]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const launching = useRef(false);
   useEffect(() => {
     setGenerationInfo(cloneConfig.generation);
-    setIsSuccess(Boolean(cloneConfig.generatedHtml));
-  }, [cloneConfig.generatedAt, cloneConfig.generation]);
+    setIsSuccess(hasCloneOutput(cloneConfig));
+  }, [cloneConfig.generatedAt, cloneConfig.generation, cloneConfig.artifact]);
+
+  useEffect(() => {setUiImages(normalizeCloneImages(cloneConfig.uiImages));}, [cloneConfig.generatedAt]);
 
   // Sync state up to project draft
   function syncConfig(updated: Partial<CloneConfig>) {
@@ -94,7 +109,6 @@ export function CloneEditor({
       ...updated,
     };
     onUpdateDraft({
-      buildBranch: 'clone',
       cloneConfig: nextConfig,
     });
   }
@@ -123,6 +137,9 @@ export function CloneEditor({
     if (!files.length || uploadBusy.current || generating) return;
     uploadBusy.current = true;
     setUploading(true);
+    const controller = new AbortController();
+    uploadController.current = controller;
+    const startedAt = Date.now();
     setUploadError('');
     const totalBytes = files.reduce((sum, file) => sum + file.size, 0) || 1;
     let completedBytes = 0;
@@ -131,18 +148,21 @@ export function CloneEditor({
     const newImages = [...uiImages];
     try {
       for (const file of files) {
+        if (controller.signal.aborted) throw new Error('上传已取消。');
         currentName = file.name;
-        const updateProgress = (fraction: number) => setUploadProgress({
+        const updateProgress = (fraction: number) => {
+          setTransfer({ name: file.name, fraction: (completedBytes + file.size * fraction) / totalBytes, startedAt });
+          setUploadProgress({
           name: file.name, completed, total: files.length,
           // Completion is confirmed by the server, not just the last transmitted byte.
           percent: Math.min(99, Math.floor((completedBytes + file.size * fraction) / totalBytes * 100)),
           processing: fraction === 1,
-        });
+        }); };
         updateProgress(0);
         const form = new FormData();
         form.append('file', file);
         const result = await upload<{ asset: { id: string } }>(
-          `/api/projects/${encodeURIComponent(projectId)}/uploads`, form, updateProgress,
+          `/api/projects/${encodeURIComponent(projectId)}/uploads`, form, updateProgress, controller.signal,
         );
         newImages.push({
           id: crypto.randomUUID(), assetId: result.asset.id, name: file.name,
@@ -158,6 +178,8 @@ export function CloneEditor({
       const msg = err instanceof Error ? err.message : '图片上传失败。';
       setUploadError(`${currentName}：${msg} 已保留本次成功上传的 ${completed} 张图片；可重新选择未完成的图片。`);
     } finally {
+      uploadController.current = null;
+      setTransfer(null);
       uploadBusy.current = false;
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -178,8 +200,8 @@ export function CloneEditor({
 
   // Handle clone generation via OpenAI
   async function handleGenerate() {
-    if (!targetUrl.trim() && uiImages.length === 0) {
-      setGenError('请至少输入目标网站 URL 或上传一张页面设计稿。');
+    if (!targetUrl.trim() && !uiImages.some(i=>i.role!=='asset')) {
+      setGenError('请输入参考网址，或上传并标注至少一张页面设计图。');
       return;
     }
 
@@ -216,7 +238,10 @@ export function CloneEditor({
 
   return (
     <>
+    <>
+    {transfer && <UploadProgress state={transfer} onCancel={() => uploadController.current?.abort()} />}
     <fieldset disabled={generating || uploading} className="clone-editor" style={{ maxWidth: '1100px', width: '100%', minWidth: 0, border: 0, margin: '0 auto', padding: '1.5rem 0' }}>
+      {cloneConfig.referenceCapture && <div className="notice">已自动采集 {cloneConfig.referenceCapture.screenshotCount} 张截图、{cloneConfig.referenceCapture.assets.length} 个素材。{cloneConfig.referenceCapture.warnings.join('；')} 生成完成后请对照参考网站预览。</div>}
       {/* Mode Header */}
       <div
         style={{
@@ -350,20 +375,22 @@ export function CloneEditor({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <span style={{ fontSize: '18px' }}>🌐</span>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>
-              目标参考网站 URL (可选)
+              参考网址
             </h3>
           </div>
           <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#64748b' }}>
-            网址用于提取标题、导航和文本。需要还原视觉布局时，请同时上传页面截图；抓取文字不等于读取网页设计。
+            只需输入公开网址，系统自动采集电脑与手机截图、主要内页和可用素材，再由模型分析重建。也可直接上传设计图。
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <input
               type="url"
               placeholder="例如: https://squishytoys.store 或 https://example.com"
+              aria-label="参考网址"
               value={targetUrl}
               onChange={(e) => {
                 setTargetUrl(e.target.value);
-                syncConfig({ targetUrl: e.target.value });
+                setEnhancementMode('faithful');
+                syncConfig({ targetUrl: e.target.value, enhancementMode:'faithful' });
               }}
               style={{
                 flex: 1,
@@ -381,7 +408,7 @@ export function CloneEditor({
               disabled={!targetUrl.trim() || scraping}
               style={{ minWidth: '130px' }}
             >
-              {scraping ? '嗅探中...' : '⚡ 实时嗅探抓取'}
+              {scraping ? '嗅探中...' : '读取文字摘要（选填）'}
             </Button>
           </div>
 
@@ -742,12 +769,13 @@ export function CloneEditor({
           <label style={{ display: 'block', textAlign: 'left', marginBottom: 16, color: '#475569' }}>
             <input type="checkbox" checked={autoPublish} onChange={event => { setAutoPublish(event.target.checked); syncConfig({ autoPublish: event.target.checked }); }} />
             {' '}生成完成后自动发布
-            <small style={{ display: 'block', marginTop: 6 }}>{autoPublish ? '成功后会直接上线并写入同一条发布记录，无需再次点击发布。' : '生成后先预览，确认页面后再到发布页上线。'}</small>
+            <small style={{ display: 'block', marginTop: 6 }}>{autoPublish ? '生成成功后自动发布；若检查发现布局或图片问题，会保留页面供预览并暂停自动发布。' : '生成后先预览，确认页面后再到发布页上线。'}</small>
           </label>
           {generationInfo && <p style={{ fontSize: '13px', color: '#475569', textAlign: 'left' }}>
             {generationInfo.mode === 'fixture' ? '测试演示：没有调用视觉模型，不代表设计还原结果。' : generationInfo.mode === 'reference-rebuild' ? '按设计稿直接重建的页面，未调用视觉模型。' : `实际模型：${generationInfo.model}；读取 ${generationInfo.imageCount} 张图片。`}
             {' '}{generationInfo.pageCount} 个页面文件。{generationInfo.visuallyVerified ? '已进行人工视觉检查。' : '尚未进行视觉验收。'}
           </p>}
+          {generationInfo?.quality && <CloneQualityReport projectId={projectId} quality={generationInfo.quality} />}
           {!!generationInfo?.improvements?.length && <div style={{ textAlign: 'left', color: '#475569', fontSize: 13 }}><strong>本次页面优化</strong><ul>{generationInfo.improvements.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
           {!generationInfo && isSuccess && <Notice tone="warning">这是旧版生成结果，缺少视觉生成记录。请检查页面是否使用了设计图后再发布。</Notice>}
 
@@ -861,13 +889,14 @@ export function CloneEditor({
               }}
             >
               {isSuccess
-                ? (autoPublish ? '🔄 重新按设计稿生成并部署' : '🔄 重新生成页面并预览')
-                : (autoPublish ? '🎯 按设计稿生成并部署' : '🎯 生成页面并预览')}
+                ? (autoPublish ? '🔄 重新生成并发布' : '🔄 重新生成页面并预览')
+                : (autoPublish ? '🎯 生成并发布网站' : '🎯 生成页面并预览')}
             </Button>
           )}
         </div>
       </div>
     </fieldset>
+    </>
     <CloneTaskPanel projectId={projectId} taskId={cloneConfig.taskId} onOpenPublish={onProceedToPublish} onState={active => { if (!launching.current) setGenerating(active); }} onFinished={onRefresh} />
     </>
   );

@@ -1,4 +1,9 @@
+import { withSiteContacts } from '../shared/site-contacts';
+import { bannerPageFromPath } from '../shared/banner-config';
+import { withBanner } from '../shared/banner';
 import type { Draft, Language } from '../shared/model';
+import { withFavicon } from '../shared/favicon';
+import { sanitizeGeneratedHtml } from './site-safety';
 import { plannedPages } from '../shared/site-brief';
 import { publicAssetReferences, requireCondition } from './domain';
 
@@ -88,9 +93,9 @@ export function materializeSiteFiles(
     asset ? options.assetUrl(asset) : options.inquiryUrl,
     'https://preview.invalid',
   ).origin;
-  const policy = `default-src 'none'; img-src 'self' ${origin} data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' ${origin}; font-src data:; form-action 'self' ${origin}; base-uri 'none'`;
+  const policy = `default-src 'none'; img-src 'self' ${origin} data:; media-src 'self' ${origin}; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self' ${origin}; font-src data:; form-action 'self' ${origin}; base-uri 'none'`;
   for (const [key, html] of Object.entries(files)) {
-    result[key] = html
+    result[key] = sanitizeGeneratedHtml(withSiteContacts(html,draft), options.inquiryUrl)
       .replace(/__WR_ASSET_([^<>"\s]+?)__/g, (_, id) => escape(options.assetUrl(id)))
       .replaceAll('__WR_INQUIRY__', escape(options.inquiryUrl))
       .replace(
@@ -110,5 +115,5 @@ export function materializeSiteFiles(
     'site_page_large',
     '生成的网页超过发布大小限制，请简化设计后重新生成。',
   );
-  return result;
+  return Object.fromEntries(Object.entries(result).map(([path, html]) => [path, withBanner(withFavicon(html, draft, options.assetUrl), draft, options.assetUrl, bannerPageFromPath(path) ?? false)]));
 }

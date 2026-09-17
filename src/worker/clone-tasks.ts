@@ -1,15 +1,20 @@
+import { captureReference, ReferencePaused } from './clone-reference';
+import { completeSparseHome } from './clone-completion';
+import { reviewClone } from './clone-quality';
 import type { CloneConfig, CloneTaskProgress, Job, Principal, Project } from '../shared/model';
 import type { AppEnv } from './env';
 import { testMode } from './env';
 import { DomainStore } from './domain-store';
-import { expectedVersion, requestId, requireCondition, validateDraft } from './domain';
+import { expectedVersion, requestId, requireCondition, validateDraft, validEmail } from './domain';
 import { generateCloneBundle } from './clone-service';
 import { normalizeCloneImages } from '../shared/clone';
+import { storeCloneOutput } from './clone-artifacts';
+import { hasCloneOutput, preserveCloneOutput } from '../shared/clone-output';
 
 const now = () => new Date().toISOString();
 const active = (job?: Job) => !!job && ['queued', 'running', 'paused'].includes(job.status);
 const checkpoint = (job: Job) => `projects/${job.projectId}/clone-tasks/${job.id}.json`;
-class PauseBoundary extends Error {}
+class PauseBoundary extends ReferencePaused {}
 interface Hooks {
   lock<T>(run: () => Promise<T>): Promise<T>;
   wake(): Promise<void>;
@@ -47,16 +52,27 @@ export class CloneTasks {
     expectedVersion(project, body.expectedVersion);
     const cloneConfig = validateDraft({
       ...project.draft,
-      cloneConfig: { ...project.draft.cloneConfig, ...(body.cloneConfig as CloneConfig) },
+      cloneConfig: preserveCloneOutput(project.draft.cloneConfig, {
+        ...project.draft.cloneConfig,
+        ...(body.cloneConfig as CloneConfig),
+      }),
     }).cloneConfig!;
     cloneConfig.uiImages = normalizeCloneImages(cloneConfig.uiImages);
     requireCondition(
-      !!cloneConfig.uiImages?.some((image) => image.role !== 'asset') ||
+      !!cloneConfig.targetUrl?.trim() ||
+        !!cloneConfig.uiImages?.some((image) => image.role !== 'asset') ||
         (testMode(this.env) && this.env.CLONE_TEST_FIXTURE === 'true'),
       400,
       'clone_design_missing',
-      '请上传至少一张页面设计稿。',
+      '请输入参考网址，或上传至少一张页面设计稿。',
     );
+    if (body.autoPublish === true)
+      requireCondition(
+        project.draft.company.name.trim() && validEmail(project.draft.company.email),
+        400,
+        'company_incomplete',
+        '自动发布前请填写公司 / 品牌名称和有效联系邮箱；也可以先生成私有预览。',
+      );
     const id = crypto.randomUUID();
     project.draft = {
       ...project.draft,
@@ -80,7 +96,7 @@ export class CloneTasks {
           history.slice(0, 5).reduce((sum, j) => sum + j.cloneProgress!.elapsedMs / 1000, 0) /
             Math.min(5, history.length),
         )
-      : Math.min(600, 120 + imageCount * 15);
+      : Math.min(600, (cloneConfig.targetUrl ? 360 : 120) + imageCount * 15);
     const snapshot = structuredClone(project);
     if (snapshot.draft.cloneConfig) {
       delete snapshot.draft.cloneConfig.generatedHtml;
@@ -169,7 +185,7 @@ export class CloneTasks {
       job.cloneProgress!.pauseRequested = false;
       this.controllers.get(job.id)?.abort();
       if (project.draft.cloneConfig) {
-        project.draft.cloneConfig.status = project.draft.cloneConfig.generatedHtml
+        project.draft.cloneConfig.status = hasCloneOutput(project.draft.cloneConfig)
           ? 'ready'
           : 'idle';
         project.draft.cloneConfig.error = undefined;
@@ -180,7 +196,8 @@ export class CloneTasks {
     }
     job.updatedAt = now();
     await this.store.update('jobs', job).run();
-    if (job.status === 'cancelled') await this.env.MEDIA.delete(checkpoint(job));
+    if (job.status === 'cancelled')
+      await this.env.MEDIA.delete([checkpoint(job), checkpoint(job) + '.reference']);
     return { project, job: this.publicJob(job) };
   }
   async tick() {
@@ -223,7 +240,7 @@ export class CloneTasks {
       this.hooks.lock(async () => {
         const job = await this.store.one<Job>('jobs', selected.id);
         if (!job || job.status !== 'running') throw new DOMException('Task stopped', 'AbortError');
-        if (job.cloneProgress!.pauseRequested && phase === 'reading') {
+        if (job.cloneProgress!.pauseRequested && (phase === 'reading' || phase === 'capturing')) {
           job.status = 'paused';
           this.stopClock(job);
           job.updatedAt = now();
@@ -231,7 +248,7 @@ export class CloneTasks {
           throw new PauseBoundary();
         }
         job.cloneProgress!.phase = phase;
-        if (phase === 'reading') job.cloneProgress!.imagesRead = count;
+        if (phase === 'reading' || phase === 'capturing') job.cloneProgress!.imagesRead = count;
         if (phase === 'model') job.cloneProgress!.outputCharacters = count;
         job.updatedAt = now();
         await this.store.update('jobs', job).run();
@@ -239,6 +256,47 @@ export class CloneTasks {
     try {
       const snapshot = selected.input.project as Project;
       const saved = await this.env.MEDIA.get(checkpoint(selected));
+      if (
+        !saved &&
+        snapshot.draft.cloneConfig?.targetUrl &&
+        !snapshot.draft.cloneConfig.uiImages?.some(
+          (i) => i.role !== 'asset' && !i.id.startsWith('reference-'),
+        )
+      ) {
+        const sourceKey = checkpoint(selected) + '.reference';
+        const captured = await this.env.MEDIA.get(sourceKey);
+        snapshot.draft.cloneConfig = captured
+          ? ((await new Response(captured.body).json()) as CloneConfig)
+          : await captureReference(
+              this.env,
+              this.store,
+              {
+                ...snapshot,
+                draft: {
+                  ...snapshot.draft,
+                  cloneConfig: {
+                    ...snapshot.draft.cloneConfig,
+                    uiImages: snapshot.draft.cloneConfig.uiImages?.filter(
+                      (i) => !i.id.startsWith('reference-'),
+                    ),
+                  },
+                },
+              },
+              controller.signal,
+              (count) => update('capturing', count),
+              this.hooks.lock,
+            );
+        if (!captured)
+          await this.env.MEDIA.put(sourceKey, JSON.stringify(snapshot.draft.cloneConfig));
+        await this.hooks.lock(async () => {
+          const job = await this.store.one<Job>('jobs', selected.id);
+          if (job?.status === 'running') {
+            job.input.project = snapshot;
+            job.cloneProgress!.imageCount = snapshot.draft.cloneConfig!.uiImages?.length || 0;
+            await this.store.update('jobs', job).run();
+          }
+        });
+      }
       const bundle: Awaited<ReturnType<typeof generateCloneBundle>> = saved
         ? ((await new Response(saved.body).json()) as Awaited<
             ReturnType<typeof generateCloneBundle>
@@ -256,6 +314,48 @@ export class CloneTasks {
         await this.env.MEDIA.put(checkpoint(selected), JSON.stringify(bundle), {
           httpMetadata: { contentType: 'application/json' },
         });
+      const pendingControl = await this.store.one<Job>('jobs', selected.id);
+      if (
+        pendingControl?.status === 'running' &&
+        !pendingControl.cloneProgress?.pauseRequested &&
+        !bundle.generation.quality &&
+        bundle.generation.mode !== 'fixture'
+      ) {
+        await update('validating');
+        bundle.generation.quality = await reviewClone(
+          this.env,
+          snapshot,
+          bundle,
+          (id) => this.hooks.image(snapshot.id, id),
+          controller.signal,
+        );
+        const quality = bundle.generation.quality;
+        if (quality.status === 'passed' && quality.sparsePages?.length) {
+          const completed = completeSparseHome(
+            snapshot.draft,
+            bundle.generatedFiles,
+            quality.sparsePages,
+          );
+          if (completed !== bundle.generatedFiles) {
+            bundle.generatedFiles = completed;
+            bundle.generatedHtml = completed[`${snapshot.draft.languages[0]}/index.html`];
+            bundle.generation.improvements = [
+              ...(bundle.generation.improvements ?? []).slice(0, 7),
+              '页面内容较少，使用已提供的产品与联系方式补充首页；未新增未经提供的事实。',
+            ];
+            bundle.generation.quality = await reviewClone(
+              this.env,
+              snapshot,
+              bundle,
+              (id) => this.hooks.image(snapshot.id, id),
+              controller.signal,
+            );
+          }
+        }
+        await this.env.MEDIA.put(checkpoint(selected), JSON.stringify(bundle), {
+          httpMetadata: { contentType: 'application/json' },
+        });
+      }
       await this.hooks.lock(async () => {
         const job = await this.store.one<Job>('jobs', selected.id);
         if (!job || job.status !== 'running') return;
@@ -273,13 +373,13 @@ export class CloneTasks {
             '任务执行期间草稿已更新，生成结果已保留，请停止后重新生成。',
           );
           if (!job.input.committedVersion) {
-            project.draft.cloneConfig = {
-              ...project.draft.cloneConfig,
+            project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, {
+              ...snapshot.draft.cloneConfig,
               ...bundle,
               status: 'ready',
               generatedAt: now(),
               error: undefined,
-            };
+            });
             project.version++;
             project.updatedAt = now();
             job.input.committedVersion = project.version;
@@ -289,7 +389,12 @@ export class CloneTasks {
             ]);
           }
           // Publish is idempotent by task id and is now independent of the browser.
-          if (job.input.autoPublish) {
+          const quality = bundle.generation.quality;
+          const holdPublication =
+            quality?.status === 'issues' ||
+            (quality?.status === 'unavailable' && !!this.env.SITE_BUILDER_URL);
+          if (holdPublication) job.cloneProgress!.autoPublish = false;
+          if (job.input.autoPublish && !holdPublication) {
             const publication = await this.hooks.publish(
               project,
               job.input.principal as Principal,
@@ -327,7 +432,7 @@ export class CloneTasks {
       this.controllers.delete(selected.id);
       const job = await this.store.one<Job>('jobs', selected.id);
       if (job && ['succeeded', 'cancelled'].includes(job.status))
-        await this.env.MEDIA.delete(checkpoint(selected));
+        await this.env.MEDIA.delete([checkpoint(selected), checkpoint(selected) + '.reference']);
       await this.hooks.wake();
     }
   }

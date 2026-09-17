@@ -1,3 +1,4 @@
+import type { PublicationMetadata } from './site-metadata';
 import type {
   DesignPage,
   ConsultationResult,
@@ -36,6 +37,7 @@ export interface PublishResult {
   testMode: boolean;
 }
 export interface PreviousPublication {
+  metadata?: PublicationMetadata;
   releaseId: string;
   files: Record<string, string>;
 }
@@ -71,6 +73,7 @@ export interface ProviderSet {
     previousDeploymentId?: string,
     hostingTarget?: HostingTarget,
     previous?: PreviousPublication,
+    metadata?: PublicationMetadata,
   ): Promise<PublishResult>;
   email(
     inquiry: Inquiry,

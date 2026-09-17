@@ -1,3 +1,4 @@
+import { ProviderAccounts } from './ProviderAccounts';
 import { useEffect, useState } from 'react';
 import type { Job, Quota, ServiceStatus } from '../shared/model';
 import { api, errorMessage, post, put } from './api';
@@ -15,6 +16,9 @@ import {
 
 type AdminData = { quotas: Quota[]; services: ServiceStatus[]; jobs: Job[] };
 export function Admin() {
+  const [metrics, setMetrics] = useState<{
+    jobs: { kind: string; status: string; count: number; averageElapsedMs: number | null }[];
+  } | null>(null);
   const [data, setData] = useState<AdminData | null>(null),
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
@@ -26,7 +30,12 @@ export function Admin() {
   const [upstreamIds, setUpstreamIds] = useState<Record<string, string>>({});
   async function load() {
     try {
-      setData(await api<AdminData>('/api/admin'));
+      const [next, report] = await Promise.all([
+        api<AdminData>('/api/admin'),
+        api<NonNullable<typeof metrics>>('/api/admin/metrics'),
+      ]);
+      setData(next);
+      setMetrics(report);
     } catch (error) {
       setError(errorMessage(error));
     }
@@ -95,6 +104,41 @@ export function Admin() {
       </div>
       {error && <Notice tone="error">{error}</Notice>}
       {notice && <Notice tone="success">{notice}</Notice>}
+      <ProviderAccounts />
+      {metrics && (
+        <section className="panel">
+          <SectionTitle
+            title="近 30 天任务统计"
+            description="平均耗时来自任务记录；生成任务扣除暂停时间，其他任务包含排队时间，不表示模型计费。"
+          />
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>任务类型</th>
+                  <th>状态</th>
+                  <th>数量</th>
+                  <th>平均耗时</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metrics.jobs.map((row) => (
+                  <tr key={`${row.kind}:${row.status}`}>
+                    <td>{row.kind}</td>
+                    <td>{statusNames[row.status] || row.status}</td>
+                    <td>{row.count}</td>
+                    <td>
+                      {row.averageElapsedMs == null
+                        ? '—'
+                        : `${Math.round(row.averageElapsedMs / 1000)} 秒`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
       {!data ? (
         <div className="loading-area">
           <span className="spinner" />

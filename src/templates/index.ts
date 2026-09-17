@@ -1,4 +1,6 @@
+import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
+import { withFavicon } from '../shared/favicon';
 import { labels } from './labels';
 import { styles } from './styles';
 import { themeStyles } from './themes/styles';
@@ -50,6 +52,9 @@ function segment(id: string): string {
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  return withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+}
+function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
   const ui = labels[lang];
   const template = draft.template || 'senseng-clean';
@@ -150,7 +155,7 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
   }
   if (page === 'contact') {
     const waDigits = (company.whatsapp || '').replace(/[^0-9]/g, '');
-    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.contact)}</span><h1>${esc(ui.conversation)}</h1><p>${esc(ui.contactIntro)}</p></header><section class="contact-layout"><div class="contact-details"><h3>${esc(company.contactName)}</h3><p><strong>${esc(company.name)}</strong></p><p>${esc(ui.emailDirect)}<br><a class="text-link" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p>${company.phone ? `<p style="margin-top:12px">Phone<br><a class="text-link" href="tel:${esc(company.phone)}">${esc(company.phone)}</a></p>` : ''}${waDigits ? `<p style="margin-top:12px">WhatsApp<br><a class="text-link" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(waDigits)}">+${esc(waDigits)} (Chat Now ↗)</a></p>` : ''}${company.address ? `<p style="margin-top:12px">Address<br><span>${esc(company.address)}</span></p>` : ''}</div><form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" class="form-grid"><label class="field">${esc(ui.name)}<input name="name" autocomplete="name" required maxlength="120"></label><label class="field">${esc(ui.email)}<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label class="field full">${esc(ui.company)} (${esc(ui.optional)})<input name="company" autocomplete="organization" maxlength="200"></label><label class="field full">${esc(ui.product)} (${esc(ui.optional)})<select name="productId"><option value="">—</option>${draft.products.map((p) => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(translate(p).name)}</option>`).join('')}</select></label><label class="field full">${esc(ui.message)}<textarea name="message" required maxlength="5000" rows="5"></textarea></label><div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit"${options.preview ? ' disabled' : ''}>${esc(ui.send)} ↗</button><p class="form-status" role="status" aria-live="polite"></p></form></section></div>`;
+    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.contact)}</span><h1>${esc(ui.conversation)}</h1><p>${esc(ui.contactIntro)}</p></header><section class="contact-layout"><div class="contact-details">${company.contactName ? `<h3>${esc(company.contactName)}</h3>` : ''}<p><strong>${esc(company.name)}</strong></p><p>${esc(ui.emailDirect)}<br><a class="text-link" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p>${company.phone ? `<p style="margin-top:12px">Phone<br><a class="text-link" href="tel:${esc(company.phone)}">${esc(company.phone)}</a></p>` : ''}${waDigits ? `<p style="margin-top:12px">WhatsApp<br><a class="text-link" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(waDigits)}">+${esc(waDigits)} (Chat Now ↗)</a></p>` : ''}${company.address ? `<p style="margin-top:12px">Address<br><span>${esc(company.address)}</span></p>` : ''}</div><form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" class="form-grid"><label class="field">${esc(ui.name)}<input name="name" autocomplete="name" required maxlength="120"></label><label class="field">${esc(ui.email)}<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label class="field full">${esc(ui.company)} (${esc(ui.optional)})<input name="company" autocomplete="organization" maxlength="200"></label><label class="field full">${esc(ui.product)} (${esc(ui.optional)})<select name="productId"><option value="">—</option>${draft.products.map((p) => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(translate(p).name)}</option>`).join('')}</select></label><label class="field full">${esc(ui.message)}<textarea name="message" required maxlength="5000" rows="5"></textarea></label><div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div><button class="button" type="submit"${options.preview ? ' disabled' : ''}>${esc(ui.send)} ↗</button><p class="form-status" role="status" aria-live="polite"></p></form></section></div>`;
   }
   const socials = (['linkedin', 'facebook', 'instagram', 'x'] as const)
     .map((k) => {
@@ -201,5 +206,6 @@ export function renderSiteFiles(
   }
   files['index.html'] =
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
+  files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   return files;
 }

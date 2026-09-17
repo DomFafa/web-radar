@@ -15,7 +15,9 @@ export class Coordinator extends DurableObject<AppEnv> {
     });
   }
   async fetch(request: Request): Promise<Response> {
-    return this.domain.fetch(request);
+    const response = await this.domain.fetch(request);
+    if (request.method !== 'GET' && request.method !== 'HEAD' && response.ok) this.ctx.waitUntil(this.domain.tick());
+    return response;
   }
   async alarm(): Promise<void> {
     await this.domain.tick();

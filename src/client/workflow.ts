@@ -1,3 +1,5 @@
+import { buildMode, withBuildMode } from '../shared/build-mode';
+import { hasCloneOutput } from '../shared/clone-output';
 import type { Draft, Project } from '../shared/model';
 import { designsConfirmed, staticSiteReady } from '../shared/site-design';
 import { briefConfirmed, plannedPages } from '../shared/site-brief';
@@ -17,8 +19,8 @@ export const customWorkflowSteps = [
 ] as const;
 
 export const cloneWorkflowSteps = [
-  ['basics', '克隆与素材', 'folder'],
-  ['clone-generate', '像素级生成', 'spark'],
+  ['basics', '品牌与产品（可后补）', 'folder'],
+  ['clone-generate', '网址 / 设计稿生成', 'spark'],
   ['publish', '预览与发布', 'globe'],
 ] as const;
 
@@ -29,10 +31,10 @@ export type WorkflowStep =
   | (typeof cloneWorkflowSteps)[number][0];
 
 export function getWorkflowSteps(draft?: Draft) {
-  if (draft?.buildBranch === 'clone') {
+  if (buildMode(draft) === 'clone') {
     return cloneWorkflowSteps;
   }
-  return draft?.buildBranch === 'template'
+  return buildMode(draft) === 'template'
     ? templateWorkflowSteps
     : customWorkflowSteps;
 }
@@ -46,6 +48,7 @@ export type ChecklistItem = {
 };
 
 export function draftChecklist(draft: Draft): ChecklistItem[] {
+  draft = withBuildMode(draft);
   const email = draft.company.email;
   const legacyArtifactReady = staticSiteReady(draft) && !draft.consultation;
   const pages = plannedPages(draft);
@@ -54,11 +57,10 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
     {
       id: 'company',
       label: '公司与联系资料',
-      detail: '公司名称、有效邮箱和联系人',
+      detail: '公司 / 品牌名称和有效联系邮箱',
       step: 'basics',
       ready:
         !!draft.company.name.trim() &&
-        !!draft.company.contactName.trim() &&
         email.length <= 254 &&
         /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) &&
         !/[\r\n]/.test(email),
@@ -85,12 +87,13 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
   if (draft.buildBranch === 'clone') {
     const hasTarget = Boolean(
       draft.cloneConfig?.targetUrl?.trim() ||
-        (draft.cloneConfig?.uiImages && draft.cloneConfig.uiImages.length > 0),
+        draft.cloneConfig?.uiImages?.some(image=>image.role !== 'asset'),
     );
     const isGenerated = Boolean(
-      draft.cloneConfig?.generatedHtml || draft.cloneConfig?.status === 'ready',
+      hasCloneOutput(draft.cloneConfig),
     );
     return [
+      {...basicItems[0],detail:'生成预览可留空；发布前填写名称和联系邮箱'},
       {
         id: 'clone-source',
         label: '目标站点或设计稿',
@@ -104,10 +107,10 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
       },
       {
         id: 'clone-generate',
-        label: 'OpenAI 像素级生成',
+        label: '页面生成',
         detail: isGenerated
           ? '页面代码已生成，请对照设计图检查'
-          : '调用 GPT-4o 视觉模型进行像素级逆向与代码生成',
+          : '由所选模型分析参考页面并生成代码',
         step: 'clone-generate',
         ready: isGenerated,
       },
@@ -179,9 +182,16 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
 }
 
 export function nextDraftStep(draft: Draft): WorkflowStep {
+  draft = withBuildMode(draft);
+  if(draft.buildBranch==='clone'&&!hasCloneOutput(draft.cloneConfig))return 'clone-generate';
   return draftChecklist(draft).find((item) => !item.ready)?.step ?? 'publish';
 }
 
-export function projectStatus(project: Project): 'draft' | 'published' | 'offline' {
+export function projectStatus(project: Pick<Project, 'offline' | 'publishedReleaseId'>): 'draft' | 'published' | 'offline' {
   return !project.publishedReleaseId ? 'draft' : project.offline ? 'offline' : 'published';
+}
+
+export function resolveWorkflowTab(draft: Draft, tab: string | null): WorkflowStep | "inquiries" {
+  if (tab === "inquiries") return tab;
+  return getWorkflowSteps(draft).find(([id]) => id === tab)?.[0] ?? nextDraftStep(draft);
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultDraft,
+  assertSiteIntakeReady,
   canManage,
   editDraft,
   assertReadyForVideo,
@@ -159,4 +160,17 @@ it('publishes with omitted unknown company facts and translated empty product de
   d.copy.de = { ...d.copy.en! };
   d.products[0].translations = { de: { name: 'Produkt', description: '' } };
   expect(() => assertPublishable(d)).not.toThrow();
+});
+
+ it('allows an omitted business contact while retaining name and email intake requirements', () => {
+   const draft=readyDraft();draft.company.contactName='';
+   expect(()=>assertSiteIntakeReady(draft)).not.toThrow();
+   expect(()=>assertSiteIntakeReady({...draft,company:{...draft.company,name:''}})).toThrow();
+   expect(()=>assertSiteIntakeReady({...draft,company:{...draft.company,email:'invalid'}})).toThrow();
+ });
+
+it('identifies invalid fields and limits without echoing entered content',()=>{
+ const draft=defaultDraft();draft.cloneConfig={instructions:'private-value'.repeat(500)};
+ expect(()=>validateDraft(draft)).toThrow('品牌定制与微调指令最多允许 5000 个字符');
+ try{validateDraft(draft);}catch(error){expect((error as Error).message).not.toContain('private-value');}
 });

@@ -5,6 +5,11 @@ type Table = 'projects' | 'assets' | 'jobs' | 'releases' | 'inquiries';
 type Entity = Project | Asset | Job | Release | Inquiry;
 export class DomainStore {
   constructor(readonly db: D1Database) {}
+  private serialize(value: Entity): string {
+    const body = JSON.stringify(value);
+    if (new TextEncoder().encode(body).length > 1_900_000) throw new DomainError(413, 'record_too_large', '资料超过数据库单条容量，请减少重复产品资料；生成页面应保存到对象存储。');
+    return body;
+  }
   async one<T extends Entity>(table: Table, id: string): Promise<T | undefined> {
     const row = await this.db
       .prepare(`SELECT data FROM ${table} WHERE id=?`)
@@ -17,10 +22,12 @@ export class DomainStore {
     where = '',
     values: unknown[] = [],
     order = '',
+    limit?: number,
+    offset = 0,
   ): Promise<T[]> {
     const rows = await this.db
       .prepare(
-        `SELECT data FROM ${table}${where ? ` WHERE ${where}` : ''}${order ? ` ORDER BY ${order}` : ''}`,
+        `SELECT data FROM ${table}${where ? ` WHERE ${where}` : ''}${order ? ` ORDER BY ${order}` : ''}${limit === undefined ? '' : ` LIMIT ${Math.max(1, Math.min(1000, Math.floor(limit)))} OFFSET ${Math.max(0, Math.floor(offset))}`}`,
       )
       .bind(...values)
       .all<{ data: string }>();
@@ -31,7 +38,7 @@ export class DomainStore {
       const p = value as Project;
       return this.db
         .prepare('INSERT INTO projects(id,owner_id,workspace_id,version,data) VALUES(?,?,?,?,?)')
-        .bind(p.id, p.ownerId, p.workspaceId, p.version, JSON.stringify(p));
+        .bind(p.id, p.ownerId, p.workspaceId, p.version, this.serialize(p));
     }
     if (table === 'jobs') {
       const j = value as Job;
@@ -39,7 +46,7 @@ export class DomainStore {
         .prepare(
           'INSERT INTO jobs(id,project_id,user_id,kind,status,created_at,data) VALUES(?,?,?,?,?,?,?)',
         )
-        .bind(j.id, j.projectId, j.userId, j.kind, j.status, j.createdAt, JSON.stringify(j));
+        .bind(j.id, j.projectId, j.userId, j.kind, j.status, j.createdAt, this.serialize(j));
     }
     if (table === 'inquiries') {
       const i = value as Inquiry;
@@ -53,7 +60,7 @@ export class DomainStore {
       const r = value as Release;
       return this.db
         .prepare('INSERT INTO releases(id,project_id,created_at,data) VALUES(?,?,?,?)')
-        .bind(r.id, r.projectId, r.createdAt, JSON.stringify(r));
+        .bind(r.id, r.projectId, r.createdAt, this.serialize(r));
     }
     const a = value as Asset;
     return this.db
@@ -65,17 +72,17 @@ export class DomainStore {
       const p = value as Project;
       return this.db
         .prepare('UPDATE projects SET version=?, data=? WHERE id=?')
-        .bind(p.version, JSON.stringify(p), p.id);
+        .bind(p.version, this.serialize(p), p.id);
     }
     if (table === 'jobs') {
       const j = value as Job;
       return this.db
         .prepare('UPDATE jobs SET status=?,data=? WHERE id=?')
-        .bind(j.status, JSON.stringify(j), j.id);
+        .bind(j.status, this.serialize(j), j.id);
     }
     return this.db
       .prepare(`UPDATE ${table} SET data=? WHERE id=?`)
-      .bind(JSON.stringify(value), value.id);
+      .bind(this.serialize(value), value.id);
   }
   delete(table: Table, id: string): D1PreparedStatement {
     return this.db.prepare(`DELETE FROM ${table} WHERE id=?`).bind(id);

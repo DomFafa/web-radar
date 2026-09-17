@@ -723,7 +723,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
             </div>
             <div>
               <h4 style="font-size:20px;font-weight:900;color:#073b91;margin:0 0 4px;">Wholesale contact</h4>
-              <p style="font-size:15.5px;line-height:1.45;color:#102033;margin:0;">Contact person: ${esc(company.contactName || 'Dom Wong')}. Email: ${esc(company.email || 'vc.ddom@gmail.com')}.</p>
+              <p style="font-size:15.5px;line-height:1.45;color:#102033;margin:0;">${company.contactName ? `Contact person: ${esc(company.contactName)}. ` : ''}${company.email ? `Email: ${esc(company.email)}.` : ''}</p>
             </div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:18px;">

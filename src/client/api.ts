@@ -68,10 +68,14 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
 }
 
 /** XHR exposes actual upload bytes; fetch does not expose upload progress. */
-export function upload<T>(path: string, body: FormData, onProgress: (fraction: number) => void): Promise<T> {
+export function upload<T>(path: string, body: FormData, onProgress: (fraction: number) => void, signal?: AbortSignal): Promise<T> {
   const epoch = sessionEpoch;
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    if (signal?.aborted) { reject(new ApiError('上传已取消。', 0, 'upload_cancelled')); return; }
+    const abort = () => xhr.abort();
+    signal?.addEventListener('abort', abort, { once: true });
+    xhr.onloadend = () => signal?.removeEventListener('abort', abort);
     xhr.open('POST', path);
     xhr.timeout = 5 * 60 * 1000;
     if (session) xhr.setRequestHeader('Authorization', `Bearer ${session}`);
@@ -83,7 +87,7 @@ export function upload<T>(path: string, body: FormData, onProgress: (fraction: n
     xhr.upload.onload = () => onProgress(1);
     xhr.onerror = () => reject(new ApiError('图片上传连接中断，请检查网络后重试。', 0));
     xhr.ontimeout = () => reject(new ApiError('图片上传超时，请重试。', 0));
-    xhr.onabort = () => reject(new ApiError('图片上传已取消。', 0));
+    xhr.onabort = () => reject(new ApiError('上传已取消。', 0, 'upload_cancelled'));
     xhr.onload = () => {
       let result;
       try { result = JSON.parse(xhr.responseText); } catch {

@@ -1,7 +1,9 @@
+import { withStoredEmailStatus } from './provider-settings';
 import { Hono } from 'hono';
 import type { HonoEnv } from './env';
 import { testMode } from './env';
 import { createAuthApp, authenticate } from './auth';
+import { createTemplateGuidesApp } from './template-guides/api';
 import { createIntegrationApp } from './integration';
 import { ApiError, errorResponse } from './http';
 import { integrationConfig, parentOrigins, isLoopback } from './product-radar';
@@ -15,6 +17,7 @@ app.use('*', async (c, next) => {
     throw new ApiError(403, 'test_local_only', '测试环境仅允许本地访问。');
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
+  if (new URL(c.req.url).protocol === 'https:') c.header('Strict-Transport-Security', 'max-age=31536000');
   c.header('Referrer-Policy', 'no-referrer');
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   const path = c.req.path;
@@ -25,6 +28,7 @@ app.use('*', async (c, next) => {
   }
   if (path.startsWith('/api/') || path.startsWith('/preview/'))
     c.header('Cache-Control', 'no-store');
+  if (!path.startsWith('/public/') && !path.startsWith('/templates/')) c.header('X-Robots-Tag', 'noindex, nofollow');
   if (!path.startsWith('/public/')) {
     let ancestors = "'none'";
     if (path.startsWith('/embed/')) {
@@ -43,7 +47,7 @@ app.use('*', async (c, next) => {
 app.get('/api/health', (c) =>
   c.json({ ok: true, service: 'web-radar', testMode: testMode(c.env) }),
 );
-app.get('/api/config', (c) => {
+app.get('/api/config', async (c) => {
   let configured = false,
     origins: string[] = [];
   try {
@@ -63,11 +67,12 @@ app.get('/api/config', (c) => {
         mode: testMode(c.env) ? 'test' : configured ? 'live' : 'unconfigured',
         detail: configured ? '账号衔接已配置，实际连通性待登录核验。' : '账号衔接尚未配置。',
       },
-      ...createProviders(c.env).status(),
+      ...(await withStoredEmailStatus(c.env, createProviders(c.env).status())),
     ],
   });
 });
 app.route('/api/auth', createAuthApp());
+app.route('/api/internal/template-guides', createTemplateGuidesApp());
 app.route('/api/integrations/product-radar', createIntegrationApp());
 app.route('/public/sites', createPublicApp());
 app.all('/public/*', async (c) => {

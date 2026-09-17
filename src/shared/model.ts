@@ -8,6 +8,7 @@ export interface Principal {
   workspaceRole: 'admin' | 'member';
   workspaceName: string;
 }
+export const productFactsOrigins = ['generated-concept', 'product-set'] as const;
 export interface ProductSnapshot {
   source: 'product-radar';
   id: string;
@@ -22,7 +23,7 @@ export interface ProductSnapshot {
   designDirection: string;
   conditions: Record<string, unknown>;
   image: { sourceProductId: string; contentType: string | null };
-  factsOrigin: 'generated-concept';
+  factsOrigin: (typeof productFactsOrigins)[number];
 }
 export type Language = 'en' | 'de' | 'fr' | 'es' | 'pt' | 'it';
 export type TemplateId =
@@ -67,6 +68,7 @@ export interface Company {
   instagram: string;
   x: string;
   logoAssetId?: string;
+  faviconAssetId?: string;
 }
 export interface SiteCopy {
   headline: string;
@@ -129,7 +131,7 @@ export interface SiteDesign {
   pages: Partial<Record<DesignPage, { imageAssetId?: string; jobId?: string }>>;
   homeConfirmedAssetId?: string;
   confirmedKey?: string;
-  build?: { jobId: string; artifactKey?: string };
+  build?: { jobId: string; artifactKey?: string; contacts?: Pick<Company, 'email' | 'phone' | 'whatsapp'> };
 }
 export type CloneUiImageRole = 'home' | 'catalog' | 'detail' | 'about' | 'contact' | 'asset';
 export interface CloneUiImage {
@@ -148,7 +150,7 @@ export interface CloneScrapedData {
 }
 export interface CloneTaskProgress {
   autoPublish?: boolean;
-  phase: 'queued' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
+  phase: 'queued' | 'capturing' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
   imagesRead: number;
   imageCount: number;
   outputCharacters: number;
@@ -160,6 +162,8 @@ export interface CloneTaskProgress {
   url?: string;
 }
 export interface CloneConfig {
+  referenceCapture?: {url:string;contextKey:string;assets:{assetId:string;url:string;contentType:string}[];pageCount:number;screenshotCount:number;warnings:string[];capturedAt:string};
+  artifact?: { key: string; sha256: string; bytes: number; pageCount: number };
   enhancementMode?: 'faithful' | 'smart';
   autoPublish?: boolean;
   taskId?: string;
@@ -172,17 +176,35 @@ export interface CloneConfig {
   generatedHtml?: string;
   generatedFiles?: Record<string, string>;
   generation?: {
+    contacts?: Pick<Company, 'email' | 'phone' | 'whatsapp'>;
     mode: 'vision' | 'reference-rebuild' | 'fixture';
     model?: string;
     imageCount: number;
     pageCount: number;
     visuallyVerified: boolean;
+    quality?: { status: 'passed' | 'issues' | 'unavailable'; message: string; reportKey?: string; sampledPages?: number; widths?: number[]; sparsePages?: string[]; issues?: string[]; warnings?: string[] };
     improvements?: string[];
   };
   generatedAt?: string;
   error?: string;
 }
 
+export type BannerTarget = DesignPage | `product:${string}`;
+export interface PageBanner {
+  id: string;
+  targets: BannerTarget[];
+  kind: 'images' | 'video';
+  slides: { assetId: string; alt: string }[];
+  videoAssetId?: string;
+  posterAssetId?: string;
+  mode: 'background' | 'image';
+  fit: 'cover' | 'contain';
+  position: 'top' | 'center' | 'bottom';
+  contrast: 'light' | 'dark' | 'none';
+  height: 'auto' | 'screen';
+  autoplay: boolean;
+  interval: number;
+}
 export interface Draft {
   buildBranch?: 'template' | 'custom' | 'clone';
   templateConfirmed?: boolean;
@@ -203,6 +225,8 @@ export interface Draft {
   scenes: Scene[];
   storyboardRevision: number;
   storyboardConfirmedRevision?: number;
+  banners?: PageBanner[];
+  banner?: { contrast?: 'light' | 'dark' | 'none'; assetId: string; alt: string; mode: 'background' | 'image'; fit: 'cover' | 'contain'; position: 'top' | 'center' | 'bottom' };
   heroAssetId?: string;
   posterAssetId?: string;
   heroAccepted: boolean;
@@ -271,6 +295,7 @@ export interface Quota {
   videoReserved: number;
 }
 export interface Release {
+  seo?: { policyVersion: number; origin: string };
   hostingTarget?: HostingTarget;
   id: string;
   projectId: string;
@@ -302,8 +327,18 @@ export interface ProjectDetail {
   project: Project;
   assets: Asset[];
   jobs: Job[];
-  releases: Release[];
+  releases: (Omit<Release, 'draft'> & { draft?: Draft })[];
   quota: Quota;
+  history?: { jobsTotal: number; releasesTotal: number; limit: number };
+}
+export interface ProjectSummary {
+  id: string; name: string; companyName: string; productCount: number;
+  template: TemplateId; coverAssetId?: string; updatedAt: string; createdAt: string;
+  offline: boolean; publishedReleaseId?: string;
+}
+export interface ProjectList {
+  projects: ProjectSummary[]; total: number; page: number; pageSize: number;
+  counts: { all: number; draft: number; published: number; offline: number };
 }
 export interface ServiceStatus {
   name: string;

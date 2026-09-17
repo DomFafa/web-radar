@@ -167,6 +167,7 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
 
     application = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     preview_slots = asyncio.Semaphore(2)
+    quality_slots = asyncio.Semaphore(1)
 
     @application.middleware("http")
     async def authenticate(request: Request, call_next):
@@ -203,6 +204,29 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
             return Response(result, media_type='image/webp', headers={'Cache-Control': 'no-store'})
         finally:
             preview_slots.release()
+
+    @application.post("/v1/clone-quality")
+    async def clone_quality(request: Request):
+        from clone_quality import review, validate_payload
+        try:
+            await asyncio.wait_for(quality_slots.acquire(), timeout=2)
+        except TimeoutError:
+            raise HTTPException(503, 'Quality renderer busy') from None
+        try:
+            body=bytearray()
+            async for chunk in request.stream():
+                body.extend(chunk)
+                if len(body)>48*1024*1024:
+                    raise HTTPException(413,'Quality input exceeds limit')
+            try:
+                payload=validate_payload(json.loads(body))
+                return await asyncio.wait_for(review(payload),timeout=90)
+            except (ValueError, TypeError, KeyError):
+                raise HTTPException(422,'Invalid quality request') from None
+            except TimeoutError:
+                raise HTTPException(504,'Quality render timed out') from None
+        finally:
+            quality_slots.release()
 
     @application.post("/v1/builds", status_code=202)
     async def submit(request: Request):

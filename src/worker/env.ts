@@ -1,11 +1,13 @@
 import type { Principal } from '../shared/model';
 export interface Secrets {
+  TEMPLATE_GUIDES_API_KEY?: string; // Read-only internal template specifications; not a project/session credential.
   PRODUCT_RADAR_BASE_URL?: string;
   PRODUCT_RADAR_INTEGRATION_SECRET?: string;
   PRODUCT_RADAR_PARENT_ORIGINS?: string;
   APP_ORIGIN?: string;
   ENVIRONMENT?: string;
   TEST_PROVIDERS?: string;
+  CONNECTIONS_TEST_NETWORK?: string; // Only enabled by the isolated browser harness with mocked outbound fetch.
   CLONE_TEST_FIXTURE?: string;
   TEXT_API_BASE_URL?: string;
   TEXT_API_KEY?: string;

@@ -95,7 +95,7 @@ export function referenceInteractions() {
   });
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const updateMotion = () =>
-    document.querySelectorAll<HTMLVideoElement>('video:not(#hero-video)').forEach((video) => {
+    document.querySelectorAll<HTMLVideoElement>('video:not(#hero-video):not([data-wr-banner-video])').forEach((video) => {
       video.muted = true;
       if (motion.matches) video.pause();
       else video.play().catch(() => {});

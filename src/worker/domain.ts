@@ -1,3 +1,6 @@
+import { productFactsOrigins } from '../shared/model';
+import type { BannerTarget } from '../shared/model';
+import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
 import { z } from 'zod';
 import type { Draft, Principal, Project } from '../shared/model';
@@ -45,7 +48,7 @@ const source = z.object({
   designDirection: text,
   conditions: z.record(z.string(), z.unknown()),
   image: z.object({ sourceProductId: id, contentType: z.string().nullable() }),
-  factsOrigin: z.literal('generated-concept'),
+  factsOrigin: z.enum(productFactsOrigins),
 });
 export const snapshotSchema = source;
 const draftSchema = z.object({
@@ -69,6 +72,7 @@ const draftSchema = z.object({
     instagram: short,
     x: short,
     logoAssetId: id.optional(),
+    faviconAssetId: id.optional(),
   }),
   products: z
     .array(
@@ -122,6 +126,20 @@ const draftSchema = z.object({
     .max(8),
   storyboardRevision: z.number().int().nonnegative(),
   storyboardConfirmedRevision: z.number().int().nonnegative().optional(),
+  banners: z.array(z.object({
+    id, targets: z.array((z.union([designPageSchema,z.string().startsWith('product:').min(9).max(210)]) as z.ZodType<BannerTarget>)).max(30),
+    kind:z.enum(['images','video']), slides:z.array(z.object({assetId:id,alt:z.string().max(300)})).max(12),
+    videoAssetId:id.optional(), posterAssetId:id.optional(), mode:z.enum(['background','image']),
+    fit:z.enum(['cover','contain']), position:z.enum(['top','center','bottom']), contrast:z.enum(['light','dark','none']),
+    height:z.enum(['auto','screen']), autoplay:z.boolean(), interval:z.number().int().min(3).max(30),
+  })).max(20).superRefine((banners,ctx)=>{
+    const targets=new Set<string>(), ids=new Set<string>();
+    for(const banner of banners) {
+      if(ids.has(banner.id))ctx.addIssue({code:'custom',message:'Banner ID 重复'}); ids.add(banner.id);
+      for(const target of banner.targets) { if(targets.has(target))ctx.addIssue({code:'custom',message:'同一页面不能重复指定 Banner'}); targets.add(target); }
+    }
+  }).optional(),
+  banner: z.object({ contrast: z.enum(['light','dark','none']).optional(), assetId: id, alt: z.string().max(300), mode: z.enum(['background', 'image']), fit: z.enum(['cover', 'contain']), position: z.enum(['top', 'center', 'bottom']) }).optional(),
   heroAssetId: id.optional(),
   posterAssetId: id.optional(),
   heroAccepted: z.boolean(),
@@ -136,11 +154,13 @@ const draftSchema = z.object({
       ),
       homeConfirmedAssetId: id.optional(),
       confirmedKey: z.string().max(3000).optional(),
-      build: z.object({ jobId: id, artifactKey: z.string().max(500).optional() }).optional(),
+      build: z.object({ jobId: id, artifactKey: z.string().max(500).optional(), contacts:z.object({email:short,phone:short,whatsapp:short}).optional() }).optional(),
     })
     .optional(),
   cloneConfig: z
     .object({
+      artifact: z.object({ key: z.string().max(500), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: z.number().int().positive().max(9 * 1024 * 1024), pageCount: z.number().int().nonnegative() }).optional(),
+      referenceCapture: z.object({url:z.string().max(2000),contextKey:z.string().max(500),assets:z.array(z.object({assetId:id,url:z.string().max(3000),contentType:z.string().max(100)})).max(24),pageCount:z.number().int().max(5),screenshotCount:z.number().int().max(10),warnings:z.array(z.string().max(300)).max(20),capturedAt:z.string()}).optional(),
       taskId: z.string().optional(),
       enhancementMode: z.enum(['faithful', 'smart']).optional(),
       autoPublish: z.boolean().optional(),
@@ -171,11 +191,13 @@ const draftSchema = z.object({
       generatedHtml: z.string().optional(),
       generatedFiles: z.record(z.string(), z.string()).optional(),
       generation: z.object({
+        contacts:z.object({email:short,phone:short,whatsapp:short}).optional(),
         mode: z.enum(['vision', 'reference-rebuild', 'fixture']),
         model: z.string().max(100).optional(),
         imageCount: z.number().int().nonnegative(),
         pageCount: z.number().int().nonnegative(),
         visuallyVerified: z.boolean(),
+        quality: z.object({ status: z.enum(['passed','issues','unavailable']), message: z.string().max(500), reportKey: z.string().max(500).optional(), sampledPages: z.number().int().nonnegative().optional(), widths: z.array(z.number().int()).max(3).optional(), sparsePages: z.array(z.string().max(500)).max(10).optional(), issues: z.array(z.string().max(1000)).max(12).optional(), warnings: z.array(z.string().max(1000)).max(8).optional() }).optional(),
         improvements: z.array(z.string().max(300)).max(8).optional(),
       }).optional(),
       generatedAt: z.string().optional(),
@@ -222,8 +244,27 @@ export function defaultDraft(): Draft {
 }
 export function validateDraft(input: unknown): Draft {
   const result = draftSchema.safeParse(input);
-  requireCondition(result.success, 400, 'invalid_draft', '项目资料格式无效或超出长度限制。');
+  if (!result.success) {
+    const labels: Record<string, string> = {
+      name: '名称', email: '联系邮箱', contactName: '联系人', description: '介绍',
+      instructions: '品牌定制与微调指令', targetUrl: '参考网址', factsOrigin: '产品来源类型',
+      phone: '联系电话', whatsapp: 'WhatsApp', address: '地址', slogan: '品牌介绍',
+      material: '材质', dimensions: '尺寸', title: '标题', alt: '图片说明',
+      products: '产品列表', languages: '网站语言', banners: 'Banner 配置',
+    };
+    const details = result.error.issues.slice(0, 3).map(issue => {
+      const field = labels[String(issue.path.at(-1))] || '资料字段';
+      const prefix = issue.path[0] === 'products' && typeof issue.path[1] === 'number'
+        ? `第 ${issue.path[1] + 1} 个产品的` : '';
+      const reason = issue.code === 'too_big'
+        ? `最多允许 ${issue.maximum} ${issue.origin === 'string' ? '个字符' : issue.origin === 'array' ? '项' : ''}`
+        : '格式不正确或缺少必要信息';
+      return `${prefix}${field}${reason}`;
+    });
+    throw new DomainError(400, 'invalid_draft', `无法保存：${details.join('；')}。`);
+  }
   const d = result.data;
+  if (d.banners !== undefined) d.banners = pageBanners(d);
   requireCondition(
     d.languages[0] === 'en' && new Set(d.languages).size === d.languages.length,
     400,
@@ -370,7 +411,11 @@ export function assetReferences(d: Draft): string[] {
   return [
     ...new Set(
       [
+        ...(d.cloneConfig?.referenceCapture?.assets.map(a=>a.assetId) ?? []),
         d.company.logoAssetId,
+        d.company.faviconAssetId,
+        ...bannerAssets(d).images,
+        ...bannerAssets(d).videos,
         d.heroAssetId,
         d.posterAssetId,
         ...d.products.map((p) => p.imageAssetId),
@@ -386,7 +431,11 @@ export function publicAssetReferences(d: Draft): string[] {
   return [
     ...new Set(
       [
+        ...(d.buildBranch === 'clone' ? d.cloneConfig?.referenceCapture?.assets.map(a=>a.assetId) ?? [] : []),
         d.company.logoAssetId,
+        d.company.faviconAssetId,
+        ...bannerAssets(d,true).images,
+        ...bannerAssets(d,true).videos,
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),
@@ -397,10 +446,10 @@ export function publicAssetReferences(d: Draft): string[] {
 }
 export function assertSiteIntakeReady(d: Draft): void {
   requireCondition(
-    d.company.name.trim() && d.company.contactName.trim() && validEmail(d.company.email),
+    d.company.name.trim() && validEmail(d.company.email),
     400,
     'company_incomplete',
-    '请填写公司名称、有效联系邮箱和联系人英文名。',
+    '请填写公司 / 品牌名称和有效联系邮箱。',
   );
   requireCondition(d.country.trim(), 400, 'market_incomplete', '请选择销售国家。');
   requireCondition(
@@ -437,8 +486,9 @@ export function assertSiteContentReady(d: Draft): void {
 }
 export function assertPublishable(d: Draft): void {
   if (d.buildBranch === 'clone') {
+    requireCondition(d.company.name.trim() && validEmail(d.company.email),400,'company_incomplete','发布前请填写公司 / 品牌名称和有效联系邮箱。');
     requireCondition(
-      Boolean(d.cloneConfig?.generatedHtml?.trim()),
+      Boolean(d.cloneConfig?.artifact || d.cloneConfig?.generatedHtml?.trim()),
       400,
       'clone_not_ready',
       '请先生成可用的页面代码后再发布。',

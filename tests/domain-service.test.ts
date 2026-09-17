@@ -13,7 +13,7 @@ import {
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Principal, Job, Project } from '../src/shared/model';
 
-const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403 }));
+const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'generated-concept' }));
 vi.mock('../src/worker/product-radar', () => ({
   prService: async (_e: unknown, p: Principal, path: string, body: { productIds?: string[] }) =>
     path === 'context'
@@ -37,7 +37,7 @@ vi.mock('../src/worker/product-radar', () => ({
             designDirection: '',
             conditions: { keep: ['shape'] },
             image: { sourceProductId: id, contentType: 'image/png' },
-            factsOrigin: 'generated-concept',
+            factsOrigin: sourceState.factsOrigin,
           })),
           total: body.productIds?.length ?? 0,
         },
@@ -63,6 +63,8 @@ function database() {
   db.exec(readFileSync('migrations/0002_business.sql', 'utf8'));
   db.exec(readFileSync('migrations/0003_source_reviews.sql', 'utf8'));
   db.exec(readFileSync('migrations/0004_unlimited_quota.sql', 'utf8'));
+  db.exec(readFileSync('migrations/0005_project_summary_indexes.sql', 'utf8'));
+  db.exec(readFileSync('migrations/0006_provider_accounts.sql', 'utf8'));
   class Statement {
     values: unknown[] = [];
     constructor(readonly sql: string) {}
@@ -265,6 +267,10 @@ async function create(name = 'Site') {
   return (await request('/api/projects', { name, requestId: crypto.randomUUID() })).data
     .project as Project;
 }
+async function brandedClone() {
+ const p=await create();p.draft.company.name='Preview Brand';p.draft.company.email='sales@example.com';
+ return (await request(`/api/projects/${p.id}`, {expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project as Project;
+}
 async function quota(who = owner, images = 5, videos = 5) {
   return request(
     `/api/admin/quotas/${who.userId}`,
@@ -318,6 +324,7 @@ async function videoReady() {
 
 beforeEach(() => {
   sourceState.version = 'v1';
+  sourceState.factsOrigin = 'generated-concept';
   sourceState.revoked = false;
   sourceState.failureStatus = 403;
   bucket = mediaBucket();
@@ -681,10 +688,10 @@ describe('durable domain commands', () => {
     expect(detail.quota.videoUsed).toBe(0);
     expect(detail.jobs.find((j: Job) => j.kind === 'site-build').status).toBe('queued');
     expect(detail.project.draft.siteDesign.build.jobId).toBe(build.data.job.id);
-    const input = detail.jobs.find((j: Job) => j.kind === 'site-build').input;
+    const input = (await service.store.one<Job>('jobs', build.data.job.id))!.input;
     providers.siteBuild = async () =>
       fixtureProviders(env).siteBuild(build.data.job.id, {
-        draft: input.draft,
+        draft: input.draft as Project['draft'],
         designImages: {} as never,
       });
     await service.tick();
@@ -1061,6 +1068,26 @@ async function uploadAsset(project: Project, type = 'image/png') {
   expect(response.status).toBe(200);
   return ((await response.json()) as { asset: { id: string } }).asset;
 }
+it('uploads ICO tab icons, persists their selection, and rejects mismatched content', async () => {
+  const project = await create();
+  const upload = async (bytes: Uint8Array) => {
+    const form = new FormData();
+    form.append('file', new File([new Uint8Array(bytes)], 'favicon.ico', { type: 'image/x-icon' }));
+    return service.fetch(new Request(`http://localhost/api/projects/${project.id}/uploads`, {
+      method: 'POST', headers: { 'X-WR-Principal': JSON.stringify(owner) }, body: form,
+    }));
+  };
+  expect((await upload(new Uint8Array([1, 2, 3]))).status).toBe(400);
+  const bytes = new Uint8Array(32);
+  bytes[2] = 1; bytes[4] = 1;
+  const result = await upload(bytes);
+  expect(result.status).toBe(200);
+  const { asset } = await result.json() as { asset: { id: string } };
+  project.draft.company.faviconAssetId = asset.id;
+  const saved = await request(`/api/projects/${project.id}`, { expectedVersion: project.version, draft: project.draft }, owner, 'PUT');
+  expect(saved.status).toBe(200);
+  expect((await get(project)).project.draft.company.faviconAssetId).toBe(asset.id);
+});
 async function publishable() {
   let p = await create();
   const image = await uploadAsset(p),
@@ -1712,7 +1739,7 @@ describe('durable hosting identity and activation recovery', () => {
     await service.tick();
     let detail = await get(p);
     const releaseId = detail.releases[0].id;
-    expect(detail.jobs.find((j: Job) => j.id === queued.data.job.id)).toMatchObject({
+    expect(await service.store.one<Job>('jobs', queued.data.job.id)).toMatchObject({
       status: 'unknown',
       input: { publishResult: { deploymentId: releaseId } },
     });
@@ -2161,7 +2188,7 @@ describe('template tryout and clone version chain', () => {
     expect((await get(p)).project.version).toBe(p.version);
   });
   it('generates then publishes the returned version, while rejecting a genuinely stale version', async () => {
-    const p = await create();
+    const p = await brandedClone();
     const generated = await request(`/api/projects/${p.id}/clone/generate`, {
       expectedVersion: p.version,
       cloneConfig: { targetUrl: 'https://example.com' },
@@ -2181,12 +2208,13 @@ describe('template tryout and clone version chain', () => {
 });
 
 it('serves clone catalog paths and keeps its independent documents through save and publish', async () => {
-  const p = await create();
+  const p = await brandedClone();
   const generated = await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version, cloneConfig: { targetUrl: 'https://example.com', model: 'selected-model' } });
   const draft = generated.data.project.draft;
   expect(draft.cloneConfig.model).toBe('selected-model');
   expect(draft.cloneConfig.generation.mode).toBe('fixture');
-  draft.cloneConfig.generatedFiles['en/products/index.html'] = '<!DOCTYPE html><html><head><title>Catalog</title></head><body><h1>Independent catalog</h1></body></html>';
+  expect(draft.cloneConfig.artifact.pageCount).toBeGreaterThan(1);
+  draft.cloneConfig.generatedFiles = { 'en/products/index.html': '<!DOCTYPE html><html><body><h1>Forged catalog</h1></body></html>' };
   const saved = await request(`/api/projects/${p.id}`, { expectedVersion: generated.data.project.version, draft }, owner, 'PUT');
   expect(saved.status).toBe(200);
   const published = await request(`/api/projects/${p.id}/publish`, { expectedVersion: saved.data.project.version, requestId: crypto.randomUUID() });
@@ -2194,7 +2222,9 @@ it('serves clone catalog paths and keeps its independent documents through save 
   for (let i=0;i<3;i++) await service.tick();
   const page = await service.fetch(new Request(`http://localhost/public/sites/${p.id}/en/products/index.html`));
   expect(page.status).toBe(200);
-  expect(await page.text()).toContain('Independent catalog');
+  const html = await page.text();
+  expect(html).not.toContain('Forged catalog');
+  expect(html).toContain('<html');
 });
 
 it('keeps the last usable clone documents when regeneration fails', async () => {
@@ -2221,7 +2251,7 @@ describe('persistent clone tasks', () => {
   async function state(p: Project) { return (await request(`/api/projects/${p.id}/clone/task`)).data; }
   async function visionProject() {
     env.CLONE_TEST_FIXTURE = 'false'; env.OPENAI_API_KEY = 'test-only';
-    const p = await create(); const asset: Asset = { id: 'reference', projectId: p.id, key: 'test-ref', filename: 'index.png', contentType: 'image/png', size: 9, origin: 'upload', createdAt: new Date().toISOString() };
+    const p = await brandedClone(); const asset: Asset = { id: 'reference', projectId: p.id, key: 'test-ref', filename: 'index.png', contentType: 'image/png', size: 9, origin: 'upload', createdAt: new Date().toISOString() };
     await service.store.insert('assets', asset).run(); await bucket.put(asset.key, new Uint8Array([137,80,78,71,13,10,26,10,0]));
     p.draft.cloneConfig = { uiImages: [{ id:'one',assetId:asset.id,name:'index.png',role:'home' }] };
     return p;
@@ -2234,7 +2264,8 @@ describe('persistent clone tasks', () => {
     service = new DomainService(env, {schedule:async()=>{}},providers);
     expect((await state(p)).job.id).toBe(created.data.job.id);
     await service.tick(); expect((await state(p)).job.status).toBe('succeeded');
-    expect((await get(p)).project.draft.cloneConfig.generatedHtml).toBeTruthy();
+    expect((await get(p)).project.draft.cloneConfig.artifact).toBeTruthy();
+    expect((await get(p)).project.draft.cloneConfig.generatedHtml).toBeUndefined();
   });
   it('pauses before execution, stays paused across restart, and resumes without losing inputs', async () => {
     const p = await create(); const created = await start(p); const taskId = created.data.job.id;
@@ -2269,11 +2300,36 @@ describe('persistent clone tasks', () => {
     expect((await request(`/api/projects/${p.id}/clone/stop`,{taskId},{...owner,userId:'stranger'})).status).toBe(404);
   });
   it('does not permit draft saves to clobber active task state and auto-publishes with no client follow-up', async () => {
-    const p=await create();const created=await start(p,true);
+    const p=await brandedClone();const created=await start(p,true);
     expect((await request(`/api/projects/${p.id}`,{expectedVersion:created.data.project.version,draft:p.draft},owner,'PUT')).status).toBe(409);
-    await service.tick();const result=await state(p);
+    await service.tick();await service.tick();const result=await state(p);
     expect(result.job.status).toBe('succeeded');expect(result.publication.status).toBe('succeeded');
     expect(result.url).toBeTruthy();expect((await get(p)).jobs.filter((job:Job)=>job.kind==='publish')).toHaveLength(1);
+  });
+  it('publishes another project while a model response is pending without claiming the clone twice', async () => {
+    const p=await visionProject(); const publicProject=await publishable();
+    let release!:(r:Response)=>void;
+    const fetcher=vi.fn(()=>new Promise<Response>(resolve=>{release=resolve}));vi.stubGlobal('fetch',fetcher);
+    await start(p);const generation=service.tick();
+    await vi.waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
+    const queued=await request(`/api/projects/${publicProject.id}/publish`,{expectedVersion:publicProject.version,requestId:crypto.randomUUID()});
+    expect(queued.status).toBe(200);
+    const secondTick=service.tick();
+    await vi.waitFor(async()=>expect((await service.store.one<Job>('jobs',queued.data.job.id))?.status).toBe('succeeded'));
+    expect((await state(p)).job.status).toBe('running');
+    release(response());await Promise.all([generation,secondTick]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('retains generated code and a private report but holds auto-publication when rendering detects issues', async () => {
+    const p=await visionProject();env.SITE_BUILDER_URL='https://builder.example';env.SITE_BUILDER_KEY='test-key';
+    vi.stubGlobal('fetch',async(url:string)=>url.includes('/v1/clone-quality') ? Response.json({status:'issues',sampledPages:4,widths:[390,1440,2560],records:['en/index.html','en/products/index.html','en/about/index.html','en/contact/index.html'].flatMap(path=>[390,1440,2560].map(width=>({path,width,issues:width===390?['页面横向溢出']:[],warnings:[]}))),screenshots:{}}) : response());
+    await start(p,true);await service.tick();
+    const result=await state(p);expect(result.job.status).toBe('succeeded');expect(result.publication).toBeUndefined();
+    const detail=await get(p);expect(detail.project.draft.cloneConfig.artifact).toBeTruthy();
+    expect(detail.project.draft.cloneConfig.generation.quality.status).toBe('issues');
+    expect(detail.releases).toHaveLength(0);
+    expect((await request(`/api/projects/${p.id}/clone/quality-report`)).data.status).toBe('issues');
+    expect((await request(`/api/projects/${p.id}/clone/quality-report`,undefined,{...owner,userId:'stranger'})).status).toBe(404);
   });
   it('does not automatically repeat a possibly billed call after worker interruption', async () => {
     const p=await create();const created=await start(p);const job=await service.store.one<Job>('jobs',created.data.job.id);
@@ -2309,5 +2365,176 @@ describe('publication result consistency', () => {
     const release=detail.releases[0];release.error='Old stale pending warning';await service.store.update('releases',release).run();
     expect((await get(p)).releases[0].error).toBeUndefined();
     expect(detail.jobs.find((j:Job)=>j.id===first.data.job.id).error).toBeUndefined();
+  });
+});
+
+
+describe('bounded project queries', () => {
+  it('sorts summaries newest first, paginates, searches and excludes another owner', async () => {
+    for (let i=0;i<5;i++) {
+      const p=await create(); p.name=`Catalog ${i}`; p.updatedAt=`2026-09-${10+i}T00:00:00.000Z`;
+      if(i===4) p.ownerId='another-owner';
+      await service.store.update('projects',p).run();
+      if(i===4) await env.DB.prepare('UPDATE projects SET owner_id=? WHERE id=?').bind(p.ownerId,p.id).run();
+    }
+    const first=(await request('/api/projects?pageSize=2')).data;
+    expect(first.total).toBe(4);expect(first.projects.map((p:Project)=>p.name)).toEqual(['Catalog 3','Catalog 2']);
+    expect(first.projects[0].draft).toBeUndefined();expect(first.projects[0].companyName).toBeDefined();
+    const second=(await request('/api/projects?pageSize=2&page=2')).data;
+    expect(second.projects.map((p:Project)=>p.name)).toEqual(['Catalog 1','Catalog 0']);
+    expect((await request('/api/projects?search=Catalog%201')).data.total).toBe(1);
+    expect((await request('/api/projects?pageSize=100000')).status).toBe(400);
+  });
+  it('bounds history snapshots while retaining old active jobs and the current release', async () => {
+    const p=await create();
+    for(let i=0;i<25;i++) await service.store.insert('jobs',{id:`history-${i}`,projectId:p.id,userId:owner.userId,kind:'copy',requestId:`request-${i}`,inputVersion:p.version,testMode:true,status:i===0?'unknown':'succeeded',createdAt:`2026-08-${String(i+1).padStart(2,'0')}T00:00:00Z`,updatedAt:p.updatedAt,input:{draft:p.draft,principal:owner,pageId:'home'},attempts:1} as Job).run();
+    const detail=await get(p);
+    expect(detail.history.jobsTotal).toBe(25);expect(detail.jobs).toHaveLength(21);
+    expect(detail.jobs.some((j:Job)=>j.id==='history-0')).toBe(true);
+    expect(detail.jobs[0].input.draft).toBeUndefined();expect(detail.jobs[0].input.principal).toBeUndefined();
+    const page=(await request(`/api/projects/${p.id}/history?kind=jobs&page=2`)).data;
+    expect(page.records).toHaveLength(5);expect(page.hasMore).toBe(false);
+    expect((await request(`/api/projects/${p.id}/history?kind=jobs`,undefined,{...owner,userId:'other'})).status).toBe(404);
+  });
+});
+
+it('exposes bounded operational aggregates only to platform administrators', async () => {
+  expect((await request('/api/admin/metrics')).status).toBe(403);
+  const metrics=await request('/api/admin/metrics',undefined,platform);
+  expect(metrics.status).toBe(200);expect(metrics.data.jobs).toEqual([]);expect(metrics.data.attempts).toEqual([]);
+});
+
+it('freezes the selected Resend account when an inquiry is queued, across default changes and retries', async () => {
+  env.ASSET_SIGNING_KEY = 'test-only-credential-encryption-key';
+  const { ProviderSettings } = await import('../src/worker/provider-settings');
+  const settings = new ProviderSettings(env);
+  const first = await settings.add({kind:'resend',label:'First',apiKey:'re_first_mock_key',mailFrom:'first@example.com'},'global');
+  const second = await settings.add({kind:'resend',label:'Second',apiKey:'re_second_mock_key',mailFrom:'second@example.com'},'global');
+  await settings.setDefault(first.id);
+  const p = await publishNow(await publishable());
+  const result = await request(`/api/public/sites/${p.id}/inquiries`, {requestId:'pinned-mail-account',name:'Buyer',email:'buyer@example.net',company:'',message:'Hello'});
+  expect(result.status).toBe(200);
+  await settings.setDefault(second.id);
+  await settings.selectEmail(p.id,second.id);
+  const send = vi.spyOn(settings.constructor.prototype,'email').mockResolvedValue({id:'mock-sent',testMode:false});
+  try {
+    await service.tick();
+    expect(send).toHaveBeenCalledWith(first.id,expect.objectContaining({id:result.data.id}),'sales@example.com',expect.any(String));
+    const job=(await get(p)).jobs.find((j:Job)=>j.kind==='email');
+    expect(job.input.resendAccountId).toBe(first.id);
+  } finally {send.mockRestore();}
+});
+
+it('enforces the complete role boundary on banner edits, SEO, private assets and credentials', async () => {
+  const project = await create();
+  const image = await uploadAsset(project);
+  const banner = {assetId:image.id,alt:'Product display',mode:'background',fit:'cover',position:'center'};
+  const member = {...owner,userId:'another-member'};
+  const outsider = {...admin,userId:'outside-admin',workspaceId:'other-workspace'};
+  for (const principal of [member, outsider]) {
+    for (const suffix of ['', '/seo', `/assets/${image.id}`, '/connections', '/history'])
+      expect((await request(`/api/projects/${project.id}${suffix}`,undefined,principal)).status).toBe(404);
+    expect((await request(`/api/projects/${project.id}`, {expectedVersion:project.version,draft:{...project.draft,banner}}, principal,'PUT')).status).toBe(404);
+  }
+  for (const principal of [owner,admin,member,outsider])
+    expect((await request('/api/admin/provider-accounts',undefined,principal)).status).toBe(403);
+  expect((await request('/api/admin/provider-accounts',undefined,platform)).status).toBe(200);
+  let current = project;
+  for (const principal of [owner,admin,platform]) {
+    const response = await request(`/api/projects/${project.id}`,{expectedVersion:current.version,draft:{...current.draft,banner}},principal,'PUT');
+    expect(response.status).toBe(200);current=response.data.project;
+  }
+  const other = await create();
+  const foreign = await uploadAsset(other);
+  expect((await request(`/api/projects/${project.id}`,{expectedVersion:current.version,draft:{...current.draft,banner:{...banner,assetId:foreign.id}}},owner,'PUT')).status).toBe(404);
+  const video = await uploadAsset(project,'video/mp4');
+  expect((await request(`/api/projects/${project.id}`,{expectedVersion:current.version,draft:{...current.draft,banner:{...banner,assetId:video.id}}},owner,'PUT')).status).toBe(400);
+});
+
+it('refreshes SEO after a domain change once and retains publication idempotency', async () => {
+  let project = await publishable();
+  project = (await request(`/api/projects/${project.id}`,{expectedVersion:project.version,draft:{...project.draft,buildBranch:'template'}},owner,'PUT')).data.project;
+  const start = async () => request(`/api/projects/${project.id}/publish`, {requestId:crypto.randomUUID(),expectedVersion:(await get(project)).project.version});
+  const first = await start();expect(first.status).toBe(200);
+  await service.tick();
+  const firstDetail=await get(project);
+  expect(firstDetail.releases[0].seo.policyVersion).toBe(2);
+  expect((await request(`/api/projects/${project.id}/seo`)).data.needsPublish).toBe(false);
+  await env.DB.prepare("INSERT INTO provider_accounts(id,kind,scope,label,secret,created_at) VALUES('env','cloudflare','environment','Env','','now')").run();
+  await env.DB.prepare("INSERT INTO project_domains(hostname,project_id,credential_id,zone_id,zone_name,status,created_at) VALUES('shop.example',?,'env','zone','example','active','now')").bind(project.id).run();
+  const audit=await request(`/api/projects/${project.id}/seo`);
+  expect(audit.status).toBe(200);expect(audit.data.needsPublish).toBe(true);expect(audit.data.origin).toBe('https://shop.example');
+  const second=await start();expect(second.status).toBe(200);expect(second.data.job.id).not.toBe(first.data.job.id);
+  await service.tick();
+  expect((await request(`/api/projects/${project.id}/seo`)).data.needsPublish).toBe(false);
+  const again=await start();expect(again.data.job.id).toBe(second.data.job.id);
+});
+
+it('accepts scoped background video but rejects foreign videos and conflicting image uses', async () => {
+  const project=await create(),other=await create();
+  const video=await uploadAsset(project,'video/mp4'),foreign=await uploadAsset(other,'video/mp4'),image=await uploadAsset(project);
+  const base={id:'hero',targets:['home','contact'],kind:'video',slides:[],videoAssetId:video.id,posterAssetId:image.id,mode:'background',fit:'cover',position:'center',contrast:'dark',height:'screen',autoplay:true,interval:5};
+  const save=(draft:unknown)=>request(`/api/projects/${project.id}`,{expectedVersion:project.version,draft},owner,'PUT');
+  expect((await save({...project.draft,banners:[{...base,videoAssetId:foreign.id}]})).status).toBe(404);
+  expect((await save({...project.draft,banners:[{...base,videoAssetId:image.id}]})).status).toBe(400);
+  expect((await save({...project.draft,banners:[base],company:{...project.draft.company,logoAssetId:video.id}})).status).toBe(400);
+  expect((await save({...project.draft,banners:[base]})).status).toBe(200);
+});
+
+it('saves imported product-set projects without dropping source facts or media',async()=>{
+ sourceState.factsOrigin='product-set';
+ const p=await create();
+ const imported=await request(`/api/projects/${p.id}/import`,{expectedVersion:p.version,productIds:['set-1','set-2','set-3','set-4','set-5']});
+ expect(imported.status).toBe(200);
+ const original=imported.data.project;
+ const draft=structuredClone(original.draft);draft.company.name='Updated brand';
+ const saved=await request(`/api/projects/${p.id}`,{expectedVersion:original.version,draft},owner,'PUT');
+ expect(saved.status).toBe(200);
+ expect(saved.data.project.draft.products).toEqual(original.draft.products);
+ expect(saved.data.project.draft.products.every((p:any)=>p.source.factsOrigin==='product-set'&&p.imageAssetId)).toBe(true);
+ const tampered=structuredClone(saved.data.project.draft);tampered.products[0].source.factsOrigin='generated-concept';
+ const edited=await request(`/api/projects/${p.id}`,{expectedVersion:saved.data.project.version,draft:tampered},owner,'PUT');
+ expect(edited.status).toBe(200);expect(edited.data.project.draft.products[0].source.factsOrigin).toBe('product-set');
+ expect((await get(p)).project.draft.company.name).toBe('Updated brand');
+});
+
+
+describe('persisted website creation modes', () => {
+  it.each(['template','clone','custom'])('persists explicitly requested %s mode through create and reload', async mode => {
+    const result = await request('/api/projects', { name: 'Mode regression', requestId: crypto.randomUUID(), buildBranch: mode });
+    expect(result.status).toBe(200);
+    expect(result.data.project.draft.buildBranch).toBe(mode);
+    expect((await get(result.data.project)).project.draft.buildBranch).toBe(mode);
+  });
+  it('switches modes without deleting company details, products or clone input', async () => {
+    const created = await request('/api/projects', { name: 'Switch regression', requestId: crypto.randomUUID(), buildBranch: 'clone', targetUrl: 'https://example.com' });
+    let p = created.data.project as Project;
+    p.draft.company.name = 'Retained brand';
+    p.draft.cloneConfig!.instructions = 'Keep original first screen';
+    p.draft.products = [{ id:'p1', name:'Retained product', description:'Real facts', material:'', dimensions:'' }];
+    p.draft.primaryProductId = 'p1';
+    for (const mode of ['template','clone'] as const) {
+      const result = await request(`/api/projects/${p.id}`, { expectedVersion:p.version, draft:{...p.draft,buildBranch:mode} }, owner, 'PUT');
+      expect(result.status).toBe(200);
+      p = result.data.project;
+      expect(p.draft.buildBranch).toBe(mode);
+      expect(p.draft.company.name).toBe('Retained brand');
+      expect(p.draft.products[0].name).toBe('Retained product');
+      expect(p.draft.cloneConfig?.targetUrl).toBe('https://example.com');
+      expect(p.draft.cloneConfig?.instructions).toBe('Keep original first screen');
+    }
+  });
+  it('rejects mode changes while a server generation task is pending', async () => {
+    let p = (await request('/api/projects', { name:'Busy mode', requestId:crypto.randomUUID(), buildBranch:'template' })).data.project as Project;
+    p.draft.products = [{id:'p1',name:'Product',description:'Facts',material:'',dimensions:''}];
+    p.draft.primaryProductId = 'p1';
+    p = (await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project;
+    const queued = await request(`/api/projects/${p.id}/jobs`,{expectedVersion:p.version,requestId:crypto.randomUUID(),kind:'script'});
+    expect(queued.status).toBe(200);
+    p = (await get(p)).project;
+    const result = await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:{...p.draft,buildBranch:'clone'}},owner,'PUT');
+    expect(result.status).toBe(409);
+    expect(result.data.code).toBe('mode_change_task_active');
+    expect((await get(p)).project.draft.buildBranch).toBe('template');
   });
 });
