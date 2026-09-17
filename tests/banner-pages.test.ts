@@ -36,7 +36,7 @@ it('migrates legacy home settings without affecting other pages; explicit empty 
   expect(selectedBanner(legacy, 'contact')).toBeUndefined();
   expect(withBanner(html, { ...legacy, banners: [] }, assetUrl, 'home')).toBe(html);
 });
-it('selects by page, shared group and product-specific override without leaking into unrelated pages', () => {
+it('selects standalone pages and ignores legacy product-detail assignments', () => {
   const draft = {
     ...defaultDraft(),
     banners: [
@@ -50,7 +50,11 @@ it('selects by page, shared group and product-specific override without leaking 
   for (const page of ['about', 'contact'])
     expect(withBanner(html, draft, assetUrl, page)).toContain('https://assets.example/shared-1');
   const product = withBanner(html, draft, assetUrl, { page: 'detail', productId: 'sku/1' });
-  expect(product).toContain('https://assets.example/one-1');
+  expect(product).toBe(html);
+  expect(publicAssetReferences(draft)).not.toContain('one-1');
+  expect(publicAssetReferences(draft)).not.toContain('detail-1');
+  expect(pageBanners(draft)[2].targets).toEqual([]);
+  expect(editDraft(defaultDraft(), draft).banners?.[3].targets).toEqual([]);
   expect(product).not.toContain('https://assets.example/detail-1');
   expect(bannerPageFromPath('de/products/sku%2F1/index.html')).toEqual({
     page: 'detail',
@@ -156,4 +160,26 @@ it('escapes slide text and exposes accessible trusted controls and reduced-motio
   ];
   expect(scripts(parse(result))).toHaveLength(1);
   expect(result).toContain('data-wr-slide');
+});
+
+it('omits unprovided contact names rather than displaying sample identities', () => {
+  const draft = defaultDraft();
+  draft.company.name = 'Real Company';
+  draft.company.email = 'sales@example.test';
+  draft.company.contactName = '';
+  for (const template of ['natural', 'senseng-clean'] as const) {
+    const result = renderSite(
+      { ...draft, template },
+      {
+        projectId: 'p',
+        assetUrl,
+        inquiryUrl: 'https://assets.example/inquiries',
+        lang: 'en',
+        page: 'contact',
+      },
+    );
+    expect(result).not.toContain('Dom Wong');
+    expect(result).not.toContain('<h3></h3>');
+    expect(result).toContain('sales@example.test');
+  }
 });

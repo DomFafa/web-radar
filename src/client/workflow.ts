@@ -55,11 +55,10 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
     {
       id: 'company',
       label: '公司与联系资料',
-      detail: '公司名称、有效邮箱和联系人',
+      detail: '公司 / 品牌名称和有效联系邮箱',
       step: 'basics',
       ready:
         !!draft.company.name.trim() &&
-        !!draft.company.contactName.trim() &&
         email.length <= 254 &&
         /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) &&
         !/[\r\n]/.test(email),

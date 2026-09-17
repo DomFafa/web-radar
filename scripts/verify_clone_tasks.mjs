@@ -133,6 +133,31 @@ try {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   const url = origin + '/?project=' + project.id + '&tab=clone-generate';
+  await page.goto(origin+'/?project='+project.id+'&tab=basics');
+  await page.getByLabel('公司 / 品牌名称',{exact:true}).fill('Form regression brand');
+  await page.getByLabel('联系邮箱',{exact:true}).fill('sales@example.test');
+  await page.getByLabel('业务类型',{exact:true}).selectOption('factory');
+  await page.getByLabel('公司简介（选填）',{exact:true}).fill('Real products for wholesale buyers.');
+  await page.locator('.company-strengths summary').click();
+  await page.getByLabel('经营背景（选填）',{exact:true}).fill('Established in 2012');
+  await page.getByLabel('资质与合规说明（选填）',{exact:true}).fill('Certification applies to the supplied product only.');
+  await page.getByLabel('定制与交付能力（选填）',{exact:true}).fill('Packaging customization; lead time confirmed per order.');
+  await page.getByRole('button',{name:'保存草稿',exact:true}).click();
+  await page.getByText('草稿已保存。线上网站保持当前发布版本。',{exact:true}).waitFor();
+  await page.reload();
+  assert.equal(await page.getByLabel('公司 / 品牌名称',{exact:true}).inputValue(),'Form regression brand');
+  assert.equal(await page.getByLabel('业务联系人（选填）',{exact:true}).inputValue(),'');
+  assert.equal(await page.getByLabel('业务类型',{exact:true}).inputValue(),'factory');
+  await page.locator('.company-strengths summary').click();
+  assert.equal(await page.getByLabel('经营背景（选填）',{exact:true}).inputValue(),'Established in 2012');
+  const targetLabels=await page.locator('.banner-targets').innerText();
+  assert.ok(targetLabels.includes('首页')&&targetLabels.includes('产品列表页')&&targetLabels.includes('关于页'));
+  assert.ok(!targetLabels.includes('详情')&&!targetLabels.includes('产品：'));
+  await page.locator('.company-fields').screenshot({path:'artifacts/task-review/company-form-desktop.png'});
+  await page.setViewportSize({width:390,height:1100});
+  await page.locator('.company-fields').screenshot({path:'artifacts/task-review/company-form-mobile.png'});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.setViewportSize({width:1440,height:1100});
   await page.goto(url);
   await page
     .locator('.clone-editor input[type=file]')
@@ -396,7 +421,7 @@ try {
   await adminContext.close();
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
+    'PASS: grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];

@@ -14,7 +14,11 @@ export const newBanner = (id: string, targets: BannerTarget[] = []): PageBanner 
 });
 /** Read old drafts/releases without mutating their published snapshot. Explicit [] removes a legacy banner. */
 export function pageBanners(draft: Draft): PageBanner[] {
-  if (draft.banners !== undefined) return draft.banners;
+  if (draft.banners !== undefined)
+    return draft.banners.map((b) => ({
+      ...b,
+      targets: b.targets.filter((t) => t !== 'detail' && !t.startsWith('product:')),
+    }));
   const old = draft.banner;
   return old
     ? [
@@ -28,12 +32,8 @@ export function pageBanners(draft: Draft): PageBanner[] {
     : [];
 }
 export function selectedBanner(draft: Draft, page: string, productId?: string) {
-  const banners = pageBanners(draft);
-  return (
-    (page === 'detail' && productId
-      ? banners.find((b) => b.targets.includes(`product:${productId}`))
-      : undefined) ?? banners.find((b) => b.targets.includes(page as BannerTarget))
-  );
+  if (page === 'detail' || page.startsWith('product:')) return;
+  return pageBanners(draft).find((b) => b.targets.includes(page as BannerTarget));
 }
 export function bannerPageFromPath(path: string): { page: string; productId?: string } | undefined {
   const parts = path.split('/');

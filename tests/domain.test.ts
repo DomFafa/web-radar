@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultDraft,
+  assertSiteIntakeReady,
   canManage,
   editDraft,
   assertReadyForVideo,
@@ -160,3 +161,10 @@ it('publishes with omitted unknown company facts and translated empty product de
   d.products[0].translations = { de: { name: 'Produkt', description: '' } };
   expect(() => assertPublishable(d)).not.toThrow();
 });
+
+ it('allows an omitted business contact while retaining name and email intake requirements', () => {
+   const draft=readyDraft();draft.company.contactName='';
+   expect(()=>assertSiteIntakeReady(draft)).not.toThrow();
+   expect(()=>assertSiteIntakeReady({...draft,company:{...draft.company,name:''}})).toThrow();
+   expect(()=>assertSiteIntakeReady({...draft,company:{...draft.company,email:'invalid'}})).toThrow();
+ });

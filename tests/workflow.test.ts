@@ -243,3 +243,10 @@ it('uses the selected preset when a previous custom design is still saved', () =
   draft.template = 'juno-toys';
   expect(publicAssetReferences(draft)).not.toContain('chosen-video');
 });
+
+it('company checklist matches optional contact requirements', () => {
+ const draft=suppliedDraft();draft.company.contactName='';
+ expect(draftChecklist(draft).find(item=>item.id==='company')?.ready).toBe(true);
+ draft.company.email='invalid';
+ expect(draftChecklist(draft).find(item=>item.id==='company')?.ready).toBe(false);
+});

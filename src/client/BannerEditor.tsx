@@ -19,16 +19,12 @@ export function BannerEditor({
   onChange: (banners: PageBanner[]) => void;
 }) {
   const banners = editableBanners(draft);
-  const targets: { id: BannerTarget; label: string }[] = [
-    ...plannedPages(draft).map((page) => ({
+  const targets: { id: BannerTarget; label: string }[] = plannedPages(draft)
+    .filter((page) => page !== 'detail')
+    .map((page) => ({
       id: page,
-      label: page === 'detail' ? '全部产品详情页' : pageLabel(draft, page),
-    })),
-    ...draft.products.map((p) => ({
-      id: `product:${p.id}` as BannerTarget,
-      label: `产品：${p.name || p.id}`,
-    })),
-  ];
+      label: page === 'catalog' ? '产品列表页' : pageLabel(draft, page),
+    }));
   const change = (id: string, patch: Partial<PageBanner>) =>
     onChange(banners.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   const upload = (banner: PageBanner, slot: BannerUploadSlot, label: string) => (
@@ -56,7 +52,7 @@ export function BannerEditor({
         <span>多页面 · 多图轮播 · 全屏视频</span>
       </div>
       <p className="muted">
-        上传媒体后指定页面。同一组可用于多个页面；特定产品的配置优先于「全部产品详情页」。制作中或生成后均可修改，无需重新生成，保存预览后发布生效。
+        上传媒体后指定首页或独立页面，同一组可用于多个页面。商品详情页保持原设计。制作中或生成后均可修改，无需重新生成，保存预览后发布生效。
       </p>
       <div className="banner-config-list">
         {banners.map((banner, groupIndex) => (

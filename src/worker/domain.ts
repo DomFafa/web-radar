@@ -1,5 +1,5 @@
 import type { BannerTarget } from '../shared/model';
-import { bannerAssets } from '../shared/banner-config';
+import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
 import { z } from 'zod';
 import type { Draft, Principal, Project } from '../shared/model';
@@ -243,6 +243,7 @@ export function validateDraft(input: unknown): Draft {
   const result = draftSchema.safeParse(input);
   requireCondition(result.success, 400, 'invalid_draft', '项目资料格式无效或超出长度限制。');
   const d = result.data;
+  if (d.banners !== undefined) d.banners = pageBanners(d);
   requireCondition(
     d.languages[0] === 'en' && new Set(d.languages).size === d.languages.length,
     400,
@@ -422,10 +423,10 @@ export function publicAssetReferences(d: Draft): string[] {
 }
 export function assertSiteIntakeReady(d: Draft): void {
   requireCondition(
-    d.company.name.trim() && d.company.contactName.trim() && validEmail(d.company.email),
+    d.company.name.trim() && validEmail(d.company.email),
     400,
     'company_incomplete',
-    '请填写公司名称、有效联系邮箱和联系人英文名。',
+    '请填写公司 / 品牌名称和有效联系邮箱。',
   );
   requireCondition(d.country.trim(), 400, 'market_incomplete', '请选择销售国家。');
   requireCondition(

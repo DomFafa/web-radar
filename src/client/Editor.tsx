@@ -1,3 +1,4 @@
+import { CompanyFields } from './CompanyFields';
 import { BannerEditor, editableBanners, type BannerUploadSlot } from './BannerEditor';
 import type { SeoReport } from '../worker/site-metadata';
 import { WebsiteConnections } from './ProviderAccounts';
@@ -810,120 +811,10 @@ export function Editor({
               <section className="panel">
                 <div className="panel-title">
                   <span className="section-index">A</span>
-                  <h3>公司资料与外贸实力</h3>
-                  <span>用于海外买家建信、网站介绍与即时客户联系</span>
+                  <h3>公司与联系资料</h3>
+                  <span>先填写基本信息，再补充品牌与业务资料</span>
                 </div>
-                <div className="form-grid">
-                  <Field label="公司英文名称" required>
-                    <input
-                      value={draft.company.name}
-                      onChange={(e) => company({ name: e.target.value })}
-                      placeholder="例如：Evergreen Trading Co., Ltd."
-                      maxLength={160}
-                    />
-                  </Field>
-                  <Field label="联系邮箱" required hint="询盘通知会发送到此邮箱">
-                    <input
-                      type="email"
-                      value={draft.company.email}
-                      onChange={(e) => company({ email: e.target.value })}
-                      placeholder="sales@yourcompany.com"
-                      maxLength={254}
-                    />
-                  </Field>
-                  <Field label="联系人英文名" required>
-                    <input
-                      value={draft.company.contactName}
-                      onChange={(e) => company({ contactName: e.target.value })}
-                      placeholder="例如：Alex Chen"
-                      maxLength={100}
-                    />
-                  </Field>
-                  <Field label="公司方向">
-                    <div className="segmented">
-                      <button
-                        className={draft.company.type === 'trader' ? 'selected' : ''}
-                        onClick={() => company({ type: 'trader' })}
-                      >
-                        贸易商 / Trading
-                      </button>
-                      <button
-                        className={draft.company.type === 'factory' ? 'selected' : ''}
-                        onClick={() => company({ type: 'factory' })}
-                      >
-                        工厂 / Manufacturing
-                      </button>
-                    </div>
-                  </Field>
-                  <Field label="品牌标语 / Slogan" hint="网站首页首屏吸睛主标题">
-                    <input
-                      value={draft.company.slogan || ''}
-                      onChange={(e) => company({ slogan: e.target.value })}
-                      placeholder="例如：Your Trusted Global OEM Partner"
-                      maxLength={160}
-                    />
-                  </Field>
-                  <Field label="成立年份 / 行业经验">
-                    <input
-                      value={draft.company.establishedYear || ''}
-                      onChange={(e) => company({ establishedYear: e.target.value })}
-                      placeholder="例如：Since 2012 或 12+ Years Experience"
-                      maxLength={60}
-                    />
-                  </Field>
-                  <Field label="WhatsApp" hint="海外采购商首选即时沟通，支持一键发起会话">
-                    <input
-                      value={draft.company.whatsapp || ''}
-                      onChange={(e) => company({ whatsapp: e.target.value })}
-                      placeholder="例如：+86 13800000000"
-                      maxLength={60}
-                    />
-                  </Field>
-                  <Field label="联系电话 / Phone">
-                    <input
-                      value={draft.company.phone || ''}
-                      onChange={(e) => company({ phone: e.target.value })}
-                      placeholder="例如：+86 755 88888888"
-                      maxLength={60}
-                    />
-                  </Field>
-                  <Field className="full-width" label="公司或工厂实际地址 / Address" hint="海外买家核验真实工厂/实体信誉的核心项">
-                    <input
-                      value={draft.company.address || ''}
-                      onChange={(e) => company({ address: e.target.value })}
-                      placeholder="例如：Building 4, High-Tech Industrial Park, Shenzhen, Guangdong, China"
-                      maxLength={240}
-                    />
-                  </Field>
-                  <Field className="full-width" label="核心资质与认证 / Certifications" hint="逗号分隔，如：ISO9001, CE, RoHS, BSCI, FDA">
-                    <input
-                      value={draft.company.certifications || ''}
-                      onChange={(e) => company({ certifications: e.target.value })}
-                      placeholder="例如：ISO9001, CE, RoHS, FCC"
-                      maxLength={200}
-                    />
-                  </Field>
-                  <Field className="full-width" label="定制与交付实力 / Capabilities" hint="如：OEM/ODM、月产能、现货样品支持">
-                    <input
-                      value={draft.company.capabilities || ''}
-                      onChange={(e) => company({ capabilities: e.target.value })}
-                      placeholder="例如：OEM/ODM Available, 50,000 pcs monthly capacity, Free samples"
-                      maxLength={240}
-                    />
-                  </Field>
-                  <Field
-                    className="full-width"
-                    label="公司简介与已知事实"
-                    hint="提供你确认过的信息。没有提供的认证、产能、客户等事实不会凭空补写。"
-                  >
-                    <textarea
-                      rows={3}
-                      value={draft.company.description}
-                      onChange={(e) => company({ description: e.target.value })}
-                      placeholder="介绍你们做什么、服务哪些客户，以及可以公开展示的优势。"
-                    />
-                  </Field>
-                </div>
+                <CompanyFields value={draft.company} disabled={!!busy} onChange={company} />
                 <div className="brand-upload-grid">
                 <div className="logo-upload-row">
                   <AssetView
