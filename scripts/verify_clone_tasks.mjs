@@ -204,6 +204,58 @@ try {
   const afterPreview = statusRequests;
   await new Promise(resolve => setTimeout(resolve, 6000));
   assert.equal(statusRequests, afterPreview, 'preview-only completion must stop polling');
+  // Replace an already generated website banner without making another model call.
+  await page.goto(origin+'/?project='+project.id+'&tab=publish');
+  const bannerPanel=page.locator('.banner-editor');
+  const modelCallsBeforeBanner=calls;
+  await bannerPanel.locator('input[type=file]').setInputFiles('public/templates/senseng/hero-right.jpg');
+  await bannerPanel.getByLabel('展示方式',{exact:true}).waitFor();
+  await bannerPanel.getByLabel('展示方式',{exact:true}).selectOption('image');
+  await bannerPanel.getByLabel('图片说明（Alt）',{exact:true}).fill('Uploaded Senseng product display');
+  await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
+  await page.locator('.seo-panel').getByText(/已检查/).waitFor();
+  await page.reload();
+  assert.equal(await bannerPanel.getByLabel('展示方式',{exact:true}).inputValue(),'image');
+  await bannerPanel.screenshot({path:'artifacts/task-review/banner-editor-desktop.png'});
+  await page.getByRole('button',{name:'整站预览',exact:true}).click();
+  const bannerFrame=page.frameLocator('iframe[title$="私有预览"]');
+  await bannerFrame.locator('[data-wr-banner-image]').waitFor();
+  assert.equal(await bannerFrame.locator('[data-wr-banner-image]').getAttribute('alt'),'Uploaded Senseng product display');
+  assert.equal(await bannerFrame.locator('[data-wr-banner-image]').evaluate(img=>img.complete&&img.naturalWidth>0),true);
+  await page.screenshot({path:'artifacts/task-review/banner-preview.png'});
+  await page.getByRole('button',{name:'关闭预览',exact:true}).click();
+  await page.setViewportSize({width:390,height:1100});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await bannerPanel.screenshot({path:'artifacts/task-review/banner-editor-mobile.png'});
+  await page.setViewportSize({width:1440,height:1100});
+  assert.equal(calls,modelCallsBeforeBanner);
+  await page.getByRole('button',{name:'保存并检查 SEO',exact:true}).click();
+  await page.locator('.seo-panel').getByText(/已检查/).waitFor();
+  await page.locator('.seo-panel').screenshot({path:'artifacts/task-review/seo-report.png'});
+  const bannerDraft=(await (await context.request.get(origin+'/api/projects/'+project.id)).json()).project.draft;
+  const layoutPage=await context.newPage();
+  await layoutPage.goto(origin);
+  for(const template of ['natural','technology','explorer','senseng-clean','senseng-video','saas-automation','fintech-platform','digital-marketing','porto-accounting','crafto-corporate','juno-toys','corpox-ai-agency','corpox-consulting']){
+    const result=await context.request.post(origin+'/api/projects/'+project.id+'/preview?lang=en&page=home',{data:{draft:{...bannerDraft,template,banner:{...bannerDraft.banner,mode:'background'}}}});
+    assert.equal(result.status(),200,template);
+    const {html}=await result.json();
+    for(const width of [390,2560]){
+      await layoutPage.setViewportSize({width,height:900});
+      await layoutPage.setContent(html,{waitUntil:'domcontentloaded'});
+      await layoutPage.locator('[data-wr-banner-image]').waitFor();
+      const geometry=await layoutPage.locator('[data-wr-banner-image]').evaluate(img=>{
+        const r=img.getBoundingClientRect(),h=img.parentElement.getBoundingClientRect();
+        return {width:r.width,heroWidth:h.width,height:r.height,heroHeight:h.height,display:getComputedStyle(img).display,video:img.parentElement.querySelectorAll('video').length};
+      });
+      assert.ok(geometry.width>0&&geometry.height>0,template+' banner must be visible');
+      assert.ok(Math.abs(geometry.width-geometry.heroWidth)<3,template+' banner must span its hero');
+      assert.equal(geometry.video,0,template+' must not play its old video');
+      assert.equal(await layoutPage.locator('[data-wr-banner=custom] #video-toggle').count(),0);
+      if(['senseng-clean','senseng-video','saas-automation'].includes(template))await layoutPage.screenshot({path:`artifacts/task-review/banner-${template}-${width}.png`});
+    }
+  }
+  await layoutPage.close();
+
   // Real browser + worker checks for encrypted shared credentials and per-site connections.
   const adminContext=await browser.newContext({viewport:{width:1440,height:1100}});
   assert.equal((await adminContext.request.post(origin+'/api/auth/test-login',{data:{identity:'platform'}})).status(),200);
@@ -259,7 +311,7 @@ try {
   await adminContext.close();
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded.',
+    'PASS: live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];

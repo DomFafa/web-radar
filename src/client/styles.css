@@ -5476,3 +5476,5 @@ td > .pill {
   .panel .section-title > div { min-width: 0; max-width: 100%; }
   .panel .section-title .title-actions { flex-wrap: wrap; }
 }
+
+.banner-editor .logo-upload-row{align-items:flex-start;gap:24px}.banner-editor .logo-upload-row>img,.banner-editor .logo-upload-row>.asset-view{width:240px;max-width:40%;height:120px;object-fit:contain;border-radius:12px}.banner-editor .form-grid{margin-top:20px}.seo-panel li{margin:10px 0;overflow-wrap:anywhere}.seo-panel code{font-size:.88em}.seo-panel details{margin:16px 0}.seo-panel summary{cursor:pointer;font-weight:600}@media(max-width:600px){.banner-editor .logo-upload-row{flex-direction:column}.banner-editor .logo-upload-row>img,.banner-editor .logo-upload-row>.asset-view{max-width:100%;width:100%}}

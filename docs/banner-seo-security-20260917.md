@@ -1,0 +1,55 @@
+# Banner、SEO 与权限检查
+
+## 使用方式
+
+- 「资料与产品」与「预览与发布」均可上传首页 Banner，覆盖模板、以图生站及自定义生成三个分支。
+- 背景模式保留首屏文案与按钮，支持铺满/完整显示、顶部/居中/底部与明暗文字遮罩；整图模式按比例显示含文字的成品设计图。Alt 应准确描述画面，装饰图可留空。
+- 图片随草稿保存。预览前自动保存，发布成功后才更新线上版本。替换 Banner 不调用模型，不修改原始生成文件；移除后恢复原页面。
+- 无法安全识别首屏的历史页面会在正文前添加完整 Banner，保留原有内容。复杂自定义首屏建议使用私有预览核对图片、导航和裁切。
+- 生成提示要求将主首屏标记为 `data-wr-hero`，导航置于首屏之外。
+
+## SEO
+
+参考 `/Volumes/DAIDAI/AutomationProject/SEOchecklist.md`，实现：
+
+1. 从实际产物生成 canonical、互相对应的 hreflang、x-default、带语言链接的 sitemap.xml 与 robots.txt。
+2. 重复或缺失标题按页面用途、产品与公司名补齐；页面说明、Open Graph、Twitter 分享信息与当前发布素材同步。
+3. 基于已提供资料生成 Organization、WebSite、BreadcrumbList；产品页仅在名称与正文对应时添加 Product。不生成价格、评分、销量、认证或 FAQ 等未经提供的事实。
+4. 已激活的自定义域名优先，多个绑定时采用最早创建且当前为 active 的绑定。没有自定义域名时使用固定 Pages 域名。页面规范地址随发布快照保存。
+5. 「保存并检查 SEO」检查全部输出语言/页面的标题、描述、H1、图片 Alt 和基本语言标记。绑定/解绑域名或升级 SEO 策略后，可点击「发布 SEO 更新」。相同内容与 SEO 配置重复发布仍复用结果。
+6. 自定义 Banner 使用 eager + fetchpriority=high，防止首屏图片被延迟加载。管理应用和私有 API 返回 noindex，生产网站保留索引入口。
+
+清单中的 FID 已被 INP 替代，良好 CLS 门槛为 0.1。当前采用 LCP ≤ 2.5 秒、INP ≤ 200 毫秒、CLS ≤ 0.1。参考：
+
+- https://developers.google.com/search/docs/appearance/core-web-vitals
+- https://developers.google.com/search/docs/specialty/international/localized-versions
+- https://developers.google.com/search/docs/appearance/structured-data/product
+
+这里是产物标记检查，并非收录率、搜索排名、富媒体结果或 PageSpeed 95 分的证明。真实站点仍需 Search Console 域名验证、提交 sitemap、PageSpeed/真实访问测试与人工翻译验收。B2B 产品没有价格和评分时不承诺 Product 富媒体结果。不会为凑指标增加虚构字段或一律对可撤销的私有媒体设置长期缓存。
+
+## 权限边界
+
+| 身份 | 网站范围 | Banner/SEO/发布/网站连接 | 共享 Cloudflare/Resend 配置 |
+| --- | --- | --- | --- |
+| 普通成员 | 本人拥有的网站 | 可管理本人网站 | 禁止 |
+| 工作区管理员 | 本人网站及当前工作区网站 | 可管理该范围网站 | 禁止 |
+| 平台管理员 | 全部网站 | 可管理全部网站 | 可管理 |
+| 未登录/其他工作区成员 | 仅已发布的公开网站 | 不可读取草稿、报告、私有素材或凭据 | 禁止 |
+
+新增接口复用服务端项目权限检查。Banner 必须引用本项目已验证的图片；跨项目图片、视频伪装 Banner 均被拒绝。角色来自实时认证，客户端不能自行声明管理员。
+
+本次额外加固 HTTPS HSTS、管理页面 noindex、生成页面外链 noopener/noreferrer；现有 HttpOnly 会话、Origin 校验、生成 HTML 清洗、参考网站 SSRF 限制、凭据加密、公开/管理网站源隔离继续保留。回归验证包括普通成员、同工作区管理员、跨工作区管理员、平台管理员，以及禁止跨项目媒体引用。
+
+## 后续可继续优化
+
+- 提供站点级「只读 / 内容编辑 / 发布 / 域名管理」角色。现有 Product Radar 仅提供工作区 admin/member，因此本次没有凭空引入无法由身份源管理的角色。
+- 为域名绑定、共享凭据变更和发布建立可检索的操作审计；对敏感账号配置增加身份源的二次认证。
+- Banner 上传后生成不同尺寸的 WebP/AVIF 派生文件并记录真实宽高。应保留原图和版式，先测再调；不把压缩成功等同于 Core Web Vitals 达标。
+- 周期性做 D1/R2 恢复演练、生产队列时延/失败率告警与外部链接检查。未在本次自动创建付费监控、定时任务或触发搜索服务提交。
+
+## 本次验证
+
+- `npm run check`：373 项测试、类型检查、生产构建通过。
+- `npm run test:browser`：真实本地 Worker/D1/R2 与 Chrome；上传 Banner、刷新恢复、私有预览、无额外模型调用、SEO 报告，以及 13 个模板在 390/2560 像素宽度下的覆盖检查通过。
+- `npm audit --omit=dev`：生产依赖报告 0 项已知漏洞（检查时的注册表结果，不代表绝对无风险）。
+- Cloudflare 打包 dry-run 通过。测试使用隔离的模型、邮件、DNS 桩，不调用真实付费模型或修改客户域名。

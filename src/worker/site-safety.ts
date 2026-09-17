@@ -63,6 +63,12 @@ export function sanitizeGeneratedHtml(html: string, inquiryUrl: string): string 
         }
         return true;
       });
+      if (tag === 'a' && child.attrs.some(a => a.name === 'target' && a.value === '_blank')) {
+        const rel = new Set((child.attrs.find(a => a.name === 'rel')?.value ?? '').split(/\s+/).filter(Boolean));
+        rel.add('noopener'); rel.add('noreferrer');
+        child.attrs = child.attrs.filter(a => a.name !== 'rel');
+        child.attrs.push({name:'rel',value:[...rel].join(' ')});
+      }
       if (tag === 'form') {
         child.attrs = child.attrs.filter((a) => !['action', 'method'].includes(a.name));
         child.attrs.push(

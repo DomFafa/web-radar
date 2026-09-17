@@ -1,3 +1,4 @@
+import { withBanner } from '../shared/banner';
 import type { Draft, Language } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
 import { sanitizeGeneratedHtml } from './site-safety';
@@ -112,5 +113,5 @@ export function materializeSiteFiles(
     'site_page_large',
     '生成的网页超过发布大小限制，请简化设计后重新生成。',
   );
-  return Object.fromEntries(Object.entries(result).map(([path, html]) => [path, withFavicon(html, draft, options.assetUrl)]));
+  return Object.fromEntries(Object.entries(result).map(([path, html]) => [path, withBanner(withFavicon(html, draft, options.assetUrl), draft, options.assetUrl, /^[a-z]{2}\/index\.html$/.test(path))]));
 }

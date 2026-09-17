@@ -1,3 +1,4 @@
+import { auditSeo, withPublicationMetadata, SEO_POLICY_VERSION, type PublicationMetadata } from './site-metadata';
 import { ProviderSettings, withStoredEmailStatus } from './provider-settings';
 import { backupManifest } from './backup-manifest';
 import { listProjectSummaries } from './project-queries';
@@ -301,6 +302,18 @@ export class DomainService {
       throw new DomainError(404, 'not_found', '接口不存在。');
     }
     if (!command && method === 'GET') return json(await this.detail(project, principal));
+    if (command === 'seo' && method === 'GET') {
+      requireCondition(staticSiteReady(project.draft), 409, 'site_not_built', '请先生成网站或选择模版，再检查 SEO。');
+      const metadata = await this.publicationMetadata(project, project.draft);
+      const files = await this.renderFiles(project.draft, {
+        projectId: project.id, assetUrl: metadata.assetUrl!,
+        inquiryUrl: `/api/public/sites/${project.id}/inquiries`,
+        publicBaseUrl: `${this.origin()}/public/sites/${project.id}`,
+      });
+      const release = project.publishedReleaseId ? await this.store.one<Release>('releases', project.publishedReleaseId) : undefined;
+      return json({ ...auditSeo(withPublicationMetadata(files, metadata.origin ?? 'https://preview.invalid', metadata)), version: project.version, origin: metadata.origin ?? null,
+        needsPublish: !!release && (release.seo?.policyVersion !== SEO_POLICY_VERSION || release.seo?.origin !== metadata.origin) });
+    }
     if (command === 'history' && method === 'GET') return json(await this.history(project, url));
     if (!command && method === 'DELETE') {
       await this.deleteProject(project.id, principal);
@@ -1727,13 +1740,14 @@ export class DomainService {
       ? await this.store.one<Release>('releases', project.publishedReleaseId)
       : undefined;
     if (activeRelease?.draft.cloneConfig && hasCloneOutput(activeRelease.draft.cloneConfig)) activeRelease.draft.cloneConfig = await storeCloneOutput(this.env, project.id, activeRelease.draft.cloneConfig);
+    const currentMetadata = await this.publicationMetadata(project, draft);
     if (!restore) {
       const samePending = pending.find(job => !job.input.cancelledByOffline && job.input.draft && samePublishedDraft(draft, job.input.draft as Draft));
       if (samePending) {
         await this.store.remember(scope, rid, hash, { id: samePending.id }).run();
         return samePending;
       }
-      if (!project.offline && activeRelease?.status === 'succeeded' && samePublishedDraft(draft, activeRelease.draft)) {
+      if (!project.offline && activeRelease?.status === 'succeeded' && activeRelease.seo?.policyVersion === SEO_POLICY_VERSION && activeRelease.seo?.origin === currentMetadata.origin && samePublishedDraft(draft, activeRelease.draft)) {
         const jobs = await this.store.list<Job>('jobs', "project_id=? AND kind='publish' AND status='succeeded'", [project.id], 'created_at DESC');
         const existing = jobs.find(job => job.input.releaseId === activeRelease.id);
         if (existing) {
@@ -1761,6 +1775,7 @@ export class DomainService {
       draftVersion,
       draft,
       hostingTarget: structuredClone(target),
+      seo: { policyVersion: SEO_POLICY_VERSION, origin: currentMetadata.origin ?? `https://${target.pagesProjectName}.pages.dev` },
       createdAt: now(),
       status: 'pending',
       testMode: testMode(this.env),
@@ -2718,7 +2733,7 @@ export class DomainService {
       };
       const files = await this.renderFiles(release.draft, renderOptions);
       const previousPublication = previous
-        ? { releaseId: previous.id, files: await this.renderFiles(previous.draft, renderOptions) }
+        ? { releaseId: previous.id, files: await this.renderFiles(previous.draft, renderOptions), metadata: { ...(await this.publicationMetadata(p, previous.draft)), origin: previous.seo?.origin ?? `https://${previous.hostingTarget?.pagesProjectName ?? p.hostingTarget!.pagesProjectName}.pages.dev` } }
         : undefined;
       let published = input.publishResult;
       if (!published) {
@@ -2749,6 +2764,7 @@ export class DomainService {
           previous?.deploymentId,
           release.hostingTarget,
           previousPublication,
+          { ...(await this.publicationMetadata(p, release.draft)), origin: release.seo?.origin },
         );
         job.input.publishResult = structuredClone(published);
         // Preserve the accepted provider result before permission checks or the activation batch.
@@ -2888,6 +2904,17 @@ export class DomainService {
     const files: unknown = await new Response(object.body).json();
     validateSiteFiles(files, draft);
     return files;
+  }
+  private async publicationMetadata(project: Project, draft: Draft): Promise<PublicationMetadata> {
+    // Only a verified active binding may replace the hosting origin. Use the oldest
+    // active binding consistently rather than whichever domain was refreshed last.
+    const domain = await this.env.DB.prepare("SELECT hostname FROM project_domains WHERE project_id=? AND status='active' ORDER BY created_at ASC, hostname ASC LIMIT 1")
+      .bind(project.id).first<{hostname:string}>();
+    return {
+      origin: domain ? `https://${domain.hostname}` : project.hostingTarget ? `https://${project.hostingTarget.pagesProjectName}.pages.dev` : undefined,
+      draft,
+      assetUrl: id => `${this.origin()}/public/sites/${project.id}/assets/${encodeURIComponent(id)}`,
+    };
   }
   private async renderFiles(
     draft: Draft,

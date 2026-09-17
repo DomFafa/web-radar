@@ -123,6 +123,7 @@ const draftSchema = z.object({
     .max(8),
   storyboardRevision: z.number().int().nonnegative(),
   storyboardConfirmedRevision: z.number().int().nonnegative().optional(),
+  banner: z.object({ contrast: z.enum(['light','dark','none']).optional(), assetId: id, alt: z.string().max(300), mode: z.enum(['background', 'image']), fit: z.enum(['cover', 'contain']), position: z.enum(['top', 'center', 'bottom']) }).optional(),
   heroAssetId: id.optional(),
   posterAssetId: id.optional(),
   heroAccepted: z.boolean(),
@@ -375,6 +376,7 @@ export function assetReferences(d: Draft): string[] {
       [
         d.company.logoAssetId,
         d.company.faviconAssetId,
+        d.banner?.assetId,
         d.heroAssetId,
         d.posterAssetId,
         ...d.products.map((p) => p.imageAssetId),
@@ -392,6 +394,7 @@ export function publicAssetReferences(d: Draft): string[] {
       [
         d.company.logoAssetId,
         d.company.faviconAssetId,
+        d.banner?.assetId,
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),

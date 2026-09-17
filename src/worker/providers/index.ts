@@ -54,8 +54,8 @@ export function createProviders(env: Secrets): ProviderSet {
     submitVideo: (draft, refs, idempotencyKey) => submitVideo(env, draft, refs, idempotencyKey),
     pollVideo: (id) => pollVideo(env, id),
     resolveHostingTarget: (projectId, current) => resolveHostingTarget(env, projectId, current),
-    publish: (projectId, releaseId, files, previousId, hostingTarget, previous) =>
-      publishPages(env, projectId, releaseId, files, previousId, hostingTarget, previous),
+    publish: (projectId, releaseId, files, previousId, hostingTarget, previous, metadata) =>
+      publishPages(env, projectId, releaseId, files, previousId, hostingTarget, previous, metadata),
     email: (inquiry, recipient, key) => sendInquiry(env, inquiry, recipient, key),
   };
 }

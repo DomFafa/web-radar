@@ -2419,3 +2419,48 @@ it('freezes the selected Resend account when an inquiry is queued, across defaul
     expect(job.input.resendAccountId).toBe(first.id);
   } finally {send.mockRestore();}
 });
+
+it('enforces the complete role boundary on banner edits, SEO, private assets and credentials', async () => {
+  const project = await create();
+  const image = await uploadAsset(project);
+  const banner = {assetId:image.id,alt:'Product display',mode:'background',fit:'cover',position:'center'};
+  const member = {...owner,userId:'another-member'};
+  const outsider = {...admin,userId:'outside-admin',workspaceId:'other-workspace'};
+  for (const principal of [member, outsider]) {
+    for (const suffix of ['', '/seo', `/assets/${image.id}`, '/connections', '/history'])
+      expect((await request(`/api/projects/${project.id}${suffix}`,undefined,principal)).status).toBe(404);
+    expect((await request(`/api/projects/${project.id}`, {expectedVersion:project.version,draft:{...project.draft,banner}}, principal,'PUT')).status).toBe(404);
+  }
+  for (const principal of [owner,admin,member,outsider])
+    expect((await request('/api/admin/provider-accounts',undefined,principal)).status).toBe(403);
+  expect((await request('/api/admin/provider-accounts',undefined,platform)).status).toBe(200);
+  let current = project;
+  for (const principal of [owner,admin,platform]) {
+    const response = await request(`/api/projects/${project.id}`,{expectedVersion:current.version,draft:{...current.draft,banner}},principal,'PUT');
+    expect(response.status).toBe(200);current=response.data.project;
+  }
+  const other = await create();
+  const foreign = await uploadAsset(other);
+  expect((await request(`/api/projects/${project.id}`,{expectedVersion:current.version,draft:{...current.draft,banner:{...banner,assetId:foreign.id}}},owner,'PUT')).status).toBe(404);
+  const video = await uploadAsset(project,'video/mp4');
+  expect((await request(`/api/projects/${project.id}`,{expectedVersion:current.version,draft:{...current.draft,banner:{...banner,assetId:video.id}}},owner,'PUT')).status).toBe(400);
+});
+
+it('refreshes SEO after a domain change once and retains publication idempotency', async () => {
+  let project = await publishable();
+  project = (await request(`/api/projects/${project.id}`,{expectedVersion:project.version,draft:{...project.draft,buildBranch:'template'}},owner,'PUT')).data.project;
+  const start = async () => request(`/api/projects/${project.id}/publish`, {requestId:crypto.randomUUID(),expectedVersion:(await get(project)).project.version});
+  const first = await start();expect(first.status).toBe(200);
+  await service.tick();
+  const firstDetail=await get(project);
+  expect(firstDetail.releases[0].seo.policyVersion).toBe(2);
+  expect((await request(`/api/projects/${project.id}/seo`)).data.needsPublish).toBe(false);
+  await env.DB.prepare("INSERT INTO provider_accounts(id,kind,scope,label,secret,created_at) VALUES('env','cloudflare','environment','Env','','now')").run();
+  await env.DB.prepare("INSERT INTO project_domains(hostname,project_id,credential_id,zone_id,zone_name,status,created_at) VALUES('shop.example',?,'env','zone','example','active','now')").bind(project.id).run();
+  const audit=await request(`/api/projects/${project.id}/seo`);
+  expect(audit.status).toBe(200);expect(audit.data.needsPublish).toBe(true);expect(audit.data.origin).toBe('https://shop.example');
+  const second=await start();expect(second.status).toBe(200);expect(second.data.job.id).not.toBe(first.data.job.id);
+  await service.tick();
+  expect((await request(`/api/projects/${project.id}/seo`)).data.needsPublish).toBe(false);
+  const again=await start();expect(again.data.job.id).toBe(second.data.job.id);
+});

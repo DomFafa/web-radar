@@ -16,6 +16,7 @@ app.use('*', async (c, next) => {
     throw new ApiError(403, 'test_local_only', '测试环境仅允许本地访问。');
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
+  if (new URL(c.req.url).protocol === 'https:') c.header('Strict-Transport-Security', 'max-age=31536000');
   c.header('Referrer-Policy', 'no-referrer');
   c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   const path = c.req.path;
@@ -26,6 +27,7 @@ app.use('*', async (c, next) => {
   }
   if (path.startsWith('/api/') || path.startsWith('/preview/'))
     c.header('Cache-Control', 'no-store');
+  if (!path.startsWith('/public/') && !path.startsWith('/templates/')) c.header('X-Robots-Tag', 'noindex, nofollow');
   if (!path.startsWith('/public/')) {
     let ancestors = "'none'";
     if (path.startsWith('/embed/')) {

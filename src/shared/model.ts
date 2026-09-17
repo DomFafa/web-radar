@@ -206,6 +206,7 @@ export interface Draft {
   scenes: Scene[];
   storyboardRevision: number;
   storyboardConfirmedRevision?: number;
+  banner?: { contrast?: 'light' | 'dark' | 'none'; assetId: string; alt: string; mode: 'background' | 'image'; fit: 'cover' | 'contain'; position: 'top' | 'center' | 'bottom' };
   heroAssetId?: string;
   posterAssetId?: string;
   heroAccepted: boolean;
@@ -274,6 +275,7 @@ export interface Quota {
   videoReserved: number;
 }
 export interface Release {
+  seo?: { policyVersion: number; origin: string };
   hostingTarget?: HostingTarget;
   id: string;
   projectId: string;

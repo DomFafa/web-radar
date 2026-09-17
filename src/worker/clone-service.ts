@@ -1,3 +1,4 @@
+import { withBanner } from '../shared/banner';
 import { fetchReferenceHtml } from './reference-fetch';
 import { interactionScript } from './site-runtime';
 import { sanitizeGeneratedHtml } from './site-safety';
@@ -174,7 +175,7 @@ Company/product facts below replace corresponding identity/contact/product field
 Output ONLY one JSON object with this structure:
 {"css":"shared CSS without style tags","pages":{"en":{"home":"body HTML","catalog":"body HTML","detail":"body HTML","about":"body HTML","contact":"body HTML"}}}
 Also include an "improvements" array of up to 8 short Chinese notes describing concrete changes actually made, or [] when none. Do not claim visual verification.
-Include all five page bodies separately for EACH requested language: ${JSON.stringify(draft?.languages ?? ['en'])}. Include header/footer in each body. Use embedded CSS only; no Tailwind CDN, external scripts, imports, or SPA page-switching dependency. Do not put html/head/body/style/script tags in page bodies.
+Include all five page bodies separately for EACH requested language: ${JSON.stringify(draft?.languages ?? ['en'])}. Include header/footer in each body. Mark the main home hero section with data-wr-hero so the owner can replace its banner later without regenerating the page. Keep navigation outside that hero section. Use embedded CSS only; no Tailwind CDN, external scripts, imports, or SPA page-switching dependency. Do not put html/head/body/style/script tags in page bodies.
 Use real links /LANG/index.html, /LANG/products/index.html, /LANG/about/index.html, /LANG/contact/index.html, /LANG/products/PRODUCT_ID/index.html. Add data-wr-page="home|catalog|detail|about|contact" on these links, and data-wr-product-id on detail links. Navigation must work without JavaScript.
 The detail body is a reusable product page. Use literal tokens {{product.name}}, {{product.description}}, {{product.material}}, {{product.dimensions}}, {{product.image}}, {{product.id}} in the corresponding selected-product fields. Related product links may use concrete IDs. Do not substitute the primary product into all detail pages.
 For inquiries use <form data-wr-inquiry action="__WR_INQUIRY__" method="post"> with name,email,message,website (hidden honeypot) fields and a submit button. A shared handler is provided; no custom script needed. Add data-product-card/data-product-name on catalog cards and data-product-search on search input if the reference has search.
@@ -324,7 +325,7 @@ export function renderCloneFiles(draft: Draft, options: { projectId: string; ass
   html = sanitizeGeneratedHtml(html, options.inquiryUrl);
   html = withFavicon(html, draft, options.assetUrl);
   return Object.fromEntries(draft.languages.flatMap(lang => [
-    [siteFilePath(lang, 'home'), html], ...['catalog', 'about', 'contact'].map(p => [siteFilePath(lang, p), html]),
+    [siteFilePath(lang, 'home'), withBanner(html, draft, options.assetUrl, true)], ...['catalog', 'about', 'contact'].map(p => [siteFilePath(lang, p), html]),
     ...draft.products.map(p => [siteFilePath(lang, 'detail', p.id), html]),
   ]).concat([['index.html', html]]));
 }

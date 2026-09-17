@@ -1,4 +1,4 @@
-import { withPublicationMetadata } from '../site-metadata';
+import { withPublicationMetadata, type PublicationMetadata } from '../site-metadata';
 import type { Secrets } from '../env';
 import type { HostingTarget } from '../../shared/model';
 import { ProviderError, type PublishResult, type PreviousPublication } from '../provider-contract';
@@ -199,6 +199,7 @@ export async function publishPages(
   _previousDeploymentId?: string,
   hostingTarget?: HostingTarget,
   previous?: PreviousPublication,
+  metadata?: PublicationMetadata,
 ): Promise<PublishResult> {
   if (!hostingTarget)
     throw new ProviderError(
@@ -214,8 +215,8 @@ export async function publishPages(
   const sourceEntries = [...Object.entries(files), ...Object.entries(previous?.files ?? {})];
   if (!Object.keys(files).length || sourceEntries.length > 100 || sourceEntries.some(([path,content]) => !path.endsWith('.html') || path.startsWith('/') || path.includes('..') || path.includes('\\') || path.includes('\0') || typeof content !== 'string')) throw new ProviderError('pages_artifacts_invalid', '网站产物路径或内容无效');
   const siteOrigin = `https://${target.pagesProjectName}.pages.dev`;
-  files = withPublicationMetadata(files, siteOrigin);
-  if (previous) previous = { ...previous, files: withPublicationMetadata(previous.files, siteOrigin) };
+  files = withPublicationMetadata(files, metadata?.origin ?? siteOrigin, metadata);
+  if (previous) previous = { ...previous, files: withPublicationMetadata(previous.files, previous.metadata?.origin ?? siteOrigin, previous.metadata) };
   const gateway = createPagesGateway(origin, projectId, releaseId, previous?.releaseId, {
     current: Object.keys(files),
     previous: Object.keys(previous?.files ?? {}),

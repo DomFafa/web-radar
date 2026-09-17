@@ -1,3 +1,4 @@
+import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
 import { labels } from './labels';
@@ -51,7 +52,7 @@ function segment(id: string): string {
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
-  return withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl);
+  return withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, options.page === 'home');
 }
 function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
