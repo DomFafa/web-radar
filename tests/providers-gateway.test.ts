@@ -206,7 +206,7 @@ describe('generated Pages gateway with immutable static artifacts', () => {
     );
     expect(home.status).toBe(200);
     expect(await home.text()).toBe('<h1>Precompiled /en/index.html</h1>');
-    expect(home.headers.get('cache-control')).toBe('no-store');
+    expect(home.headers.get('cache-control')).toBe('private, no-cache');
     expect(home.headers.has('set-cookie')).toBe(false);
     expect(fake.events).toEqual(['gate', 'gate', 'gate', 'assets:/en/index.html']);
     expect(fake.fetch.mock.calls.every(([url]) => url === `${appOrigin}${gatePath}`)).toBe(true);
@@ -433,3 +433,14 @@ it.each([301, 302, 303, 307, 308])(
     expect(upstream.mock.calls.every(([, init]) => init.redirect === 'manual')).toBe(true);
   },
 );
+
+it('revalidates publication before allowing a cached 304 response', async () => {
+  const worker=await gateway();const fake=upstream();
+  fake.assets.mockImplementation(async()=>new Response(null,{status:304,headers:{ETag:'"immutable-body"'}}));
+  const request=new Request('https://stable.pages.dev/en/index.html',{headers:{'If-None-Match':'"immutable-body"'}});
+  const response=await worker.fetch(request,fake.env);
+  expect(response.status).toBe(304);expect(response.headers.get('cache-control')).toBe('private, no-cache');
+  expect(fake.events[0]).toBe('gate');expect(fake.assets.mock.calls[0][0].headers.get('if-none-match')).toBe('"immutable-body"');
+  upstream(false);expect((await worker.fetch(request,fake.env)).status).toBe(404);
+  expect(fake.assets).toHaveBeenCalledTimes(1);
+});

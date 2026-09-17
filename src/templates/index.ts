@@ -1,4 +1,5 @@
 import type { Draft, Language, Product } from '../shared/model';
+import { withFavicon } from '../shared/favicon';
 import { labels } from './labels';
 import { styles } from './styles';
 import { themeStyles } from './themes/styles';
@@ -50,6 +51,9 @@ function segment(id: string): string {
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  return withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl);
+}
+function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
   const ui = labels[lang];
   const template = draft.template || 'senseng-clean';
@@ -201,5 +205,6 @@ export function renderSiteFiles(
   }
   files['index.html'] =
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
+  files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   return files;
 }

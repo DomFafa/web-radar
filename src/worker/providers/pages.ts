@@ -1,3 +1,4 @@
+import { withPublicationMetadata } from '../site-metadata';
 import type { Secrets } from '../env';
 import type { HostingTarget } from '../../shared/model';
 import { ProviderError, type PublishResult, type PreviousPublication } from '../provider-contract';
@@ -101,7 +102,7 @@ export function createPagesGateway(
           return respond('Website temporarily unavailable', 503);
         }
         const out = new Response(response.body, response);
-        out.headers.set('Cache-Control', 'no-store');
+        out.headers.set('Cache-Control', !isInquiry && (response.ok || response.status === 304) ? 'private, no-cache' : 'no-store');
         out.headers.delete('Set-Cookie');
         return out;
       } catch (error) {
@@ -210,6 +211,11 @@ export async function publishPages(
   )!.apiToken;
   if (!env.APP_ORIGIN) throw new ProviderError('pages_unconfigured', 'APP_ORIGIN 发布网关尚未配置');
   const origin = new URL(endpoint(env.APP_ORIGIN, '')).origin;
+  const sourceEntries = [...Object.entries(files), ...Object.entries(previous?.files ?? {})];
+  if (!Object.keys(files).length || sourceEntries.length > 100 || sourceEntries.some(([path,content]) => !path.endsWith('.html') || path.startsWith('/') || path.includes('..') || path.includes('\\') || path.includes('\0') || typeof content !== 'string')) throw new ProviderError('pages_artifacts_invalid', '网站产物路径或内容无效');
+  const siteOrigin = `https://${target.pagesProjectName}.pages.dev`;
+  files = withPublicationMetadata(files, siteOrigin);
+  if (previous) previous = { ...previous, files: withPublicationMetadata(previous.files, siteOrigin) };
   const gateway = createPagesGateway(origin, projectId, releaseId, previous?.releaseId, {
     current: Object.keys(files),
     previous: Object.keys(previous?.files ?? {}),
@@ -222,10 +228,10 @@ export async function publishPages(
   ];
   if (
     !entries.length ||
-    entries.length > 100 ||
+    entries.length > 104 ||
     entries.some(
       ([path, content]) =>
-        !path.endsWith('.html') ||
+        (!path.endsWith('.html') && !['sitemap.xml','robots.txt','__wr_previous/sitemap.xml','__wr_previous/robots.txt'].includes(path)) ||
         path.startsWith('/') ||
         path.includes('..') ||
         path.includes('\\') ||
@@ -310,13 +316,14 @@ export async function publishPages(
     const manifest: Record<string, string> = {};
     const values = [];
     for (const [path, content] of entries) {
-      const key = await digest(`text/html;charset=utf-8:${content}`);
+      const contentType = path.endsWith('.xml') ? 'application/xml;charset=utf-8' : path.endsWith('.txt') ? 'text/plain;charset=utf-8' : 'text/html;charset=utf-8';
+      const key = await digest(`${contentType}:${content}`);
       manifest[`/${path}`] = key;
       values.push({
         key,
         value: base64FromBytes(new TextEncoder().encode(content)),
         base64: true,
-        metadata: { contentType: 'text/html;charset=utf-8' },
+        metadata: { contentType },
       });
     }
     // Bounded batches avoid buffering all generated sites in a single upload request.

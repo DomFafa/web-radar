@@ -1,3 +1,5 @@
+import { completeSparseHome } from './clone-completion';
+import { reviewClone } from './clone-quality';
 import type { CloneConfig, CloneTaskProgress, Job, Principal, Project } from '../shared/model';
 import type { AppEnv } from './env';
 import { testMode } from './env';
@@ -5,6 +7,8 @@ import { DomainStore } from './domain-store';
 import { expectedVersion, requestId, requireCondition, validateDraft } from './domain';
 import { generateCloneBundle } from './clone-service';
 import { normalizeCloneImages } from '../shared/clone';
+import { storeCloneOutput } from './clone-artifacts';
+import { hasCloneOutput, preserveCloneOutput } from '../shared/clone-output';
 
 const now = () => new Date().toISOString();
 const active = (job?: Job) => !!job && ['queued', 'running', 'paused'].includes(job.status);
@@ -47,7 +51,7 @@ export class CloneTasks {
     expectedVersion(project, body.expectedVersion);
     const cloneConfig = validateDraft({
       ...project.draft,
-      cloneConfig: { ...project.draft.cloneConfig, ...(body.cloneConfig as CloneConfig) },
+      cloneConfig: preserveCloneOutput(project.draft.cloneConfig, { ...project.draft.cloneConfig, ...(body.cloneConfig as CloneConfig) }),
     }).cloneConfig!;
     cloneConfig.uiImages = normalizeCloneImages(cloneConfig.uiImages);
     requireCondition(
@@ -169,7 +173,7 @@ export class CloneTasks {
       job.cloneProgress!.pauseRequested = false;
       this.controllers.get(job.id)?.abort();
       if (project.draft.cloneConfig) {
-        project.draft.cloneConfig.status = project.draft.cloneConfig.generatedHtml
+        project.draft.cloneConfig.status = hasCloneOutput(project.draft.cloneConfig)
           ? 'ready'
           : 'idle';
         project.draft.cloneConfig.error = undefined;
@@ -256,6 +260,22 @@ export class CloneTasks {
         await this.env.MEDIA.put(checkpoint(selected), JSON.stringify(bundle), {
           httpMetadata: { contentType: 'application/json' },
         });
+      const pendingControl = await this.store.one<Job>('jobs', selected.id);
+      if (pendingControl?.status === 'running' && !pendingControl.cloneProgress?.pauseRequested && !bundle.generation.quality && bundle.generation.mode !== 'fixture') {
+        await update('validating');
+        bundle.generation.quality = await reviewClone(this.env, snapshot, bundle, id => this.hooks.image(snapshot.id, id), controller.signal);
+        const quality = bundle.generation.quality;
+        if (quality.status === 'passed' && quality.sparsePages?.length) {
+          const completed = completeSparseHome(snapshot.draft, bundle.generatedFiles, quality.sparsePages);
+          if (completed !== bundle.generatedFiles) {
+            bundle.generatedFiles = completed;
+            bundle.generatedHtml = completed[`${snapshot.draft.languages[0]}/index.html`];
+            bundle.generation.improvements = [...(bundle.generation.improvements??[]).slice(0,7), '页面内容较少，使用已提供的产品与联系方式补充首页；未新增未经提供的事实。'];
+            bundle.generation.quality = await reviewClone(this.env, snapshot, bundle, id => this.hooks.image(snapshot.id, id), controller.signal);
+          }
+        }
+        await this.env.MEDIA.put(checkpoint(selected), JSON.stringify(bundle), { httpMetadata: { contentType: 'application/json' } });
+      }
       await this.hooks.lock(async () => {
         const job = await this.store.one<Job>('jobs', selected.id);
         if (!job || job.status !== 'running') return;
@@ -273,13 +293,13 @@ export class CloneTasks {
             '任务执行期间草稿已更新，生成结果已保留，请停止后重新生成。',
           );
           if (!job.input.committedVersion) {
-            project.draft.cloneConfig = {
+            project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, {
               ...project.draft.cloneConfig,
               ...bundle,
               status: 'ready',
               generatedAt: now(),
               error: undefined,
-            };
+            });
             project.version++;
             project.updatedAt = now();
             job.input.committedVersion = project.version;
@@ -289,7 +309,10 @@ export class CloneTasks {
             ]);
           }
           // Publish is idempotent by task id and is now independent of the browser.
-          if (job.input.autoPublish) {
+          const quality = bundle.generation.quality;
+          const holdPublication = quality?.status === 'issues' || (quality?.status === 'unavailable' && !!this.env.SITE_BUILDER_URL);
+          if (holdPublication) job.cloneProgress!.autoPublish = false;
+          if (job.input.autoPublish && !holdPublication) {
             const publication = await this.hooks.publish(
               project,
               job.input.principal as Principal,

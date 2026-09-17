@@ -1,3 +1,6 @@
+import { CloneQualityReport } from './CloneQualityReport';
+import { UploadProgress, type UploadState } from './UploadProgress';
+import { hasCloneOutput } from '../shared/clone-output';
 import { CloneTaskPanel } from './CloneTaskPanel';
 import { useState, useRef, useEffect } from 'react';
 import { guessCloneImageRole, normalizeCloneImages } from '../shared/clone';
@@ -55,6 +58,9 @@ export function CloneEditor({
   const [scraping, setScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState('');
 
+  const [transfer, setTransfer] = useState<UploadState | null>(null);
+  const uploadController = useRef<AbortController | null>(null);
+  useEffect(() => () => uploadController.current?.abort(), []);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const uploadBusy = useRef(false);
@@ -66,7 +72,7 @@ export function CloneEditor({
   const [generationInfo, setGenerationInfo] = useState(cloneConfig.generation);
   const [genError, setGenError] = useState(cloneConfig.error || '');
   const [isSuccess, setIsSuccess] = useState(
-    Boolean(cloneConfig.generatedHtml || cloneConfig.status === 'ready'),
+    hasCloneOutput(cloneConfig),
   );
 
   const [deploying, setDeploying] = useState(false);
@@ -77,8 +83,8 @@ export function CloneEditor({
   const launching = useRef(false);
   useEffect(() => {
     setGenerationInfo(cloneConfig.generation);
-    setIsSuccess(Boolean(cloneConfig.generatedHtml));
-  }, [cloneConfig.generatedAt, cloneConfig.generation]);
+    setIsSuccess(hasCloneOutput(cloneConfig));
+  }, [cloneConfig.generatedAt, cloneConfig.generation, cloneConfig.artifact]);
 
   // Sync state up to project draft
   function syncConfig(updated: Partial<CloneConfig>) {
@@ -123,6 +129,9 @@ export function CloneEditor({
     if (!files.length || uploadBusy.current || generating) return;
     uploadBusy.current = true;
     setUploading(true);
+    const controller = new AbortController();
+    uploadController.current = controller;
+    const startedAt = Date.now();
     setUploadError('');
     const totalBytes = files.reduce((sum, file) => sum + file.size, 0) || 1;
     let completedBytes = 0;
@@ -131,18 +140,21 @@ export function CloneEditor({
     const newImages = [...uiImages];
     try {
       for (const file of files) {
+        if (controller.signal.aborted) throw new Error('上传已取消。');
         currentName = file.name;
-        const updateProgress = (fraction: number) => setUploadProgress({
+        const updateProgress = (fraction: number) => {
+          setTransfer({ name: file.name, fraction: (completedBytes + file.size * fraction) / totalBytes, startedAt });
+          setUploadProgress({
           name: file.name, completed, total: files.length,
           // Completion is confirmed by the server, not just the last transmitted byte.
           percent: Math.min(99, Math.floor((completedBytes + file.size * fraction) / totalBytes * 100)),
           processing: fraction === 1,
-        });
+        }); };
         updateProgress(0);
         const form = new FormData();
         form.append('file', file);
         const result = await upload<{ asset: { id: string } }>(
-          `/api/projects/${encodeURIComponent(projectId)}/uploads`, form, updateProgress,
+          `/api/projects/${encodeURIComponent(projectId)}/uploads`, form, updateProgress, controller.signal,
         );
         newImages.push({
           id: crypto.randomUUID(), assetId: result.asset.id, name: file.name,
@@ -158,6 +170,8 @@ export function CloneEditor({
       const msg = err instanceof Error ? err.message : '图片上传失败。';
       setUploadError(`${currentName}：${msg} 已保留本次成功上传的 ${completed} 张图片；可重新选择未完成的图片。`);
     } finally {
+      uploadController.current = null;
+      setTransfer(null);
       uploadBusy.current = false;
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -216,6 +230,8 @@ export function CloneEditor({
 
   return (
     <>
+    <>
+    {transfer && <UploadProgress state={transfer} onCancel={() => uploadController.current?.abort()} />}
     <fieldset disabled={generating || uploading} className="clone-editor" style={{ maxWidth: '1100px', width: '100%', minWidth: 0, border: 0, margin: '0 auto', padding: '1.5rem 0' }}>
       {/* Mode Header */}
       <div
@@ -742,12 +758,13 @@ export function CloneEditor({
           <label style={{ display: 'block', textAlign: 'left', marginBottom: 16, color: '#475569' }}>
             <input type="checkbox" checked={autoPublish} onChange={event => { setAutoPublish(event.target.checked); syncConfig({ autoPublish: event.target.checked }); }} />
             {' '}生成完成后自动发布
-            <small style={{ display: 'block', marginTop: 6 }}>{autoPublish ? '成功后会直接上线并写入同一条发布记录，无需再次点击发布。' : '生成后先预览，确认页面后再到发布页上线。'}</small>
+            <small style={{ display: 'block', marginTop: 6 }}>{autoPublish ? '生成成功后自动发布；若检查发现布局或图片问题，会保留页面供预览并暂停自动发布。' : '生成后先预览，确认页面后再到发布页上线。'}</small>
           </label>
           {generationInfo && <p style={{ fontSize: '13px', color: '#475569', textAlign: 'left' }}>
             {generationInfo.mode === 'fixture' ? '测试演示：没有调用视觉模型，不代表设计还原结果。' : generationInfo.mode === 'reference-rebuild' ? '按设计稿直接重建的页面，未调用视觉模型。' : `实际模型：${generationInfo.model}；读取 ${generationInfo.imageCount} 张图片。`}
             {' '}{generationInfo.pageCount} 个页面文件。{generationInfo.visuallyVerified ? '已进行人工视觉检查。' : '尚未进行视觉验收。'}
           </p>}
+          {generationInfo?.quality && <CloneQualityReport projectId={projectId} quality={generationInfo.quality} />}
           {!!generationInfo?.improvements?.length && <div style={{ textAlign: 'left', color: '#475569', fontSize: 13 }}><strong>本次页面优化</strong><ul>{generationInfo.improvements.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
           {!generationInfo && isSuccess && <Notice tone="warning">这是旧版生成结果，缺少视觉生成记录。请检查页面是否使用了设计图后再发布。</Notice>}
 
@@ -868,6 +885,7 @@ export function CloneEditor({
         </div>
       </div>
     </fieldset>
+    </>
     <CloneTaskPanel projectId={projectId} taskId={cloneConfig.taskId} onOpenPublish={onProceedToPublish} onState={active => { if (!launching.current) setGenerating(active); }} onFinished={onRefresh} />
     </>
   );

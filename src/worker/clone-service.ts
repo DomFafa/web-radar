@@ -1,4 +1,8 @@
+import { fetchReferenceHtml } from './reference-fetch';
+import { interactionScript } from './site-runtime';
+import { sanitizeGeneratedHtml } from './site-safety';
 import { readCloneAnswer } from './clone-stream';
+import { withFavicon } from '../shared/favicon';
 import type { AppEnv } from './env';
 import { testMode } from './env';
 import type { CloneConfig, CloneScrapedData, Draft, Project } from '../shared/model';
@@ -19,21 +23,7 @@ export async function scrapeTargetUrl(targetUrl: string): Promise<CloneScrapedDa
   }
 
   try {
-    const response = await fetch(urlObj.href, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-      },
-      signal: AbortSignal.timeout(15000),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} ${response.statusText}`);
-    }
-
-    const html = await response.text();
+    const html = await fetchReferenceHtml(urlObj.href);
 
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const title = titleMatch ? titleMatch[1].trim() : '';
@@ -73,6 +63,7 @@ export async function scrapeTargetUrl(targetUrl: string): Promise<CloneScrapedDa
       sampleText,
     };
   } catch (err: unknown) {
+    if (err instanceof ApiError) throw err;
     const msg = err instanceof Error ? err.message : String(err);
     throw new ApiError(502, 'scrape_failed', `无法抓取目标网站内容 (${msg})，您可以直接上传设计稿进行还原。`);
   }
@@ -204,20 +195,7 @@ export interface CloneBundle {
   generation: NonNullable<CloneConfig['generation']>;
 }
 
-const interactionScript = `<script>
-for(const form of document.querySelectorAll('form[data-wr-inquiry]')){
- let requestId=crypto.randomUUID();
- form.addEventListener('submit',async event=>{
-  event.preventDefault();if(!form.reportValidity())return;
-  const button=form.querySelector('[type=submit]');if(button)button.disabled=true;
-  let status=form.querySelector('[role=status]');if(!status){status=document.createElement('p');status.setAttribute('role','status');form.append(status)}
-  status.textContent='Sending…';
-  try{const response=await fetch(form.action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),requestId})});if(!response.ok)throw Error();status.textContent='Your inquiry has been received.';form.reset();requestId=crypto.randomUUID()}
-  catch{status.textContent='Unable to send. Please try again.'}finally{if(button)button.disabled=false}
- })
-}
-for(const search of document.querySelectorAll('[data-product-search]'))search.addEventListener('input',()=>{for(const card of document.querySelectorAll('[data-product-card]'))card.hidden=!(card.dataset.productName||card.textContent).toLowerCase().includes(search.value.toLowerCase())});
-</script>`;
+
 
 export function buildCloneFiles(output: unknown, draft: Draft): Record<string, string> {
   const data = output as { css?: unknown; pages?: Record<string, Record<string, string>> };
@@ -343,6 +321,8 @@ export function renderCloneFiles(draft: Draft, options: { projectId: string; ass
   let html = syncDraftDataIntoHtml(config?.generatedHtml || '', draft, options.projectId);
   html = html.replace(/(?:https?:\/\/[^/"'\s]+)?\/api\/projects\/[^/"'\s]+\/assets\/([^/?"'\s<>]+)/g,
     (_, id) => allowed.has(id) ? escapeHtml(options.assetUrl(id)) : '');
+  html = sanitizeGeneratedHtml(html, options.inquiryUrl);
+  html = withFavicon(html, draft, options.assetUrl);
   return Object.fromEntries(draft.languages.flatMap(lang => [
     [siteFilePath(lang, 'home'), html], ...['catalog', 'about', 'contact'].map(p => [siteFilePath(lang, p), html]),
     ...draft.products.map(p => [siteFilePath(lang, 'detail', p.id), html]),

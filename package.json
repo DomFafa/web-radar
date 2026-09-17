@@ -11,12 +11,14 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:browser": "node scripts/verify_clone_tasks.mjs",
     "types": "wrangler types",
     "check": "npm run typecheck && npm test && npm run build",
     "db:local": "wrangler d1 migrations apply web-radar --local"
   },
   "dependencies": {
     "hono": "4.13.7",
+    "parse5": "^7.3.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "4.6.2"

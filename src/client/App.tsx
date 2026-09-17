@@ -1,3 +1,4 @@
+import type { ProjectSummary, ProjectList } from '../shared/model';
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Principal, Project, ServiceStatus, TemplateId } from '../shared/model';
 import {
@@ -518,7 +519,7 @@ function Login({
 }
 
 function Projects({ onOpen }: { onOpen: (id: string) => void }) {
-  const [projects, setProjects] = useState<Project[]>([]),
+  const [projects, setProjects] = useState<ProjectSummary[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false),
@@ -530,24 +531,27 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     'all',
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const createRequest = useRef(requestId());
+  const [page, setPage] = useState(1), [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState({all:0,draft:0,published:0,offline:0});
+  const [search, setSearch] = useState('');
+  const loadEpoch = useRef(0);
+  useEffect(() => { const timer = setTimeout(() => { setPage(1); setSearch(filter.trim()); }, 300); return () => clearTimeout(timer); }, [filter]);
   const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
+    const epoch = ++loadEpoch.current;
+    setLoading(true); setError('');
     try {
-      setProjects((await api<{ projects: Project[] }>('/api/projects')).projects);
-    } catch (error) {
-      setError(errorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-  useEffect(() => {
-    void load();
-  }, [load]);
+      const result = await api<ProjectList>(`/api/projects?${new URLSearchParams({page:String(page),pageSize:'20',status:statusFilter,search})}`);
+      if (epoch !== loadEpoch.current) return;
+      setProjects(result.projects); setTotal(result.total); setCounts(result.counts); setSelectedIds(new Set());
+      if (!result.projects.length && page > 1) setPage(page - 1);
+    } catch (error) { if (epoch === loadEpoch.current) setError(errorMessage(error)); }
+    finally { if (epoch === loadEpoch.current) setLoading(false); }
+  }, [page, statusFilter, search]);
+  useEffect(() => { void load(); return () => { loadEpoch.current++; }; }, [load]);
   async function create(event: FormEvent) {
     event.preventDefault();
     setCreating(true);
@@ -619,13 +623,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
       setDeleting(false);
     }
   };
-  const filtered = projects.filter(
-    (project) =>
-      (statusFilter === 'all' || projectStatus(project) === statusFilter) &&
-      `${project.name} ${project.draft.company.name}`
-        .toLowerCase()
-        .includes(filter.trim().toLowerCase()),
-  );
+  const filtered = projects;
   const statusLabels = {
     all: '全部',
     draft: '草稿',
@@ -664,15 +662,13 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
               <button
                 key={id}
                 aria-pressed={statusFilter === id}
-                onClick={() => setStatusFilter(id)}
+                onClick={() => { setPage(1); setStatusFilter(id); }}
               >
                 {label}
                 <span>
                   {loading
                     ? '—'
-                    : id === 'all'
-                      ? projects.length
-                      : projects.filter((p) => projectStatus(p) === id).length}
+                    : counts[id]}
                 </span>
               </button>
             ),
@@ -691,7 +687,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
           <span className="spinner" />
           正在读取网站项目…
         </div>
-      ) : projects.length === 0 ? (
+      ) : counts.all === 0 && !search ? (
         <div className="project-empty">
           <Empty
             icon="folder"
@@ -742,7 +738,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                   checked={filtered.length > 0 && selectedIds.size === filtered.length}
                   onChange={(e) => (e.target.checked ? selectAll() : deselectAll())}
                 />
-                <span>全选当前筛选列表 ({filtered.length})</span>
+                <span>全选当前页 ({filtered.length})</span>
               </label>
               {selectedIds.size > 0 && (
                 <span style={{ color: '#4f46e5', fontWeight: 700 }}>
@@ -791,7 +787,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                 }}
                 style={{ cursor: 'pointer', position: 'relative' }}
               >
-                <div className={`project-cover ${project.draft.template}`}>
+                <div className={`project-cover ${project.template}`}>
                   {/* Selection Checkbox Overlay */}
                   <div
                     className="project-card-select-overlay"
@@ -824,28 +820,18 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                     </button>
                   </div>
 
-                  {project.draft.siteDesign?.pages.home?.imageAssetId ||
-                  project.draft.posterAssetId ||
-                  project.draft.products.find((p) => p.imageAssetId)?.imageAssetId ? (
-                    <AssetView
-                      projectId={project.id}
-                      assetId={
-                        project.draft.siteDesign?.pages.home?.imageAssetId ||
-                        project.draft.posterAssetId ||
-                        project.draft.products.find((p) => p.imageAssetId)?.imageAssetId
-                      }
-                      alt={project.name}
-                    />
-                  ) : TEMPLATE_PREVIEWS[project.draft.template] ? (
+                  {project.coverAssetId ? (
+                    <AssetView projectId={project.id} assetId={project.coverAssetId} alt={project.name} />
+                  ) : TEMPLATE_PREVIEWS[project.template] ? (
                     <img
-                      src={TEMPLATE_PREVIEWS[project.draft.template]}
+                      src={TEMPLATE_PREVIEWS[project.template]}
                       alt={project.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
                     <div className="project-cover-art">
                       <div className="cover-orbit" />
-                      <span>{project.draft.company.name || '尚未添加产品图片'}</span>
+                      <span>{project.companyName || '尚未添加产品图片'}</span>
                     </div>
                   )}
                   <span
@@ -859,10 +845,10 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                 </div>
                 <div className="project-info">
                   <h3>{project.name}</h3>
-                  <p>{project.draft.company.name || '尚未填写公司名称'}</p>
+                  <p>{project.companyName || '尚未填写公司名称'}</p>
                   <div>
                     <span>
-                      {project.draft.products.length} 个产品 ·{' '}
+                      {project.productCount} 个产品 ·{' '}
                       {
                         ({
                           natural: '现代典雅',
@@ -878,7 +864,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                           'juno-toys': 'Juno 儿童童趣玩具',
                           'corpox-ai-agency': 'Corpox AI 智能工坊',
                           'corpox-consulting': 'Corpox 顶级战略咨询',
-                        } as Record<TemplateId, string>)[project.draft.template] || '专业模版'
+                        } as Record<TemplateId, string>)[project.template] || '专业模版'
                       }
                     </span>
                     <time dateTime={project.updatedAt}>{dateTime(project.updatedAt)}</time>
@@ -887,7 +873,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                     <span>
                       {projectStatus(project) === 'published'
                         ? '编辑网站'
-                        : `继续：${workflowSteps.find(([id]) => id === nextDraftStep(project.draft))?.[1]}`}
+                        : '继续编辑'}
                     </span>
                     <Icon name="arrow" size={15} />
                   </div>
@@ -897,6 +883,11 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
           </div>
         </>
       )}
+      {total > 20 && <div className="project-pagination" style={{display:'flex',gap:16,alignItems:'center',justifyContent:'center',margin:'24px 0'}}>
+        <Button disabled={loading || page === 1} onClick={() => setPage(page-1)}>上一页</Button>
+        <span>第 {page} / {Math.ceil(total/20)} 页 · 共 {total} 个项目</span>
+        <Button disabled={loading || page*20 >= total} onClick={() => setPage(page+1)}>下一页</Button>
+      </div>}
       {createOpen && (
         <Modal title="创建网站项目" onClose={() => setCreateOpen(false)}>
           <form onSubmit={create}>

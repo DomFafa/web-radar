@@ -1,3 +1,6 @@
+import { ProjectHistory } from './ProjectHistory';
+import { UploadProgress, type UploadState } from './UploadProgress';
+import { hasCloneOutput } from '../shared/clone-output';
 import { liveJob } from './task-polling';
 import { samePublishedDraft } from '../shared/publication';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -17,7 +20,7 @@ import type {
   ProjectDetail,
   ServiceStatus,
 } from '../shared/model';
-import { api, ApiError, errorMessage, post, put, requestId, PendingOperations } from './api';
+import { api, upload as uploadAsset, ApiError, errorMessage, post, put, requestId, PendingOperations } from './api';
 import {
   AssetView,
   Brand,
@@ -93,6 +96,10 @@ export function Editor({
   embedded?: boolean;
   onBack: () => void;
 }) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [uploadState, setUploadState] = useState<UploadState | null>(null);
+  const uploadController = useRef<AbortController | null>(null);
+  useEffect(() => () => uploadController.current?.abort(), []);
   const [detail, setDetail] = useState<ProjectDetail | null>(null),
     [project, setProject] = useState<Project | null>(null),
     [tab, setTab] = useState<Tab>(() => {
@@ -409,10 +416,15 @@ export function Editor({
       async () => {
         const form = new FormData();
         form.append('file', file);
-        const result = await api<{ asset: Asset }>(`${endpoint}/uploads`, {
-          method: 'POST',
-          body: form,
-        });
+        const controller = new AbortController();
+        uploadController.current = controller;
+        const startedAt = Date.now();
+        setUploadState({ name: file.name, fraction: 0, startedAt });
+        let result: { asset: Asset };
+        try {
+          result = await uploadAsset<{ asset: Asset }>(`${endpoint}/uploads`, form,
+            fraction => setUploadState({ name: file.name, fraction, startedAt }), controller.signal);
+        } finally { setUploadState(null); uploadController.current = null; }
         setDetail((current) =>
           current ? { ...current, assets: [...current.assets, result.asset] } : current,
         );
@@ -576,7 +588,7 @@ export function Editor({
     );
   const draft = project.draft;
   const onlineRelease = detail.releases.find(release => release.id === project.publishedReleaseId && release.status === 'succeeded');
-  const alreadyPublished = !project.offline && !!onlineRelease && samePublishedDraft(draft, onlineRelease.draft);
+  const alreadyPublished = !project.offline && !!onlineRelease?.draft && samePublishedDraft(draft, onlineRelease.draft);
   const activeJobs = detail.jobs.filter((job) =>
     ['queued', 'running', 'unknown'].includes(job.status),
   );
@@ -602,7 +614,7 @@ export function Editor({
     basics: basicsReady,
     template: Boolean(draft.templateConfirmed),
     'clone-generate': Boolean(
-      draft.cloneConfig?.generatedHtml || draft.cloneConfig?.status === 'ready',
+      hasCloneOutput(draft.cloneConfig),
     ),
     consultation: !!draft.consultation?.brief,
     brief: briefReady,
@@ -612,6 +624,7 @@ export function Editor({
   };
   return (
     <div className={`editor-shell ${embedded ? 'is-embedded' : ''}`}>
+      {historyOpen && <Modal title="项目历史记录" onClose={() => setHistoryOpen(false)}><ProjectHistory projectId={projectId} /></Modal>}
       <header className="editor-topbar">
         <div className="editor-brand">
           <Button
@@ -749,6 +762,7 @@ export function Editor({
                 ))}
             </details>
           )}
+          {uploadState && <UploadProgress state={uploadState} onCancel={() => uploadController.current?.abort()} />}
           {error && <Notice tone="error">{error}</Notice>}
           {notice && <Notice tone="success">{notice}</Notice>}
           {detail.project.version !== project.version && dirty && (
@@ -880,6 +894,7 @@ export function Editor({
                     />
                   </Field>
                 </div>
+                <div className="brand-upload-grid">
                 <div className="logo-upload-row">
                   <AssetView
                     projectId={project.id}
@@ -903,6 +918,23 @@ export function Editor({
                       </Button>
                     )}
                   </div>
+                </div>
+                <div className="logo-upload-row">
+                  <AssetView projectId={project.id} assetId={draft.company.faviconAssetId} alt="网站图标 Favicon" />
+                  <div>
+                    <strong>网站图标 Favicon <span className="optional">选填</span></strong>
+                    <p>显示在浏览器标签页。建议上传 32×32 或 48×48 的正方形 PNG / ICO，也支持 WebP、JPEG。</p>
+                    <UploadButton
+                      label="上传网站图标"
+                      accept="image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon,.ico"
+                      disabled={!!busy}
+                      onFile={(file) => upload(file, (asset) => company({ faviconAssetId: asset.id }))}
+                    />
+                    {draft.company.faviconAssetId && (
+                      <Button kind="quiet" onClick={() => company({ faviconAssetId: undefined })}>移除图标</Button>
+                    )}
+                  </div>
+                </div>
                 </div>
               </section>
               <section className="panel">
@@ -1436,7 +1468,7 @@ export function Editor({
                 <section className="panel">
                   <div className="panel-title">
                     <span className="section-index">✓</span>
-                    <h3>{draft.cloneConfig?.generatedHtml ? '设计稿页面代码已保存' : '请先按设计稿生成页面'}</h3>
+                    <h3>{hasCloneOutput(draft.cloneConfig) ? '设计稿页面代码已保存' : '请先按设计稿生成页面'}</h3>
                     <span>
                       {draft.cloneConfig?.targetUrl ? `参考网址：${draft.cloneConfig.targetUrl}` : '设计稿高保真还原'}
                       {draft.cloneConfig?.generatedAt && ` · 生成于 ${new Date(draft.cloneConfig.generatedAt).toLocaleTimeString()}`}
@@ -1579,7 +1611,7 @@ export function Editor({
                 </small>
               </section>
               <section className="panel">
-                <SectionTitle title="发布记录" />
+                <SectionTitle title="发布记录" actions={<Button onClick={() => setHistoryOpen(true)}>查看全部历史</Button>} />
                 {detail.releases.length === 0 ? (
                   <Empty icon="globe" title="还没有发布记录">
                     完成预览后，发布你的第一个版本。

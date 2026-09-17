@@ -67,6 +67,7 @@ export interface Company {
   instagram: string;
   x: string;
   logoAssetId?: string;
+  faviconAssetId?: string;
 }
 export interface SiteCopy {
   headline: string;
@@ -160,6 +161,7 @@ export interface CloneTaskProgress {
   url?: string;
 }
 export interface CloneConfig {
+  artifact?: { key: string; sha256: string; bytes: number; pageCount: number };
   enhancementMode?: 'faithful' | 'smart';
   autoPublish?: boolean;
   taskId?: string;
@@ -177,6 +179,7 @@ export interface CloneConfig {
     imageCount: number;
     pageCount: number;
     visuallyVerified: boolean;
+    quality?: { status: 'passed' | 'issues' | 'unavailable'; message: string; reportKey?: string; sampledPages?: number; widths?: number[]; sparsePages?: string[]; issues?: string[]; warnings?: string[] };
     improvements?: string[];
   };
   generatedAt?: string;
@@ -302,8 +305,18 @@ export interface ProjectDetail {
   project: Project;
   assets: Asset[];
   jobs: Job[];
-  releases: Release[];
+  releases: (Omit<Release, 'draft'> & { draft?: Draft })[];
   quota: Quota;
+  history?: { jobsTotal: number; releasesTotal: number; limit: number };
+}
+export interface ProjectSummary {
+  id: string; name: string; companyName: string; productCount: number;
+  template: TemplateId; coverAssetId?: string; updatedAt: string; createdAt: string;
+  offline: boolean; publishedReleaseId?: string;
+}
+export interface ProjectList {
+  projects: ProjectSummary[]; total: number; page: number; pageSize: number;
+  counts: { all: number; draft: number; published: number; offline: number };
 }
 export interface ServiceStatus {
   name: string;

@@ -69,6 +69,7 @@ const draftSchema = z.object({
     instagram: short,
     x: short,
     logoAssetId: id.optional(),
+    faviconAssetId: id.optional(),
   }),
   products: z
     .array(
@@ -141,6 +142,7 @@ const draftSchema = z.object({
     .optional(),
   cloneConfig: z
     .object({
+      artifact: z.object({ key: z.string().max(500), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: z.number().int().positive().max(9 * 1024 * 1024), pageCount: z.number().int().nonnegative() }).optional(),
       taskId: z.string().optional(),
       enhancementMode: z.enum(['faithful', 'smart']).optional(),
       autoPublish: z.boolean().optional(),
@@ -176,6 +178,7 @@ const draftSchema = z.object({
         imageCount: z.number().int().nonnegative(),
         pageCount: z.number().int().nonnegative(),
         visuallyVerified: z.boolean(),
+        quality: z.object({ status: z.enum(['passed','issues','unavailable']), message: z.string().max(500), reportKey: z.string().max(500).optional(), sampledPages: z.number().int().nonnegative().optional(), widths: z.array(z.number().int()).max(3).optional(), sparsePages: z.array(z.string().max(500)).max(10).optional(), issues: z.array(z.string().max(1000)).max(12).optional(), warnings: z.array(z.string().max(1000)).max(8).optional() }).optional(),
         improvements: z.array(z.string().max(300)).max(8).optional(),
       }).optional(),
       generatedAt: z.string().optional(),
@@ -371,6 +374,7 @@ export function assetReferences(d: Draft): string[] {
     ...new Set(
       [
         d.company.logoAssetId,
+        d.company.faviconAssetId,
         d.heroAssetId,
         d.posterAssetId,
         ...d.products.map((p) => p.imageAssetId),
@@ -387,6 +391,7 @@ export function publicAssetReferences(d: Draft): string[] {
     ...new Set(
       [
         d.company.logoAssetId,
+        d.company.faviconAssetId,
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
         ...d.products.map((p) => p.imageAssetId),
@@ -438,7 +443,7 @@ export function assertSiteContentReady(d: Draft): void {
 export function assertPublishable(d: Draft): void {
   if (d.buildBranch === 'clone') {
     requireCondition(
-      Boolean(d.cloneConfig?.generatedHtml?.trim()),
+      Boolean(d.cloneConfig?.artifact || d.cloneConfig?.generatedHtml?.trim()),
       400,
       'clone_not_ready',
       '请先生成可用的页面代码后再发布。',

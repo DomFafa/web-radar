@@ -141,7 +141,7 @@ export function briefConfirmed(draft: Draft): boolean {
 }
 export function consultationInputKey(draft: Draft): string {
   return JSON.stringify({
-    company: draft.company,
+    company: { ...draft.company, faviconAssetId: undefined },
     products: draft.products.map(({ translations: _translations, ...product }) => product),
     primaryProductId: draft.primaryProductId,
     category: draft.category,

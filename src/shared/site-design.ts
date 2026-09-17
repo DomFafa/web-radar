@@ -1,3 +1,4 @@
+import { hasCloneOutput } from './clone-output';
 import type { BaseDesignPage, DesignPage, Draft, SiteDesign } from './model';
 
 export const designPages: readonly DesignPage[] = ['home', 'catalog', 'detail', 'about', 'contact'];
@@ -10,7 +11,7 @@ export const designLabels: Record<BaseDesignPage, string> = {
 };
 export const siteInputKey = (d: Draft) =>
   JSON.stringify({
-    company: d.company,
+    company: { ...d.company, faviconAssetId: undefined },
     products: d.products,
     primaryProductId: d.primaryProductId,
     category: d.category,
@@ -55,7 +56,7 @@ export function designsConfirmed(design?: SiteDesign): boolean {
 }
 export function staticSiteReady(draft: Draft): boolean {
   if (draft.buildBranch === 'clone') {
-    return !!draft.cloneConfig?.generatedHtml || draft.cloneConfig?.status === 'ready';
+    return !!hasCloneOutput(draft.cloneConfig);
   }
   if (draft.buildBranch === 'template') {
     return !!draft.template;

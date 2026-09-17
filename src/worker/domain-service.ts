@@ -1,3 +1,7 @@
+import { backupManifest } from './backup-manifest';
+import { listProjectSummaries } from './project-queries';
+import { hasCloneOutput, preserveCloneOutput } from '../shared/clone-output';
+import { storeCloneOutput, loadCloneOutput } from './clone-artifacts';
 import { samePublishedDraft } from '../shared/publication';
 import { CloneTasks } from './clone-tasks';
 import { ApiError } from './http';
@@ -79,6 +83,7 @@ const json = (value: unknown, status = 200) =>
   Response.json(value, { status, headers: { 'Cache-Control': 'no-store' } });
 const maxUpload = 80 * 1024 * 1024;
 const supportedImages = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+const supportedIcons = new Set(['image/x-icon', 'image/vnd.microsoft.icon']);
 const supportedVideos = new Set(['video/mp4', 'video/webm']);
 interface JobInput extends Record<string, unknown> {
   draft?: Draft;
@@ -103,7 +108,7 @@ export class DomainService {
   readonly store: DomainStore;
   private readonly clones: CloneTasks;
   private serial: Promise<unknown> = Promise.resolve();
-  private activeTick: Promise<void> | undefined;
+  private readonly activeLanes = new Map<string, Promise<void>>();
   constructor(
     readonly env: AppEnv,
     readonly scheduler: DomainScheduler,
@@ -128,8 +133,10 @@ export class DomainService {
   }
   async fetch(request: Request): Promise<Response> {
     try {
-      const consistentExport = new URL(request.url).pathname === '/api/admin/export';
-      return !consistentExport && (request.method === 'GET' || request.method === 'HEAD')
+      const pathname = new URL(request.url).pathname;
+      const consistentExport = pathname === '/api/admin/export';
+      const streamingUpload = request.method === 'POST' && /^\/api\/projects\/[^/]+\/(uploads|clone\/scrape)$/.test(pathname);
+      return !consistentExport && (streamingUpload || request.method === 'GET' || request.method === 'HEAD')
         ? await this.route(request)
         : await this.lock(() => this.route(request));
     } catch (e) {
@@ -249,24 +256,7 @@ export class DomainService {
     if (path[1] !== 'projects') throw new DomainError(404, 'not_found', '接口不存在。');
     if (path.length === 2) {
       if (method === 'GET') {
-        const where =
-          principal.systemRole === 'super_admin'
-            ? ''
-            : principal.workspaceRole === 'admin'
-              ? 'owner_id=? OR workspace_id=?'
-              : 'owner_id=?';
-        const values =
-          principal.systemRole === 'super_admin'
-            ? []
-            : principal.workspaceRole === 'admin'
-              ? [principal.userId, principal.workspaceId]
-              : [principal.userId];
-        return json({
-          projects: await this.store.list<Project>(
-            'projects', where, values,
-            "json_extract(data, '$.updatedAt') DESC, json_extract(data, '$.createdAt') DESC, id DESC",
-          ),
-        });
+        return json(await listProjectSummaries(this.env.DB, principal, url));
       }
       if (method === 'POST') {
         const b = await this.body(request);
@@ -285,6 +275,7 @@ export class DomainService {
     const project = await this.project(path[2] ?? '', principal),
       command = path[3];
     if (!command && method === 'GET') return json(await this.detail(project, principal));
+    if (command === 'history' && method === 'GET') return json(await this.history(project, url));
     if (!command && method === 'DELETE') {
       await this.deleteProject(project.id, principal);
       return json({ ok: true, deletedId: project.id });
@@ -294,7 +285,10 @@ export class DomainService {
       const b = await this.body(request);
       expectedVersion(project, b.expectedVersion);
       const taskId = project.draft.cloneConfig?.taskId;
-      project.draft = editDraft(project.draft, b.draft);
+      const incoming = b.draft as Draft;
+      if (incoming?.cloneConfig) incoming.cloneConfig = preserveCloneOutput(project.draft.cloneConfig, incoming.cloneConfig);
+      project.draft = editDraft(project.draft, incoming);
+      if (hasCloneOutput(project.draft.cloneConfig)) project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, project.draft.cloneConfig!);
       if (taskId && project.draft.cloneConfig) project.draft.cloneConfig.taskId = taskId;
       await this.validateAssets(project.id, project.draft);
       if (b.name !== undefined) {
@@ -381,6 +375,13 @@ export class DomainService {
       return json(await this.clones.start(project, principal, await this.body(request)), 202);
     if (command === 'clone' && ['pause', 'resume', 'stop'].includes(path[4]) && method === 'POST')
       return json(await this.clones.control(project, await this.body(request), path[4]));
+    if (command === 'clone' && path[4] === 'quality-report' && method === 'GET') {
+      const key = project.draft.cloneConfig?.generation?.quality?.reportKey;
+      requireCondition(key?.startsWith(`projects/${project.id}/quality/`), 404, 'quality_report_missing', '还没有可用的质量报告。');
+      const object = await this.env.MEDIA.get(key!);
+      requireCondition(object, 404, 'quality_report_missing', '质量报告不存在。');
+      return new Response(object.body, { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
+    }
     if (command === 'clone' && path[4] === 'scrape' && method === 'POST') {
       const b = await this.body(request);
       requireCondition(
@@ -433,13 +434,13 @@ export class DomainService {
           cloneConfig,
           getImageBase64,
         );
-        project.draft.cloneConfig = {
+        project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, {
           ...cloneConfig,
           status: 'ready',
           ...generated,
           generatedAt: new Date().toISOString(),
           error: undefined,
-        };
+        });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         project.draft.cloneConfig = {
@@ -667,14 +668,34 @@ export class DomainService {
       return json({ inquiry: await this.retryInquiry(project, path[4]) });
     throw new DomainError(404, 'not_found', '接口不存在。');
   }
+  private publicHistoryJob(job: Job): Job {
+    if (job.kind === 'clone') return this.clones.publicJob(job);
+    const { draft, products, principal, publishResult, ...input } = job.input;
+    return { ...job, input };
+  }
   private async detail(project: Project, principal: Principal) {
-    const [assets, jobs, releases, quota] = await Promise.all([
+    const [assets, recentJobs, activeJobs, releases, activeRelease, quota, totals] = await Promise.all([
       this.store.list<Asset>('assets', 'project_id=?', [project.id]),
-      this.store.list<Job>('jobs', 'project_id=?', [project.id], 'created_at DESC'),
-      this.store.list<Release>('releases', 'project_id=?', [project.id], 'created_at DESC'),
+      this.store.list<Job>('jobs', 'project_id=?', [project.id], 'created_at DESC, id DESC', 20),
+      this.store.list<Job>('jobs', "project_id=? AND status IN ('queued','running','paused','unknown')", [project.id], 'created_at DESC'),
+      this.store.list<Release>('releases', 'project_id=?', [project.id], 'created_at DESC, id DESC', 20),
+      project.publishedReleaseId ? this.store.one<Release>('releases', project.publishedReleaseId) : undefined,
       this.store.quota(principal.userId),
+      this.env.DB.prepare('SELECT (SELECT count(*) FROM jobs WHERE project_id=?) AS jobsTotal, (SELECT count(*) FROM releases WHERE project_id=?) AS releasesTotal').bind(project.id, project.id).first<{jobsTotal:number;releasesTotal:number}>(),
     ]);
-    return { project, assets, jobs: jobs.map(job => job.kind === 'clone' ? this.clones.publicJob(job) : job), releases: releases.map(release => release.status === 'succeeded' ? { ...release, error: undefined } : release), quota };
+    const jobs = [...new Map([...recentJobs, ...activeJobs].map(job => [job.id, job])).values()].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+    if (activeRelease && !releases.some(release => release.id === activeRelease.id)) releases.push(activeRelease);
+    return { project, assets, jobs: jobs.map(job => this.publicHistoryJob(job)), releases: releases.map(release => ({ ...release, draft: release.id === project.publishedReleaseId ? release.draft : undefined, error: release.status === 'succeeded' ? undefined : release.error })), quota, history: { ...totals, limit: 20 } };
+  }
+  private async history(project: Project, url: URL) {
+    const kind = url.searchParams.get('kind'), page = Number(url.searchParams.get('page') ?? 1);
+    requireCondition((kind === 'jobs' || kind === 'releases') && Number.isInteger(page) && page > 0, 400, 'invalid_pagination', '历史记录分页参数无效。');
+    const records = await this.store.list<Job | Release>(kind, 'project_id=?', [project.id], 'created_at DESC, id DESC', 21, (page-1)*20);
+    return { page, hasMore: records.length > 20, records: records.slice(0,20).map(record => {
+      if ('kind' in record) return this.publicHistoryJob(record);
+      const { draft, ...release } = record;
+      return { ...release, error: release.status === 'succeeded' ? undefined : release.error };
+    }) };
   }
   private async deleteProject(id: string, principal: Principal): Promise<void> {
     const p = await this.store.one<Project>('projects', id);
@@ -942,7 +963,8 @@ export class DomainService {
       const asset = await this.projectAsset(projectId, id);
       const video = id === draft.heroAssetId;
       requireCondition(
-        video ? supportedVideos.has(asset.contentType) : supportedImages.has(asset.contentType),
+        video ? supportedVideos.has(asset.contentType) : supportedImages.has(asset.contentType) ||
+          (id === draft.company.faviconAssetId && supportedIcons.has(asset.contentType)),
         400,
         'asset_type_mismatch',
         '素材格式与用途不匹配。',
@@ -972,7 +994,7 @@ export class DomainService {
     assetId: string = crypto.randomUUID(),
   ): Promise<Asset> {
     requireCondition(
-      supportedImages.has(media.contentType) || supportedVideos.has(media.contentType),
+      supportedImages.has(media.contentType) || supportedIcons.has(media.contentType) || supportedVideos.has(media.contentType),
       502,
       'invalid_media_type',
       '服务返回的媒体格式不受支持。',
@@ -1095,12 +1117,13 @@ export class DomainService {
       'invalid_upload',
       '请选择有效文件。',
     );
-    const type = file.type.toLowerCase();
+    const type = (!file.type || file.type === 'application/octet-stream') && /\.ico$/i.test(file.name)
+      ? 'image/x-icon' : file.type.toLowerCase();
     requireCondition(
-      supportedImages.has(type) || supportedVideos.has(type),
+      supportedImages.has(type) || supportedIcons.has(type) || supportedVideos.has(type),
       400,
       'invalid_media_type',
-      '支持 PNG、JPEG、WebP、GIF、MP4 和 WebM。',
+      '支持 PNG、JPEG、WebP、GIF、ICO、MP4 和 WebM。',
     );
     const magic = new Uint8Array(await file.slice(0, 32).arrayBuffer());
     requireCondition(
@@ -1121,7 +1144,10 @@ export class DomainService {
       'upload',
     );
     try {
-      await this.store.insert('assets', asset).run();
+      await this.lock(async () => {
+        requireCondition(await this.store.one<Project>('projects', project.id), 404, 'project_not_found', '项目已删除。');
+        await this.store.insert('assets', asset).run();
+      });
     } catch (e) {
       await this.env.MEDIA.delete(asset.key);
       throw e;
@@ -1129,6 +1155,7 @@ export class DomainService {
     return asset;
   }
   private matchesMagic(type: string, b: Uint8Array): boolean {
+    if (supportedIcons.has(type)) return b.length >= 22 && b[0] === 0 && b[1] === 0 && b[2] === 1 && b[3] === 0 && (b[4] > 0 || b[5] > 0);
     const word = (start: number, end: number) => String.fromCharCode(...b.slice(start, end));
     return type === 'image/png'
       ? b[0] === 137 && word(1, 4) === 'PNG'
@@ -1651,7 +1678,10 @@ export class DomainService {
     }
     if (draft.buildBranch === 'clone') {
       requireCondition(testMode(this.env) || draft.cloneConfig?.generation?.mode !== 'fixture', 400, 'clone_fixture_only', '演示页面不能发布到生产环境，请使用真实设计生成。');
-      if (draft.cloneConfig?.generatedFiles) validateSiteFiles(draft.cloneConfig.generatedFiles, draft);
+      const output = await loadCloneOutput(this.env, project.id, draft);
+      if (output.cloneConfig?.generatedFiles) validateSiteFiles(output.cloneConfig.generatedFiles, output);
+      draft.cloneConfig = await storeCloneOutput(this.env, project.id, draft.cloneConfig!);
+      if (!restore) project.draft.cloneConfig = draft.cloneConfig;
     }
     await this.validateAssets(project.id, draft);
     for (const id of publicAssetReferences(draft))
@@ -1664,6 +1694,7 @@ export class DomainService {
     const activeRelease = project.publishedReleaseId
       ? await this.store.one<Release>('releases', project.publishedReleaseId)
       : undefined;
+    if (activeRelease?.draft.cloneConfig && hasCloneOutput(activeRelease.draft.cloneConfig)) activeRelease.draft.cloneConfig = await storeCloneOutput(this.env, project.id, activeRelease.draft.cloneConfig);
     if (!restore) {
       const samePending = pending.find(job => !job.input.cancelledByOffline && job.input.draft && samePublishedDraft(draft, job.input.draft as Draft));
       if (samePending) {
@@ -1739,6 +1770,14 @@ export class DomainService {
       'release_unavailable',
       'Website temporarily unavailable',
     );
+    // Generated customer documents must not execute on the management application's origin.
+    if (!testMode(this.env) && path[0] !== 'assets') {
+      const destination = release.url ? new URL(release.url) : undefined;
+      requireCondition(destination?.protocol === 'https:' && destination.origin !== this.origin(), 503, 'public_origin_unavailable', 'Website temporarily unavailable');
+      destination.pathname = '/' + path.map(encodeURIComponent).join('/');
+      destination.search = '';
+      return new Response(null, { status: 302, headers: { Location: destination.href, 'Cache-Control': 'no-store' } });
+    }
     if (path[0] === 'assets' && path[1]) {
       requireCondition(
         publicAssetReferences(release.draft).includes(path[1]),
@@ -1768,7 +1807,7 @@ export class DomainService {
     if (path.length === 1 || path[1] === 'index.html') page = 'home';
     else if (path[1] === 'catalog') page = 'catalog';
     else if (
-      (release.draft.siteDesign || release.draft.cloneConfig?.generatedFiles) &&
+      (release.draft.siteDesign || release.draft.cloneConfig?.generatedFiles || release.draft.cloneConfig?.artifact) &&
       path[1] === 'products' &&
       (!path[2] || path[2] === 'index.html')
     )
@@ -1953,8 +1992,16 @@ export class DomainService {
       return json({
         quotas: await this.store.quotas(),
         services: this.providers.status(),
-        jobs: await this.store.list<Job>('jobs', '', [], 'created_at DESC'),
+        jobs: (await this.store.list<Job>('jobs', '', [], 'created_at DESC', 100)).map(job => this.publicHistoryJob(job)),
       });
+    if (path[0] === 'metrics' && request.method === 'GET') {
+      const since = new Date(Date.now() - 30*24*3600000).toISOString();
+      const [jobs, attempts] = await Promise.all([
+        this.env.DB.prepare("SELECT kind,status,count(*) AS count,avg(CASE WHEN status IN ('succeeded','failed','cancelled') THEN max(0,coalesce(json_extract(data,'$.cloneProgress.elapsedMs'),(julianday(json_extract(data,'$.updatedAt'))-julianday(created_at))*86400000)) END) AS averageElapsedMs FROM jobs WHERE created_at>=? GROUP BY kind,status").bind(since).all(),
+        this.env.DB.prepare('SELECT provider,outcome,count(*) AS count FROM provider_attempts WHERE created_at>=? GROUP BY provider,outcome').bind(since).all(),
+      ]);
+      return json({ since, jobs: jobs.results, attempts: attempts.results });
+    }
     if (path[0] === 'jobs' && path[1] && path[2] === 'reconcile' && request.method === 'POST') {
       const body = await this.body(request);
       requireCondition(
@@ -2035,16 +2082,17 @@ export class DomainService {
     if (path[0] === 'export' && request.method === 'GET') {
       const [projects, assets, jobs, releases, inquiries, quotas, ledger, attempts, idempotency] =
         await Promise.all([
-          this.store.list('projects'),
-          this.store.list('assets'),
-          this.store.list('jobs'),
-          this.store.list('releases'),
+          this.store.list<Project>('projects'),
+          this.store.list<Asset>('assets'),
+          this.store.list<Job>('jobs'),
+          this.store.list<Release>('releases'),
           this.store.list('inquiries'),
           this.store.quotas(),
           this.env.DB.prepare('SELECT * FROM quota_ledger').all(),
           this.env.DB.prepare('SELECT * FROM provider_attempts').all(),
           this.env.DB.prepare('SELECT * FROM idempotency').all(),
         ]);
+      const objects = backupManifest(projects, assets, jobs, releases);
       return json({
         format: 'web-radar-business-v1',
         exportedAt: now(),
@@ -2059,8 +2107,8 @@ export class DomainService {
         idempotency: idempotency.results,
         media: {
           format: 'R2 immutable objects',
-          count: assets.length,
-          note: 'Copy every listed asset key from the private MEDIA bucket. Export excludes login credentials and secrets.',
+          count: objects.length, objects,
+          note: 'Copy all required object keys from MEDIA, including generated site artifacts. Optional clone checkpoints may not exist yet. Keep this export private; it contains business data, not authentication secrets.',
         },
       });
     }
@@ -2143,16 +2191,24 @@ export class DomainService {
     await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 25 : 1000));
   }
   async tick(): Promise<void> {
-    if (this.activeTick) return this.activeTick;
-    this.activeTick = (async () => { await this.clones.tick(); await this.runTick(); })().finally(() => {
-      this.activeTick = undefined;
-    });
-    return this.activeTick;
+    // Independent upstream calls can overlap; claims and quota changes still share the short lock.
+    const lanes = ['clone', 'publish', 'email', 'other'] as const;
+    await Promise.all(lanes.map(lane => {
+      const active = this.activeLanes.get(lane);
+      if (active) return active;
+      const task = (lane === 'clone' ? this.clones.tick() : this.runTick(lane))
+        .finally(() => { this.activeLanes.delete(lane); });
+      this.activeLanes.set(lane, task);
+      return task;
+    }));
   }
-  private async runTick(): Promise<void> {
-    const selected = await this.lock(() => this.claim());
+  private laneFilter(lane: 'publish' | 'email' | 'other'): string {
+    return lane === 'other' ? "kind NOT IN ('clone','publish','email')" : `kind='${lane}'`;
+  }
+  private async runTick(lane: 'publish' | 'email' | 'other'): Promise<void> {
+    const selected = await this.lock(() => this.claim(lane));
     if (!selected) {
-      const next = await this.nextActionTime();
+      const next = await this.nextActionTime(lane);
       if (next !== undefined) await this.scheduler.schedule(next);
       return;
     }
@@ -2214,8 +2270,8 @@ export class DomainService {
       await this.fail(job, error);
     }
   }
-  private async nextActionTime(): Promise<number | undefined> {
-    const jobs = await this.store.list<Job>('jobs', "kind!='clone' AND status IN ('queued','running','unknown')");
+  private async nextActionTime(lane: 'publish' | 'email' | 'other'): Promise<number | undefined> {
+    const jobs = await this.store.list<Job>('jobs', `${this.laneFilter(lane)} AND status IN ('queued','running','unknown')`);
     const occupied = jobs.some(
       (j) => j.kind === 'video' && (j.status === 'running' || j.status === 'unknown'),
     );
@@ -2234,8 +2290,8 @@ export class DomainService {
     }
     return times.length ? Math.min(...times) : undefined;
   }
-  private async claim(): Promise<{ job: Job; recovery: boolean } | undefined> {
-    const running = await this.store.list<Job>('jobs', "kind!='clone' AND status='running'", [], 'created_at ASC');
+  private async claim(lane: 'publish' | 'email' | 'other'): Promise<{ job: Job; recovery: boolean } | undefined> {
+    const running = await this.store.list<Job>('jobs', `${this.laneFilter(lane)} AND status='running'`, [], 'created_at ASC');
     // A running non-video job can only remain here after a prior invocation was interrupted.
     const interrupted = running.find((j) => j.kind !== 'video');
     if (interrupted) {
@@ -2263,7 +2319,7 @@ export class DomainService {
       }
     }
     const unknownVideos = await this.store.list<Job>('jobs', "kind='video' AND status='unknown'");
-    const queued = await this.store.list<Job>('jobs', "kind!='clone' AND status='queued'", [], 'created_at ASC');
+    const queued = await this.store.list<Job>('jobs', `${this.laneFilter(lane)} AND status='queued'`, [], 'created_at ASC');
     const job = queued.find(
       (j) =>
         (j.kind !== 'video' || (!video && !unknownVideos.length)) &&
@@ -2803,8 +2859,8 @@ export class DomainService {
     draft: Draft,
     options: Parameters<typeof renderSiteFiles>[1],
   ): Promise<Record<string, string>> {
-    if (draft.buildBranch === 'clone' && draft.cloneConfig?.generatedHtml) {
-      return renderCloneFiles(draft, options);
+    if (draft.buildBranch === 'clone' && hasCloneOutput(draft.cloneConfig)) {
+      return renderCloneFiles(await loadCloneOutput(this.env, options.projectId, draft), options);
     }
     if (draft.buildBranch === 'template' || !draft.siteDesign) return renderSiteFiles(draft, options);
     return materializeSiteFiles(await this.storedSiteFiles(draft), draft, {
@@ -2817,8 +2873,8 @@ export class DomainService {
     options: Parameters<typeof renderSite>[1],
     basePath?: string,
   ): Promise<string> {
-    if (draft.buildBranch === 'clone' && draft.cloneConfig?.generatedHtml) {
-      const files = renderCloneFiles(draft, { ...options, basePath });
+    if (draft.buildBranch === 'clone' && hasCloneOutput(draft.cloneConfig)) {
+      const files = renderCloneFiles(await loadCloneOutput(this.env, options.projectId, draft), { ...options, basePath });
       const key = siteFilePath(options.lang, options.page, options.productId ?? draft.primaryProductId);
       requireCondition(files[key], 404, 'page_not_found', '页面不存在。');
       return files[key];

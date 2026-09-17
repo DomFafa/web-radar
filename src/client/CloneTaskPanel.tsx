@@ -1,7 +1,7 @@
 import { needsClonePolling } from './task-polling';
 import { useEffect, useRef, useState } from 'react';
 import type { Job } from '../shared/model';
-import { api, post } from './api';
+import { api, post, ApiError } from './api';
 import { Button, Notice } from './components';
 
 type TaskState = {
@@ -38,11 +38,15 @@ export function CloneTaskPanel({
   useEffect(() => {
     let cancelled = false,
       timer: ReturnType<typeof setTimeout>;
+    let failures = 0;
+    const controller = new AbortController();
     const read = async () => {
+      if (document.hidden) { timer = setTimeout(read, 15000); return; }
       let keepPolling = false;
       try {
-        const next = await api<TaskState>(endpoint + '/task');
+        const next = await api<TaskState>(endpoint + '/task', { signal: controller.signal });
         if (cancelled) return;
+        failures = 0;
         setState(next);
         setError('');
         keepPolling = needsClonePolling(next);
@@ -50,7 +54,7 @@ export function CloneTaskPanel({
           !!next.job &&
           (['queued', 'running', 'paused'].includes(next.job.status) ||
             (!!next.publication &&
-              ['queued', 'running', 'unknown'].includes(next.publication.status)));
+              ['queued', 'running'].includes(next.publication.status)));
         callbacks.current.onState(active);
         const key = `${next.job?.id}:${next.job?.status}:${next.publication?.status}`;
         if (
@@ -60,11 +64,12 @@ export function CloneTaskPanel({
         )
           void callbacks.current.onFinished?.().catch(() => {});
         lastState.current = key;
-      } catch {
-        keepPolling = true;
-        if (!cancelled) setError('暂时无法同步任务状态，正在重连。后台任务不会因页面断线而停止。');
+      } catch (error) {
+        failures++;
+        keepPolling = failures < 6 && !(error instanceof ApiError && [401,403,404].includes(error.status));
+        if (!cancelled) setError(keepPolling ? '暂时无法同步任务状态，正在重连。后台任务不会因页面断线而停止。' : '状态同步已停止，请点击重新同步。后台任务状态仍会保留。');
       } finally {
-        if (!cancelled && keepPolling) timer = setTimeout(read, 2000);
+        if (!cancelled && keepPolling) timer = setTimeout(read, failures ? Math.min(30000, 2000 * 2 ** failures) : 3000);
       }
     };
     void read();
@@ -73,6 +78,7 @@ export function CloneTaskPanel({
     document.addEventListener('visibilitychange', resync);
     return () => {
       cancelled = true;
+      controller.abort();
       clearTimeout(timer);
       window.removeEventListener('focus', resync);
       document.removeEventListener('visibilitychange', resync);
@@ -101,13 +107,14 @@ export function CloneTaskPanel({
   }
   const job = state.job,
     progress = job?.cloneProgress;
-  if (!job || !progress) return error ? <Notice tone="error">{error}</Notice> : null;
+  if (!job || !progress) return error ? <Notice tone="error">{error}<Button onClick={() => setRevision(value => value + 1)}>重新同步</Button></Notice> : null;
   const paused = job.status === 'paused',
     stopped = job.status === 'cancelled';
   const publishing =
-    !!state.publication && ['queued', 'running', 'unknown'].includes(state.publication.status);
+    !!state.publication && ['queued', 'running'].includes(state.publication.status);
   const complete =
     job.status === 'succeeded' && (!state.publication || state.publication.status === 'succeeded');
+  const needsRecovery = job.status === 'unknown' || state.publication?.status === 'unknown';
   const failed = job.status === 'failed' || state.publication?.status === 'failed';
   const active = ['queued', 'running'].includes(job.status);
   const elapsed =
@@ -141,7 +148,9 @@ export function CloneTaskPanel({
           ? '任务已暂停'
           : stopped
             ? '任务已停止'
-            : failed
+            : needsRecovery
+              ? '结果待核实，请在发布管理中恢复任务'
+              : failed
               ? '任务未完成'
               : progress.pauseRequested
                 ? '正在暂停：等待当前模型结果保存'
@@ -217,7 +226,7 @@ export function CloneTaskPanel({
             停止
           </Button>
         )}
-        {job.status === 'succeeded' && onOpenPublish && <Button onClick={onOpenPublish}>预览与发布管理</Button>}
+        {(job.status === 'succeeded' || needsRecovery) && onOpenPublish && <Button onClick={onOpenPublish}>预览与发布管理</Button>}
         {state.url && (
           <a href={state.url} target="_blank" rel="noreferrer">
             打开网站 ↗
@@ -234,6 +243,7 @@ export function CloneTaskPanel({
           发布已提交，无法暂停或撤回；刷新后可继续查看结果。
         </p>
       )}
+      {error && <Button onClick={() => setRevision(value => value + 1)}>重新同步</Button>}
       {(error || job.error || state.publication?.error) && (
         <Notice tone="error">{error || state.publication?.error || job.error}</Notice>
       )}

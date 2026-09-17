@@ -1,3 +1,4 @@
+import { hasCloneOutput } from '../shared/clone-output';
 import type { Draft, Project } from '../shared/model';
 import { designsConfirmed, staticSiteReady } from '../shared/site-design';
 import { briefConfirmed, plannedPages } from '../shared/site-brief';
@@ -88,7 +89,7 @@ export function draftChecklist(draft: Draft): ChecklistItem[] {
         (draft.cloneConfig?.uiImages && draft.cloneConfig.uiImages.length > 0),
     );
     const isGenerated = Boolean(
-      draft.cloneConfig?.generatedHtml || draft.cloneConfig?.status === 'ready',
+      hasCloneOutput(draft.cloneConfig),
     );
     return [
       {
@@ -182,6 +183,6 @@ export function nextDraftStep(draft: Draft): WorkflowStep {
   return draftChecklist(draft).find((item) => !item.ready)?.step ?? 'publish';
 }
 
-export function projectStatus(project: Project): 'draft' | 'published' | 'offline' {
+export function projectStatus(project: Pick<Project, 'offline' | 'publishedReleaseId'>): 'draft' | 'published' | 'offline' {
   return !project.publishedReleaseId ? 'draft' : project.offline ? 'offline' : 'published';
 }

@@ -123,9 +123,7 @@ export function SitePreview({
       targets.forEach((node) => rewritePreviewMedia(node, project.id));
       doc.querySelectorAll('form').forEach((form) => {
         form.removeAttribute('action');
-        form
-          .querySelectorAll('input,textarea,button,select')
-          .forEach((control) => ((control as HTMLInputElement).disabled = true));
+        form.removeAttribute('target');
       });
       const nonce = requestId().replaceAll('-', '');
       const csp = doc.createElement('meta');
@@ -136,6 +134,17 @@ export function SitePreview({
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `
         (${referenceInteractions.toString()})();
+        for (const search of document.querySelectorAll('[data-product-search]')) search.addEventListener('input', () => {
+          for (const card of document.querySelectorAll('[data-product-card]')) card.hidden = !(card.dataset.productName || card.textContent).toLowerCase().includes(search.value.toLowerCase());
+        });
+        document.addEventListener('submit', event => {
+          event.preventDefault();
+          const form = event.target;
+          if (!form.reportValidity()) return;
+          let status = form.querySelector('[role=status]');
+          if (!status) { status = document.createElement('p'); status.setAttribute('role','status'); form.append(status); }
+          status.textContent = 'Preview: form validation passed. No message was sent.';
+        });
         const video = document.getElementById('hero-video');
         const toggle = document.getElementById('video-toggle');
         const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -314,7 +323,7 @@ export function SitePreview({
           <iframe
             ref={frame}
             title={`${pageLabel(project.draft, page)} ${lang} 私有预览`}
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-forms"
             srcDoc={html}
           />
         )}

@@ -12,3 +12,37 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npx wrangler deploy --dry-run
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-regression-screenshots
+          path: artifacts/task-review/*.png
+
+  render-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: services/site-builder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --group dev --python 3.12
+      - run: uv run playwright install --with-deps chromium
+      - run: uv run pytest tests/test_clone_quality.py tests/test_service.py -q

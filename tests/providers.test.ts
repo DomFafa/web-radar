@@ -495,12 +495,17 @@ describe('Pages direct upload transaction', () => {
     const manifest = JSON.parse(String(ctx.forms[0].get('manifest')));
     expect(Object.keys(manifest).sort()).toEqual([
       '/__wr_previous/en/index.html',
+      '/__wr_previous/robots.txt',
+      '/__wr_previous/sitemap.xml',
       '/en/index.html',
+      '/robots.txt',
+      '/sitemap.xml',
     ]);
     const uploaded = ctx.uploads
       .flat()
       .map((item) => Buffer.from(item.value, 'base64').toString('utf8'));
-    expect(uploaded).toContain('<h1>Approved old site</h1>');
+    expect(uploaded.some(html => html.includes('<h1>Approved old site</h1>'))).toBe(true);
+    expect(uploaded.some(html => html.includes('<urlset'))).toBe(true);
     const gateway = await (ctx.forms[0].get('_worker.js') as Blob).text();
     expect(gateway).toContain('/gate/prior-release');
     expect(gateway).toContain('__wr_previous');

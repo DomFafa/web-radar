@@ -63,6 +63,7 @@ function database() {
   db.exec(readFileSync('migrations/0002_business.sql', 'utf8'));
   db.exec(readFileSync('migrations/0003_source_reviews.sql', 'utf8'));
   db.exec(readFileSync('migrations/0004_unlimited_quota.sql', 'utf8'));
+  db.exec(readFileSync('migrations/0005_project_summary_indexes.sql', 'utf8'));
   class Statement {
     values: unknown[] = [];
     constructor(readonly sql: string) {}
@@ -681,10 +682,10 @@ describe('durable domain commands', () => {
     expect(detail.quota.videoUsed).toBe(0);
     expect(detail.jobs.find((j: Job) => j.kind === 'site-build').status).toBe('queued');
     expect(detail.project.draft.siteDesign.build.jobId).toBe(build.data.job.id);
-    const input = detail.jobs.find((j: Job) => j.kind === 'site-build').input;
+    const input = (await service.store.one<Job>('jobs', build.data.job.id))!.input;
     providers.siteBuild = async () =>
       fixtureProviders(env).siteBuild(build.data.job.id, {
-        draft: input.draft,
+        draft: input.draft as Project['draft'],
         designImages: {} as never,
       });
     await service.tick();
@@ -1061,6 +1062,26 @@ async function uploadAsset(project: Project, type = 'image/png') {
   expect(response.status).toBe(200);
   return ((await response.json()) as { asset: { id: string } }).asset;
 }
+it('uploads ICO tab icons, persists their selection, and rejects mismatched content', async () => {
+  const project = await create();
+  const upload = async (bytes: Uint8Array) => {
+    const form = new FormData();
+    form.append('file', new File([new Uint8Array(bytes)], 'favicon.ico', { type: 'image/x-icon' }));
+    return service.fetch(new Request(`http://localhost/api/projects/${project.id}/uploads`, {
+      method: 'POST', headers: { 'X-WR-Principal': JSON.stringify(owner) }, body: form,
+    }));
+  };
+  expect((await upload(new Uint8Array([1, 2, 3]))).status).toBe(400);
+  const bytes = new Uint8Array(32);
+  bytes[2] = 1; bytes[4] = 1;
+  const result = await upload(bytes);
+  expect(result.status).toBe(200);
+  const { asset } = await result.json() as { asset: { id: string } };
+  project.draft.company.faviconAssetId = asset.id;
+  const saved = await request(`/api/projects/${project.id}`, { expectedVersion: project.version, draft: project.draft }, owner, 'PUT');
+  expect(saved.status).toBe(200);
+  expect((await get(project)).project.draft.company.faviconAssetId).toBe(asset.id);
+});
 async function publishable() {
   let p = await create();
   const image = await uploadAsset(p),
@@ -1712,7 +1733,7 @@ describe('durable hosting identity and activation recovery', () => {
     await service.tick();
     let detail = await get(p);
     const releaseId = detail.releases[0].id;
-    expect(detail.jobs.find((j: Job) => j.id === queued.data.job.id)).toMatchObject({
+    expect(await service.store.one<Job>('jobs', queued.data.job.id)).toMatchObject({
       status: 'unknown',
       input: { publishResult: { deploymentId: releaseId } },
     });
@@ -2186,7 +2207,8 @@ it('serves clone catalog paths and keeps its independent documents through save 
   const draft = generated.data.project.draft;
   expect(draft.cloneConfig.model).toBe('selected-model');
   expect(draft.cloneConfig.generation.mode).toBe('fixture');
-  draft.cloneConfig.generatedFiles['en/products/index.html'] = '<!DOCTYPE html><html><head><title>Catalog</title></head><body><h1>Independent catalog</h1></body></html>';
+  expect(draft.cloneConfig.artifact.pageCount).toBeGreaterThan(1);
+  draft.cloneConfig.generatedFiles = { 'en/products/index.html': '<!DOCTYPE html><html><body><h1>Forged catalog</h1></body></html>' };
   const saved = await request(`/api/projects/${p.id}`, { expectedVersion: generated.data.project.version, draft }, owner, 'PUT');
   expect(saved.status).toBe(200);
   const published = await request(`/api/projects/${p.id}/publish`, { expectedVersion: saved.data.project.version, requestId: crypto.randomUUID() });
@@ -2194,7 +2216,9 @@ it('serves clone catalog paths and keeps its independent documents through save 
   for (let i=0;i<3;i++) await service.tick();
   const page = await service.fetch(new Request(`http://localhost/public/sites/${p.id}/en/products/index.html`));
   expect(page.status).toBe(200);
-  expect(await page.text()).toContain('Independent catalog');
+  const html = await page.text();
+  expect(html).not.toContain('Forged catalog');
+  expect(html).toContain('<html');
 });
 
 it('keeps the last usable clone documents when regeneration fails', async () => {
@@ -2234,7 +2258,8 @@ describe('persistent clone tasks', () => {
     service = new DomainService(env, {schedule:async()=>{}},providers);
     expect((await state(p)).job.id).toBe(created.data.job.id);
     await service.tick(); expect((await state(p)).job.status).toBe('succeeded');
-    expect((await get(p)).project.draft.cloneConfig.generatedHtml).toBeTruthy();
+    expect((await get(p)).project.draft.cloneConfig.artifact).toBeTruthy();
+    expect((await get(p)).project.draft.cloneConfig.generatedHtml).toBeUndefined();
   });
   it('pauses before execution, stays paused across restart, and resumes without losing inputs', async () => {
     const p = await create(); const created = await start(p); const taskId = created.data.job.id;
@@ -2271,9 +2296,34 @@ describe('persistent clone tasks', () => {
   it('does not permit draft saves to clobber active task state and auto-publishes with no client follow-up', async () => {
     const p=await create();const created=await start(p,true);
     expect((await request(`/api/projects/${p.id}`,{expectedVersion:created.data.project.version,draft:p.draft},owner,'PUT')).status).toBe(409);
-    await service.tick();const result=await state(p);
+    await service.tick();await service.tick();const result=await state(p);
     expect(result.job.status).toBe('succeeded');expect(result.publication.status).toBe('succeeded');
     expect(result.url).toBeTruthy();expect((await get(p)).jobs.filter((job:Job)=>job.kind==='publish')).toHaveLength(1);
+  });
+  it('publishes another project while a model response is pending without claiming the clone twice', async () => {
+    const p=await visionProject(); const publicProject=await publishable();
+    let release!:(r:Response)=>void;
+    const fetcher=vi.fn(()=>new Promise<Response>(resolve=>{release=resolve}));vi.stubGlobal('fetch',fetcher);
+    await start(p);const generation=service.tick();
+    await vi.waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(1));
+    const queued=await request(`/api/projects/${publicProject.id}/publish`,{expectedVersion:publicProject.version,requestId:crypto.randomUUID()});
+    expect(queued.status).toBe(200);
+    const secondTick=service.tick();
+    await vi.waitFor(async()=>expect((await service.store.one<Job>('jobs',queued.data.job.id))?.status).toBe('succeeded'));
+    expect((await state(p)).job.status).toBe('running');
+    release(response());await Promise.all([generation,secondTick]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('retains generated code and a private report but holds auto-publication when rendering detects issues', async () => {
+    const p=await visionProject();env.SITE_BUILDER_URL='https://builder.example';env.SITE_BUILDER_KEY='test-key';
+    vi.stubGlobal('fetch',async(url:string)=>url.includes('/v1/clone-quality') ? Response.json({status:'issues',sampledPages:4,widths:[390,1440,2560],records:['en/index.html','en/products/index.html','en/about/index.html','en/contact/index.html'].flatMap(path=>[390,1440,2560].map(width=>({path,width,issues:width===390?['页面横向溢出']:[],warnings:[]}))),screenshots:{}}) : response());
+    await start(p,true);await service.tick();
+    const result=await state(p);expect(result.job.status).toBe('succeeded');expect(result.publication).toBeUndefined();
+    const detail=await get(p);expect(detail.project.draft.cloneConfig.artifact).toBeTruthy();
+    expect(detail.project.draft.cloneConfig.generation.quality.status).toBe('issues');
+    expect(detail.releases).toHaveLength(0);
+    expect((await request(`/api/projects/${p.id}/clone/quality-report`)).data.status).toBe('issues');
+    expect((await request(`/api/projects/${p.id}/clone/quality-report`,undefined,{...owner,userId:'stranger'})).status).toBe(404);
   });
   it('does not automatically repeat a possibly billed call after worker interruption', async () => {
     const p=await create();const created=await start(p);const job=await service.store.one<Job>('jobs',created.data.job.id);
@@ -2310,4 +2360,40 @@ describe('publication result consistency', () => {
     expect((await get(p)).releases[0].error).toBeUndefined();
     expect(detail.jobs.find((j:Job)=>j.id===first.data.job.id).error).toBeUndefined();
   });
+});
+
+
+describe('bounded project queries', () => {
+  it('sorts summaries newest first, paginates, searches and excludes another owner', async () => {
+    for (let i=0;i<5;i++) {
+      const p=await create(); p.name=`Catalog ${i}`; p.updatedAt=`2026-09-${10+i}T00:00:00.000Z`;
+      if(i===4) p.ownerId='another-owner';
+      await service.store.update('projects',p).run();
+      if(i===4) await env.DB.prepare('UPDATE projects SET owner_id=? WHERE id=?').bind(p.ownerId,p.id).run();
+    }
+    const first=(await request('/api/projects?pageSize=2')).data;
+    expect(first.total).toBe(4);expect(first.projects.map((p:Project)=>p.name)).toEqual(['Catalog 3','Catalog 2']);
+    expect(first.projects[0].draft).toBeUndefined();expect(first.projects[0].companyName).toBeDefined();
+    const second=(await request('/api/projects?pageSize=2&page=2')).data;
+    expect(second.projects.map((p:Project)=>p.name)).toEqual(['Catalog 1','Catalog 0']);
+    expect((await request('/api/projects?search=Catalog%201')).data.total).toBe(1);
+    expect((await request('/api/projects?pageSize=100000')).status).toBe(400);
+  });
+  it('bounds history snapshots while retaining old active jobs and the current release', async () => {
+    const p=await create();
+    for(let i=0;i<25;i++) await service.store.insert('jobs',{id:`history-${i}`,projectId:p.id,userId:owner.userId,kind:'copy',requestId:`request-${i}`,inputVersion:p.version,testMode:true,status:i===0?'unknown':'succeeded',createdAt:`2026-08-${String(i+1).padStart(2,'0')}T00:00:00Z`,updatedAt:p.updatedAt,input:{draft:p.draft,principal:owner,pageId:'home'},attempts:1} as Job).run();
+    const detail=await get(p);
+    expect(detail.history.jobsTotal).toBe(25);expect(detail.jobs).toHaveLength(21);
+    expect(detail.jobs.some((j:Job)=>j.id==='history-0')).toBe(true);
+    expect(detail.jobs[0].input.draft).toBeUndefined();expect(detail.jobs[0].input.principal).toBeUndefined();
+    const page=(await request(`/api/projects/${p.id}/history?kind=jobs&page=2`)).data;
+    expect(page.records).toHaveLength(5);expect(page.hasMore).toBe(false);
+    expect((await request(`/api/projects/${p.id}/history?kind=jobs`,undefined,{...owner,userId:'other'})).status).toBe(404);
+  });
+});
+
+it('exposes bounded operational aggregates only to platform administrators', async () => {
+  expect((await request('/api/admin/metrics')).status).toBe(403);
+  const metrics=await request('/api/admin/metrics',undefined,platform);
+  expect(metrics.status).toBe(200);expect(metrics.data.jobs).toEqual([]);expect(metrics.data.attempts).toEqual([]);
 });

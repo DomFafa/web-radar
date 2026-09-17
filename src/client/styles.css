@@ -1993,6 +1993,11 @@ small {
 .editor-loading > .notice {
   max-width: 540px;
 }
+.brand-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 24px;
+}
 .logo-upload-row {
   display: flex;
   gap: 16px;
@@ -5450,3 +5455,9 @@ td > .pill {
 .editor-services strong {
   font-weight: 550;
 }
+
+.upload-progress { display: grid; gap: 12px; overflow-wrap: anywhere; }
+.upload-progress progress { width: 100%; accent-color: var(--primary, #6558f5); }
+.upload-progress p { margin: 0; }
+.upload-progress button { justify-self: start; }
+.project-pagination { display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 24px; }
