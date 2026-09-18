@@ -1,4 +1,5 @@
 import { bannerRuntime } from '../shared/banner-runtime';
+import { materialsRuntime } from '../shared/materials-runtime';
 import { useEffect, useRef, useState } from 'react';
 import type { DesignPage, Language, Project } from '../shared/model';
 import { pageLabel, plannedPages } from '../shared/site-brief';
@@ -45,6 +46,34 @@ export function rewritePreviewMedia(
       node.removeAttribute(attribute);
     }
   }
+}
+
+export function rewriteMaterialsPreviewMedia(node:{getAttribute(name:string):string|null;setAttribute(name:string,value:string):void;removeAttribute(name:string):void},projectId:string):string[]{
+  const ids:string[]=[];
+  for(const attribute of ['srcset','data-wr-desktop-poster','data-wr-mobile-poster']){
+    const id=privateAssetId(node.getAttribute(attribute)||'',projectId);
+    if(id){ids.push(id);node.removeAttribute(attribute);node.setAttribute(attribute==='srcset'?'data-wr-srcset':attribute+'-id',id);}
+  }
+  const style=node.getAttribute('style')||'';
+  const safe=style.replace(/url\((['"]?)([^)]+?)\1\)/g,(match,quote:string,url:string)=>{
+    const id=privateAssetId(url,projectId);if(!id)return match;ids.push(id);return'none';
+  });
+  if(safe!==style){node.setAttribute('data-wr-material-style',style);node.setAttribute('style',safe);}
+  return ids;
+}
+
+function restoreMaterialsPreviewMedia(urls:Map<string,string>,projectId:string){
+  const assetId=(value:string)=>{
+    try{const match=new URL(value,'https://preview.invalid').pathname.match(/^\/api\/projects\/([^/]+)\/assets\/([^/]+)$/);return match&&decodeURIComponent(match[1])===projectId?decodeURIComponent(match[2]):null;}catch{return null;}
+  };
+  document.querySelectorAll('[data-wr-material-style],[data-wr-srcset],[data-wr-desktop-poster-id],[data-wr-mobile-poster-id]').forEach(node=>{
+    const style=node.getAttribute('data-wr-material-style');
+    if(style)node.setAttribute('style',style.replace(/url\((['"]?)([^)]+?)\1\)/g,(match,quote:string,url:string)=>{const id=assetId(url);return id?urls.has(id)?`url("${urls.get(id)}")`:'none':match;}));
+    for(const attribute of ['srcset','data-wr-desktop-poster','data-wr-mobile-poster']){
+      const id=node.getAttribute(attribute==='srcset'?'data-wr-srcset':attribute+'-id');const url=id?urls.get(id):undefined;if(url)node.setAttribute(attribute,url);
+    }
+  });
+  window.dispatchEvent(new Event('wr:materials-media-ready'));
 }
 
 export function SitePreview({
@@ -107,13 +136,14 @@ export function SitePreview({
         )
         .forEach((node) => node.remove());
       const targets = [...doc.querySelectorAll('[src],[poster]')];
+      const materialsIds=project.materials?[...doc.querySelectorAll('[style],[srcset],[data-wr-desktop-poster],[data-wr-mobile-poster]')].flatMap(node=>rewriteMaterialsPreviewMedia(node,project.id)):[];
       const ids = [
         ...new Set(
-          targets.flatMap((node) =>
+          [...materialsIds,...targets.flatMap((node) =>
             ['src', 'poster']
               .map((attribute) => privateAssetId(node.getAttribute(attribute) || '', project.id))
               .filter((id): id is string => !!id),
-          ),
+          )],
         ),
       ];
       const items = await Promise.all(
@@ -135,6 +165,7 @@ export function SitePreview({
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `
         (${referenceInteractions.toString()})();
+        (${materialsRuntime.toString()})();
         ${bannerRuntime}
         for (const search of document.querySelectorAll('[data-product-search]')) search.addEventListener('input', () => {
           for (const card of document.querySelectorAll('[data-product-card]')) card.hidden = !(card.dataset.productName || card.textContent).toLowerCase().includes(search.value.toLowerCase());
@@ -184,6 +215,7 @@ export function SitePreview({
               if (url) node.setAttribute(attribute, url);
             }
           });
+          ${project.materials?`(${restoreMaterialsPreviewMedia.toString()})(urls,${scriptJson(project.id)});`:''}
           document.dispatchEvent(new Event('wr:banner-media-ready'));
           if (video) video.load();
           respectMotion();

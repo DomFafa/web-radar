@@ -135,7 +135,12 @@ export default function App() {
       } catch {}
       setSessionMessage('');
       setEmbedError('');
-      if (result.projectId) setSelected(result.projectId);
+      if (result.projectId) {
+        if(result.entry==='prepared-materials'){
+          const url=new URL(window.location.href);url.searchParams.set('tab','publish');window.history.replaceState({},'',url.toString());
+        }
+        setSelected(result.projectId);
+      }
 
     },
     [expire],

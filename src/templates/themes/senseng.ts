@@ -68,7 +68,7 @@ export const SENSENG_DEFAULT_PRODUCTS = [
   },
 ];
 
-export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false): string {
+export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, materialsMode=Boolean(ctx.draft.materials)): string {
   const { draft, options, page, path, navAttrs, asset, translateProduct } = ctx;
   const company = draft.company;
 
@@ -78,18 +78,18 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
     const def = SENSENG_DEFAULT_PRODUCTS[idx % SENSENG_DEFAULT_PRODUCTS.length];
     return {
       id: p.id,
-      name: t.name || p.name || def.name,
-      desc: t.description || p.description || def.desc,
-      img: p.imageAssetId ? asset(p.imageAssetId) : def.img,
-      material: p.material || def.material,
-      dimensions: p.dimensions || def.dimensions,
-      badge: def.badge,
+      name: materialsMode?t.name:t.name || p.name || def.name,
+      desc: materialsMode?t.description:t.description || p.description || def.desc,
+      img: p.imageAssetId ? asset(p.imageAssetId) : materialsMode?'':def.img,
+      material: materialsMode?p.material:p.material || def.material,
+      dimensions: materialsMode?p.dimensions:p.dimensions || def.dimensions,
+      badge: materialsMode?'':def.badge,
     };
   });
 
   // Ensure 8 slots for perfect grid layout
   const allProducts = [...mappedUserProducts];
-  while (allProducts.length < 8) {
+  while (!materialsMode && allProducts.length < 8) {
     const i = allProducts.length;
     const def = SENSENG_DEFAULT_PRODUCTS[i % SENSENG_DEFAULT_PRODUCTS.length];
     allProducts.push({
@@ -112,8 +112,8 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
   const headerHtml = `
     <header class="senseng-header">
       <div class="senseng-header-inner">
-        <a href="${path('index.html')}" ${navAttrs('home')} class="senseng-logo" aria-label="senseng home">
-          <img src="/templates/senseng/logo.png" alt="senseng" width="170" height="44">
+        <a href="${path('index.html')}" ${navAttrs('home')} class="senseng-logo" aria-label="${materialsMode?esc(company.name):'senseng'} home">
+          ${materialsMode?ctx.brandLogo:'<img src="/templates/senseng/logo.png" alt="senseng" width="170" height="44">'}
         </a>
         <nav class="senseng-nav">
           <a href="${path('index.html')}" ${navAttrs('home')} class="senseng-nav-link ${page === 'home' ? 'active' : ''}">Home</a>
@@ -180,13 +180,13 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
       <div class="senseng-footer-inner">
         <div class="senseng-footer-left">
           <div class="senseng-logo" style="cursor:default;">
-            <img src="/templates/senseng/logo.png" alt="senseng" width="170" height="44">
+            ${materialsMode?ctx.brandLogo:'<img src="/templates/senseng/logo.png" alt="senseng" width="170" height="44">'}
           </div>
           <div class="senseng-footer-divider"></div>
           <div>
             <h4 style="font-size:20px;font-weight:900;color:#073b91;margin:0 0 4px;">About senseng</h4>
             <p style="font-size:15px;line-height:1.45;color:#102033;margin:0;max-width:820px;">
-              ${esc(company.description || 'senseng is a squishy toy trader presenting paperboard-packaged, character-led sales versions for buyer review. Materials and dimensions are to be confirmed where not yet supplied.')}
+              ${esc(materialsMode?company.description:company.description || 'senseng is a squishy toy trader presenting paperboard-packaged, character-led sales versions for buyer review. Materials and dimensions are to be confirmed where not yet supplied.')}
             </p>
           </div>
         </div>
@@ -221,8 +221,8 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
               </a>
               ${withSpecs ? `
                 <div class="senseng-p-spec">
-                  <strong>Material:</strong> To be confirmed;<br>paperboard packaging<br>
-                  <strong>Dimensions:</strong> To be confirmed
+                  <strong>Material:</strong> ${materialsMode?esc(p.material):'To be confirmed;<br>paperboard packaging'}<br>
+                  <strong>Dimensions:</strong> ${materialsMode?esc(p.dimensions):'To be confirmed'}
                 </div>
               ` : ''}
               <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="senseng-btn-detail">
@@ -242,11 +242,11 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
     let heroBlock = '';
     if (isVideoFullscreen) {
       const customHeroVideo = asset(draft.heroAssetId);
-      const heroVideo = customHeroVideo || '/templates/senseng/hero-video.mp4';
+      const heroVideo = customHeroVideo || (materialsMode?'':'/templates/senseng/hero-video.mp4');
       heroBlock = `
         <div class="senseng-hero-video-full${customHeroVideo ? '' : ' senseng-hero-video-bundled'}">
           <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="${esc(asset(draft.posterAssetId) || '/templates/senseng/video-poster.jpg')}">
-            <source src="${esc(heroVideo)}" type="video/mp4">
+            ${heroVideo?`<source src="${esc(heroVideo)}" type="video/mp4">`:''}
           </video>
           <div class="senseng-hero-video-overlay"></div>
           <div class="senseng-hero-video-content">
@@ -263,7 +263,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
               </a>
             </div>
           </div>
-          <button id="video-toggle" type="button" class="senseng-video-toggle" aria-label="Pause background video">Ⅱ</button>
+          ${heroVideo?'<button id="video-toggle" type="button" class="senseng-video-toggle" aria-label="Pause background video">Ⅱ</button>':''}
           <div class="senseng-scroll-down hero-scroll-cue">↓ SCROLL TO EXPLORE</div>
         </div>
       `;
@@ -272,7 +272,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
         <div class="senseng-hero">
           <div class="senseng-hero-inner">
             <div class="senseng-hero-scene" aria-hidden="true">
-              <img class="senseng-hero-sky" src="/templates/senseng/hero-sky-v2.png" alt="" fetchpriority="high">
+              ${materialsMode?'':'<img class="senseng-hero-sky" src="/templates/senseng/hero-sky-v2.png" alt="" fetchpriority="high">'}
               <img class="senseng-hero-products" src="/templates/senseng/hero-bg.jpg" alt="" fetchpriority="high">
             </div>
             <div class="senseng-hero-left">
@@ -427,7 +427,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            ${[allProducts[4], allProducts[6]].map((p) => `
+            ${(materialsMode?allProducts.slice(4,4+Math.ceil(Math.max(0,allProducts.length-4)/2)):[allProducts[4], allProducts[6]]).map((p) => `
               <article class="senseng-catalog-card">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:flex;align-items:center;">
                   <img src="${esc(p.img)}" alt="${esc(p.name)}">
@@ -456,7 +456,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            ${[allProducts[5], allProducts[7]].map((p) => `
+            ${(materialsMode?allProducts.slice(4+Math.ceil(Math.max(0,allProducts.length-4)/2)):[allProducts[5], allProducts[7]]).map((p) => `
               <article class="senseng-catalog-card">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:flex;align-items:center;">
                   <img src="${esc(p.img)}" alt="${esc(p.name)}">
@@ -498,7 +498,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false):
           </div>
           <div class="senseng-detail-thumbs">
             <button type="button" class="senseng-thumb-arrow" aria-label="Previous image">&lt;</button>
-            ${allProducts.slice(0, 5).map((p, idx) => `
+            ${(materialsMode?(draft.products.find(p=>p.id===currentProduct.id)?.gallery||[]).map(image=>({id:currentProduct.id,img:asset(image.assetId),name:image.caption||currentProduct.name})):allProducts.slice(0, 5)).map((p, idx) => `
               <div class="senseng-thumb-btn ${p.id === currentProduct.id || idx === 0 ? 'active' : ''}" onclick="document.getElementById('detailMainImg').src='${esc(p.img)}';">
                 <img src="${esc(p.img)}" alt="${esc(p.name)}">
               </div>

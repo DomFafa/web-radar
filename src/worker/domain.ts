@@ -3,6 +3,8 @@ import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
 import { z } from 'zod';
+import { appliedMaterialsSchema } from '../shared/materials';
+import { preserveMaterialsEdit } from './materials-draft';
 import type { Draft, Principal, Project } from '../shared/model';
 import {
   consultationSchema,
@@ -51,7 +53,9 @@ const source = z.object({
   factsOrigin: z.enum(productFactsOrigins),
 });
 export const snapshotSchema = source;
+import { productImageKind } from '../shared/product-snapshot';
 const draftSchema = z.object({
+  materials: appliedMaterialsSchema.optional(),
   buildBranch: z.enum(['template', 'custom', 'clone']).optional(),
   templateConfirmed: z.boolean().optional(),
   company: z.object({
@@ -83,6 +87,10 @@ const draftSchema = z.object({
         material: text,
         dimensions: short,
         imageAssetId: id.optional(),
+        gallery: z.array(z.object({assetId:id,sourceImageId:id,kind:productImageKind,caption:z.string().max(1000)})).min(1).max(11).optional(),
+        tagline: z.string().max(160).optional(),
+        sellingPoints: z.array(z.string().max(180)).max(5).optional(),
+        applications: z.array(z.string().max(180)).max(5).optional(),
         source: source.optional(),
         translations: z.partialRecord(language, translation).optional(),
       }),
@@ -332,6 +340,7 @@ export function videoInputKey(d: Draft): string {
 }
 export function editDraft(previous: Draft, input: unknown): Draft {
   const next = validateDraft(input);
+  preserveMaterialsEdit(previous,next);
   // Provenance is written only through the authenticated source importer.
   next.products = next.products.map((p) => ({
     ...p,
@@ -412,13 +421,14 @@ export function assetReferences(d: Draft): string[] {
     ...new Set(
       [
         ...(d.cloneConfig?.referenceCapture?.assets.map(a=>a.assetId) ?? []),
+        ...(d.materials?.imageBindings.flatMap(b=>[b.assetId,b.mobileAssetId])??[]),
         d.company.logoAssetId,
         d.company.faviconAssetId,
         ...bannerAssets(d).images,
         ...bannerAssets(d).videos,
         d.heroAssetId,
         d.posterAssetId,
-        ...d.products.map((p) => p.imageAssetId),
+        ...d.products.flatMap((p) => [p.imageAssetId,...(d.materials ? p.gallery ?? [] : []).map(image=>image.assetId)]),
         ...d.scenes.map((s) => s.imageAssetId),
         ...Object.values(d.siteDesign?.pages ?? {}).map((p) => p?.imageAssetId),
         ...(d.cloneConfig?.uiImages?.map((img) => img.assetId) ?? []),
@@ -432,13 +442,14 @@ export function publicAssetReferences(d: Draft): string[] {
     ...new Set(
       [
         ...(d.buildBranch === 'clone' ? d.cloneConfig?.referenceCapture?.assets.map(a=>a.assetId) ?? [] : []),
+        ...(d.materials?.imageBindings.flatMap(b=>[b.assetId,b.mobileAssetId])??[]),
         d.company.logoAssetId,
         d.company.faviconAssetId,
         ...bannerAssets(d,true).images,
         ...bannerAssets(d,true).videos,
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
-        ...d.products.map((p) => p.imageAssetId),
+        ...d.products.flatMap((p) => [p.imageAssetId,...(d.materials ? p.gallery ?? [] : []).map(image=>image.assetId)]),
         ...(d.buildBranch === 'clone' ? normalizeCloneImages(d.cloneConfig?.uiImages).filter(img => img.role === 'asset').map(img => img.assetId) : []),
       ].filter((v): v is string => Boolean(v)),
     ),

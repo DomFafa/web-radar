@@ -3,6 +3,7 @@ import { referenceInteractions } from './referenceInteractions';
 import { referenceLayouts } from './referenceLayouts';
 import { buildThemeContext, esc, productPath, type RenderOptions } from './types';
 import type { Draft } from '../../shared/model';
+import { materialProductImage, materialsReferenceBody, materialsSeo, materialsThemeStyle } from '../materials-render';
 
 export type ReferenceTemplateId = keyof typeof referenceLayouts;
 export const isReferenceTemplate = (id: string): id is ReferenceTemplateId =>
@@ -60,7 +61,7 @@ export function renderReferencePage(
   const layout = referenceLayouts[id];
   const ctx = buildThemeContext(draft, options);
   const { ui, lang, path, navPath, navAttrs, translateProduct, asset } = ctx;
-  const palette = palettes[id];
+  const palette = draft.materials?{...palettes[id],accent:draft.materials.visual.palette.primary,ink:draft.materials.visual.palette.text,surface:draft.materials.visual.palette.surface}:palettes[id];
   const products = [...draft.products].sort(
     (a, b) => Number(b.id === draft.primaryProductId) - Number(a.id === draft.primaryProductId),
   );
@@ -96,10 +97,10 @@ export function renderReferencePage(
     tokens['IMAGE_' + i] = esc(product ? asset(product.imageAssetId) : slot.src);
     tokens['ALT_' + i] = esc(product ? translateProduct(product).name : slot.alt);
   });
-  let body = layout.html.replace(/__WR_([A-Z_0-9]+)__/g, (_, key: string) => tokens[key] ?? '');
+  let body = (draft.materials?materialsReferenceBody(draft,options):layout.html).replace(/__WR_([A-Z_0-9]+)__/g, (_, key: string) => tokens[key] ?? '');
   if (pictured.length)
     body = body.replace(/data-wr-product-slot="(\d+)"/g, '$& data-wr-bound-product="true"');
-  const cards = `<section class="wr-products" aria-label="${esc(ui.catalog)}"><div class="wr-section-title"><h2>${esc(ui.catalog)}</h2><a href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>${esc(ui.discover)} ↗</a></div><div class="wr-product-grid">${products.map((p) => `<article class="wr-product-card"><a href="${esc(path(productPath(p.id)))}" ${navAttrs('detail', p.id)}>${asset(p.imageAssetId) ? `<img src="${esc(asset(p.imageAssetId))}" alt="${esc(translateProduct(p).name)}" loading="lazy">` : ''}<h3>${esc(translateProduct(p).name)}</h3></a><p>${esc(translateProduct(p).description)}</p><a class="wr-details" href="${esc(path(productPath(p.id)))}" ${navAttrs('detail', p.id)}>${esc(ui.details)} ↗</a></article>`).join('')}</div></section>`;
+  const cards = `<section class="wr-products" aria-label="${esc(ui.catalog)}"><div class="wr-section-title"><h2>${esc(ui.catalog)}</h2><a href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>${esc(ui.discover)} ↗</a></div><div class="wr-product-grid">${products.map((p) => `<article class="wr-product-card"><a href="${esc(path(productPath(p.id)))}" ${navAttrs('detail', p.id)}>${materialProductImage(draft,options,p)??(asset(p.imageAssetId) ? `<img src="${esc(asset(p.imageAssetId))}" alt="${esc(translateProduct(p).name)}" loading="lazy">` : '')}<h3>${esc(translateProduct(p).name)}</h3></a><p>${esc(translateProduct(p).description)}</p><a class="wr-details" href="${esc(path(productPath(p.id)))}" ${navAttrs('detail', p.id)}>${esc(ui.details)} ↗</a></article>`).join('')}</div></section>`;
   if (options.page !== 'home') {
     const header = body.match(/<header\b[\s\S]*?<\/header>/)?.[0] || '';
     const footer = body.match(/<footer\b[\s\S]*?<\/footer>/)?.[0] || '';
@@ -122,7 +123,8 @@ export function renderReferencePage(
       : '';
   const localize = (s: string) =>
     staticOrigin ? s.replace(/(["'(])\/templates\//g, `$1${staticOrigin}/templates/`) : s;
+  const seo=materialsSeo(draft,options);
   return localize(
-    `<!doctype html><html lang="${lang}" class="${esc(layout.htmlClass)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(draft.company.name)}</title><meta name="description" content="${esc(copy?.subtitle || draft.company.description)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}${layout.css.map((href) => `<link rel="stylesheet" href="${href}">`).join('')}<style>${referenceOverrides}</style></head><body class="${esc(layout.bodyClass)} ${id} wr-reference" data-template="${id}" style="--wr-accent:${palette.accent};--wr-ink:${palette.ink};--wr-surface:${palette.surface};--wr-font:'${palette.font}'">${body}<script>${formScript};(${referenceInteractions.toString()})();</script></body></html>`,
+    `<!doctype html><html lang="${lang}" class="${esc(layout.htmlClass)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo?.title??draft.company.name)}</title><meta name="description" content="${esc(seo?.description??(copy?.subtitle || draft.company.description))}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}${layout.css.map((href) => `<link rel="stylesheet" href="${href}">`).join('')}<style>${referenceOverrides}</style>${materialsThemeStyle(draft)}</head><body class="${esc(layout.bodyClass)} ${id} wr-reference${draft.materials?' wr-materials-site':''}" data-template="${id}" style="--wr-accent:${palette.accent};--wr-ink:${palette.ink};--wr-surface:${palette.surface};--wr-font:'${palette.font}'">${body}<script>${formScript};(${referenceInteractions.toString()})();</script></body></html>`,
   );
 }

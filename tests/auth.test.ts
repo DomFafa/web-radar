@@ -71,6 +71,15 @@ function exchange(app: ReturnType<typeof createIntegrationApp>, body: unknown) {
   );
 }
 describe('integration grants', () => {
+  it('returns the prepared entry only from a receipt-backed project check',async()=>{
+    const app=createIntegrationApp();
+    for(const prepared of [false,true]){
+      env.COORDINATOR={getByName:()=>({fetch:async()=>Response.json({project:{id:'project-1',...(prepared?{materials:{submissionId:'confirmed'}}:{})}})})}as unknown as AppEnv['COORDINATOR'];
+      const body={...payload(),intent:'open',projectId:'project-1'};const grant=await(await issue(app,body)).json()as any;
+      const response=await exchange(app,{...grant,parentOrigin:body.parentOrigin});expect(response.status).toBe(200);
+      expect((await response.json()as any).entry).toBe(prepared?'prepared-materials':undefined);
+    }
+  });
   it('preserves a batch of eight products with complete design context through authorization', async () => {
     const app = createIntegrationApp();
     const products = Array.from({ length: 8 }, (_, index) => ({

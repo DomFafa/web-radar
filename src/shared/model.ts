@@ -9,22 +9,8 @@ export interface Principal {
   workspaceName: string;
 }
 export const productFactsOrigins = ['generated-concept', 'product-set'] as const;
-export interface ProductSnapshot {
-  source: 'product-radar';
-  id: string;
-  sourceProjectId: string;
-  workflow: 'create' | 'build';
-  version: string;
-  name: string;
-  description: string;
-  material: string;
-  dimensions: string;
-  seriesName: string;
-  designDirection: string;
-  conditions: Record<string, unknown>;
-  image: { sourceProductId: string; contentType: string | null };
-  factsOrigin: (typeof productFactsOrigins)[number];
-}
+export type ProductSnapshot = import('zod').infer<typeof import('./product-snapshot').productSnapshotSchema>;
+export interface ProductGalleryImage { assetId: string; sourceImageId: string; kind: import('zod').infer<typeof import('./product-snapshot').productImageKind>; caption: string }
 export type Language = 'en' | 'de' | 'fr' | 'es' | 'pt' | 'it';
 export type TemplateId =
   | 'natural'
@@ -47,6 +33,10 @@ export interface Product {
   material: string;
   dimensions: string;
   imageAssetId?: string;
+  gallery?: ProductGalleryImage[];
+  tagline?: string;
+  sellingPoints?: string[];
+  applications?: string[];
   source?: ProductSnapshot;
   translations?: Partial<Record<Language, { name: string; description: string }>>;
 }
@@ -206,6 +196,7 @@ export interface PageBanner {
   interval: number;
 }
 export interface Draft {
+  materials?: import('./materials').AppliedMaterials;
   buildBranch?: 'template' | 'custom' | 'clone';
   templateConfirmed?: boolean;
   company: Company;
@@ -239,6 +230,7 @@ export interface HostingTarget {
   pagesProjectName: string;
 }
 export interface Project {
+  materials?: import('./materials').MaterialsProvenance;
   id: string;
   ownerId: string;
   workspaceId: string;

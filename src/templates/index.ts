@@ -15,6 +15,8 @@ import { renderCraftoHome } from './themes/craftoCorporate';
 import { renderToysHome } from './themes/junoToys';
 import { renderAiAgencyHome } from './themes/corpoxAiAgency';
 import { renderConsultingHome } from './themes/corpoxConsulting';
+import { materialProductImage,materialsSensengBody,materialsSeo,materialsThemeStyle } from './materials-render';
+import { materialsRuntime } from '../shared/materials-runtime';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -52,7 +54,10 @@ function segment(id: string): string {
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
-  return withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+  const html=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+  // Wrangler's keepNames inserts __name calls inside stringified functions.
+  // Keep the approved branch self-contained when it runs outside the Worker.
+  return draft.materials?html.replace('<script>', '<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`):html;
 }
 function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
@@ -79,8 +84,16 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   });
   const img = (p: Product) => {
     const url = asset(p.imageAssetId);
+    const prepared=materialProductImage(draft,options,p);
+    if(prepared)return `<div class="product-image">${prepared}</div>`;
     return `<div class="product-image">${url ? `<img src="${esc(url)}" alt="${esc(translate(p).name)}" loading="lazy" decoding="async">` : `<span class="empty-image">${esc(ui.unavailable)}</span>`}</div>`;
   };
+  const gallery = (p: Product) => {
+    if(!draft.materials)return '';
+    const images=(p.gallery??[]).filter(image=>image.assetId!==p.imageAssetId&&asset(image.assetId));
+    return images.length?`<div class="product-gallery" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">${images.map(image=>materialProductImage(draft,options,p,image.assetId)||'').join('')}</div>`:'';
+  };
+  const websiteDetails = (p: Product) => draft.materials && lang === 'en' ? `${p.tagline ? `<p>${esc(p.tagline)}</p>` : ''}${[p.sellingPoints,p.applications].map(values=>values?.length ? `<ul>${values.map(value=>`<li>${esc(value)}</li>`).join('')}</ul>` : '').join('')}` : '';
   const navAttrs = (p: string, id?: string) =>
     `data-wr-page="${p}"${id ? ` data-wr-product-id="${esc(id)}"` : ''}`;
   const navLink = (p: string, label: string) =>
@@ -150,7 +163,7 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   if (page === 'detail') {
     const p = draft.products.find((item) => item.id === options.productId);
     content = p
-      ? `<section class="detail wrap">${img(p)}<div><a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>← ${esc(ui.back)}</a><h1>${esc(translate(p).name)}</h1>${translate(p).description ? `<p>${esc(translate(p).description)}</p>` : ''}<dl class="specs">${p.material ? `<div><dt>${esc(ui.material)}</dt><dd>${esc(p.material)}</dd></div>` : ''}${p.dimensions ? `<div><dt>${esc(ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd></div>` : ''}</dl><a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)}>${esc(ui.inquire)} ↗</a></div></section><section class="chapter wrap"><div class="section-top"><h2>${esc(ui.related)}</h2></div>${cards(draft.products.filter((item) => item.id !== p.id).slice(0, 3))}</section>`
+      ? `<section class="detail wrap">${draft.materials?`<div>${img(p)}${gallery(p)}</div>`:img(p)}<div><a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>← ${esc(ui.back)}</a><h1>${esc(translate(p).name)}</h1>${websiteDetails(p)}${translate(p).description ? `<p>${esc(translate(p).description)}</p>` : ''}<dl class="specs">${p.material ? `<div><dt>${esc(ui.material)}</dt><dd>${esc(p.material)}</dd></div>` : ''}${p.dimensions ? `<div><dt>${esc(ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd></div>` : ''}</dl><a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)}>${esc(ui.inquire)} ↗</a></div></section><section class="chapter wrap"><div class="section-top"><h2>${esc(ui.related)}</h2></div>${cards(draft.products.filter((item) => item.id !== p.id).slice(0, 3))}</section>`
       : `<section class="chapter wrap"><h1>${esc(ui.noProducts)}</h1></section>`;
   }
   if (page === 'contact') {
@@ -178,7 +191,11 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const isSenseng = template === 'senseng-clean' || template === 'senseng-video';
   if (isSenseng) {
     const ctx = buildThemeContext(draft, options);
-    const bodyHtml = renderSensengPage(ctx, template === 'senseng-video');
+    const bodyHtml = draft.materials?materialsSensengBody(ctx):renderSensengPage(ctx, template === 'senseng-video');
+    if(draft.materials){
+      const seo=materialsSeo(draft,options)!;
+      return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title)}</title><meta name="description" content="${esc(seo.description)}">${options.preview?'<meta name="robots" content="noindex,nofollow">':''}<style>${styles}\n${themeStyles}</style>${materialsThemeStyle(draft)}</head><body class="${template} wr-materials-site" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${bodyHtml}<script>${script}</script></body></html>`;
+    }
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
   }
   if (isReferenceTemplate(template)) return renderReferencePage(draft, { ...options, page }, content, script);

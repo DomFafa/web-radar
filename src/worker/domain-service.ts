@@ -1,4 +1,7 @@
 import { blocksModeChange, buildMode } from '../shared/build-mode';
+import { MaterialsService } from './materials-service';
+import { currentMaterialsPrincipal } from './materials-auth';
+import { validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
 import { bannerAssets } from '../shared/banner-config';
 import { auditSeo, withPublicationMetadata, SEO_POLICY_VERSION, type PublicationMetadata } from './site-metadata';
@@ -112,6 +115,7 @@ interface JobInput extends Record<string, unknown> {
 export class DomainService {
   readonly store: DomainStore;
   private readonly clones: CloneTasks;
+  private readonly materials: MaterialsService;
   private serial: Promise<unknown> = Promise.resolve();
   private readonly activeLanes = new Map<string, Promise<void>>();
   constructor(
@@ -120,6 +124,7 @@ export class DomainService {
     readonly providers: ProviderSet = createProviders(env),
   ) {
     this.store = new DomainStore(env.DB);
+    this.materials=new MaterialsService(env,this.store,{lock:operation=>this.lock(operation),schedule:time=>this.scheduler.schedule(time)});
     this.clones = new CloneTasks(env, this.store, {
       lock: operation => this.lock(operation), wake: () => this.wake(),
       validate: project => this.validateAssets(project.id, project.draft),
@@ -173,6 +178,7 @@ export class DomainService {
       'project_not_found',
       '项目不存在或没有访问权限。',
     );
+    if(p.materials)await currentMaterialsPrincipal(this.env,principal);
     return p;
   }
   private async body(request: Request): Promise<Record<string, unknown>> {
@@ -233,6 +239,10 @@ export class DomainService {
     )
       return this.submitInquiry(request, path[3]);
     const principal = this.principal(request);
+    if(path[0]==='internal'&&path[1]==='materials-submissions'&&method==='POST'){
+      const receipt=path[2]&&path[3]==='status'?await this.materials.status(principal,path[2]):await this.materials.submit(principal,await this.body(request));
+      return json(receipt,receipt.state==='receiving'?202:200);
+    }
     if (path[0] === 'internal' && path[1] === 'handoff-project' && method === 'POST') {
       const b = await this.body(request);
       return json({
@@ -649,9 +659,12 @@ export class DomainService {
       return json({ project: next });
     }
     if (command === 'preview' && (method === 'GET' || method === 'POST')) {
-      const draft = method === 'POST'
-        ? validateDraft({ ...((await this.body(request)).draft as Draft), buildBranch: 'template', cloneConfig: undefined, siteDesign: undefined })
-        : project.draft;
+      let draft=project.draft;
+      if(method==='POST'){
+        const input={ ...((await this.body(request)).draft as Draft), buildBranch:'template' as const,cloneConfig:undefined,siteDesign:undefined };
+        requireCondition(!input.materials||project.materials,403,'materials_receipt_required','新版资料预览需要已接收的资料项目。');
+        draft=project.materials?editDraft(project.draft,input):validateDraft(input);
+      }
       if (method === 'POST') await this.validateAssets(project.id, draft);
       const lang = (url.searchParams.get('lang') ?? 'en') as Language;
       requireCondition(
@@ -749,6 +762,7 @@ export class DomainService {
   private async deleteProject(id: string, principal: Principal): Promise<void> {
     const p = await this.store.one<Project>('projects', id);
     requireCondition(p && canManage(p, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
+    if(p.materials)await currentMaterialsPrincipal(this.env,principal);
     const domains = await this.env.DB.prepare('SELECT count(*) AS n FROM project_domains WHERE project_id=?').bind(id).first<{n:number}>();
     requireCondition(!domains?.n, 409, 'domains_bound', '请先解除该网站的自定义域名，再删除网站。');
     await this.store.batch([
@@ -1018,6 +1032,7 @@ export class DomainService {
     );
   }
   private async validateAssets(projectId: string, draft: Draft): Promise<void> {
+    validateMaterialsDraft(draft);
     const bannerMedia = bannerAssets(draft);
     const imageRefs = new Set(assetReferences({...draft, heroAssetId:undefined,
       cloneConfig:draft.cloneConfig?{...draft.cloneConfig,referenceCapture:draft.cloneConfig.referenceCapture?{...draft.cloneConfig.referenceCapture,assets:draft.cloneConfig.referenceCapture.assets.filter(a=>!a.contentType.startsWith('video/'))}:undefined}:undefined,
@@ -1025,6 +1040,7 @@ export class DomainService {
     }));
     for (const id of assetReferences(draft)) {
       const asset = await this.projectAsset(projectId, id);
+      if(draft.materials?.imageBindings.some(b=>b.assetId===id||b.mobileAssetId===id))requireCondition(['image/png','image/jpeg','image/webp'].includes(asset.contentType),400,'materials_asset_type','资料位置仅支持 PNG、JPEG 或 WebP 图片。');
       const video = id === draft.heroAssetId || bannerMedia.videos.includes(id) || !!draft.cloneConfig?.referenceCapture?.assets.some(a=>a.assetId===id&&a.contentType.startsWith('video/'));
       const image = supportedImages.has(asset.contentType) ||
         (id === draft.company.faviconAssetId && !bannerMedia.images.includes(id) && supportedIcons.has(asset.contentType));
@@ -2258,11 +2274,11 @@ export class DomainService {
   }
   async tick(): Promise<void> {
     // Independent upstream calls can overlap; claims and quota changes still share the short lock.
-    const lanes = ['clone', 'publish', 'email', 'other'] as const;
+    const lanes = ['clone', 'publish', 'email', 'other', 'materials'] as const;
     await Promise.all(lanes.map(lane => {
       const active = this.activeLanes.get(lane);
       if (active) return active;
-      const task = (lane === 'clone' ? this.clones.tick() : this.runTick(lane))
+      const task = (lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
         .finally(() => { this.activeLanes.delete(lane); });
       this.activeLanes.set(lane, task);
       return task;

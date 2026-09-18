@@ -12,6 +12,7 @@ import {
   snapshotSchema,
 } from './product-radar';
 import { mintSession } from './auth';
+import { registerMaterialsIntegration } from './materials-integration';
 const handoffSchema = z
   .object({
     protocolVersion: z.literal(1),
@@ -87,6 +88,7 @@ function assertSameOrigin(request: Request, env: AppEnv) {
 export function createIntegrationApp() {
   const app = new Hono<HonoEnv>();
   app.onError(errorResponse);
+  registerMaterialsIntegration(app);
   app.post('/handoffs', async (c) => {
     const config = integrationConfig(c.env);
     const supplied = c.req.header('X-Web-Radar-Secret') ?? '';
@@ -182,12 +184,15 @@ export function createIntegrationApp() {
     if (payload.requestId !== input.requestId || payload.parentOrigin !== input.parentOrigin)
       throw new ApiError(403, 'grant_binding_mismatch', '授权来源或请求不匹配。');
     const principal = await currentPrincipal(c.env, payload.principal);
-    if (payload.intent === 'open')
-      await internal(
+    let entry:'prepared-materials'|undefined;
+    if (payload.intent === 'open') {
+      const opened=await internal(
         c.env,
         '/internal/check-project/' + encodeURIComponent(payload.projectId!),
         principal,
       );
+      if(opened.project.materials)entry='prepared-materials';
+    }
     const consumed = await c.env.DB.prepare(
       'UPDATE handoffs SET consumed_at=? WHERE id=? AND code_hash=? AND consumed_at IS NULL AND expires_at>? RETURNING id',
     )
@@ -213,7 +218,7 @@ export function createIntegrationApp() {
         ? principal.userId.replace('test-', '')
         : undefined,
     );
-    return c.json({ ...session, projectId, target: projectId ? 'project' : 'browse' });
+    return c.json({ ...session, projectId, target: projectId ? 'project' : 'browse',...(entry?{entry}:{}) });
   });
   return app;
 }

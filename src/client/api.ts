@@ -116,6 +116,7 @@ export type SessionResult = {
   principal: Principal;
   projectId?: string;
   target?: 'project' | 'browse';
+  entry?: 'prepared-materials';
 };
 
 export async function privateAssetBlob(

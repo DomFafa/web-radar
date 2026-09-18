@@ -9,6 +9,7 @@ export const templateWorkflowSteps = [
   ['template', '选择模版', 'palette'],
   ['publish', '预览与发布', 'globe'],
 ] as const;
+export const materialsWorkflowSteps=[['basics','品牌与产品','folder'],['template','页面资料','palette'],['publish','预览与发布','globe']]as const;
 
 export const customWorkflowSteps = [
   ['basics', '资料与产品', 'folder'],
@@ -31,6 +32,7 @@ export type WorkflowStep =
   | (typeof cloneWorkflowSteps)[number][0];
 
 export function getWorkflowSteps(draft?: Draft) {
+  if(draft?.materials)return materialsWorkflowSteps;
   if (buildMode(draft) === 'clone') {
     return cloneWorkflowSteps;
   }

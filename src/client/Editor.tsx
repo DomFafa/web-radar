@@ -53,6 +53,7 @@ import { briefConfirmed, plannedPages, resetConsultationForEdit } from '../share
 import { draftChecklist, getWorkflowSteps, resolveWorkflowTab, type WorkflowStep } from './workflow';
 import { TemplateSelector } from './TemplateSelector';
 import { CloneEditor } from './CloneEditor';
+import { MaterialsEditor } from './MaterialsEditor';
 
 const languageNames: Record<Language, string> = {
   en: 'English · 英语',
@@ -813,20 +814,21 @@ export function Editor({
           <div className="editor-breadcrumb">
             {project.name}
             <span>/</span>
-            {allTabLabels[tab]}
+            {project.materials&&tab==='template'?'页面资料':allTabLabels[tab]}
             <span className="private-tag">
               <Icon name="lock" size={12} />
               私有草稿
             </span>
           </div>
-          <section className="build-mode-switcher" aria-label="建站方式切换">
+          {!project.materials&&<section className="build-mode-switcher" aria-label="建站方式切换">
             <div><strong>建站方式</strong><p>{draft.buildBranch === 'custom' ? '当前为已有定制项目（5步）。' : '模板与网址 / 设计稿可随时切换。'} 切换会保存资料与素材，线上版本在重新发布后更新。</p></div>
             <div className="build-mode-options">
               <Button aria-pressed={draft.buildBranch === 'template'} kind={draft.buildBranch === 'template' ? 'primary' : undefined} disabled={!!busy || saving || cloneActivity || !!uploadState || detail.jobs.some(blocksModeChange)} onClick={() => void switchBuildMode('template')}>模板建站</Button>
               <Button aria-pressed={draft.buildBranch === 'clone'} kind={draft.buildBranch === 'clone' ? 'primary' : undefined} disabled={!!busy || saving || cloneActivity || !!uploadState || detail.jobs.some(blocksModeChange)} onClick={() => void switchBuildMode('clone')}>网址 / 设计稿建站</Button>
             </div>
             {detail.jobs.some(blocksModeChange) && <small>生成或发布任务结束后可切换；暂停中的生成任务请先停止。</small>}
-          </section>
+          </section>}
+          {project.materials&&<Notice tone="success">Product Radar 已确认的网站资料已接收。可直接预览，或继续调整品牌、产品与页面内容。</Notice>}
           {services.some((service) => service.mode === 'unconfigured') && (
             <details className="editor-services">
               <summary>部分服务尚未接通 · 点击查看</summary>
@@ -1212,7 +1214,7 @@ export function Editor({
             </>
           )}
           {tab === 'template' && (
-            <TemplateSelector
+            project.materials&&draft.materials?<MaterialsEditor projectId={project.id} draft={draft} disabled={!!busy||saving} onChange={patch} onUpload={upload} onPreview={openPreview}/>:<TemplateSelector
               onPreview={(template) => {
                 const current = projectRef.current!;
                 setPreviewProject({ ...current, draft: { ...current.draft, buildBranch: 'template', template: template.id, brandColor: template.accentColor, cloneConfig: undefined, siteDesign: undefined } });
@@ -1421,7 +1423,7 @@ export function Editor({
                     </Button>
                     <Button kind="quiet" onClick={() => setTab('template')}>
                       <Icon name="palette" />
-                      更换模版与配色
+                      {project.materials?'调整页面资料与配色':'更换模版与配色'}
                     </Button>
                   </div>
                 </section>

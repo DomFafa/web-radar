@@ -13,7 +13,7 @@ import {
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Principal, Job, Project } from '../src/shared/model';
 
-const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'generated-concept' }));
+const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'generated-concept', materialsEmail:'other@example.com' }));
 vi.mock('../src/worker/product-radar', () => ({
   prService: async (_e: unknown, p: Principal, path: string, body: { productIds?: string[] }) =>
     path === 'context'
@@ -21,7 +21,7 @@ vi.mock('../src/worker/product-radar', () => ({
         ? Promise.reject(
             Object.assign(new Error('Permission revoked'), { status: sourceState.failureStatus }),
           )
-        : { principal: p }
+        : { principal: p.authSubject==='untrusted'?{...p,email:sourceState.materialsEmail}:p }
       : {
           products: (body.productIds ?? []).map((id) => ({
             source: 'product-radar',
@@ -327,6 +327,7 @@ beforeEach(() => {
   sourceState.factsOrigin = 'generated-concept';
   sourceState.revoked = false;
   sourceState.failureStatus = 403;
+  sourceState.materialsEmail='other@example.com';
   bucket = mediaBucket();
   env = {
     DB: database(),
@@ -2536,5 +2537,23 @@ describe('persisted website creation modes', () => {
     expect(result.status).toBe(409);
     expect(result.data.code).toBe('mode_change_task_active');
     expect((await get(p)).project.draft.buildBranch).toBe('template');
+  });
+});
+
+describe('confirmed materials account scope',()=>{
+  it('hides and denies receipt-backed projects when the account loses materials access',async()=>{
+    const p=await create('Confirmed materials');p.materials={submissionId:crypto.randomUUID(),source:{materialsId:'source',revision:1},contentSha256:'a'.repeat(64),snapshotKey:'confirmed.json',acceptedAt:new Date().toISOString()};
+    await env.DB.prepare('UPDATE projects SET data=? WHERE id=?').bind(JSON.stringify(p),p.id).run();
+    const permitted={...owner,email:'vc.ddom@gmail.com'};
+    sourceState.materialsEmail=permitted.email;
+    expect((await request(`/api/projects/${p.id}`,undefined,permitted)).status).toBe(200);
+    sourceState.materialsEmail=owner.email;
+    for(const principal of [owner,admin,platform]){
+      expect((await request(`/api/projects/${p.id}`,undefined,principal)).status).toBe(403);
+      expect((await request(`/api/projects/${p.id}/preview`,{draft:p.draft},principal)).status).toBe(403);
+      expect((await request(`/api/projects/${p.id}`,{draft:p.draft,expectedVersion:p.version},principal,'PUT')).status).toBe(403);
+    }
+    const list=await request('/api/projects');expect(JSON.stringify(list.data).includes(p.id)).toBe(false);
+    const ordinary=await create('Standalone');expect((await request(`/api/projects/${ordinary.id}`)).status).toBe(200);
   });
 });
