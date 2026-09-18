@@ -297,4 +297,32 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'senseng-candy': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
+    bannerNote: '马卡龙糖果粉彩背景与悬浮萌宠特写已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-wonder': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
+    bannerNote: '北欧温暖画卷与波浪曲线沉浸背景已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
 };

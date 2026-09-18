@@ -268,3 +268,89 @@ it('renders saved gallery images and fixed website copy on product details only'
   expect(html).toContain('At home');
   expect(renderSite(d,{...opts,page:'catalog'})).not.toContain('https://media.example/side-view');
 });
+
+describe('senseng toy templates (senseng-candy & senseng-wonder)', () => {
+  const toyTemplates: Draft['template'][] = ['senseng-candy', 'senseng-wonder'];
+
+  for (const template of toyTemplates) {
+    it(`renders ${template} full website journey across 5 page types`, () => {
+      const d = draft();
+      d.template = template;
+      d.languages = ['en', 'de'];
+
+      // Home
+      const homeHtml = renderSite(d, opts);
+      expect(homeHtml).toContain(`data-template="${template}"`);
+      expect(homeHtml).toContain('data-wr-page="home"');
+      expect(homeHtml).toContain('<!doctype html>');
+      expect(homeHtml).toContain('products/p-one/index.html');
+
+      // Catalog
+      const catalogHtml = renderSite(d, { ...opts, page: 'catalog' });
+      expect(catalogHtml).toContain('data-wr-page="catalog"');
+      expect(catalogHtml).toContain('products/p-one/index.html');
+
+      // Detail
+      const detailHtml = renderSite(d, { ...opts, page: 'detail', productId: 'p-one' });
+      expect(detailHtml).toContain('data-wr-page="detail"');
+      expect(detailHtml).toContain('p-one');
+
+      // About
+      const aboutHtml = renderSite(d, { ...opts, page: 'about' });
+      expect(aboutHtml).toContain('data-wr-page="about"');
+      expect(aboutHtml).toContain('Field &amp; Form');
+
+      // Contact
+      const contactHtml = renderSite(d, { ...opts, page: 'contact' });
+      expect(contactHtml).toContain('data-wr-page="contact"');
+      expect(contactHtml).toContain('id="inquiry"');
+      expect(contactHtml).toContain(opts.inquiryUrl);
+
+      // Render all site files
+      const files = renderSiteFiles(d, {
+        ...opts,
+        publicBaseUrl: 'https://wr.example/public/sites/project',
+      });
+      for (const lang of ['en', 'de']) {
+        for (const path of [
+          'index.html',
+          'catalog/index.html',
+          'products/p-one/index.html',
+          'about/index.html',
+          'contact/index.html',
+        ]) {
+          expect(files[`${lang}/${path}`]).toBeDefined();
+          expect(files[`${lang}/${path}`]).toContain(`lang="${lang}"`);
+        }
+      }
+    });
+  }
+
+  it('verifies specialized layout signatures for senseng-candy and senseng-wonder', () => {
+    const d = draft();
+
+    // senseng-candy: Candy pop playground layout
+    const candyHome = renderSite({ ...d, template: 'senseng-candy' }, opts);
+    expect(candyHome).toContain('wr-candy-ribbon');
+    expect(candyHome).toContain('wr-candy-hero');
+    expect(candyHome).toContain('wr-candy-stage');
+    expect(candyHome).toContain('wr-candy-card');
+
+    const candyAbout = renderSite({ ...d, template: 'senseng-candy' }, { ...opts, page: 'about' });
+    expect(candyAbout).toContain('wr-senseng-candy-inner');
+
+    // senseng-wonder: Nordic storybook bento layout
+    const wonderHome = renderSite({ ...d, template: 'senseng-wonder' }, opts);
+    expect(wonderHome).toContain('wr-wonder-ribbon');
+    expect(wonderHome).toContain('wr-wonder-hero');
+    expect(wonderHome).toContain('wr-wonder-card');
+    expect(wonderHome).toContain('CHAPTER 01');
+
+    const wonderContact = renderSite({ ...d, template: 'senseng-wonder' }, { ...opts, page: 'contact' });
+    expect(wonderContact).toContain('wr-senseng-wonder-inner');
+
+    // The two layouts have completely different structures
+    expect(candyHome).not.toEqual(wonderHome);
+  });
+});
+

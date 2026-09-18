@@ -140,6 +140,30 @@ export const TEMPLATES: TemplateDefinition[] = [
     badge: '商务咨询 · 紫色强调',
     previewImg: '/templates/previews/corpox-consulting.jpg',
   },
+  {
+    id: 'senseng-candy',
+    name: 'Senseng 缤纷糖果乐园',
+    englishName: 'Senseng Candy Pop & Play',
+    tagline: '专为儿童萌趣玩具与触感解压公仔定制；马卡龙粉彩体系、立体圆角泡泡与感官触觉矩阵',
+    category: 'consumer',
+    industries: ['儿童玩具', '萌宠解压', '感官潮玩', '亲子母婴', '外贸出口'],
+    features: ['马卡龙糖果配色', '左右分栏萌趣舞台', '4大感官魔力标签', '立体糖果展台网格'],
+    accentColor: '#ff6b8b',
+    badge: '童趣感官玩具 · 爆款首选',
+    previewImg: '/templates/previews/senseng-candy.jpg',
+  },
+  {
+    id: 'senseng-wonder',
+    name: 'Senseng 北欧温润工坊',
+    englishName: 'Senseng Nordic Wonder Studio',
+    tagline: '专为品质玩具独立站与全龄桌面疗愈设计；温暖奶油大地色、北欧便当盒画廊与波浪有机曲线',
+    category: 'consumer',
+    industries: ['益智玩具', '治愈解压', '精品独立站', '生活美学潮玩', '品牌代工'],
+    features: ['全屏画卷轮播', '北欧便当盒画廊', '波浪有机曲线分割', '材质工艺与FAQ'],
+    accentColor: '#f77f00',
+    badge: '北欧温润绘本 · 精品独立站',
+    previewImg: '/templates/previews/senseng-wonder.jpg',
+  },
 ];
 
 const PRESET_COLORS = [

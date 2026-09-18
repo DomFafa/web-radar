@@ -15,6 +15,8 @@ import { renderCraftoHome } from './themes/craftoCorporate';
 import { renderToysHome } from './themes/junoToys';
 import { renderAiAgencyHome } from './themes/corpoxAiAgency';
 import { renderConsultingHome } from './themes/corpoxConsulting';
+import { renderCandyHome, renderCandyPage } from './themes/sensengCandy';
+import { renderWonderHome, renderWonderPage } from './themes/sensengWonder';
 import { materialProductImage,materialsSensengBody,materialsSeo,materialsThemeStyle } from './materials-render';
 import { materialsRuntime } from '../shared/materials-runtime';
 export { labels };
@@ -154,6 +156,12 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
       case 'corpox-consulting':
         content = renderConsultingHome(ctx);
         break;
+      case 'senseng-candy':
+        content = renderCandyHome(ctx);
+        break;
+      case 'senseng-wonder':
+        content = renderWonderHome(ctx);
+        break;
       default:
         content = `${hero}<section class="chapter wrap"><div class="section-top"><div><span class="eyebrow">${esc(ui.products)}</span><h2>${esc(ui.catalog)}</h2></div><a class="text-link" href="catalog/index.html" ${navAttrs('catalog')}>${esc(ui.allProducts)} ↗</a></div>${cards(draft.products.slice(0, template === 'explorer' ? 4 : 3))}</section>${story}${contactBand}`;
         break;
@@ -199,6 +207,16 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
       const seo=materialsSeo(draft,options)!;
       return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title)}</title><meta name="description" content="${esc(seo.description)}">${options.preview?'<meta name="robots" content="noindex,nofollow">':''}<style>${styles}\n${themeStyles}</style>${materialsThemeStyle(draft)}</head><body class="${template} wr-materials-site" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${bodyHtml}<script>${script}</script></body></html>`;
     }
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'senseng-candy') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderCandyPage(ctx);
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'senseng-wonder') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderWonderPage(ctx);
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
   }
   if (isReferenceTemplate(template)) return renderReferencePage(draft, { ...options, page }, content, script);

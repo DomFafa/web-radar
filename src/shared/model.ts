@@ -25,7 +25,9 @@ export type TemplateId =
   | 'crafto-corporate'
   | 'juno-toys'
   | 'corpox-ai-agency'
-  | 'corpox-consulting';
+  | 'corpox-consulting'
+  | 'senseng-candy'
+  | 'senseng-wonder';
 export interface Product {
   id: string;
   name: string;

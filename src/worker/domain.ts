@@ -97,6 +97,8 @@ const draftSchema = z.object({
     'juno-toys',
     'corpox-ai-agency',
     'corpox-consulting',
+    'senseng-candy',
+    'senseng-wonder',
   ]),
   brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   copy: z.partialRecord(language, copy),
