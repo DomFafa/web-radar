@@ -1,7 +1,7 @@
 import{parseFragment,serialize,type DefaultTreeAdapterMap}from'parse5';
 import type{Draft}from'../shared/model';
 import{materialsPages,type MaterialsTemplateContract}from'../shared/materials';
-import{renderSensengPage}from'./themes/senseng';
+import{renderLegacySensengPage}from'./materials-legacy-senseng';
 import{buildThemeContext,type ThemeContext}from'./themes/types';
 
 type Node=DefaultTreeAdapterMap['node'];
@@ -50,7 +50,7 @@ export function sensengMaterialInventory(id:'senseng-clean'|'senseng-video'):Inv
     text[page]={};images[page]={};
     textSlots.push(textSlot(`${page}-seo-title`,page,'Search title',70),textSlot(`${page}-seo-description`,page,'Search description',170));
     const options={projectId:'demo',page,lang:'en' as const,productId:'sample',assetUrl:()=>'/materials-demo/product.png',inquiryUrl:'',preview:false};
-    walkSensengMaterials(renderSensengPage(buildThemeContext(d,options),id==='senseng-video',true),page,(value,attribute)=>{
+    walkSensengMaterials(renderLegacySensengPage(buildThemeContext(d,options),id==='senseng-video',true),page,(value,attribute)=>{
       if(value==='demo@example.invalid'||value.includes('__WR_'))return value;
       const key=textKey(value,attribute);
       if(!text[page][key]){
@@ -74,7 +74,7 @@ export function sensengMaterialInventory(id:'senseng-clean'|'senseng-video'):Inv
 export function prepareSensengMaterials(ctx:ThemeContext):string{
   const inventory=sensengMaterialInventory(ctx.draft.template as 'senseng-clean'|'senseng-video');
   const text=inventory.text[ctx.page],images=inventory.images[ctx.page];
-  return walkSensengMaterials(renderSensengPage(ctx,ctx.draft.template==='senseng-video'),ctx.page,(value,attribute)=>{
+  return walkSensengMaterials(renderLegacySensengPage(ctx,ctx.draft.template==='senseng-video'),ctx.page,(value,attribute)=>{
     const id=text[textKey(value,attribute)];
     return id?ctx.draft.materials!.textBindings.find(b=>b.slotId===id&&b.locale===ctx.lang)?.text||'':value;
   },source=>images[source]);
