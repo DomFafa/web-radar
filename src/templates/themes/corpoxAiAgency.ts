@@ -39,26 +39,29 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
           <div><span style="color:#06b6d4;">[✓]</span> ON-PREMISE AIR-GAPPED DEPLOYMENT</div>
           <div><span style="color:#06b6d4;">[✓]</span> ZERO DATA RETENTION RETENTION</div>
         </div>
+        <div style="margin-top:40px;">
+          <a href="#ai-metrics" class="wr-scroll-down" aria-label="Scroll to neural performance metrics" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;border:1px solid rgba(6,182,212,0.4);color:#06b6d4;font-size:1.3rem;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;">↓</a>
+        </div>
       </div>
     </section>
   `;
 
   // 2. Performance Metrics Strip
   const metricsHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
+    <section id="ai-metrics" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.08);">
-          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">5.2x Faster</div>
+          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;"><span data-counter="5.2" data-suffix="x">5.2x</span> Faster</div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Autonomous Agent Deployments</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">FP8 & AWQ kernel optimizations delivering sub-20ms first-token latency.</div>
         </div>
         <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(129,140,248,0.08);">
-          <div style="font-size:2.8rem;font-weight:900;color:#818cf8;letter-spacing:-1px;">99.4%</div>
+          <div style="font-size:2.8rem;font-weight:900;color:#818cf8;letter-spacing:-1px;"><span data-counter="99.4" data-suffix="%">99.4%</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Retrieval Precision (RAG)</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Deterministic JSON schema enforcement eliminating hallucinated tool outputs.</div>
         </div>
         <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(192,132,252,0.08);">
-          <div style="font-size:2.8rem;font-weight:900;color:#c084fc;letter-spacing:-1px;">240M+</div>
+          <div style="font-size:2.8rem;font-weight:900;color:#c084fc;letter-spacing:-1px;"><span data-counter="240" data-suffix="M+">240M+</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Tokens Processed Daily</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Auto-scaling vLLM clusters orchestrating parallel reasoning workloads.</div>
         </div>
@@ -612,6 +615,10 @@ export function renderAiAgencyDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const company = draft.company;
+  const isZh = (ctx.lang as string) === 'zh';
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
     <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
@@ -630,20 +637,59 @@ export function renderAiAgencyDetail(ctx: ThemeContext): string {
     </section>
 
     <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:flex-start;">
         <div>
           ${imgUrl ? `
             <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;overflow:hidden;padding:24px;box-shadow:0 0 30px rgba(6,182,212,0.08);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;border-radius:10px;">
+              <img id="wr-detail-main-img" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;border-radius:10px;">
             </div>
           ` : `
             <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:70px 24px;text-align:center;font-size:4rem;">⚡</div>
           `}
+
+          <!-- SLA Progress Bars -->
+          <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:26px;margin-top:28px;box-shadow:0 0 25px rgba(6,182,212,0.05);">
+            <div style="font-size:0.8rem;font-weight:900;color:#67e8f9;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:18px;">
+              // INFERENCE RUNTIME BENCHMARKS
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;">
+                  <span style="color:#f8fafc;font-weight:700;">Sub-20ms First-Token Latency</span>
+                  <span style="color:#06b6d4;font-weight:900;font-family:monospace;">99%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#1e293b;height:8px;border-radius:9999px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="99" style="background:linear-gradient(90deg,#06b6d4,#6366f1);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16, 1, 0.3, 1);"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;">
+                  <span style="color:#f8fafc;font-weight:700;">Deterministic JSON Schema Precision</span>
+                  <span style="color:#818cf8;font-weight:900;font-family:monospace;">98.6%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#1e293b;height:8px;border-radius:9999px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="98.6" style="background:linear-gradient(90deg,#818cf8,#c084fc);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;">
+                  <span style="color:#f8fafc;font-weight:700;">Zero Data Retention & Sovereign Security</span>
+                  <span style="color:#34d399;font-weight:900;font-family:monospace;">100%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#1e293b;height:8px;border-radius:9999px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#10b981,#34d399);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
           <div style="display:inline-block;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);color:#67e8f9;padding:4px 14px;border-radius:9999px;font-size:0.82rem;font-weight:700;margin-bottom:16px;">
-            AGENTIC RUNTIME V4
+            AGENTIC RUNTIME V4 · PRODUCTION GRADE
           </div>
           <p style="font-size:1.15rem;line-height:1.75;color:#cbd5e1;margin:0 0 24px;">
             ${esc(t.description || 'Enterprise agentic intelligence module optimized for high-complexity workflows.')}
@@ -671,11 +717,119 @@ export function renderAiAgencyDetail(ctx: ThemeContext): string {
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;display:inline-block;box-shadow:0 0 25px rgba(6,182,212,0.3);text-decoration:none;">
-            ${esc(ui.inquire || 'Deploy This Agent')} ↗
-          </a>
+          <!-- Direct Technical Inquiry Box -->
+          <div id="inquiry-panel" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 12px 30px rgba(0,0,0,0.4);">
+            <h3 style="font-size:1.3rem;font-weight:900;color:#f8fafc;margin:0 0 8px;">
+              ${isZh ? '启动神经模型试点交付' : 'Deploy This Agent / Pilot Request'}
+            </h3>
+            <p style="font-size:0.9rem;color:#94a3b8;line-height:1.5;margin:0 0 20px;">
+              ${isZh ? '填写您的企业基础设施需求与目标模型规格，Corpox 架构师将在 2 小时内交付沙箱环境。' : 'Submit your infrastructure target and context specs to receive an air-gapped evaluation sandbox within 2 hours.'}
+            </p>
+
+            <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:6px;">Target Architecture</label>
+                <input name="productName" value="${esc(t.name)}" readonly style="width:100%;box-sizing:border-box;background:#151d2f;border:1px solid #334155;color:#67e8f9;padding:10px 14px;border-radius:8px;font-size:0.9rem;">
+                <input type="hidden" name="productId" value="${esc(p.id)}">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:6px;">Name *</label>
+                  <input name="name" required placeholder="Lead Architect / CTO" style="width:100%;box-sizing:border-box;background:#050811;border:1px solid #334155;color:#ffffff;padding:10px 14px;border-radius:8px;font-size:0.9rem;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:6px;">Work Email *</label>
+                  <input name="email" type="email" required placeholder="name@enterprise.com" style="width:100%;box-sizing:border-box;background:#050811;border:1px solid #334155;color:#ffffff;padding:10px 14px;border-radius:8px;font-size:0.9rem;">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.8rem;color:#94a3b8;margin-bottom:6px;">Deployment Scope & Concurrency</label>
+                <textarea name="message" rows="3" placeholder="Target throughput (e.g. 500 req/sec, on-prem VPC, Kubernetes vLLM)..." style="width:100%;box-sizing:border-box;background:#050811;border:1px solid #334155;color:#ffffff;padding:10px 14px;border-radius:8px;font-size:0.9rem;resize:vertical;"></textarea>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px;">
+                <button type="submit" class="button" style="flex:1;background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border:none;border-radius:8px;padding:14px;cursor:pointer;box-shadow:0 0 20px rgba(6,182,212,0.35);">
+                  ${esc(ui.send || 'Submit Pilot Request')} ↗
+                </button>
+                ${waDigits ? `
+                  <a class="button" target="_blank" rel="noopener noreferrer" style="background:#25d366;color:#ffffff;font-weight:800;border-radius:8px;padding:14px 20px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;" href="https://wa.me/${esc(waDigits)}">
+                    WhatsApp ↗
+                  </a>
+                ` : ''}
+              </div>
+              <p class="form-status" role="status" aria-live="polite" style="margin:4px 0 0;font-size:0.85rem;color:#67e8f9;text-align:center;"></p>
+            </form>
+          </div>
         </div>
       </div>
+
+      <!-- 3 Neural Architecture Pillar Cards -->
+      <div style="margin-top:70px;border-top:1px solid #1e293b;padding-top:50px;">
+        <div style="text-align:center;margin-bottom:36px;">
+          <span style="color:#06b6d4;font-weight:800;font-size:0.82rem;letter-spacing:0.12em;text-transform:uppercase;">ENTERPRISE ARCHITECTURE PILLARS</span>
+          <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#f8fafc;margin:6px 0 0;">Engineered for Mission-Critical Autonomous Execution</h2>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:28px;">
+            <div style="font-size:2rem;margin-bottom:12px;">⚡</div>
+            <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Kernel Acceleration & FP8 Precision</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0;">
+              High-throughput continuous batching powered by vLLM and TensorRT-LLM, cutting inference GPU memory footprints by 65% with zero degradation in benchmark accuracy.
+            </p>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:28px;">
+            <div style="font-size:2rem;margin-bottom:12px;">🛡️</div>
+            <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Grammar-Guided Schema Guardrails</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0;">
+              Deterministic state-machine parsing enforces valid JSON output schemas on every generation token, preventing hallucinated parameters during external tool and API calls.
+            </p>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:28px;">
+            <div style="font-size:2rem;margin-bottom:12px;">🔒</div>
+            <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Air-Gapped Sovereign Isolation</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0;">
+              Deployable directly into your AWS Outposts, private bare-metal Kubernetes, or air-gapped government cloud with cryptographic audit logging and ISO 42001 verification.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related AI Models Grid -->
+      ${related.length > 0 ? `
+        <div style="margin-top:70px;border-top:1px solid #1e293b;padding-top:40px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+            <h3 style="font-size:1.4rem;font-weight:900;color:#f8fafc;margin:0;">
+              ${isZh ? '相关智能体与微调模型' : 'Related AI Agents & Neural Pipelines'}
+            </h3>
+            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#38bdf8;font-weight:700;font-size:0.9rem;text-decoration:none;">
+              ${esc(ui.allProducts)} ↗
+            </a>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+            ${related.map((item) => {
+              const itemT = translateProduct(item);
+              const itemImg = asset(item.imageAssetId);
+              return `
+                <div class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+                  <div>
+                    ${itemImg ? `
+                      <img src="${esc(itemImg)}" alt="${esc(itemT.name)}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:14px;">
+                    ` : ''}
+                    <h4 style="font-size:1.05rem;font-weight:800;color:#f8fafc;margin:0 0 6px;">${esc(itemT.name)}</h4>
+                    <p style="font-size:0.84rem;color:#94a3b8;line-height:1.5;margin:0 0 14px;">${esc(itemT.description || '')}</p>
+                  </div>
+                  <a class="button" href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="background:rgba(255,255,255,0.06);color:#67e8f9;border:1px solid #1e293b;border-radius:6px;padding:8px 16px;text-align:center;font-size:0.85rem;text-decoration:none;">
+                    View Architecture →
+                  </a>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
     </section>
   `;
 }

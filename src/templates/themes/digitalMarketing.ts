@@ -41,26 +41,27 @@ export function renderMarketingHome(ctx: ThemeContext): string {
           <div style="display:flex;align-items:center;gap:8px;"><span>🔥</span> Meta Certified Media Agency</div>
           <div style="display:flex;align-items:center;gap:8px;"><span>⚡</span> TikTok Official Marketing Partner</div>
         </div>
+        <a href="#stats" class="wr-scroll-down" aria-label="Scroll to content">↓</a>
       </div>
     </section>
   `;
 
   // 2. Performance Funnel & ROI Stats
   const statsHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
+    <section id="stats" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #d946ef;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(217,70,239,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#d946ef;letter-spacing:-1px;">+380%</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #d946ef;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(217,70,239,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#d946ef;letter-spacing:-1px;" data-counter="380">+380%</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Organic Traffic Lift</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Across enterprise brands with structured entity SEO & topical authority content.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #ec4899;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(236,72,153,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#ec4899;letter-spacing:-1px;">4.2x</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #ec4899;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(236,72,153,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#ec4899;letter-spacing:-1px;" data-counter="4.2">4.2x</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Blended ROAS Multiplier</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Validated through algorithmic bid optimization and high-intent audience lookalikes.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #8b5cf6;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(139,92,246,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#8b5cf6;letter-spacing:-1px;">$120M+</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #8b5cf6;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(139,92,246,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#8b5cf6;letter-spacing:-1px;" data-counter="120">$120M+</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Managed Client Ad Spend</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Scaling performance marketing across 38 competitive global consumer verticals.</div>
         </div>
@@ -593,8 +594,11 @@ export function renderMarketingDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
+    <!-- Top Breadcrumbs & Discipline Hero -->
     <section class="marketing-inner-hero" style="background:linear-gradient(135deg,#3b0764 0%,#701a75 50%,#831843 100%);color:#ffffff;padding:50px 0 40px;border-bottom:1px solid rgba(255,255,255,0.1);">
       <div class="wrap">
         <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#f5d0fe;margin-bottom:16px;">
@@ -604,55 +608,248 @@ export function renderMarketingDetail(ctx: ThemeContext): string {
           <span>/</span>
           <span style="color:#ffffff;font-weight:700;">${esc(t.name)}</span>
         </div>
-        <h1 style="font-size:clamp(2rem,4vw,3.2rem);line-height:1.15;font-weight:900;letter-spacing:-0.03em;margin:0;color:#ffffff;">
-          ${esc(t.name)}
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);color:#fdf4ff;padding:4px 14px;border-radius:999px;font-size:0.8rem;font-weight:800;margin-bottom:12px;">
+              <span>🔥</span> PERFORMANCE MARKETING DISCIPLINE
+            </div>
+            <h1 style="font-size:clamp(2.2rem,4vw,3.4rem);line-height:1.15;font-weight:900;letter-spacing:-0.03em;margin:0;color:#ffffff;">
+              ${esc(t.name)}
+            </h1>
+          </div>
+          <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:12px 20px;text-align:right;">
+            <div style="color:#f5d0fe;font-size:0.8rem;text-transform:uppercase;font-weight:700;">Partner Tier</div>
+            <div style="color:#ffffff;font-weight:800;font-size:1.05rem;">Google & Meta Premier</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+    <!-- Main Showcase: Col 1 Preview & Growth Badges, Col 2 Specs & Progress Bars -->
+    <section class="wrap" style="padding:60px 0 40px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
+        <!-- Left Col: Preview Card -->
         <div>
-          ${imgUrl ? `
-            <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;overflow:hidden;padding:24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:10px;">
-            </div>
-          ` : `
-            <div style="background:#faf5ff;border:1px solid #f3e8ff;border-radius:16px;padding:60px 24px;text-align:center;font-size:4rem;">🎯</div>
-          `}
+          <div class="wr-card-hover" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;overflow:hidden;padding:32px;text-align:center;box-shadow:0 10px 30px rgba(217,70,239,0.06);">
+            ${imgUrl ? `
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:contain;border-radius:12px;">
+            ` : `
+              <div style="padding:70px 24px;text-align:center;font-size:5rem;">🎯</div>
+            `}
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span style="background:#fdf4ff;border:1px solid #f5d0fe;color:#c026d3;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;">🚀 Server-Side Tracking</span>
+            <span style="background:#fdf2f8;border:1px solid #fbcfe8;color:#db2777;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;">📊 Predictive LTV Models</span>
+            <span style="background:#f5f3ff;border:1px solid #ddd6fe;color:#7c3aed;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;">🎯 Granular Retention</span>
+          </div>
         </div>
 
+        <!-- Right Col: Overview, Live Progress Bars, Scope Parameters -->
         <div>
-          <div style="display:inline-block;background:rgba(217,70,239,0.12);border:1px solid rgba(217,70,239,0.3);color:#d946ef;padding:4px 14px;border-radius:9999px;font-size:0.8rem;font-weight:800;margin-bottom:16px;">STRATEGIC SERVICE POD</div>
-          <p style="font-size:1.15rem;line-height:1.7;color:#3f3f46;margin:0 0 24px;">${esc(t.description || 'Full-funnel digital marketing discipline.')}</p>
+          <h2 style="color:#18181b;font-size:1.8rem;font-weight:800;margin:0 0 16px;">Campaign Architecture & Strategy</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#52525b;margin:0 0 28px;">
+            ${esc(t.description || 'Full-funnel digital marketing discipline integrating proprietary audience segmentation, high-velocity creative testing, and multi-touch deterministic attribution.')}
+          </p>
 
-          <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;padding:24px;margin-bottom:28px;box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-            <h3 style="color:#18181b;font-size:1.1rem;margin:0 0 16px;">Service Scope & Parameters</h3>
-            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
-              ${p.material ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">
-                  <span style="color:#71717a;">Execution Channels</span>
-                  <span style="color:#18181b;font-weight:700;">${esc(p.material)}</span>
+          <!-- Dynamic Performance Progress Bars -->
+          <div style="background:#fdf4ff;border:1px solid #f5d0fe;border-radius:16px;padding:26px;margin-bottom:28px;">
+            <h3 style="color:#701a75;font-size:1.05rem;font-weight:800;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span>📈</span> Validated Campaign Performance Benchmarks
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#3f3f46;margin-bottom:6px;">
+                  <span>Average Client ROAS Lift</span>
+                  <span style="color:#c026d3;">94% (3.8x baseline)</span>
                 </div>
-              ` : ''}
-              ${p.dimensions ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">
-                  <span style="color:#71717a;">Campaign Cadence</span>
-                  <span style="color:#18181b;font-weight:700;">${esc(p.dimensions)}</span>
+                <div class="wr-progress-container" style="background:#fae8ff;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="94" style="background:linear-gradient(90deg,#d946ef,#ec4899);height:100%;border-radius:99px;"></div>
                 </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#71717a;">Attribution Model</span>
-                <span style="color:#d946ef;font-weight:700;">Server-Side Multi-Touch</span>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#3f3f46;margin-bottom:6px;">
+                  <span>Attribution Accuracy Rate</span>
+                  <span style="color:#db2777;">98% Deterministic</span>
+                </div>
+                <div class="wr-progress-container" style="background:#fae8ff;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#ec4899,#f43f5e);height:100%;border-radius:99px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#3f3f46;margin-bottom:6px;">
+                  <span>Omni-Channel Sync Speed</span>
+                  <span style="color:#7c3aed;">96% Instantaneous</span>
+                </div>
+                <div class="wr-progress-container" style="background:#fae8ff;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#9333ea,#c084fc);height:100%;border-radius:99px;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:linear-gradient(90deg,#d946ef 0%,#ec4899 100%);color:#ffffff;font-weight:800;border-radius:9999px;padding:16px 36px;display:inline-block;text-decoration:none;box-shadow:0 8px 20px rgba(217,70,239,0.3);">
-            ${esc(ui.inquire || 'Engage This Discipline')} ↗
-          </a>
+          <!-- Scope Parameters -->
+          <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;padding:24px;margin-bottom:32px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+            <h3 style="color:#18181b;font-size:1.05rem;font-weight:800;margin:0 0 16px;">Service Delivery Parameters</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">
+                <span style="color:#71717a;">Execution Channels</span>
+                <span style="color:#18181b;font-weight:700;">${esc(p.material || 'Google Search, Meta, TikTok & Programmatic')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">
+                <span style="color:#71717a;">Campaign Cadence</span>
+                <span style="color:#18181b;font-weight:700;">${esc(p.dimensions || 'Continuous Multi-Variant Testing')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f4f4f5;">
+                <span style="color:#71717a;">Attribution Model</span>
+                <span style="color:#d946ef;font-weight:700;">Server-Side CAPI & Multi-Touch Data Mesh</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Reporting Rhythm</span>
+                <span style="color:#18181b;font-weight:700;">Live Real-Time Looker Studio Dashboard</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- 3 Campaign Workflow Pillars -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
+        <span style="color:#d946ef;font-size:0.85rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">GROWTH ENGINE METHODOLOGY</span>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#18181b;font-weight:800;margin:8px 0 12px;">Systematic Scientific Growth</h2>
+        <p style="color:#71717a;font-size:1.05rem;line-height:1.6;margin:0;">Iterative conversion engineering and high-velocity asset experimentation.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(217,70,239,0.04);">
+          <div style="width:52px;height:52px;border-radius:12px;background:#fdf4ff;color:#d946ef;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">🎯</div>
+          <h3 style="color:#18181b;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Predictive Audience Modeling</h3>
+          <p style="color:#71717a;font-size:0.95rem;line-height:1.6;margin:0;">Proprietary customer intent scoring models identifying high-LTV customer cohorts before auction costs peak.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(217,70,239,0.04);">
+          <div style="width:52px;height:52px;border-radius:12px;background:#fdf2f8;color:#ec4899;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">⚡</div>
+          <h3 style="color:#18181b;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Dynamic Creative Testing</h3>
+          <p style="color:#71717a;font-size:0.95rem;line-height:1.6;margin:0;">Over 40 modular hook and lifestyle video variants deployed per month to combat creative fatigue and lower CPA.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(217,70,239,0.04);">
+          <div style="width:52px;height:52px;border-radius:12px;background:#f5f3ff;color:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">📊</div>
+          <h3 style="color:#18181b;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Full-Funnel Attribution</h3>
+          <p style="color:#71717a;font-size:0.95rem;line-height:1.6;margin:0;">Unbiased media mix modeling across paid, organic, email and affiliate touchpoints to allocate capital optimally.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Strategy Session & Audit Inquiry Form -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="background:linear-gradient(135deg,#3b0764 0%,#701a75 100%);color:#ffffff;border-radius:24px;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+        <div>
+          <span style="color:#f5d0fe;font-size:0.85rem;font-weight:800;text-transform:uppercase;">GROWTH PARTNERSHIP</span>
+          <h2 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:8px 0 12px;">Scale With ${esc(t.name)}</h2>
+          <p style="color:#f5d0fe;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+            Book a confidential performance growth audit. We evaluate your existing ad accounts, conversion funnels, and retention rates.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#fdf4ff;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span>✓</span> Comprehensive 30-Point Funnel & Ad Account Audit
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span>✓</span> Benchmark Competitor CPA & ROAS Comparison
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span>✓</span> Custom 90-Day Media Mix & Creative Plan
+            </div>
+          </div>
+          ${waDigits ? `
+            <div style="margin-top:28px;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:999px;text-decoration:none;font-size:0.95rem;">
+                <span>WhatsApp Strategy Chat ↗</span>
+              </a>
+            </div>
+          ` : ''}
+        </div>
+
+        <div>
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#f5d0fe;font-size:0.85rem;font-weight:600;">Selected Discipline</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;font-weight:700;">
+              <input type="hidden" name="productId" value="${esc(p.id)}">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#f5d0fe;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#ffffff;">*</span></label>
+              <input name="name" required placeholder="Growth leader" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#f5d0fe;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#ffffff;">*</span></label>
+              <input name="email" type="email" required placeholder="work@brand.com" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#f5d0fe;font-size:0.85rem;font-weight:600;">Brand / Website <span style="color:#ffffff;">*</span></label>
+              <input name="company" required placeholder="company.com" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#f5d0fe;font-size:0.85rem;font-weight:600;">Current Monthly Ad Spend</label>
+              <input name="quantity" placeholder="e.g. $50k - $200k/mo" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#f5d0fe;font-size:0.85rem;font-weight:600;">Core Scaling Bottlenecks</label>
+              <textarea name="message" rows="3" placeholder="Describe your current conversion rate, CPA target, or upcoming product launch goals..." style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;resize:vertical;"></textarea>
+            </div>
+            <div style="grid-column:1 / -1;margin-top:6px;">
+              <button type="submit" class="button" style="width:100%;background:#ffffff;color:#701a75;font-weight:900;border-radius:999px;padding:14px;font-size:1rem;border:none;cursor:pointer;">
+                ${esc(ui.inquire || 'Request Growth Audit & Strategy')} ↗
+              </button>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#f5d0fe;"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Marketing Disciplines -->
+    ${related.length > 0 ? `
+      <section class="wrap" style="padding:20px 0 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+          <h2 style="font-size:1.6rem;color:#18181b;font-weight:800;margin:0;">Complementary Growth Disciplines</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#d946ef;font-weight:700;text-decoration:none;font-size:0.95rem;">
+            ${esc(ui.allProducts)} ↗
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          ${related.map(item => {
+            const it = translateProduct(item);
+            const itemImg = asset(item.imageAssetId);
+            return `
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 14px rgba(217,70,239,0.03);">
+                ${itemImg ? `
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#faf5ff;overflow:hidden;">
+                    <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover;">
+                  </a>
+                ` : `
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#faf5ff;">🎯</div>
+                `}
+                <div style="padding:20px;display:flex;flex-direction:column;flex:1;">
+                  <h4 style="font-size:1.1rem;font-weight:800;margin:0 0 8px;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#18181b;text-decoration:none;">
+                      ${esc(it.name)}
+                    </a>
+                  </h4>
+                  <p style="color:#71717a;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
+                    ${esc(it.description || 'Full-funnel digital marketing discipline.')}
+                  </p>
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#d946ef;font-weight:700;font-size:0.88rem;text-decoration:none;margin-top:auto;">
+                    ${esc(ui.details)} →
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    ` : ''}
   `;
 }

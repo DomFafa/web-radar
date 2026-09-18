@@ -54,26 +54,27 @@ export function renderAccountingHome(ctx: ThemeContext): string {
           <div><strong style="color:#d90a2c;font-size:1.1rem;">99.8%</strong> Clean Audit Rate</div>
           <div><strong style="color:#d90a2c;font-size:1.1rem;">$850M+</strong> Managed Advisory Volume</div>
         </div>
+        <a href="#stats" class="wr-scroll-down" aria-label="Scroll to content">↓</a>
       </div>
     </section>
   `;
 
   // 3. Stats & Credential Counters
   const statsHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
+    <section id="stats" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;">$850M+</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="850">$850M+</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">Assets Under Tax Advisory</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Protecting corporate treasuries and high-net-worth multi-generational family offices.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;">120+</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="120">120+</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">CPAs & Accredited Attorneys</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Senior Big-4 alumni with specialized forensic, cross-border, and M&A experience.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;">99.8%</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="99.8">99.8%</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">Audit Defense Success</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Rigorous documentation standards with zero unmitigated penalties across 25 years.</div>
         </div>
@@ -602,8 +603,11 @@ export function renderAccountingDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
+    <!-- Top Breadcrumbs & Practice Hero -->
     <section class="porto-inner-hero" style="background:linear-gradient(135deg,#1f2421 0%,#2b2b2b 60%,#383838 100%);color:#ffffff;padding:50px 0 40px;border-bottom:3px solid #d90a2c;">
       <div class="wrap">
         <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#d1d5db;margin-bottom:16px;">
@@ -613,55 +617,248 @@ export function renderAccountingDetail(ctx: ThemeContext): string {
           <span>/</span>
           <span style="color:#d90a2c;font-weight:700;">${esc(t.name)}</span>
         </div>
-        <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2rem,4vw,3.2rem);line-height:1.15;font-weight:700;letter-spacing:-0.02em;margin:0;color:#ffffff;">
-          ${esc(t.name)}
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(217,10,44,0.15);border:1px solid #d90a2c;color:#fdf1f3;padding:4px 14px;border-radius:4px;font-size:0.8rem;font-weight:700;margin-bottom:12px;text-transform:uppercase;">
+              <span>⚖️</span> CHARTERED ACCOUNTING & FIDUCIARY ADVISORY
+            </div>
+            <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.2rem,4vw,3.4rem);line-height:1.15;font-weight:700;letter-spacing:-0.02em;margin:0;color:#ffffff;">
+              ${esc(t.name)}
+            </h1>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:12px 20px;text-align:right;">
+            <div style="color:#9ca3af;font-size:0.8rem;text-transform:uppercase;font-weight:700;">Supervising Partner</div>
+            <div style="color:#d90a2c;font-weight:800;font-size:1.05rem;">Partner-Led Engagement</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+    <!-- Main Showcase: Col 1 Preview & Credentials, Col 2 Scope & Progress Bars -->
+    <section class="wrap" style="padding:60px 0 40px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
+        <!-- Left Col: Practice Card -->
         <div>
-          ${imgUrl ? `
-            <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;padding:24px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:4px;">
-            </div>
-          ` : `
-            <div style="background:#fdf1f3;border:1px solid #e8d8d9;border-radius:4px;padding:60px 24px;text-align:center;font-size:4rem;">⚖️</div>
-          `}
+          <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+            ${imgUrl ? `
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:contain;border-radius:4px;">
+            ` : `
+              <div style="padding:70px 24px;text-align:center;font-size:5rem;">⚖️</div>
+            `}
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span style="background:#fdf1f3;border:1px solid #fecdd3;color:#d90a2c;padding:8px 14px;border-radius:4px;font-size:0.85rem;font-weight:700;">✓ IFRS & GAAP Compliant</span>
+            <span style="background:#fdf1f3;border:1px solid #fecdd3;color:#d90a2c;padding:8px 14px;border-radius:4px;font-size:0.85rem;font-weight:700;">✓ Big-4 Trained CPAs</span>
+            <span style="background:#fdf1f3;border:1px solid #fecdd3;color:#d90a2c;padding:8px 14px;border-radius:4px;font-size:0.85rem;font-weight:700;">✓ Zero Audit Disallowance</span>
+          </div>
         </div>
 
+        <!-- Right Col: Overview, Dynamic Progress Bars, Credentials -->
         <div>
-          <div style="display:inline-block;background:rgba(217,10,44,0.12);border:1px solid #d90a2c;color:#d90a2c;padding:4px 12px;border-radius:4px;font-size:0.8rem;font-weight:700;margin-bottom:16px;text-transform:uppercase;">PRACTICE SPECIFICATION</div>
-          <p style="font-size:1.15rem;line-height:1.7;color:#4d4d4d;margin:0 0 24px;">${esc(t.description || 'Certified public accounting and corporate advisory practice.')}</p>
+          <h2 style="font-family:'Playfair Display',Georgia,serif;color:#18181b;font-size:1.8rem;font-weight:700;margin:0 0 16px;">Practice Scope & Execution</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#4b5563;margin:0 0 28px;">
+            ${esc(t.description || 'Certified fiduciary accounting and statutory audit practice delivering meticulous financial statement validation, multi-jurisdiction tax shielding, and senior partner accountability.')}
+          </p>
 
-          <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:24px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.1rem;margin:0 0 16px;">Practice Credentials</h3>
-            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
-              ${p.material ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
-                  <span style="color:#666666;">Statutory Jurisdiction</span>
-                  <span style="color:#262626;font-weight:600;">${esc(p.material)}</span>
+          <!-- Dynamic Fiduciary Progress Bars -->
+          <div style="background:#fdf1f3;border:1px solid #fecdd3;border-radius:4px;padding:26px;margin-bottom:28px;">
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#2b2b2b;font-size:1.05rem;font-weight:700;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#d90a2c;">📊</span> Fiduciary Precision & Compliance Metrics
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#262626;margin-bottom:6px;">
+                  <span>Statutory Audit Precision</span>
+                  <span style="color:#d90a2c;">100% Unqualified Opinions</span>
                 </div>
-              ` : ''}
-              ${p.dimensions ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
-                  <span style="color:#666666;">Engagement Format</span>
-                  <span style="color:#262626;font-weight:600;">${esc(p.dimensions)}</span>
+                <div class="wr-progress-container" style="background:#ffe4e6;height:8px;border-radius:2px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#e11d48,#be123c);height:100%;"></div>
                 </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#666666;">Supervising Partner</span>
-                <span style="color:#d90a2c;font-weight:700;">Partner-Led Engagement</span>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#262626;margin-bottom:6px;">
+                  <span>Corporate Tax Optimization Ratio</span>
+                  <span style="color:#b91c1c;">95% Validated Shielding</span>
+                </div>
+                <div class="wr-progress-container" style="background:#ffe4e6;height:8px;border-radius:2px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="95" style="background:linear-gradient(90deg,#dc2626,#991b1b);height:100%;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#262626;margin-bottom:6px;">
+                  <span>Filing & Regulatory Accuracy</span>
+                  <span style="color:#15803d;">99.8% On-Time Completion</span>
+                </div>
+                <div class="wr-progress-container" style="background:#ffe4e6;height:8px;border-radius:2px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#16a34a,#15803d);height:100%;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#d90a2c;color:#ffffff;font-weight:700;border-radius:4px;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.04em;text-decoration:none;">
-            ${esc(ui.inquire || 'Retain This Practice Area')} ↗
-          </a>
+          <!-- Practice Credentials Table -->
+          <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:24px;margin-bottom:32px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.05rem;font-weight:700;margin:0 0 16px;">Practice Credentials</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
+                <span style="color:#666666;">Statutory Jurisdiction</span>
+                <span style="color:#262626;font-weight:600;">${esc(p.material || 'Domestic & Cross-Border OECD BEPS')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
+                <span style="color:#666666;">Engagement Format</span>
+                <span style="color:#262626;font-weight:600;">${esc(p.dimensions || 'Retainer Advisory & Quarterly Attestation')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
+                <span style="color:#666666;">Partner Lead</span>
+                <span style="color:#d90a2c;font-weight:700;">Partner-Led Engagement</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#666666;">Confidentiality Standard</span>
+                <span style="color:#262626;font-weight:600;">Fiduciary Legal Privilege Protocol</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- 3 Fiduciary Advisory Pillars -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
+        <span style="color:#d90a2c;font-size:0.85rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">PRACTICE FOUNDATION</span>
+        <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,3vw,2.4rem);color:#18181b;font-weight:700;margin:8px 0 12px;">Institutional Accounting Standards</h2>
+        <p style="color:#6b7280;font-size:1.05rem;line-height:1.6;margin:0;">Delivering defensible audit trails and resilient international corporate tax structures.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="width:52px;height:52px;border-radius:4px;background:#fdf1f3;color:#d90a2c;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">⚖️</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#18181b;font-size:1.2rem;font-weight:700;margin:0 0 10px;">Corporate Tax Structuring</h3>
+          <p style="color:#4b5563;font-size:0.95rem;line-height:1.6;margin:0;">Optimizing international treaty benefits and cross-border transfer pricing while strictly complying with OECD standards.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="width:52px;height:52px;border-radius:4px;background:#fdf1f3;color:#d90a2c;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">📑</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#18181b;font-size:1.2rem;font-weight:700;margin:0 0 10px;">Continuous Ledger Matching</h3>
+          <p style="color:#4b5563;font-size:0.95rem;line-height:1.6;margin:0;">Automating general ledger entries with bank feeds for continuous real-time closing and zero month-end reporting friction.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="width:52px;height:52px;border-radius:4px;background:#fdf1f3;color:#d90a2c;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">🔍</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#18181b;font-size:1.2rem;font-weight:700;margin:0 0 10px;">Forensic Risk Due Diligence</h3>
+          <p style="color:#4b5563;font-size:0.95rem;line-height:1.6;margin:0;">Comprehensive balance sheet vetting for mergers, acquisitions, and restructuring to uncover hidden liabilities.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Confidential Consultation Inquiry Form -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="background:#1f2421;color:#ffffff;border-radius:4px;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+        <div>
+          <span style="color:#d90a2c;font-size:0.85rem;font-weight:800;text-transform:uppercase;">CONFIDENTIAL ENGAGEMENT</span>
+          <h2 style="font-family:'Playfair Display',Georgia,serif;color:#ffffff;font-size:1.8rem;font-weight:700;margin:8px 0 12px;">Retain ${esc(t.name)}</h2>
+          <p style="color:#d1d5db;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+            Schedule a confidential partner-level preliminary consultation to review your corporate structure or upcoming audit timeline.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#e5e7eb;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#d90a2c;">✓</span> Mutual Non-Disclosure Agreement (NDA) Protected
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#d90a2c;">✓</span> Direct Assessment by Senior Practice Director
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#d90a2c;">✓</span> Defensible Written Engagement Scope
+            </div>
+          </div>
+          ${waDigits ? `
+            <div style="margin-top:28px;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:4px;text-decoration:none;font-size:0.95rem;">
+                <span>WhatsApp Private Advisory ↗</span>
+              </a>
+            </div>
+          ` : ''}
+        </div>
+
+        <div>
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#d1d5db;font-size:0.85rem;font-weight:600;">Selected Practice Area</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:#2b2b2b;border:1px solid #404040;border-radius:4px;padding:10px 14px;color:#ffffff;font:inherit;font-weight:700;">
+              <input type="hidden" name="productId" value="${esc(p.id)}">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#d1d5db;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#d90a2c;">*</span></label>
+              <input name="name" required placeholder="Authorized officer" style="background:#2b2b2b;border:1px solid #404040;border-radius:4px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#d1d5db;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#d90a2c;">*</span></label>
+              <input name="email" type="email" required placeholder="cfo@corporation.com" style="background:#2b2b2b;border:1px solid #404040;border-radius:4px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#d1d5db;font-size:0.85rem;font-weight:600;">Entity Legal Name <span style="color:#d90a2c;">*</span></label>
+              <input name="company" required placeholder="Corporate entity name" style="background:#2b2b2b;border:1px solid #404040;border-radius:4px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#d1d5db;font-size:0.85rem;font-weight:600;">Estimated Annual Revenue</label>
+              <input name="quantity" placeholder="e.g. $5M - $50M" style="background:#2b2b2b;border:1px solid #404040;border-radius:4px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#d1d5db;font-size:0.85rem;font-weight:600;">Advisory or Audit Objectives</label>
+              <textarea name="message" rows="3" placeholder="Outline your corporate filing deadlines, jurisdictions, or statutory requirements..." style="background:#2b2b2b;border:1px solid #404040;border-radius:4px;padding:10px 14px;color:#ffffff;font:inherit;resize:vertical;"></textarea>
+            </div>
+            <div style="grid-column:1 / -1;margin-top:6px;">
+              <button type="submit" class="button" style="width:100%;background:#d90a2c;color:#ffffff;font-weight:700;border-radius:4px;padding:14px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;border:none;cursor:pointer;">
+                ${esc(ui.inquire || 'Schedule Confidential Discussion')} ↗
+              </button>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#d1d5db;"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Accounting Practices -->
+    ${related.length > 0 ? `
+      <section class="wrap" style="padding:20px 0 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+          <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:1.6rem;color:#18181b;font-weight:700;margin:0;">Related Fiduciary Practices</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#d90a2c;font-weight:700;text-decoration:none;font-size:0.95rem;">
+            ${esc(ui.allProducts)} ↗
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          ${related.map(item => {
+            const it = translateProduct(item);
+            const itemImg = asset(item.imageAssetId);
+            return `
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+                ${itemImg ? `
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#fdf1f3;overflow:hidden;">
+                    <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover;">
+                  </a>
+                ` : `
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#fdf1f3;">⚖️</div>
+                `}
+                <div style="padding:20px;display:flex;flex-direction:column;flex:1;">
+                  <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.15rem;font-weight:700;margin:0 0 8px;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#262626;text-decoration:none;">
+                      ${esc(it.name)}
+                    </a>
+                  </h4>
+                  <p style="color:#666666;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
+                    ${esc(it.description || 'Certified fiduciary accounting and statutory audit practice.')}
+                  </p>
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#d90a2c;font-weight:700;font-size:0.88rem;text-decoration:none;margin-top:auto;">
+                    ${esc(ui.details)} →
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    ` : ''}
   `;
 }

@@ -42,6 +42,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
           </div>
           <span style="font-size:0.85rem;color:#94a3b8;">Trusted by <strong>2,400+</strong> global fast-scaling teams</span>
         </div>
+        <a href="#metrics" class="wr-scroll-down" aria-label="Scroll to content">↓</a>
       </div>
       <div class="hero-controls">
         <button type="button" id="video-toggle" class="video-control" aria-label="${esc(ui.pause)}">Ⅱ</button>
@@ -51,21 +52,21 @@ export function renderSaasHome(ctx: ThemeContext): string {
 
   // Real-time Metrics Band
   const metricsHtml = `
-    <section class="wrap" style="padding:40px 0;">
+    <section id="metrics" class="wrap" style="padding:40px 0;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#6366f1;letter-spacing:-1px;">99.99%</div>
+        <div data-reveal="fade-up">
+          <div style="font-size:2.4rem;font-weight:900;color:#6366f1;letter-spacing:-1px;" data-counter="99.99">99.99%</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Uptime SLA Guarantee</div>
         </div>
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">10x Faster</div>
+        <div data-reveal="fade-up">
+          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;" data-counter="10">10x Faster</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Deployment & Sync Cycles</div>
         </div>
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;">240M+</div>
+        <div data-reveal="fade-up">
+          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;" data-counter="240">240M+</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Automated Events Processed</div>
         </div>
-        <div>
+        <div data-reveal="fade-up">
           <div style="font-size:2.4rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">Zero Code</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Visual Trigger Configuration</div>
         </div>
@@ -581,8 +582,11 @@ export function renderSaasDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
+    <!-- Top Breadcrumbs & Module Title -->
     <section class="saas-inner-hero" style="background:linear-gradient(180deg,#090d16 0%,#111827 100%);color:#f8fafc;padding:50px 0 40px;border-bottom:1px solid #1e293b;">
       <div class="wrap">
         <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#94a3b8;margin-bottom:16px;">
@@ -592,56 +596,251 @@ export function renderSaasDetail(ctx: ThemeContext): string {
           <span>/</span>
           <span style="color:#bef264;">${esc(t.name)}</span>
         </div>
-        <h1 style="font-size:clamp(2rem,4vw,3.2rem);line-height:1.15;font-weight:800;letter-spacing:-0.02em;margin:0;color:#ffffff;">
-          ${esc(t.name)}
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(190,242,100,0.12);border:1px solid rgba(190,242,100,0.3);color:#bef264;padding:4px 14px;border-radius:999px;font-size:0.8rem;font-weight:700;margin-bottom:12px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:#bef264;box-shadow:0 0 8px #bef264;"></span>
+              ENTERPRISE ORCHESTRATION COMPONENT
+            </div>
+            <h1 style="font-size:clamp(2.2rem,4vw,3.4rem);line-height:1.15;font-weight:800;letter-spacing:-0.02em;margin:0;color:#ffffff;">
+              ${esc(t.name)}
+            </h1>
+          </div>
+          <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:12px 20px;text-align:right;">
+            <div style="color:#64748b;font-size:0.8rem;text-transform:uppercase;font-weight:700;">Service Status</div>
+            <div style="color:#4ade80;font-weight:800;font-size:1.05rem;">99.99% Production Ready</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+    <!-- Main Showcase: Col 1 Preview & Badges, Col 2 Specs & Progress Bars -->
+    <section class="wrap" style="padding:60px 0 40px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
+        <!-- Left Col: Visual Preview & Trust Pills -->
         <div>
-          ${imgUrl ? `
-            <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;overflow:hidden;padding:24px;text-align:center;">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;">
-            </div>
-          ` : `
-            <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:60px 24px;text-align:center;font-size:4rem;">⚡</div>
-          `}
+          <div class="wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:20px;overflow:hidden;padding:32px;text-align:center;position:relative;">
+            ${imgUrl ? `
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:contain;border-radius:12px;filter:drop-shadow(0 16px 30px rgba(0,0,0,0.5));">
+            ` : `
+              <div style="padding:70px 24px;text-align:center;font-size:5rem;">⚡</div>
+            `}
+          </div>
+
+          <!-- Feature Highlights Tags -->
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span style="background:#121826;border:1px solid #1e293b;color:#cbd5e1;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;">⚡ Zero-Copy Streaming</span>
+            <span style="background:#121826;border:1px solid #1e293b;color:#cbd5e1;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;">🔒 SOC2 Type II Certified</span>
+            <span style="background:#121826;border:1px solid #1e293b;color:#cbd5e1;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;">☁️ Multi-Cloud Mesh</span>
+          </div>
         </div>
 
+        <!-- Right Col: Overview, Live Progress Bars, Technical Parameters -->
         <div>
-          <div style="display:inline-block;background:rgba(190,242,100,0.12);border:1px solid rgba(190,242,100,0.3);color:#bef264;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:700;margin-bottom:16px;">ENTERPRISE MODULE</div>
-          <p style="font-size:1.15rem;line-height:1.7;color:#cbd5e1;margin:0 0 24px;">${esc(t.description || 'Enterprise-grade automated data pipeline module.')}</p>
+          <h2 style="color:#f8fafc;font-size:1.8rem;font-weight:800;margin:0 0 16px;">Module Architecture & Scope</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#cbd5e1;margin:0 0 28px;">
+            ${esc(t.description || 'Enterprise-grade automated data pipeline module engineered for sub-millisecond event streaming, zero-downtime reconfiguration, and granular RBAC security.')}
+          </p>
 
-          <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:24px;margin-bottom:28px;">
-            <h3 style="color:#f8fafc;font-size:1.1rem;margin:0 0 16px;">Technical Specifications</h3>
-            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
-              ${p.material ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
-                  <span style="color:#94a3b8;">Execution Protocol</span>
-                  <span style="color:#f8fafc;font-weight:600;">${esc(p.material)}</span>
+          <!-- Dynamic Performance & SLA Progress Bars -->
+          <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:26px;margin-bottom:28px;">
+            <h3 style="color:#f8fafc;font-size:1.05rem;font-weight:800;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#bef264;">📊</span> Live Performance & SLA Benchmarks
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#cbd5e1;margin-bottom:6px;">
+                  <span>Cloud Throughput SLA</span>
+                  <span style="color:#bef264;">99.99% Guaranteed</span>
                 </div>
-              ` : ''}
-              ${p.dimensions ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
-                  <span style="color:#94a3b8;">Throughput SLA</span>
-                  <span style="color:#f8fafc;font-weight:600;">${esc(p.dimensions)}</span>
+                <div class="wr-progress-container" style="background:#090d16;height:8px;border-radius:99px;overflow:hidden;border:1px solid #1e293b;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#84cc16,#bef264);height:100%;border-radius:99px;"></div>
                 </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#94a3b8;">Cluster Isolation</span>
-                <span style="color:#4ade80;font-weight:600;">Dedicated Tenant Pod</span>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#cbd5e1;margin-bottom:6px;">
+                  <span>Auto-Scaling Elasticity</span>
+                  <span style="color:#38bdf8;">96% Velocity</span>
+                </div>
+                <div class="wr-progress-container" style="background:#090d16;height:8px;border-radius:99px;overflow:hidden;border:1px solid #1e293b;">
+                  <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#0284c7,#38bdf8);height:100%;border-radius:99px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#cbd5e1;margin-bottom:6px;">
+                  <span>Fault-Tolerance & Failover</span>
+                  <span style="color:#a855f7;">99.5% Resilience</span>
+                </div>
+                <div class="wr-progress-container" style="background:#090d16;height:8px;border-radius:99px;overflow:hidden;border:1px solid #1e293b;">
+                  <div class="wr-progress-bar" data-progress="99" style="background:linear-gradient(90deg,#9333ea,#c084fc);height:100%;border-radius:99px;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#bef264;color:#090d16;font-weight:700;border-radius:8px;padding:16px 32px;display:inline-block;text-decoration:none;">
-            ${esc(ui.inquire || 'Deploy This Module')} ↗
-          </a>
+          <!-- Specifications Table -->
+          <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:24px;margin-bottom:32px;">
+            <h3 style="color:#f8fafc;font-size:1.05rem;font-weight:800;margin:0 0 16px;">Technical Specifications</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                <span style="color:#94a3b8;">Execution Protocol</span>
+                <span style="color:#f8fafc;font-weight:600;">${esc(p.material || 'gRPC / HTTPS Webhook Stream')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                <span style="color:#94a3b8;">Throughput SLA</span>
+                <span style="color:#f8fafc;font-weight:600;">${esc(p.dimensions || '50,000 req/sec')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                <span style="color:#94a3b8;">Cluster Isolation</span>
+                <span style="color:#4ade80;font-weight:600;">Dedicated Tenant Pod (K8s)</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#94a3b8;">Encryption Standard</span>
+                <span style="color:#f8fafc;font-weight:600;">AES-256 GCM in Transit & At Rest</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- 3 Architecture Pillars -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
+        <span style="color:#bef264;font-size:0.85rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">ENTERPRISE CAPABILITIES</span>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#f8fafc;font-weight:800;margin:8px 0 12px;">Engineered for High-Concurrence Workloads</h2>
+        <p style="color:#94a3b8;font-size:1.05rem;line-height:1.6;margin:0;">Seamless integration into existing cloud infrastructures with zero vendor lock-in.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:18px;padding:32px;">
+          <div style="width:52px;height:52px;border-radius:12px;background:rgba(190,242,100,0.1);color:#bef264;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">⚡</div>
+          <h3 style="color:#f8fafc;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Stream Ingestion Engine</h3>
+          <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0;">Zero-copy memory bus pipeline routing up to 100,000 parallel events per node with guaranteed order preservation.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:18px;padding:32px;">
+          <div style="width:52px;height:52px;border-radius:12px;background:rgba(56,189,248,0.1);color:#38bdf8;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">🛡️</div>
+          <h3 style="color:#f8fafc;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Isolated Tenant Pods</h3>
+          <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0;">Every enterprise deployment operates within dedicated, sandboxed microVMs with strict resource quotas.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:18px;padding:32px;">
+          <div style="width:52px;height:52px;border-radius:12px;background:rgba(168,85,247,0.1);color:#a855f7;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">🔄</div>
+          <h3 style="color:#f8fafc;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Automated Compliance</h3>
+          <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0;">Continuous telemetry feeds into your compliance dashboard for automated SOC2, HIPAA, and GDPR audit reports.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Direct Fast Inquiry / Deployment Form -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="background:#121826;border:1px solid #1e293b;border-radius:24px;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+        <div>
+          <span style="color:#bef264;font-size:0.85rem;font-weight:800;text-transform:uppercase;">FAST ONBOARDING</span>
+          <h2 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:8px 0 12px;">Deploy ${esc(t.name)}</h2>
+          <p style="color:#94a3b8;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+            Send your estimated traffic and architectural requirements to our solutions engineering team for immediate sandbox provisioning.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#cbd5e1;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#4ade80;">✓</span> 14-Day Free Production Sandbox
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#4ade80;">✓</span> Direct Slack / Teams Channel with Core Engineers
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#4ade80;">✓</span> Customized Data Pipeline Sizing
+            </div>
+          </div>
+          ${waDigits ? `
+            <div style="margin-top:28px;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:0.95rem;">
+                <span>WhatsApp Direct Support ↗</span>
+              </a>
+            </div>
+          ` : ''}
+        </div>
+
+        <div>
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Selected Module</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:#090d16;border:1px solid #1e293b;border-radius:8px;padding:10px 14px;color:#bef264;font:inherit;font-weight:700;">
+              <input type="hidden" name="productId" value="${esc(p.id)}">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#bef264;">*</span></label>
+              <input name="name" required placeholder="Your full name" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#bef264;">*</span></label>
+              <input name="email" type="email" required placeholder="work@company.com" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.company || 'Company')} <span style="color:#bef264;">*</span></label>
+              <input name="company" required placeholder="Your organization" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Estimated Pipeline Volume</label>
+              <input name="quantity" placeholder="e.g. 5M events/day" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Technical Scope / Requirements</label>
+              <textarea name="message" rows="3" placeholder="Describe your data pipeline requirements or deployment timeline..." style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;resize:vertical;"></textarea>
+            </div>
+            <div style="grid-column:1 / -1;margin-top:6px;">
+              <button type="submit" class="button" style="width:100%;background:#bef264;color:#090d16;font-weight:800;border-radius:8px;padding:14px;font-size:1rem;border:none;cursor:pointer;">
+                ${esc(ui.inquire || 'Request Deployment Sandbox')} ↗
+              </button>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#94a3b8;"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Modules Grid -->
+    ${related.length > 0 ? `
+      <section class="wrap" style="padding:20px 0 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+          <h2 style="font-size:1.6rem;color:#ffffff;font-weight:800;margin:0;">Complementary Pipeline Modules</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#bef264;font-weight:700;text-decoration:none;font-size:0.95rem;">
+            ${esc(ui.allProducts)} ↗
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          ${related.map(item => {
+            const it = translateProduct(item);
+            const itemImg = asset(item.imageAssetId);
+            return `
+              <div class="wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+                ${itemImg ? `
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#090d16;overflow:hidden;">
+                    <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover;">
+                  </a>
+                ` : `
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#090d16;">⚡</div>
+                `}
+                <div style="padding:20px;display:flex;flex-direction:column;flex:1;">
+                  <h4 style="font-size:1.1rem;font-weight:800;margin:0 0 8px;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#ffffff;text-decoration:none;">
+                      ${esc(it.name)}
+                    </a>
+                  </h4>
+                  <p style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
+                    ${esc(it.description || 'Pre-configured workflow integration component.')}
+                  </p>
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#bef264;font-weight:700;font-size:0.88rem;text-decoration:none;margin-top:auto;">
+                    ${esc(ui.details)} →
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    ` : ''}
   `;
 }
 

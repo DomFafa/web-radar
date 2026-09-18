@@ -1299,11 +1299,153 @@ body[data-template="corpox-consulting"] {
 }
 .wr-motion-ready [data-reveal]:not(.wr-revealed) {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(28px);
+}
+.wr-motion-ready [data-reveal="fade-down"]:not(.wr-revealed) {
+  opacity: 0;
+  transform: translateY(-28px);
+}
+.wr-motion-ready [data-reveal="slide-left"]:not(.wr-revealed) {
+  opacity: 0;
+  transform: translateX(-32px);
+}
+.wr-motion-ready [data-reveal="slide-right"]:not(.wr-revealed) {
+  opacity: 0;
+  transform: translateX(32px);
+}
+.wr-motion-ready [data-reveal="zoom-in"]:not(.wr-revealed) {
+  opacity: 0;
+  transform: scale(0.92);
 }
 [data-reveal].wr-revealed {
   opacity: 1 !important;
-  transform: translateY(0) !important;
+  transform: none !important;
+}
+
+/* Dynamic Animated Progress Bars */
+.wr-progress-container {
+  width: 100%;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  height: 8px;
+  margin: 6px 0;
+}
+.wr-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--brand, #089ced) 0%, #38bdf8 100%);
+  transition: width 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+.wr-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.5) 50%, transparent 100%);
+  animation: wrShine 2.6s infinite;
+}
+@keyframes wrShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Floating Bouncing Next-Screen Indicator */
+.wr-scroll-down {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  animation: wrBounce 2.4s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  color: #1e293b;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.25s ease;
+}
+.wr-scroll-down:hover {
+  animation-play-state: paused;
+  transform: translateY(4px);
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+@keyframes wrBounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-9px); }
+  60% { transform: translateY(-4px); }
+}
+
+/* Banner Carousel & Fade Transitions */
+.wr-carousel {
+  position: relative;
+  overflow: hidden;
+}
+.wr-carousel-track {
+  display: flex;
+  transition: transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+  width: 100%;
+}
+.wr-carousel-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.wr-carousel-slide.fade {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease-in-out;
+}
+.wr-carousel-slide.fade.active {
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
+}
+.wr-carousel-nav {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+.wr-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.45);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+.wr-carousel-dot.active {
+  width: 28px;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+/* Hover Cards Micro-Interactions */
+.wr-card-hover {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.wr-card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
 }
 
 .wr-arcade-card:hover {
@@ -1333,6 +1475,9 @@ body[data-template="corpox-consulting"] {
   }
   .wr-progress-bar {
     transition: none !important;
+  }
+  .wr-scroll-down {
+    animation: none !important;
   }
   * {
     animation-duration: 0.001ms !important;

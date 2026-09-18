@@ -55,31 +55,34 @@ export function renderConsultingHome(ctx: ThemeContext): string {
           <div><strong style="color:#fcd34d;font-size:1.15rem;">180+</strong> Mergers & Acquisitions Advised</div>
           <div><strong style="color:#fcd34d;font-size:1.15rem;">94%</strong> Strategic Execution Rate</div>
         </div>
+        <div style="margin-top:40px;">
+          <a href="#consulting-metrics" class="wr-scroll-down" aria-label="Scroll to strategic performance metrics" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:2px;border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:1.3rem;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;">↓</a>
+        </div>
       </div>
     </section>
   `;
 
   // 3. Strategic Metrics Strip
   const statsHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
+    <section id="consulting-metrics" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">$42.8B</div>
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="42.8" data-suffix="B">$42.8B</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Enterprise Value Engineered</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Compound shareholder returns realized across global holding companies.</div>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">180+</div>
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="180" data-suffix="+">180+</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Cross-Border Transactions</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Due diligence, synergistic integration, and post-merger governance.</div>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">30+ Yrs</div>
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="30" data-suffix="+ Yrs">30+ Yrs</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Boardroom Advisory Heritage</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Direct trusted counsel to Fortune 500 CEOs and family office patriarchs.</div>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">94%</div>
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="94" data-suffix="%">94%</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Implementation Success</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Execution frameworks that transcend PowerPoint to deliver realized EBITDA.</div>
         </div>
@@ -576,6 +579,10 @@ export function renderConsultingDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const company = draft.company;
+  const isZh = (ctx.lang as string) === 'zh';
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
     <section class="consulting-inner-hero" style="background:linear-gradient(135deg,#071324 0%,#0a192f 50%,#0f2b59 100%);color:#ffffff;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:2px solid #d4af37;">
@@ -594,20 +601,59 @@ export function renderConsultingDetail(ctx: ThemeContext): string {
     </section>
 
     <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:flex-start;">
         <div>
           ${imgUrl ? `
             <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;overflow:hidden;padding:24px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:2px;">
+              <img id="wr-detail-main-img" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:2px;">
             </div>
           ` : `
             <div style="background:#071324;border-top:3px solid #d4af37;border-radius:4px;padding:60px 24px;text-align:center;font-size:4rem;color:#d4af37;">⚖️</div>
           `}
+
+          <!-- Strategic Progress Bars -->
+          <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:26px;margin-top:28px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:#0f2b59;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:18px;">
+              FIDUCIARY EXECUTION BENCHMARKS
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;">
+                  <span style="color:#0f172a;font-weight:700;">EBITDA Multiple Expansion Target</span>
+                  <span style="color:#0f2b59;font-weight:900;">98%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#f1f5f9;height:8px;border-radius:2px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#0f2b59,#d4af37);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16, 1, 0.3, 1);"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;">
+                  <span style="color:#0f172a;font-weight:700;">Milestone Roadmap Adherence</span>
+                  <span style="color:#0f2b59;font-weight:900;">96%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#f1f5f9;height:8px;border-radius:2px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#0f2b59,#d4af37);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;margin-bottom:6px;">
+                  <span style="color:#0f172a;font-weight:700;">Statutory Governance & Compliance</span>
+                  <span style="color:#0f2b59;font-weight:900;">100%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#f1f5f9;height:8px;border-radius:2px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#0f2b59,#d4af37);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
           <div style="display:inline-block;background:rgba(212,175,55,0.12);border:1px solid #d4af37;color:#0f2b59;padding:4px 12px;border-radius:2px;font-size:0.8rem;font-weight:700;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.08em;">
-            PRACTICE CHARTER
+            PRACTICE CHARTER · BOARD LEVEL
           </div>
           <p style="font-size:1.15rem;line-height:1.75;color:#475569;margin:0 0 24px;">
             ${esc(t.description || 'Executive strategic advisory discipline delivering quantitative competitive advantage.')}
@@ -635,11 +681,119 @@ export function renderConsultingDetail(ctx: ThemeContext): string {
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#d4af37;color:#071324;font-weight:800;border-radius:2px;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.06em;text-decoration:none;">
-            ${esc(ui.inquire || 'Commission This Practice')} ↗
-          </a>
+          <!-- Direct Advisory Commission Form -->
+          <div id="inquiry-panel" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:28px;box-shadow:0 6px 18px rgba(0,0,0,0.04);">
+            <h3 style="font-family:'Cinzel',serif;font-size:1.25rem;font-weight:700;color:#0f2b59;margin:0 0 8px;">
+              ${isZh ? '启动合伙人董事会咨询意向' : 'Commission This Advisory Practice'}
+            </h3>
+            <p style="font-size:0.9rem;color:#64748b;line-height:1.5;margin:0 0 20px;">
+              ${isZh ? '填写您的战略目标或并购标的概况，高级管理合伙人将在一个工作日内签署保密协议并安排专场闭门会议。' : 'Submit your corporate transaction or strategic charter for discreet partner review under our standard bilateral NDA.'}
+            </p>
+
+            <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:6px;text-transform:uppercase;font-weight:700;">Advisory Scope</label>
+                <input name="productName" value="${esc(t.name)}" readonly style="width:100%;box-sizing:border-box;background:#f8fafc;border:1px solid #cbd5e1;color:#0f2b59;padding:10px 14px;border-radius:2px;font-size:0.9rem;font-weight:700;">
+                <input type="hidden" name="productId" value="${esc(p.id)}">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:6px;text-transform:uppercase;font-weight:700;">Principal Name *</label>
+                  <input name="name" required placeholder="Managing Director / CEO" style="width:100%;box-sizing:border-box;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;padding:10px 14px;border-radius:2px;font-size:0.9rem;">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:6px;text-transform:uppercase;font-weight:700;">Corporate Email *</label>
+                  <input name="email" type="email" required placeholder="ceo@holdingcorp.com" style="width:100%;box-sizing:border-box;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;padding:10px 14px;border-radius:2px;font-size:0.9rem;">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:6px;text-transform:uppercase;font-weight:700;">Strategic Mandate Summary</label>
+                <textarea name="message" rows="3" placeholder="Transaction horizon, enterprise scale, targeted market expansion..." style="width:100%;box-sizing:border-box;background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;padding:10px 14px;border-radius:2px;font-size:0.9rem;resize:vertical;"></textarea>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px;">
+                <button type="submit" class="button" style="flex:1;background:#d4af37;color:#071324;font-weight:800;border:none;border-radius:2px;padding:14px;cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;font-size:0.88rem;">
+                  ${esc(ui.send || 'Submit Discrete Mandate')} ↗
+                </button>
+                ${waDigits ? `
+                  <a class="button" target="_blank" rel="noopener noreferrer" style="background:#071324;color:#fcd34d;border:1px solid #d4af37;font-weight:800;border-radius:2px;padding:14px 20px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.06em;text-transform:uppercase;font-size:0.84rem;" href="https://wa.me/${esc(waDigits)}">
+                    Direct Line ↗
+                  </a>
+                ` : ''}
+              </div>
+              <p class="form-status" role="status" aria-live="polite" style="margin:4px 0 0;font-size:0.85rem;color:#0f2b59;text-align:center;font-weight:700;"></p>
+            </form>
+          </div>
         </div>
       </div>
+
+      <!-- 3 Strategic Methodology Pillars -->
+      <div style="margin-top:70px;border-top:1px solid #e2e8f0;padding-top:50px;">
+        <div style="text-align:center;margin-bottom:36px;">
+          <span style="color:#d4af37;font-weight:800;font-size:0.82rem;letter-spacing:0.18em;text-transform:uppercase;">METHODOLOGICAL RIGOR</span>
+          <h2 style="font-family:'Cinzel',serif;font-size:clamp(1.8rem,3vw,2.4rem);color:#0f2b59;margin:6px 0 0;">Institutional Pillars of Strategic Advisory</h2>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:28px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="font-size:2rem;margin-bottom:12px;">📊</div>
+            <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">Forensic Due Diligence & Valuation</h3>
+            <p style="color:#64748b;font-size:0.9rem;line-height:1.6;margin:0;">
+              Exhaustive multi-scenario DCF, LBO, and market multiple modelling backed by primary data acquisition to expose hidden liability and capital synergies.
+            </p>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="font-size:2rem;margin-bottom:12px;">🏛️</div>
+            <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">Post-Merger Synergy Realization</h3>
+            <p style="color:#64748b;font-size:0.9rem;line-height:1.6;margin:0;">
+              Rigorous Day-One to Day-100 playbooks orchestrating culture fusion, enterprise software rationalization, and procurement renegotiation.
+            </p>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:28px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="font-size:2rem;margin-bottom:12px;">🛡️</div>
+            <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">Discrete Boardroom Governance</h3>
+            <p style="color:#64748b;font-size:0.9rem;line-height:1.6;margin:0;">
+              Fiduciary conflict resolution, poison pill defence strategies, and cross-border regulatory pre-clearance with international antitrust authorities.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related Advisory Practices Grid -->
+      ${related.length > 0 ? `
+        <div style="margin-top:70px;border-top:1px solid #e2e8f0;padding-top:40px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+            <h3 style="font-family:'Cinzel',serif;font-size:1.4rem;font-weight:700;color:#0f2b59;margin:0;">
+              ${isZh ? '相关战略咨询业务' : 'Complementary Strategic Practices'}
+            </h3>
+            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#0f2b59;font-weight:700;font-size:0.9rem;text-decoration:none;">
+              ${esc(ui.allProducts)} ↗
+            </a>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+            ${related.map((item) => {
+              const itemT = translateProduct(item);
+              const itemImg = asset(item.imageAssetId);
+              return `
+                <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;overflow:hidden;padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+                  <div>
+                    ${itemImg ? `
+                      <img src="${esc(itemImg)}" alt="${esc(itemT.name)}" style="width:100%;max-height:160px;object-fit:cover;border-radius:2px;margin-bottom:14px;">
+                    ` : ''}
+                    <h4 style="font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;color:#0f2b59;margin:0 0 6px;">${esc(itemT.name)}</h4>
+                    <p style="font-size:0.84rem;color:#64748b;line-height:1.5;margin:0 0 14px;">${esc(itemT.description || '')}</p>
+                  </div>
+                  <a class="button" href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="background:#071324;color:#fcd34d;border-radius:2px;padding:8px 16px;text-align:center;font-size:0.82rem;text-decoration:none;letter-spacing:0.06em;text-transform:uppercase;">
+                    Practice Details →
+                  </a>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
     </section>
   `;
 }

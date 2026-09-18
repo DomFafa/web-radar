@@ -33,15 +33,16 @@ export function renderCraftoHome(ctx: ThemeContext): string {
             Explore Capabilities →
           </a>
         </div>
+        <a href="#pillars" class="wr-scroll-down" aria-label="Scroll to content">↓</a>
       </div>
     </section>
   `;
 
   // 2. Three Pillar Feature Strip directly below hero
   const pillarsHtml = `
-    <section style="background:#0f172a;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;color:#ffffff;padding:32px 0;">
+    <section id="pillars" style="background:#0f172a;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;color:#ffffff;padding:32px 0;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-        <div style="display:flex;align-items:flex-start;gap:16px;padding:12px;">
+        <div data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;">
           <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">01</div>
           <div>
             <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Enterprise Strategy</h4>
@@ -627,8 +628,11 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
+    <!-- Top Breadcrumbs & Corporate Hero -->
     <section class="crafto-inner-hero" style="background:#0b1120;color:#ffffff;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
       <div class="wrap" style="position:relative;z-index:2;">
         <div style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:#94a3b8;margin-bottom:16px;text-transform:uppercase;font-weight:700;">
@@ -638,60 +642,249 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
           <span>/</span>
           <span style="color:#93c5fd;">${esc(t.name)}</span>
         </div>
-        <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;margin:0;color:#ffffff;">
-          ${esc(t.name)}
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,71,255,0.15);border:1px solid #0047ff;color:#93c5fd;padding:4px 14px;border-radius:0;font-size:0.78rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">
+              <span>⚙️</span> INDUSTRIAL & ENGINEERING SPECIFICATION
+            </div>
+            <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;margin:0;color:#ffffff;">
+              ${esc(t.name)}
+            </h1>
+          </div>
+          <div style="background:#0f172a;border:1px solid #1e293b;padding:12px 20px;text-align:right;">
+            <div style="color:#64748b;font-size:0.8rem;text-transform:uppercase;font-weight:700;">Quality Standard</div>
+            <div style="color:#0047ff;font-weight:800;font-size:1.05rem;">ISO 9001 / 14001 Certified</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+    <!-- Main Showcase: Col 1 Preview & Certifications, Col 2 Specs & Dynamic Progress Bars -->
+    <section class="wrap" style="padding:60px 0 40px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
+        <!-- Left Col: Engineering Visual -->
         <div>
-          ${imgUrl ? `
-            <div style="background:#ffffff;border:1px solid #0f172a;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;">
-            </div>
-          ` : `
-            <div style="background:#0f172a;color:#ffffff;border:1px solid #1e293b;padding:70px 24px;text-align:center;font-size:4rem;">🏛️</div>
-          `}
+          <div class="wr-card-hover" style="background:#ffffff;border:1px solid #0f172a;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.04);text-align:center;">
+            ${imgUrl ? `
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;">
+            ` : `
+              <div style="background:#0f172a;color:#ffffff;padding:70px 24px;text-align:center;font-size:5rem;">🏛️</div>
+            `}
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span style="background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ Micron Tolerance</span>
+            <span style="background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ ISO 2768-m</span>
+            <span style="background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ Batch Traceability</span>
+          </div>
         </div>
 
+        <!-- Right Col: Narrative, Dynamic Progress Bars, Technical Parameters -->
         <div>
-          <div style="display:inline-block;background:rgba(0,71,255,0.12);border:1px solid #0047ff;color:#0047ff;padding:4px 12px;font-size:0.78rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">
-            MANDATE BLUEPRINT
-          </div>
-          <p style="font-size:1.15rem;line-height:1.75;color:#334155;margin:0 0 24px;">
-            ${esc(t.description || 'Enterprise advisory discipline providing strategic transformation and executive oversight.')}
+          <h2 style="color:#0f172a;font-size:1.8rem;font-weight:900;text-transform:uppercase;margin:0 0 16px;">Engineering Scope & Specifications</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#334155;margin:0 0 28px;">
+            ${esc(t.description || 'Advanced manufacturing and corporate engineering solution engineered for high repeatability, robust environmental resilience, and stringent quality control protocols.')}
           </p>
 
-          <div style="background:#ffffff;border:1px solid #0f172a;padding:24px;margin-bottom:28px;">
-            <h3 style="font-size:1.05rem;font-weight:800;text-transform:uppercase;color:#0f172a;margin:0 0 16px;">Practice Specifications</h3>
-            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;">
-              ${p.material ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
-                  <span style="color:#64748b;">Regulatory Jurisdiction</span>
-                  <strong style="color:#0f172a;">${esc(p.material)}</strong>
+          <!-- Dynamic Engineering Quality Progress Bars -->
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;border-top:3px solid #0047ff;padding:26px;margin-bottom:28px;">
+            <h3 style="color:#0f172a;font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#0047ff;">⚙️</span> Manufacturing QA & Delivery Benchmarks
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
+                  <span>Machining Tolerance (ISO 2768-m)</span>
+                  <span style="color:#0047ff;">99.9% Micron Precision</span>
                 </div>
-              ` : ''}
-              ${p.dimensions ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
-                  <span style="color:#64748b;">Operational Model</span>
-                  <strong style="color:#0f172a;">${esc(p.dimensions)}</strong>
+                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:#0047ff;height:100%;"></div>
                 </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#64748b;">Managing Desk</span>
-                <strong style="color:#0047ff;">Executive Taskforce Partner</strong>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
+                  <span>Tensile & Stress Compliance</span>
+                  <span style="color:#0284c7;">97% Yield Strength</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="97" style="background:linear-gradient(90deg,#0284c7,#38bdf8);height:100%;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
+                  <span>Batch Quality Pass Rate</span>
+                  <span style="color:#16a34a;">99.8% First-Pass Yield</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#0047ff;color:#ffffff;font-weight:800;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.06em;text-decoration:none;">
-            ${esc(ui.inquire || 'Commission This Mandate')} ↗
-          </a>
+          <!-- Parameters Box -->
+          <div style="background:#ffffff;border:1px solid #0f172a;padding:24px;margin-bottom:32px;">
+            <h3 style="font-size:1.05rem;font-weight:800;text-transform:uppercase;color:#0f172a;margin:0 0 16px;">Mandate Blueprint</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;">
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
+                <span style="color:#64748b;">Regulatory Jurisdiction</span>
+                <strong style="color:#0f172a;">${esc(p.material || 'Global Industrial ISO & CE Standard')}</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
+                <span style="color:#64748b;">Operational Model</span>
+                <strong style="color:#0f172a;">${esc(p.dimensions || 'High-Throughput Automated Production')}</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
+                <span style="color:#64748b;">Managing Desk</span>
+                <strong style="color:#0047ff;">Executive Taskforce Partner</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#64748b;">Material Traceability</span>
+                <strong style="color:#0f172a;">Full Heat-Lot Spectral Certification</strong>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- 3 Engineering / Strategic Pillars -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
+        <span style="color:#0047ff;font-size:0.85rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">INDUSTRIAL CAPABILITIES</span>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#0f172a;font-weight:900;text-transform:uppercase;margin:8px 0 12px;">Engineered for Precision Scale</h2>
+        <p style="color:#64748b;font-size:1.05rem;line-height:1.6;margin:0;">From initial rapid tooling validation to automated high-volume series delivery.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;margin-bottom:16px;">01</div>
+          <h3 style="color:#0f172a;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">5-Axis Multi-Spindle CNC</h3>
+          <p style="color:#475569;font-size:0.95rem;line-height:1.6;margin:0;">Micron-level repeatable tool positioning handling exotic alloys, aerospace-grade titanium, and hardened tool steels.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;margin-bottom:16px;">02</div>
+          <h3 style="color:#0f172a;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">Spectrometric Testing</h3>
+          <p style="color:#475569;font-size:0.95rem;line-height:1.6;margin:0;">In-house metallurgical laboratories performing continuous X-ray diffraction, tensile stress testing, and chemical verification.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;margin-bottom:16px;">03</div>
+          <h3 style="color:#0f172a;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">Rapid DFM to Volume</h3>
+          <p style="color:#475569;font-size:0.95rem;line-height:1.6;margin:0;">Design for Manufacturing feedback within 24 hours, bridging pilot prototype tooling to full-scale automated multi-cavity runs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Technical RFQ / Proposal Form -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="background:#0b1120;color:#ffffff;border:1px solid #1e293b;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+        <div>
+          <span style="color:#0047ff;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">ENGINEERING RFQ</span>
+          <h2 style="color:#ffffff;font-size:1.8rem;font-weight:900;text-transform:uppercase;margin:8px 0 12px;">Commission ${esc(t.name)}</h2>
+          <p style="color:#94a3b8;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+            Submit your CAD specifications or technical blueprint for immediate engineering review and formal quotation within 24 hours.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#cbd5e1;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#0047ff;">✓</span> 24-Hour Guaranteed Engineering DFM Response
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#0047ff;">✓</span> Full First-Article Inspection Report (FAIR) Included
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#0047ff;">✓</span> Direct Access to Lead Production Metallurgist
+            </div>
+          </div>
+          ${waDigits ? `
+            <div style="margin-top:28px;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:0;text-decoration:none;font-size:0.95rem;">
+                <span>WhatsApp Technical Inquiry ↗</span>
+              </a>
+            </div>
+          ` : ''}
+        </div>
+
+        <div>
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#94a3b8;font-size:0.85rem;font-weight:600;">Selected Solution</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#93c5fd;font:inherit;font-weight:700;">
+              <input type="hidden" name="productId" value="${esc(p.id)}">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#0047ff;">*</span></label>
+              <input name="name" required placeholder="Lead engineer / buyer" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#0047ff;">*</span></label>
+              <input name="email" type="email" required placeholder="engineering@company.com" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Company / Facility <span style="color:#0047ff;">*</span></label>
+              <input name="company" required placeholder="Enterprise organization" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Estimated Production Volume</label>
+              <input name="quantity" placeholder="e.g. 5,000 - 50,000 pcs" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Material / Drawing Details</label>
+              <textarea name="message" rows="3" placeholder="Specify alloy grade, finish requirement, target tolerance, or delivery timeline..." style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;resize:vertical;"></textarea>
+            </div>
+            <div style="grid-column:1 / -1;margin-top:6px;">
+              <button type="submit" class="button" style="width:100%;background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:14px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.06em;border:none;cursor:pointer;">
+                ${esc(ui.inquire || 'Request Formal Technical Quotation')} ↗
+              </button>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#94a3b8;"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Industrial Solutions -->
+    ${related.length > 0 ? `
+      <section class="wrap" style="padding:20px 0 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+          <h2 style="font-size:1.6rem;color:#0f172a;font-weight:900;text-transform:uppercase;margin:0;">Related Industrial Solutions</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#0047ff;font-weight:800;text-decoration:none;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;">
+            ${esc(ui.allProducts)} ↗
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          ${related.map(item => {
+            const it = translateProduct(item);
+            const itemImg = asset(item.imageAssetId);
+            return `
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #0f172a;padding:20px;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                ${itemImg ? `
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#0f172a;overflow:hidden;margin-bottom:14px;">
+                    <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover;">
+                  </a>
+                ` : `
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#0f172a;color:#fff;margin-bottom:14px;">🏛️</div>
+                `}
+                <div style="display:flex;flex-direction:column;flex:1;">
+                  <h4 style="font-size:1.1rem;font-weight:800;text-transform:uppercase;margin:0 0 8px;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#0f172a;text-decoration:none;">
+                      ${esc(it.name)}
+                    </a>
+                  </h4>
+                  <p style="color:#64748b;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
+                    ${esc(it.description || 'Enterprise industrial manufacturing solution.')}
+                  </p>
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#0047ff;font-weight:800;font-size:0.88rem;text-transform:uppercase;letter-spacing:0.04em;text-decoration:none;margin-top:auto;">
+                    ${esc(ui.details)} →
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    ` : ''}
   `;
 }
 

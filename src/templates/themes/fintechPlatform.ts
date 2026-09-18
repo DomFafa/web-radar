@@ -46,31 +46,32 @@ export function renderFintechHome(ctx: ThemeContext): string {
             <span>✓</span> SWIFT & SEPA Connected
           </div>
         </div>
+        <a href="#kpis" class="wr-scroll-down" aria-label="Scroll to content">↓</a>
       </div>
     </section>
   `;
 
   // 2. Financial KPI & Security Badges
   const securityBandHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
+    <section id="kpis" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0284c7;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#0284c7;font-weight:900;letter-spacing:-0.03em;">$18.4B+</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0284c7;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#0284c7;font-weight:900;letter-spacing:-0.03em;" data-counter="18.4">$18.4B+</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Annual Settlement Volume</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Real-time clearing across SWIFT, FedNow & SEPA networks with zero slippage.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #06b6d4;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#06b6d4;font-weight:900;letter-spacing:-0.03em;">140+ Currencies</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #06b6d4;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#06b6d4;font-weight:900;letter-spacing:-0.03em;" data-counter="140">140+ Currencies</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Direct FX Liquidity</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Competitive institutional interbank spreads with automated hedging triggers.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #10b981;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #10b981;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
           <div style="font-size:2.2rem;color:#10b981;font-weight:900;letter-spacing:-0.03em;">SOC 2 Type II</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Bank-Grade Encryption</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Hardware Security Module (HSM) key isolation with continuous 24/7 audits.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #8b5cf6;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#8b5cf6;font-weight:900;letter-spacing:-0.03em;">0.02s Latency</div>
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #8b5cf6;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#8b5cf6;font-weight:900;letter-spacing:-0.03em;" data-counter="0.02">0.02s Latency</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Ledger Reconciliation</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Eliminate manual month-end closing delays with continuous algorithmic matching.</div>
         </div>
@@ -630,8 +631,11 @@ export function renderFintechDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
+    <!-- Top Breadcrumb & Solution Header -->
     <section class="fintech-inner-hero" style="background:linear-gradient(135deg,#091322 0%,#0f172a 60%,#1e293b 100%);color:#ffffff;padding:50px 0 40px;border-bottom:1px solid rgba(255,255,255,0.1);">
       <div class="wrap">
         <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#94a3b8;margin-bottom:16px;">
@@ -641,55 +645,249 @@ export function renderFintechDetail(ctx: ThemeContext): string {
           <span>/</span>
           <span style="color:#38bdf8;">${esc(t.name)}</span>
         </div>
-        <h1 style="font-size:clamp(2rem,4vw,3.2rem);line-height:1.15;font-weight:800;letter-spacing:-0.02em;margin:0;color:#ffffff;">
-          ${esc(t.name)}
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(2,132,199,0.18);border:1px solid rgba(56,189,248,0.35);color:#38bdf8;padding:4px 14px;border-radius:999px;font-size:0.8rem;font-weight:700;margin-bottom:12px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;"></span>
+              INSTITUTIONAL FINANCIAL SPECIFICATION
+            </div>
+            <h1 style="font-size:clamp(2.2rem,4vw,3.4rem);line-height:1.15;font-weight:800;letter-spacing:-0.02em;margin:0;color:#ffffff;">
+              ${esc(t.name)}
+            </h1>
+          </div>
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 20px;text-align:right;">
+            <div style="color:#94a3b8;font-size:0.8rem;text-transform:uppercase;font-weight:700;">Regulatory Status</div>
+            <div style="color:#38bdf8;font-weight:800;font-size:1.05rem;">Tier-1 Segregated / Audited</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+    <!-- Main Showcase: Col 1 Preview & Compliance, Col 2 Specs & Dynamic Progress Bars -->
+    <section class="wrap" style="padding:60px 0 40px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
+        <!-- Left Col: Preview Card -->
         <div>
-          ${imgUrl ? `
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;padding:24px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;">
-            </div>
-          ` : `
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:60px 24px;text-align:center;font-size:4rem;">🏛️</div>
-          `}
+          <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;overflow:hidden;padding:32px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
+            ${imgUrl ? `
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:contain;border-radius:12px;">
+            ` : `
+              <div style="padding:70px 24px;text-align:center;font-size:5rem;">🏛️</div>
+            `}
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span style="background:#f0f9ff;border:1px solid #bae6fd;color:#0284c7;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;">✓ ISO 27001 Certified</span>
+            <span style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;">✓ SWIFT / SEPA Direct</span>
+            <span style="background:#faf5ff;border:1px solid #e9d5ff;color:#9333ea;padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;">✓ Real-Time Hedging</span>
+          </div>
         </div>
 
+        <!-- Right Col: Narrative, Progress Bars, Parameters -->
         <div>
-          <div style="display:inline-block;background:rgba(2,132,199,0.1);border:1px solid rgba(2,132,199,0.3);color:#0284c7;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:700;margin-bottom:16px;">FINANCIAL SPECIFICATION</div>
-          <p style="font-size:1.15rem;line-height:1.7;color:#334155;margin:0 0 24px;">${esc(t.description || 'Enterprise-grade financial management platform module.')}</p>
+          <h2 style="color:#0f172a;font-size:1.8rem;font-weight:800;margin:0 0 16px;">System Scope & Compliance</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#475569;margin:0 0 28px;">
+            ${esc(t.description || 'Enterprise-grade treasury management module delivering deterministic latency, continuous multi-currency reconciliation, and sovereign regulatory compliance.')}
+          </p>
 
-          <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin-bottom:28px;box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-            <h3 style="color:#0f172a;font-size:1.1rem;margin:0 0 16px;">Core System Parameters</h3>
-            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
-              ${p.material ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
-                  <span style="color:#64748b;">Regulatory Classification</span>
-                  <span style="color:#0f172a;font-weight:600;">${esc(p.material)}</span>
+          <!-- Dynamic Performance & SLA Progress Bars -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:26px;margin-bottom:28px;">
+            <h3 style="color:#0f172a;font-size:1.05rem;font-weight:800;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#0284c7;">📈</span> Financial Performance & Security Metrics
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#1e293b;margin-bottom:6px;">
+                  <span>Clearing Latency SLA (&lt; 15ms)</span>
+                  <span style="color:#0284c7;">99.8% Sub-15ms</span>
                 </div>
-              ` : ''}
-              ${p.dimensions ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
-                  <span style="color:#64748b;">Clearing Throughput</span>
-                  <span style="color:#0f172a;font-weight:600;">${esc(p.dimensions)}</span>
+                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#0284c7,#38bdf8);height:100%;border-radius:99px;"></div>
                 </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#64748b;">Custodial Protection</span>
-                <span style="color:#0284c7;font-weight:600;">Tier-1 Segregated</span>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#1e293b;margin-bottom:6px;">
+                  <span>Cryptographic Vault Security (AES-256)</span>
+                  <span style="color:#10b981;">100% HSM Isolated</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#059669,#34d399);height:100%;border-radius:99px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:700;color:#1e293b;margin-bottom:6px;">
+                  <span>Multi-Jurisdiction Compliance</span>
+                  <span style="color:#8b5cf6;">98% Automation</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#7c3aed,#a78bfa);height:100%;border-radius:99px;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#0284c7;color:#ffffff;font-weight:700;border-radius:8px;padding:16px 32px;display:inline-block;text-decoration:none;">
-            ${esc(ui.inquire || 'Consultation on This Solution')} ↗
-          </a>
+          <!-- Parameters Box -->
+          <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:32px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+            <h3 style="color:#0f172a;font-size:1.05rem;font-weight:800;margin:0 0 16px;">Core System Parameters</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;">Regulatory Classification</span>
+                <span style="color:#0f172a;font-weight:600;">${esc(p.material || 'Tier-1 Regulated Treasury Asset')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;">Clearing Throughput</span>
+                <span style="color:#0f172a;font-weight:600;">${esc(p.dimensions || '25,000 tx/sec')}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;">Custodial Protection</span>
+                <span style="color:#0284c7;font-weight:600;">Dedicated Segregated Trust</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#64748b;">Audit Frequency</span>
+                <span style="color:#0f172a;font-weight:600;">Continuous Real-Time Telemetry</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- 3 Institutional Architecture Pillars -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
+        <span style="color:#0284c7;font-size:0.85rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">ENTERPRISE ARCHITECTURE</span>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#0f172a;font-weight:800;margin:8px 0 12px;">Institutional-Grade Capital Security</h2>
+        <p style="color:#64748b;font-size:1.05rem;line-height:1.6;margin:0;">Purpose-built for multinational enterprises managing multi-currency treasury positions.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="width:52px;height:52px;border-radius:12px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">🏛️</div>
+          <h3 style="color:#0f172a;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Immutable Ledger Matching</h3>
+          <p style="color:#64748b;font-size:0.95rem;line-height:1.6;margin:0;">Dual-entry cryptographic balance checking ensuring tamper-proof transaction verification across all connected accounts.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="width:52px;height:52px;border-radius:12px;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">⚡</div>
+          <h3 style="color:#0f172a;font-size:1.2rem;font-weight:800;margin:0 0 10px;">High-Frequency Clearing</h3>
+          <p style="color:#64748b;font-size:0.95rem;line-height:1.6;margin:0;">Ultra-low latency settlement pipeline enabling cross-border wholesale transfers in seconds rather than business days.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+          <div style="width:52px;height:52px;border-radius:12px;background:#f3e8ff;color:#9333ea;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;">🛡️</div>
+          <h3 style="color:#0f172a;font-size:1.2rem;font-weight:800;margin:0 0 10px;">Dynamic Liquidity Monitoring</h3>
+          <p style="color:#64748b;font-size:0.95rem;line-height:1.6;margin:0;">Predictive machine learning models simulate cash-flow exposures and trigger automated currency balance rebalancing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Institutional Advisory Form -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="background:#0f172a;color:#ffffff;border-radius:24px;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+        <div>
+          <span style="color:#38bdf8;font-size:0.85rem;font-weight:800;text-transform:uppercase;">INSTITUTIONAL ENGAGEMENT</span>
+          <h2 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:8px 0 12px;">Inquire About ${esc(t.name)}</h2>
+          <p style="color:#94a3b8;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+            Connect directly with an institutional treasury specialist to configure your corporate liquidity settlement pipeline.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#cbd5e1;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#38bdf8;">✓</span> Dedicated Relationship Director & Compliance Officer
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#38bdf8;">✓</span> Custom Interbank FX Pricing Matrices
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#38bdf8;">✓</span> API Sandbox Access with SWIFT MT/MX Format Testbeds
+            </div>
+          </div>
+          ${waDigits ? `
+            <div style="margin-top:28px;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:0.95rem;">
+                <span>WhatsApp Private Advisory ↗</span>
+              </a>
+            </div>
+          ` : ''}
+        </div>
+
+        <div>
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#94a3b8;font-size:0.85rem;font-weight:600;">Selected Solution</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#38bdf8;font:inherit;font-weight:700;">
+              <input type="hidden" name="productId" value="${esc(p.id)}">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#38bdf8;">*</span></label>
+              <input name="name" required placeholder="Authorized representative" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#38bdf8;">*</span></label>
+              <input name="email" type="email" required placeholder="corporate@enterprise.com" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.company || 'Institution')} <span style="color:#38bdf8;">*</span></label>
+              <input name="company" required placeholder="Institutional legal name" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Monthly Treasury Volume</label>
+              <input name="quantity" placeholder="e.g. $10M+ / month" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Specific Jurisdiction / Clearing Needs</label>
+              <textarea name="message" rows="3" placeholder="Outline your payment rails, currencies, or settlement timeframe requirements..." style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#ffffff;font:inherit;resize:vertical;"></textarea>
+            </div>
+            <div style="grid-column:1 / -1;margin-top:6px;">
+              <button type="submit" class="button" style="width:100%;background:#0284c7;color:#ffffff;font-weight:800;border-radius:8px;padding:14px;font-size:1rem;border:none;cursor:pointer;">
+                ${esc(ui.inquire || 'Request Institutional Scoping')} ↗
+              </button>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#94a3b8;"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Financial Solutions -->
+    ${related.length > 0 ? `
+      <section class="wrap" style="padding:20px 0 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+          <h2 style="font-size:1.6rem;color:#0f172a;font-weight:800;margin:0;">Related Institutional Capabilities</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#0284c7;font-weight:700;text-decoration:none;font-size:0.95rem;">
+            ${esc(ui.allProducts)} ↗
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          ${related.map(item => {
+            const it = translateProduct(item);
+            const itemImg = asset(item.imageAssetId);
+            return `
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+                ${itemImg ? `
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#f8fafc;overflow:hidden;">
+                    <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover;">
+                  </a>
+                ` : `
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#f8fafc;">🏛️</div>
+                `}
+                <div style="padding:20px;display:flex;flex-direction:column;flex:1;">
+                  <h4 style="font-size:1.1rem;font-weight:800;margin:0 0 8px;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#0f172a;text-decoration:none;">
+                      ${esc(it.name)}
+                    </a>
+                  </h4>
+                  <p style="color:#64748b;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
+                    ${esc(it.description || 'Institutional-grade corporate financial infrastructure.')}
+                  </p>
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#0284c7;font-weight:700;font-size:0.88rem;text-decoration:none;margin-top:auto;">
+                    ${esc(ui.details)} →
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    ` : ''}
   `;
 }

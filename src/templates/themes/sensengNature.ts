@@ -98,6 +98,10 @@ export function renderNatureHome(ctx: ThemeContext): string {
               <div style="font-size:0.8rem;color:#6b7280;margin-top:4px;">${isZh ? '大豆油墨纸盒包装' : 'Soy-Ink Box'}</div>
             </div>
           </div>
+
+          <div style="margin-top:24px;">
+            <a href="#nature-manifesto" class="wr-scroll-down" aria-label="Scroll to eco manifesto" style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:#ffffff;border:1px solid #c8d3c5;color:#2d4a22;font-size:1.2rem;text-decoration:none;">↓</a>
+          </div>
         </div>
 
         <!-- Right Visual Showcase -->
@@ -119,7 +123,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
 
   // 3. Eco Footprint Progress Bars
   const ecoProgressHtml = `
-    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
+    <section id="nature-manifesto" class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:24px;padding:36px 40px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
           <div>
@@ -367,6 +371,42 @@ export function renderNatureDetail(ctx: ThemeContext): string {
               </div>
             </div>
 
+            <!-- Eco & Tactile Calibration Progress Bars -->
+            <div style="background:#ffffff;border:1px solid #d5cec0;border-left:3px solid #2d4a22;border-radius:16px;padding:22px;margin-bottom:28px;">
+              <h4 style="font-size:0.95rem;font-weight:800;color:#1e3318;margin:0 0 14px;">
+                🍃 ${isZh ? '生态物性与触感评测' : 'Eco-Tactile Performance Index'}
+              </h4>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;color:#1e3318;margin-bottom:4px;">
+                    <span>${isZh ? '天然无毒环保纯度' : 'Bio-Degradable Purity Index'}</span>
+                    <span style="color:#2d4a22;font-weight:900;">100%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f4f1ea;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#2d4a22,#4a7c59);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;color:#1e3318;margin-bottom:4px;">
+                    <span>${isZh ? '慢升云感记忆弹性' : 'Sensory Memory Rebound'}</span>
+                    <span style="color:#4a7c59;font-weight:900;">98%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f4f1ea;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#4a7c59,#81b29a);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;color:#1e3318;margin-bottom:4px;">
+                    <span>${isZh ? '大豆油墨印刷可回收率' : 'Recyclable Soy-Ink Packaging'}</span>
+                    <span style="color:#c89f77;font-weight:900;">100%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f4f1ea;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#c89f77,#e07a5f);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style="display:flex;gap:14px;flex-wrap:wrap;">
               <a class="button" style="flex:1;background:#2d4a22;color:#ffffff;font-weight:800;padding:16px;border-radius:8px;text-align:center;box-shadow:0 4px 14px rgba(45,74,34,0.2);" href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')}>
                 ${isZh ? '索取样品与报价单 ↗' : 'Request Quotation ↗'}
@@ -379,6 +419,26 @@ export function renderNatureDetail(ctx: ThemeContext): string {
             </div>
           </div>
         </div>
+
+        <!-- Related Specimen -->
+        ${related.length > 0 ? `
+          <div style="margin-top:70px;border-top:1px solid #d5cec0;padding-top:40px;">
+            <h3 style="font-size:1.4rem;font-weight:900;color:#1e3318;margin-bottom:24px;">
+              ${isZh ? '更多自然原野系列标本' : 'More Botanical & Forest Specimens'}
+            </h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+              ${related.map((r) => `
+                <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:20px;text-align:center;">
+                  <img src="${esc(r.img)}" alt="${esc(r.name)}" style="max-height:150px;object-fit:contain;margin-bottom:12px;">
+                  <h4 style="font-size:0.95rem;font-weight:800;color:#1e3318;margin:0 0 8px;">${esc(r.name)}</h4>
+                  <a class="button" style="background:#f4f1ea;color:#2d4a22;font-size:0.82rem;font-weight:800;padding:8px 16px;border-radius:6px;display:inline-block;" href="${path(`products/${r.id}/index.html`)}" ${navAttrs('detail', r.id)}>
+                    ${isZh ? '查阅标本' : 'View Specimen'} ↗
+                  </a>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </section>
     </main>
   `;

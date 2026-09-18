@@ -243,9 +243,11 @@ export function referenceInteractions() {
       { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
 
+    document.body?.classList.add('wr-motion-ready');
+
     document
       .querySelectorAll<HTMLElement>(
-        '.wr-reveal, .wr-product-card, .single-ai-service, .single-modern-case-studies, .signle-fun-facts-one, .service-layout-presentation-box, .blog-card-text'
+        '.wr-reveal, [data-reveal], .wr-product-card, .single-ai-service, .single-modern-case-studies, .signle-fun-facts-one, .service-layout-presentation-box, .blog-card-text'
       )
       .forEach((el) => {
         if (!el.classList.contains('wr-reveal')) {
@@ -266,12 +268,99 @@ export function referenceInteractions() {
       { threshold: 0.15 }
     );
     document
-      .querySelectorAll<HTMLElement>('.odometer, [data-count], [data-to], .timer')
+      .querySelectorAll<HTMLElement>('.odometer, [data-count], [data-to], [data-counter], .timer')
       .forEach((el) => counterObserver.observe(el));
+
+    // Dynamic Progress Bars
+    const progressObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const bar = entry.target as HTMLElement;
+            const targetWidth = bar.getAttribute('data-progress') || '0';
+            bar.style.width = targetWidth + '%';
+            obs.unobserve(bar);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    document.querySelectorAll<HTMLElement>('.wr-progress-bar[data-progress]').forEach((el) => {
+      el.style.width = '0%';
+      el.style.transition = 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)';
+      progressObserver.observe(el);
+    });
   } else {
-    document.querySelectorAll<HTMLElement>('.wr-reveal').forEach((el) => el.classList.add('wr-revealed'));
+    document.querySelectorAll<HTMLElement>('.wr-reveal, [data-reveal]').forEach((el) => el.classList.add('wr-revealed'));
     document
-      .querySelectorAll<HTMLElement>('.odometer, [data-count], [data-to], .timer')
+      .querySelectorAll<HTMLElement>('.odometer, [data-count], [data-to], [data-counter], .timer')
       .forEach((el) => animateCounter(el));
+    document.querySelectorAll<HTMLElement>('.wr-progress-bar[data-progress]').forEach((el) => {
+      el.style.width = (el.getAttribute('data-progress') || '0') + '%';
+    });
   }
+
+  // Smooth next-screen scroll down button
+  document.querySelectorAll<HTMLElement>('.wr-scroll-down').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentSection = btn.closest('section') || btn.closest('.hero');
+      const nextSec = currentSection?.nextElementSibling || document.querySelector('main > section:nth-of-type(2)') || document.querySelector('section:nth-of-type(2)');
+      if (nextSec) {
+        nextSec.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Interactive Product Detail Thumbnail Switcher
+  document.querySelectorAll<HTMLElement>('.wr-detail-thumb').forEach((thumb) => {
+    thumb.addEventListener('click', () => {
+      const targetId = thumb.getAttribute('data-target') || 'detailMainImg';
+      const src = thumb.getAttribute('data-src');
+      const mainImg = document.getElementById(targetId) as HTMLImageElement;
+      if (mainImg && src) {
+        mainImg.src = src;
+        thumb.parentElement?.querySelectorAll('.wr-detail-thumb').forEach((t) => t.classList.remove('active'));
+        thumb.classList.add('active');
+      }
+    });
+  });
+
+  // Auto carousel rotator for .wr-carousel
+  document.querySelectorAll<HTMLElement>('.wr-carousel').forEach((carousel) => {
+    const slides = carousel.querySelectorAll<HTMLElement>('.wr-slide');
+    const dots = carousel.querySelectorAll<HTMLElement>('.wr-carousel-dot');
+    if (slides.length <= 1) return;
+    let idx = 0;
+    let timer: number | undefined;
+
+    const gotoSlide = (next: number) => {
+      slides[idx]?.classList.remove('active');
+      dots[idx]?.classList.remove('active');
+      idx = (next + slides.length) % slides.length;
+      slides[idx]?.classList.add('active');
+      dots[idx]?.classList.add('active');
+    };
+
+    const start = () => {
+      if (!timer) timer = window.setInterval(() => gotoSlide(idx + 1), 4500);
+    };
+    const stop = () => {
+      if (timer) { clearInterval(timer); timer = undefined; }
+    };
+
+    dots.forEach((dot, dotIdx) => {
+      dot.addEventListener('click', () => {
+        gotoSlide(dotIdx);
+        stop();
+        start();
+      });
+    });
+
+    carousel.addEventListener('mouseenter', stop);
+    carousel.addEventListener('mouseleave', start);
+    carousel.addEventListener('touchstart', stop, { passive: true });
+    carousel.addEventListener('touchend', start, { passive: true });
+    start();
+  });
 }

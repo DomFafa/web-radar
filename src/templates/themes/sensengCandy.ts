@@ -240,6 +240,10 @@ export function renderCandyHome(ctx: ThemeContext): string {
             <div style="display:flex;align-items:center;gap:6px;"><span>🛡️</span> ${isZh ? '欧美玩具实验室安全认证' : 'ASTM & EN71 Certified'}</div>
             <div style="display:flex;align-items:center;gap:6px;"><span>☁️</span> ${isZh ? '5秒柔和慢回弹' : '5s Slow Rebound'}</div>
           </div>
+
+          <div style="margin-top:28px;">
+            <a href="#candy-sensory" class="wr-scroll-down" aria-label="Scroll to sensory features" style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:#ffeef2;border:2px solid #ffd0d8;color:#ff6b8b;font-size:1.2rem;text-decoration:none;">↓</a>
+          </div>
         </div>
 
         <!-- Right Column: Interactive 3D Stage -->
@@ -269,7 +273,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // Sensory Magic 4-Pill Bar
   const sensoryBarHtml = `
-    <section class="wrap" style="padding:40px 0 20px;">
+    <section id="candy-sensory" class="wrap" style="padding:40px 0 20px;">
       <div style="text-align:center;margin-bottom:30px;">
         <span class="eyebrow" style="color:#ff6b8b;font-weight:900;letter-spacing:0.08em;">${isZh ? '感官魔力解密' : 'SENSORY TOUCH MAGIC'}</span>
         <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);color:#2b2d42;font-weight:900;margin:6px 0 0;">
@@ -663,6 +667,42 @@ export function renderCandyDetail(ctx: ThemeContext): string {
                 <div>
                   <span style="color:#8d99ae;font-size:0.84rem;display:block;">${isZh ? '安全认证' : 'Safety Compliance'}</span>
                   <strong style="color:#2b2d42;">CE, EN71, ASTM F963</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Tactile & Sensory Progress Bars -->
+            <div style="background:#fff7f9;border:2px solid #ffccd5;border-radius:24px;padding:24px;margin-bottom:32px;">
+              <h3 style="font-size:1.05rem;font-weight:900;color:#c9184a;margin:0 0 16px;">
+                🍬 ${isZh ? '触觉动态评测指标' : 'Tactile Sensory Dynamic Ratings'}
+              </h3>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:800;color:#2b2d42;margin-bottom:6px;">
+                    <span>${isZh ? '柔和慢回弹记忆指数' : 'Cloud Slow-Rise Memory Index'}</span>
+                    <span style="color:#ff6b8b;font-weight:900;">98%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#ffeef2;height:8px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#ff6b8b,#ff8fa3);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:800;color:#2b2d42;margin-bottom:6px;">
+                    <span>${isZh ? '食品级皮肤安全等级' : 'Food-Grade Skin Safety Purity'}</span>
+                    <span style="color:#2a9d8f;font-weight:900;">100%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#ffeef2;height:8px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#2a9d8f,#52b788);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:800;color:#2b2d42;margin-bottom:6px;">
+                    <span>${isZh ? '微爆珠软充手感抗撕裂度' : 'Crunchy Bead Soft-Fill Tear Resistance'}</span>
+                    <span style="color:#f77f00;font-weight:900;">96%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#ffeef2;height:8px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#f77f00,#fcbf49);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+                  </div>
                 </div>
               </div>
             </div>

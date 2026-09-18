@@ -264,7 +264,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             </div>
           </div>
           ${heroVideo?'<button id="video-toggle" type="button" class="senseng-video-toggle" aria-label="Pause background video">Ⅱ</button>':''}
-          <div class="senseng-scroll-down hero-scroll-cue">↓ SCROLL TO EXPLORE</div>
+          <a href="#senseng-props" class="senseng-scroll-down hero-scroll-cue wr-scroll-down" style="text-decoration:none;cursor:pointer;">↓ SCROLL TO EXPLORE</a>
         </div>
       `;
     } else {
@@ -283,6 +283,9 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
                 <span>Send a wholesale inquiry</span>
               </a>
+              <div style="margin-top:20px;">
+                <a href="#senseng-props" class="wr-scroll-down" aria-label="Scroll to product collection" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#e0f4ff;color:#089ced;font-size:1.2rem;text-decoration:none;">↓</a>
+              </div>
             </div>
 
           </div>
@@ -291,7 +294,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
     }
 
     const valuePropsHtml = `
-      <div class="senseng-value-props">
+      <div id="senseng-props" class="senseng-value-props">
         <div class="senseng-vp-item">
           <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h15l-2 8H8L6 3H3"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
@@ -534,6 +537,42 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             </div>
           </div>
 
+          <!-- Tactile & Safety Calibration Progress Bars -->
+          <div style="background:#f4f9fd;border:1px solid #d0e7f7;border-radius:14px;padding:20px;margin-bottom:28px;">
+            <div style="font-size:13px;font-weight:900;color:#073b91;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;">
+              Sensory Touch & Safety Calibration
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#102033;margin-bottom:5px;">
+                  <span>Slow-Rise Memory Rebound</span>
+                  <span style="color:#0797e8;font-weight:900;">98%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e1effa;height:7px;border-radius:9999px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#0797e8,#00d2ff);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#102033;margin-bottom:5px;">
+                  <span>Food-Grade Skin-Safe Polymer</span>
+                  <span style="color:#11a886;font-weight:900;">100%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e1effa;height:7px;border-radius:9999px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#11a886,#34d399);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#102033;margin-bottom:5px;">
+                  <span>Tear & Tensile Recovery Rate</span>
+                  <span style="color:#ef348d;font-weight:900;">96%</span>
+                </div>
+                <div class="wr-progress-container" style="background:#e1effa;height:7px;border-radius:9999px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#ef348d,#ff6b8b);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div style="display:flex;align-items:flex-start;gap:14px;">
               <div class="senseng-vp-icon" style="width:44px;height:44px;min-width:44px;background:#dff4ff;color:#0797e8;">
@@ -598,6 +637,11 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
               <span>Send a wholesale inquiry</span>
             </button>
+            ${draft.company.whatsapp ? `
+              <a href="https://wa.me/${draft.company.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" class="senseng-btn-pill" style="width:100%;justify-content:center;padding:12px;margin-top:8px;font-size:15px;background:#25d366;text-decoration:none;box-sizing:border-box;">
+                <span>WhatsApp Direct Inquiry ↗</span>
+              </a>
+            ` : ''}
             <p class="form-status" role="status" aria-live="polite" style="margin:6px 0 0;font-size:13px;text-align:center;"></p>
           </form>
         </aside>

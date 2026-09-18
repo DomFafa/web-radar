@@ -92,6 +92,10 @@ export function renderMinimalHome(ctx: ThemeContext): string {
               <div style="font-size:0.75rem;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;">${isZh ? '触觉满意度' : 'Client Rating'}</div>
             </div>
           </div>
+
+          <div style="margin-top:28px;">
+            <a href="#minimal-exhibit" class="wr-scroll-down" aria-label="Scroll to exhibition archive" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:2px;border:1px solid #111827;color:#111827;font-size:1.2rem;text-decoration:none;">↓</a>
+          </div>
         </div>
 
         <!-- Right Spotlight Podium -->
@@ -113,7 +117,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
 
   // 3. Precision Damping & Calibration Progress Bars
   const calibrationProgressHtml = `
-    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
+    <section id="minimal-exhibit" class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="border:1px solid #e5e7eb;background:#ffffff;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.02);">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
           <div>
@@ -377,6 +381,42 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
               </div>
             </div>
 
+            <!-- Swiss Precision Damping Progress Bars -->
+            <div style="border:1px solid #e5e7eb;padding:24px;margin-bottom:32px;">
+              <div style="font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:#c59b27;margin-bottom:14px;font-weight:800;">
+                PRECISION DAMPING CALIBRATION //
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.84rem;color:#111827;font-weight:700;margin-bottom:5px;">
+                    <span>Slow Rebound Damping Precision</span>
+                    <span style="color:#c59b27;font-weight:900;">99.2%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f3f4f6;height:6px;border-radius:2px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="99.2" style="background:#111827;height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.84rem;color:#111827;font-weight:700;margin-bottom:5px;">
+                    <span>Medical-Grade Tactile Polymer Purity</span>
+                    <span style="color:#111827;font-weight:900;">100%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f3f4f6;height:6px;border-radius:2px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="100" style="background:#c59b27;height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.84rem;color:#111827;font-weight:700;margin-bottom:5px;">
+                    <span>Acoustic Squeeze Silence Quotient</span>
+                    <span style="color:#6b7280;font-weight:900;">97.5%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f3f4f6;height:6px;border-radius:2px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="97.5" style="background:#4b5563;height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style="display:flex;gap:14px;flex-wrap:wrap;">
               <a class="button" style="flex:1;background:#111827;color:#ffffff;font-weight:700;padding:16px;border-radius:2px;text-align:center;letter-spacing:0.04em;text-transform:uppercase;" href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')}>
                 ${isZh ? '预约礼宾采购与打样 ↗' : 'Inquire for Acquisition ↗'}
@@ -389,6 +429,27 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
             </div>
           </div>
         </div>
+
+        <!-- Related Exhibit Objects -->
+        ${related.length > 0 ? `
+          <div style="margin-top:70px;border-top:1px solid #e5e7eb;padding-top:40px;">
+            <div style="font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;color:#c59b27;margin-bottom:20px;font-weight:800;">
+              // PARALLEL OBJECT STUDIES
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+              ${related.map((r) => `
+                <div style="border:1px solid #e5e7eb;background:#ffffff;padding:24px;text-align:center;">
+                  <img src="${esc(r.img)}" alt="${esc(r.name)}" style="max-height:160px;object-fit:contain;margin-bottom:14px;">
+                  <div style="font-size:0.75rem;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">${esc(r.badge)}</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:#111827;margin:0 0 12px;">${esc(r.name)}</h4>
+                  <a class="button" style="background:#f9fafb;color:#111827;border:1px solid #e5e7eb;font-size:0.8rem;padding:8px 16px;border-radius:2px;display:inline-block;letter-spacing:0.04em;text-transform:uppercase;" href="${path(`products/${r.id}/index.html`)}" ${navAttrs('detail', r.id)}>
+                    ${isZh ? '检视造形' : 'Inspect Form'} →
+                  </a>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </section>
     </main>
   `;

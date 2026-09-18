@@ -4,6 +4,7 @@ import { referenceLayouts } from './referenceLayouts';
 import { buildThemeContext, esc, productPath, type RenderOptions, type ThemeContext } from './types';
 import type { Draft } from '../../shared/model';
 import { materialProductImage, materialsReferenceBody, materialsSeo, materialsThemeStyle } from '../materials-render';
+import { themeStyles } from './styles';
 import { renderSaasAbout, renderSaasContact, renderSaasCatalog, renderSaasDetail } from './saasAutomation';
 import { renderFintechAbout, renderFintechContact, renderFintechCatalog, renderFintechDetail } from './fintechPlatform';
 import { renderMarketingAbout, renderMarketingContact, renderMarketingCatalog, renderMarketingDetail } from './digitalMarketing';
@@ -294,6 +295,6 @@ export function renderReferencePage(
     staticOrigin ? s.replace(/(["'(])\/templates\//g, `$1${staticOrigin}/templates/`) : s;
   const seo=materialsSeo(draft,options);
   return localize(
-    `<!doctype html><html lang="${lang}" class="${esc(layout.htmlClass)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo?.title??draft.company.name)}</title><meta name="description" content="${esc(seo?.description??(copy?.subtitle || draft.company.description))}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}${layout.css.map((href) => `<link rel="stylesheet" href="${href}">`).join('')}<style>${referenceOverrides}</style>${materialsThemeStyle(draft)}</head><body class="${esc(layout.bodyClass)} ${id} wr-reference${draft.materials?' wr-materials-site':''}" data-template="${id}" style="--wr-accent:${palette.accent};--wr-ink:${palette.ink};--wr-surface:${palette.surface};--wr-font:'${palette.font}'">${body}<script>${formScript};(${referenceInteractions.toString()})();</script></body></html>`,
+    `<!doctype html><html lang="${lang}" class="${esc(layout.htmlClass)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo?.title??draft.company.name)}</title><meta name="description" content="${esc(seo?.description??(copy?.subtitle || draft.company.description))}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}${layout.css.map((href) => `<link rel="stylesheet" href="${href}">`).join('')}<style>${referenceOverrides}\n${themeStyles}</style>${materialsThemeStyle(draft)}</head><body class="${esc(layout.bodyClass)} ${id} wr-reference${draft.materials?' wr-materials-site':''}" data-template="${id}" style="--wr-accent:${palette.accent};--wr-ink:${palette.ink};--wr-surface:${palette.surface};--wr-font:'${palette.font}'">${body}<script>${formScript};(${referenceInteractions.toString()})();</script></body></html>`,
   );
 }

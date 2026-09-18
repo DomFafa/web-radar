@@ -54,15 +54,16 @@ export function renderToysHome(ctx: ThemeContext): string {
           <div>🪵 FSC-Certified Beechwood</div>
           <div>❤️ Loved by 150,000+ Happy Families</div>
         </div>
+        <a href="#safety" class="wr-scroll-down" aria-label="Scroll to content">↓</a>
       </div>
     </section>
   `;
 
   // 3. Safety & Material Guarantees
   const safetyHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
+    <section id="safety" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
+        <div data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
           <div style="font-size:2.5rem;margin-bottom:8px;">🌱</div>
           <div style="font-weight:900;color:#78350f;font-size:1.1rem;">100% Non-Toxic</div>
           <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">Food-grade water-based lacquers and natural vegetable dyes safe for teething babies.</div>
@@ -590,8 +591,11 @@ export function renderToysDetail(ctx: ThemeContext): string {
 
   const t = translateProduct(p);
   const imgUrl = asset(p.imageAssetId);
+  const related = draft.products.filter(item => item.id !== p.id).slice(0, 3);
+  const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');
 
   return `
+    <!-- Top Breadcrumbs & Toy Title -->
     <section class="juno-inner-hero" style="background:linear-gradient(135deg,#fef08a 0%,#fed7aa 50%,#fbcfe8 100%);color:#451a03;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:3px solid #fde047;">
       <div class="wrap" style="position:relative;z-index:2;">
         <div style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:#92400e;margin-bottom:16px;font-weight:800;">
@@ -601,60 +605,249 @@ export function renderToysDetail(ctx: ThemeContext): string {
           <span>/</span>
           <span style="color:#78350f;">${esc(t.name)}</span>
         </div>
-        <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;margin:0;color:#78350f;">
-          ${esc(t.name)}
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #fde047;padding:4px 14px;border-radius:9999px;font-size:0.8rem;font-weight:900;color:#92400e;margin-bottom:12px;">
+              <span>🧸</span> CHILD-SAFE DEVELOPMENTAL TOY
+            </div>
+            <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;margin:0;color:#78350f;">
+              ${esc(t.name)}
+            </h1>
+          </div>
+          <div style="background:#ffffff;border:2px solid #fde047;border-radius:16px;padding:12px 20px;text-align:right;box-shadow:0 4px 12px rgba(245,158,11,0.08);">
+            <div style="color:#92400e;font-size:0.8rem;text-transform:uppercase;font-weight:800;">Safety Guarantee</div>
+            <div style="color:#d97706;font-weight:900;font-size:1.05rem;">ASTM & EN71 Passed</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap" style="padding:60px 0 80px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+    <!-- Main Showcase: Col 1 Preview & Certifications, Col 2 Specs & Dynamic Progress Bars -->
+    <section class="wrap" style="padding:60px 0 40px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
+        <!-- Left Col: Toy Visual -->
         <div>
-          ${imgUrl ? `
-            <div style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:24px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
-              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:440px;object-fit:contain;border-radius:18px;">
-            </div>
-          ` : `
-            <div style="background:#fffbeb;border:3px solid #fef08a;border-radius:28px;padding:70px 24px;text-align:center;font-size:4rem;">🧸</div>
-          `}
+          <div class="wr-card-hover" style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+            ${imgUrl ? `
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:contain;border-radius:18px;">
+            ` : `
+              <div style="background:#fffbeb;border-radius:28px;padding:70px 24px;text-align:center;font-size:5rem;">🧸</div>
+            `}
+          </div>
+
+          <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span style="background:#fefce8;border:1px solid #fef08a;color:#854d0e;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:800;">✨ Zero BPA or Phthalates</span>
+            <span style="background:#fefce8;border:1px solid #fef08a;color:#854d0e;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:800;">🌱 Organic Water Dyes</span>
+            <span style="background:#fefce8;border:1px solid #fef08a;color:#854d0e;padding:8px 14px;border-radius:999px;font-size:0.85rem;font-weight:800;">💧 Washable & Durable</span>
+          </div>
         </div>
 
+        <!-- Right Col: Narrative, Dynamic Safety Progress Bars, Specifications -->
         <div>
-          <div style="display:inline-block;background:#fef3c7;border:1px solid #fde047;color:#b45309;padding:4px 14px;border-radius:9999px;font-size:0.82rem;font-weight:900;margin-bottom:16px;">
-            CHILD-SAFE CERTIFIED TOY
-          </div>
-          <p style="font-size:1.15rem;line-height:1.75;color:#92400e;margin:0 0 24px;">
-            ${esc(t.description || 'Delightful non-toxic developmental toy crafted for curious minds and safe everyday play.')}
+          <h2 style="color:#78350f;font-size:1.8rem;font-weight:900;margin:0 0 16px;">Sensory Comfort & Child Development</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#92400e;margin:0 0 28px;">
+            ${esc(t.description || 'Delightful non-toxic developmental toy engineered with velvety tactile softness, gentle slow memory rise, and certified drop durability for everyday playful adventures.')}
           </p>
 
-          <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:24px;margin-bottom:28px;box-shadow:0 4px 14px rgba(245,158,11,0.04);">
-            <h3 style="color:#78350f;font-size:1.1rem;font-weight:900;margin:0 0 16px;">Toy Details & Materials</h3>
-            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
-              ${p.material ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px dashed #fde047;">
-                  <span style="color:#92400e;">Natural Materials</span>
-                  <strong style="color:#78350f;">${esc(p.material)}</strong>
+          <!-- Dynamic Toy Safety & Material Progress Bars -->
+          <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:26px;margin-bottom:28px;">
+            <h3 style="color:#78350f;font-size:1.05rem;font-weight:900;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span>🧸</span> Certified Safety & Sensory Benchmarks
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:800;color:#78350f;margin-bottom:6px;">
+                  <span>Food-Grade Safety Standard (EN71 / ASTM)</span>
+                  <span style="color:#16a34a;">100% Certified Pass</span>
                 </div>
-              ` : ''}
-              ${p.dimensions ? `
-                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px dashed #fde047;">
-                  <span style="color:#92400e;">Toy Dimensions</span>
-                  <strong style="color:#78350f;">${esc(p.dimensions)}</strong>
+                <div class="wr-progress-container" style="background:#fef3c7;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;border-radius:99px;"></div>
                 </div>
-              ` : ''}
-              <div style="display:flex;justify-content:space-between;">
-                <span style="color:#92400e;">Safety Standards</span>
-                <strong style="color:#f59e0b;">ASTM F963 / EN71 Certified</strong>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:800;color:#78350f;margin-bottom:6px;">
+                  <span>5-Second Memory Rise Profile</span>
+                  <span style="color:#d97706;">98% Rebound Uniformity</span>
+                </div>
+                <div class="wr-progress-container" style="background:#fef3c7;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#f59e0b,#fbbf24);height:100%;border-radius:99px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.9rem;font-weight:800;color:#78350f;margin-bottom:6px;">
+                  <span>Drop & Stretch Resilience</span>
+                  <span style="color:#ea580c;">96% Tear Durability</span>
+                </div>
+                <div class="wr-progress-container" style="background:#fef3c7;height:8px;border-radius:99px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#ea580c,#f97316);height:100%;border-radius:99px;"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:16px 36px;display:inline-block;box-shadow:0 8px 24px rgba(245,158,11,0.4);font-size:0.92rem;text-decoration:none;">
-            ${esc(ui.inquire || 'Order Gift Bundle')} ↗
-          </a>
+          <!-- Toy Specifications Table -->
+          <div style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:24px;margin-bottom:32px;box-shadow:0 4px 14px rgba(245,158,11,0.04);">
+            <h3 style="color:#78350f;font-size:1.05rem;font-weight:900;margin:0 0 16px;">Toy Details & Materials</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px dashed #fde047;">
+                <span style="color:#92400e;">Natural Materials</span>
+                <strong style="color:#78350f;">${esc(p.material || 'Ultra-Soft Elastic Foam / Eco-Polymer')}</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px dashed #fde047;">
+                <span style="color:#92400e;">Toy Dimensions</span>
+                <strong style="color:#78350f;">${esc(p.dimensions || '120mm x 85mm (Comfort Handheld)')}</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px dashed #fde047;">
+                <span style="color:#92400e;">Age Recommendation</span>
+                <strong style="color:#d97706;">Ages 3+ & All Sensory Play Lovers</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#92400e;">Safety Certifications</span>
+                <strong style="color:#16a34a;">ASTM F963, EN71, CPSIA Verified</strong>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
+
+    <!-- 3 Child Development Pillars -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
+        <span style="color:#d97706;font-size:0.85rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;">DEVELOPMENTAL BENEFITS</span>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#78350f;font-weight:900;margin:8px 0 12px;">Crafted for Growth and Smiles</h2>
+        <p style="color:#92400e;font-size:1.05rem;line-height:1.6;margin:0;">Carefully balanced sensory resistance to help children self-soothe and build finger coordination.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:32px;box-shadow:0 6px 18px rgba(245,158,11,0.06);text-align:center;">
+          <div style="font-size:2.8rem;margin-bottom:16px;">🖐️</div>
+          <h3 style="color:#78350f;font-size:1.2rem;font-weight:900;margin:0 0 10px;">Fine Motor Skills</h3>
+          <p style="color:#92400e;font-size:0.95rem;line-height:1.6;margin:0;">Gentle tactile resistance strengthens tiny fingers and improves grip control essential for early handwriting.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:32px;box-shadow:0 6px 18px rgba(245,158,11,0.06);text-align:center;">
+          <div style="font-size:2.8rem;margin-bottom:16px;">🌱</div>
+          <h3 style="color:#78350f;font-size:1.2rem;font-weight:900;margin:0 0 10px;">100% Non-Toxic & Safe</h3>
+          <p style="color:#92400e;font-size:0.95rem;line-height:1.6;margin:0;">Made purely with food-grade compliant colorants and zero volatile organic compounds for complete peace of mind.</p>
+        </div>
+
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:32px;box-shadow:0 6px 18px rgba(245,158,11,0.06);text-align:center;">
+          <div style="font-size:2.8rem;margin-bottom:16px;">🧸</div>
+          <h3 style="color:#78350f;font-size:1.2rem;font-weight:900;margin:0 0 10px;">Sensory Calming</h3>
+          <p style="color:#92400e;font-size:0.95rem;line-height:1.6;margin:0;">Rhythmic squeezing creates immediate deep tactile feedback, naturally lowering sensory overload and anxiety.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wholesale & Gift Bundle Inquiry Form -->
+    <section class="wrap" style="padding:20px 0 60px;">
+      <div style="background:linear-gradient(135deg,#fef08a 0%,#fed7aa 100%);color:#451a03;border-radius:28px;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+        <div>
+          <span style="color:#92400e;font-size:0.85rem;font-weight:900;text-transform:uppercase;">ORDER & WHOLESALE</span>
+          <h2 style="color:#78350f;font-size:1.8rem;font-weight:900;margin:8px 0 12px;">Order ${esc(t.name)}</h2>
+          <p style="color:#92400e;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+            Whether you are ordering custom gift sets, boutique retail bundles, or sample packs, let us know your requirements.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#78350f;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span>✓</span> Fast Worldwide Air Express Dispatch
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span>✓</span> Custom Retail Packaging & Hangtag Options
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span>✓</span> Low Minimum Order Quantity (MOQ) for Boutiques
+            </div>
+          </div>
+          ${waDigits ? `
+            <div style="margin-top:28px;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:800;padding:12px 24px;border-radius:9999px;text-decoration:none;font-size:0.95rem;box-shadow:0 4px 14px rgba(37,211,102,0.3);">
+                <span>WhatsApp Toy Concierge ↗</span>
+              </a>
+            </div>
+          ` : ''}
+        </div>
+
+        <div>
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#78350f;font-size:0.85rem;font-weight:800;">Selected Toy Style</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:#ffffff;border:2px solid #fde047;border-radius:12px;padding:10px 14px;color:#78350f;font:inherit;font-weight:800;">
+              <input type="hidden" name="productId" value="${esc(p.id)}">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#78350f;font-size:0.85rem;font-weight:800;">${esc(ui.name)} <span style="color:#d97706;">*</span></label>
+              <input name="name" required placeholder="Your name" style="background:#ffffff;border:2px solid #fed7aa;border-radius:12px;padding:10px 14px;color:#78350f;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#78350f;font-size:0.85rem;font-weight:800;">${esc(ui.email)} <span style="color:#d97706;">*</span></label>
+              <input name="email" type="email" required placeholder="name@email.com" style="background:#ffffff;border:2px solid #fed7aa;border-radius:12px;padding:10px 14px;color:#78350f;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#78350f;font-size:0.85rem;font-weight:800;">Company / Store <span style="color:#d97706;">*</span></label>
+              <input name="company" required placeholder="Store or company name" style="background:#ffffff;border:2px solid #fed7aa;border-radius:12px;padding:10px 14px;color:#78350f;font:inherit;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#78350f;font-size:0.85rem;font-weight:800;">Estimated Quantity</label>
+              <input name="quantity" placeholder="e.g. 500 pcs or sample pack" style="background:#ffffff;border:2px solid #fed7aa;border-radius:12px;padding:10px 14px;color:#78350f;font:inherit;">
+            </div>
+            <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
+              <label style="color:#78350f;font-size:0.85rem;font-weight:800;">Your Message / Packaging Requests</label>
+              <textarea name="message" rows="3" placeholder="Tell us if you need custom display boxes, barcode labeling, or sample testing..." style="background:#ffffff;border:2px solid #fed7aa;border-radius:12px;padding:10px 14px;color:#78350f;font:inherit;resize:vertical;"></textarea>
+            </div>
+            <div style="grid-column:1 / -1;margin-top:6px;">
+              <button type="submit" class="button" style="width:100%;background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:14px;font-size:1rem;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(245,158,11,0.4);">
+                ${esc(ui.inquire || 'Send Wholesale & Sample Inquiry')} ↗
+              </button>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#92400e;"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Toy Collections -->
+    ${related.length > 0 ? `
+      <section class="wrap" style="padding:20px 0 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+          <h2 style="font-size:1.6rem;color:#78350f;font-weight:900;margin:0;">More Cherished Toys to Explore</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#d97706;font-weight:800;text-decoration:none;font-size:0.95rem;">
+            ${esc(ui.allProducts)} ↗
+          </a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          ${related.map(item => {
+            const it = translateProduct(item);
+            const itemImg = asset(item.imageAssetId);
+            return `
+              <div class="wr-card-hover" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:20px;display:flex;flex-direction:column;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
+                ${itemImg ? `
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#fffbeb;border-radius:16px;overflow:hidden;margin-bottom:14px;">
+                    <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:contain;">
+                  </a>
+                ` : `
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#fffbeb;border-radius:16px;margin-bottom:14px;">🧸</div>
+                `}
+                <div style="padding:4px;display:flex;flex-direction:column;flex:1;">
+                  <h4 style="font-size:1.1rem;font-weight:900;color:#78350f;margin:0 0 8px;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#78350f;text-decoration:none;">
+                      ${esc(it.name)}
+                    </a>
+                  </h4>
+                  <p style="color:#92400e;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
+                    ${esc(it.description || 'Natural developmental sensory children toy.')}
+                  </p>
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#f59e0b;font-weight:900;font-size:0.88rem;text-decoration:none;margin-top:auto;">
+                    ${esc(ui.details)} →
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+    ` : ''}
   `;
 }
 

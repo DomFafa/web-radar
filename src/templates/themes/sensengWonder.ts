@@ -74,6 +74,10 @@ export function renderWonderHome(ctx: ThemeContext): string {
             <div>✓ ${isZh ? '20,000次抗疲劳拉伸' : '20,000 Squeezes Tested'}</div>
             <div>✓ ${isZh ? '大豆油墨纸盒包装' : 'Eco-Soy Packaging'}</div>
           </div>
+
+          <div style="margin-top:28px;">
+            <a href="#wonder-bento" class="wr-scroll-down" aria-label="Scroll to bento showcase" style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:#f4ede1;border:1px solid #e7dcce;color:#264653;font-size:1.2rem;text-decoration:none;">↓</a>
+          </div>
         </div>
 
         <!-- Right Visual Showcase -->
@@ -97,7 +101,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
   // Bento Box Grid (北欧便当盒五格精选画廊)
   const bentoHtml = `
-    <section class="wrap" style="padding:70px 0 40px;">
+    <section id="wonder-bento" class="wrap" style="padding:70px 0 40px;">
       <div style="text-align:center;max-width:680px;margin:0 auto 48px;">
         <span class="eyebrow" style="color:#2a9d8f;font-weight:800;letter-spacing:0.06em;">${isZh ? '匠心工坊解构' : 'BENTO BOX SHOWCASE'}</span>
         <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.7rem);color:#264653;font-weight:900;margin:8px 0 12px;">
@@ -473,6 +477,42 @@ export function renderWonderDetail(ctx: ThemeContext): string {
                 <div>
                   <span style="color:#8d99ae;font-size:0.84rem;display:block;">${isZh ? '检测标准' : 'Standard'}</span>
                   <strong style="color:#264653;">CE / ASTM F963</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tactile & Craft Progress Bars -->
+            <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:22px;margin-bottom:32px;">
+              <h4 style="font-size:0.95rem;font-weight:900;color:#264653;margin:0 0 14px;">
+                🌿 ${isZh ? '工坊材质与触感实测标定' : 'Material & Tactile Calibration'}
+              </h4>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;color:#264653;margin-bottom:5px;">
+                    <span>${isZh ? '5秒慢回弹阻尼感' : '5s Slow Memory Rise'}</span>
+                    <span style="color:#e76f51;font-weight:900;">98%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f4ede1;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="98" style="background:linear-gradient(90deg,#e76f51,#f4a261);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;color:#264653;margin-bottom:5px;">
+                    <span>${isZh ? '食品级环保无毒纯度' : 'Food-Grade Eco Purity'}</span>
+                    <span style="color:#2a9d8f;font-weight:900;">100%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f4ede1;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#2a9d8f,#52b788);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.86rem;font-weight:800;color:#264653;margin-bottom:5px;">
+                    <span>${isZh ? '抗揉捏拉伸恢复力' : 'Tear & Tensile Recovery'}</span>
+                    <span style="color:#264653;font-weight:900;">96%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#f4ede1;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="96" style="background:linear-gradient(90deg,#264653,#457b9d);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -138,6 +138,9 @@ export function renderArcadeHome(ctx: ThemeContext): string {
             </div>
             <div style="font-family:monospace;font-size:0.72rem;color:#64748b;margin-top:8px;">ACOUSTIC CRUNCH FREQUENCY: 432 Hz</div>
           </div>
+          <div style="margin-top:24px;text-align:center;">
+            <a href="#arcade-physics" class="wr-scroll-down" aria-label="Scroll to physics benchmarks" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:4px;border:1px solid #00f5d4;color:#00f5d4;font-size:1.2rem;text-decoration:none;">↓</a>
+          </div>
         </div>
       </div>
     </section>
@@ -145,7 +148,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
   // 3. Tactile Physics Benchmark (Dynamic Progress Bars)
   const physicsProgressHtml = `
-    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
+    <section id="arcade-physics" class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:36px 40px;box-shadow:0 12px 30px rgba(0,0,0,0.3);">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
           <div>
@@ -450,6 +453,42 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
               <div style="display:flex;justify-content:space-between;padding:8px 0;">
                 <span style="color:#64748b;">SUPPLY MODE</span>
                 <span style="color:#38bdf8;font-weight:800;">READY STOCK & CUSTOM OEM</span>
+              </div>
+            </div>
+
+            <!-- Tactical HUD Benchmark Progress Bars -->
+            <div style="background:#0f172a;border:1px solid #1e293b;border-left:3px solid #00f5d4;border-radius:12px;padding:20px;margin-bottom:28px;">
+              <div style="font-family:monospace;font-size:0.8rem;font-weight:900;color:#00f5d4;margin-bottom:14px;letter-spacing:0.08em;">
+                // TACTICAL BENCHMARK GAUGES
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-family:monospace;font-size:0.82rem;margin-bottom:4px;">
+                    <span style="color:#ffffff;">SLOW REBOUND DAMPING</span>
+                    <span style="color:#00f5d4;font-weight:900;">98.4%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#1e293b;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="98.4" style="background:linear-gradient(90deg,#00f5d4,#38bdf8);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1);"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-family:monospace;font-size:0.82rem;margin-bottom:4px;">
+                    <span style="color:#ffffff;">MICRO-BEAD ACOUSTIC CRUNCH</span>
+                    <span style="color:#f72585;font-weight:900;">100%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#1e293b;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#f72585,#b5179e);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-family:monospace;font-size:0.82rem;margin-bottom:4px;">
+                    <span style="color:#ffffff;">THERMAL COLOR LATENCY</span>
+                    <span style="color:#fbbf24;font-weight:900;">94.8%</span>
+                  </div>
+                  <div class="wr-progress-container" style="background:#1e293b;height:7px;border-radius:9999px;overflow:hidden;">
+                    <div class="wr-progress-bar" data-progress="94.8" style="background:linear-gradient(90deg,#fbbf24,#f97316);height:100%;width:0%;transition:width 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s;"></div>
+                  </div>
+                </div>
               </div>
             </div>
 

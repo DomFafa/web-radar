@@ -40,6 +40,76 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'senseng-candy': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 930（8:3 宽幅甜美画卷，适配萌宠主图排版）',
+    bannerNote: '马卡龙糖果粉彩背景与悬浮萌宠特写已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-wonder': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1070（12:5 北欧治愈插画与自然光画卷）',
+    bannerNote: '北欧温暖画卷与波浪曲线沉浸背景已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-arcade': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1000（16:6 赛博霓虹机能全景背景）',
+    bannerNote: '赛博机能 HUD 仪表台与极光电光特写已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-nature': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（8:3 森林原木与自然光晨雾背景）',
+    bannerNote: '原野森林生态画卷与晨雾自然光影已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-minimal': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 830（3:1 极简现代艺术画廊宽幅背景）',
+    bannerNote: '瑞士国际主义极简雕塑展台与纯净留白已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
@@ -297,74 +367,5 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
-  'senseng-candy': {
-    productCount: 8,
-    productSize: '1200 × 1200（1:1）',
-    bannerSize: '2560 × 930（8:3 宽幅甜美画卷，适配萌宠主图排版）',
-    bannerNote: '马卡龙糖果粉彩背景与悬浮萌宠特写已内置。',
-    videos: 0,
-    slots: [
-      {
-        count: 8,
-        width: 1200,
-        height: 1200,
-      },
-    ],
-  },
-  'senseng-wonder': {
-    productCount: 8,
-    productSize: '1200 × 1200（1:1）',
-    bannerSize: '2560 × 1070（12:5 北欧治愈插画与自然光画卷）',
-    bannerNote: '北欧温暖画卷与波浪曲线沉浸背景已内置。',
-    videos: 0,
-    slots: [
-      {
-        count: 8,
-        width: 1200,
-        height: 1200,
-      },
-    ],
-  },
-  'senseng-arcade': {
-    productCount: 8,
-    productSize: '1200 × 1200（1:1）',
-    bannerSize: '2560 × 1000（16:6 赛博霓虹机能全景背景）',
-    bannerNote: '赛博机能 HUD 仪表台与极光电光特写已内置。',
-    videos: 0,
-    slots: [
-      {
-        count: 8,
-        width: 1200,
-        height: 1200,
-      },
-    ],
-  },
-  'senseng-nature': {
-    productCount: 8,
-    productSize: '1200 × 1200（1:1）',
-    bannerSize: '2560 × 960（8:3 森林原木与自然光晨雾背景）',
-    bannerNote: '原野森林生态画卷与晨雾自然光影已内置。',
-    videos: 0,
-    slots: [
-      {
-        count: 8,
-        width: 1200,
-        height: 1200,
-      },
-    ],
-  },
-  'senseng-minimal': {
-    productCount: 8,
-    productSize: '1200 × 1200（1:1）',
-    bannerSize: '2560 × 830（3:1 极简现代艺术画廊宽幅背景）',
-    bannerNote: '瑞士国际主义极简雕塑展台与纯净留白已内置。',
-    videos: 0,
-    slots: [
-      {
-        count: 8,
-        width: 1200,
-        height: 1200,
-      },
-    ],
-  },
 };
+
