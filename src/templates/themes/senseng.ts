@@ -209,20 +209,22 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
     <section class="senseng-showcase-box" data-reveal="fade-up">
       <div class="senseng-showcase-card">
         <div class="senseng-showcase-top">
-          <h2 style="font-size:32px;font-weight:900;color:#073b91;letter-spacing:-0.5px;margin:0;">${heading}</h2>
-          ${showViewAll ? `<a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#0088eb;font-size:16px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">View All Products →</a>` : ''}
+          <h2>${heading}</h2>
+          ${showViewAll ? `<a href="${path('catalog/index.html')}" ${navAttrs('catalog')} class="senseng-showcase-viewall">View All Products →</a>` : ''}
         </div>
         <div class="senseng-grid-8">
-          ${allProducts.slice(0, 8).map((p) => `
-            <article class="senseng-p-card wr-card-hover" data-reveal="fade-up">
-              <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:contents;">
-                <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">
+          ${allProducts.slice(0, 8).map((p, idx) => `
+            <article class="senseng-p-card wr-card-hover" data-reveal="fade-up" style="transition-delay: ${(idx % 4) * 0.08}s;">
+              <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="senseng-p-link">
+                <div class="senseng-p-img-wrap">
+                  <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">
+                </div>
                 <h4>${esc(p.name)}</h4>
               </a>
               ${withSpecs ? `
                 <div class="senseng-p-spec">
-                  <strong>Material:</strong> ${materialsMode?esc(p.material):'To be confirmed;<br>paperboard packaging'}<br>
-                  <strong>Dimensions:</strong> ${materialsMode?esc(p.dimensions):'To be confirmed'}
+                  <div class="senseng-p-spec-row"><strong>Material:</strong> <span>${materialsMode?esc(p.material):'To be confirmed; paperboard packaging'}</span></div>
+                  <div class="senseng-p-spec-row"><strong>Dimensions:</strong> <span>${materialsMode?esc(p.dimensions):'To be confirmed'}</span></div>
                 </div>
               ` : ''}
               <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="senseng-btn-detail">
@@ -295,7 +297,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
 
     const valuePropsHtml = `
       <div id="senseng-props" class="senseng-value-props">
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.04s;">
           <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h15l-2 8H8L6 3H3"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
           </div>
@@ -304,7 +306,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>senseng presents character-led squishy toys with paperboard packaging and clear front-label naming for easier shelf sorting and buyer comparison.</p>
           </div>
         </div>
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.12s;">
           <div class="senseng-vp-icon" style="background:#ffd7ec;color:#ef348d;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M21 21v-2a4 4 0 0 0-3-3.87"></path></svg>
           </div>
@@ -313,7 +315,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>The range includes kids-facing, adults desk-facing, mixed-age gifting, and texture/effect-led versions, each using distinct visual cues while keeping a compact merchandising format.</p>
           </div>
         </div>
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.20s;">
           <div class="senseng-vp-icon" style="background:#c8f5e9;color:#11a886;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
           </div>
@@ -329,24 +331,32 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
       <section class="senseng-partners" style="max-width:1536px;margin:0 auto;padding:64px 40px;" data-reveal="fade-up">
         <h2 style="font-size:36px;font-weight:900;color:#073b91;text-align:center;letter-spacing:-0.5px;margin:0 0 48px;">Why Partner with senseng?</h2>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;">
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.05s;">
             <div style="width:64px;height:64px;border-radius:50%;background:#c9f4ff;color:#0c9de6;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">🏭</div>
-            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Direct Factory Access</h3>
+            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 6px;">Direct Factory Access</h3>
+            <div style="font-size:1.9rem;font-weight:900;color:#0088eb;margin-bottom:6px;" data-counter="50000" data-suffix=" m²">50,000 m²</div>
+            <div class="wr-progress-container" style="max-width:130px;margin:0 auto 12px;"><div class="wr-progress-bar" data-progress="95"></div></div>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Work directly with verified manufacturers for competitive pricing and custom orders.</p>
           </div>
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.12s;">
             <div style="width:64px;height:64px;border-radius:50%;background:#ffd7ec;color:#ef348d;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">📦</div>
-            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Low MOQ Available</h3>
+            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 6px;">Low MOQ Available</h3>
+            <div style="font-size:1.9rem;font-weight:900;color:#ef348d;margin-bottom:6px;" data-counter="500" data-suffix=" pcs">500 pcs</div>
+            <div class="wr-progress-container" style="max-width:130px;margin:0 auto 12px;"><div class="wr-progress-bar" data-progress="90"></div></div>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Flexible minimum order quantities to support businesses of all sizes.</p>
           </div>
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.19s;">
             <div style="width:64px;height:64px;border-radius:50%;background:#c8f5e9;color:#11a886;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">🌍</div>
-            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Global Shipping</h3>
+            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 6px;">Global Shipping</h3>
+            <div style="font-size:1.9rem;font-weight:900;color:#11a886;margin-bottom:6px;" data-counter="120" data-suffix="+ Countries">120+ Countries</div>
+            <div class="wr-progress-container" style="max-width:130px;margin:0 auto 12px;"><div class="wr-progress-bar" data-progress="98"></div></div>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Reliable worldwide logistics with door-to-door delivery and customs support.</p>
           </div>
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.26s;">
             <div style="width:64px;height:64px;border-radius:50%;background:#fff0c9;color:#d4a017;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">✅</div>
-            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Quality Assured</h3>
+            <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 6px;">Quality Assured</h3>
+            <div style="font-size:1.9rem;font-weight:900;color:#d4a017;margin-bottom:6px;" data-counter="100" data-suffix="% Certified">100% Certified</div>
+            <div class="wr-progress-container" style="max-width:130px;margin:0 auto 12px;"><div class="wr-progress-bar" data-progress="100"></div></div>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Every product passes strict quality checks before shipment to ensure customer satisfaction.</p>
           </div>
         </div>
@@ -674,7 +684,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
       </div>
       <div class="senseng-value-props">
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.04s;">
           <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18v12H3z"></path><path d="m3 9 2-5h14l2 5"></path><path d="M9 21v-6h6v6"></path></svg>
           </div>
@@ -683,7 +693,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>senseng is a trader focused on squishy toy products, including character-led concepts and paperboard-packaged sales versions for buyer review.</p>
           </div>
         </div>
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.12s;">
           <div class="senseng-vp-icon" style="background:#ffd7ec;color:#ef348d;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 16-9 5-9-5V8l9-5 9 5z"></path><path d="M3.3 7.6 12 12.5l8.7-4.9"></path><path d="M12 22V12"></path></svg>
           </div>
@@ -692,7 +702,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>The current showcase emphasizes age-led, gift-led, desk-led, and texture/effect-led packaging cues so buyers can compare the assortment more efficiently.</p>
           </div>
         </div>
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.20s;">
           <div class="senseng-vp-icon" style="background:#c8f5e9;color:#11a886;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg>
           </div>
