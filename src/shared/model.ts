@@ -13,19 +13,24 @@ export type ProductSnapshot = import('zod').infer<typeof import('./product-snaps
 export interface ProductGalleryImage { assetId: string; sourceImageId: string; kind: import('zod').infer<typeof import('./product-snapshot').productImageKind>; caption: string }
 export type Language = 'en' | 'de' | 'fr' | 'es' | 'pt' | 'it';
 export type TemplateId =
-  | 'natural'
-  | 'technology'
-  | 'explorer'
   | 'senseng-clean'
   | 'senseng-video'
+  | 'senseng-candy'
+  | 'senseng-wonder'
+  | 'senseng-arcade'
+  | 'senseng-nature'
+  | 'senseng-minimal'
+  | 'juno-toys'
   | 'saas-automation'
   | 'fintech-platform'
   | 'digital-marketing'
   | 'porto-accounting'
   | 'crafto-corporate'
-  | 'juno-toys'
   | 'corpox-ai-agency'
-  | 'corpox-consulting';
+  | 'corpox-consulting'
+  | 'natural'
+  | 'technology'
+  | 'explorer';
 export interface Product {
   id: string;
   name: string;
@@ -180,11 +185,20 @@ export interface CloneConfig {
 }
 
 export type BannerTarget = DesignPage | `product:${string}`;
+export interface BannerSlide {
+  assetId: string;
+  alt: string;
+  headline?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+}
+
 export interface PageBanner {
   id: string;
   targets: BannerTarget[];
   kind: 'images' | 'video';
-  slides: { assetId: string; alt: string }[];
+  slides: BannerSlide[];
   videoAssetId?: string;
   posterAssetId?: string;
   mode: 'background' | 'image';

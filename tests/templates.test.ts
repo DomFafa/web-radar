@@ -268,3 +268,140 @@ it('renders saved gallery images and fixed website copy on product details only'
   expect(html).toContain('At home');
   expect(renderSite(d,{...opts,page:'catalog'})).not.toContain('https://media.example/side-view');
 });
+
+describe('senseng toy templates (senseng-candy, senseng-wonder, senseng-arcade, senseng-nature, senseng-minimal)', () => {
+  const toyTemplates: Draft['template'][] = [
+    'senseng-candy',
+    'senseng-wonder',
+    'senseng-arcade',
+    'senseng-nature',
+    'senseng-minimal',
+  ];
+
+  for (const template of toyTemplates) {
+    it(`renders ${template} full website journey across 5 page types`, () => {
+      const d = draft();
+      d.template = template;
+      d.languages = ['en', 'de'];
+
+      // Home
+      const homeHtml = renderSite(d, opts);
+      expect(homeHtml).toContain(`data-template="${template}"`);
+      expect(homeHtml).toContain('data-wr-page="home"');
+      expect(homeHtml).toContain('<!doctype html>');
+      expect(homeHtml).toContain('products/p-one/index.html');
+
+      // Catalog
+      const catalogHtml = renderSite(d, { ...opts, page: 'catalog' });
+      expect(catalogHtml).toContain('data-wr-page="catalog"');
+      expect(catalogHtml).toContain('products/p-one/index.html');
+
+      // Detail
+      const detailHtml = renderSite(d, { ...opts, page: 'detail', productId: 'p-one' });
+      expect(detailHtml).toContain('data-wr-page="detail"');
+      expect(detailHtml).toContain('p-one');
+
+      // About
+      const aboutHtml = renderSite(d, { ...opts, page: 'about' });
+      expect(aboutHtml).toContain('data-wr-page="about"');
+      expect(aboutHtml).toContain('Field &amp; Form');
+
+      // Contact
+      const contactHtml = renderSite(d, { ...opts, page: 'contact' });
+      expect(contactHtml).toContain('data-wr-page="contact"');
+      expect(contactHtml).toContain('id="inquiry"');
+      expect(contactHtml).toContain(opts.inquiryUrl);
+
+      // Render all site files
+      const files = renderSiteFiles(d, {
+        ...opts,
+        publicBaseUrl: 'https://wr.example/public/sites/project',
+      });
+      for (const lang of ['en', 'de']) {
+        for (const path of [
+          'index.html',
+          'catalog/index.html',
+          'products/p-one/index.html',
+          'about/index.html',
+          'contact/index.html',
+        ]) {
+          expect(files[`${lang}/${path}`]).toBeDefined();
+          expect(files[`${lang}/${path}`]).toContain(`lang="${lang}"`);
+        }
+      }
+    });
+  }
+
+  it('verifies specialized layout signatures and dynamic motion features for all 5 toy templates', () => {
+    const d = draft();
+
+    // senseng-candy: Candy pop playground layout
+    const candyHome = renderSite({ ...d, template: 'senseng-candy' }, opts);
+    expect(candyHome).toContain('wr-candy-ribbon');
+    expect(candyHome).toContain('wr-candy-hero');
+    expect(candyHome).toContain('wr-candy-stage');
+    expect(candyHome).toContain('wr-candy-card');
+
+    const candyAbout = renderSite({ ...d, template: 'senseng-candy' }, { ...opts, page: 'about' });
+    expect(candyAbout).toContain('wr-senseng-candy-inner');
+
+    // senseng-wonder: Nordic storybook bento layout
+    const wonderHome = renderSite({ ...d, template: 'senseng-wonder' }, opts);
+    expect(wonderHome).toContain('wr-wonder-ribbon');
+    expect(wonderHome).toContain('wr-wonder-hero');
+    expect(wonderHome).toContain('wr-wonder-card');
+    expect(wonderHome).toContain('CHAPTER 01');
+
+    const wonderContact = renderSite({ ...d, template: 'senseng-wonder' }, { ...opts, page: 'contact' });
+    expect(wonderContact).toContain('wr-senseng-wonder-inner');
+
+    // senseng-arcade: Cyber Pop HUD & dynamic effects
+    const arcadeHome = renderSite({ ...d, template: 'senseng-arcade' }, opts);
+    expect(arcadeHome).toContain('wr-arcade-hud');
+    expect(arcadeHome).toContain('wr-arcade-hero');
+    expect(arcadeHome).toContain('wrArcadeScan');
+    expect(arcadeHome).toContain('wr-arcade-card');
+    expect(arcadeHome).toContain('data-reveal');
+    expect(arcadeHome).toContain('data-counter');
+    expect(arcadeHome).toContain('data-progress');
+    expect(arcadeHome).toContain('wr-progress-bar');
+
+    const arcadeAbout = renderSite({ ...d, template: 'senseng-arcade' }, { ...opts, page: 'about' });
+    expect(arcadeAbout).toContain('wr-senseng-arcade-inner');
+    expect(arcadeAbout).toContain('FOOD-GRADE SILICONE');
+
+    // senseng-nature: Botanical Forest & Organic Counters
+    const natureHome = renderSite({ ...d, template: 'senseng-nature' }, opts);
+    expect(natureHome).toContain('wr-nature-hero');
+    expect(natureHome).toContain('wr-nature-card');
+    expect(natureHome).toContain('wr-nature-frame');
+    expect(natureHome).toContain('data-reveal');
+    expect(natureHome).toContain('data-counter');
+    expect(natureHome).toContain('data-progress');
+
+    const natureCatalog = renderSite({ ...d, template: 'senseng-nature' }, { ...opts, page: 'catalog' });
+    expect(natureCatalog).toContain('wr-senseng-nature-inner');
+    expect(natureCatalog).toContain('wr-nature-grid');
+
+    // senseng-minimal: Swiss Modernist Atelier & Precision Damping
+    const minimalHome = renderSite({ ...d, template: 'senseng-minimal' }, opts);
+    expect(minimalHome).toContain('wr-minimal-hero');
+    expect(minimalHome).toContain('wr-minimal-card');
+    expect(minimalHome).toContain('wr-minimal-podium');
+    expect(minimalHome).toContain('data-reveal');
+    expect(minimalHome).toContain('data-progress');
+
+    const minimalDetail = renderSite(
+      { ...d, template: 'senseng-minimal' },
+      { ...opts, page: 'detail', productId: 'p-one' },
+    );
+    expect(minimalDetail).toContain('wr-senseng-minimal-inner');
+    expect(minimalDetail).toContain('TECHNICAL ANATOMY');
+
+    // Verify all 5 templates have distinct layouts and content structures
+    const homes = [candyHome, wonderHome, arcadeHome, natureHome, minimalHome];
+    const uniqueHomes = new Set(homes);
+    expect(uniqueHomes.size).toBe(5);
+  });
+});
+

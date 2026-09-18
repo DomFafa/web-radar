@@ -1,6 +1,6 @@
 export const referenceOverrides = `
 .wr-crafto-hero {
-  height: calc(100svh - 92px);
+  height: clamp(720px, 55vw, 980px);
   min-height: 720px;
   margin-top: 92px;
   position: relative;
@@ -101,15 +101,24 @@ export const referenceOverrides = `
 [data-wr-next] {
   right: 30px;
 }
+[data-wr-slide] {
+  transition: opacity 0.55s ease, transform 0.55s ease !important;
+}
 [data-wr-slide][hidden] {
   display: none !important;
+  opacity: 0;
+}
+[data-wr-slide]:not([hidden]) {
+  display: block !important;
+  opacity: 1;
 }
 .wr-juno-hero {
   position: relative;
   width: 100vw;
   left: 50%;
   margin-left: -50vw;
-  height: 650px;
+  min-height: 650px;
+  height: clamp(650px, 52vw, 980px);
   background: #d9effb;
   overflow: hidden;
 }
@@ -117,14 +126,15 @@ export const referenceOverrides = `
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center;
+  background-position: center center;
 }
 .wr-juno-copy {
   position: relative;
   max-width: 1170px;
   margin: auto;
-  padding: 190px 0 80px;
+  padding: 120px 24px 60px;
   color: #172849;
+  z-index: 3;
 }
 .wr-juno-copy h1,
 .wr-juno-copy h2 {
@@ -339,8 +349,6 @@ export const referenceOverrides = `
 }
 .wr-reference .appear-animation,
 .wr-reference .animated-icon {
-  animation: none !important;
-  transform: none !important;
   opacity: 1 !important;
 }
 .wr-reference .animated-icon svg {
@@ -548,14 +556,10 @@ body.wr-reference {
 .appear-animation,
 .elementor-invisible,
 .wow {
-  opacity: 1 !important;
+  opacity: 1;
   visibility: visible !important;
-  filter: none !important;
 }
-[data-text-reveal] .text-reveal-line,
-.text-anime-style-2 div,
 .split-inner {
-  transform: none !important;
   opacity: 1 !important;
 }
 .wr-reference .wr-reference-brand {
@@ -750,6 +754,29 @@ body.wr-reference {
     sans-serif;
   color: var(--wr-ink);
   background: white;
+}
+.wr-inner .wrap {
+  width: min(1280px, 92%);
+  margin-left: auto;
+  margin-right: auto;
+}
+.wr-saas-automation-inner {
+  background: #090d16 !important;
+  color: #cbd5e1 !important;
+}
+.wr-corpox-ai-agency-inner {
+  background: #050811 !important;
+  color: #f8fafc !important;
+}
+.wr-inner .saas-inner-hero,
+.wr-inner .fintech-inner-hero,
+.wr-inner .marketing-inner-hero,
+.wr-inner .porto-inner-hero,
+.wr-inner .crafto-inner-hero,
+.wr-inner .juno-inner-hero,
+.wr-inner .ai-inner-hero,
+.wr-inner .consulting-inner-hero {
+  padding-top: 130px !important;
 }
 .wr-inner h1,
 .wr-inner h2,
@@ -959,4 +986,138 @@ body.wr-reference {
 @media (max-width: 1199px) { .porto-accounting .owl-carousel.carousel-half-full-width-right > div { flex-basis: calc((100% - 60px) / 4); } }
 @media (max-width: 991px) { .porto-accounting .owl-carousel.carousel-half-full-width-right > div { flex-basis: calc((100% - 40px) / 3); } }
 @media (max-width: 767px) { .porto-accounting .owl-carousel.carousel-half-full-width-right > div { flex-basis: 100%; } }
+
+/* Dynamic animations & micro-interactions */
+@keyframes wrFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes wrFloatReverse {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(8px); }
+}
+@keyframes wrPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.16); opacity: 0.75; }
+}
+
+.wr-juno-clouds,
+.absolute-rating-area,
+.images-left-right-float {
+  animation: wrFloat 4.5s ease-in-out infinite !important;
+}
+.wr-quality {
+  animation: wrFloatReverse 4s ease-in-out infinite !important;
+}
+.pulse, [class*="-pulse"] {
+  animation: wrPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Card hover 3D elevation */
+.product-card,
+.wr-product-card,
+.single-ai-service,
+.single-modern-case-studies,
+.signle-fun-facts-one,
+.card.tmponhover,
+.service-layout-presentation-box,
+.blog-card-text {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.product-card:hover,
+.wr-product-card:hover,
+.single-ai-service:hover,
+.single-modern-case-studies:hover,
+.signle-fun-facts-one:hover,
+.card.tmponhover:hover,
+.blog-card-text:hover {
+  transform: translateY(-8px) !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Button hover feedback */
+.tmp-btn,
+.button,
+a.button {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.tmp-btn:hover,
+.button:hover,
+a.button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+}
+.hover-icon-reverse:hover .btn-icon {
+  transform: translateX(5px);
+  transition: transform 0.25s ease;
+}
+
+/* Apple-Grade Motion System for Reference Templates */
+.wr-reveal, [data-reveal] {
+  opacity: 0;
+  transform: translateY(32px) scale(0.97);
+  filter: blur(8px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+.wr-reveal.wr-revealed, [data-reveal].wr-revealed {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: blur(0px) !important;
+}
+
+/* Staggered Delay Cascade */
+.wr-reveal:nth-child(1), [data-reveal]:nth-child(1) { transition-delay: 0.04s; }
+.wr-reveal:nth-child(2), [data-reveal]:nth-child(2) { transition-delay: 0.09s; }
+.wr-reveal:nth-child(3), [data-reveal]:nth-child(3) { transition-delay: 0.14s; }
+.wr-reveal:nth-child(4), [data-reveal]:nth-child(4) { transition-delay: 0.19s; }
+.wr-reveal:nth-child(5), [data-reveal]:nth-child(5) { transition-delay: 0.24s; }
+.wr-reveal:nth-child(6), [data-reveal]:nth-child(6) { transition-delay: 0.29s; }
+.wr-reveal:nth-child(7), [data-reveal]:nth-child(7) { transition-delay: 0.34s; }
+.wr-reveal:nth-child(8), [data-reveal]:nth-child(8) { transition-delay: 0.39s; }
+
+/* 3D Card Hover Physics & Apple Spotlight */
+.product-card, .wr-product-card, .wr-card-hover {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  will-change: transform;
+}
+.product-card:hover, .wr-product-card:hover, .wr-card-hover:hover {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Apple Keynote Floating Levitation */
+@keyframes wrAppleHeroFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.08));
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.6deg);
+    filter: drop-shadow(0 25px 40px rgba(0, 0, 0, 0.13));
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.08));
+  }
+}
+.wr-hero-float {
+  animation: wrAppleHeroFloat 5s ease-in-out infinite alternate;
+  will-change: transform, filter;
+}
+
+/* Apple Spring Micro-Interactions on Buttons */
+.button, a.button, .tmp-btn {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, filter 0.2s ease !important;
+}
+.button:hover, a.button:hover, .tmp-btn:hover {
+  transform: scale(1.03) translateY(-2px) !important;
+  filter: brightness(1.08) !important;
+}
+.button:active, a.button:active, .tmp-btn:active {
+  transform: scale(0.96) translateY(1px) !important;
+}
+
 `;

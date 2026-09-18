@@ -164,6 +164,7 @@ export function SitePreview({
       const bridge = doc.createElement('script');
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `
+        var __name = typeof __name === 'function' ? __name : (v) => v;
         (${referenceInteractions.toString()})();
         (${materialsRuntime.toString()})();
         ${bannerRuntime}

@@ -56,6 +56,8 @@ export interface ThemeContext {
   asset: (id?: string) => string;
   translateProduct: (p: Product) => { name: string; description: string };
   mainProduct?: Product;
+  defaultProductImage: string;
+  productMainImage: (p?: Product) => string;
   color: string;
   brandInk: string;
   socials: string;
@@ -95,6 +97,12 @@ export function buildThemeContext(draft: Draft, options: RenderOptions): ThemeCo
 
   const mainProduct =
     draft.products.find((p) => p.id === draft.primaryProductId) ?? draft.products[0];
+  const defaultProductImage =
+    asset(mainProduct?.imageAssetId) ||
+    asset(draft.products.find((p) => p.imageAssetId)?.imageAssetId) ||
+    '';
+  const productMainImage = (p?: Product) =>
+    (p && asset(p.imageAssetId)) || defaultProductImage;
 
   const socials = (['linkedin', 'facebook', 'instagram', 'x'] as const)
     .map((k) => {
@@ -144,6 +152,8 @@ export function buildThemeContext(draft: Draft, options: RenderOptions): ThemeCo
     asset,
     translateProduct,
     mainProduct,
+    defaultProductImage,
+    productMainImage,
     color,
     brandInk,
     socials,

@@ -45,6 +45,11 @@ const TEMPLATE_PREVIEWS: Record<string, string> = {
   'juno-toys': '/templates/previews/juno-toys.jpg',
   'corpox-ai-agency': '/templates/previews/corpox-ai-agency.jpg',
   'corpox-consulting': '/templates/previews/corpox-consulting.jpg',
+  'senseng-candy': '/templates/previews/senseng-candy.jpg',
+  'senseng-wonder': '/templates/previews/senseng-wonder.jpg',
+  'senseng-arcade': '/templates/previews/senseng-arcade.jpg',
+  'senseng-nature': '/templates/previews/senseng-nature.jpg',
+  'senseng-minimal': '/templates/previews/senseng-minimal.jpg',
   natural: '/templates/previews/senseng-clean.jpg',
   technology: '/templates/previews/saas-automation.jpg',
   explorer: '/templates/previews/crafto-corporate.jpg',
@@ -871,6 +876,11 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                           'juno-toys': 'Juno 儿童童趣玩具',
                           'corpox-ai-agency': 'Corpox AI 智能工坊',
                           'corpox-consulting': 'Corpox 顶级战略咨询',
+                          'senseng-candy': 'Senseng 缤纷糖果乐园',
+                          'senseng-wonder': 'Senseng 北欧温润工坊',
+                          'senseng-arcade': 'Senseng 霓虹赛博潮玩',
+                          'senseng-nature': 'Senseng 森林原野工坊',
+                          'senseng-minimal': 'Senseng 瑞士极简生活馆',
                         } as Record<TemplateId, string>)[project.template] || '专业模版'
                       }
                     </span>

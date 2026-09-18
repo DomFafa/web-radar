@@ -44,6 +44,78 @@ export const TEMPLATES: TemplateDefinition[] = [
     previewImg: '/templates/previews/senseng-video.jpg',
   },
   {
+    id: 'senseng-candy',
+    name: 'Senseng 缤纷糖果乐园',
+    englishName: 'Senseng Candy Pop & Play',
+    tagline: '专为儿童萌趣玩具与触感解压公仔定制；马卡龙粉彩体系、立体圆角泡泡与感官触觉矩阵',
+    category: 'consumer',
+    industries: ['儿童玩具', '萌宠解压', '感官潮玩', '亲子母婴', '外贸出口'],
+    features: ['马卡龙糖果配色', '左右分栏萌趣舞台', '4大感官魔力标签', '立体糖果展台网格'],
+    accentColor: '#ff6b8b',
+    badge: '童趣感官玩具 · 爆款首选',
+    previewImg: '/templates/previews/senseng-candy.jpg',
+  },
+  {
+    id: 'senseng-wonder',
+    name: 'Senseng 北欧温润工坊',
+    englishName: 'Senseng Nordic Wonder Studio',
+    tagline: '专为品质玩具独立站与全龄桌面疗愈设计；温暖奶油大地色、北欧便当盒画廊与波浪有机曲线',
+    category: 'consumer',
+    industries: ['益智玩具', '治愈解压', '精品独立站', '生活美学潮玩', '品牌代工'],
+    features: ['全屏画卷轮播', '北欧便当盒画廊', '波浪有机曲线分割', '材质工艺与FAQ'],
+    accentColor: '#f77f00',
+    badge: '北欧温润绘本 · 精品独立站',
+    previewImg: '/templates/previews/senseng-wonder.jpg',
+  },
+  {
+    id: 'senseng-arcade',
+    name: 'Senseng 霓虹赛博潮玩',
+    englishName: 'Senseng Cyber Arcade & Pop',
+    tagline: '机能潮玩机甲 HUD 与电光霓虹；物理触感动态进度条、实时跑数与赛博盲盒展台',
+    category: 'consumer',
+    industries: ['潮流盲盒', '机能玩具', '极客解压', '电竞桌面潮玩', '外贸直采'],
+    features: ['赛博HUD仪表台', '物理参数动态进度条', '实时跑数计数器', '街机芯片卡片'],
+    accentColor: '#00f5d4',
+    badge: '机能赛博潮玩 · 动态跑数',
+    previewImg: '/templates/previews/senseng-arcade.jpg',
+  },
+  {
+    id: 'senseng-nature',
+    name: 'Senseng 森林原野工坊',
+    englishName: 'Senseng Botanical & Forest',
+    tagline: '零塑环保自然主义；晨露鼠尾草绿、生态减碳动态进度条、波浪曲线与植物画册瀑布流',
+    category: 'consumer',
+    industries: ['母婴玩具', '环保可降解', '自然生活美学', '绿色供应链', '亲子早教'],
+    features: ['柔和波浪弧线', '生态减碳进度条', '晨雾滑入动效', '植物标本瀑布流'],
+    accentColor: '#4a7c59',
+    badge: '零塑环保自然 · 动态减碳条',
+    previewImg: '/templates/previews/senseng-nature.jpg',
+  },
+  {
+    id: 'senseng-minimal',
+    name: 'Senseng 瑞士极简生活馆',
+    englishName: 'Senseng Swiss Minimal Gallery',
+    tagline: '瑞士现代主义大留白与艺术品展台；精密阻尼刻度条、典藏编号序列与奢品解构详情',
+    category: 'creative',
+    industries: ['艺术潮玩', '设计师买手店', '奢品感官生活', '现代家居', '高端礼品'],
+    features: ['艺术馆聚光灯展台', '精密材料学阻尼刻度', '编号典藏展签', '奢品级单品解构'],
+    accentColor: '#c59b27',
+    badge: '瑞士极简画廊 · 奢品级解构',
+    previewImg: '/templates/previews/senseng-minimal.jpg',
+  },
+  {
+    id: 'juno-toys',
+    name: 'Juno 儿童童趣玩具',
+    englishName: 'Juno Playful Toys',
+    tagline: '参考 Juno Toys；天空蓝云朵首屏、圆润字体与童趣选品卡片',
+    category: 'consumer',
+    industries: ['儿童玩具', '母婴亲子', '益智教具', '文具礼品', '少儿生活消费'],
+    features: ['天空蓝云朵首屏', 'Quicksand 圆润字体', '圆形分类卡片', '自动绑定产品图片'],
+    accentColor: '#267cce',
+    badge: '温暖童趣 · 亲子家庭最爱',
+    previewImg: '/templates/previews/juno-toys.jpg',
+  },
+  {
     id: 'saas-automation',
     name: 'SaaS 智能自动化',
     englishName: 'Automation SaaS Tailwind',
@@ -105,18 +177,6 @@ export const TEMPLATES: TemplateDefinition[] = [
     previewImg: '/templates/previews/crafto-corporate.jpg',
   },
   {
-    id: 'juno-toys',
-    name: 'Juno 儿童童趣玩具',
-    englishName: 'Juno Playful Toys',
-    tagline: '参考 Juno Toys；天空蓝云朵首屏、圆润字体与童趣选品卡片',
-    category: 'consumer',
-    industries: ['儿童玩具', '母婴亲子', '益智教具', '文具礼品', '少儿生活消费'],
-    features: ['天空蓝云朵首屏', 'Quicksand 圆润字体', '圆形分类卡片', '自动绑定产品图片'],
-    accentColor: '#267cce',
-    badge: '温暖童趣 · 亲子家庭最爱',
-    previewImg: '/templates/previews/juno-toys.jpg',
-  },
-  {
     id: 'corpox-ai-agency',
     name: 'Corpox AI 智能工坊',
     englishName: 'Corpox Next-Gen AI Studio',
@@ -155,11 +215,11 @@ const PRESET_COLORS = [
 ];
 
 const CATEGORIES = [
-  { id: 'all', label: '全部模版 (10)' },
-  { id: 'consumer', label: '工贸与消费品 (3)' },
+  { id: 'all', label: '全部模版 (15)' },
+  { id: 'consumer', label: '潮玩玩具与工贸 (6)' },
   { id: 'tech', label: '科技与 SaaS (2)' },
   { id: 'enterprise', label: '金融与企服 (3)' },
-  { id: 'creative', label: '创意与集团 (2)' },
+  { id: 'creative', label: '艺术与创意生活 (4)' },
 ] as const;
 
 export function TemplateSelector({
@@ -194,8 +254,8 @@ export function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 10
-            套精心设计的高保真行业模版（含经典工贸、动态全屏视频、SaaS、金融、咨询等）。选中后将自动灌注你的公司与产品数据。
+            共提供 15
+            套精心设计的高保真行业模版（含赛博机能潮玩、森林原野、瑞士极简画廊、童趣糖果乐园、北欧温润、动态视频等）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>
 
@@ -280,8 +340,8 @@ export function TemplateSelector({
               <dt>视频背景（选填）</dt>
               <dd>{media.videos ? `内置 ${media.videos} 段视频；无需额外上传` : '默认无需视频'}</dd>
               <small>
-                自定义全屏背景：每组 1 段 MP4 / WebM，建议 1920 × 1080（16:9），另备 1
-                张同尺寸封面。超宽屏可用 2560 × 1440，边缘预留裁切空间。
+                自定义全屏背景：每组 1 段 MP4 / WebM，建议 2560 × 1440（16:9，适配 27–32 寸大屏及 4K），另备 1
+                张同尺寸封面。超宽屏可用 3840 × 2160，边缘预留安全裁切空间。
               </small>
             </div>
             <div>
@@ -456,7 +516,7 @@ export function TemplateSelector({
                     <span>
                       视频：
                       {requirements.videos
-                        ? `已内置 ${requirements.videos} 段 · 可用 1920 × 1080 替换首页背景`
+                        ? `已内置 ${requirements.videos} 段 · 可用 2560 × 1440 替换首页背景`
                         : '默认 0 段；可自行添加全屏背景'}
                     </span>
                     <small>选中模板查看完整清单；产品图会自动复用。</small>
