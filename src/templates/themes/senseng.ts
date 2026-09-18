@@ -510,13 +510,13 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <img id="detailMainImg" src="${esc(currentProduct.img)}" alt="${esc(currentProduct.name)}">
           </div>
           <div class="senseng-detail-thumbs">
-            <button type="button" class="senseng-thumb-arrow" aria-label="Previous image">&lt;</button>
+            <button type="button" class="senseng-thumb-arrow senseng-thumb-prev" aria-label="Previous image">&lt;</button>
             ${(materialsMode?(draft.products.find(p=>p.id===currentProduct.id)?.gallery||[]).map(image=>({id:currentProduct.id,img:asset(image.assetId),name:image.caption||currentProduct.name})):allProducts.slice(0, 5)).map((p, idx) => `
-              <div class="senseng-thumb-btn ${p.id === currentProduct.id || idx === 0 ? 'active' : ''}" onclick="document.getElementById('detailMainImg').src='${esc(p.img)}';">
+              <button type="button" class="senseng-thumb-btn wr-detail-thumb ${p.id === currentProduct.id || idx === 0 ? 'active' : ''}" data-src="${esc(p.img)}" data-large="${esc(p.img)}" data-target="detailMainImg" aria-label="${esc(p.name)}">
                 <img src="${esc(p.img)}" alt="${esc(p.name)}">
-              </div>
+              </button>
             `).join('')}
-            <button type="button" class="senseng-thumb-arrow" aria-label="Next image">&gt;</button>
+            <button type="button" class="senseng-thumb-arrow senseng-thumb-next" aria-label="Next image">&gt;</button>
           </div>
         </div>
 

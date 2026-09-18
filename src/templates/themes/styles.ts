@@ -764,6 +764,23 @@ body[data-template="senseng-video"] .senseng-newsletter button { background: #ff
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 0;
+  outline: none;
+  font-family: inherit;
+  line-height: 1;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+.senseng-thumb-arrow:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+.senseng-thumb-arrow:active {
+  transform: scale(0.94);
 }
 .senseng-thumb-btn {
   width: 62px;
@@ -773,14 +790,30 @@ body[data-template="senseng-video"] .senseng-newsletter button { background: #ff
   background: #fbfdff;
   padding: 4px;
   cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.senseng-thumb-btn:hover {
+  border-color: #7dd3fc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(7, 59, 145, 0.1);
 }
 .senseng-thumb-btn.active {
   border-color: #0088eb;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 136, 235, 0.25);
+  transform: translateY(-1px);
 }
 .senseng-thumb-btn img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 8px;
+  pointer-events: none;
 }
 .senseng-badge-pill {
   display: inline-block;

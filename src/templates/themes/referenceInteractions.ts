@@ -333,11 +333,13 @@ export function referenceInteractions() {
   document.querySelectorAll<HTMLElement>('.wr-detail-thumb').forEach((thumb) => {
     thumb.addEventListener('click', () => {
       const targetId = thumb.getAttribute('data-target') || 'detailMainImg';
-      const src = thumb.getAttribute('data-src');
-      const mainImg = document.getElementById(targetId) as HTMLImageElement;
+      const src = thumb.getAttribute('data-src') || thumb.getAttribute('data-large') || thumb.querySelector<HTMLImageElement>('img')?.src;
+      const mainImg = (document.getElementById(targetId) || document.getElementById('detailMainImg') || document.getElementById('wr-detail-main-img')) as HTMLImageElement;
       if (mainImg && src) {
+        mainImg.closest('picture')?.querySelectorAll('source').forEach((s) => s.remove());
         mainImg.src = src;
-        thumb.parentElement?.querySelectorAll('.wr-detail-thumb').forEach((t) => t.classList.remove('active'));
+        const container = thumb.closest('.senseng-detail-thumbs') || thumb.parentElement;
+        container?.querySelectorAll('.wr-detail-thumb, .senseng-thumb-btn').forEach((t) => t.classList.remove('active'));
         thumb.classList.add('active');
       }
     });
