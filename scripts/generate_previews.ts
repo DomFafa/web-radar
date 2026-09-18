@@ -7,7 +7,98 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 describe('generate previews', () => {
-  it('captures senseng-candy and senseng-wonder preview screenshots', async () => {
+  it('captures senseng templates preview screenshots', async () => {
+    const products = [
+      {
+        id: 'p-1',
+        name: 'Shiba Inu Pop Bead Squeeze',
+        description: 'Bursting sensory beads with slow-rebound soft touch. Instant stress relief companion.',
+        material: 'Food-Grade TPR Silicone',
+        dimensions: '8.5 × 6.5 cm',
+        imageAssetId: 'p1',
+      },
+      {
+        id: 'p-2',
+        name: 'Sweet Cat Playmate Pouch',
+        description: 'Ultra-soft squishy kitten with bell collar & cozy carrying pouch.',
+        material: 'High-Elastic Memory Gel',
+        dimensions: '9.0 × 7.0 cm',
+        imageAssetId: 'p2',
+      },
+      {
+        id: 'p-3',
+        name: 'Penguin Desk Anti-Stress Buddy',
+        description: 'Weighted soothing squishy companion designed for focused work and quiet study.',
+        material: 'BPA-Free Elastic Silicone',
+        dimensions: '7.8 × 5.2 cm',
+        imageAssetId: 'p3',
+      },
+      {
+        id: 'p-4',
+        name: 'Aurora Thermal Narwhal Plush-Gel',
+        description: 'Magical color-shifting horn with soothing tactile squish response.',
+        material: 'Eco Thermo-Sensing PU',
+        dimensions: '10.5 × 6.0 cm',
+        imageAssetId: 'p4',
+      },
+      {
+        id: 'p-5',
+        name: 'Rainbow Cloud Jelly Switcher',
+        description: 'Bioluminescent soothing squishy cloud with gentle chromatic diffusion.',
+        material: 'Optic Elastic Polymer',
+        dimensions: '9.5 × 6.0 cm',
+        imageAssetId: 'p5',
+      },
+      {
+        id: 'p-6',
+        name: 'Stellar Cosmic Galaxy Orb',
+        description: 'Swirling celestial glitter encased in ultra-durable shock-absorbing gel.',
+        material: 'High-Purity Silicone Gel',
+        dimensions: '7.0 × 7.0 cm',
+        imageAssetId: 'p6',
+      },
+      {
+        id: 'p-7',
+        name: 'Kawaii Strawberry Matcha Bunny',
+        description: 'Slow-rise velvety texture infused with natural soothing aromatics.',
+        material: 'Botanical Memory Foam',
+        dimensions: '11.0 × 6.5 cm',
+        imageAssetId: 'p7',
+      },
+      {
+        id: 'p-8',
+        name: 'Zen Forest Tactile Acorn Trio',
+        description: 'Organic hand-turned beechwood cap paired with ultra-tactile acoustic core.',
+        material: 'FSC Beech & Organic Silicone',
+        dimensions: '6.0 × 5.0 cm',
+        imageAssetId: 'p8',
+      },
+    ];
+
+    const brandColors: Record<string, string> = {
+      'senseng-candy': '#ff6b8b',
+      'senseng-wonder': '#2a9d8f',
+      'senseng-arcade': '#00f5d4',
+      'senseng-nature': '#2d4a22',
+      'senseng-minimal': '#111827',
+    };
+
+    const headlines: Record<string, string> = {
+      'senseng-candy': 'Pop the Stress Away, Squeeze Pure Magic!',
+      'senseng-wonder': 'Warm Tactile Companions Crafted for Pure Joy',
+      'senseng-arcade': 'Next-Gen Cyber Toybox & Sonic Tactile Playground',
+      'senseng-nature': 'Earth-Crafted Wooden Companions & Botanical Wonders',
+      'senseng-minimal': 'The Pure Architecture of Tactile Form',
+    };
+
+    const subtitles: Record<string, string> = {
+      'senseng-candy': 'Original Sensory Squishies & Kawaii Pocket Friends',
+      'senseng-wonder': 'Timeless Nordic Design Meets Playful Imagination',
+      'senseng-arcade': 'Ultra-Reactive Sensory Machines Engineered for Future Play',
+      'senseng-nature': 'Gentle Organic Textures Nurturing Childhood Curiosity & Earth Harmony',
+      'senseng-minimal': 'Sculptural Play Objects for the Design-Discerning Modern Nursery',
+    };
+
     const draft = (template: Draft['template']): Draft => ({
       company: {
         name: 'SENSENG TOYS',
@@ -19,54 +110,17 @@ describe('generate previews', () => {
         instagram: 'https://instagram.com/sensengtoys',
         x: '',
       },
-      products: [
-        {
-          id: 'p-1',
-          name: 'Shiba Inu Pop Bead Squeeze',
-          description: 'Bursting sensory beads with slow-rebound soft touch. Instant stress relief companion.',
-          material: 'Food-Grade TPR Silicone',
-          dimensions: '8.5 × 6.5 cm',
-          imageAssetId: 'p1',
-        },
-        {
-          id: 'p-2',
-          name: 'Sweet Cat Playmate Pouch',
-          description: 'Ultra-soft squishy kitten with bell collar & cozy carrying pouch.',
-          material: 'High-Elastic Memory Gel',
-          dimensions: '9.0 × 7.0 cm',
-          imageAssetId: 'p2',
-        },
-        {
-          id: 'p-3',
-          name: 'Penguin Desk Anti-Stress Buddy',
-          description: 'Weighted soothing squishy companion designed for focused work and quiet study.',
-          material: 'BPA-Free Elastic Silicone',
-          dimensions: '7.8 × 5.2 cm',
-          imageAssetId: 'p3',
-        },
-        {
-          id: 'p-4',
-          name: 'Aurora Thermal Narwhal Plush-Gel',
-          description: 'Magical color-shifting horn with soothing tactile squish response.',
-          material: 'Eco Thermo-Sensing PU',
-          dimensions: '10.5 × 6.0 cm',
-          imageAssetId: 'p4',
-        },
-      ],
+      products,
       primaryProductId: 'p-1',
       category: 'toys',
       country: 'CN',
       languages: ['en'],
       template,
-      brandColor: template === 'senseng-candy' ? '#ff6b8b' : '#2a9d8f',
+      brandColor: brandColors[template] || '#ff6b8b',
       copy: {
         en: {
-          headline: template === 'senseng-candy' 
-            ? 'Pop the Stress Away, Squeeze Pure Magic!' 
-            : 'Warm Tactile Companions Crafted for Pure Joy',
-          subtitle: template === 'senseng-candy'
-            ? 'Original Sensory Squishies & Kawaii Pocket Friends'
-            : 'Timeless Nordic Design Meets Playful Imagination',
+          headline: headlines[template] || 'Sensory Play Crafted for Pure Joy',
+          subtitle: subtitles[template] || 'Certified BPA-Free Tactile Worlds',
           about: 'Senseng Crafts premium sensory squishy toys certified to EN71, ASTM F963 and CPSIA standards.',
           cta: 'Explore Sensory Toys',
         },
@@ -94,21 +148,27 @@ describe('generate previews', () => {
       preview: true,
     };
 
-    const candyHtml = renderSite(draft('senseng-candy'), opts);
-    const wonderHtml = renderSite(draft('senseng-wonder'), opts);
+    const templatesToRender: Draft['template'][] = [
+      'senseng-candy',
+      'senseng-wonder',
+      'senseng-arcade',
+      'senseng-nature',
+      'senseng-minimal',
+    ];
+
+    const renderedPages = new Map<string, string>();
+    for (const t of templatesToRender) {
+      renderedPages.set(t, renderSite(draft(t), opts));
+    }
 
     // Start a temporary HTTP server serving public/ and the html pages
     const publicDir = path.resolve('public');
     const server = http.createServer((req, res) => {
       const url = new URL(req.url || '/', 'http://127.0.0.1');
-      if (url.pathname === '/candy') {
+      const route = url.pathname.replace(/^\//, '');
+      if (renderedPages.has(route)) {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(candyHtml);
-        return;
-      }
-      if (url.pathname === '/wonder') {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(wonderHtml);
+        res.end(renderedPages.get(route));
         return;
       }
 
@@ -148,32 +208,23 @@ describe('generate previews', () => {
         deviceScaleFactor: 1,
       });
 
-      // Capture candy preview
-      await page.goto(`${baseUrl}/candy`, { waitUntil: 'networkidle' });
-      await page.waitForTimeout(500);
-      const candyPath = path.resolve('public/templates/previews/senseng-candy.jpg');
-      await page.screenshot({
-        path: candyPath,
-        type: 'jpeg',
-        quality: 90,
-        clip: { x: 0, y: 0, width: 1440, height: 1000 },
-      });
+      for (const t of templatesToRender) {
+        await page.goto(`${baseUrl}/${t}`, { waitUntil: 'networkidle' });
+        await page.waitForTimeout(600);
+        const screenshotPath = path.resolve(`public/templates/previews/${t}.jpg`);
+        await page.screenshot({
+          path: screenshotPath,
+          type: 'jpeg',
+          quality: 90,
+          clip: { x: 0, y: 0, width: 1440, height: 1000 },
+        });
+        console.log(`Saved screenshot for ${t} -> ${screenshotPath}`);
+      }
 
-      // Capture wonder preview
-      await page.goto(`${baseUrl}/wonder`, { waitUntil: 'networkidle' });
-      await page.waitForTimeout(500);
-      const wonderPath = path.resolve('public/templates/previews/senseng-wonder.jpg');
-      await page.screenshot({
-        path: wonderPath,
-        type: 'jpeg',
-        quality: 90,
-        clip: { x: 0, y: 0, width: 1440, height: 1000 },
-      });
-
-      console.log('Screenshots saved successfully!');
+      console.log('All screenshots saved successfully!');
     } finally {
       await browser.close();
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
-  }, 30000);
+  }, 60000);
 });

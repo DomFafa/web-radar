@@ -164,6 +164,42 @@ export const TEMPLATES: TemplateDefinition[] = [
     badge: '北欧温润绘本 · 精品独立站',
     previewImg: '/templates/previews/senseng-wonder.jpg',
   },
+  {
+    id: 'senseng-arcade',
+    name: 'Senseng 霓虹赛博潮玩',
+    englishName: 'Senseng Cyber Arcade & Pop',
+    tagline: '机能潮玩机甲 HUD 与电光霓虹；物理触感动态进度条、实时跑数与赛博盲盒展台',
+    category: 'consumer',
+    industries: ['潮流盲盒', '机能玩具', '极客解压', '电竞桌面潮玩', '外贸直采'],
+    features: ['赛博HUD仪表台', '物理参数动态进度条', '实时跑数计数器', '街机芯片卡片'],
+    accentColor: '#00f5d4',
+    badge: '机能赛博潮玩 · 动态跑数',
+    previewImg: '/templates/previews/senseng-arcade.jpg',
+  },
+  {
+    id: 'senseng-nature',
+    name: 'Senseng 森林原野工坊',
+    englishName: 'Senseng Botanical & Forest',
+    tagline: '零塑环保自然主义；晨露鼠尾草绿、生态减碳动态进度条、波浪曲线与植物画册瀑布流',
+    category: 'consumer',
+    industries: ['母婴玩具', '环保可降解', '自然生活美学', '绿色供应链', '亲子早教'],
+    features: ['柔和波浪弧线', '生态减碳进度条', '晨雾滑入动效', '植物标本瀑布流'],
+    accentColor: '#4a7c59',
+    badge: '零塑环保自然 · 动态减碳条',
+    previewImg: '/templates/previews/senseng-nature.jpg',
+  },
+  {
+    id: 'senseng-minimal',
+    name: 'Senseng 瑞士极简生活馆',
+    englishName: 'Senseng Swiss Minimal Gallery',
+    tagline: '瑞士现代主义大留白与艺术品展台；精密阻尼刻度条、典藏编号序列与奢品解构详情',
+    category: 'creative',
+    industries: ['艺术潮玩', '设计师买手店', '奢品感官生活', '现代家居', '高端礼品'],
+    features: ['艺术馆聚光灯展台', '精密材料学阻尼刻度', '编号典藏展签', '奢品级单品解构'],
+    accentColor: '#c59b27',
+    badge: '瑞士极简画廊 · 奢品级解构',
+    previewImg: '/templates/previews/senseng-minimal.jpg',
+  },
 ];
 
 const PRESET_COLORS = [
@@ -179,11 +215,11 @@ const PRESET_COLORS = [
 ];
 
 const CATEGORIES = [
-  { id: 'all', label: '全部模版 (10)' },
-  { id: 'consumer', label: '工贸与消费品 (3)' },
+  { id: 'all', label: '全部模版 (15)' },
+  { id: 'consumer', label: '潮玩玩具与工贸 (6)' },
   { id: 'tech', label: '科技与 SaaS (2)' },
   { id: 'enterprise', label: '金融与企服 (3)' },
-  { id: 'creative', label: '创意与集团 (2)' },
+  { id: 'creative', label: '艺术与创意生活 (4)' },
 ] as const;
 
 export function TemplateSelector({
@@ -218,8 +254,8 @@ export function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 10
-            套精心设计的高保真行业模版（含经典工贸、动态全屏视频、SaaS、金融、咨询等）。选中后将自动灌注你的公司与产品数据。
+            共提供 15
+            套精心设计的高保真行业模版（含赛博机能潮玩、森林原野、瑞士极简画廊、童趣糖果乐园、北欧温润、动态视频等）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>
 

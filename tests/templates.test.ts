@@ -269,8 +269,14 @@ it('renders saved gallery images and fixed website copy on product details only'
   expect(renderSite(d,{...opts,page:'catalog'})).not.toContain('https://media.example/side-view');
 });
 
-describe('senseng toy templates (senseng-candy & senseng-wonder)', () => {
-  const toyTemplates: Draft['template'][] = ['senseng-candy', 'senseng-wonder'];
+describe('senseng toy templates (senseng-candy, senseng-wonder, senseng-arcade, senseng-nature, senseng-minimal)', () => {
+  const toyTemplates: Draft['template'][] = [
+    'senseng-candy',
+    'senseng-wonder',
+    'senseng-arcade',
+    'senseng-nature',
+    'senseng-minimal',
+  ];
 
   for (const template of toyTemplates) {
     it(`renders ${template} full website journey across 5 page types`, () => {
@@ -326,7 +332,7 @@ describe('senseng toy templates (senseng-candy & senseng-wonder)', () => {
     });
   }
 
-  it('verifies specialized layout signatures for senseng-candy and senseng-wonder', () => {
+  it('verifies specialized layout signatures and dynamic motion features for all 5 toy templates', () => {
     const d = draft();
 
     // senseng-candy: Candy pop playground layout
@@ -349,8 +355,53 @@ describe('senseng toy templates (senseng-candy & senseng-wonder)', () => {
     const wonderContact = renderSite({ ...d, template: 'senseng-wonder' }, { ...opts, page: 'contact' });
     expect(wonderContact).toContain('wr-senseng-wonder-inner');
 
-    // The two layouts have completely different structures
-    expect(candyHome).not.toEqual(wonderHome);
+    // senseng-arcade: Cyber Pop HUD & dynamic effects
+    const arcadeHome = renderSite({ ...d, template: 'senseng-arcade' }, opts);
+    expect(arcadeHome).toContain('wr-arcade-hud');
+    expect(arcadeHome).toContain('wr-arcade-hero');
+    expect(arcadeHome).toContain('wrArcadeScan');
+    expect(arcadeHome).toContain('wr-arcade-card');
+    expect(arcadeHome).toContain('data-reveal');
+    expect(arcadeHome).toContain('data-counter');
+    expect(arcadeHome).toContain('data-progress');
+    expect(arcadeHome).toContain('wr-progress-bar');
+
+    const arcadeAbout = renderSite({ ...d, template: 'senseng-arcade' }, { ...opts, page: 'about' });
+    expect(arcadeAbout).toContain('wr-senseng-arcade-inner');
+    expect(arcadeAbout).toContain('FOOD-GRADE SILICONE');
+
+    // senseng-nature: Botanical Forest & Organic Counters
+    const natureHome = renderSite({ ...d, template: 'senseng-nature' }, opts);
+    expect(natureHome).toContain('wr-nature-hero');
+    expect(natureHome).toContain('wr-nature-card');
+    expect(natureHome).toContain('wr-nature-frame');
+    expect(natureHome).toContain('data-reveal');
+    expect(natureHome).toContain('data-counter');
+    expect(natureHome).toContain('data-progress');
+
+    const natureCatalog = renderSite({ ...d, template: 'senseng-nature' }, { ...opts, page: 'catalog' });
+    expect(natureCatalog).toContain('wr-senseng-nature-inner');
+    expect(natureCatalog).toContain('wr-nature-grid');
+
+    // senseng-minimal: Swiss Modernist Atelier & Precision Damping
+    const minimalHome = renderSite({ ...d, template: 'senseng-minimal' }, opts);
+    expect(minimalHome).toContain('wr-minimal-hero');
+    expect(minimalHome).toContain('wr-minimal-card');
+    expect(minimalHome).toContain('wr-minimal-podium');
+    expect(minimalHome).toContain('data-reveal');
+    expect(minimalHome).toContain('data-progress');
+
+    const minimalDetail = renderSite(
+      { ...d, template: 'senseng-minimal' },
+      { ...opts, page: 'detail', productId: 'p-one' },
+    );
+    expect(minimalDetail).toContain('wr-senseng-minimal-inner');
+    expect(minimalDetail).toContain('TECHNICAL ANATOMY');
+
+    // Verify all 5 templates have distinct layouts and content structures
+    const homes = [candyHome, wonderHome, arcadeHome, natureHome, minimalHome];
+    const uniqueHomes = new Set(homes);
+    expect(uniqueHomes.size).toBe(5);
   });
 });
 

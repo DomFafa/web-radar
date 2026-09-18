@@ -27,7 +27,10 @@ export type TemplateId =
   | 'corpox-ai-agency'
   | 'corpox-consulting'
   | 'senseng-candy'
-  | 'senseng-wonder';
+  | 'senseng-wonder'
+  | 'senseng-arcade'
+  | 'senseng-nature'
+  | 'senseng-minimal';
 export interface Product {
   id: string;
   name: string;

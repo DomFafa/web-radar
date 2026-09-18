@@ -1261,4 +1261,77 @@ body[data-template="corpox-consulting"] {
   .senseng-detail-h1 { font-size: 32px; }
   .senseng-contact-2col > div { padding: 24px 18px !important; }
 }
+
+/* ------------------------------------------------------------- */
+/* DYNAMIC EFFECTS: SCROLL REVEAL, HUD SCAN, FLOATING & CARDS    */
+/* ------------------------------------------------------------- */
+@keyframes wrArcadePulse {
+  0% { opacity: 0.4; }
+  100% { opacity: 1; filter: drop-shadow(0 0 8px #00f5d4); }
+}
+@keyframes wrArcadeFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-12px); }
+}
+@keyframes wrArcadeScan {
+  0% { top: 0; opacity: 0.9; }
+  50% { opacity: 1; }
+  100% { top: 100%; opacity: 0.1; }
+}
+@keyframes wrArcadeBar {
+  0% { height: 6px; }
+  100% { height: 24px; }
+}
+@keyframes wrFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-10px); }
+}
+@keyframes wrFloatReverse {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(10px); }
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-reveal].wr-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wr-arcade-card:hover {
+  transform: translateY(-6px);
+  border-color: #00f5d4 !important;
+  box-shadow: 0 0 28px rgba(0, 245, 212, 0.35) !important;
+}
+.wr-nature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(45, 74, 34, 0.12) !important;
+}
+.wr-minimal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.06) !important;
+}
+.wr-minimal-card:hover img,
+.wr-nature-card:hover img,
+.wr-arcade-card:hover img {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .wr-progress-bar {
+    transition: none !important;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
 `;

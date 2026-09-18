@@ -325,4 +325,46 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'senseng-arcade': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
+    bannerNote: '赛博机能 HUD 仪表台与极光电光特写已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-nature': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
+    bannerNote: '原野森林生态画卷与晨雾自然光影已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'senseng-minimal': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
+    bannerNote: '瑞士国际主义极简雕塑展台与纯净留白已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
 };
