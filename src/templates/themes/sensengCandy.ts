@@ -111,7 +111,20 @@ export const CANDY_DEFAULT_PRODUCTS = [
 export function getCandyProducts(ctx: ThemeContext) {
   const { draft, translateProduct } = ctx;
   const isZh = (ctx.lang as string) === 'zh';
-  return draft.products.map((p, idx) => {
+  if (!draft.products || draft.products.length === 0) {
+    return CANDY_DEFAULT_PRODUCTS.map((def, idx) => ({
+      id: `p-${idx + 1}`,
+      name: isZh ? def.nameZh : def.name,
+      desc: isZh ? def.descZh : def.desc,
+      badge: def.badge,
+      material: isZh ? def.materialZh : def.material,
+      dimensions: def.dimensions,
+      tagline: def.tagline,
+      category: def.category,
+      img: def.img,
+    }));
+  }
+  const userProducts = draft.products.map((p, idx) => {
     const def = CANDY_DEFAULT_PRODUCTS[idx % CANDY_DEFAULT_PRODUCTS.length];
     const t = translateProduct(p);
     const hasCustomName = p.name && !p.name.startsWith('产品') && !p.name.startsWith('Product') && p.name !== 'Oak form';
@@ -127,6 +140,28 @@ export function getCandyProducts(ctx: ThemeContext) {
       img: ctx.productMainImage(p) || def.img,
     };
   });
+
+  // If project has fewer than 8 products, pad with demo products for a rich catalog showcase
+  if (userProducts.length < 8) {
+    const padCount = 8 - userProducts.length;
+    for (let i = 0; i < padCount; i++) {
+      const defIdx = (userProducts.length + i) % CANDY_DEFAULT_PRODUCTS.length;
+      const def = CANDY_DEFAULT_PRODUCTS[defIdx];
+      userProducts.push({
+        id: `demo-${defIdx + 1}`,
+        name: isZh ? def.nameZh : def.name,
+        desc: isZh ? def.descZh : def.desc,
+        badge: def.badge,
+        material: isZh ? def.materialZh : def.material,
+        dimensions: def.dimensions,
+        tagline: def.tagline,
+        category: def.category,
+        img: def.img,
+      });
+    }
+  }
+
+  return userProducts;
 }
 
 export function renderCandyHome(ctx: ThemeContext): string {

@@ -20,13 +20,19 @@ export function renderMinimalHome(ctx: ThemeContext): string {
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 
-  const copy = draft.copy[ctx.lang] ?? {
-    headline: isZh ? '形体、重力与指尖静谧的永恒触觉' : 'Form, Gravity & The Quiet Joy of Tactile Objects',
-    subtitle: isZh
+  const userCopy = draft.copy[ctx.lang];
+  const copy = {
+    headline: userCopy?.headline || (isZh ? '形体、重力与指尖静谧的永恒触觉' : 'Form, Gravity & The Quiet Joy of Tactile Objects'),
+    subtitle: userCopy?.subtitle || (isZh
       ? '源自瑞士国际主义极简设计哲学。以微米级开模公差与医用级触感聚合物，让解压公仔升华为现代桌面雕塑与触觉艺术藏品。'
-      : 'Rooted in Swiss modernist minimalism. Precision-calibrated tactile polymers designed as collectible sculptures for the mindful desk.',
-    cta: isZh ? '阅览典藏画廊' : 'View Exhibition Index',
+      : 'Rooted in Swiss modernist minimalism. Precision-calibrated tactile polymers designed as collectible sculptures for the mindful desk.'),
+    cta: userCopy?.cta || (isZh ? '阅览典藏画廊' : 'View Exhibition Index'),
   };
+
+  const customBanner = draft.banner ? ctx.asset(draft.banner.assetId) : null;
+  const heroBg = customBanner
+    ? `linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(249,250,251,0.94) 100%), url('${esc(customBanner)}') center/cover no-repeat`
+    : `linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(249,250,251,0.96) 100%), url('/templates/senseng/hero-minimal.jpg') center/cover no-repeat`;
 
   // 1. Top Archival Ribbon
   const ribbonHtml = `
@@ -40,10 +46,10 @@ export function renderMinimalHome(ctx: ThemeContext): string {
 
   // 2. Sculptural Spotlight Hero
   const heroHtml = `
-    <section class="wr-minimal-hero" aria-label="${esc(copy.headline)}" style="background:#ffffff;padding:85px 0 95px;position:relative;border-bottom:1px solid #e5e7eb;">
+    <section class="wr-minimal-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:85px 0 95px;position:relative;border-bottom:1px solid #e5e7eb;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:60px;align-items:center;">
         <!-- Left Editorial Column -->
-        <div data-reveal="fade-up">
+        <div class="wr-minimal-hero-left">
           <div style="font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;color:#c59b27;font-weight:800;margin-bottom:20px;">
             № 2026 COLLECTION // OBJECT STUDY
           </div>
@@ -89,12 +95,12 @@ export function renderMinimalHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Spotlight Podium -->
-        <div data-reveal="fade-up" style="position:relative;text-align:center;">
+        <div class="wr-minimal-hero-right" style="position:relative;text-align:center;">
           <div class="wr-minimal-podium" style="background:#f9fafb;border:1px solid #e5e7eb;padding:50px 30px;position:relative;max-width:460px;margin:0 auto;box-shadow:0 20px 40px rgba(0,0,0,0.03);">
             <div style="position:absolute;top:16px;left:16px;font-size:0.72rem;letter-spacing:0.1em;color:#9ca3af;text-transform:uppercase;">
               EXHIBIT // № 01
             </div>
-            <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:340px;height:auto;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,0.08));">
+            <img src="${esc(heroProduct.img || '/templates/senseng/products-3.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:340px;height:auto;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,0.08));">
             <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:14px;display:flex;justify-content:space-between;font-size:0.78rem;color:#6b7280;letter-spacing:0.05em;">
               <span>${esc(heroProduct.name)}</span>
               <span>100% NON-TOXIC SILICONE</span>

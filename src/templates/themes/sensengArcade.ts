@@ -20,13 +20,19 @@ export function renderArcadeHome(ctx: ThemeContext): string {
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 
-  const copy = draft.copy[ctx.lang] ?? {
-    headline: isZh ? '赛博机能潮玩 · 触觉神经降噪黑科技' : 'Hyper-Tactile Cyber Toys // Zero Stress Protocol',
-    subtitle: isZh
+  const userCopy = draft.copy[ctx.lang];
+  const copy = {
+    headline: userCopy?.headline || (isZh ? '赛博机能潮玩 · 触觉神经降噪黑科技' : 'Hyper-Tactile Cyber Toys // Zero Stress Protocol'),
+    subtitle: userCopy?.subtitle || (isZh
       ? '融合独创数万颗微爆珠声学振动与 5 秒慢回弹记忆聚合物。高弹食品级环保材质，专为极客桌面与潮流玩家打造的情绪解压机甲。'
-      : 'Engineered with patented acoustic micro-bead resonance and 5-second memory rebound. 100% certified food-grade TPR crafted for modern desks and cyberpunk collectors.',
-    cta: isZh ? '启动机能潮玩目录' : 'Enter Cyber Catalog',
+      : 'Engineered with patented acoustic micro-bead resonance and 5-second memory rebound. 100% certified food-grade TPR crafted for modern desks and cyberpunk collectors.'),
+    cta: userCopy?.cta || (isZh ? '启动机能潮玩目录' : 'Enter Cyber Catalog'),
   };
+
+  const customBanner = draft.banner ? ctx.asset(draft.banner.assetId) : null;
+  const heroBg = customBanner
+    ? `linear-gradient(180deg, rgba(9,13,22,0.85) 0%, rgba(9,13,22,0.95) 100%), url('${esc(customBanner)}') center/cover no-repeat`
+    : `radial-gradient(ellipse at center, rgba(15,23,42,0.88) 0%, rgba(9,13,22,0.96) 100%), url('/templates/senseng/hero-arcade.jpg') center/cover no-repeat`;
 
   // 1. Top Cyber Ribbon
   const ribbonHtml = `
@@ -45,14 +51,14 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
   // 2. Hero HUD Stage
   const heroHtml = `
-    <section class="wr-arcade-hero" aria-label="${esc(copy.headline)}" style="background:radial-gradient(ellipse at top, #151d2f 0%, #0a0d16 80%);padding:70px 0 80px;position:relative;overflow:hidden;border-bottom:2px solid #00f5d4;color:#ffffff;">
+    <section class="wr-arcade-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:70px 0 80px;position:relative;overflow:hidden;border-bottom:2px solid #00f5d4;color:#ffffff;">
       <!-- Neon Grid Background Lines -->
       <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,245,212,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,212,0.05) 1px, transparent 1px);background-size:40px 40px;pointer-events:none;"></div>
       <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(247,37,133,0.12);filter:blur(80px);top:-100px;right:-50px;pointer-events:none;"></div>
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:48px;align-items:center;position:relative;z-index:2;">
         <!-- Left Column: Copy, Tech Badges, CTAs -->
-        <div data-reveal="fade-up">
+        <div class="wr-arcade-hero-left">
           <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,245,212,0.08);border:1px solid #00f5d4;padding:6px 16px;border-radius:4px;margin-bottom:20px;">
             <span style="color:#00f5d4;font-family:monospace;font-size:0.8rem;font-weight:900;letter-spacing:0.08em;">
               ⚡ SENSENG SENSORY LAB // VER. 3.0
@@ -101,7 +107,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Column: 3D HUD Stage Showcase -->
-        <div data-reveal="fade-up" style="position:relative;text-align:center;">
+        <div class="wr-arcade-hero-right" style="position:relative;text-align:center;">
           <div class="wr-arcade-hud" style="background:#0f172a;border:2px solid #00f5d4;border-radius:16px;padding:36px;box-shadow:0 0 35px rgba(0,245,212,0.25), inset 0 0 20px rgba(0,245,212,0.1);position:relative;max-width:480px;margin:0 auto;">
             <!-- Corner Decors -->
             <div style="position:absolute;top:-4px;left:-4px;width:16px;height:16px;border-top:3px solid #f72585;border-left:3px solid #f72585;"></div>
@@ -117,7 +123,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
             <!-- Main Floating Image with Radar Scan Line -->
             <div style="position:relative;overflow:hidden;padding:15px;">
-              <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;filter:drop-shadow(0 0 25px rgba(0,245,212,0.4));animation:wrArcadeFloat 4s ease-in-out infinite alternate;">
+              <img src="${esc(heroProduct.img || '/templates/senseng/products-1.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;filter:drop-shadow(0 0 25px rgba(0,245,212,0.4));animation:wrArcadeFloat 4s ease-in-out infinite alternate;">
               <div style="position:absolute;inset:0;height:2px;background:linear-gradient(90deg,transparent,#00f5d4,transparent);box-shadow:0 0 8px #00f5d4;animation:wrArcadeScan 3s linear infinite;"></div>
             </div>
 

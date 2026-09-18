@@ -1291,14 +1291,19 @@ body[data-template="corpox-consulting"] {
   100% { transform: translateY(10px); }
 }
 
+/* Progressive enhancement: elements stay visible by default to prevent blank screen in previews/no-JS */
 [data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.wr-motion-ready [data-reveal]:not(.wr-revealed) {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-reveal].wr-revealed {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 .wr-arcade-card:hover {

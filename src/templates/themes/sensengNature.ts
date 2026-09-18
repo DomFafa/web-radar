@@ -20,13 +20,19 @@ export function renderNatureHome(ctx: ThemeContext): string {
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 
-  const copy = draft.copy[ctx.lang] ?? {
-    headline: isZh ? '抚摸原野心跳 · 归还童年最初的纯净与温柔' : 'Gentle by Nature // Organic Tactile Sensory Companions',
-    subtitle: isZh
+  const userCopy = draft.copy[ctx.lang];
+  const copy = {
+    headline: userCopy?.headline || (isZh ? '抚摸原野心跳 · 归还童年最初的纯净与温柔' : 'Gentle by Nature // Organic Tactile Sensory Companions'),
+    subtitle: userCopy?.subtitle || (isZh
       ? '坚持采用 100% 植物大豆油墨与经欧盟认证的食品级环保生物基硅胶。零微塑料、零刺激异味，为孩子和大地带来无微不至的温柔守护。'
-      : 'Thoughtfully crafted with certified bio-based polymers and natural soy ink packaging. Zero phthalates, non-toxic, and circular by design.',
-    cta: isZh ? '探索自然原野系列' : 'Explore Botanical Collection',
+      : 'Thoughtfully crafted with certified bio-based polymers and natural soy ink packaging. Zero phthalates, non-toxic, and circular by design.'),
+    cta: userCopy?.cta || (isZh ? '探索自然原野系列' : 'Explore Botanical Collection'),
   };
+
+  const customBanner = draft.banner ? ctx.asset(draft.banner.assetId) : null;
+  const heroBg = customBanner
+    ? `linear-gradient(180deg, rgba(253,252,249,0.85) 0%, rgba(244,241,234,0.92) 100%), url('${esc(customBanner)}') center/cover no-repeat`
+    : `linear-gradient(180deg, rgba(253,252,249,0.88) 0%, rgba(244,241,234,0.95) 100%), url('/templates/senseng/hero-nature.jpg') center/cover no-repeat`;
 
   // 1. Top Ribbon
   const ribbonHtml = `
@@ -41,13 +47,13 @@ export function renderNatureHome(ctx: ThemeContext): string {
 
   // 2. Botanical Hero with Soft Wave Curves
   const heroHtml = `
-    <section class="wr-nature-hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(180deg, #f4f1ea 0%, #e9e5db 100%);padding:75px 0 85px;position:relative;overflow:hidden;border-bottom:1px solid #dcd5c7;">
+    <section class="wr-nature-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:75px 0 85px;position:relative;overflow:hidden;border-bottom:1px solid #dcd5c7;">
       <!-- Subtle Floating Leaves SVG / Decor -->
       <div style="position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(74,124,89,0.08);filter:blur(60px);top:-60px;left:-60px;pointer-events:none;"></div>
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:52px;align-items:center;">
         <!-- Left Editorial Copy -->
-        <div data-reveal="fade-up">
+        <div class="wr-nature-hero-left">
           <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:1px solid #c8d3c5;padding:6px 18px;border-radius:9999px;margin-bottom:20px;box-shadow:0 2px 8px rgba(45,74,34,0.06);">
             <span style="color:#2d4a22;font-size:0.85rem;font-weight:800;">
               🌱 SUSTAINABLE SENSORY PLAY
@@ -95,9 +101,9 @@ export function renderNatureHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Visual Showcase -->
-        <div data-reveal="fade-up" style="position:relative;text-align:center;">
+        <div class="wr-nature-hero-right" style="position:relative;text-align:center;">
           <div class="wr-nature-frame" style="background:#ffffff;border:1px solid #d5cec0;border-radius:32px;padding:40px;box-shadow:0 16px 36px rgba(45,74,34,0.08);position:relative;max-width:480px;margin:0 auto;">
-            <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;transition:transform 0.4s ease;">
+            <img src="${esc(heroProduct.img || '/templates/senseng/products-2.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;transition:transform 0.4s ease;">
             <div style="margin-top:20px;display:flex;justify-content:center;gap:12px;font-size:0.82rem;font-weight:800;color:#2d4a22;">
               <span>🌱 0 Phthalates</span>
               <span>·</span>
