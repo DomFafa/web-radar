@@ -140,7 +140,7 @@ def _originals(payload: dict[str, Any]) -> list[tuple[dict[str, Any], bytes, str
     draft = payload['draft']
     products = draft['products']
     references = payload.get('referenceAssets', {})
-    allowed = {p.get('imageAssetId') for p in products} | {draft['company'].get('logoAssetId')}
+    allowed = {asset for p in products for asset in [p.get('imageAssetId'), *(image['assetId'] for image in p.get('gallery', []))]} | {draft['company'].get('logoAssetId')}
     allowed.discard(None)
     if not isinstance(references, dict) or not set(references) <= allowed:
         raise GeneratedAssetError('Scene generation accepts only approved product and company reference assets.')

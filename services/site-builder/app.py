@@ -34,7 +34,7 @@ def validate_request(value: Any) -> dict[str, Any]:
     if not isinstance(images, dict) or set(images) != set(planned_pages(value["draft"])):
         raise ValueError("Design images must exactly match the approved page plan")
     references = value.get("referenceAssets", {})
-    allowed_references = {product.get('imageAssetId') for product in value['draft']['products']} | {value['draft']['company'].get('logoAssetId')}
+    allowed_references = {asset for product in value['draft']['products'] for asset in [product.get('imageAssetId'), *(image['assetId'] for image in product.get('gallery', []))]} | {value['draft']['company'].get('logoAssetId')}
     allowed_references.discard(None)
     if not isinstance(references, dict) or not set(references) <= allowed_references:
         raise ValueError("Only approved product and logo reference assets are accepted")

@@ -23,7 +23,7 @@ LABEL_KEYS = ("home", "catalog", "about", "contact", "detail", "name", "email", 
 LABELS: dict[str, dict[str, str]] = {lang: dict(zip(LABEL_KEYS, row)) for lang, row in LABEL_ROWS.items()}
 ALLOWED_TAGS = set("html head body title style header footer main section article aside nav div span p h1 h2 h3 h4 h5 h6 a img ul ol li dl dt dd table thead tbody tr th td strong b em i small blockquote br hr figure figcaption button label".split())
 DROP_TAGS = set("script iframe object embed link meta base svg math video audio source track canvas template noscript form input textarea select option".split())
-HOOKS = {"company.name", "company.description", "company.email", "company.contactName", "company.logo", "copy.headline", "copy.subtitle", "copy.about", "copy.cta", "product.name", "product.description", "product.material", "product.dimensions", "product.image"} | {f"ui.{name}" for name in LABEL_KEYS}
+HOOKS = {"company.name", "company.description", "company.email", "company.contactName", "company.logo", "copy.headline", "copy.subtitle", "copy.about", "copy.cta", "product.name", "product.description", "product.material", "product.dimensions", "product.image", "product.gallery", "product.tagline", "product.sellingPoints", "product.applications"} | {f"ui.{name}" for name in LABEL_KEYS}
 REQUIRED = {"home": {"company.name", "copy.headline"}, "catalog": {"product.name", "product.image"}, "detail": {"product.name", "product.description", "product.image", "product.material", "product.dimensions"}, "about": {"copy.about"}, "contact": set()}
 
 
@@ -75,7 +75,14 @@ def content_bindings(draft: dict[str, Any], page: str) -> list[str]:
 def required_bindings(draft: dict[str, Any], page: str) -> set[str]:
     if page not in planned_pages(draft):
         raise OutputValidationError("Unknown page type")
-    return REQUIRED.get(page, set()) | set(content_bindings(draft, page))
+    required = REQUIRED.get(page, set()) | set(content_bindings(draft, page))
+    if page == "detail":
+        if any(len(product.get("gallery", [])) > 1 for product in draft["products"]):
+            required = required | {"product.gallery"}
+        for field in ("tagline", "sellingPoints", "applications"):
+            if any(product.get(field) for product in draft["products"]):
+                required = required | {f"product.{field}"}
+    return required
 
 
 def page_title_binding(page: str) -> str:
@@ -150,6 +157,21 @@ def validate_draft(draft: Any) -> None:
         for field in ("name", "description", "material", "dimensions"):
             if not isinstance(product.get(field), str):
                 raise ValueError("Product facts are required")
+        gallery = product.get("gallery", [])
+        if not isinstance(gallery, list) or len(gallery) > 11:
+            raise ValueError("Invalid product gallery assets")
+        gallery_ids = set()
+        for image in gallery:
+            if not isinstance(image, dict) or not isinstance(image.get("assetId"), str) or image["assetId"] in gallery_ids or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,199}", image["assetId"]):
+                raise ValueError("Invalid gallery asset token ID")
+            gallery_ids.add(image["assetId"])
+            if not isinstance(image.get("caption", ""), str) or len(image.get("caption", "")) > 1000:
+                raise ValueError("Invalid gallery caption")
+        if "tagline" in product and (not isinstance(product["tagline"], str) or len(product["tagline"]) > 160):
+            raise ValueError("Invalid product tagline")
+        for field in ("sellingPoints", "applications"):
+            if field in product and (not isinstance(product[field], list) or len(product[field]) > 5 or any(not isinstance(value, str) or len(value) > 180 for value in product[field])):
+                raise ValueError("Invalid product website fields")
         for lang in languages:
             if lang != "en":
                 translation = product.get("translations", {}).get(lang, {})
@@ -333,7 +355,29 @@ def bind(container: Tag, draft: dict[str, Any], lang: str, product: dict[str, An
             raise OutputValidationError("Unknown data binding hook")
         if node.name in ("style", "html", "head", "body") or node.find(True) is not None:
             raise OutputValidationError("Text bindings require safe leaf elements")
-        if hook == 'company.name' and node.name == 'img' and node.get('data-wr-design-asset') == 'logo':
+        if hook == 'product.gallery':
+            if node.name not in ('div', 'section'):
+                raise OutputValidationError("Gallery bindings require an empty div or section")
+            images = [image for image in product.get('gallery', []) if image['assetId'] != product.get('imageAssetId')]
+            if not images:
+                node.decompose()
+                continue
+            for image in images:
+                node.append(Tag(name='img', attrs={'src': f"__WR_ASSET_{image['assetId']}__", 'alt': image.get('caption') or str(values['product.name']), 'loading': 'lazy', 'style': 'max-width:100%;height:auto;object-fit:contain'}))
+        elif hook in ('product.sellingPoints', 'product.applications'):
+            if node.name not in ('ul', 'ol'):
+                raise OutputValidationError("Product list bindings require an empty list")
+            entries = product.get(hook.split('.')[1], []) if lang == 'en' else []
+            if not entries:
+                node.decompose()
+                continue
+            for entry in entries:
+                child = Tag(name='li')
+                child.string = entry
+                node.append(child)
+        elif hook == 'product.tagline' and lang != 'en':
+            node.decompose()
+        elif hook == 'company.name' and node.name == 'img'  and node.get('data-wr-design-asset') == 'logo':
             node['alt'] = draft['company']['name']
         elif hook in ("company.logo", "product.image"):
             if node.name != "img":

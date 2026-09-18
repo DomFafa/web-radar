@@ -1,4 +1,3 @@
-import { productFactsOrigins } from '../shared/model';
 import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
@@ -36,24 +35,8 @@ const short = z.string().max(300),
 const language = z.enum(['en', 'de', 'fr', 'es', 'pt', 'it']);
 const translation = z.object({ name: short, description: text });
 const copy = z.object({ headline: short, subtitle: text, about: text, cta: short });
-const source = z.object({
-  source: z.literal('product-radar'),
-  id,
-  sourceProjectId: id,
-  workflow: z.enum(['create', 'build']),
-  version: id,
-  name: short,
-  description: text,
-  material: text,
-  dimensions: short,
-  seriesName: short,
-  designDirection: text,
-  conditions: z.record(z.string(), z.unknown()),
-  image: z.object({ sourceProductId: id, contentType: z.string().nullable() }),
-  factsOrigin: z.enum(productFactsOrigins),
-});
-export const snapshotSchema = source;
-import { productImageKind } from '../shared/product-snapshot';
+export { importProductSnapshotSchema as snapshotSchema } from '../shared/product-snapshot';
+import { productSnapshotSchema as source, productImageKind } from '../shared/product-snapshot';
 const draftSchema = z.object({
   materials: appliedMaterialsSchema.optional(),
   buildBranch: z.enum(['template', 'custom', 'clone']).optional(),
@@ -328,6 +311,7 @@ export function videoInputKey(d: Draft): string {
       material: p.material,
       dimensions: p.dimensions,
       imageAssetId: p.imageAssetId,
+      gallery: p.gallery, tagline: p.tagline, sellingPoints: p.sellingPoints, applications: p.applications,
     })),
     primaryProductId: d.primaryProductId,
     category: d.category,
@@ -342,10 +326,12 @@ export function editDraft(previous: Draft, input: unknown): Draft {
   const next = validateDraft(input);
   preserveMaterialsEdit(previous,next);
   // Provenance is written only through the authenticated source importer.
-  next.products = next.products.map((p) => ({
-    ...p,
-    source: previous.products.find((old) => old.id === p.id)?.source,
-  }));
+  next.products = next.products.map((p) => {
+    const old = previous.products.find(product=>product.id === p.id);
+    return {...p,source:old?.source,...(old?.source?.factsOrigin === 'product-set' ? {
+      gallery:old.gallery,tagline:old.tagline,sellingPoints:old.sellingPoints,applications:old.applications,
+    } : {})};
+  });
   const scriptChanged =
     previous.script !== next.script || videoInputKey(previous) !== videoInputKey(next);
   next.scriptRevision = previous.scriptRevision + (scriptChanged ? 1 : 0);
@@ -428,7 +414,7 @@ export function assetReferences(d: Draft): string[] {
         ...bannerAssets(d).videos,
         d.heroAssetId,
         d.posterAssetId,
-        ...d.products.flatMap((p) => [p.imageAssetId,...(d.materials ? p.gallery ?? [] : []).map(image=>image.assetId)]),
+        ...d.products.flatMap((p) => [p.imageAssetId,...(p.gallery ?? []).map(image=>image.assetId)]),
         ...d.scenes.map((s) => s.imageAssetId),
         ...Object.values(d.siteDesign?.pages ?? {}).map((p) => p?.imageAssetId),
         ...(d.cloneConfig?.uiImages?.map((img) => img.assetId) ?? []),
@@ -449,7 +435,7 @@ export function publicAssetReferences(d: Draft): string[] {
         ...bannerAssets(d,true).videos,
         usesHero ? d.heroAssetId : undefined,
         usesHero ? d.posterAssetId : undefined,
-        ...d.products.flatMap((p) => [p.imageAssetId,...(d.materials ? p.gallery ?? [] : []).map(image=>image.assetId)]),
+        ...d.products.flatMap((p) => [p.imageAssetId,...(p.gallery ?? []).map(image=>image.assetId)]),
         ...(d.buildBranch === 'clone' ? normalizeCloneImages(d.cloneConfig?.uiImages).filter(img => img.role === 'asset').map(img => img.assetId) : []),
       ].filter((v): v is string => Boolean(v)),
     ),

@@ -1,4 +1,3 @@
-import { productFactsOrigins } from '../shared/model';
 import { z } from 'zod';
 import type { Principal, ProductSnapshot } from '../shared/model';
 import type { AppEnv } from './env';
@@ -14,25 +13,8 @@ export const principalSchema = z.object({
   workspaceRole: z.enum(['admin', 'member']),
   workspaceName: z.string().max(300),
 });
-export const snapshotSchema = z.object({
-  source: z.literal('product-radar'),
-  id: z.string().min(1).max(200),
-  sourceProjectId: z.string().min(1).max(200),
-  workflow: z.enum(['create', 'build']),
-  version: z.string().min(1).max(200),
-  name: z.string().max(500),
-  description: z.string().max(10000),
-  material: z.string().max(2000),
-  dimensions: z.string().max(2000),
-  seriesName: z.string().max(1000),
-  designDirection: z.string().max(10000),
-  conditions: z.record(z.string(), z.unknown()),
-  image: z.object({
-    sourceProductId: z.string().min(1).max(200),
-    contentType: z.string().nullable(),
-  }),
-  factsOrigin: z.enum(productFactsOrigins),
-});
+export { productSnapshotSchema as snapshotSchema } from '../shared/product-snapshot';
+import { importProductSnapshotSchema } from '../shared/product-snapshot';
 export function isLoopback(host: string): boolean {
   return ['localhost', '127.0.0.1', '[::1]'].includes(host);
 }
@@ -171,7 +153,7 @@ export async function prService<T = unknown>(
     return parsed.data as T;
   }
   const parsed = z
-    .object({ products: z.array(snapshotSchema), total: z.number().int().nonnegative() })
+    .object({ products: z.array(importProductSnapshotSchema), total: z.number().int().nonnegative() })
     .safeParse(data);
   if (!parsed.success) throw new ApiError(502, 'invalid_products', '来源产品格式有误。');
   return parsed.data as T;
@@ -184,6 +166,7 @@ export async function prImage(
   principal: Principal,
   productId: string,
   expectedVersion: string,
+  imageId = 'original',
 ): Promise<Response> {
   if (testMode(env) && principal.userId.startsWith('test-')) {
     if (expectedVersion !== 'test-v1')
@@ -205,6 +188,7 @@ export async function prImage(
     workspaceId: principal.workspaceId,
     productId,
     expectedVersion,
+    imageId,
   });
 }
 export async function signInAtPr(env: AppEnv, email: string, password: string): Promise<Principal> {
@@ -275,6 +259,8 @@ export function testProduct(): ProductSnapshot {
     designDirection: 'Natural studio demonstration',
     conditions: { keep: ['product silhouette'], change: ['background only'], testFixture: true },
     image: { sourceProductId: 'test-product', contentType: 'image/png' },
-    factsOrigin: 'generated-concept',
+    factsOrigin: 'product-set',
+    websiteCopy: {name:'Test product',tagline:'Test product set',description:'Local test product',sellingPoints:['First feature','Second feature','Third feature'],applications:['Local tests']},
+    images:[{id:'original',kind:'original',caption:'Original',contentType:'image/png'}],
   };
 }

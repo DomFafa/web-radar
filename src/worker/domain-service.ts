@@ -871,7 +871,11 @@ export class DomainService {
       );
     }
     const initialDraft = defaultDraft();
-    if (rawBuildBranch === 'template' || rawBuildBranch === 'custom') initialDraft.buildBranch = rawBuildBranch;
+    if (rawBuildBranch === 'template' || rawBuildBranch === 'custom') {
+      initialDraft.buildBranch = rawBuildBranch;
+    } else if (handoff) {
+      initialDraft.buildBranch = 'template';
+    }
     if (rawBuildBranch === 'clone') {
       initialDraft.buildBranch = 'clone';
       initialDraft.cloneConfig = {
@@ -897,15 +901,18 @@ export class DomainService {
     const assets: Asset[] = [];
     try {
       for (const snapshot of accepted) {
-        const asset = await this.importImage(p.id, principal, snapshot);
-        assets.push(asset);
+        const gallery = await this.importGallery(p.id, principal, snapshot, assets);
         p.draft.products.push({
           id: crypto.randomUUID(),
           name: snapshot.name,
           description: snapshot.description,
           material: snapshot.material,
           dimensions: snapshot.dimensions,
-          imageAssetId: asset.id,
+          imageAssetId: gallery[0].assetId,
+          gallery,
+          tagline: snapshot.websiteCopy?.tagline,
+          sellingPoints: snapshot.websiteCopy?.sellingPoints,
+          applications: snapshot.websiteCopy?.applications,
           source: snapshot,
         });
       }
@@ -933,15 +940,18 @@ export class DomainService {
       for (const snapshot of snapshots) {
         const existing = draft.products.find((p) => p.source?.id === snapshot.id);
         if (existing && !apply) continue;
-        const asset = await this.importImage(project.id, principal, snapshot);
-        assets.push(asset);
+        const gallery = await this.importGallery(project.id, principal, snapshot, assets);
         const product = {
           id: existing?.id ?? crypto.randomUUID(),
           name: snapshot.name,
           description: snapshot.description,
           material: snapshot.material,
           dimensions: snapshot.dimensions,
-          imageAssetId: asset.id,
+          imageAssetId: gallery[0].assetId,
+          gallery,
+          tagline: snapshot.websiteCopy?.tagline,
+          sellingPoints: snapshot.websiteCopy?.sellingPoints,
+          applications: snapshot.websiteCopy?.applications,
           source: snapshot,
         };
         if (existing)
@@ -981,13 +991,23 @@ export class DomainService {
       return before.version === after.version ? [] : [{ productId: before.id, before, after }];
     });
   }
+  private async importGallery(projectId: string, principal: Principal, snapshot: ProductSnapshot, assets: Asset[]) {
+    const gallery: NonNullable<import('../shared/model').Product['gallery']> = [];
+    for (const image of snapshot.images!) {
+      const asset = await this.importImage(projectId, principal, snapshot, image.id);
+      assets.push(asset);
+      gallery.push({assetId:asset.id,sourceImageId:image.id,kind:image.kind,caption:image.caption});
+    }
+    return gallery;
+  }
   private async importImage(
     projectId: string,
     principal: Principal,
     snapshot: ProductSnapshot,
+    imageId: string,
   ): Promise<Asset> {
     const productId = snapshot.id;
-    const response = await prImage(this.env, principal, productId, snapshot.version);
+    const response = await prImage(this.env, principal, productId, snapshot.version, imageId);
     requireCondition(
       response.ok && response.body,
       502,
@@ -1006,7 +1026,7 @@ export class DomainService {
       {
         body: response.body,
         contentType,
-        filename: `source-${productId}`,
+        filename: `source-${productId}-${imageId}`,
         size: Number(response.headers.get('content-length')) || undefined,
         testMode: false,
       },
@@ -1452,12 +1472,15 @@ export class DomainService {
         '全部设计稿均已生成，可以选择单页重做。',
       );
       for (const page of pages) {
+        const referenceIds = new Set(originalImages);
+        if (page === 'detail') for (const image of project.draft.products.find(product=>product.id === project.draft.primaryProductId)?.gallery ?? []) referenceIds.add(image.assetId);
+        requireCondition(referenceIds.size <= 19, 400, 'design_references_limit', '产品、套图和 Logo 参考图合计最多 19 张，请减少选用图片后再生成。');
         try {
           validatePageDesignInput(
             project.draft,
             page,
             instructions,
-            originalImages.size + (page === 'home' ? 0 : 1),
+            referenceIds.size + (page === 'home' ? 0 : 1),
           );
         } catch (error) {
           if (error instanceof ProviderError) throw new DomainError(400, error.code, error.message);
@@ -2597,6 +2620,7 @@ export class DomainService {
               ...(input.pageId !== 'home' ? [draft.siteDesign?.pages.home?.imageAssetId] : []),
               draft.products.find((p) => p.id === draft.primaryProductId)?.imageAssetId,
               ...draft.products.map((p) => p.imageAssetId),
+              ...(input.pageId === 'detail' ? (draft.products.find(p=>p.id === draft.primaryProductId)?.gallery ?? []).map(image=>image.assetId) : []),
               draft.company.logoAssetId,
             ].filter((id): id is string => !!id),
           ),
@@ -3027,7 +3051,7 @@ export class DomainService {
       const referenceAssets: Record<string, string> = {};
       for (const id of new Set(
         [
-          ...draft.products.map((product) => product.imageAssetId),
+          ...draft.products.flatMap((product) => [product.imageAssetId,...(product.gallery ?? []).map(image=>image.assetId)]),
           draft.company.logoAssetId,
         ].filter(Boolean),
       ))

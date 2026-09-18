@@ -257,3 +257,14 @@ describe('reference template product and route integration', () => {
     });
   }
 });
+
+it('renders saved gallery images and fixed website copy on product details only',()=>{
+  const d=draft();
+  Object.assign(d.products[0],{tagline:'Made for daily use',sellingPoints:['Approved feature'],applications:['At home'],gallery:[{assetId:'product',sourceImageId:'original',kind:'original',caption:'Original'},{assetId:'side-view',sourceImageId:'side',kind:'angle',caption:'Side view'}]});
+  const html=renderSite(d,{...opts,page:'detail',productId:'p-one'});
+  expect(html).toContain('https://media.example/side-view');
+  expect(html).toContain('Made for daily use');
+  expect(html).toContain('Approved feature');
+  expect(html).toContain('At home');
+  expect(renderSite(d,{...opts,page:'catalog'})).not.toContain('https://media.example/side-view');
+});

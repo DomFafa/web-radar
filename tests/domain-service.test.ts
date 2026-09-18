@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { DomainService } from '../src/worker/domain-service';
 import { testBrief } from './fixtures/site-brief';
 import { defaultDraft } from '../src/worker/domain';
+import { getWorkflowSteps } from '../src/client/workflow';
 import { fixtureProviders } from '../src/worker/providers/fixtures';
 import {
   ProviderError,
@@ -13,7 +14,7 @@ import {
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Principal, Job, Project } from '../src/shared/model';
 
-const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'generated-concept', materialsEmail:'other@example.com' }));
+const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'product-set', gallery: false, failImage: '', materialsEmail:'other@example.com', imageRequests: [] as string[] }));
 vi.mock('../src/worker/product-radar', () => ({
   prService: async (_e: unknown, p: Principal, path: string, body: { productIds?: string[] }) =>
     path === 'context'
@@ -26,8 +27,8 @@ vi.mock('../src/worker/product-radar', () => ({
           products: (body.productIds ?? []).map((id) => ({
             source: 'product-radar',
             id,
-            sourceProjectId: 'source',
-            workflow: 'build',
+            sourceProjectId: sourceState.gallery ? null : 'source',
+            workflow: sourceState.gallery ? 'upload' : 'build',
             version: sourceState.version,
             name: `Product ${id}`,
             description: 'Snapshot',
@@ -38,13 +39,18 @@ vi.mock('../src/worker/product-radar', () => ({
             conditions: { keep: ['shape'] },
             image: { sourceProductId: id, contentType: 'image/png' },
             factsOrigin: sourceState.factsOrigin,
+            websiteCopy: {name:`Product ${id}`,tagline:'A useful product',description:'Snapshot',sellingPoints:['One','Two','Three'],applications:['Daily use']},
+            images:[{id:'original',kind:'original',caption:'Original',contentType:null},...(sourceState.gallery ? [{id:'detail',kind:'detail',caption:'Detail',contentType:null},{id:'scene',kind:'scene',caption:'Scene',contentType:null}]:[])],
           })),
           total: body.productIds?.length ?? 0,
         },
-  prImage: async () =>
-    new Response(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0]), {
+  prImage: async (_e:unknown,_p:Principal,_id:string,_version:string,imageId='original') => {
+    sourceState.imageRequests.push(imageId);
+    if (imageId === sourceState.failImage) throw Object.assign(new Error('Source image changed'),{status:409});
+    return new Response(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0]), {
       headers: { 'content-type': 'image/png' },
-    }),
+    });
+  },
 }));
 const owner: Principal = {
   userId: 'owner',
@@ -282,6 +288,65 @@ async function quota(who = owner, images = 5, videos = 5) {
 async function get(p: Project) {
   return (await request(`/api/projects/${p.id}`)).data;
 }
+
+describe('project creation workflow', () => {
+  it('hides and denies receipt-backed projects when the account loses materials access',async()=>{
+    const p=await create('Confirmed materials');p.materials={submissionId:crypto.randomUUID(),source:{materialsId:'source',revision:1},contentSha256:'a'.repeat(64),snapshotKey:'confirmed.json',acceptedAt:new Date().toISOString()};
+    await env.DB.prepare('UPDATE projects SET data=? WHERE id=?').bind(JSON.stringify(p),p.id).run();
+    const permitted={...owner,email:'vc.ddom@gmail.com'};
+    sourceState.materialsEmail=permitted.email;
+    expect((await request(`/api/projects/${p.id}`,undefined,permitted)).status).toBe(200);
+    sourceState.materialsEmail=owner.email;
+    for(const principal of [owner,admin,platform]){
+      expect((await request(`/api/projects/${p.id}`,undefined,principal)).status).toBe(403);
+      expect((await request(`/api/projects/${p.id}/preview`,{draft:p.draft},principal)).status).toBe(403);
+      expect((await request(`/api/projects/${p.id}`,{draft:p.draft,expectedVersion:p.version},principal,'PUT')).status).toBe(403);
+    }
+    const list=await request('/api/projects');expect(JSON.stringify(list.data).includes(p.id)).toBe(false);
+    const ordinary=await create('Standalone');expect((await request(`/api/projects/${ordinary.id}`)).status).toBe(200);
+  });
+  it.each([
+    ['template', ['basics', 'template', 'publish']],
+    ['custom', ['basics', 'consultation', 'brief', 'design', 'publish']],
+    ['clone', ['basics', 'clone-generate', 'publish']],
+  ] as const)('persists the selected %s workflow after reopening', async (buildBranch, steps) => {
+    const result = await request('/api/projects', {
+      name: 'Selected workflow', requestId: crypto.randomUUID(), buildBranch,
+    });
+    expect(result.status).toBe(200);
+    const { project } = await get(result.data.project);
+    expect(project.draft.buildBranch).toBe(buildBranch);
+    expect(getWorkflowSteps(project.draft).map(([id]) => id)).toEqual(steps);
+  });
+
+  it('opens Product Radar handoffs in the three-step template workflow', async () => {
+    sourceState.gallery = true;
+    const sourceProject = await create();
+    const imported = await request(`/api/projects/${sourceProject.id}/import`, {
+      expectedVersion: sourceProject.version, productIds: ['source-1'],
+    });
+    const products = imported.data.project.draft.products.map((product: { source: unknown }) => product.source);
+    const body = { requestId: crypto.randomUUID(), products };
+    const result = await request('/internal/handoff-project', body);
+    expect(result.status).toBe(200);
+    const { project } = await get(result.data.project);
+    expect(project.draft.buildBranch).toBe('template');
+    expect(getWorkflowSteps(project.draft).map(([id]) => id)).toEqual([
+      'basics', 'template', 'publish',
+    ]);
+    expect(project.draft.products).toHaveLength(1);
+    expect(project.draft.products[0].source).toEqual(products[0]);
+    expect(project.draft.products[0].gallery).toHaveLength(3);
+    expect((await request('/internal/handoff-project', body)).data.project.id).toBe(project.id);
+  });
+
+  it('uses the current template default for new projects without an explicit mode', async () => {
+    const { project } = await get(await create());
+    expect(getWorkflowSteps(project.draft).map(([id]) => id)).toEqual([
+      'basics', 'template', 'publish',
+    ]);
+  });
+});
 async function scriptReady() {
   let p = await create();
   p.draft.products = [
@@ -324,10 +389,13 @@ async function videoReady() {
 
 beforeEach(() => {
   sourceState.version = 'v1';
-  sourceState.factsOrigin = 'generated-concept';
+  sourceState.factsOrigin = 'product-set';
   sourceState.revoked = false;
-  sourceState.failureStatus = 403;
   sourceState.materialsEmail='other@example.com';
+  sourceState.failureStatus = 403;
+  sourceState.gallery = false;
+  sourceState.failImage = '';
+  sourceState.imageRequests = [];
   bucket = mediaBucket();
   env = {
     DB: database(),
@@ -2540,20 +2608,35 @@ describe('persisted website creation modes', () => {
   });
 });
 
-describe('confirmed materials account scope',()=>{
-  it('hides and denies receipt-backed projects when the account loses materials access',async()=>{
-    const p=await create('Confirmed materials');p.materials={submissionId:crypto.randomUUID(),source:{materialsId:'source',revision:1},contentSha256:'a'.repeat(64),snapshotKey:'confirmed.json',acceptedAt:new Date().toISOString()};
-    await env.DB.prepare('UPDATE projects SET data=? WHERE id=?').bind(JSON.stringify(p),p.id).run();
-    const permitted={...owner,email:'vc.ddom@gmail.com'};
-    sourceState.materialsEmail=permitted.email;
-    expect((await request(`/api/projects/${p.id}`,undefined,permitted)).status).toBe(200);
-    sourceState.materialsEmail=owner.email;
-    for(const principal of [owner,admin,platform]){
-      expect((await request(`/api/projects/${p.id}`,undefined,principal)).status).toBe(403);
-      expect((await request(`/api/projects/${p.id}/preview`,{draft:p.draft},principal)).status).toBe(403);
-      expect((await request(`/api/projects/${p.id}`,{draft:p.draft,expectedVersion:p.version},principal,'PUT')).status).toBe(403);
-    }
-    const list=await request('/api/projects');expect(JSON.stringify(list.data).includes(p.id)).toBe(false);
-    const ordinary=await create('Standalone');expect((await request(`/api/projects/${ordinary.id}`)).status).toBe(200);
+describe('product set gallery storage',()=>{
+  it('imports original and selected images with copy into one project transaction',async()=>{
+    sourceState.gallery=true;
+    const p=await create();
+    const response=await request(`/api/projects/${p.id}/import`,{expectedVersion:p.version,productIds:['saved-set']});
+    expect(response.status).toBe(200);
+    const product=response.data.project.draft.products[0];
+    expect(product).toMatchObject({tagline:'A useful product',sellingPoints:['One','Two','Three'],applications:['Daily use'],source:{workflow:'upload',factsOrigin:'product-set'}});
+    expect(product.gallery.map((image:any)=>image.sourceImageId)).toEqual(['original','detail','scene']);
+    expect(product.imageAssetId).toBe(product.gallery[0].assetId);
+    const oldClientDraft=structuredClone(response.data.project.draft);
+    delete oldClientDraft.products[0].gallery;
+    delete oldClientDraft.products[0].tagline;
+    delete oldClientDraft.products[0].sellingPoints;
+    delete oldClientDraft.products[0].applications;
+    const saved=await request(`/api/projects/${p.id}`,{expectedVersion:response.data.project.version,draft:oldClientDraft},owner,'PUT');
+    expect(saved.status).toBe(200);
+    expect(saved.data.project.draft.products[0].gallery).toEqual(product.gallery);
+    expect((await get(p)).assets).toHaveLength(3);
+  });
+  it('removes partial gallery objects and leaves draft unchanged if any image version fails',async()=>{
+    sourceState.gallery=true;
+    sourceState.failImage='detail';
+    const p=await create();
+    const response=await request(`/api/projects/${p.id}/import`,{expectedVersion:p.version,productIds:['saved-set']});
+    expect(response.status).toBe(409);
+    expect((await get(p)).project.draft.products).toEqual([]);
+    expect((await get(p)).assets).toHaveLength(0);
+    expect(bucket.objects.size).toBe(0);
+    expect(sourceState.imageRequests).toEqual(['original','detail']);
   });
 });

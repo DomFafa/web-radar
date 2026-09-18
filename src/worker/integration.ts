@@ -9,9 +9,9 @@ import {
   integrationConfig,
   parentOrigins,
   principalSchema,
-  snapshotSchema,
 } from './product-radar';
 import { mintSession } from './auth';
+import { importProductSnapshotSchema } from '../shared/product-snapshot';
 import { registerMaterialsIntegration } from './materials-integration';
 const handoffSchema = z
   .object({
@@ -21,7 +21,7 @@ const handoffSchema = z
     projectId: z.string().min(1).max(200).optional(),
     parentOrigin: z.string().max(500),
     principal: principalSchema,
-    products: z.array(snapshotSchema).max(20),
+    products: z.array(importProductSnapshotSchema).max(20),
   })
   .superRefine((v, ctx) => {
     if (v.intent === 'open' && (!v.projectId || v.products.length))

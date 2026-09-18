@@ -503,3 +503,16 @@ it('treats long non-visible company history as context, preserving approved foot
   expect(mock.imagePrompts[0]).toContain('Our studio');
   expect(mock.imagePrompts[0].length + 4000).toBeLessThanOrEqual(28000);
 });
+
+it('preserves selected detail references and website fields in the page design request',async()=>{
+  const draft=fixture();
+  draft.products.forEach(product=>{product.source!.conditions={};});
+  const primary=draft.products[1];
+  Object.assign(primary,{tagline:'Grounded tagline',sellingPoints:['Approved detail'],applications:['Daily use'],gallery:[{assetId:primary.imageAssetId,sourceImageId:'original',kind:'original',caption:'Original'},{assetId:'detail-photo',sourceImageId:'detail',kind:'detail',caption:'Approved detail photo'}]});
+  const calls=mockProviders();
+  await generatePageDesign(env,draft,'detail','',[photo,photo,photo,photo]);
+  expect(calls.imagePrompts[0]).toContain('selected detail gallery image for product-1');
+  expect(calls.imagePrompts[0]).toContain('Grounded tagline');
+  expect(calls.imagePrompts[0]).toContain('Approved detail');
+  expect(calls.imagePrompts[0]).not.toContain('No extra angles or multi-angle galleries.');
+});

@@ -114,7 +114,7 @@ def layout_context(page: str, draft: dict[str, Any]) -> dict[str, Any]:
         "requiredBindings": sorted(required_bindings(draft, page)),
         "longestFinalText": longest,
         "emptyOptionalBindings": [key for key, value in longest.items() if not value.strip()],
-        "productImagesPerProduct": 1,
+        "productImagesPerProduct": max((len(product.get("gallery", [])) or 1 for product in draft["products"]), default=1),
     }
 
 
@@ -130,7 +130,7 @@ def messages_for(page: str, draft: dict[str, Any], image: str, home_html: str | 
     page_guidance = {
         "home": "Use copy.headline for the one main h1 and copy.subtitle as a readable hero paragraph. A visible product collection is optional when the screenshot includes one; do not make a hidden collection.",
         "catalog": "Use page.title for the one main h1 when approved page content exists, otherwise ui.catalog. Include a visible product collection using the repeatable card contract; each real product must have visible text and a usable detail link.",
-        "detail": "Use product.name for the one main h1. Match the screenshot's desktop columns: image, product information and a separate inquiry panel when shown. Keep the photo and information in the same row, with breadcrumbs above or spanning all columns. An inquiry form shown in the design MUST remain a styled working form, not a link or empty panel. Stack image, information then form naturally on mobile. Show product.description, material and dimensions as readable text. Each product has only ONE supplied image: show that image once, with no duplicate thumbnail strip, invented gallery, carousel arrows or fake controls.",
+        "detail": "Use product.name for the one main h1. Match the screenshot's desktop columns: image, product information and a separate inquiry panel when shown. Keep the photo and information in the same row, with breadcrumbs above or spanning all columns. An inquiry form shown in the design MUST remain a styled working form, not a link or empty panel. Stack image, information then form naturally on mobile. Show product.description, material and dimensions as readable text. Show the original product.image once. When supplied product.gallery images exist, include one empty div data-wr-bind='product.gallery' styled as a responsive image grid beneath the primary image; the trusted assembler fills only selected gallery images. Do not invent additional views, duplicate the original image, carousel arrows or fake controls.",
         "about": "Preserve the screenshot's main headline using copy.headline when it matches that approved text; otherwise use page.title when approved page content exists, or ui.about. Use exactly one main h1 and approved company facts. Keep the screenshot's product showcase using compact product collections. When copy.about and company.description are empty, do not invent a company story or reserve an empty panel.",
         "contact": "Use page.title for the one main h1 when approved page content exists, otherwise ui.contact. Preserve the screenshot's form columns, labels, field outlines and colored submit button using the slotted form contract. Preserve any visible product showcase.",
     }.get(page)
@@ -235,8 +235,12 @@ data-wr-product-ids='["exact approved ID", "another approved ID"]' on the collec
 real products are repeated, in that order. Use exact IDs from facts and factual section associations.
 Every product must appear somewhere on catalog; do not put all products in the first group while
 leaving other groups empty. Product strips are allowed on home/about/contact/detail as shown.
-Do not create gallery thumbnails
-from repeated copies of the only product image.
+For supplied product galleries only, use one empty div data-wr-bind="product.gallery" on detail;
+style its direct img children as a responsive grid. The assembler inserts only saved selected images,
+excluding the primary photo. Never invent gallery images or repeat the primary as thumbnails.
+For supplied website fields on detail, use safe empty leaf p data-wr-bind="product.tagline" and
+ul data-wr-bind="product.sellingPoints" / ul data-wr-bind="product.applications". The assembler owns
+all list entries. These optional fields are shown in English when supplied and omitted otherwise.
 Contact requires an inquiry form; detail or other pages may also have it when shown in the design.
 Author div data-wr-form with your exact form grid/classes/style. Inside, use label wrappers with
 span data-wr-bind="ui.name|ui.email|ui.company|ui.message|ui.catalog" and safe leaf span placeholders
@@ -268,7 +272,7 @@ Unbound text will be removed. Keep decoration in CSS shapes and gradients with n
     brief = draft.get("consultation", {}).get("brief")
     facts = {
         "company": draft["company"], "products": [
-            {key: value for key, value in product.items() if key in ('id', 'name', 'description', 'material', 'dimensions', 'imageAssetId', 'translations')}
+            {key: value for key, value in product.items() if key in ('id', 'name', 'description', 'material', 'dimensions', 'imageAssetId', 'gallery', 'tagline', 'sellingPoints', 'applications', 'translations')}
             for product in draft['products']
         ],
         "primaryProductId": draft["primaryProductId"], "copy": draft["copy"],

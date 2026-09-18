@@ -78,3 +78,15 @@ Safe `{message:string,code?:string}` errors: invalid input400, absent/invalid lo
 
 PR tests: configuration redaction and HTTPS/origin validation; forged principal roles and secret denial; suspension/membership removal; source-product eligibility; 20-product limit and no partial import; snapshot fingerprint stability/change; scoped image reads; no upstream redirects; strict frame origin/source binding and refresh idempotency.
 WR tests: one-time exchange/replay/expiry/origin mismatch; requestId payload conflict; create deduplication; same draft across entry modes; current role revocation; real storage import; quota ownership; approvals tied to current inputs; provider job resume with one global video task; publication/inquiry behavior from the approved spec.
+
+## Saved product sets (2026-09-15)
+
+This update supersedes direct Create/Build concept import. New handoffs and service product listings accept only saved product-set item IDs whose website copy and every generated image are ready, with at least one selected generated image. Original concept IDs are rejected. Existing stored `generated-concept` snapshots remain readable; refreshing/importing always uses the new server contract.
+
+- `ProductSnapshot.factsOrigin` is `product-set`; `workflow` includes `upload`, whose `sourceProjectId` is `null`.
+- `websiteCopy` contains `name`, `tagline`, `description`, `sellingPoints`, and `applications`.
+- `images` is an ordered list of 1–11 `{id,kind,caption,contentType}` objects. The first is `{id:'original',kind:'original',...}`; the remainder are selected successful images. No private storage keys or fetch URLs are supplied.
+- `/api/web-radar/service/image` also accepts `imageId` (defaults to `original`). Every image request includes the complete snapshot's `expectedVersion`; Product Radar rechecks current trial, ownership/source access and version before streaming bytes. Changed versions return 409; unavailable, incomplete or unauthorized sets/images return 404.
+- Web Radar copies all images before committing the import. A failed image rolls back the entire import and deletes copied objects. Local product JSON stores `gallery: [{assetId,sourceImageId,kind,caption}]`, preserves the original as `imageAssetId`, and retains the fixed website fields. These imported gallery/extra-copy fields are preserved on ordinary draft saves, including older clients that omit them.
+- Static site assets include the gallery. Detail layouts use the trusted `product.gallery` binding to emit selected images without duplicating the primary image; `product.tagline`, `product.sellingPoints`, and `product.applications` bind supplied English text. Name/description translations keep their existing behavior; extra fields are omitted from secondary languages until supplied translations exist.
+- The shared integration secret, principal revalidation, one-time handoff, account scope, project persistence and publication authorization are unchanged. No database migration is required for Web Radar's JSON fields.

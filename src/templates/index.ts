@@ -89,11 +89,11 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     return `<div class="product-image">${url ? `<img src="${esc(url)}" alt="${esc(translate(p).name)}" loading="lazy" decoding="async">` : `<span class="empty-image">${esc(ui.unavailable)}</span>`}</div>`;
   };
   const gallery = (p: Product) => {
-    if(!draft.materials)return '';
-    const images=(p.gallery??[]).filter(image=>image.assetId!==p.imageAssetId&&asset(image.assetId));
-    return images.length?`<div class="product-gallery" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">${images.map(image=>materialProductImage(draft,options,p,image.assetId)||'').join('')}</div>`:'';
+    const images = (p.gallery ?? []).filter(image=>image.assetId !== p.imageAssetId && asset(image.assetId));
+    if(draft.materials)return images.length?`<div class="product-gallery" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">${images.map(image=>materialProductImage(draft,options,p,image.assetId)||'').join('')}</div>`:'';
+    return images.length ? `<div class="product-gallery" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">${images.map(image=>`<img src="${esc(asset(image.assetId))}" alt="${esc(image.caption || translate(p).name)}" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain">`).join('')}</div>` : '';
   };
-  const websiteDetails = (p: Product) => draft.materials && lang === 'en' ? `${p.tagline ? `<p>${esc(p.tagline)}</p>` : ''}${[p.sellingPoints,p.applications].map(values=>values?.length ? `<ul>${values.map(value=>`<li>${esc(value)}</li>`).join('')}</ul>` : '').join('')}` : '';
+  const websiteDetails = (p: Product) => lang === 'en' ? `${p.tagline ? `<p>${esc(p.tagline)}</p>` : ''}${[p.sellingPoints,p.applications].map(values=>values?.length ? `<ul>${values.map(value=>`<li>${esc(value)}</li>`).join('')}</ul>` : '').join('')}` : '';
   const navAttrs = (p: string, id?: string) =>
     `data-wr-page="${p}"${id ? ` data-wr-product-id="${esc(id)}"` : ''}`;
   const navLink = (p: string, label: string) =>
@@ -163,7 +163,7 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   if (page === 'detail') {
     const p = draft.products.find((item) => item.id === options.productId);
     content = p
-      ? `<section class="detail wrap">${draft.materials?`<div>${img(p)}${gallery(p)}</div>`:img(p)}<div><a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>← ${esc(ui.back)}</a><h1>${esc(translate(p).name)}</h1>${websiteDetails(p)}${translate(p).description ? `<p>${esc(translate(p).description)}</p>` : ''}<dl class="specs">${p.material ? `<div><dt>${esc(ui.material)}</dt><dd>${esc(p.material)}</dd></div>` : ''}${p.dimensions ? `<div><dt>${esc(ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd></div>` : ''}</dl><a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)}>${esc(ui.inquire)} ↗</a></div></section><section class="chapter wrap"><div class="section-top"><h2>${esc(ui.related)}</h2></div>${cards(draft.products.filter((item) => item.id !== p.id).slice(0, 3))}</section>`
+      ? `<section class="detail wrap"><div>${img(p)}${gallery(p)}</div><div><a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>← ${esc(ui.back)}</a><h1>${esc(translate(p).name)}</h1>${websiteDetails(p)}${translate(p).description ? `<p>${esc(translate(p).description)}</p>` : ''}<dl class="specs">${p.material ? `<div><dt>${esc(ui.material)}</dt><dd>${esc(p.material)}</dd></div>` : ''}${p.dimensions ? `<div><dt>${esc(ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd></div>` : ''}</dl><a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)}>${esc(ui.inquire)} ↗</a></div></section><section class="chapter wrap"><div class="section-top"><h2>${esc(ui.related)}</h2></div>${cards(draft.products.filter((item) => item.id !== p.id).slice(0, 3))}</section>`
       : `<section class="chapter wrap"><h1>${esc(ui.noProducts)}</h1></section>`;
   }
   if (page === 'contact') {
