@@ -1,4 +1,4 @@
-import { esc, type ThemeContext } from './types';
+import { esc, safeUrl, type ThemeContext } from './types';
 
 export function renderSaasHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -89,10 +89,11 @@ export function renderSaasHome(ctx: ThemeContext): string {
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;">
         ${products.map((p, idx) => {
           const t = translateProduct(p);
+          const imgUrl = ctx.productMainImage(p);
           const icon = ['⚡', '🔄', '🛡️', '📊', '🌐', '🧩'][idx % 6];
           return `
             <article class="product-card">
-              <div style="font-size:2.2rem;margin-bottom:16px;">${icon}</div>
+              ${imgUrl ? `<div class="product-image" style="border-radius:10px;overflow:hidden;margin-bottom:16px;max-height:180px;"><img src="${esc(imgUrl)}" alt="${esc(t.name)}" loading="lazy"></div>` : `<div style="font-size:2.2rem;margin-bottom:16px;">${icon}</div>`}
               <h3 style="margin:0 0 10px;font-size:1.3rem;color:#f8fafc;">${esc(t.name)}</h3>
               <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0 0 20px;">${esc(t.description || 'Pre-configured workflow automation integration module.')}</p>
               <a class="text-link" style="color:#818cf8;font-weight:600;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
@@ -199,5 +200,448 @@ export function renderSaasHome(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${metricsHtml}${productsHtml}${storyHtml}${integrationHtml}${testimonialsHtml}${contactBandHtml}`;
+}
+
+export function renderSaasAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang];
+  const aboutText = copy?.about || company.description || 'We build enterprise-grade automation infrastructure that connects data pipelines, accelerates conversions, and reduces operational overhead.';
+
+  const heroHtml = `
+    <section class="saas-inner-hero" style="background:linear-gradient(180deg,#090d16 0%,#111827 100%);color:#f8fafc;padding:70px 0 50px;border-bottom:1px solid #1e293b;">
+      <div class="wrap">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(190,242,100,0.1);border:1px solid rgba(190,242,100,0.3);padding:6px 16px;border-radius:9999px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#bef264;box-shadow:0 0 8px #bef264;"></span>
+          <span style="font-size:0.8rem;font-weight:700;color:#bef264;letter-spacing:0.06em;">AUTONOMOUS WORKFLOW OS · EST. ${esc(company.establishedYear || '2021')}</span>
+        </div>
+        <h1 style="font-size:clamp(2.4rem,4.8vw,4rem);line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 20px;color:#ffffff;">
+          Empowering Scalable, Autonomous Workflows
+        </h1>
+        <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#94a3b8;margin:0;">
+          ${esc(copy?.subtitle || 'Connecting heterogeneous cloud data pipelines, accelerating event conversions, and eliminating repetitive operational friction.')}
+        </p>
+      </div>
+    </section>
+  `;
+
+  const metricsHtml = `
+    <section class="wrap" style="padding:48px 0 32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+        <div>
+          <div style="font-size:2.4rem;font-weight:900;color:#bef264;letter-spacing:-1px;">99.99%</div>
+          <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Uptime SLA Guarantee</div>
+        </div>
+        <div>
+          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">10x Faster</div>
+          <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Deployment & Sync Cycles</div>
+        </div>
+        <div>
+          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;">240M+</div>
+          <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Automated Events Processed</div>
+        </div>
+        <div>
+          <div style="font-size:2.4rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">Zero Code</div>
+          <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Visual Trigger Configuration</div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const originHtml = `
+    <section class="wrap" style="padding:40px 0 60px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
+        <div>
+          <span class="eyebrow" style="color:#bef264;font-weight:700;">OUR ORIGIN & PURPOSE</span>
+          <h2 style="font-size:2.2rem;color:#f8fafc;margin:12px 0 20px;line-height:1.2;">Architected to Replace Repetitive Drag With Intelligent Velocity</h2>
+          <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+            <p>${esc(aboutText)}</p>
+            <p>From initial trigger payload ingestion to cross-platform reconciliation, our infrastructure eliminates data fragmentation across globally distributed tech stacks.</p>
+          </div>
+          ${company.capabilities ? `
+            <div style="margin-top:24px;padding:20px;background:#121826;border-left:4px solid #bef264;border-radius:0 8px 8px 0;">
+              <div style="font-size:0.85rem;font-weight:700;color:#bef264;text-transform:uppercase;">Core Platform Capabilities</div>
+              <div style="color:#e2e8f0;margin-top:6px;font-size:0.95rem;">${esc(company.capabilities)}</div>
+            </div>
+          ` : ''}
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:20px;padding:36px;text-align:center;">
+          <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:16px;background:rgba(190,242,100,0.12);color:#bef264;font-size:2rem;margin-bottom:20px;">⚡</div>
+          <h3 style="color:#f8fafc;font-size:1.4rem;margin:0 0 10px;">High-Concurrency Event Mesh</h3>
+          <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Sub-millisecond routing across multitenant clusters with automated backoff and self-healing consumer groups.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;">
+            <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;border:1px solid #1e293b;">
+              <div style="color:#bef264;font-weight:700;font-size:0.85rem;">END-TO-END TLS</div>
+              <div style="color:#cbd5e1;font-size:0.8rem;margin-top:4px;">AES-256 encrypted at rest & transit</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;border:1px solid #1e293b;">
+              <div style="color:#06b6d4;font-weight:700;font-size:0.85rem;">EVENT RETENTION</div>
+              <div style="color:#cbd5e1;font-size:0.8rem;margin-top:4px;">Immutable replayable audit logs</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const pillarsHtml = `
+    <section class="wrap" style="padding:60px 0;border-top:1px solid #1e293b;">
+      <div style="text-align:center;margin-bottom:44px;">
+        <span class="eyebrow" style="color:#bef264;font-weight:700;">ENGINEERING PRINCIPLES</span>
+        <h2 style="font-size:2.2rem;color:#f8fafc;margin:10px 0;">Four Architectural Pillars</h2>
+        <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">Designed from the ground up for high-throughput resilience and enterprise compliance.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+          <div style="font-size:2rem;margin-bottom:14px;">🌐</div>
+          <h3 style="color:#f8fafc;font-size:1.25rem;margin:0 0 10px;">Distributed Message Mesh</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Geo-distributed edge workers handling dynamic traffic surges without dropouts or message degradation.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+          <div style="font-size:2rem;margin-bottom:14px;">🛡️</div>
+          <h3 style="color:#f8fafc;font-size:1.25rem;margin:0 0 10px;">Zero-Trust Data Protection</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Role-based granular ACLs, automated secret rotation, and strict tenant cryptographic isolation.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+          <div style="font-size:2rem;margin-bottom:14px;">🧩</div>
+          <h3 style="color:#f8fafc;font-size:1.25rem;margin:0 0 10px;">Modular API & Webhooks</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Instant developer onboarding with OpenAPI specifications, webhooks with retry guarantees, and CLI tools.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+          <div style="font-size:2rem;margin-bottom:14px;">📊</div>
+          <h3 style="color:#f8fafc;font-size:1.25rem;margin:0 0 10px;">Continuous Observability</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Live execution traces, latency heatmaps, and automated anomaly detection to spot pipeline bottlenecks.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const teamHtml = `
+    <section class="wrap" style="padding:60px 0;border-top:1px solid #1e293b;">
+      <div style="text-align:center;margin-bottom:40px;">
+        <span class="eyebrow" style="color:#bef264;font-weight:700;">ENGINEERING SPECIALISTS</span>
+        <h2 style="font-size:2.2rem;color:#f8fafc;margin:10px 0;">Leadership & Platform Architects</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#6366f1;color:#fff;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">JW</div>
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 4px;">James Walker</h3>
+          <div style="color:#bef264;font-size:0.85rem;font-weight:600;margin-bottom:12px;">Chief Technology Officer</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">15+ years orchestrating distributed distributed systems and enterprise event pipelines.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#06b6d4;color:#fff;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">EB</div>
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 4px;">Elijah Brooks</h3>
+          <div style="color:#06b6d4;font-size:0.85rem;font-weight:600;margin-bottom:12px;">Lead Automation Architect</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Specializes in event stream optimization, webhook reliability, and cluster balancing.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#8b5cf6;color:#fff;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">MR</div>
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 4px;">Michael Rivera</h3>
+          <div style="color:#8b5cf6;font-size:0.85rem;font-weight:600;margin-bottom:12px;">Platform Infrastructure Lead</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Directs multitenant container orchestration, global edge nodes, and disaster recovery.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#ec4899;color:#fff;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">DK</div>
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 4px;">Daniel Kim</h3>
+          <div style="color:#ec4899;font-size:0.85rem;font-weight:600;margin-bottom:12px;">Security & Compliance Lead</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Oversees SOC2 Type II accreditation, penetration testing, and zero-trust protocols.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const ctaHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="background:linear-gradient(135deg,#1e1b4b 0%,#121826 100%);border:1px solid #312e81;border-radius:20px;padding:48px;text-align:center;">
+        <h2 style="font-size:2.2rem;color:#f8fafc;margin:0 0 14px;">Ready to Scale Your Automated Data Flow?</h2>
+        <p style="color:#cbd5e1;max-width:580px;margin:0 auto 28px;font-size:1.05rem;">Connect with our solutions architects to evaluate our throughput benchmarks on your production workloads.</p>
+        <a class="button" style="background:#bef264;color:#090d16;font-weight:700;border-radius:8px;padding:16px 32px;display:inline-block;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+          Schedule Technical Briefing ↗
+        </a>
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${metricsHtml}${originHtml}${pillarsHtml}${teamHtml}${ctaHtml}`;
+}
+
+export function renderSaasContact(ctx: ThemeContext): string {
+  const { draft, ui, options } = ctx;
+  const company = draft.company;
+
+  const heroHtml = `
+    <section class="saas-inner-hero" style="background:linear-gradient(180deg,#090d16 0%,#111827 100%);color:#f8fafc;padding:70px 0 50px;border-bottom:1px solid #1e293b;">
+      <div class="wrap">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(190,242,100,0.1);border:1px solid rgba(190,242,100,0.3);padding:6px 16px;border-radius:9999px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;"></span>
+          <span style="font-size:0.8rem;font-weight:700;color:#bef264;letter-spacing:0.06em;">LIVE SOLUTIONS & ENGINEERING SUPPORT</span>
+        </div>
+        <h1 style="font-size:clamp(2.4rem,4.8vw,4rem);line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 20px;color:#ffffff;">
+          ${esc(ui.conversation || 'Connect With Our Engineers')}
+        </h1>
+        <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#94a3b8;margin:0;">
+          ${esc(ui.contactIntro || 'Let us explore how our automation engine and custom webhook triggers can support your scaling goals.')}
+        </p>
+      </div>
+    </section>
+  `;
+
+  const contactSectionHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div class="contact-layout" style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
+        <!-- Left Column: Direct channels & Live SLA note -->
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:20px;padding:36px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid #1e293b;">
+            <span style="width:12px;height:12px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80;"></span>
+            <div>
+              <div style="font-weight:700;color:#f8fafc;font-size:0.95rem;">All Systems Operational</div>
+              <div style="color:#64748b;font-size:0.8rem;">99.99% Guaranteed SLA Uptime</div>
+            </div>
+          </div>
+
+          <h3 style="color:#f8fafc;font-size:1.4rem;margin:0 0 20px;">Direct Channels</h3>
+
+          <div style="display:flex;flex-direction:column;gap:20px;color:#cbd5e1;font-size:0.95rem;">
+            <div>
+              <div style="color:#94a3b8;font-size:0.82rem;text-transform:uppercase;font-weight:700;margin-bottom:4px;">Technical Inquiries</div>
+              <a style="color:#bef264;text-decoration:none;font-weight:600;font-size:1.05rem;" href="mailto:${esc(company.email)}">${esc(company.email)}</a>
+            </div>
+
+            ${company.phone ? `
+              <div>
+                <div style="color:#94a3b8;font-size:0.82rem;text-transform:uppercase;font-weight:700;margin-bottom:4px;">Global Engineering Desk</div>
+                <a style="color:#f8fafc;text-decoration:none;font-weight:600;" href="tel:${esc(company.phone)}">${esc(company.phone)}</a>
+              </div>
+            ` : ''}
+
+            ${company.whatsapp ? `
+              <div>
+                <div style="color:#94a3b8;font-size:0.82rem;text-transform:uppercase;font-weight:700;margin-bottom:4px;">Instant WhatsApp Channel</div>
+                <a style="color:#4ade80;text-decoration:none;font-weight:600;" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(company.whatsapp.replace(/[^0-9]/g, ''))}">+${esc(company.whatsapp.replace(/[^0-9]/g, ''))} (Chat Now ↗)</a>
+              </div>
+            ` : ''}
+
+            ${company.address ? `
+              <div>
+                <div style="color:#94a3b8;font-size:0.82rem;text-transform:uppercase;font-weight:700;margin-bottom:4px;">Global Operations HQ</div>
+                <span style="color:#cbd5e1;line-height:1.5;">${esc(company.address)}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="margin-top:32px;padding-top:24px;border-top:1px solid #1e293b;">
+            <div style="font-size:0.85rem;color:#94a3b8;line-height:1.6;">
+              <strong style="color:#f8fafc;">Median SLA Response Time:</strong> &lt; 15 minutes for enterprise tier incidents. Solution engineers available 24/7/365.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive form -->
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:20px;padding:36px;">
+          <h2 style="color:#f8fafc;font-size:1.6rem;margin:0 0 8px;">Submit Technical Inquiry</h2>
+          <p style="color:#94a3b8;font-size:0.95rem;margin:0 0 28px;">Specify your pipeline volume or integration goals for tailored scoping.</p>
+
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <label style="display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.name)} <span style="color:#bef264;">*</span></span>
+              <input name="name" autocomplete="name" required maxlength="120" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.email)} <span style="color:#bef264;">*</span></span>
+              <input name="email" type="email" autocomplete="email" required maxlength="254" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.company)} (${esc(ui.optional)})</span>
+              <input name="company" autocomplete="organization" maxlength="200" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.product)} (${esc(ui.optional)})</span>
+              <select name="productId" style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+                <option value="">— Select Target Workflow / Module —</option>
+                ${draft.products.map(p => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(ctx.translateProduct(p).name)}</option>`).join('')}
+              </select>
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.message)} <span style="color:#bef264;">*</span></span>
+              <textarea name="message" required maxlength="5000" rows="5" placeholder="Describe your data pipelines, event frequency, or custom connectors..." style="background:#090d16;border:1px solid #334155;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;resize:vertical;"></textarea>
+            </label>
+            <div class="honeypot" aria-hidden="true" style="position:absolute;left:-9999px;">
+              <label>Website<input name="website" tabindex="-1" autocomplete="off"></label>
+            </div>
+            <div style="grid-column:1/-1;">
+              <button class="button" type="submit"${options.preview ? ' disabled' : ''} style="background:#bef264;color:#090d16;font-weight:700;border-radius:8px;padding:14px 28px;border:none;cursor:pointer;font-size:1rem;">
+                ${esc(ui.send)} ↗
+              </button>
+            </div>
+            <p class="form-status" role="status" aria-live="polite" style="grid-column:1/-1;margin:4px 0 0;font-size:0.9rem;"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const faqHtml = `
+    <section class="wrap" style="padding:40px 0 80px;border-top:1px solid #1e293b;">
+      <div style="text-align:center;margin-bottom:44px;">
+        <span class="eyebrow" style="color:#bef264;font-weight:700;">FREQUENTLY ASKED QUESTIONS</span>
+        <h2 style="font-size:2.2rem;color:#f8fafc;margin:10px 0;">Technical Deployment & Integration FAQ</h2>
+      </div>
+      <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">How fast can we integrate with existing microservices?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Standard webhook listeners and SDK endpoints can be deployed in under 15 minutes with our zero-code connector templates.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">What security guarantees are provided for sensitive payload data?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">All data packets are encrypted using AES-256 in transit and at rest. We support private VPC peering and regional data residency across US, EU, and APAC.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Can we replay failed webhook events automatically?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Yes. Our event mesh includes exponential backoff with dead-letter queue management and 30-day immutable replay capabilities.</p>
+        </div>
+        <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Do you provide dedicated technical account management?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Enterprise tier accounts receive a dedicated solutions architect, Slack connect channels, and guaranteed sub-15 minute SLAs.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${contactSectionHtml}${faqHtml}`;
+}
+
+export function renderSaasCatalog(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
+
+  const heroHtml = `
+    <section class="saas-inner-hero" style="background:linear-gradient(180deg,#090d16 0%,#111827 100%);color:#f8fafc;padding:70px 0 50px;border-bottom:1px solid #1e293b;">
+      <div class="wrap">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(190,242,100,0.1);border:1px solid rgba(190,242,100,0.3);padding:6px 16px;border-radius:9999px;margin-bottom:20px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#bef264;letter-spacing:0.06em;">CATALOG OF MODULES</span>
+        </div>
+        <h1 style="font-size:clamp(2.4rem,4.8vw,4rem);line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 20px;color:#ffffff;">
+          ${esc(ui.catalog || 'Intelligent Workflow Modules')}
+        </h1>
+        <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#94a3b8;margin:0;">
+          Explore our pre-configured integrations, automated data connectors, and high-throughput execution modules.
+        </p>
+      </div>
+    </section>
+  `;
+
+  const productsHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;">
+        ${draft.products.map((p, idx) => {
+          const t = translateProduct(p);
+          const icon = ['⚡', '🔄', '🛡️', '📊', '🌐', '🧩'][idx % 6];
+          const imgUrl = asset(p.imageAssetId);
+          return `
+            <article style="background:#121826;border:1px solid #1e293b;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+              ${imgUrl ? `
+                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#090d16;overflow:hidden;">
+                  <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                </a>
+              ` : `
+                <div style="padding:32px 24px 16px;font-size:2.4rem;">${icon}</div>
+              `}
+              <div style="padding:24px;display:flex;flex-direction:column;flex:1;">
+                <h3 style="margin:0 0 10px;font-size:1.3rem;color:#f8fafc;">
+                  <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="color:#f8fafc;text-decoration:none;">
+                    ${esc(t.name)}
+                  </a>
+                </h3>
+                <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0 0 20px;flex:1;">
+                  ${esc(t.description || 'Pre-configured workflow integration component.')}
+                </p>
+                <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #1e293b;padding-top:16px;margin-top:auto;">
+                  <span style="font-size:0.85rem;color:#bef264;font-weight:600;">Active Module</span>
+                  <a style="color:#818cf8;font-weight:600;font-size:0.9rem;text-decoration:none;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
+                    ${esc(ui.details || 'View Details')} →
+                  </a>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${productsHtml}`;
+}
+
+export function renderSaasDetail(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset, options } = ctx;
+  const p = draft.products.find(item => item.id === options.productId) || draft.products[0];
+  if (!p) {
+    return `<section class="wrap" style="padding:80px 0;"><h1 style="color:#fff;">${esc(ui.noProducts || 'Module Not Found')}</h1></section>`;
+  }
+
+  const t = translateProduct(p);
+  const imgUrl = asset(p.imageAssetId);
+
+  return `
+    <section class="saas-inner-hero" style="background:linear-gradient(180deg,#090d16 0%,#111827 100%);color:#f8fafc;padding:50px 0 40px;border-bottom:1px solid #1e293b;">
+      <div class="wrap">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#94a3b8;margin-bottom:16px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="color:#94a3b8;text-decoration:none;">${esc(ui.home)}</a>
+          <span>/</span>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#94a3b8;text-decoration:none;">${esc(ui.catalog)}</a>
+          <span>/</span>
+          <span style="color:#bef264;">${esc(t.name)}</span>
+        </div>
+        <h1 style="font-size:clamp(2rem,4vw,3.2rem);line-height:1.15;font-weight:800;letter-spacing:-0.02em;margin:0;color:#ffffff;">
+          ${esc(t.name)}
+        </h1>
+      </div>
+    </section>
+
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+        <div>
+          ${imgUrl ? `
+            <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;overflow:hidden;padding:24px;text-align:center;">
+              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;">
+            </div>
+          ` : `
+            <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:60px 24px;text-align:center;font-size:4rem;">⚡</div>
+          `}
+        </div>
+
+        <div>
+          <div style="display:inline-block;background:rgba(190,242,100,0.12);border:1px solid rgba(190,242,100,0.3);color:#bef264;padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:700;margin-bottom:16px;">ENTERPRISE MODULE</div>
+          <p style="font-size:1.15rem;line-height:1.7;color:#cbd5e1;margin:0 0 24px;">${esc(t.description || 'Enterprise-grade automated data pipeline module.')}</p>
+
+          <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:24px;margin-bottom:28px;">
+            <h3 style="color:#f8fafc;font-size:1.1rem;margin:0 0 16px;">Technical Specifications</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              ${p.material ? `
+                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                  <span style="color:#94a3b8;">Execution Protocol</span>
+                  <span style="color:#f8fafc;font-weight:600;">${esc(p.material)}</span>
+                </div>
+              ` : ''}
+              ${p.dimensions ? `
+                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                  <span style="color:#94a3b8;">Throughput SLA</span>
+                  <span style="color:#f8fafc;font-weight:600;">${esc(p.dimensions)}</span>
+                </div>
+              ` : ''}
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#94a3b8;">Cluster Isolation</span>
+                <span style="color:#4ade80;font-weight:600;">Dedicated Tenant Pod</span>
+              </div>
+            </div>
+          </div>
+
+          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#bef264;color:#090d16;font-weight:700;border-radius:8px;padding:16px 32px;display:inline-block;text-decoration:none;">
+            ${esc(ui.inquire || 'Deploy This Module')} ↗
+          </a>
+        </div>
+      </div>
+    </section>
+  `;
 }
 

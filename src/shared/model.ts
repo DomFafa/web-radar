@@ -180,11 +180,20 @@ export interface CloneConfig {
 }
 
 export type BannerTarget = DesignPage | `product:${string}`;
+export interface BannerSlide {
+  assetId: string;
+  alt: string;
+  headline?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonUrl?: string;
+}
+
 export interface PageBanner {
   id: string;
   targets: BannerTarget[];
   kind: 'images' | 'video';
-  slides: { assetId: string; alt: string }[];
+  slides: BannerSlide[];
   videoAssetId?: string;
   posterAssetId?: string;
   mode: 'background' | 'image';

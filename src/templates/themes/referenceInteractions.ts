@@ -31,16 +31,47 @@ export function referenceInteractions() {
     });
   document.querySelectorAll<HTMLElement>('[data-wr-slider]').forEach((slider) => {
     const slides = [...slider.querySelectorAll<HTMLElement>('[data-wr-slide]')];
+    if (!slides.length) return;
     let index = 0;
+    let timer: number | undefined;
+
     const show = (next: number) => {
       index = (next + slides.length) % slides.length;
       slides.forEach((slide, i) => {
         slide.hidden = i !== index;
       });
     };
-    slider.querySelector('[data-wr-prev]')?.addEventListener('click', () => show(index - 1));
-    slider.querySelector('[data-wr-next]')?.addEventListener('click', () => show(index + 1));
-    if (slides.length) show(0);
+
+    const startAutoplay = () => {
+      stopAutoplay();
+      if (slides.length > 1) {
+        timer = window.setInterval(() => show(index + 1), 6000);
+      }
+    };
+
+    const stopAutoplay = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = undefined;
+      }
+    };
+
+    slider.querySelector('[data-wr-prev]')?.addEventListener('click', () => {
+      show(index - 1);
+      startAutoplay();
+    });
+    slider.querySelector('[data-wr-next]')?.addEventListener('click', () => {
+      show(index + 1);
+      startAutoplay();
+    });
+
+    slider.addEventListener('mouseenter', stopAutoplay);
+    slider.addEventListener('mouseleave', startAutoplay);
+    slider.addEventListener('touchstart', stopAutoplay, { passive: true });
+    slider.addEventListener('touchend', startAutoplay, { passive: true });
+
+    show(0);
+    startAutoplay();
   });
   document
     .querySelectorAll<HTMLElement>('.slick-slider,.swiper,.swiper-container')
@@ -122,4 +153,125 @@ export function referenceInteractions() {
         carousel.parentNode.insertBefore(controls, carousel.nextSibling);
       }
     });
+
+  // Tab switching
+  document
+    .querySelectorAll<HTMLElement>('[data-bs-toggle="tab"], [data-toggle="tab"]')
+    .forEach((tabBtn) => {
+      tabBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        const targetId =
+          tabBtn.getAttribute('data-bs-target') ||
+          tabBtn.getAttribute('data-target') ||
+          tabBtn.getAttribute('href');
+        if (!targetId || !targetId.startsWith('#')) return;
+
+        const navList = tabBtn.closest('.nav-tabs, .tab-button-list, ul, nav');
+        if (navList) {
+          navList.querySelectorAll('.nav-link, .tab-button').forEach((b) => b.classList.remove('active'));
+          navList.querySelectorAll('.nav-item').forEach((item) => item.classList.remove('active-nav'));
+        }
+        tabBtn.classList.add('active');
+        tabBtn.closest('.nav-item')?.classList.add('active-nav');
+
+        const container =
+          tabBtn.closest('.service-layout-presentation-box, .auto-slider-service, section, .container, body') ||
+          document;
+        const targetPane = container.querySelector<HTMLElement>(targetId);
+        if (targetPane) {
+          const tabContent = targetPane.closest('.tab-content') || targetPane.parentElement;
+          if (tabContent) {
+            tabContent.querySelectorAll<HTMLElement>('.tab-pane').forEach((p) => {
+              p.classList.remove('active', 'show');
+              p.style.display = 'none';
+            });
+          }
+          targetPane.classList.add('active', 'show');
+          targetPane.style.display = 'block';
+        }
+      });
+    });
+
+  // Number Counter / Odometer animation
+  const animateCounter = (el: HTMLElement) => {
+    if (el.dataset.wrCounted) return;
+    const rawValue = el.getAttribute('data-count') || el.getAttribute('data-to') || el.textContent || '';
+    const numericStr = rawValue.replace(/[^\d.]/g, '');
+    if (!numericStr) return;
+    const target = parseFloat(numericStr);
+    if (isNaN(target)) return;
+    el.dataset.wrCounted = 'true';
+
+    const hasComma = rawValue.includes(',');
+    const duration = 1200;
+    const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+    const update = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(ease * target);
+      el.textContent = hasComma ? current.toLocaleString() : String(current);
+      if (progress < 1) {
+        if (typeof requestAnimationFrame !== 'undefined') {
+          requestAnimationFrame(update);
+        } else {
+          setTimeout(() => update(Date.now()), 16);
+        }
+      } else {
+        el.textContent = hasComma ? target.toLocaleString() : String(target);
+      }
+    };
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(update);
+    } else {
+      setTimeout(() => update(Date.now()), 16);
+    }
+  };
+
+  // Scroll Reveal & Counter Observer
+  if (typeof IntersectionObserver !== 'undefined') {
+    const revealObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('wr-revealed');
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    document
+      .querySelectorAll<HTMLElement>(
+        '.wr-reveal, .wr-product-card, .single-ai-service, .single-modern-case-studies, .signle-fun-facts-one, .service-layout-presentation-box, .blog-card-text'
+      )
+      .forEach((el) => {
+        if (!el.classList.contains('wr-reveal')) {
+          el.classList.add('wr-reveal');
+        }
+        revealObserver.observe(el);
+      });
+
+    const counterObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target as HTMLElement);
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+    document
+      .querySelectorAll<HTMLElement>('.odometer, [data-count], [data-to], .timer')
+      .forEach((el) => counterObserver.observe(el));
+  } else {
+    document.querySelectorAll<HTMLElement>('.wr-reveal').forEach((el) => el.classList.add('wr-revealed'));
+    document
+      .querySelectorAll<HTMLElement>('.odometer, [data-count], [data-to], .timer')
+      .forEach((el) => animateCounter(el));
+  }
 }

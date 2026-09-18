@@ -82,8 +82,13 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     name: p.translations?.[lang]?.name ?? p.name,
     description: p.translations?.[lang]?.description ?? (lang === 'en' ? p.description : ''),
   });
+  const mainProduct =
+    draft.products.find((p) => p.id === draft.primaryProductId) ?? draft.products[0];
+  const defaultProductImg =
+    asset(mainProduct?.imageAssetId) ||
+    asset(draft.products.find((p) => p.imageAssetId)?.imageAssetId);
   const img = (p: Product) => {
-    const url = asset(p.imageAssetId);
+    const url = asset(p.imageAssetId) || defaultProductImg;
     const prepared=materialProductImage(draft,options,p);
     if(prepared)return `<div class="product-image">${prepared}</div>`;
     return `<div class="product-image">${url ? `<img src="${esc(url)}" alt="${esc(translate(p).name)}" loading="lazy" decoding="async">` : `<span class="empty-image">${esc(ui.unavailable)}</span>`}</div>`;
@@ -109,8 +114,6 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722 > 0.179
       ? '#17261c'
       : '#ffffff';
-  const mainProduct =
-    draft.products.find((p) => p.id === draft.primaryProductId) ?? draft.products[0];
   const poster = asset(draft.posterAssetId) || asset(mainProduct?.imageAssetId);
   const video = asset(draft.heroAssetId);
   const hero = `<section class="hero" aria-label="${esc(copy.headline)}">${poster ? `<img class="poster" src="${esc(poster)}" alt="">` : ''}${video ? `<video id="hero-video" autoplay muted loop playsinline preload="metadata"${poster ? ` poster="${esc(poster)}"` : ''} aria-hidden="true"><source src="${esc(video)}"></video>` : ''}<div class="wrap hero-content"><span class="eyebrow">${esc(company.name)}</span><${page === 'home' ? 'h1' : 'h2'} class="hero-title">${esc(copy.headline)}</${page === 'home' ? 'h1' : 'h2'}>${copy.subtitle ? `<p>${esc(copy.subtitle)}</p>` : ''}<a class="button" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${esc(copy.cta || ui.discover)} <span aria-hidden="true">↗</span></a></div>${video ? `<div class="hero-controls"><button type="button" id="video-toggle" class="video-control" aria-label="${esc(ui.pause)}">Ⅱ</button></div>` : ''}</section>`;

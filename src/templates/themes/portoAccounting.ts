@@ -1,4 +1,4 @@
-import { esc, type ThemeContext } from './types';
+import { esc, safeUrl, type ThemeContext } from './types';
 
 export function renderAccountingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -102,7 +102,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;">
         ${products.map((p, idx) => {
           const t = translateProduct(p);
-          const imgUrl = asset(p.imageAssetId);
+          const imgUrl = ctx.productMainImage(p);
           const icons = ['📑', '⚖️', '💼', '📊', '🏛️', '🔍'];
           return `
             <article class="product-card" style="background:#ffffff;border:1px solid #e8d8d9;border-top:4px solid #d90a2c;border-radius:4px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
@@ -229,4 +229,439 @@ export function renderAccountingHome(ctx: ThemeContext): string {
   `;
 
   return `${topBarHtml}${heroHtml}${statsHtml}${productsHtml}${whyChooseHtml}${testimonialsHtml}${contactBandHtml}`;
+}
+
+export function renderAccountingAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang];
+  const aboutText = copy?.about || company.description || 'With over two decades of accredited excellence, our certified public accountants and tax attorneys provide bulletproof compliance, proactive wealth preservation, and transparent financial stewardship.';
+
+  const heroHtml = `
+    <section class="porto-inner-hero" style="background:linear-gradient(135deg,#1f2421 0%,#2b2b2b 60%,#383838 100%);color:#ffffff;padding:70px 0 50px;border-bottom:3px solid #d90a2c;">
+      <div class="wrap">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,10,44,0.15);border:1px solid #d90a2c;padding:6px 18px;border-radius:4px;margin-bottom:20px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fdf1f3;letter-spacing:0.1em;text-transform:uppercase;">ACCREDITED CPA PRACTICE · EST. ${esc(company.establishedYear || '1998')}</span>
+        </div>
+        <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.4rem,4.8vw,4.2rem);line-height:1.12;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;color:#ffffff;">
+          Accredited Accounting, Tax & Corporate Advisory
+        </h1>
+        <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#d1d5db;margin:0;">
+          ${esc(copy?.subtitle || 'Strategic wealth management, cross-border corporate structuring, and rigorous tax compliance for expanding enterprises and high-net-worth families.')}
+        </p>
+      </div>
+    </section>
+  `;
+
+  const statsHtml = `
+    <section class="wrap" style="padding:48px 0 32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="font-size:2.4rem;color:#d90a2c;font-weight:800;font-family:'Playfair Display',Georgia,serif;">25+</div>
+          <div style="font-weight:700;margin-top:6px;color:#262626;font-size:1.05rem;">Years of Fiduciary Trust</div>
+          <div style="font-size:0.88rem;color:#666666;margin-top:6px;line-height:1.5;">Continuous corporate advisory and registered accounting excellence.</div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="font-size:2.4rem;color:#d90a2c;font-weight:800;font-family:'Playfair Display',Georgia,serif;">99.8%</div>
+          <div style="font-weight:700;margin-top:6px;color:#262626;font-size:1.05rem;">Clean Audit Defense Rate</div>
+          <div style="font-size:0.88rem;color:#666666;margin-top:6px;line-height:1.5;">Flawless statutory audit outcomes before domestic and international revenue authorities.</div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="font-size:2.4rem;color:#d90a2c;font-weight:800;font-family:'Playfair Display',Georgia,serif;">$850M+</div>
+          <div style="font-weight:700;margin-top:6px;color:#262626;font-size:1.05rem;">Advised Corporate Capital</div>
+          <div style="font-size:0.88rem;color:#666666;margin-top:6px;line-height:1.5;">Managed wealth, corporate mergers, and balance sheet optimizations.</div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="font-size:2.4rem;color:#d90a2c;font-weight:800;font-family:'Playfair Display',Georgia,serif;">100%</div>
+          <div style="font-weight:700;margin-top:6px;color:#262626;font-size:1.05rem;">Licensed CPA Staff</div>
+          <div style="font-size:0.88rem;color:#666666;margin-top:6px;line-height:1.5;">AICPA members and IRS Enrolled Agents leading each account.</div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const heritageHtml = `
+    <section class="wrap" style="padding:40px 0 60px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
+        <div>
+          <span class="eyebrow" style="color:#d90a2c;font-weight:700;">FIRM HERITAGE & PHILOSOPHY</span>
+          <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#262626;margin:12px 0 20px;line-height:1.2;">Proactive Tax Strategy Built on Uncompromising Integrity</h2>
+          <div style="color:#4d4d4d;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+            <p>${esc(aboutText)}</p>
+            <p>Unlike standard reactive tax filing services, our partners maintain continuous quarterly audits, multi-jurisdiction nexus reviews, and strategic capital structuring to prevent fiscal vulnerabilities before they emerge.</p>
+          </div>
+          ${company.certifications ? `
+            <div style="margin-top:24px;padding:20px;background:#fdf1f3;border-left:4px solid #d90a2c;border-radius:0 4px 4px 0;">
+              <div style="font-size:0.85rem;font-weight:700;color:#d90a2c;text-transform:uppercase;">Professional Accreditations</div>
+              <div style="color:#262626;margin-top:6px;font-weight:600;">${esc(company.certifications)}</div>
+            </div>
+          ` : ''}
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:6px;padding:36px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2rem;color:#d90a2c;margin-bottom:16px;">⚖️</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.35rem;margin:0 0 10px;">Fiduciary Duty & Transparency</h3>
+          <p style="color:#666666;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Our practice adheres to the highest statutory accounting ethics, ensuring your business preserves wealth legally and strategically.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.9rem;color:#333333;">
+              <span style="color:#d90a2c;font-weight:700;">●</span> Licensed by the State Board of Public Accountancy
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.9rem;color:#333333;">
+              <span style="color:#d90a2c;font-weight:700;">●</span> AICPA (American Institute of CPAs) Accredited Firm
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:0.9rem;color:#333333;">
+              <span style="color:#d90a2c;font-weight:700;">●</span> Cross-Border Double Taxation Treaty Practitioners
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const practicePillarsHtml = `
+    <section class="wrap" style="padding:60px 0;border-top:1px solid #e8d8d9;">
+      <div style="text-align:center;margin-bottom:44px;">
+        <span class="eyebrow" style="color:#d90a2c;font-weight:700;">CORE DISCIPLINES</span>
+        <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#262626;margin:10px 0;">Four Core Practice Specialties</h2>
+        <p style="color:#666666;max-width:620px;margin:0 auto;font-size:1rem;">Specialized CPA and legal counsel covering all facets of enterprise financial governance.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+          <div style="font-size:2rem;margin-bottom:14px;">📑</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.2rem;margin:0 0 10px;">Corporate Tax Structuring</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">Cross-border corporate entity tax optimization, transfer pricing, and VAT/GST compliance.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+          <div style="font-size:2rem;margin-bottom:14px;">🔍</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.2rem;margin:0 0 10px;">Statutory Financial Audits</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">Independent GAAP/IFRS statement verification, compliance certifications, and internal control reviews.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+          <div style="font-size:2rem;margin-bottom:14px;">💼</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.2rem;margin:0 0 10px;">M&A & Due Diligence</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">Rigorous financial forensics, target valuation modeling, and pre-deal tax liability analysis.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+          <div style="font-size:2rem;margin-bottom:14px;">🏛️</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.2rem;margin:0 0 10px;">Private Wealth Advisory</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">Family office structuring, generational wealth succession planning, and estate tax shielding.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const partnersHtml = `
+    <section class="wrap" style="padding:60px 0;border-top:1px solid #e8d8d9;">
+      <div style="text-align:center;margin-bottom:40px;">
+        <span class="eyebrow" style="color:#d90a2c;font-weight:700;">PRACTICE LEADERSHIP</span>
+        <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#262626;margin:10px 0;">Senior Partners & CPAs</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#262626;color:#fff;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">AS</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 4px;">Arthur Sterling, CPA</h3>
+          <div style="color:#d90a2c;font-size:0.85rem;font-weight:700;margin-bottom:10px;">Managing Partner</div>
+          <p style="color:#666666;font-size:0.85rem;line-height:1.5;margin:0;">25+ years experience in corporate restructuring and international tax strategy.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#d90a2c;color:#fff;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">EM</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 4px;">Evelyn Montgomery, Esq.</h3>
+          <div style="color:#d90a2c;font-size:0.85rem;font-weight:700;margin-bottom:10px;">Senior Tax Attorney & Partner</div>
+          <p style="color:#666666;font-size:0.85rem;line-height:1.5;margin:0;">Specializes in tax dispute defense, cross-border treaties, and corporate governance.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#4d4d4d;color:#fff;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">RC</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 4px;">Richard Caldwell, CPA</h3>
+          <div style="color:#d90a2c;font-size:0.85rem;font-weight:700;margin-bottom:10px;">Director of Audit & Assurance</div>
+          <p style="color:#666666;font-size:0.85rem;line-height:1.5;margin:0;">Supervises statutory independent audits for domestic and multinational enterprises.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#262626;color:#fff;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">BH</div>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 4px;">Beatrice Holmes, CFE</h3>
+          <div style="color:#d90a2c;font-size:0.85rem;font-weight:700;margin-bottom:10px;">Forensic Accounting Lead</div>
+          <p style="color:#666666;font-size:0.85rem;line-height:1.5;margin:0;">Certified fraud examiner with deep forensic valuation experience across M&A deals.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const ctaHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="background:#262626;border-top:3px solid #d90a2c;border-radius:4px;padding:48px;text-align:center;color:#ffffff;">
+        <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#ffffff;margin:0 0 14px;">Schedule a Complimentary Confidential Tax Review</h2>
+        <p style="color:#cccccc;max-width:600px;margin:0 auto 28px;font-size:1.05rem;">Our senior partners will review your corporate filings, identify risk exposures, and highlight optimization opportunities.</p>
+        <a class="button" style="background:#d90a2c;color:#ffffff;font-weight:700;border-radius:4px;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.04em;text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+          Book Initial Consultation ↗
+        </a>
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${statsHtml}${heritageHtml}${practicePillarsHtml}${partnersHtml}${ctaHtml}`;
+}
+
+export function renderAccountingContact(ctx: ThemeContext): string {
+  const { draft, ui, options } = ctx;
+  const company = draft.company;
+
+  const heroHtml = `
+    <section class="porto-inner-hero" style="background:linear-gradient(135deg,#1f2421 0%,#2b2b2b 60%,#383838 100%);color:#ffffff;padding:70px 0 50px;border-bottom:3px solid #d90a2c;">
+      <div class="wrap">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,10,44,0.15);border:1px solid #d90a2c;padding:6px 18px;border-radius:4px;margin-bottom:20px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fdf1f3;letter-spacing:0.1em;text-transform:uppercase;">CONFIDENTIAL CLIENT INTAKE</span>
+        </div>
+        <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.4rem,4.8vw,4.2rem);line-height:1.12;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;color:#ffffff;">
+          ${esc(ui.conversation || 'Schedule a Consultation')}
+        </h1>
+        <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#d1d5db;margin:0;">
+          ${esc(ui.contactIntro || 'Engage our accredited partners for corporate tax planning, statutory audit preparation, or confidential financial counsel.')}
+        </p>
+      </div>
+    </section>
+  `;
+
+  const contactContentHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div class="contact-layout" style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
+        <!-- Left: Offices & Info -->
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:36px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <span class="eyebrow" style="color:#d90a2c;font-weight:700;">PARTNER DIRECTORY</span>
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.4rem;margin:8px 0 24px;">Firm Headquarters & Desks</h3>
+
+          <div style="display:flex;flex-direction:column;gap:20px;color:#4d4d4d;font-size:0.95rem;">
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;color:#d90a2c;text-transform:uppercase;margin-bottom:4px;">Senior Partner Desk Email</div>
+              <a style="color:#262626;font-weight:700;font-size:1.05rem;text-decoration:none;" href="mailto:${esc(company.email)}">${esc(company.email)}</a>
+            </div>
+
+            ${company.phone ? `
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:#d90a2c;text-transform:uppercase;margin-bottom:4px;">Toll-Free Advisory Line</div>
+                <a style="color:#262626;font-weight:700;text-decoration:none;" href="tel:${esc(company.phone)}">${esc(company.phone)}</a>
+              </div>
+            ` : ''}
+
+            ${company.whatsapp ? `
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:#d90a2c;text-transform:uppercase;margin-bottom:4px;">Direct WhatsApp Consultation</div>
+                <a style="color:#10b981;font-weight:700;text-decoration:none;" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(company.whatsapp.replace(/[^0-9]/g, ''))}">+${esc(company.whatsapp.replace(/[^0-9]/g, ''))} (Chat Now ↗)</a>
+              </div>
+            ` : ''}
+
+            ${company.address ? `
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:#d90a2c;text-transform:uppercase;margin-bottom:4px;">Main Office Address</div>
+                <span style="color:#333333;line-height:1.5;">${esc(company.address)}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="margin-top:32px;padding:20px;background:#fdf1f3;border-radius:4px;border:1px solid #e8d8d9;">
+            <div style="font-size:0.85rem;color:#4d4d4d;line-height:1.6;">
+              <strong style="color:#262626;">Office Hours:</strong> Monday – Friday: 8:30 AM – 6:00 PM EST.<br>
+              <strong style="color:#d90a2c;">Emergency Tax Defense:</strong> On-call CPA support available 24/7 during active statutory audit reviews.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Consultation Form -->
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:36px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <h2 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.6rem;margin:0 0 8px;">Request Confidential Consultation</h2>
+          <p style="color:#666666;font-size:0.95rem;margin:0 0 28px;">All submissions are treated under strict attorney-client and CPA confidentiality privileges.</p>
+
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <label style="display:flex;flex-direction:column;gap:6px;color:#333333;font-size:0.88rem;">
+              <span>${esc(ui.name)} <span style="color:#d90a2c;">*</span></span>
+              <input name="name" autocomplete="name" required maxlength="120" style="background:#ffffff;border:1px solid #cccccc;border-radius:4px;padding:12px 14px;color:#262626;font:inherit;">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;color:#333333;font-size:0.88rem;">
+              <span>${esc(ui.email)} <span style="color:#d90a2c;">*</span></span>
+              <input name="email" type="email" autocomplete="email" required maxlength="254" style="background:#ffffff;border:1px solid #cccccc;border-radius:4px;padding:12px 14px;color:#262626;font:inherit;">
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#333333;font-size:0.88rem;">
+              <span>${esc(ui.company)} (${esc(ui.optional)})</span>
+              <input name="company" autocomplete="organization" maxlength="200" style="background:#ffffff;border:1px solid #cccccc;border-radius:4px;padding:12px 14px;color:#262626;font:inherit;">
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#333333;font-size:0.88rem;">
+              <span>${esc(ui.product)} (${esc(ui.optional)})</span>
+              <select name="productId" style="background:#ffffff;border:1px solid #cccccc;border-radius:4px;padding:12px 14px;color:#262626;font:inherit;">
+                <option value="">— Select Target Practice Area —</option>
+                ${draft.products.map(p => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(ctx.translateProduct(p).name)}</option>`).join('')}
+              </select>
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#333333;font-size:0.88rem;">
+              <span>${esc(ui.message)} <span style="color:#d90a2c;">*</span></span>
+              <textarea name="message" required maxlength="5000" rows="5" placeholder="Brief description of your business structure, filing jurisdictions, and required advisory services..." style="background:#ffffff;border:1px solid #cccccc;border-radius:4px;padding:12px 14px;color:#262626;font:inherit;resize:vertical;"></textarea>
+            </label>
+            <div class="honeypot" aria-hidden="true" style="position:absolute;left:-9999px;">
+              <label>Website<input name="website" tabindex="-1" autocomplete="off"></label>
+            </div>
+            <div style="grid-column:1/-1;">
+              <button class="button" type="submit"${options.preview ? ' disabled' : ''} style="background:#d90a2c;color:#ffffff;font-weight:700;border-radius:4px;padding:14px 36px;border:none;cursor:pointer;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.04em;">
+                ${esc(ui.send)} ↗
+              </button>
+            </div>
+            <p class="form-status" role="status" aria-live="polite" style="grid-column:1/-1;margin:4px 0 0;font-size:0.9rem;"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const faqHtml = `
+    <section class="wrap" style="padding:40px 0 80px;border-top:1px solid #e8d8d9;">
+      <div style="text-align:center;margin-bottom:44px;">
+        <span class="eyebrow" style="color:#d90a2c;font-weight:700;">FREQUENTLY ASKED QUESTIONS</span>
+        <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#262626;margin:10px 0;">Client Engagement & Practice FAQ</h2>
+      </div>
+      <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:24px;">
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 8px;">How do we prepare for an initial corporate tax review?</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">Prior to our first strategy session, our secure portal will request your past two years of corporate returns, balance sheets, and active entity charters.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:24px;">
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 8px;">Can your partners represent us before tax authorities?</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">Yes. Our licensed CPAs and tax attorneys possess full power of attorney representation rights before domestic revenue services and international fiscal bodies.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:24px;">
+          <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.15rem;margin:0 0 8px;">What billing models are available for ongoing advisory?</h3>
+          <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0;">We offer both fixed quarterly retainers (including unlimited partner consultations) and project-based milestone fees for M&A due diligence and statutory audits.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${contactContentHtml}${faqHtml}`;
+}
+
+export function renderAccountingCatalog(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
+
+  const heroHtml = `
+    <section class="porto-inner-hero" style="background:linear-gradient(135deg,#1f2421 0%,#2b2b2b 60%,#383838 100%);color:#ffffff;padding:70px 0 50px;border-bottom:3px solid #d90a2c;">
+      <div class="wrap">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,10,44,0.15);border:1px solid #d90a2c;padding:6px 18px;border-radius:4px;margin-bottom:20px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fdf1f3;letter-spacing:0.1em;text-transform:uppercase;">PRACTICE DIRECTORY</span>
+        </div>
+        <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.4rem,4.8vw,4.2rem);line-height:1.12;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;color:#ffffff;">
+          ${esc(ui.catalog || 'Practice Areas & Advisory Solutions')}
+        </h1>
+        <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#d1d5db;margin:0;">
+          Explore our certified public accounting practice areas, cross-border corporate taxation solutions, and statutory audit disciplines.
+        </p>
+      </div>
+    </section>
+  `;
+
+  const productsHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;">
+        ${draft.products.map(p => {
+          const t = translateProduct(p);
+          const imgUrl = asset(p.imageAssetId);
+          return `
+            <article style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.02);display:flex;flex-direction:column;">
+              ${imgUrl ? `
+                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#f5f5f5;overflow:hidden;">
+                  <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                </a>
+              ` : `
+                <div style="padding:32px 24px 16px;font-size:2.4rem;">📑</div>
+              `}
+              <div style="padding:24px;display:flex;flex-direction:column;flex:1;">
+                <h3 style="font-family:'Playfair Display',Georgia,serif;margin:0 0 10px;font-size:1.3rem;color:#262626;">
+                  <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="color:#262626;text-decoration:none;">
+                    ${esc(t.name)}
+                  </a>
+                </h3>
+                <p style="color:#666666;font-size:0.92rem;line-height:1.6;margin:0 0 20px;flex:1;">
+                  ${esc(t.description || 'Professional corporate accounting and advisory practice.')}
+                </p>
+                <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #e8d8d9;padding-top:16px;margin-top:auto;">
+                  <span style="font-size:0.85rem;color:#d90a2c;font-weight:700;">Accredited Service</span>
+                  <a style="color:#d90a2c;font-weight:700;font-size:0.9rem;text-decoration:none;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
+                    ${esc(ui.details || 'View Details')} →
+                  </a>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${productsHtml}`;
+}
+
+export function renderAccountingDetail(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset, options } = ctx;
+  const p = draft.products.find(item => item.id === options.productId) || draft.products[0];
+  if (!p) {
+    return `<section class="wrap" style="padding:80px 0;"><h1>${esc(ui.noProducts || 'Practice Not Found')}</h1></section>`;
+  }
+
+  const t = translateProduct(p);
+  const imgUrl = asset(p.imageAssetId);
+
+  return `
+    <section class="porto-inner-hero" style="background:linear-gradient(135deg,#1f2421 0%,#2b2b2b 60%,#383838 100%);color:#ffffff;padding:50px 0 40px;border-bottom:3px solid #d90a2c;">
+      <div class="wrap">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#d1d5db;margin-bottom:16px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="color:#d1d5db;text-decoration:none;">${esc(ui.home)}</a>
+          <span>/</span>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#d1d5db;text-decoration:none;">${esc(ui.catalog)}</a>
+          <span>/</span>
+          <span style="color:#d90a2c;font-weight:700;">${esc(t.name)}</span>
+        </div>
+        <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2rem,4vw,3.2rem);line-height:1.15;font-weight:700;letter-spacing:-0.02em;margin:0;color:#ffffff;">
+          ${esc(t.name)}
+        </h1>
+      </div>
+    </section>
+
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+        <div>
+          ${imgUrl ? `
+            <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;padding:24px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:4px;">
+            </div>
+          ` : `
+            <div style="background:#fdf1f3;border:1px solid #e8d8d9;border-radius:4px;padding:60px 24px;text-align:center;font-size:4rem;">⚖️</div>
+          `}
+        </div>
+
+        <div>
+          <div style="display:inline-block;background:rgba(217,10,44,0.12);border:1px solid #d90a2c;color:#d90a2c;padding:4px 12px;border-radius:4px;font-size:0.8rem;font-weight:700;margin-bottom:16px;text-transform:uppercase;">PRACTICE SPECIFICATION</div>
+          <p style="font-size:1.15rem;line-height:1.7;color:#4d4d4d;margin:0 0 24px;">${esc(t.description || 'Certified public accounting and corporate advisory practice.')}</p>
+
+          <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:24px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.1rem;margin:0 0 16px;">Practice Credentials</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              ${p.material ? `
+                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
+                  <span style="color:#666666;">Statutory Jurisdiction</span>
+                  <span style="color:#262626;font-weight:600;">${esc(p.material)}</span>
+                </div>
+              ` : ''}
+              ${p.dimensions ? `
+                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f5f5f5;">
+                  <span style="color:#666666;">Engagement Format</span>
+                  <span style="color:#262626;font-weight:600;">${esc(p.dimensions)}</span>
+                </div>
+              ` : ''}
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#666666;">Supervising Partner</span>
+                <span style="color:#d90a2c;font-weight:700;">Partner-Led Engagement</span>
+              </div>
+            </div>
+          </div>
+
+          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#d90a2c;color:#ffffff;font-weight:700;border-radius:4px;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.04em;text-decoration:none;">
+            ${esc(ui.inquire || 'Retain This Practice Area')} ↗
+          </a>
+        </div>
+      </div>
+    </section>
+  `;
 }

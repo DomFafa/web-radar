@@ -215,6 +215,72 @@ export function BannerEditor({
                           }
                         />
                       </Field>
+                      <Field label={`幻灯片 ${index + 1} 独立主标题（选填）`}>
+                        <input
+                          aria-label={`幻灯片 ${index + 1} 独立主标题`}
+                          maxLength={150}
+                          placeholder="留空时使用整站默认主标题"
+                          disabled={disabled}
+                          value={slide.headline || ''}
+                          onChange={(e) =>
+                            change(banner.id, {
+                              slides: banner.slides.map((s, i) =>
+                                i === index ? { ...s, headline: e.target.value } : s,
+                              ),
+                            })
+                          }
+                        />
+                      </Field>
+                      <Field label={`幻灯片 ${index + 1} 独立描述（选填）`}>
+                        <input
+                          aria-label={`幻灯片 ${index + 1} 独立描述`}
+                          maxLength={300}
+                          placeholder="留空时使用整站默认副标题"
+                          disabled={disabled}
+                          value={slide.subtitle || ''}
+                          onChange={(e) =>
+                            change(banner.id, {
+                              slides: banner.slides.map((s, i) =>
+                                i === index ? { ...s, subtitle: e.target.value } : s,
+                              ),
+                            })
+                          }
+                        />
+                      </Field>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <Field label="按钮文字（选填）">
+                          <input
+                            aria-label={`幻灯片 ${index + 1} 按钮文字`}
+                            maxLength={50}
+                            placeholder="如：立即咨询"
+                            disabled={disabled}
+                            value={slide.buttonText || ''}
+                            onChange={(e) =>
+                              change(banner.id, {
+                                slides: banner.slides.map((s, i) =>
+                                  i === index ? { ...s, buttonText: e.target.value } : s,
+                                ),
+                              })
+                            }
+                          />
+                        </Field>
+                        <Field label="按钮链接（选填）">
+                          <input
+                            aria-label={`幻灯片 ${index + 1} 按钮链接`}
+                            maxLength={200}
+                            placeholder="如：contact/index.html"
+                            disabled={disabled}
+                            value={slide.buttonUrl || ''}
+                            onChange={(e) =>
+                              change(banner.id, {
+                                slides: banner.slides.map((s, i) =>
+                                  i === index ? { ...s, buttonUrl: e.target.value } : s,
+                                ),
+                              })
+                            }
+                          />
+                        </Field>
+                      </div>
                       <div className="banner-slide-actions">
                         <Button
                           kind="quiet"

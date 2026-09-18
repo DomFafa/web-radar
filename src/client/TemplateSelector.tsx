@@ -280,8 +280,8 @@ export function TemplateSelector({
               <dt>视频背景（选填）</dt>
               <dd>{media.videos ? `内置 ${media.videos} 段视频；无需额外上传` : '默认无需视频'}</dd>
               <small>
-                自定义全屏背景：每组 1 段 MP4 / WebM，建议 1920 × 1080（16:9），另备 1
-                张同尺寸封面。超宽屏可用 2560 × 1440，边缘预留裁切空间。
+                自定义全屏背景：每组 1 段 MP4 / WebM，建议 2560 × 1440（16:9，适配 27–32 寸大屏及 4K），另备 1
+                张同尺寸封面。超宽屏可用 3840 × 2160，边缘预留安全裁切空间。
               </small>
             </div>
             <div>
@@ -456,7 +456,7 @@ export function TemplateSelector({
                     <span>
                       视频：
                       {requirements.videos
-                        ? `已内置 ${requirements.videos} 段 · 可用 1920 × 1080 替换首页背景`
+                        ? `已内置 ${requirements.videos} 段 · 可用 2560 × 1440 替换首页背景`
                         : '默认 0 段；可自行添加全屏背景'}
                     </span>
                     <small>选中模板查看完整清单；产品图会自动复用。</small>

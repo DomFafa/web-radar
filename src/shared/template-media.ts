@@ -15,7 +15,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'senseng-clean': {
     productCount: 8,
     productSize: '1536 × 1024（3:2）',
-    bannerSize: '1920 × 640（3:1）',
+    bannerSize: '2560 × 850 及以上（3:1 宽幅，适配 27–32 寸大屏）',
     bannerNote: '经典展台与天空背景已内置。',
     videos: 0,
     slots: [
@@ -29,7 +29,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'senseng-video': {
     productCount: 8,
     productSize: '1536 × 1024（3:2）',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 1,
     slots: [
@@ -43,7 +43,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 1,
     slots: [
@@ -97,7 +97,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'fintech-platform': {
     productCount: 8,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 0,
     slots: [
@@ -141,7 +141,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'digital-marketing': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 0,
     slots: [
@@ -170,7 +170,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'porto-accounting': {
     productCount: 3,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 0,
     slots: [
@@ -189,7 +189,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'crafto-corporate': {
     productCount: 6,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 0,
     slots: [
@@ -213,7 +213,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'juno-toys': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 0,
     slots: [
@@ -242,7 +242,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'corpox-ai-agency': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 0,
     slots: [
@@ -271,7 +271,7 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
   'corpox-consulting': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '1920 × 1080（16:9）',
+    bannerSize: '2560 × 1440 及以上（16:9，适配 27–32 寸大屏及 4K）',
     bannerNote: '保留默认背景时无需上传。',
     videos: 1,
     slots: [

@@ -1,4 +1,4 @@
-import { esc, type ThemeContext } from './types';
+import { esc, safeUrl, type ThemeContext } from './types';
 
 export function renderAiAgencyHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -87,7 +87,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;">
         ${products.map((p, idx) => {
           const t = translateProduct(p);
-          const imgUrl = asset(p.imageAssetId);
+          const imgUrl = ctx.productMainImage(p);
           const icons = ['🧠', '🤖', '⚡', '📊', '🔍', '🛡️'];
           const tags = ['Agent Swarm', 'Fine-Tuned LLM', 'Vision-Language', 'RAG Engine', 'Code Synthesis', 'Security Gate'];
           return `
@@ -249,3 +249,434 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
 
   return `${heroHtml}${metricsHtml}${productsHtml}${architectureHtml}${modelsHtml}${testimonialsHtml}${contactBandHtml}`;
 }
+
+export function renderAiAgencyAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs } = ctx;
+  const copy = draft.copy[ctx.lang] ?? {
+    about: 'Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.',
+  };
+
+  const heroHtml = `
+    <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:80px 0 60px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+      <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(circle,rgba(6,182,212,0.18) 0%,rgba(99,102,241,0.12) 50%,transparent 70%);filter:blur(50px);pointer-events:none;"></div>
+      <div class="wrap" style="position:relative;z-index:2;text-align:center;">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);padding:6px 18px;border-radius:9999px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
+          <span style="font-size:0.84rem;font-weight:700;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">CORPOX AI LABS · RESEARCH CHARTER</span>
+        </div>
+        <h1 style="font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1.06;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:920px;margin:0 auto 20px;">
+          Autonomous Neural Intelligence & Synthetic Reasoning
+        </h1>
+        <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0 auto;">
+          ${esc(copy.about)}
+        </p>
+      </div>
+    </section>
+  `;
+
+  const statsHtml = `
+    <section class="wrap" style="padding:50px 0 30px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">1,200+</div>
+          <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">Deployed Neural Agents</div>
+          <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Operating in high-throughput enterprise pipelines across finance and logistics.</div>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(129,140,248,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#818cf8;letter-spacing:-1px;">240M+</div>
+          <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">Daily Token Inferences</div>
+          <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Low-latency FP8 quantized inference clusters with 99.99% system availability.</div>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(192,132,252,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#c084fc;letter-spacing:-1px;">&lt;18ms</div>
+          <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">First-Token Latency</div>
+          <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Sub-20ms streaming token generation via hardware-optimized custom kernels.</div>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #38bdf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(56,189,248,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">100%</div>
+          <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">Air-Gapped Sovereign Data</div>
+          <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Zero external model calls. Full on-premise execution with encrypted vector state.</div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const missionHtml = `
+    <section class="wrap" style="padding:50px 0 70px;">
+      <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;">
+        <div>
+          <span class="eyebrow" style="color:#06b6d4;font-weight:700;">ENGINEERED REASONING</span>
+          <h2 style="font-size:2.4rem;line-height:1.15;color:#f8fafc;margin:10px 0 20px;">
+            Beyond Conversational AI: Deterministic Autonomous Execution
+          </h2>
+          <p style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
+            At Corpox AI Labs, we reject the notion that enterprises must choose between creative neural generation and deterministic reliability. We build agentic reasoning loops where mathematical logic, code compilers, and relational databases act as self-correcting grounding layers.
+          </p>
+          <p style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
+            Our proprietary multi-agent orchestrator decomposes complex business directives into parallel execution graphs, ensuring every single tool call is schema-validated and auditable down to individual floating-point tensor activations.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
+              <strong style="color:#06b6d4;display:block;font-size:1rem;margin-bottom:4px;">⚡ Real-Time Tool Binding</strong>
+              <span style="color:#94a3b8;font-size:0.85rem;">Deterministic JSON-RPC interfaces eliminate API hallucination.</span>
+            </div>
+            <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
+              <strong style="color:#818cf8;display:block;font-size:1rem;margin-bottom:4px;">🔒 Cryptographic Auditing</strong>
+              <span style="color:#94a3b8;font-size:0.85rem;">Immutable prompt-to-execution state hashing for regulatory compliance.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.08);">
+          <h3 style="font-size:1.3rem;font-weight:700;color:#f8fafc;margin:0 0 20px;">Core Engineering Disciplines</h3>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div style="border-left:3px solid #06b6d4;padding-left:14px;">
+              <strong style="color:#67e8f9;font-size:0.95rem;">1. Reinforcement Learning from Compiler Feedback (RLCF)</strong>
+              <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:4px 0 0;">Agents generate unit-tested code solutions with zero hallucination guarantee.</p>
+            </div>
+            <div style="border-left:3px solid #818cf8;padding-left:14px;">
+              <strong style="color:#a5b4fc;font-size:0.95rem;">2. Quantized Local Inference Kernels</strong>
+              <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:4px 0 0;">Custom CUDA & Triton kernels achieving 3x higher throughput per GPU cluster.</p>
+            </div>
+            <div style="border-left:3px solid #c084fc;padding-left:14px;">
+              <strong style="color:#d8b4fe;font-size:0.95rem;">3. Hierarchical Agent Swarm Coordination</strong>
+              <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:4px 0 0;">Planner, Executor, and Verifier agents cross-validating multi-step decisions.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const researchersHtml = `
+    <section class="wrap" style="padding:60px 0;border-top:1px solid #1e293b;">
+      <div style="text-align:center;margin-bottom:44px;">
+        <span class="eyebrow" style="color:#06b6d4;font-weight:700;">RESEARCH FELLOWS</span>
+        <h2 style="font-size:2.2rem;color:#f8fafc;font-weight:800;margin:8px 0;">Principal AI Scientists & Neural Architects</h2>
+        <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">Pioneering synthetic reasoning, distributed GPU clusters, and multimodal foundation models.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#06b6d4;color:#050811;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">ER</div>
+          <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Dr. Elena Rostova</h3>
+          <div style="color:#06b6d4;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Chief AI Scientist & Co-Founder</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Ex-DeepMind research scientist with 40+ citations in reasoning models and autonomous swarms.</p>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#818cf8;color:#ffffff;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">MS</div>
+          <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Marcus Sterling</h3>
+          <div style="color:#818cf8;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Head of Agentic Frameworks</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Pioneered dynamic DAG task decomposition engines powering our 24/7 autonomous production clusters.</p>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#c084fc;color:#050811;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">TA</div>
+          <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Dr. Tariq Al-Mansoor</h3>
+          <div style="color:#c084fc;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Director of Inference & Quantization</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Specializes in custom Triton kernel development, FP8 execution pipelines, and high-bandwidth memory caches.</p>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#38bdf8;color:#050811;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">VK</div>
+          <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Vera Kross, Ph.D.</h3>
+          <div style="color:#38bdf8;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Lead Security & AI Alignment</div>
+          <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Designs cryptographic sandboxing, prompt injection countermeasures, and sovereign air-gap isolation.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const ctaHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="background:#080d1a;border:1px solid #06b6d4;border-radius:16px;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 0 40px rgba(6,182,212,0.15);">
+        <div>
+          <span style="font-family:monospace;color:#06b6d4;font-weight:700;font-size:0.85rem;">[DEPLOY AUTONOMOUS CLUSTERS]</span>
+          <h2 style="font-size:2.2rem;color:#f8fafc;margin:8px 0;font-weight:900;">Deploy Sovereign Neural Workflows</h2>
+          <p style="color:#94a3b8;font-size:1rem;margin:0;max-width:560px;">Collaborate directly with our research fellows to engineer custom agentic pipelines.</p>
+        </div>
+        <a class="button" style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 25px rgba(6,182,212,0.4);text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+          Schedule Architecture Session ↗
+        </a>
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${statsHtml}${missionHtml}${researchersHtml}${ctaHtml}`;
+}
+
+export function renderAiAgencyContact(ctx: ThemeContext): string {
+  const { draft, ui, options } = ctx;
+  const company = draft.company;
+
+  const heroHtml = `
+    <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:80px 0 50px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+      <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(circle,rgba(6,182,212,0.18) 0%,rgba(99,102,241,0.12) 50%,transparent 70%);filter:blur(50px);pointer-events:none;"></div>
+      <div class="wrap" style="position:relative;z-index:2;text-align:center;">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);padding:6px 18px;border-radius:9999px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
+          <span style="font-size:0.84rem;font-weight:700;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">NEURAL ARCHITECTURE LAB</span>
+        </div>
+        <h1 style="font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1.06;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:920px;margin:0 auto 20px;">
+          ${esc(ui.conversation || 'Initiate Neural Architecture Consultation')}
+        </h1>
+        <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0 auto;">
+          ${esc(ui.contactIntro || 'Connect directly with our AI research fellows to blueprint autonomous multi-agent systems, local air-gapped inference clusters, or customized reasoning pipelines.')}
+        </p>
+      </div>
+    </section>
+  `;
+
+  const contentHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
+        <!-- Left: AI Dispatch & Laboratory -->
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 30px rgba(6,182,212,0.06);">
+          <span class="eyebrow" style="color:#06b6d4;font-weight:700;">ENGINEERING DESK</span>
+          <h3 style="font-size:1.35rem;font-weight:700;color:#f8fafc;margin:8px 0 24px;">AI Labs Dispatch & Infrastructure</h3>
+
+          <div style="display:flex;flex-direction:column;gap:20px;font-size:0.95rem;">
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;color:#06b6d4;text-transform:uppercase;margin-bottom:4px;">Research Direct Email</div>
+              <a style="color:#38bdf8;font-weight:700;font-size:1.05rem;text-decoration:none;" href="mailto:${esc(company.email)}">${esc(company.email)}</a>
+            </div>
+
+            ${company.phone ? `
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:#06b6d4;text-transform:uppercase;margin-bottom:4px;">Direct Lab Hotline</div>
+                <a style="color:#f8fafc;font-weight:700;text-decoration:none;" href="tel:${esc(company.phone)}">${esc(company.phone)}</a>
+              </div>
+            ` : ''}
+
+            ${company.whatsapp ? `
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:#06b6d4;text-transform:uppercase;margin-bottom:4px;">Secure WhatsApp Dispatch</div>
+                <a style="color:#10b981;font-weight:700;text-decoration:none;" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(company.whatsapp.replace(/[^0-9]/g, ''))}">+${esc(company.whatsapp.replace(/[^0-9]/g, ''))} (Connect ↗)</a>
+              </div>
+            ` : ''}
+
+            ${company.address ? `
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:#06b6d4;text-transform:uppercase;margin-bottom:4px;">Global Research Headquarters</div>
+                <span style="color:#cbd5e1;line-height:1.5;">${esc(company.address)}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <div style="margin-top:32px;background:#050811;border:1px solid #1e293b;border-radius:12px;padding:20px;">
+            <div style="font-size:0.85rem;color:#94a3b8;line-height:1.6;">
+              <strong style="color:#67e8f9;">Inference Cluster Support:</strong> 24/7 dedicated engineering coverage for enterprise SLAs.<br>
+              <strong style="color:#a5b4fc;">Security Protocol:</strong> All project discussions are protected under standard mutual NDA guidelines.
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Inquiry Form -->
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 30px rgba(6,182,212,0.06);">
+          <h2 style="font-size:1.6rem;font-weight:800;color:#f8fafc;margin:0 0 8px;">Submit Project Brief</h2>
+          <p style="color:#94a3b8;font-size:0.95rem;margin:0 0 28px;">Specify your inference parameters, desired model stack, and deployment environment.</p>
+
+          <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <label style="display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.name)} <span style="color:#06b6d4;">*</span></span>
+              <input name="name" autocomplete="name" required maxlength="120" style="background:#050811;border:1px solid #1e293b;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.email)} <span style="color:#06b6d4;">*</span></span>
+              <input name="email" type="email" autocomplete="email" required maxlength="254" style="background:#050811;border:1px solid #1e293b;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.company)} (${esc(ui.optional)})</span>
+              <input name="company" autocomplete="organization" maxlength="200" style="background:#050811;border:1px solid #1e293b;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.product)} (${esc(ui.optional)})</span>
+              <select name="productId" style="background:#050811;border:1px solid #1e293b;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;">
+                <option value="">— Select Target Neural Module —</option>
+                ${draft.products.map(p => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(ctx.translateProduct(p).name)}</option>`).join('')}
+              </select>
+            </label>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#cbd5e1;font-size:0.88rem;">
+              <span>${esc(ui.message)} <span style="color:#06b6d4;">*</span></span>
+              <textarea name="message" required maxlength="5000" rows="5" placeholder="Describe your throughput requirements, compliance environment (HIPAA, SOC2), or agentic workflow objectives..." style="background:#050811;border:1px solid #1e293b;border-radius:8px;padding:12px 14px;color:#f8fafc;font:inherit;resize:vertical;"></textarea>
+            </label>
+            <div class="honeypot" aria-hidden="true" style="position:absolute;left:-9999px;">
+              <label>Website<input name="website" tabindex="-1" autocomplete="off"></label>
+            </div>
+            <div style="grid-column:1/-1;">
+              <button class="button" type="submit"${options.preview ? ' disabled' : ''} style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border:none;border-radius:8px;padding:14px 36px;cursor:pointer;font-size:0.9rem;box-shadow:0 0 20px rgba(6,182,212,0.3);">
+                ${esc(ui.send)} ↗
+              </button>
+            </div>
+            <p class="form-status" role="status" aria-live="polite" style="grid-column:1/-1;margin:4px 0 0;font-size:0.9rem;"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  `;
+
+  const faqHtml = `
+    <section class="wrap" style="padding:40px 0 80px;border-top:1px solid #1e293b;">
+      <div style="text-align:center;margin-bottom:40px;">
+        <span class="eyebrow" style="color:#06b6d4;font-weight:700;">DEPLOYMENT FAQ</span>
+        <h2 style="font-size:2.2rem;color:#f8fafc;margin:8px 0;">Agent Architecture & Cluster Deployment FAQ</h2>
+      </div>
+      <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Can we deploy your models within an air-gapped on-premise data center?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Yes. We package complete containerized vLLM inference runtimes that require zero external internet access, ensuring full HIPAA and defense-grade sovereign data isolation.</p>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">What level of customization is performed on the foundation weights?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">We perform targeted LoRA/DoRA adapter tuning alongside direct preference optimization (DPO) on your private proprietary datasets, keeping customer weights completely isolated.</p>
+        </div>
+        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+          <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">How do the autonomous agents handle edge cases and execution failures?</h3>
+          <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Our multi-agent consensus protocol triggers automated replanning and tool retry loops upon detecting assertion failures. If certainty falls below a configurable threshold, the task escalates to human review.</p>
+        </div>
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${contentHtml}${faqHtml}`;
+}
+
+export function renderAiAgencyCatalog(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
+
+  const heroHtml = `
+    <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:80px 0 50px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+      <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(circle,rgba(6,182,212,0.18) 0%,rgba(99,102,241,0.12) 50%,transparent 70%);filter:blur(50px);pointer-events:none;"></div>
+      <div class="wrap" style="position:relative;z-index:2;text-align:center;">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);padding:6px 18px;border-radius:9999px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
+          <span style="font-size:0.84rem;font-weight:700;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">MODEL REPOSITORY & AGENTS</span>
+        </div>
+        <h1 style="font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1.06;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:920px;margin:0 auto 20px;">
+          ${esc(ui.catalog || 'Autonomous Neural Models & Agentic Modules')}
+        </h1>
+        <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0 auto;">
+          Fine-tuned agentic models, multimodal perception engines, and high-performance inference pipelines ready for sovereign deployment.
+        </p>
+      </div>
+    </section>
+  `;
+
+  const productsHtml = `
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;">
+        ${draft.products.map((p, idx) => {
+          const t = translateProduct(p);
+          const imgUrl = asset(p.imageAssetId);
+          const tags = ['Agent Swarm', 'Fine-Tuned LLM', 'Vision-Language', 'RAG Engine', 'Code Synthesis', 'Security Gate'];
+          return `
+            <article style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:26px;display:flex;flex-direction:column;box-shadow:0 0 25px rgba(6,182,212,0.05);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <span style="font-size:0.75rem;font-weight:700;color:#38bdf8;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);padding:4px 12px;border-radius:9999px;">${tags[idx % tags.length]}</span>
+                <span style="font-family:monospace;font-size:0.8rem;color:#67e8f9;">FP8 / AWQ</span>
+              </div>
+              ${imgUrl ? `
+                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#050811;border-radius:10px;margin-bottom:16px;overflow:hidden;">
+                  <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                </a>
+              ` : `
+                <div style="background:#050811;border-radius:10px;padding:28px 20px;text-align:center;font-size:2.5rem;margin-bottom:16px;">🧠</div>
+              `}
+              <h3 style="color:#f8fafc;margin:0 0 10px;font-size:1.3rem;font-weight:700;">
+                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="color:#f8fafc;text-decoration:none;">
+                  ${esc(t.name)}
+                </a>
+              </h3>
+              <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0 0 20px;flex:1;">
+                ${esc(t.description || 'Enterprise agentic intelligence module optimized for high-complexity workflows.')}
+              </p>
+              <div style="border-top:1px solid #1e293b;padding-top:16px;display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
+                <span style="font-size:0.85rem;color:#06b6d4;font-family:monospace;">LATENCY &lt; 18ms</span>
+                <a style="color:#38bdf8;font-weight:700;font-size:0.9rem;text-decoration:none;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
+                  ${esc(ui.details || 'Inspect Model')} →
+                </a>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `;
+
+  return `${heroHtml}${productsHtml}`;
+}
+
+export function renderAiAgencyDetail(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, translateProduct, asset, options } = ctx;
+  const p = draft.products.find(item => item.id === options.productId) || draft.products[0];
+  if (!p) {
+    return `<section class="wrap" style="padding:80px 0;"><h1>${esc(ui.noProducts || 'Model Not Found')}</h1></section>`;
+  }
+
+  const t = translateProduct(p);
+  const imgUrl = asset(p.imageAssetId);
+
+  return `
+    <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+      <div class="wrap" style="position:relative;z-index:2;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="color:#94a3b8;text-decoration:none;">${esc(ui.home)}</a>
+          <span>/</span>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#94a3b8;text-decoration:none;">${esc(ui.catalog)}</a>
+          <span>/</span>
+          <span style="color:#67e8f9;">${esc(t.name)}</span>
+        </div>
+        <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;margin:0;color:#f8fafc;">
+          ${esc(t.name)}
+        </h1>
+      </div>
+    </section>
+
+    <section class="wrap" style="padding:60px 0 80px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:flex-start;">
+        <div>
+          ${imgUrl ? `
+            <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;overflow:hidden;padding:24px;box-shadow:0 0 30px rgba(6,182,212,0.08);">
+              <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;border-radius:10px;">
+            </div>
+          ` : `
+            <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:70px 24px;text-align:center;font-size:4rem;">⚡</div>
+          `}
+        </div>
+
+        <div>
+          <div style="display:inline-block;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);color:#67e8f9;padding:4px 14px;border-radius:9999px;font-size:0.82rem;font-weight:700;margin-bottom:16px;">
+            AGENTIC RUNTIME V4
+          </div>
+          <p style="font-size:1.15rem;line-height:1.75;color:#cbd5e1;margin:0 0 24px;">
+            ${esc(t.description || 'Enterprise agentic intelligence module optimized for high-complexity workflows.')}
+          </p>
+
+          <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:24px;margin-bottom:28px;">
+            <h3 style="color:#f8fafc;font-size:1.1rem;margin:0 0 16px;">Technical Specifications</h3>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:0.92rem;">
+              ${p.material ? `
+                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                  <span style="color:#94a3b8;">Quantization Format</span>
+                  <strong style="color:#38bdf8;">${esc(p.material)}</strong>
+                </div>
+              ` : ''}
+              ${p.dimensions ? `
+                <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #1e293b;">
+                  <span style="color:#94a3b8;">Context Window</span>
+                  <strong style="color:#f8fafc;">${esc(p.dimensions)}</strong>
+                </div>
+              ` : ''}
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#94a3b8;">Execution Security</span>
+                <strong style="color:#34d399;">Air-Gapped Sovereign Isolation</strong>
+              </div>
+            </div>
+          </div>
+
+          <a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;display:inline-block;box-shadow:0 0 25px rgba(6,182,212,0.3);text-decoration:none;">
+            ${esc(ui.inquire || 'Deploy This Agent')} ↗
+          </a>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
