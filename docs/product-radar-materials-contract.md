@@ -69,6 +69,30 @@ interface MaterialsTemplateContract {
 
 Senseng video uses the approved `home-video-poster` composition without playing the template's bundled sample video; this image-only materials contract does not generate or import video. Old standalone video behavior is unchanged.
 
+### Public-page collection banners (generation guidance, 2026-09-18)
+
+For the following exact slots, Product Radar should plan and generate each banner with **all products selected for that materials project together in the same composition**. With one selected product, show that product. Each Juno slide must contain the complete selection; do not distribute different subsets across slides or use only the primary product.
+
+| Template | Page | Banner slot ID |
+| --- | --- | --- |
+| `juno-toys` | `home` | `hero-slide-0` |
+| `juno-toys` | `home` | `hero-slide-1` |
+| `juno-toys` | `home` | `hero-slide-2` |
+| `senseng-clean` | `home` | `home-hero-bg` |
+| `senseng-clean` | `catalog` | `catalog-hero-catalog-star` |
+| `senseng-clean` | `about` | `about-about-reference` |
+| `senseng-clean` | `contact` | `contact-contact-reference` |
+| `senseng-video` | `home` | `home-video-poster` |
+| `senseng-video` | `catalog` | `catalog-hero-catalog-star` |
+| `senseng-video` | `about` | `about-about-reference` |
+| `senseng-video` | `contact` | `contact-contact-reference` |
+
+Keep every selected product identifiable, preserving its actual shape, colors and markings. Arrange the collection to fit the existing template dimensions and reserved text area. Mobile composition must retain the complete collection; do not crop away products to satisfy a generic central-area guideline. Validate both planned product coverage and the generated image's visible coverage. A limit on reference-image count must not silently reduce the selected product set.
+
+This guidance applies only to the listed banners. Juno `home-image-0` through `home-image-16` remain category, product-card or editorial images. `product-main`, `product-gallery`, other content images and product-detail images keep their existing rules. Juno has no additional public-page banner slot in this contract; do not infer new slots from a page name.
+
+This is a Product Radar generation-policy update, not a runtime requirements change. Preserve the complete canonical requirements response, including existing `purpose`, `composition`, `mobileComposition`, IDs, quantities and revisions: Product Radar compares the full contract when confirming a draft. Do not edit `docs/materials-requirements/*.json` or the Web Radar runtime inventory for this guidance. Existing confirmed media and private projects remain intact; this document does not authorize regenerating their assets or publishing a customer website.
+
 Slots are revision-scoped stable IDs, never DOM selectors supplied by Product Radar. Product Radar calculates quantity from selected products and these rules, not `recommendedDistinctProductImages` alone. `assetSpecId` from the older generation manifest describes an asset class; it is not a render position. Product Radar must bind generated media to the returned slot IDs.
 
 Preview is an explicitly labelled demo using bundled public media, without project creation, private customer data, model calls or active inquiry submission. Product Radar proxies the authenticated response and uses its sandboxed preview surface for desktop/mobile widths and page navigation. Do not forward the read-only key to the browser. Preserve trusted template interaction runtime while disabling form submission and arbitrary navigation.
