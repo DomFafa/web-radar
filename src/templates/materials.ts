@@ -4,6 +4,8 @@ import { materialsPages } from '../shared/materials';
 import { referenceLayouts } from './themes/referenceLayouts';
 import { sensengMaterialInventory } from './materials-senseng';
 import { junoDisplayContract, junoDisplayRevision, junoLegacyRevision, validateJunoDisplay } from './juno-display';
+import { getTypedMaterialsTemplate } from './materials-typed';
+import { validateTypedMaterials } from './materials-typed-validation';
 
 type Node=DefaultTreeAdapterMap['node'];
 type Element=DefaultTreeAdapterMap['element'];
@@ -94,13 +96,16 @@ function prepareJuno(){
   const result={html:serialize(root),contract};prepared.set('juno-toys',result);return result;
 }
 export function getMaterialsTemplate(id:string,contractRevision?:string):MaterialsTemplateContract|undefined {
-  if(id==='senseng-clean'||id==='senseng-video'){
+  if(contractRevision&&(id==='senseng-clean'||id==='senseng-video')){
     const profile=sensengMaterialInventory(id).profile;
-    return !contractRevision||contractRevision===profile.contractRevision?structuredClone(profile):undefined;
+    if(contractRevision===profile.contractRevision)return structuredClone(profile);
   }
-  if(id!=='juno-toys')return;
-  if(contractRevision===junoLegacyRevision)return structuredClone(prepareJuno().contract);
-  if(!contractRevision||contractRevision===junoDisplayRevision)return junoDisplayContract(prepareJuno().contract);
+  if(id==='juno-toys'){
+    if(contractRevision===junoLegacyRevision)return structuredClone(prepareJuno().contract);
+    if(contractRevision===junoDisplayRevision)return junoDisplayContract(prepareJuno().contract);
+  }
+  const profile=getTypedMaterialsTemplate(id);
+  return profile&&(!contractRevision||profile.contractRevision===contractRevision)?profile:undefined;
 }
 export function prepareMaterialsReference(id:string):string {
   if(id!=='juno-toys')throw new Error('Unsupported materials template');
@@ -116,6 +121,7 @@ export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
   if(!p){add('materials.template','unsupported_template','Template is not materials-ready');return issues;}
   if(p.guideRevision!==m.template.guideRevision||p.contractRevision!==m.template.contractRevision){add('materials.template','contract_revision_conflict','Read the current template requirements');return issues;}
   if(p.contractRevision===junoDisplayRevision)issues.push(...validateJunoDisplay(m,p));
+  if(p.imagePolicy==='typed-regions-v1')issues.push(...validateTypedMaterials(m,p));
   for(const s of p.optionalSections)if(!m.omittedSectionIds.includes(s.id))add('materials.omittedSectionIds','unsupported_section',`Omit ${s.id} for this revision`);
   for(const id of m.omittedSectionIds)if(!p.optionalSections.some(s=>s.id===id))add('materials.omittedSectionIds','unsupported_section',`Unknown section ${id}`);
   for(const [kind,bindings,slots] of [['image',m.imageBindings,p.imageSlots],['text',m.textBindings,p.textSlots]] as const){
@@ -135,7 +141,7 @@ export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
       }
     }
     for(const slot of slots){
-      const targets=slot.repeat==='per-product'?m.products.map(p=>p.id):slot.repeat==='per-selection'?(m.displaySelection?.['selectionGroup'in slot&&slot.selectionGroup==='scene'?'sceneProductIds':'featuredProductIds']||[]):[undefined];
+      const targets=slot.repeat==='per-product'?m.products.slice(0,'maxProducts'in slot?slot.maxProducts:undefined).map(p=>p.id):slot.repeat==='per-selection'?(m.displaySelection?.['selectionGroup'in slot&&slot.selectionGroup==='scene'?'sceneProductIds':'featuredProductIds']||[]):[undefined];
       for(const productId of targets){
         const locales=kind==='text'?m.locales:[undefined];
         for(const locale of locales){

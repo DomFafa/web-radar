@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0",
-  "revision": "2026-09-17.1",
+  "revision": "2026-09-19.1",
   "templateId": "digital-marketing",
   "name": "数字营销增长机构",
   "documentLanguage": "zh-CN",
-  "purpose": "内部 AI 素材与文案生成规范；只读，不负责生成、上传、保存或发布网站。",
+  "purpose": "内部 AI 素材与文案规范。Standalone 独立建站字段说明与 Product Radar confirmed-materials 接入分别解释；后者必须读取 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 新合同。规范接口只读，不负责生成、保存或发布客户网站。",
   "visualSystem": {
     "palette": [
       "#202020",
@@ -40,7 +40,7 @@
       "brandInstructions",
       "requestedAssets"
     ],
-    "missingInputPolicy": "不补造事实；缺少产品参考图时仅输出背景/构图建议，产品图生成列入 missingFacts 并等待素材。",
+    "missingInputPolicy": "不补造事实；保留已有原图，缺图才生成。无产品不补示例产品；缺少产品参考时记录 missingFacts 并等待素材。工厂、生产、仓储、物流可生成明确用途的示意配图；证书和报告只能真实上传，无法验证的背书、面积、MOQ、评价和统计数字省略。",
     "priority": [
       "授权的品牌要求与真实产品事实",
       "本模板构图和绑定规则",
@@ -82,7 +82,7 @@
     "minimumProductImages": 1,
     "bundledVideoCount": 0,
     "defaultHero": "image-or-css",
-    "reuseRule": "有图片的产品先按主产品置前排序，然后按展示位置索引取模复用；产品不足时不需要按槽位重复上传。",
+    "reuseRule": "confirmed-materials：优先复用产品原图、场景、包装、细节及符合要求的海报，缺图才生成；同一区域只放同类图，图/名称/链接保持同产品，数量不足缩减或隐藏，不补示例产品。Standalone：原渲染器可能按展示位置复用产品图，此说明不改变独立建站行为。",
     "decorativeAssets": "CSS、图标、字体、背景与装饰已随模板内置，保留风格时无需重新生成。"
   },
   "layoutImageSlots": [
@@ -97,7 +97,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -111,7 +111,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -125,7 +125,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -139,7 +139,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -153,7 +153,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -167,7 +167,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -181,7 +181,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -195,7 +195,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -209,7 +209,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -223,7 +223,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -237,7 +237,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
@@ -251,7 +251,7 @@
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "此位置当前自动复用产品图；不能单独指定槽位图片。若按槽位生成不同场景图，接入方需先扩展绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     }
   ],
@@ -259,7 +259,7 @@
     {
       "id": "product-master",
       "kind": "image",
-      "purpose": "每款产品一张主图；主产品先排，自动复用到模板展示位置",
+      "purpose": "每款产品的原始主图；优先复用已提供素材，缺图才生成",
       "quantity": {
         "min": 1,
         "recommended": 12,
@@ -277,12 +277,12 @@
       "recommendedMaxBytes": 2097152,
       "required": true,
       "composition": "统一柔和棚拍光线；主体居中占画面 65–80%，四周至少 10% 留白；透明或接近页面底色的干净背景。",
-      "promptTemplate": "为 {{brand.name}} 的 {{product.name}} 生成产品主图。以 {{product.referenceImages}} 保留真实结构与包装；黑色超大标题、灰白机械/抽象形态背景、宽留白；圆角服务卡与高对比排版。 只表现已提供的 {{product.facts}}。",
+      "promptTemplate": "先复用 {{product.referenceImages}} 中符合用途的已有原始主图；只有缺图且客户明确开始生成时才补图。保留 {{product.name}} 的真实结构、材质、颜色和包装标识，不改产品事实。视觉环境：黑色超大标题、灰白机械/抽象形态背景、宽留白；圆角服务卡与高对比排版。",
       "negativePrompt": "不要水印、乱码、虚构商标、假认证；不得改变产品结构、数量、材质或包装标识。不要把导航、按钮、价格、统计数字烧录进背景。",
       "binding": {
         "strategy": "product-image",
         "path": "draft.products[].imageAssetId",
-        "note": "先上传图片获得 assetId，再关联各产品。推荐数量用于减少复用，并非建站强制最少数量。"
+        "note": "Standalone：先上传图片获得 assetId，再关联各产品。推荐数量用于减少复用，并非建站强制最少数量。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/digital-marketing 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -300,8 +300,8 @@
         "max": 12
       },
       "dimensions": {
-        "width": 1920,
-        "height": 1080
+        "width": 2560,
+        "height": 960
       },
       "formats": [
         "image/png",
@@ -311,12 +311,12 @@
       "recommendedMaxBytes": 2097152,
       "required": false,
       "composition": "抽象形体放画面边缘；中部标题区域不堆叠复杂纹理；产品保持统一光向，少用彩色光污染。",
-      "promptTemplate": "生成 数字营销增长机构 的首页背景，风格：黑色超大标题、灰白机械/抽象形态背景、宽留白；圆角服务卡与高对比排版。 构图：抽象形体放画面边缘；中部标题区域不堆叠复杂纹理；产品保持统一光向，少用彩色光污染。 主题来自 {{brand.description}} 和 {{products}}。文字由 HTML 叠加，图片不含文字。",
+      "promptTemplate": "生成 数字营销增长机构 的首页背景，风格：黑色超大标题、灰白机械/抽象形态背景、宽留白；圆角服务卡与高对比排版。 构图：抽象形体放画面边缘；中部标题区域不堆叠复杂纹理；产品保持统一光向，少用彩色光污染。 主题来自 {{brand.description}} 和 {{products}}。文字由 HTML 叠加，图片不含文字。 confirmed-materials 公共页的每张 Banner 必须包含全部所选产品，多张 Banner 构图不同；不要重复图凑数。",
       "negativePrompt": "不要水印、乱码、虚构商标、假认证；不得改变产品结构、数量、材质或包装标识。不要把导航、按钮、价格、统计数字烧录进背景。",
       "binding": {
         "strategy": "page-banner",
         "path": "draft.banners[].slides[].assetId",
-        "note": "targets=[\"home\"]，kind=\"images\"，mode=\"background\"；1 张静态，2–12 张轮播。独立页面需单独建立对应 targets 的配置，不适用于产品详情。"
+        "note": "Standalone：targets=[\"home\"]，kind=\"images\"，mode=\"background\"；1 张静态，2–12 张轮播。独立页面需单独建立对应 targets 的配置，不适用于产品详情。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/digital-marketing 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -349,7 +349,7 @@
       "binding": {
         "strategy": "page-banner",
         "path": "draft.banners[].videoAssetId",
-        "note": "targets=[\"home\"]，kind=\"video\"，height=\"screen\"，fit=\"cover\"，mode=\"background\"；设置 posterAssetId。浏览器静音自动播放，允许暂停和 reduced-motion 静态降级。"
+        "note": "Standalone：targets=[\"home\"]，kind=\"video\"，height=\"screen\"，fit=\"cover\"，mode=\"background\"；设置 posterAssetId。浏览器静音自动播放，允许暂停和 reduced-motion 静态降级。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/digital-marketing 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -391,7 +391,7 @@
       "binding": {
         "strategy": "page-banner",
         "path": "draft.banners[].posterAssetId",
-        "note": "与对应视频 Banner 使用相同配置 ID。"
+        "note": "Standalone：与对应视频 Banner 使用相同配置 ID。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/digital-marketing 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -425,7 +425,7 @@
       "binding": {
         "strategy": "brand",
         "path": "draft.company.logoAssetId",
-        "note": "使用已上传 Logo 的 assetId；缺省使用公司名称。"
+        "note": "Standalone：使用已上传 Logo 的 assetId；缺省使用公司名称。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/digital-marketing 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -459,7 +459,7 @@
       "binding": {
         "strategy": "brand",
         "path": "draft.company.faviconAssetId",
-        "note": "使用已上传图标的 assetId。"
+        "note": "Standalone：使用已上传图标的 assetId。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/digital-marketing 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -483,7 +483,7 @@
       "binding": {
         "strategy": "draft-field",
         "path": "draft.copy[language].headline",
-        "note": "使用当前目标语言，保留其它语言的 copy。"
+        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -500,7 +500,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "draft.copy[language].subtitle",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -517,7 +517,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -534,7 +534,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -551,7 +551,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -568,7 +568,7 @@
       "binding": {
         "strategy": "draft-field",
         "path": "draft.products[].name",
-        "note": "使用当前目标语言，保留其它语言的 copy。"
+        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -585,7 +585,7 @@
       "binding": {
         "strategy": "draft-field",
         "path": "draft.products[].description",
-        "note": "使用当前目标语言，保留其它语言的 copy。"
+        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -602,7 +602,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "图片输出 alt；当前产品卡默认以产品名称作为 alt",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -619,7 +619,7 @@
       "binding": {
         "strategy": "draft-field",
         "path": "draft.copy[language].about / draft.company.description（无对应语言 copy 时的回退）",
-        "note": "使用当前目标语言，保留其它语言的 copy。"
+        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -636,7 +636,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -653,7 +653,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "生成建议交给现有 SEO 流程；不直接拼接 HTML",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -670,17 +670,18 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "生成建议交给现有 SEO 流程；不直接拼接 HTML",
-        "note": "硬编码文案需接入模板，不能假设写入 copy 即生效。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/digital-marketing 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     }
   ],
   "generationWorkflow": [
-    "读取本规范及 output-schema；由调用方提供品牌、产品真实资料与目标语言。",
-    "先输出计划与 missingFacts；仅对 requestedAssets 指定的素材生成，避免为已有内置背景重复生成。",
-    "优先生成产品主图，再做背景/视频与同构图封面，最后生成与事实一致的文案。",
-    "按 outputContract 返回结果，保留 templateId、guideRevision、assetSpecId、textSlotId 与产品 ID。",
-    "适配层上传素材并获取 assetId，按 binding 保存草稿；manual-template-edit 的项只作为待接入建议。",
-    "在 390、1440、2560 px 预览文字换行、裁切与视频铺满；人工或视觉检查后由授权方决定发布。"
+    "区分入口：Standalone 独立建站保留现有字段与流程；Product Radar confirmed-materials 必须读取 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 版本化合同，并固定 guideRevision 与 contractRevision。",
+    "核对品牌、产品、目标市场、客户类型、合作流程及真实素材；先复用已有主图、场景、包装、细节和符合要求的海报，缺图才生成。",
+    "按合同的区域图类型、数量、明确像素尺寸、产品范围及来源策略形成计划，展示需新生成与复用数量和用途；客户确认开始后才执行生成。",
+    "同一区域只显示同类图片；图、名称和目标链接同属一个产品，正面与包装对照行保持同产品同顺序；数量不足缩减或隐藏，不补示例产品。",
+    "公共页每张 Banner 包含全部所选产品，多 Banner 构图不同。工厂、生产、仓储、物流可用 AI 配图且不冒充事实证据；证书和报告只能真实上传，无依据背书省略。",
+    "confirmed-materials 使用稳定图片/文案槽位 ID、产品 ID 与确认事实提交；旧 Juno v2/v3 与旧 Senseng 资料继续按原合同解释，不自动升级。Standalone manifest 仍遵照 output-schema 和各 binding.strategy。",
+    "在 390、1440、2560 px 检查完整五页的文字、裁切、产品一致性与交互动效；确认计数器、后缀和进度条不会恢复示例事实。渲染成功不等于视觉验收，资料接收不发布客户网站。"
   ],
   "qualityChecks": [
     "实际像素、格式、时长与尺寸满足规格；字节预算为性能建议，不是上传接口的硬限制。",
@@ -689,7 +690,10 @@
     "视频首尾自然衔接，无闪烁、强烈抖动、字幕、水印或音轨。",
     "所有文字有可追溯事实，省略无来源案例/评价/统计，设计中原示例数字不能当真实事实。",
     "标题在约定行数内，移动端 CTA 不截断；采用现有布局与语义标题。",
-    "图片 alt 描述内容；视频提供封面，前端保留暂停与减少动态效果支持。"
+    "图片 alt 描述内容；视频提供封面，前端保留暂停与减少动态效果支持。",
+    "首页 Banner 尺寸采用 template-media.ts 明确像素 2560 × 960；原显示说明为“2560 × 960（8:3 数字创意增长通栏）”。括号比例为概略说明，与明确像素冲突时不按比例重算或裁减数量。",
+    "confirmed-materials 的完整预览、校验和渲染使用同一合同；产品不足缩减或隐藏，不补示例产品或重复凑数。",
+    "证书和报告只能真实上传；无来源的工厂面积、MOQ、认证、客户评价或统计数字不得由文案、图片、data-counter、data-suffix 或 data-progress 重新引入。"
   ],
   "outputContract": {
     "schemaEndpoint": "/api/internal/template-guides/output-schema",
@@ -704,6 +708,6 @@
       "missingFacts",
       "warnings"
     ],
-    "bindingWarning": "规范建议不等于所有文案/素材已有编辑字段。以各项 binding.strategy 为准；manual-template-edit 必须由接入层实现。"
+    "bindingWarning": "本 output-schema 描述通用生成 manifest，不是 confirmed-materials 接收协议。Product Radar 接入必须按 /api/internal/template-guides/materials/digital-marketing 的 typed-regions-v1 新合同生成 imageBindings/textBindings 并使用对应修订版；Standalone 的 manual-template-edit 项仍需原流程接入，不能仅写 draft.copy 就声称覆盖所有页面。"
   }
 }

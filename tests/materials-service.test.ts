@@ -32,6 +32,7 @@ describe('durable confirmed materials receiver',()=>{
     const receipt=await finish();expect(receipt.state).toBe('accepted');expect(receipt.receivedMedia).toBe(2);expect(receipt.autoPublish).toBe(false);
     const p=await store.one<Project>('projects',receipt.projectId!);expect(p?.draft.products).toHaveLength(2);expect(p?.materials?.contentSha256).toBe(fixture.confirmation.contentSha256);expect(p?.publishedReleaseId).toBeUndefined();
     expect(p?.draft.materials?.imageBindings[0].assetId).toBeTruthy();expect((await store.list('jobs'))).toHaveLength(0);
+    for(const asset of await store.list<any>('assets'))expect(asset.sha256).toBe(fixture.materials.media.find(media=>asset.id===`materials-${fixture.submissionId}-${fixture.materials.media.indexOf(media)}`)?.sha256);
     const replay=await service.submit(fixture.principal,fixture);expect(replay.projectId).toBe(p?.id);expect(fetches).toBe(2);
   });
   it('resumes a partial failed copy with the same ID and reuses verified media',async()=>{

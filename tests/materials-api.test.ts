@@ -4,6 +4,7 @@ import {createTemplateGuidesApp}from'../src/worker/template-guides/api';
 import {createIntegrationApp}from'../src/worker/integration';
 import {materialsFixture}from'./fixtures/materials';
 import type{AppEnv,HonoEnv}from'../src/worker/env';
+import {templateMediaRequirements}from'../src/shared/template-media';
 
 describe('materials guide account boundary',()=>{
   let env:AppEnv;let principal:Awaited<ReturnType<typeof materialsFixture>>['principal'];
@@ -14,9 +15,11 @@ describe('materials guide account boundary',()=>{
   const get=(p:string,headers={})=>app.request('https://web-radar.net/api/internal/template-guides/'+p,{headers:{'X-Web-Radar-Secret':'s'.repeat(40),'X-Product-Radar-User-Id':'materials-owner','X-Product-Radar-Workspace-Id':'materials-workspace',...headers}},env);
   it('allows the current permitted account and returns a complete demo with submission disabled',async()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
-    expect((await catalog.json()as any).templates.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId)).toEqual(['senseng-clean','senseng-video','juno-toys']);
+    const entries=(await catalog.json()as any).templates;
+    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(Object.keys(templateMediaRequirements).sort());
+    expect(entries.every((t:any)=>t.contractRevision===`2026-09-19.${t.templateId}-materials.1`&&t.guideRevision==='2026-09-19.1')).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
-    const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(b.html).toContain('<!doctype html>');expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
+    const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
   });
   it('denies wrong account, forged identity, missing identity and bad secret',async()=>{
     principal.email='someone@example.com';expect((await get('materials/catalog')).status).toBe(403);
@@ -27,7 +30,7 @@ describe('materials guide account boundary',()=>{
   it('does not grant the integration secret access to legacy template guides',async()=>{
     expect((await get('juno-toys')).status).toBe(401);
   });
-  it('reads and previews exact legacy contracts while the catalog advertises v3',async()=>{
+  it('reads and previews exact legacy contracts while the catalog advertises typed regions',async()=>{
     const legacy='2026-09-17.juno-materials.2';
     const response=await get(`materials/juno-toys?contractRevision=${legacy}`);
     expect((await response.json()as any).contractRevision).toBe(legacy);
@@ -35,6 +38,18 @@ describe('materials guide account boundary',()=>{
     const body=await preview.json()as any;expect(body.contractRevision).toBe(legacy);expect(body.html).not.toContain('data-wr-display-role');
     expect((await get('materials/juno-toys?contractRevision=unknown')).status).toBe(404);
     expect((await get('materials/juno-toys/preview?contractRevision=unknown')).status).toBe(404);
+    for(const[id,revision]of [['juno-toys','2026-09-18.juno-materials.3'],['senseng-clean','2026-09-17.senseng-clean-materials.1'],['senseng-video','2026-09-17.senseng-video-materials.2']]){
+      const old=await get(`materials/${id}/preview?contractRevision=${revision}`);expect(old.status).toBe(200);expect((await old.json()as any).contractRevision).toBe(revision);
+    }
+  });
+  it.each(Object.keys(templateMediaRequirements))('serves all five labelled, non-publishing previews for %s',async id=>{
+    const requirements=await get(`materials/${id}`);expect(requirements.status).toBe(200);
+    expect((await requirements.json()as any).imagePolicy).toBe('typed-regions-v1');
+    for(const page of ['home','catalog','detail','about','contact']){
+      const response=await get(`materials/${id}/preview?page=${page}`);expect(response.status,`${id}:${page}`).toBe(200);
+      const body=await response.json()as any;expect(body.demo).toBe(true);expect(body.html.includes('Example Brand')).toBe(true);
+      if(page==='contact')expect(body.html.includes(' disabled')).toBe(true);
+    }
   });
   it('previews the B2B materials branch without retail prices or fabricated testimonials',async()=>{
     const response=await get('materials/juno-toys/preview?page=home');const {html}=await response.json()as any;

@@ -3,6 +3,11 @@ import { z } from 'zod';
 export const guideIds = [
   'senseng-clean',
   'senseng-video',
+  'senseng-candy',
+  'senseng-wonder',
+  'senseng-arcade',
+  'senseng-nature',
+  'senseng-minimal',
   'saas-automation',
   'fintech-platform',
   'digital-marketing',

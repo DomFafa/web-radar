@@ -1,0 +1,96 @@
+{
+  "revision": "2026-09-19.1",
+  "imagePolicy": "typed-regions-v1",
+  "templates": {
+    "corpox-ai-agency": {
+      "contractRevision": "2026-09-19.corpox-ai-agency-materials.1",
+      "sha256": "1d6b67ce0cff6ca826f6211b60895d492745fe21c7f0fbb41752ec8ff61ae287",
+      "images": 7,
+      "texts": 387
+    },
+    "corpox-consulting": {
+      "contractRevision": "2026-09-19.corpox-consulting-materials.1",
+      "sha256": "ddb680ea9e7c04180648c61ece0dc743266e3e87bab52849a974550b7d02a213",
+      "images": 8,
+      "texts": 441
+    },
+    "crafto-corporate": {
+      "contractRevision": "2026-09-19.crafto-corporate-materials.1",
+      "sha256": "dac459d8aa4f19a118af224ea7b7b26d0821961fee3d8af2932f37282a6b4e19",
+      "images": 10,
+      "texts": 470
+    },
+    "digital-marketing": {
+      "contractRevision": "2026-09-19.digital-marketing-materials.1",
+      "sha256": "20bb9f9d989f339f85255cb98913c6f4df692c7d85315038351b3dc6064fb6b5",
+      "images": 7,
+      "texts": 449
+    },
+    "fintech-platform": {
+      "contractRevision": "2026-09-19.fintech-platform-materials.1",
+      "sha256": "01129e54fcf5ddbf0a8843d16063d27d91b648e1e738f18b1701c6ed8f6443d7",
+      "images": 10,
+      "texts": 525
+    },
+    "juno-toys": {
+      "contractRevision": "2026-09-19.juno-toys-materials.1",
+      "sha256": "29915ca2c132af492b9a79fc1bdca911d5c79a2d0fccd460742ac524d66e7e76",
+      "images": 11,
+      "texts": 233
+    },
+    "porto-accounting": {
+      "contractRevision": "2026-09-19.porto-accounting-materials.1",
+      "sha256": "69afe6724d13387ab6647aea6a5862a3dffd184a1983c65f06d5a6fbfe654c18",
+      "images": 5,
+      "texts": 468
+    },
+    "saas-automation": {
+      "contractRevision": "2026-09-19.saas-automation-materials.1",
+      "sha256": "a5495c7c4c4dfb04b43fc3a09f4b6a6e670cafbd13820582f39287ae267e700d",
+      "images": 15,
+      "texts": 495
+    },
+    "senseng-arcade": {
+      "contractRevision": "2026-09-19.senseng-arcade-materials.1",
+      "sha256": "00aa1152b15963baab1151cc3d7e8678102e0644e5a6a6909e647bb31f278b58",
+      "images": 3,
+      "texts": 242
+    },
+    "senseng-candy": {
+      "contractRevision": "2026-09-19.senseng-candy-materials.1",
+      "sha256": "b9b54f8830b2e709bb7d05c66f7e7d7fa896ef648e8b5d7fb02f7699d6f7e117",
+      "images": 3,
+      "texts": 258
+    },
+    "senseng-clean": {
+      "contractRevision": "2026-09-19.senseng-clean-materials.1",
+      "sha256": "5ef5f4900b19cb0c1b65751115b8cd9f06029e21797a8e7fab48c3841bf3b281",
+      "images": 6,
+      "texts": 191
+    },
+    "senseng-minimal": {
+      "contractRevision": "2026-09-19.senseng-minimal-materials.1",
+      "sha256": "4e25cd1ab6ded8fa34d8cc1e7ef8ed8318630588b1dde51cb717f66537e2a2ee",
+      "images": 3,
+      "texts": 222
+    },
+    "senseng-nature": {
+      "contractRevision": "2026-09-19.senseng-nature-materials.1",
+      "sha256": "6a55fd6d02922ffce105233463b88c443dc9c539b989233b4e26578feaa31661",
+      "images": 3,
+      "texts": 208
+    },
+    "senseng-video": {
+      "contractRevision": "2026-09-19.senseng-video-materials.1",
+      "sha256": "bcaf956a4ced61d78c7290a67f92e0f8d9c61609410ed4cbc4573b8a073921bd",
+      "images": 6,
+      "texts": 203
+    },
+    "senseng-wonder": {
+      "contractRevision": "2026-09-19.senseng-wonder-materials.1",
+      "sha256": "53faa21f45266e356cb5b71573ac3a072e59413802f2422a37a0bbddac95c71d",
+      "images": 4,
+      "texts": 236
+    }
+  }
+}

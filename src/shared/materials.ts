@@ -10,8 +10,8 @@ const locale = z.enum(materialsLocales);
 const localizedText = z.partialRecord(locale, text);
 const facts = z.array(id).max(100);
 const point = z.strictObject({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) });
-export const materialsImageRoles=['scene','front','packaging','collection']as const;
-export const materialsDisplaySelectionSchema=z.strictObject({sceneProductIds:z.array(id).min(1).max(4),featuredProductIds:z.array(id).min(1).max(4)});
+export const materialsImageRoles=['scene','front','packaging','collection','main','detail','facility','logistics']as const;
+export const materialsDisplaySelectionSchema=z.strictObject({sceneProductIds:z.array(id).max(20),featuredProductIds:z.array(id).max(20)});
 export type MaterialsDisplaySelection=z.infer<typeof materialsDisplaySelectionSchema>;
 export const materialsPrincipalSchema = z.strictObject({
   userId:id, authSubject:id, email:z.email(), displayName:z.string().max(200),
@@ -26,7 +26,7 @@ export const materialsVisualSchema = z.strictObject({
 export const materialsImageBindingSchema = z.strictObject({
   slotId:id,mediaId:id,mobileMediaId:id.optional(),productId:id.optional(),itemIndex:z.number().int().min(0).max(255).optional(),
   fit:z.enum(['cover','contain']),focalPoint:point,mobileFocalPoint:point.optional(),alt:localizedText,
-  role:z.enum(materialsImageRoles).optional(),depictedProductIds:z.array(id).min(1).max(20).optional(),evidenceMediaIds:z.array(id).min(1).max(11).optional(),
+  role:z.enum(materialsImageRoles).optional(),depictedProductIds:z.array(id).max(20).optional(),evidenceMediaIds:z.array(id).min(1).max(11).optional(),
 });
 export const materialsTextBindingSchema = z.strictObject({
   slotId:id,locale,text,productId:id.optional(),itemIndex:z.number().int().min(0).max(255).optional(),factReferences:facts,
@@ -42,6 +42,7 @@ export const confirmedMaterialsSchema = z.strictObject({
   brand:z.strictObject({
     profileId:id,profileVersion:id,name:z.string().min(1).max(300),description:text,
     businessType:z.enum(['factory','trader']).optional(),slogan:z.string().max(300).optional(),address:text.optional(),establishedYear:z.string().max(300).optional(),certifications:text.optional(),capabilities:text.optional(),
+    targetMarkets:text.optional(),customerTypes:text.optional(),cooperationProcess:text.optional(),
     linkedin:z.string().max(300).optional(),facebook:z.string().max(300).optional(),instagram:z.string().max(300).optional(),x:z.string().max(300).optional(),logoMediaId:id.optional(),faviconMediaId:id.optional(),
   }),
   contact:z.strictObject({cardId:id,cardVersion:id,name:z.string().min(1).max(300),email:z.email().max(254),phone:z.string().max(200).optional(),whatsapp:z.string().max(200).optional()}),
@@ -60,6 +61,10 @@ export const confirmedMaterialsSchema = z.strictObject({
   unique(m.products.map(p=>p.id),['products']);unique(m.media.map(p=>p.id),['media']);unique(m.facts.map(p=>p.id),['facts']);unique(m.locales,['locales']);unique(m.omittedSectionIds,['omittedSectionIds']);
   if(m.locales[0]!=='en')issue(['locales'],'English must be first');
   const productIds=new Set(m.products.map(p=>p.id)),mediaIds=new Set(m.media.map(p=>p.id)),factIds=new Set(m.facts.map(p=>p.id));
+  if(m.displaySelection)for(const group of ['sceneProductIds','featuredProductIds']as const){
+    unique(m.displaySelection[group],['displaySelection',group]);
+    if(m.displaySelection[group].some(id=>!productIds.has(id)))issue(['displaySelection',group],'Unknown selected product');
+  }
   if(!productIds.has(m.primaryProductId))issue(['primaryProductId'],'Unknown primary product');
   const mediaRef=(value:string|undefined,path:(string|number)[])=>{if(value&&!mediaIds.has(value))issue(path,'Unknown media');};
   const factRefs=(refs:string[],path:(string|number)[])=>{if(refs.some(f=>!factIds.has(f)))issue(path,'Unknown fact reference');};
@@ -107,7 +112,8 @@ interface Slot {
 }
 export interface MaterialsTemplateContract {
   schemaVersion:'wr-template-materials-v1';templateId:string;guideRevision:string;contractRevision:string;materialsReady:boolean;pages:Array<typeof materialsPages[number]>;
-  imageSlots:Array<Slot & {repeat:'once'|'per-product'|'per-product-gallery'|'fixed'|'per-selection';selectionGroup?:'scene'|'featured';role?:typeof materialsImageRoles[number];width:number;height:number;composition:string;mobileComposition:string;fit:'cover'|'contain';allowedMimeTypes:string[]}>;
+  imagePolicy?:'typed-regions-v1';selectionGroups?:{scene:number;featured:number};
+  imageSlots:Array<Slot & {repeat:'once'|'per-product'|'per-product-gallery'|'fixed'|'per-selection';selectionGroup?:'scene'|'featured';role?:typeof materialsImageRoles[number];sourcePolicy?:'product-reference'|'illustration';maxProducts?:number;width:number;height:number;composition:string;mobileComposition:string;fit:'cover'|'contain';allowedMimeTypes:string[]}>;
   textSlots:Array<Slot & {repeat:'once'|'per-product'|'fixed';maxCodePoints:number;maxLines:number;factualPolicy:string;exampleText?:string}>;
   optionalSections:Array<{id:string;reason:string}>;visualParameters:string[];contentPolicy:'b2b-confirmed-facts-only';
 }

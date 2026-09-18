@@ -15,7 +15,7 @@ describe('versioned Juno display contracts',()=>{
   it('retains the entire accepted v2 contract and discovers v3 separately',()=>{
     const frozen=JSON.parse(readFileSync(new URL('../docs/materials-requirements/juno-toys.json',import.meta.url),'utf8'));
     expect(getMaterialsTemplate('juno-toys',legacy)).toEqual(frozen);
-    expect(getMaterialsTemplate('juno-toys')?.contractRevision).toBe(revision);
+    expect(getMaterialsTemplate('juno-toys',revision)?.contractRevision).toBe(revision);
     expect(getMaterialsTemplate('juno-toys','invented')).toBeUndefined();
   });
   it('describes selection-bound card roles and a real middle collection banner',()=>{

@@ -1,5 +1,6 @@
 import type { Product } from '../../shared/model';
 import { esc, safeUrl, type ThemeContext } from './types';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export const CANDY_DEFAULT_PRODUCTS = [
   {
@@ -110,6 +111,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
 
 export function getCandyProducts(ctx: ThemeContext) {
   const { draft, translateProduct } = ctx;
+  if(isTypedMaterialsSource(draft))return draft.products.map(p=>({id:p.id,name:translateProduct(p).name,desc:translateProduct(p).description,badge:'',material:p.material||'',dimensions:p.dimensions||'',tagline:p.tagline||'',category:'',img:ctx.productMainImage(p)}));
   const isZh = (ctx.lang as string) === 'zh';
   if (!draft.products || draft.products.length === 0) {
     return CANDY_DEFAULT_PRODUCTS.map((def, idx) => ({

@@ -10,6 +10,8 @@ import { createTemplateGuidesApp } from '../src/worker/template-guides/api';
 import { guideMarkdown } from '../src/worker/template-guides/markdown';
 import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 import { templateMediaRequirements } from '../src/shared/template-media';
+import { TEMPLATES } from '../src/client/TemplateSelector';
+import { getMaterialsTemplate } from '../src/templates/materials';
 import { authenticate, mintSession } from '../src/worker/auth';
 import { testPrincipal } from '../src/worker/product-radar';
 import { testDb } from './helpers/db';
@@ -37,14 +39,45 @@ beforeEach(() => {
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
     expect(templateGuides.map((g) => g.templateId)).toEqual([...guideIds]);
-    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(10);
-    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(10);
+    expect([...guideIds].sort()).toEqual(TEMPLATES.map((template) => template.id).sort());
+    expect([...guideIds].sort()).toEqual(Object.keys(templateMediaRequirements).sort());
+    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(15);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(15);
+  });
+  it('requires a matching confirmed-materials contract for every registered template', () => {
+    for (const template of TEMPLATES) {
+      const guide = templateGuides.find(guide => guide.templateId === template.id)!;
+      expect(getMaterialsTemplate(template.id), template.id).toMatchObject({
+        templateId: template.id,
+        guideRevision: guide.revision,
+        materialsReady: true,
+        imagePolicy: 'typed-regions-v1',
+      });
+    }
+  });
+  it.each([
+    ['senseng-candy', '#FF6B8B', '糖果', 930],
+    ['senseng-wonder', '#264653', '北欧', 1070],
+    ['senseng-arcade', '#00F5D4', 'HUD', 1000],
+    ['senseng-nature', '#2D4A22', '森林', 960],
+    ['senseng-minimal', '#C59B27', '瑞士', 830],
+  ] as const)('%s describes its actual visual identity and square product slots', (id, color, style, height) => {
+    const guide = templateGuides.find(guide => guide.templateId === id);
+    expect(guide).toBeDefined();
+    expect(guide!.visualSystem.palette).toContain(color);
+    expect(guide!.visualSystem.artDirection).toContain(style);
+    expect(guide!.assets.find(asset => asset.id === 'hero-image')!.dimensions).toEqual({ width: 2560, height });
+    expect(guide!.layoutImageSlots).toHaveLength(8);
+    for (const slot of guide!.layoutImageSlots) expect(slot.dimensions).toEqual({ width: 1200, height: 1200 });
   });
   it.each(templateGuides)(
     '$templateId specifies every renderer slot and actionable material/copy rules',
     (guide) => {
       expect(guideSchema.safeParse(guide).success).toBe(true);
       const summary = templateMediaRequirements[guide.templateId]!;
+      expect(guide.revision).toBe('2026-09-19.1');
+      const [, width, height] = summary.bannerSize.match(/^(\d+)\s*×\s*(\d+)/)!;
+      expect(guide.assets.find(asset => asset.id === 'hero-image')!.dimensions).toEqual({ width: Number(width), height: Number(height) });
       expect(guide.inventory.bundledVideoCount).toBe(summary.videos);
       expect(guide.inventory.recommendedDistinctProductImages).toBe(summary.productCount);
       expect(guide.layoutImageSlots.length).toBe(summary.productCount);
@@ -77,17 +110,22 @@ describe('versioned internal template documents', () => {
       for (const asset of guide.assets) expect(md).toContain(asset.promptTemplate);
       for (const slot of guide.textSlots) expect(md).toContain(slot.promptTemplate);
       expect(md).toContain(guide.inputContract.untrustedInputPolicy);
+      expect(md).toContain(`/api/internal/template-guides/materials/${guide.templateId}`);
+      expect(md).toContain('typed-regions-v1');
+      expect(md).toContain('缺图才生成');
+      expect(md).toContain('证书和报告只能真实上传');
+      expect(md).toContain('不补示例产品');
     },
   );
 });
 describe('read-only guide API', () => {
-  it('lists ten documents and returns matching JSON, Markdown and schema', async () => {
+  it('lists all fifteen documents and returns matching JSON, Markdown and schema', async () => {
     const list = await get();
     expect(list.status).toBe(200);
     expect(list.headers.get('cache-control')).toBe('no-store');
     expect(list.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const catalog = (await list.json()) as any;
-    expect(catalog.total).toBe(10);
+    expect(catalog.total).toBe(15);
     for (const item of catalog.templates) {
       const res = await get('/' + item.templateId);
       expect(res.status).toBe(200);
@@ -101,9 +139,11 @@ describe('read-only guide API', () => {
     }
     const schema = (await (await get('/schema')).json()) as any;
     expect(schema.required).toContain('assets');
+    expect(schema.properties.templateId.enum).toEqual([...guideIds]);
     const output = (await (await get('/output-schema')).json()) as any;
     expect(output.required).toContain('missingFacts');
     expect(output.additionalProperties).toBe(false);
+    expect(output.properties.templateId.enum).toEqual([...guideIds]);
   });
   it('denies anonymous, wrong, malformed and unconfigured machine credentials', async () => {
     expect((await get('', '')).status).toBe(401);

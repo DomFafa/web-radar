@@ -1,24 +1,27 @@
 {
   "schemaVersion": "1.0",
   "revision": "2026-09-19.1",
-  "templateId": "porto-accounting",
-  "name": "Porto 经典财税会计",
+  "templateId": "senseng-minimal",
+  "name": "Senseng 瑞士极简生活馆",
   "documentLanguage": "zh-CN",
-  "purpose": "内部 AI 素材与文案规范。Standalone 独立建站字段说明与 Product Radar confirmed-materials 接入分别解释；后者必须读取 /api/internal/template-guides/materials/porto-accounting 的 typed-regions-v1 新合同。规范接口只读，不负责生成、保存或发布客户网站。",
+  "purpose": "内部 AI 素材与文案规范。Standalone 独立建站字段说明与 Product Radar confirmed-materials 接入分别解释；后者必须读取 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 新合同。规范接口只读，不负责生成、保存或发布客户网站。",
   "visualSystem": {
     "palette": [
-      "#E8D8D9",
-      "#D90A2C",
-      "#4D4D4D",
-      "#FDF1F3"
+      "#111827",
+      "#C59B27",
+      "#FFFFFF",
+      "#E5E7EB",
+      "#9CA3AF"
     ],
-    "artDirection": "柔粉色背景、红色强调色、深灰文字；两栏首屏，圆形人物/产品视觉，竖向介绍卡。",
-    "composition": "Hero 左侧留标题，右侧主体居中；方形原图需适合圆形裁切，脸部/产品完整保留在中央 70%。",
-    "tone": "克制、稳重、解释服务过程；使用真实资质与可提供的协作方式。",
+    "artDirection": "瑞士现代主义黑白灰网格、黄铜金细节、大面积留白、编号展签与聚光雕塑展台，直角卡片替代糖果泡泡。",
+    "composition": "左侧精简文字与宽松留白，右侧白灰直角展台聚光展示完整产品；细分隔线与小型编号由 HTML 呈现。公共 Banner 中全部所选产品按艺术陈列节奏排序，避免数量不足时复制同款。",
+    "tone": "克制、准确、像展品说明；采购价值与材料规格依据客户事实，避免医用级、精密公差或满意度的无源承诺。",
     "avoid": [
       "不得将整张网页截图当作可编辑网站背景。",
       "图片不带导航/CTA/大段文字；标题与按钮由 HTML 呈现。",
-      "禁止编造认证、客户 Logo、客户评价、业绩数字或真实团队身份。"
+      "禁止编造认证、客户 Logo、客户评价、业绩数字或真实团队身份。",
+      "避免马卡龙泡泡、森林花叶、赛博扫描线和炫光。",
+      "不虚构典藏版次、设计奖项、实验公差、客户评分或材料认证。"
     ]
   },
   "inputContract": {
@@ -51,82 +54,150 @@
   },
   "pagePlan": {
     "home": [
-      "双栏首屏",
-      "业务简介",
-      "服务列表",
-      "选择理由",
-      "专业能力",
-      "客户反馈",
-      "询价表单"
+      "极简档案横幅与聚光展台首屏",
+      "已确认规格说明（量化指标须真实）",
+      "编号艺术品产品网格",
+      "设计合作与采购行动"
     ],
     "catalog": [
-      "分类/筛选（以模板能力为准）",
-      "产品图片、名称、简介与详情链接"
+      "编号典藏展台产品目录",
+      "产品图片、名称、简介与详情链接保持同一产品身份",
+      "不足目标数量时缩减或隐藏，不补示例产品"
     ],
     "about": [
-      "已确认的公司简介",
-      "真实能力说明",
-      "联系行动"
+      "保持本模板瑞士现代主义黑白灰网格、黄铜金细节、大面积留白、编号展签与聚光雕塑展台的品牌介绍",
+      "以客户资料填写公司能力、目标市场与合作流程",
+      "可用 AI 生成工厂示意图，但不冒充实际场地或资质证据"
     ],
     "contact": [
       "真实联系方式",
       "现有询盘表单"
     ],
     "productDetail": [
-      "真实产品图",
-      "名称、简介与已知规格",
-      "询盘入口；不应用 Banner 覆盖"
+      "该产品原始主图与已有图库",
+      "同一产品的真实名称、说明与已知规格",
+      "保留当前模板询盘与相关产品布局，不混用其他产品图片"
     ]
   },
   "inventory": {
-    "recommendedDistinctProductImages": 3,
+    "recommendedDistinctProductImages": 8,
     "minimumProductImages": 1,
     "bundledVideoCount": 0,
     "defaultHero": "image-or-css",
-    "reuseRule": "confirmed-materials：优先复用产品原图、场景、包装、细节及符合要求的海报，缺图才生成；同一区域只放同类图，图/名称/链接保持同产品，数量不足缩减或隐藏，不补示例产品。Standalone：原渲染器可能按展示位置复用产品图，此说明不改变独立建站行为。",
+    "reuseRule": "confirmed-materials：优先复用产品原图、场景、包装、细节及符合要求的海报，缺图才生成；同一区域只放同类图，图/名称/链接保持同产品，数量不足缩减或隐藏，不补示例产品。Standalone：原产品卡仍按产品顺序展示，独立模板的示例与交互逻辑不由本规范改写。",
     "decorativeAssets": "CSS、图标、字体、背景与装饰已随模板内置，保留风格时无需重新生成。"
   },
   "layoutImageSlots": [
     {
       "id": "image-0",
-      "purpose": "首屏圆形视觉原图",
+      "purpose": "编号典藏展台产品 1（原模板展示图；confirmed-materials 区域按新合同）",
       "dimensions": {
-        "width": 641,
-        "height": 641
+        "width": 1200,
+        "height": 1200
       },
-      "defaultAsset": "/templates/references/f899bd7bc36a2c537d1f.jpg",
+      "defaultAsset": "/templates/senseng/products-1.jpg",
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/porto-accounting 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
       "id": "image-1",
-      "purpose": "公司介绍竖图",
+      "purpose": "编号典藏展台产品 2（原模板展示图；confirmed-materials 区域按新合同）",
       "dimensions": {
-        "width": 511,
-        "height": 600
+        "width": 1200,
+        "height": 1200
       },
-      "defaultAsset": "/templates/references/4b2ead8020ce798ee610.jpg",
+      "defaultAsset": "/templates/senseng/products-2.jpg",
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/porto-accounting 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     },
     {
       "id": "image-2",
-      "purpose": "能力介绍竖图",
+      "purpose": "编号典藏展台产品 3（原模板展示图；confirmed-materials 区域按新合同）",
       "dimensions": {
-        "width": 511,
-        "height": 600
+        "width": 1200,
+        "height": 1200
       },
-      "defaultAsset": "/templates/references/3ee4b3ad47c6d217a4d8.jpg",
+      "defaultAsset": "/templates/senseng/products-3.jpg",
       "binding": {
         "strategy": "product-reuse",
         "path": "draft.products[].imageAssetId",
-        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/porto-accounting 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+      }
+    },
+    {
+      "id": "image-3",
+      "purpose": "编号典藏展台产品 4（原模板展示图；confirmed-materials 区域按新合同）",
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/senseng/products-4.jpg",
+      "binding": {
+        "strategy": "product-reuse",
+        "path": "draft.products[].imageAssetId",
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+      }
+    },
+    {
+      "id": "image-4",
+      "purpose": "编号典藏展台产品 5（原模板展示图；confirmed-materials 区域按新合同）",
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/senseng/products-5.jpg",
+      "binding": {
+        "strategy": "product-reuse",
+        "path": "draft.products[].imageAssetId",
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+      }
+    },
+    {
+      "id": "image-5",
+      "purpose": "编号典藏展台产品 6（原模板展示图；confirmed-materials 区域按新合同）",
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/senseng/products-6.jpg",
+      "binding": {
+        "strategy": "product-reuse",
+        "path": "draft.products[].imageAssetId",
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+      }
+    },
+    {
+      "id": "image-6",
+      "purpose": "编号典藏展台产品 7（原模板展示图；confirmed-materials 区域按新合同）",
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/senseng/products-7.jpg",
+      "binding": {
+        "strategy": "product-reuse",
+        "path": "draft.products[].imageAssetId",
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
+      }
+    },
+    {
+      "id": "image-7",
+      "purpose": "编号典藏展台产品 8（原模板展示图；confirmed-materials 区域按新合同）",
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/senseng/products-8.jpg",
+      "binding": {
+        "strategy": "product-reuse",
+        "path": "draft.products[].imageAssetId",
+        "note": "Standalone：原模板产品图复用位置说明，不保证每位置有独立编辑字段。confirmed-materials：以 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 稳定槽位 ID、用途、数量、比例、产品范围与来源策略为准，不按本列表的顺序位置推断绑定。"
       }
     }
   ],
@@ -137,7 +208,7 @@
       "purpose": "每款产品的原始主图；优先复用已提供素材，缺图才生成",
       "quantity": {
         "min": 1,
-        "recommended": 3,
+        "recommended": 8,
         "max": 20
       },
       "dimensions": {
@@ -151,13 +222,13 @@
       ],
       "recommendedMaxBytes": 2097152,
       "required": true,
-      "composition": "统一柔和棚拍光线；主体居中占画面 65–80%，四周至少 10% 留白；透明或接近页面底色的干净背景。",
-      "promptTemplate": "先复用 {{product.referenceImages}} 中符合用途的已有原始主图；只有缺图且客户明确开始生成时才补图。保留 {{product.name}} 的真实结构、材质、颜色和包装标识，不改产品事实。视觉环境：柔粉色背景、红色强调色、深灰文字；两栏首屏，圆形人物/产品视觉，竖向介绍卡。",
+      "composition": "纯净白灰展台与柔和单侧聚光，保留完整产品轮廓和真实质地，轻阴影；不烧录编号、展签、价格或认证。",
+      "promptTemplate": "先复用 {{product.referenceImages}} 中符合用途的已有原始主图；只有缺图且客户明确开始生成时才补图。保留 {{product.name}} 的真实结构、材质、颜色和包装标识，不改产品事实。视觉环境：瑞士现代主义黑白灰网格、黄铜金细节、大面积留白、编号展签与聚光雕塑展台，直角卡片替代糖果泡泡。",
       "negativePrompt": "不要水印、乱码、虚构商标、假认证；不得改变产品结构、数量、材质或包装标识。不要把导航、按钮、价格、统计数字烧录进背景。",
       "binding": {
         "strategy": "product-image",
         "path": "draft.products[].imageAssetId",
-        "note": "Standalone：先上传图片获得 assetId，再关联各产品。推荐数量用于减少复用，并非建站强制最少数量。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/porto-accounting 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
+        "note": "Standalone：先上传图片获得 assetId，再关联各产品。推荐数量用于减少复用，并非建站强制最少数量。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/senseng-minimal 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -168,7 +239,7 @@
     {
       "id": "hero-image",
       "kind": "image",
-      "purpose": "首页背景；视频模板中可作为静态替代，已有背景时无需生成",
+      "purpose": "首页公共 Banner；confirmed-materials 数量与用途按版本化槽位合同，Standalone 可保留内置风格",
       "quantity": {
         "min": 0,
         "recommended": 1,
@@ -176,7 +247,7 @@
       },
       "dimensions": {
         "width": 2560,
-        "height": 770
+        "height": 830
       },
       "formats": [
         "image/png",
@@ -185,88 +256,13 @@
       ],
       "recommendedMaxBytes": 2097152,
       "required": false,
-      "composition": "Hero 左侧留标题，右侧主体居中；方形原图需适合圆形裁切，脸部/产品完整保留在中央 70%。",
-      "promptTemplate": "生成 Porto 经典财税会计 的首页背景，风格：柔粉色背景、红色强调色、深灰文字；两栏首屏，圆形人物/产品视觉，竖向介绍卡。 构图：Hero 左侧留标题，右侧主体居中；方形原图需适合圆形裁切，脸部/产品完整保留在中央 70%。 主题来自 {{brand.description}} 和 {{products}}。文字由 HTML 叠加，图片不含文字。 confirmed-materials 公共页的每张 Banner 必须包含全部所选产品，多张 Banner 构图不同；不要重复图凑数。",
+      "composition": "左侧精简文字与宽松留白，右侧白灰直角展台聚光展示完整产品；细分隔线与小型编号由 HTML 呈现。公共 Banner 中全部所选产品按艺术陈列节奏排序，避免数量不足时复制同款。",
+      "promptTemplate": "为 Senseng 瑞士极简生活馆 准备公共 Banner。瑞士现代主义黑白灰网格、黄铜金细节、大面积留白、编号展签与聚光雕塑展台，直角卡片替代糖果泡泡。 左侧精简文字与宽松留白，右侧白灰直角展台聚光展示完整产品；细分隔线与小型编号由 HTML 呈现。公共 Banner 中全部所选产品按艺术陈列节奏排序，避免数量不足时复制同款。 使用 {{products}} 的真实参考与 {{brand.description}}，不烧录标题、导航或按钮。 confirmed-materials 公共页的每张 Banner 必须包含全部所选产品，多张 Banner 构图不同；不要重复图凑数。",
       "negativePrompt": "不要水印、乱码、虚构商标、假认证；不得改变产品结构、数量、材质或包装标识。不要把导航、按钮、价格、统计数字烧录进背景。",
       "binding": {
         "strategy": "page-banner",
         "path": "draft.banners[].slides[].assetId",
-        "note": "Standalone：targets=[\"home\"]，kind=\"images\"，mode=\"background\"；1 张静态，2–12 张轮播。独立页面需单独建立对应 targets 的配置，不适用于产品详情。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/porto-accounting 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
-      },
-      "checks": [
-        "保持真实产品结构；用原始产品图做主体参考。",
-        "输出尺寸与宽高比匹配；手机裁切不切断主体。",
-        "只使用授权素材，缺少信息列入 missingFacts。"
-      ]
-    },
-    {
-      "id": "hero-video",
-      "kind": "video",
-      "purpose": "首页全屏背景；可选切换，将改变模板默认静态首屏表现",
-      "quantity": {
-        "min": 0,
-        "recommended": 1,
-        "max": 1
-      },
-      "dimensions": {
-        "width": 1920,
-        "height": 1080
-      },
-      "formats": [
-        "video/mp4",
-        "video/webm"
-      ],
-      "recommendedMaxBytes": 20971520,
-      "required": false,
-      "composition": "Hero 左侧留标题，右侧主体居中；方形原图需适合圆形裁切，脸部/产品完整保留在中央 70%。",
-      "promptTemplate": "为 Porto 经典财税会计 生成无声可循环背景视频。柔粉色背景、红色强调色、深灰文字；两栏首屏，圆形人物/产品视觉，竖向介绍卡。 Hero 左侧留标题，右侧主体居中；方形原图需适合圆形裁切，脸部/产品完整保留在中央 70%。 使用 {{products}} 的真实产品作为参考；缓慢镜头推移或轻微景深变化，一镜到底，首尾自然衔接。不得改变产品形态。",
-      "negativePrompt": "不要水印、乱码、虚构商标、假认证；不得改变产品结构、数量、材质或包装标识。不要把导航、按钮、价格、统计数字烧录进背景。",
-      "binding": {
-        "strategy": "page-banner",
-        "path": "draft.banners[].videoAssetId",
-        "note": "Standalone：targets=[\"home\"]，kind=\"video\"，height=\"screen\"，fit=\"cover\"，mode=\"background\"；设置 posterAssetId。浏览器静音自动播放，允许暂停和 reduced-motion 静态降级。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/porto-accounting 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
-      },
-      "checks": [
-        "保持真实产品结构；用原始产品图做主体参考。",
-        "输出尺寸与宽高比匹配；手机裁切不切断主体。",
-        "只使用授权素材，缺少信息列入 missingFacts。"
-      ],
-      "durationSeconds": {
-        "min": 6,
-        "recommended": 10,
-        "max": 15
-      },
-      "framesPerSecond": 24,
-      "codec": "MP4 H.264 或 WebM VP9；无音轨，sRGB / Rec.709",
-      "posterAsset": "video-poster"
-    },
-    {
-      "id": "video-poster",
-      "kind": "image",
-      "purpose": "视频首帧封面与不播放时的静态降级；选择视频时建议提供",
-      "quantity": {
-        "min": 0,
-        "recommended": 1,
-        "max": 1
-      },
-      "dimensions": {
-        "width": 1920,
-        "height": 1080
-      },
-      "formats": [
-        "image/png",
-        "image/jpeg",
-        "image/webp"
-      ],
-      "recommendedMaxBytes": 2097152,
-      "required": false,
-      "composition": "Hero 左侧留标题，右侧主体居中；方形原图需适合圆形裁切，脸部/产品完整保留在中央 70%。",
-      "promptTemplate": "从 hero-video 的稳定首帧导出无文字封面，保持同一构图、明暗与产品位置。",
-      "negativePrompt": "不要水印、乱码、虚构商标、假认证；不得改变产品结构、数量、材质或包装标识。不要把导航、按钮、价格、统计数字烧录进背景。",
-      "binding": {
-        "strategy": "page-banner",
-        "path": "draft.banners[].posterAssetId",
-        "note": "Standalone：与对应视频 Banner 使用相同配置 ID。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/porto-accounting 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
+        "note": "Standalone：targets=[\"home\"]，kind=\"images\"，mode=\"background\"；1 张静态，2–12 张轮播。独立页面需单独建立对应 targets 的配置，不适用于产品详情。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/senseng-minimal 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -300,7 +296,7 @@
       "binding": {
         "strategy": "brand",
         "path": "draft.company.logoAssetId",
-        "note": "Standalone：使用已上传 Logo 的 assetId；缺省使用公司名称。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/porto-accounting 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
+        "note": "Standalone：使用已上传 Logo 的 assetId；缺省使用公司名称。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/senseng-minimal 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -334,7 +330,7 @@
       "binding": {
         "strategy": "brand",
         "path": "draft.company.faviconAssetId",
-        "note": "Standalone：使用已上传图标的 assetId。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/porto-accounting 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
+        "note": "Standalone：使用已上传图标的 assetId。 confirmed-materials：实际接收位置、数量和尺寸以 /api/internal/template-guides/materials/senseng-minimal 返回的 typed-regions-v1 合同为准，不能把本生成 manifest 直接当作资料提交载荷。"
       },
       "checks": [
         "保持真实产品结构；用原始产品图做主体参考。",
@@ -350,15 +346,15 @@
       "quantity": 1,
       "length": {
         "unit": "unicode-code-points",
-        "recommendedMax": 60,
+        "recommendedMax": 58,
         "maxLines": 3,
         "localeNote": "以目标语言自然表达；中文尽量控制在英文建议字符数的 55% 内，最终以实际渲染换行为准。"
       },
-      "promptTemplate": "根据 {{brand.description}} 与 {{brand.audience}} 写一句核心价值。语气：克制、稳重、解释服务过程；使用真实资质与可提供的协作方式。 不照抄示例。示例仅示意长度：A dependable partner for your next step。",
+      "promptTemplate": "依据 {{brand.description}}、{{brand.audience}} 与真实产品写清采购价值。语气：克制、准确、像展品说明；采购价值与材料规格依据客户事实，避免医用级、精密公差或满意度的无源承诺。 保留模板字体和行数，不照抄内置营销主张。",
       "binding": {
-        "strategy": "draft-field",
+        "strategy": "manual-template-edit",
         "path": "draft.copy[language].headline",
-        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -371,11 +367,11 @@
         "maxLines": 3,
         "localeNote": "以目标语言自然表达；中文尽量控制在英文建议字符数的 55% 内，最终以实际渲染换行为准。"
       },
-      "promptTemplate": "用一到两句话说明产品、服务对象与下一步，信息来自 {{brand.facts}}，不要复述标题。",
+      "promptTemplate": "使用 {{brand.facts}} 说明供应品类、目标客户及联系步骤。克制、准确、像展品说明；采购价值与材料规格依据客户事实，避免医用级、精密公差或满意度的无源承诺。",
       "binding": {
         "strategy": "manual-template-edit",
         "path": "draft.copy[language].subtitle",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -392,13 +388,13 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
       "id": "section-headings",
       "purpose": "各区块标题",
-      "quantity": 6,
+      "quantity": 4,
       "length": {
         "unit": "unicode-code-points",
         "recommendedMax": 48,
@@ -409,13 +405,13 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
       "id": "section-body",
       "purpose": "各区块简介",
-      "quantity": 6,
+      "quantity": 4,
       "length": {
         "unit": "unicode-code-points",
         "recommendedMax": 180,
@@ -426,13 +422,13 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
       "id": "product-name",
       "purpose": "每款产品的展示名称",
-      "quantity": 3,
+      "quantity": 8,
       "length": {
         "unit": "unicode-code-points",
         "recommendedMax": 48,
@@ -443,13 +439,13 @@
       "binding": {
         "strategy": "draft-field",
         "path": "draft.products[].name",
-        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
       "id": "product-description",
       "purpose": "每款产品简介",
-      "quantity": 3,
+      "quantity": 8,
       "length": {
         "unit": "unicode-code-points",
         "recommendedMax": 180,
@@ -460,13 +456,13 @@
       "binding": {
         "strategy": "draft-field",
         "path": "draft.products[].description",
-        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
       "id": "product-alt",
       "purpose": "每款产品替代文本",
-      "quantity": 3,
+      "quantity": 8,
       "length": {
         "unit": "unicode-code-points",
         "recommendedMax": 100,
@@ -477,7 +473,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "图片输出 alt；当前产品卡默认以产品名称作为 alt",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -492,9 +488,9 @@
       },
       "promptTemplate": "使用 {{brand.history}}、{{brand.verifiedCapabilities}} 组织公司介绍；不虚构成立年份、工厂、员工或客户。",
       "binding": {
-        "strategy": "draft-field",
-        "path": "draft.copy[language].about / draft.company.description（无对应语言 copy 时的回退）",
-        "note": "Standalone：使用当前目标语言，保留其它语言的 copy。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "strategy": "manual-template-edit",
+        "path": "draft.company.description",
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -511,7 +507,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "模板对应区块",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -528,7 +524,7 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "生成建议交给现有 SEO 流程；不直接拼接 HTML",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     },
     {
@@ -545,12 +541,12 @@
       "binding": {
         "strategy": "manual-template-edit",
         "path": "生成建议交给现有 SEO 流程；不直接拼接 HTML",
-        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/porto-accounting 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
+        "note": "Standalone：硬编码文案需接入模板，不能假设写入 copy 即生效。 confirmed-materials：按 /api/internal/template-guides/materials/senseng-minimal 返回的稳定 text slot ID 绑定批准文案；不得假设写入 draft.copy 可以覆盖全部独立模板硬编码内容。"
       }
     }
   ],
   "generationWorkflow": [
-    "区分入口：Standalone 独立建站保留现有字段与流程；Product Radar confirmed-materials 必须读取 /api/internal/template-guides/materials/porto-accounting 的 typed-regions-v1 版本化合同，并固定 guideRevision 与 contractRevision。",
+    "区分入口：Standalone 独立建站保留现有字段与流程；Product Radar confirmed-materials 必须读取 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 版本化合同，并固定 guideRevision 与 contractRevision。",
     "核对品牌、产品、目标市场、客户类型、合作流程及真实素材；先复用已有主图、场景、包装、细节和符合要求的海报，缺图才生成。",
     "按合同的区域图类型、数量、明确像素尺寸、产品范围及来源策略形成计划，展示需新生成与复用数量和用途；客户确认开始后才执行生成。",
     "同一区域只显示同类图片；图、名称和目标链接同属一个产品，正面与包装对照行保持同产品同顺序；数量不足缩减或隐藏，不补示例产品。",
@@ -566,7 +562,7 @@
     "所有文字有可追溯事实，省略无来源案例/评价/统计，设计中原示例数字不能当真实事实。",
     "标题在约定行数内，移动端 CTA 不截断；采用现有布局与语义标题。",
     "图片 alt 描述内容；视频提供封面，前端保留暂停与减少动态效果支持。",
-    "首页 Banner 尺寸采用 template-media.ts 明确像素 2560 × 770；原显示说明为“2560 × 770（3.3:1 经典财税精练通栏）”。括号比例为概略说明，与明确像素冲突时不按比例重算或裁减数量。",
+    "首页 Banner 尺寸采用 template-media.ts 明确像素 2560 × 830；原显示说明为“2560 × 830（3:1 极简现代艺术画廊宽幅背景）”。括号比例为概略说明，与明确像素冲突时不按比例重算或裁减数量。",
     "confirmed-materials 的完整预览、校验和渲染使用同一合同；产品不足缩减或隐藏，不补示例产品或重复凑数。",
     "证书和报告只能真实上传；无来源的工厂面积、MOQ、认证、客户评价或统计数字不得由文案、图片、data-counter、data-suffix 或 data-progress 重新引入。"
   ],
@@ -583,6 +579,6 @@
       "missingFacts",
       "warnings"
     ],
-    "bindingWarning": "本 output-schema 描述通用生成 manifest，不是 confirmed-materials 接收协议。Product Radar 接入必须按 /api/internal/template-guides/materials/porto-accounting 的 typed-regions-v1 新合同生成 imageBindings/textBindings 并使用对应修订版；Standalone 的 manual-template-edit 项仍需原流程接入，不能仅写 draft.copy 就声称覆盖所有页面。"
+    "bindingWarning": "本 output-schema 描述通用生成 manifest，不是 confirmed-materials 接收协议。Product Radar 接入必须按 /api/internal/template-guides/materials/senseng-minimal 的 typed-regions-v1 新合同生成 imageBindings/textBindings 并使用对应修订版；Standalone 的 manual-template-edit 项仍需原流程接入，不能仅写 draft.copy 就声称覆盖所有页面。"
   }
 }

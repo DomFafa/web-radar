@@ -90,3 +90,16 @@ This update supersedes direct Create/Build concept import. New handoffs and serv
 - Web Radar copies all images before committing the import. A failed image rolls back the entire import and deletes copied objects. Local product JSON stores `gallery: [{assetId,sourceImageId,kind,caption}]`, preserves the original as `imageAssetId`, and retains the fixed website fields. These imported gallery/extra-copy fields are preserved on ordinary draft saves, including older clients that omit them.
 - Static site assets include the gallery. Detail layouts use the trusted `product.gallery` binding to emit selected images without duplicating the primary image; `product.tagline`, `product.sellingPoints`, and `product.applications` bind supplied English text. Name/description translations keep their existing behavior; extra fields are omitted from secondary languages until supplied translations exist.
 - The shared integration secret, principal revalidation, one-time handoff, account scope, project persistence and publication authorization are unchanged. No database migration is required for Web Radar's JSON fields.
+
+## Confirmed materials for every current template (2026-09-19)
+
+All 15 registered templates now advertise `typed-regions-v1` through the existing
+account-restricted materials catalog. The contract, original-image retention,
+role/identity rules, independent illustrations and legacy revision boundaries are
+documented in [typed materials requirements](materials-requirements/typed-regions.md).
+Product Radar reads and confirms an exact revision before generating missing
+images; Web Radar validates it, copies its media, and opens an unpublished draft.
+The optional brand facts `targetMarkets`, `customerTypes` and `cooperationProcess`
+survive reception and later edits. The shared secret and existing permitted
+account remain unchanged; standalone template creation remains available through
+its existing paths.

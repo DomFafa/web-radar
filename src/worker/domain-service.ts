@@ -1,7 +1,7 @@
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
 import { currentMaterialsPrincipal } from './materials-auth';
-import { validateMaterialsDraft } from './materials-draft';
+import { materialsImageAssetIds, validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
 import { bannerAssets } from '../shared/banner-config';
 import { auditSeo, withPublicationMetadata, SEO_POLICY_VERSION, type PublicationMetadata } from './site-metadata';
@@ -1052,7 +1052,8 @@ export class DomainService {
     );
   }
   private async validateAssets(projectId: string, draft: Draft): Promise<void> {
-    validateMaterialsDraft(draft);
+    const materialsProfile = validateMaterialsDraft(draft);
+    const ownedAssets = new Map<string, Asset>();
     const bannerMedia = bannerAssets(draft);
     const imageRefs = new Set(assetReferences({...draft, heroAssetId:undefined,
       cloneConfig:draft.cloneConfig?{...draft.cloneConfig,referenceCapture:draft.cloneConfig.referenceCapture?{...draft.cloneConfig.referenceCapture,assets:draft.cloneConfig.referenceCapture.assets.filter(a=>!a.contentType.startsWith('video/'))}:undefined}:undefined,
@@ -1068,7 +1069,33 @@ export class DomainService {
         (!video || supportedVideos.has(asset.contentType)) && (!imageRefs.has(id) || image),
         400, 'asset_type_mismatch', '素材格式与用途不匹配。',
       );
+      ownedAssets.set(id, asset);
     }
+    if (materialsProfile?.imagePolicy === 'typed-regions-v1') {
+      const verifiedHashes = new Map<string, string>();
+      for (const id of materialsImageAssetIds(draft)) {
+        const asset = ownedAssets.get(id)!;
+        verifiedHashes.set(id, await this.materialsAssetHash(asset));
+      }
+      validateMaterialsDraft(draft, verifiedHashes);
+    }
+  }
+
+  /** Only typed materials need byte identity; immutable project assets cache it after the first edit. */
+  private async materialsAssetHash(asset: Asset): Promise<string> {
+    const verifiedHash = (value: string | undefined): value is string => !!value && /^[a-f0-9]{64}$/.test(value);
+    if (verifiedHash(asset.sha256)) return asset.sha256;
+    const metadata = await this.env.MEDIA.head(asset.key);
+    requireCondition(metadata, 409, 'asset_unavailable', '素材文件尚未完整保存，请重新上传。');
+    let digest = metadata.customMetadata?.sha256;
+    if (!verifiedHash(digest)) {
+      const object = await this.env.MEDIA.get(asset.key);
+      requireCondition(object, 409, 'asset_unavailable', '素材文件尚未完整保存，请重新上传。');
+      digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', await object.arrayBuffer()))].map(value => value.toString(16).padStart(2, '0')).join('');
+    }
+    asset.sha256 = digest;
+    await this.store.update('assets', asset).run();
+    return digest;
   }
 
   private limitStream(

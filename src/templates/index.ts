@@ -22,6 +22,7 @@ import { renderNatureHome, renderNaturePage } from './themes/sensengNature';
 import { renderMinimalHome, renderMinimalPage } from './themes/sensengMinimal';
 import { materialProductImage,materialsSensengBody,materialsSeo,materialsThemeStyle } from './materials-render';
 import { materialsRuntime } from '../shared/materials-runtime';
+import { isTypedMaterials, isTypedMaterialsSource, renderTypedMaterialsSite } from './materials-typed';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -59,6 +60,7 @@ function segment(id: string): string {
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  if(isTypedMaterials(draft))return renderTypedMaterialsSite(draft,options);
   const html=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
@@ -214,7 +216,7 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const isSenseng = template === 'senseng-clean' || template === 'senseng-video';
   if (isSenseng) {
     const ctx = buildThemeContext(draft, options);
-    const bodyHtml = draft.materials?materialsSensengBody(ctx):renderSensengPage(ctx, template === 'senseng-video');
+    const bodyHtml = draft.materials?materialsSensengBody(ctx):renderSensengPage(ctx, template === 'senseng-video',isTypedMaterialsSource(draft));
     if(draft.materials){
       const seo=materialsSeo(draft,options)!;
       return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title)}</title><meta name="description" content="${esc(seo.description)}">${options.preview?'<meta name="robots" content="noindex,nofollow">':''}<style>${styles}\n${themeStyles}</style>${materialsThemeStyle(draft)}</head><body class="${template} wr-materials-site" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${bodyHtml}<script>${script}</script></body></html>`;

@@ -5,9 +5,11 @@ import { junoMaterialsImageSlots } from '../../templates/materials';
 import { sensengMaterialInventory } from '../../templates/materials-senseng';
 import { defaultDraft } from '../domain';
 import { junoDisplayRevision } from '../../templates/juno-display';
+import { typedMaterialsDemoDraft } from './materials-typed-demo';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(profile.imagePolicy==='typed-regions-v1')return typedMaterialsDemoDraft(profile,lang);
   const draft=defaultDraft();draft.template=profile.templateId as typeof draft.template;draft.buildBranch='template';draft.templateConfirmed=true;
   draft.languages=lang==='en'?['en']:['en',lang];draft.company.name='Example Brand';
   draft.company.description='Explore this example collection and discuss your retail assortment. Product details, availability and order terms are confirmed through an inquiry.';

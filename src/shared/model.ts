@@ -58,6 +58,9 @@ export interface Company {
   establishedYear?: string;
   certifications?: string;
   capabilities?: string;
+  targetMarkets?: string;
+  customerTypes?: string;
+  cooperationProcess?: string;
   linkedin?: string;
   facebook: string;
   instagram: string;
@@ -265,6 +268,7 @@ export interface Asset {
   key: string;
   contentType: string;
   size: number;
+  sha256?: string;
   filename: string;
   origin: 'upload' | 'import' | 'generated' | 'test';
   createdAt: string;

@@ -5,6 +5,7 @@ import { buildThemeContext, esc, productPath, type RenderOptions, type ThemeCont
 import type { Draft } from '../../shared/model';
 import { materialProductImage, materialsReferenceBody, materialsSeo, materialsThemeStyle } from '../materials-render';
 import { themeStyles } from './styles';
+import { isTypedMaterialsSource } from '../materials-typed';
 import { renderSaasAbout, renderSaasContact, renderSaasCatalog, renderSaasDetail } from './saasAutomation';
 import { renderFintechAbout, renderFintechContact, renderFintechCatalog, renderFintechDetail } from './fintechPlatform';
 import { renderMarketingAbout, renderMarketingContact, renderMarketingCatalog, renderMarketingDetail } from './digitalMarketing';
@@ -246,9 +247,9 @@ export function renderReferencePage(
   }
   layout.slots.forEach((slot, i) => {
     const product = pictured[i % pictured.length] || draft.products[i % draft.products.length];
-    const imgSrc = (product && productMainImage(product)) || defaultProductImage || slot.src;
+    const imgSrc = isTypedMaterialsSource(draft)?slot.src:(product && productMainImage(product)) || defaultProductImage || slot.src;
     tokens['IMAGE_' + i] = esc(imgSrc);
-    tokens['ALT_' + i] = esc(product ? translateProduct(product).name : slot.alt);
+    tokens['ALT_' + i] = esc(isTypedMaterialsSource(draft)?slot.alt:product ? translateProduct(product).name : slot.alt);
   });
   let body = (draft.materials?materialsReferenceBody(draft,options):layout.html).replace(/__WR_([A-Z_0-9]+)__/g, (_, key: string) => tokens[key] ?? '');
   if (pictured.length)
