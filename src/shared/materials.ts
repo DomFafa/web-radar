@@ -10,6 +10,9 @@ const locale = z.enum(materialsLocales);
 const localizedText = z.partialRecord(locale, text);
 const facts = z.array(id).max(100);
 const point = z.strictObject({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) });
+export const materialsImageRoles=['scene','front','packaging','collection']as const;
+export const materialsDisplaySelectionSchema=z.strictObject({sceneProductIds:z.array(id).min(1).max(4),featuredProductIds:z.array(id).min(1).max(4)});
+export type MaterialsDisplaySelection=z.infer<typeof materialsDisplaySelectionSchema>;
 export const materialsPrincipalSchema = z.strictObject({
   userId:id, authSubject:id, email:z.email(), displayName:z.string().max(200),
   systemRole:z.enum(['super_admin','user']), workspaceId:id,
@@ -23,6 +26,7 @@ export const materialsVisualSchema = z.strictObject({
 export const materialsImageBindingSchema = z.strictObject({
   slotId:id,mediaId:id,mobileMediaId:id.optional(),productId:id.optional(),itemIndex:z.number().int().min(0).max(255).optional(),
   fit:z.enum(['cover','contain']),focalPoint:point,mobileFocalPoint:point.optional(),alt:localizedText,
+  role:z.enum(materialsImageRoles).optional(),depictedProductIds:z.array(id).min(1).max(20).optional(),evidenceMediaIds:z.array(id).min(1).max(11).optional(),
 });
 export const materialsTextBindingSchema = z.strictObject({
   slotId:id,locale,text,productId:id.optional(),itemIndex:z.number().int().min(0).max(255).optional(),factReferences:facts,
@@ -49,6 +53,7 @@ export const confirmedMaterialsSchema = z.strictObject({
   facts:z.array(z.strictObject({id,text,source:text})).max(500),visual:materialsVisualSchema,
   media:z.array(materialsMediaSchema).min(1).max(256),imageBindings:z.array(materialsImageBindingSchema).max(512),
   textBindings:z.array(materialsTextBindingSchema).max(1500),omittedSectionIds:z.array(id).max(100),
+  displaySelection:materialsDisplaySelectionSchema.optional(),
 }).superRefine((m,ctx)=>{
   const issue=(path:(string|number)[],message:string)=>ctx.addIssue({code:'custom',path,message});
   const unique=(values:string[],path:(string|number)[])=>{if(new Set(values).size!==values.length)issue(path,'Duplicate identity or binding target');};
@@ -69,6 +74,8 @@ export const confirmedMaterialsSchema = z.strictObject({
   unique(m.imageBindings.map(target),['imageBindings']);unique(m.textBindings.map(b=>target(b)+b.locale),['textBindings']);
   m.imageBindings.forEach((b,i)=>{
     mediaRef(b.mediaId,['imageBindings',i,'mediaId']);mediaRef(b.mobileMediaId,['imageBindings',i,'mobileMediaId']);
+    b.evidenceMediaIds?.forEach((v,j)=>mediaRef(v,['imageBindings',i,'evidenceMediaIds',j]));
+    if(b.depictedProductIds){unique(b.depictedProductIds,['imageBindings',i,'depictedProductIds']);if(b.depictedProductIds.some(p=>!productIds.has(p)))issue(['imageBindings',i,'depictedProductIds'],'Unknown depicted product');}
     if(b.productId&&!productIds.has(b.productId))issue(['imageBindings',i,'productId'],'Unknown product');
     for(const l of m.locales)if(!b.alt[l]?.trim())issue(['imageBindings',i,'alt',l],'Selected locale alt text is missing');
   });
@@ -100,20 +107,22 @@ interface Slot {
 }
 export interface MaterialsTemplateContract {
   schemaVersion:'wr-template-materials-v1';templateId:string;guideRevision:string;contractRevision:string;materialsReady:boolean;pages:Array<typeof materialsPages[number]>;
-  imageSlots:Array<Slot & {repeat:'once'|'per-product'|'per-product-gallery'|'fixed';width:number;height:number;composition:string;mobileComposition:string;fit:'cover'|'contain';allowedMimeTypes:string[]}>;
+  imageSlots:Array<Slot & {repeat:'once'|'per-product'|'per-product-gallery'|'fixed'|'per-selection';selectionGroup?:'scene'|'featured';role?:typeof materialsImageRoles[number];width:number;height:number;composition:string;mobileComposition:string;fit:'cover'|'contain';allowedMimeTypes:string[]}>;
   textSlots:Array<Slot & {repeat:'once'|'per-product'|'fixed';maxCodePoints:number;maxLines:number;factualPolicy:string;exampleText?:string}>;
   optionalSections:Array<{id:string;reason:string}>;visualParameters:string[];contentPolicy:'b2b-confirmed-facts-only';
 }
 /** Applied fields are editable; receipt/source provenance belongs on Project, not this draft. */
 export interface AppliedMaterials {
   templateId:string;contractRevision:string;visual:MaterialsVisual;
-  imageBindings:Array<Omit<MaterialsImageBinding,'mediaId'|'mobileMediaId'> & {assetId:string;mobileAssetId?:string}>;
+  imageBindings:Array<Omit<MaterialsImageBinding,'mediaId'|'mobileMediaId'|'evidenceMediaIds'> & {assetId:string;mobileAssetId?:string;evidenceAssetIds?:string[]}>;
   textBindings:MaterialsTextBinding[];omittedSectionIds:string[];
+  displaySelection?:MaterialsDisplaySelection;
 }
 export const appliedMaterialsSchema=z.strictObject({
   templateId:id,contractRevision:id,visual:materialsVisualSchema,
-  imageBindings:z.array(materialsImageBindingSchema.omit({mediaId:true,mobileMediaId:true}).extend({assetId:id,mobileAssetId:id.optional()})).max(512),
+  imageBindings:z.array(materialsImageBindingSchema.omit({mediaId:true,mobileMediaId:true,evidenceMediaIds:true}).extend({assetId:id,mobileAssetId:id.optional(),evidenceAssetIds:z.array(id).min(1).max(11).optional()})).max(512),
   textBindings:z.array(materialsTextBindingSchema).max(1500),omittedSectionIds:z.array(id).max(100),
+  displaySelection:materialsDisplaySelectionSchema.optional(),
 });
 export interface MaterialsProvenance {
   submissionId:string;source:MaterialsSubmission['source'];contentSha256:string;snapshotKey:string;acceptedAt:string;

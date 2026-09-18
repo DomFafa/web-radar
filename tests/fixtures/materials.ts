@@ -3,7 +3,7 @@ import {getMaterialsTemplate} from '../../src/templates/materials';
 import {canonical,sha256} from '../../src/worker/http';
 export const materialsPng=Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=','base64'));
 export async function materialsFixture(productCount=1,templateId='juno-toys'):Promise<MaterialsSubmission>{
-  const profile=getMaterialsTemplate(templateId)!;
+  const profile=getMaterialsTemplate(templateId,templateId==='juno-toys'?'2026-09-17.juno-materials.2':undefined)!;
   const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',materialsPng))].map(v=>v.toString(16).padStart(2,'0')).join('');
   const products=Array.from({length:productCount},(_,i)=>({id:`p${i}`,sourceVersion:'1',name:`Actual toy ${i}`,description:`A confirmed wooden toy ${i}`,material:'Wood',dimensions:'10 cm',primaryMediaId:`m${i}`,galleryMediaIds:[`m${i}`],factReferences:['f1']}));
   const m:MaterialsSubmission={

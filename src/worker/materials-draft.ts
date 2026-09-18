@@ -4,18 +4,22 @@ import{ApiError}from'./http';
 
 export function validateMaterialsDraft(draft:Draft){
   const m=draft.materials;if(!m)return;
-  const profile=getMaterialsTemplate(m.templateId);
+  const profile=getMaterialsTemplate(m.templateId,m.contractRevision);
   if(!profile||draft.template!==m.templateId||draft.buildBranch!=='template'||!draft.templateConfirmed)throw new ApiError(409,'materials_template_conflict','已确认资料仅可使用匹配的模板；更换模板请在 Product Radar 重新准备资料。');
-  const ids=[...new Set(m.imageBindings.flatMap(b=>[b.assetId,...(b.mobileAssetId?[b.mobileAssetId]:[])]))];
-  const issues=validateMaterialsPositions({template:{id:m.templateId,contractRevision:m.contractRevision,guideRevision:profile.guideRevision},locales:draft.languages,omittedSectionIds:m.omittedSectionIds,
+  const ids=[...new Set([...m.imageBindings.flatMap(b=>[b.assetId,...(b.mobileAssetId?[b.mobileAssetId]:[])]),...draft.products.flatMap(p=>p.gallery?.map(g=>g.assetId)||[p.imageAssetId||''])])];
+  const issues=validateMaterialsPositions({template:{id:m.templateId,contractRevision:m.contractRevision,guideRevision:profile.guideRevision},locales:draft.languages,omittedSectionIds:m.omittedSectionIds,displaySelection:m.displaySelection,
     products:draft.products.map(p=>({id:p.id,primaryMediaId:p.imageAssetId||'',galleryMediaIds:p.gallery?.map(g=>g.assetId)||[p.imageAssetId||'']})),media:ids.map(id=>({id,mimeType:'image/png'})),
-    imageBindings:m.imageBindings.map(({assetId,mobileAssetId,...b})=>({...b,mediaId:assetId,mobileMediaId:mobileAssetId})),textBindings:m.textBindings});
+    imageBindings:m.imageBindings.map(({assetId,mobileAssetId,evidenceAssetIds,...b})=>({...b,mediaId:assetId,mobileMediaId:mobileAssetId,...(evidenceAssetIds?{evidenceMediaIds:evidenceAssetIds}:{})})),textBindings:m.textBindings});
   if(issues.length)throw new ApiError(422,issues[0].code,`资料位置校验未通过：${issues[0].message}`);
 }
 export function preserveMaterialsEdit(previous:Draft,next:Draft){
   if(!previous.materials){if(next.materials)throw new ApiError(403,'materials_receipt_required','新版建站资料必须通过已确认的资料接收入口创建。');return;}
   if(!next.materials)next.materials=structuredClone(previous.materials);
   const m=next.materials;
+  if(previous.materials.displaySelection){
+    if(!m.displaySelection)m.displaySelection=structuredClone(previous.materials.displaySelection);
+    if(JSON.stringify(m.displaySelection)!==JSON.stringify(previous.materials.displaySelection))throw new ApiError(409,'materials_rebind_required','更换展示产品或顺序请在 Product Radar 重新确认资料。');
+  }
   if(m.templateId!==previous.materials.templateId||m.contractRevision!==previous.materials.contractRevision||JSON.stringify(next.languages)!==JSON.stringify(previous.languages))throw new ApiError(409,'materials_rebind_required','更换模板、规范或语言请重新确认对应资料。');
   if(next.brandColor!==previous.brandColor)m.visual.palette.primary=next.brandColor;else next.brandColor=m.visual.palette.primary;
   if(next.company.description!==previous.company.description&&next.copy.en?.about===previous.copy.en?.about&&next.copy.en)next.copy.en.about=next.company.description;

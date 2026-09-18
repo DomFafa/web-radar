@@ -10,7 +10,7 @@ const copyFields={'hero-headline':'headline','hero-subtitle':'subtitle','primary
 export function MaterialsEditor({projectId,draft,disabled,onChange,onUpload,onPreview}:{projectId:string;draft:Draft;disabled:boolean;onChange:(patch:Partial<Draft>)=>void;onUpload:(file:File,apply:(asset:Asset)=>void)=>Promise<void>;onPreview:()=>void}){
   const[profile,setProfile]=useState<MaterialsTemplateContract>();const[error,setError]=useState('');
   const materials=draft.materials!;
-  useEffect(()=>{let active=true;api<MaterialsTemplateContract>(`/api/internal/template-guides/materials/${encodeURIComponent(materials.templateId)}`).then(p=>{if(active)setProfile(p)}).catch(e=>{if(active)setError(errorMessage(e))});return()=>{active=false}},[materials.templateId]);
+  useEffect(()=>{let active=true;setProfile(undefined);setError('');api<MaterialsTemplateContract>(`/api/internal/template-guides/materials/${encodeURIComponent(materials.templateId)}?contractRevision=${encodeURIComponent(materials.contractRevision)}`).then(p=>{if(active)setProfile(p)}).catch(e=>{if(active)setError(errorMessage(e))});return()=>{active=false}},[materials.templateId,materials.contractRevision]);
   const change=(next:AppliedMaterials)=>onChange({materials:next,brandColor:next.visual.palette.primary});
   const image=(index:number,patch:Partial<AppliedMaterials['imageBindings'][number]>)=>change({...materials,imageBindings:materials.imageBindings.map((b,i)=>i===index?{...b,...patch}:b)});
   const copy=(index:number,text:string)=>{
@@ -32,8 +32,8 @@ export function MaterialsEditor({projectId,draft,disabled,onChange,onUpload,onPr
       </Field>})}
     </div></details>)}
     <details className="optional-setup"><summary>页面图片与手机裁切</summary><div className="panel">
-      {materials.imageBindings.map((binding,index)=>{if(binding.slotId==='product-main'||binding.slotId==='product-gallery')return null;const spec=profile?.imageSlots.find(s=>s.id===binding.slotId);return <section key={binding.slotId} style={{borderBottom:'1px solid var(--border)',padding:'20px 0'}}>
-        <h4>{spec?pages[spec.page]:''} · 图片 {index+1}</h4><div className="brand-upload-grid"><AssetView projectId={projectId} assetId={binding.assetId} alt={binding.alt.en||''}/><div className="form-grid">
+      {materials.imageBindings.map((binding,index)=>{if(binding.slotId==='product-main'||binding.slotId==='product-gallery')return null;const spec=profile?.imageSlots.find(s=>s.id===binding.slotId);const role=binding.role?{scene:'场景图',front:'单品正面图',packaging:'包装图',collection:'产品集合图'}[binding.role]:'';const product=draft.products.find(p=>p.id===binding.productId);return <section key={`${binding.slotId}:${binding.productId||''}`} style={{borderBottom:'1px solid var(--border)',padding:'20px 0'}}>
+        <h4>{spec?pages[spec.page]:''} · {role||`图片 ${index+1}`}{product?` · ${product.name}`:''}</h4><div className="brand-upload-grid"><AssetView projectId={projectId} assetId={binding.assetId} alt={binding.alt.en||''}/><div className="form-grid">
           <Field label="替换图片"><input type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled} onChange={e=>{const file=e.target.files?.[0];if(file)void onUpload(file,asset=>image(index,{assetId:asset.id}));e.target.value=''}}/></Field>
           <Field label="手机专用图片（选填）"><input type="file" accept="image/png,image/jpeg,image/webp" disabled={disabled} onChange={e=>{const file=e.target.files?.[0];if(file)void onUpload(file,asset=>image(index,{mobileAssetId:asset.id}));e.target.value=''}}/></Field>
           <Field label="显示方式"><select value={binding.fit} disabled={disabled} onChange={e=>image(index,{fit:e.target.value as 'cover'|'contain'})}><option value="contain">显示完整图片</option><option value="cover">铺满图片位置</option></select></Field>

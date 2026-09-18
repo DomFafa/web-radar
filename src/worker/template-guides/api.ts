@@ -77,7 +77,7 @@ export function createTemplateGuidesApp() {
     return {templateId:g.templateId,name:g.name,guideRevision:g.revision,contractRevision:profile?.contractRevision??null,thumbnailUrl:`/templates/previews/${g.templateId}.jpg`,pages:[...materialsPages],materialsReady:!!profile?.materialsReady,requirementsPath:`/api/internal/template-guides/materials/${g.templateId}`,previewPath:`/api/internal/template-guides/materials/${g.templateId}/preview`};
   })}));
   app.get('/materials/:id/preview',(c)=>{
-    const profile=getMaterialsTemplate(c.req.param('id'));
+    const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
     const page=c.req.query('page')||'home',lang=c.req.query('lang')||'en';
     if(!materialsPages.includes(page as never)||!materialsLocales.includes(lang as never))throw new ApiError(400,'invalid_preview','页面或语言无效。');
@@ -86,7 +86,7 @@ export function createTemplateGuidesApp() {
     return c.json({templateId:profile.templateId,contractRevision:profile.contractRevision,page,html,assetBaseUrl:c.env.APP_ORIGIN||new URL(c.req.url).origin,demo:true});
   });
   app.get('/materials/:id',(c)=>{
-    const profile=getMaterialsTemplate(c.req.param('id'));
+    const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
     return c.json(profile);
   });

@@ -4,6 +4,7 @@ import { referenceLayouts } from '../../templates/themes/referenceLayouts';
 import { junoMaterialsImageSlots } from '../../templates/materials';
 import { sensengMaterialInventory } from '../../templates/materials-senseng';
 import { defaultDraft } from '../domain';
+import { junoDisplayRevision } from '../../templates/juno-display';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
@@ -14,6 +15,9 @@ export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Langua
   const juno=profile.templateId==='juno-toys',layout=referenceLayouts['juno-toys'];
   const names=juno?['Dolls Trailer','Construction Cup','Teddy Bear Toy','Emergency Truck','Skywinder Toy','Excavator Toy']:['Star Cat','Heart Cat','Desk Cat','Penguin','Crunchy Pup','Yellow Cat','Narwhal','Sunshine Cat'];
   draft.products=names.map((name,i)=>({id:`demo-${i}`,name,description:'Example product. Request the current specifications and available options for your assortment.',material:'',dimensions:'',imageAssetId:juno?layout.slots[[4,5,6,7,10,11][i]].src:`/templates/senseng/products-${i+1}.jpg`}));
+  const display=profile.contractRevision===junoDisplayRevision;
+  if(display)draft.products=draft.products.slice(0,4).map((p,i)=>({...p,name:`Example toy ${i+1}`,imageAssetId:`/templates/juno-display-demo/front-${i}.svg`}));
+  const displaySelection=display?{sceneProductIds:draft.products.map(p=>p.id),featuredProductIds:draft.products.map(p=>p.id)}:undefined;
   draft.primaryProductId=draft.products[0].id;
   const copy={headline:'Discover your next toy collection',subtitle:'Browse the collection, explore product details and start a conversation about your retail assortment.',cta:'Request product details',about:draft.company.description};
   for(const locale of draft.languages)draft.copy[locale]={...copy};
@@ -34,10 +38,14 @@ export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Langua
   const sensengImages=juno?[]:Object.entries(sensengMaterialInventory(profile.templateId as 'senseng-clean'|'senseng-video').images).flatMap(([,images])=>Object.entries(images));
   const imageBindings=profile.imageSlots.flatMap(slot=>{
     if(slot.id==='product-gallery')return[];
-    const targets=slot.id==='product-main'?draft.products:[undefined];
-    return targets.map(product=>({slotId:slot.id,...(product?{productId:product.id}:{}),assetId:product?.imageAssetId||(slot.id.startsWith('hero-slide-')?'/templates/references/'+hero[Number(slot.id.slice(-1))]:slot.id.startsWith('home-image-')?junoMaterialsImageSlots[Number(slot.id.slice(11))].src:sensengImages.find(([,id])=>id===slot.id)![0]),fit:slot.fit,focalPoint:{x:.5,y:.5},alt:Object.fromEntries(draft.languages.map(locale=>[locale,product?.name||'Template demonstration image']))}));
+    const targets=slot.id==='product-main'||slot.repeat==='per-selection'?draft.products:display&&slot.role==='scene'?[draft.products[0]]:[undefined];
+    return targets.map(product=>{
+      const index=product?draft.products.indexOf(product):0;
+      const displayAsset=display&&slot.role?`/templates/juno-display-demo/${slot.role==='collection'?`collection-${slot.id==='collection-banner-mid'?3:slot.id.slice(-1)}`:`${slot.role}-${index}`}.svg`:undefined;
+      return {slotId:slot.id,...(product?{productId:product.id}:{}),...(slot.role?{role:slot.role,depictedProductIds:slot.role==='collection'?draft.products.map(p=>p.id):[product!.id]}:{}),assetId:displayAsset||product?.imageAssetId||(slot.id.startsWith('hero-slide-')?'/templates/references/'+hero[Number(slot.id.slice(-1))]:slot.id.startsWith('home-image-')?junoMaterialsImageSlots[Number(slot.id.slice(11))].src:sensengImages.find(([,id])=>id===slot.id)![0]),fit:slot.fit,focalPoint:{x:.5,y:.5},alt:Object.fromEntries(draft.languages.map(locale=>[locale,display?`Illustrated example: ${product?.name||'complete collection'} ${slot.role||''}`:product?.name||'Template demonstration image']))};
+    });
   });
-  draft.materials={templateId:profile.templateId,contractRevision:profile.contractRevision,visual:{palette:{primary:'#236BB0',secondary:'#E9AB4D',background:'#FAFBFF',surface:'#FFFFFF',text:'#20263E',mutedText:'#626B7E'},backgroundStyle:'plain',imageTreatment:'natural',compositionSummary:'Public template demonstration using bundled sample imagery.'},textBindings,imageBindings,omittedSectionIds:profile.optionalSections.map(s=>s.id)};
+  draft.materials={templateId:profile.templateId,contractRevision:profile.contractRevision,...(displaySelection?{displaySelection}:{}),visual:{palette:{primary:'#236BB0',secondary:'#E9AB4D',background:'#FAFBFF',surface:'#FFFFFF',text:'#20263E',mutedText:'#626B7E'},backgroundStyle:'plain',imageTreatment:'natural',compositionSummary:'Public template demonstration using bundled sample imagery.'},textBindings,imageBindings,omittedSectionIds:profile.optionalSections.map(s=>s.id)};
   draft.brandColor=draft.materials.visual.palette.primary;
   return draft;
 }

@@ -3,6 +3,7 @@ import type { ConfirmedMaterials, MaterialsTemplateContract } from '../shared/ma
 import { materialsPages } from '../shared/materials';
 import { referenceLayouts } from './themes/referenceLayouts';
 import { sensengMaterialInventory } from './materials-senseng';
+import { junoDisplayContract, junoDisplayRevision, junoLegacyRevision, validateJunoDisplay } from './juno-display';
 
 type Node=DefaultTreeAdapterMap['node'];
 type Element=DefaultTreeAdapterMap['element'];
@@ -92,9 +93,14 @@ function prepareJuno(){
   };
   const result={html:serialize(root),contract};prepared.set('juno-toys',result);return result;
 }
-export function getMaterialsTemplate(id:string):MaterialsTemplateContract|undefined {
-  if(id==='senseng-clean'||id==='senseng-video')return structuredClone(sensengMaterialInventory(id).profile);
-  return id==='juno-toys'?structuredClone(prepareJuno().contract):undefined;
+export function getMaterialsTemplate(id:string,contractRevision?:string):MaterialsTemplateContract|undefined {
+  if(id==='senseng-clean'||id==='senseng-video'){
+    const profile=sensengMaterialInventory(id).profile;
+    return !contractRevision||contractRevision===profile.contractRevision?structuredClone(profile):undefined;
+  }
+  if(id!=='juno-toys')return;
+  if(contractRevision===junoLegacyRevision)return structuredClone(prepareJuno().contract);
+  if(!contractRevision||contractRevision===junoDisplayRevision)return junoDisplayContract(prepareJuno().contract);
 }
 export function prepareMaterialsReference(id:string):string {
   if(id!=='juno-toys')throw new Error('Unsupported materials template');
@@ -102,13 +108,14 @@ export function prepareMaterialsReference(id:string):string {
 }
 export interface MaterialsIssue {path:string;code:string;message:string}
 /** Position validation is separate from structural wire parsing and has no network side effects. */
-type PositionInput=Pick<ConfirmedMaterials,'template'|'omittedSectionIds'|'imageBindings'|'textBindings'|'locales'> & {products:Array<Pick<ConfirmedMaterials['products'][number],'id'|'primaryMediaId'|'galleryMediaIds'>>;media:Array<Pick<ConfirmedMaterials['media'][number],'id'|'mimeType'>>};
+export type PositionInput=Pick<ConfirmedMaterials,'template'|'omittedSectionIds'|'imageBindings'|'textBindings'|'locales'|'displaySelection'> & {products:Array<Pick<ConfirmedMaterials['products'][number],'id'|'primaryMediaId'|'galleryMediaIds'>>;media:Array<Pick<ConfirmedMaterials['media'][number],'id'|'mimeType'> & {sha256?:string}>};
 export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
   const issues:MaterialsIssue[]=[];
   const add=(path:string,code:string,message:string)=>issues.push({path,code,message});
-  const p=getMaterialsTemplate(m.template.id);
+  const p=getMaterialsTemplate(m.template.id,m.template.contractRevision);
   if(!p){add('materials.template','unsupported_template','Template is not materials-ready');return issues;}
   if(p.guideRevision!==m.template.guideRevision||p.contractRevision!==m.template.contractRevision){add('materials.template','contract_revision_conflict','Read the current template requirements');return issues;}
+  if(p.contractRevision===junoDisplayRevision)issues.push(...validateJunoDisplay(m,p));
   for(const s of p.optionalSections)if(!m.omittedSectionIds.includes(s.id))add('materials.omittedSectionIds','unsupported_section',`Omit ${s.id} for this revision`);
   for(const id of m.omittedSectionIds)if(!p.optionalSections.some(s=>s.id===id))add('materials.omittedSectionIds','unsupported_section',`Unknown section ${id}`);
   for(const [kind,bindings,slots] of [['image',m.imageBindings,p.imageSlots],['text',m.textBindings,p.textSlots]] as const){
@@ -117,7 +124,7 @@ export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
       if(!slot){add(`materials.${kind}Bindings`,'unsupported_slot',b.slotId);continue;}
       if(slot.repeat==='once'&&b.itemIndex!==undefined)add(`materials.${kind}Bindings`,'invalid_target',b.slotId);
       if(b.productId&&!m.products.some(p=>p.id===b.productId))add(`materials.${kind}Bindings`,'unknown_product',b.slotId);
-      if(slot.repeat.startsWith('per-product')&&!b.productId)add(`materials.${kind}Bindings`,'missing_product',b.slotId);
+      if((slot.repeat.startsWith('per-product')||slot.repeat==='per-selection')&&!b.productId)add(`materials.${kind}Bindings`,'missing_product',b.slotId);
       if('text' in b&&'maxCodePoints' in slot&&[...b.text].length>slot.maxCodePoints)add('materials.textBindings','copy_too_long',b.slotId);
       if(kind==='image'&&'mediaId' in b&&'allowedMimeTypes' in slot){
         for(const locale of m.locales)if(!b.alt[locale]?.trim())add('materials.imageBindings','missing_alt',`${b.slotId}:${locale}`);
@@ -128,7 +135,7 @@ export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
       }
     }
     for(const slot of slots){
-      const targets=slot.repeat==='per-product'?m.products.map(p=>p.id):[undefined];
+      const targets=slot.repeat==='per-product'?m.products.map(p=>p.id):slot.repeat==='per-selection'?(m.displaySelection?.['selectionGroup'in slot&&slot.selectionGroup==='scene'?'sceneProductIds':'featuredProductIds']||[]):[undefined];
       for(const productId of targets){
         const locales=kind==='text'?m.locales:[undefined];
         for(const locale of locales){

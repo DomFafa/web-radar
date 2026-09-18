@@ -27,6 +27,15 @@ describe('materials guide account boundary',()=>{
   it('does not grant the integration secret access to legacy template guides',async()=>{
     expect((await get('juno-toys')).status).toBe(401);
   });
+  it('reads and previews exact legacy contracts while the catalog advertises v3',async()=>{
+    const legacy='2026-09-17.juno-materials.2';
+    const response=await get(`materials/juno-toys?contractRevision=${legacy}`);
+    expect((await response.json()as any).contractRevision).toBe(legacy);
+    const preview=await get(`materials/juno-toys/preview?contractRevision=${legacy}`);
+    const body=await preview.json()as any;expect(body.contractRevision).toBe(legacy);expect(body.html).not.toContain('data-wr-display-role');
+    expect((await get('materials/juno-toys?contractRevision=unknown')).status).toBe(404);
+    expect((await get('materials/juno-toys/preview?contractRevision=unknown')).status).toBe(404);
+  });
   it('previews the B2B materials branch without retail prices or fabricated testimonials',async()=>{
     const response=await get('materials/juno-toys/preview?page=home');const {html}=await response.json()as any;
     expect(html.includes('wr-materials-site')).toBe(true);

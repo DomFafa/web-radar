@@ -4,6 +4,8 @@ import type{AppliedMaterials}from'../shared/materials';
 import{prepareMaterialsReference}from'./materials';
 import{esc,safeUrl,type RenderOptions,type ThemeContext}from'./themes/types';
 import{prepareSensengMaterials}from'./materials-senseng';
+import{junoDisplayRevision}from'./juno-display';
+import{renderJunoDisplay,junoDisplayStyle}from'./juno-display-render';
 
 type Binding=AppliedMaterials['imageBindings'][number];
 const position=(p:Binding['focalPoint'])=>`${p.x*100}% ${p.y*100}%`;
@@ -22,7 +24,9 @@ export function materialProductImage(draft:Draft,options:RenderOptions,product:P
 }
 export function materialsReferenceBody(draft:Draft,options:RenderOptions):string{
   const materials=draft.materials!;
-  let markup=prepareMaterialsReference(draft.template)
+  let markup=prepareMaterialsReference(draft.template);
+  if(materials.contractRevision===junoDisplayRevision)markup=renderJunoDisplay(markup,draft,options);
+  markup=markup
     .replace(/__WR_MATERIAL_TEXT_(\d+)__/g,(_,index:string)=>esc(materials.textBindings.find(b=>b.slotId===`layout-text-${index}`&&b.locale===options.lang)?.text||''))
     .replaceAll('__WR_MATERIAL_SUBTITLE__',esc(draft.copy[options.lang]?.subtitle||''))
     .replaceAll('__WR_MATERIAL_CTA__',esc(draft.copy[options.lang]?.cta||''));
@@ -44,7 +48,8 @@ function bindMaterialsImages(markup:string,draft:Draft,options:RenderOptions):st
     if('tagName'in node){
       // Remove the unsupported promo and spacing left by omitted news/brands only
       // at render time, after the published layout-text slots have been assigned.
-      if(draft.template==='juno-toys'&&node.tagName==='section'&&['6f48de11','67fddce','7b2b7e3','87636bb','54828a1'].includes(node.attrs.find(a=>a.name==='data-id')?.value||'')){
+      const id=node.attrs.find(a=>a.name==='data-id')?.value||'';
+      if(draft.template==='juno-toys'&&node.tagName==='section'&&(['67fddce','7b2b7e3','87636bb','54828a1'].includes(id)||(id==='6f48de11'&&materials.contractRevision!==junoDisplayRevision))){
         node.parentNode!.childNodes=node.parentNode!.childNodes.filter(n=>n!==node);return;
       }
       if((node.attrs.find(a=>a.name==='class')?.value||'').split(/\s+/).includes('senseng-thumb-btn')){node.attrs=node.attrs.filter(a=>a.name!=='onclick');node.attrs.push({name:'data-wr-material-thumb',value:''});}
@@ -52,7 +57,8 @@ function bindMaterialsImages(markup:string,draft:Draft,options:RenderOptions):st
       const source=node.attrs.find(a=>a.name==='src')?.value;
       const productBinding=!slot&&node.tagName==='img'?materials.imageBindings.find(b=>b.productId&&options.assetUrl(b.assetId)===source):undefined;
       if(slot||productBinding){
-        const binding=productBinding||materials.imageBindings.find(b=>b.slotId===slot);
+        const productId=node.attrs.find(a=>a.name==='data-wr-material-product')?.value;
+        const binding=productBinding||materials.imageBindings.find(b=>b.slotId===slot&&(!productId||b.productId===productId));
         if(!binding)throw Error(`Missing validated materials binding ${slot}`);
         slot=binding.slotId;
         if(node.tagName==='video'){
@@ -123,7 +129,7 @@ export function materialsThemeStyle(draft:Draft):string{
     .wr-materials-site.juno-toys .wr-juno-clouds{display:none}
     .wr-materials-site.juno-toys .wr-juno-hero>button{top:auto;bottom:18px}
   }
-  </style>`;
+  ${draft.materials.contractRevision===junoDisplayRevision?junoDisplayStyle:''}</style>`;
 }
 export function materialsSeo(draft:Draft,options:RenderOptions):{title:string;description:string}|undefined{
   if(!draft.materials)return;
