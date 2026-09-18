@@ -18,7 +18,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
       <video id="hero-video" autoplay muted loop playsinline preload="metadata"${posterUrl ? ` poster="${esc(posterUrl)}"` : ''}>
         <source src="${esc(videoUrl)}" type="video/mp4">
       </video>
-      <div class="wrap hero-content">
+      <div class="wrap hero-content" data-reveal="fade-up">
         <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);padding:6px 16px;border-radius:9999px;margin-bottom:20px;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;"></span>
           <span style="font-size:0.82rem;font-weight:600;color:#c7d2fe;letter-spacing:0.04em;">NEW RELEASE · INTELLIGENT WORKFLOW ENGINE 3.0</span>
@@ -53,21 +53,21 @@ export function renderSaasHome(ctx: ThemeContext): string {
   // Real-time Metrics Band
   const metricsHtml = `
     <section id="metrics" class="wrap" style="padding:40px 0;">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
-        <div data-reveal="fade-up">
-          <div style="font-size:2.4rem;font-weight:900;color:#6366f1;letter-spacing:-1px;" data-counter="99.99">99.99%</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#6366f1;letter-spacing:-1px;" data-counter="99.99" data-suffix="%">99.99%</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Uptime SLA Guarantee</div>
         </div>
-        <div data-reveal="fade-up">
-          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;" data-counter="10">10x Faster</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;" data-counter="10" data-suffix="x Faster">10x Faster</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Deployment & Sync Cycles</div>
         </div>
-        <div data-reveal="fade-up">
-          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;" data-counter="240">240M+</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;" data-counter="240" data-suffix="M+">240M+</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Automated Events Processed</div>
         </div>
-        <div data-reveal="fade-up">
-          <div style="font-size:2.4rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">Zero Code</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;" data-counter="100" data-suffix="% Zero Code">100% Zero Code</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Visual Trigger Configuration</div>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
   const products = draft.products.slice(0, 6);
   const productsHtml = `
     <section class="wrap chapter">
-      <div class="section-top">
+      <div class="section-top" data-reveal="fade-up">
         <div>
           <span class="eyebrow" style="color:#6366f1;">INTELLIGENT MODULES</span>
           <h2>Automated Ecosystem & Features</h2>
@@ -93,7 +93,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
           const imgUrl = ctx.productMainImage(p);
           const icon = ['⚡', '🔄', '🛡️', '📊', '🌐', '🧩'][idx % 6];
           return `
-            <article class="product-card">
+            <article class="product-card wr-card-hover" data-reveal="fade-up">
               ${imgUrl ? `<div class="product-image" style="border-radius:10px;overflow:hidden;margin-bottom:16px;max-height:180px;"><img src="${esc(imgUrl)}" alt="${esc(t.name)}" loading="lazy"></div>` : `<div style="font-size:2.2rem;margin-bottom:16px;">${icon}</div>`}
               <h3 style="margin:0 0 10px;font-size:1.3rem;color:#f8fafc;">${esc(t.name)}</h3>
               <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0 0 20px;">${esc(t.description || 'Pre-configured workflow automation integration module.')}</p>
@@ -109,8 +109,8 @@ export function renderSaasHome(ctx: ThemeContext): string {
 
   // Story & Architecture
   const storyHtml = `
-    <section class="wrap story" style="border-top:1px solid #1e293b;">
-      <div class="story-visual" style="background:#121826;border:1px solid #1e293b;border-radius:16px;display:flex;align-items:center;justify-content:center;padding:32px;">
+    <section class="wrap story" style="border-top:1px solid #1e293b;" data-reveal="fade-up">
+      <div class="story-visual wr-hero-float wr-card-hover" style="background:#121826;border:1px solid #1e293b;border-radius:16px;display:flex;align-items:center;justify-content:center;padding:32px;">
         <div style="width:100%;text-align:center;">
           <div style="font-size:4rem;margin-bottom:12px;">⚙️</div>
           <div style="font-weight:700;color:#6366f1;font-size:1.2rem;">Enterprise Cloud Bus</div>
@@ -132,7 +132,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
 
   // Integration Ecosystem Band
   const integrationHtml = `
-    <section class="wrap" style="padding:60px 0 40px;">
+    <section class="wrap" style="padding:60px 0 40px;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:32px;">
         <span class="eyebrow" style="color:#818cf8;">SEAMLESS INTEGRATIONS</span>
         <h2 style="font-size:2rem;margin:12px 0 8px;color:#f8fafc;">Connect with 200+ Platforms & APIs</h2>
@@ -140,7 +140,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
         ${['Salesforce CRM', 'HubSpot', 'Stripe Payments', 'AWS Lambda', 'Google Cloud', 'Shopify', 'Slack', 'Zapier'].map(name => `
-          <div style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:20px;text-align:center;transition:border-color 0.3s;">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:12px;padding:20px;text-align:center;transition:border-color 0.3s;">
             <div style="font-size:1.6rem;margin-bottom:8px;">🔗</div>
             <div style="font-size:0.9rem;font-weight:700;color:#e2e8f0;">${name}</div>
           </div>
@@ -151,13 +151,13 @@ export function renderSaasHome(ctx: ThemeContext): string {
 
   // Testimonials
   const testimonialsHtml = `
-    <section class="wrap" style="padding:60px 0;">
+    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:40px;">
         <span class="eyebrow" style="color:#6366f1;">WHAT OUR CLIENTS SAY</span>
         <h2 style="font-size:2rem;margin:12px 0;color:#f8fafc;">Trusted by Industry Leaders</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;">
-        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
           <div style="color:#fbbf24;font-size:1.1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#cbd5e1;line-height:1.7;font-size:0.95rem;margin:0 0 16px;">"This platform cut our deployment cycles by 70%. The visual workflow builder is incredibly intuitive for our team."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -165,7 +165,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
             <div><div style="color:#f8fafc;font-weight:600;font-size:0.9rem;">James Mitchell</div><div style="color:#64748b;font-size:0.8rem;">CTO, FinTech Solutions</div></div>
           </div>
         </div>
-        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
           <div style="color:#fbbf24;font-size:1.1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#cbd5e1;line-height:1.7;font-size:0.95rem;margin:0 0 16px;">"The real-time analytics dashboard gives us actionable insights. We've increased conversion rates by 340% in 6 months."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -173,7 +173,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
             <div><div style="color:#f8fafc;font-weight:600;font-size:0.9rem;">Sarah Kim</div><div style="color:#64748b;font-size:0.8rem;">VP Growth, E-Commerce Inc</div></div>
           </div>
         </div>
-        <div style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:28px;">
           <div style="color:#fbbf24;font-size:1.1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#cbd5e1;line-height:1.7;font-size:0.95rem;margin:0 0 16px;">"Enterprise-grade security with zero-code configuration. Best automation platform we've evaluated in our 10-year history."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -186,7 +186,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
   `;
 
   const contactBandHtml = `
-    <section class="contact-band" style="background:#121826;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;">
+    <section class="contact-band" data-reveal="fade-up" style="background:#121826;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;">
       <div class="wrap">
         <div>
           <span class="eyebrow" style="color:#818cf8;">GET IN TOUCH</span>
@@ -227,22 +227,22 @@ export function renderSaasAbout(ctx: ThemeContext): string {
   `;
 
   const metricsHtml = `
-    <section class="wrap" style="padding:48px 0 32px;">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#bef264;letter-spacing:-1px;">99.99%</div>
+    <section class="wrap" style="padding:48px 0 32px;" data-reveal="fade-up">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#bef264;letter-spacing:-1px;" data-counter="99.99" data-suffix="%">99.99%</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Uptime SLA Guarantee</div>
         </div>
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">10x Faster</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;" data-counter="10" data-suffix="x Faster">10x Faster</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Deployment & Sync Cycles</div>
         </div>
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;">240M+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#a855f7;letter-spacing:-1px;" data-counter="240" data-suffix="M+">240M+</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Automated Events Processed</div>
         </div>
-        <div>
-          <div style="font-size:2.4rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">Zero Code</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+          <div style="font-size:2.4rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;" data-counter="100" data-suffix="% Zero Code">100% Zero Code</div>
           <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">Visual Trigger Configuration</div>
         </div>
       </div>
@@ -539,7 +539,7 @@ export function renderSaasCatalog(ctx: ThemeContext): string {
           const icon = ['⚡', '🔄', '🛡️', '📊', '🌐', '🧩'][idx % 6];
           const imgUrl = asset(p.imageAssetId);
           return `
-            <article style="background:#121826;border:1px solid #1e293b;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
               ${imgUrl ? `
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#090d16;overflow:hidden;">
                   <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">

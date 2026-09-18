@@ -58,7 +58,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:48px;align-items:center;position:relative;z-index:2;">
         <!-- Left Column: Copy, Tech Badges, CTAs -->
-        <div class="wr-arcade-hero-left">
+        <div class="wr-arcade-hero-left" data-reveal="fade-up">
           <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,245,212,0.08);border:1px solid #00f5d4;padding:6px 16px;border-radius:4px;margin-bottom:20px;">
             <span style="color:#00f5d4;font-family:monospace;font-size:0.8rem;font-weight:900;letter-spacing:0.08em;">
               ⚡ SENSENG SENSORY LAB // VER. 3.0
@@ -86,19 +86,19 @@ export function renderArcadeHome(ctx: ThemeContext): string {
           <!-- Dynamic Number Counters (Run on Viewport Scroll) -->
           <div style="margin-top:44px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:20px;border-top:1px solid #1e293b;padding-top:28px;">
             <div>
-              <div style="font-size:1.9rem;font-weight:900;color:#00f5d4;font-family:monospace;" data-counter="1500000" data-suffix="+">
+              <div style="font-size:1.9rem;font-weight:900;color:#00f5d4;font-family:monospace;" data-counter>
                 1,500,000+
               </div>
               <div style="font-size:0.8rem;color:#64748b;margin-top:4px;font-family:monospace;">${isZh ? '全球极客交付量' : 'UNITS SHIPPED'}</div>
             </div>
             <div>
-              <div style="font-size:1.9rem;font-weight:900;color:#f72585;font-family:monospace;" data-counter="48" data-suffix=" LABS">
+              <div style="font-size:1.9rem;font-weight:900;color:#f72585;font-family:monospace;" data-counter>
                 48 LABS
               </div>
               <div style="font-size:0.8rem;color:#64748b;margin-top:4px;font-family:monospace;">${isZh ? '权威安全检测' : 'SAFETY CERTS'}</div>
             </div>
             <div>
-              <div style="font-size:1.9rem;font-weight:900;color:#7209b7;font-family:monospace;" data-counter="50000" data-suffix=" CYCLES">
+              <div style="font-size:1.9rem;font-weight:900;color:#7209b7;font-family:monospace;" data-counter>
                 50,000 CYCLES
               </div>
               <div style="font-size:0.8rem;color:#64748b;margin-top:4px;font-family:monospace;">${isZh ? '高弹挤压耐久测试' : 'DURABILITY TESTS'}</div>
@@ -107,8 +107,8 @@ export function renderArcadeHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Column: 3D HUD Stage Showcase -->
-        <div class="wr-arcade-hero-right" style="position:relative;text-align:center;">
-          <div class="wr-arcade-hud" style="background:#0f172a;border:2px solid #00f5d4;border-radius:16px;padding:36px;box-shadow:0 0 35px rgba(0,245,212,0.25), inset 0 0 20px rgba(0,245,212,0.1);position:relative;max-width:480px;margin:0 auto;">
+        <div class="wr-arcade-hero-right" style="position:relative;text-align:center;" data-reveal="fade-up">
+          <div class="wr-arcade-hud wr-hero-float wr-card-hover" style="background:#0f172a;border:2px solid #00f5d4;border-radius:16px;padding:36px;box-shadow:0 0 35px rgba(0,245,212,0.25), inset 0 0 20px rgba(0,245,212,0.1);position:relative;max-width:480px;margin:0 auto;">
             <!-- Corner Decors -->
             <div style="position:absolute;top:-4px;left:-4px;width:16px;height:16px;border-top:3px solid #f72585;border-left:3px solid #f72585;"></div>
             <div style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-top:3px solid #f72585;border-right:3px solid #f72585;"></div>
@@ -149,7 +149,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
   // 3. Tactile Physics Benchmark (Dynamic Progress Bars)
   const physicsProgressHtml = `
     <section id="arcade-physics" class="wrap" style="padding:60px 0;" data-reveal="fade-up">
-      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:36px 40px;box-shadow:0 12px 30px rgba(0,0,0,0.3);">
+      <div class="wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:36px 40px;box-shadow:0 12px 30px rgba(0,0,0,0.3);">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
           <div>
             <span style="color:#00f5d4;font-family:monospace;font-size:0.8rem;font-weight:900;">// PHYSICAL BENCHMARKS</span>
@@ -217,7 +217,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
   // 4. Cyber Blind Box / Arcade Products Grid
   const productsGridHtml = `
-    <section class="wrap" style="padding:40px 0 70px;">
+    <section class="wrap" style="padding:40px 0 70px;" data-reveal="fade-up">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
         <div>
           <span style="color:#f72585;font-family:monospace;font-size:0.82rem;font-weight:900;">[ ARCADE ROSTER // 8 BESTSELLERS ]</span>
@@ -232,7 +232,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
       <div class="wr-arcade-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:28px;">
         ${products.slice(0, 8).map((p, idx) => `
-          <div class="wr-arcade-card" data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,border-color 0.25s,box-shadow 0.25s;position:relative;">
+          <div class="wr-arcade-card wr-card-hover" data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,border-color 0.25s,box-shadow 0.25s;position:relative;">
             <div style="position:relative;background:#151d2f;padding:28px 20px;text-align:center;border-bottom:1px solid #1e293b;">
               <span style="position:absolute;top:12px;left:12px;background:#090d16;color:#00f5d4;border:1px solid #00f5d4;font-family:monospace;font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:3px;">
                 SLOT // 0${idx + 1}
@@ -273,7 +273,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
   // 5. Factory Specs & Cleanroom Banner
   const factoryBannerHtml = `
     <section class="wrap" style="padding:20px 0 70px;" data-reveal="fade-up">
-      <div style="background:linear-gradient(135deg,#0f172a 0%, #1e1b4b 50%, #172554 100%);border:2px solid #3b82f6;border-radius:16px;padding:50px 40px;color:#ffffff;box-shadow:0 16px 40px rgba(59,130,246,0.2);">
+      <div class="wr-card-hover" style="background:linear-gradient(135deg,#0f172a 0%, #1e1b4b 50%, #172554 100%);border:2px solid #3b82f6;border-radius:16px;padding:50px 40px;color:#ffffff;box-shadow:0 16px 40px rgba(59,130,246,0.2);">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:36px;align-items:center;">
           <div>
             <span style="color:#38bdf8;font-family:monospace;font-size:0.82rem;font-weight:900;">// INDUSTRIAL CAPABILITY MATRIX</span>
@@ -291,20 +291,20 @@ export function renderArcadeHome(ctx: ThemeContext): string {
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-            <div style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
-              <div style="font-size:2.2rem;font-weight:900;color:#00f5d4;font-family:monospace;" data-counter="1200000" data-suffix="+">1.2M+</div>
+            <div class="wr-card-hover" style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
+              <div style="font-size:2.2rem;font-weight:900;color:#00f5d4;font-family:monospace;" data-counter>1,200,000+</div>
               <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">${isZh ? '月度产能 (Monthly Units)' : 'Monthly Output'}</div>
             </div>
-            <div style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
-              <div style="font-size:2.2rem;font-weight:900;color:#f72585;font-family:monospace;" data-counter="72" data-suffix="h">72h</div>
+            <div class="wr-card-hover" style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
+              <div style="font-size:2.2rem;font-weight:900;color:#f72585;font-family:monospace;" data-counter>72h</div>
               <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">${isZh ? '极速打样 (Rapid Sampling)' : 'Rapid Prototype'}</div>
             </div>
-            <div style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
-              <div style="font-size:2.2rem;font-weight:900;color:#38bdf8;font-family:monospace;" data-counter="60" data-suffix="+">60+</div>
+            <div class="wr-card-hover" style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
+              <div style="font-size:2.2rem;font-weight:900;color:#38bdf8;font-family:monospace;" data-counter>60+</div>
               <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">${isZh ? '出口国家 (Export Markets)' : 'Global Markets'}</div>
             </div>
-            <div style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
-              <div style="font-size:2.2rem;font-weight:900;color:#e2e8f0;font-family:monospace;" data-counter="100" data-suffix="%">100%</div>
+            <div class="wr-card-hover" style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:24px;text-align:center;">
+              <div style="font-size:2.2rem;font-weight:900;color:#e2e8f0;font-family:monospace;" data-counter>100%</div>
               <div style="font-size:0.78rem;color:#64748b;margin-top:4px;">${isZh ? '出厂全检 (Inspection Rate)' : 'QC Pass Rate'}</div>
             </div>
           </div>
@@ -344,7 +344,7 @@ export function renderArcadeCatalog(ctx: ThemeContext): string {
 
         <div class="wr-arcade-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:28px;">
           ${products.map((p, idx) => `
-            <div class="wr-arcade-card" data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;flex-direction:column;justify-content:space-between;position:relative;">
+            <div class="wr-arcade-card wr-card-hover" data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4);display:flex;flex-direction:column;justify-content:space-between;position:relative;">
               <div style="background:#151d2f;padding:28px 20px;text-align:center;border-bottom:1px solid #1e293b;position:relative;">
                 <span style="position:absolute;top:12px;left:12px;background:#090d16;color:#00f5d4;border:1px solid #00f5d4;font-family:monospace;font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:3px;">
                   SLOT // 0${(idx % 8) + 1}
@@ -413,7 +413,7 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start;">
           <!-- Left: Big Product Image in HUD Stand -->
-          <div class="wr-arcade-hud" style="background:#0f172a;border:2px solid #00f5d4;border-radius:16px;padding:48px;text-align:center;box-shadow:0 0 30px rgba(0,245,212,0.2);">
+          <div class="wr-arcade-hud wr-card-hover" data-reveal="fade-up" style="background:#0f172a;border:2px solid #00f5d4;border-radius:16px;padding:48px;text-align:center;box-shadow:0 0 30px rgba(0,245,212,0.2);">
             <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;filter:drop-shadow(0 15px 25px rgba(0,0,0,0.5));">
             <div style="margin-top:28px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
               <span style="background:rgba(0,245,212,0.1);color:#00f5d4;border:1px solid #00f5d4;padding:4px 12px;border-radius:4px;font-family:monospace;font-size:0.75rem;">✓ FOOD-GRADE TPR</span>
@@ -423,7 +423,7 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
           </div>
 
           <!-- Right: Specs, Disassembly, Form -->
-          <div>
+          <div data-reveal="fade-up">
             <div style="display:inline-block;background:#f72585;color:#ffffff;font-family:monospace;font-size:0.78rem;font-weight:900;padding:4px 12px;border-radius:3px;margin-bottom:12px;">
               ${esc(p.badge)}
             </div>
@@ -437,7 +437,7 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
             </p>
 
             <!-- Disassembly Specs Table -->
-            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:20px;margin-bottom:28px;font-family:monospace;font-size:0.86rem;">
+            <div class="wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:20px;margin-bottom:28px;font-family:monospace;font-size:0.86rem;">
               <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;">
                 <span style="color:#64748b;">DIMENSIONS</span>
                 <span style="color:#00f5d4;font-weight:800;">${esc(p.dimensions)}</span>
@@ -457,7 +457,7 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
             </div>
 
             <!-- Tactical HUD Benchmark Progress Bars -->
-            <div style="background:#0f172a;border:1px solid #1e293b;border-left:3px solid #00f5d4;border-radius:12px;padding:20px;margin-bottom:28px;">
+            <div class="wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-left:3px solid #00f5d4;border-radius:12px;padding:20px;margin-bottom:28px;">
               <div style="font-family:monospace;font-size:0.8rem;font-weight:900;color:#00f5d4;margin-bottom:14px;letter-spacing:0.08em;">
                 // TACTICAL BENCHMARK GAUGES
               </div>
@@ -508,13 +508,13 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
 
         <!-- Related Toys -->
         ${related.length > 0 ? `
-          <div style="margin-top:70px;border-top:1px solid #1e293b;padding-top:40px;">
+          <div style="margin-top:70px;border-top:1px solid #1e293b;padding-top:40px;" data-reveal="fade-up">
             <h3 style="font-size:1.4rem;font-weight:900;color:#ffffff;font-family:monospace;margin-bottom:24px;">
               // SIMILAR ROSTER RECONNAISSANCE
             </h3>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
               ${related.map((r) => `
-                <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:20px;text-align:center;">
+                <div class="wr-arcade-card wr-card-hover" data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:20px;text-align:center;">
                   <img src="${esc(r.img)}" alt="${esc(r.name)}" style="max-height:140px;object-fit:contain;margin-bottom:12px;">
                   <h4 style="font-size:0.95rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${esc(r.name)}</h4>
                   <a class="button" style="background:#1e293b;color:#00f5d4;font-family:monospace;font-size:0.8rem;padding:8px 16px;border-radius:4px;display:inline-block;" href="${path(`products/${r.id}/index.html`)}" ${navAttrs('detail', r.id)}>
@@ -552,7 +552,7 @@ export function renderArcadeAbout(ctx: ThemeContext): string {
 
         <!-- 3 Core Technological Pillars -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-bottom:70px;">
-          <div data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
+          <div data-reveal="fade-up" class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
             <div style="font-size:2.2rem;margin-bottom:14px;">🧪</div>
             <h3 style="font-size:1.25rem;font-weight:900;color:#00f5d4;margin:0 0 10px;font-family:monospace;">01 // 100% FOOD-GRADE SILICONE</h3>
             <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0;">
@@ -560,7 +560,7 @@ export function renderArcadeAbout(ctx: ThemeContext): string {
             </p>
           </div>
 
-          <div data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
+          <div data-reveal="fade-up" class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
             <div style="font-size:2.2rem;margin-bottom:14px;">🧬</div>
             <h3 style="font-size:1.25rem;font-weight:900;color:#f72585;margin:0 0 10px;font-family:monospace;">02 // ACOUSTIC MICRO-BEADS</h3>
             <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0;">
@@ -568,7 +568,7 @@ export function renderArcadeAbout(ctx: ThemeContext): string {
             </p>
           </div>
 
-          <div data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
+          <div data-reveal="fade-up" class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
             <div style="font-size:2.2rem;margin-bottom:14px;">🌐</div>
             <h3 style="font-size:1.25rem;font-weight:900;color:#38bdf8;margin:0 0 10px;font-family:monospace;">03 // GLOBAL EXPORT COMPLIANCE</h3>
             <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0;">
@@ -578,7 +578,7 @@ export function renderArcadeAbout(ctx: ThemeContext): string {
         </div>
 
         <!-- Vertical Laser Timeline -->
-        <div data-reveal="fade-up" style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;margin-bottom:60px;">
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;margin-bottom:60px;">
           <h2 style="font-size:1.6rem;font-weight:900;color:#ffffff;font-family:monospace;margin-bottom:30px;">
             // EVOLUTION TIMELINE // 2018 - 2026
           </h2>
@@ -623,7 +623,7 @@ export function renderArcadeContact(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:44px;align-items:start;">
           <!-- Left: Contact Form -->
-          <div data-reveal="fade-up" style="background:#0f172a;border:2px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 12px 36px rgba(0,0,0,0.4);">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#0f172a;border:2px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 12px 36px rgba(0,0,0,0.4);">
             <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:20px;">
               <div>
                 <label for="name" style="display:block;font-family:monospace;font-size:0.82rem;font-weight:800;color:#00f5d4;margin-bottom:6px;">// USER_NAME</label>
@@ -657,7 +657,7 @@ export function renderArcadeContact(ctx: ThemeContext): string {
 
           <!-- Right: Direct Terminal Info -->
           <div data-reveal="fade-up" style="display:grid;gap:20px;">
-            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:28px;">
+            <div class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:28px;">
               <span style="font-family:monospace;color:#f72585;font-size:0.8rem;font-weight:800;">// DIRECT_LINES</span>
               <h3 style="font-size:1.15rem;font-weight:900;color:#ffffff;margin:8px 0 14px;">${esc(company.name)}</h3>
               <p style="color:#94a3b8;font-size:0.92rem;margin:0 0 8px;"><strong>EMAIL:</strong> <a style="color:#00f5d4;" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p>
@@ -666,7 +666,7 @@ export function renderArcadeContact(ctx: ThemeContext): string {
               ${company.whatsapp ? `<p style="color:#94a3b8;font-size:0.92rem;margin:0 0 8px;"><strong>WHATSAPP:</strong> ${esc(company.whatsapp)}</p>` : ''}
             </div>
 
-            <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:28px;">
+            <div class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:28px;">
               <span style="font-family:monospace;color:#38bdf8;font-size:0.8rem;font-weight:800;">// SAMPLE_KIT_POLICY</span>
               <h4 style="font-size:1.05rem;font-weight:900;color:#ffffff;margin:8px 0 10px;">${isZh ? '样品寄送与打样标准' : 'Rapid Sample Dispatch'}</h4>
               <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0;">

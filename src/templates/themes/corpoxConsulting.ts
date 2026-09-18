@@ -32,16 +32,16 @@ export function renderConsultingHome(ctx: ThemeContext): string {
     <section class="hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(135deg,#071324 0%,#0a192f 50%,#0f2b59 100%);color:#ffffff;padding:95px 0 85px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:-100px;right:-50px;width:550px;height:550px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
       <div class="wrap hero-content" style="position:relative;z-index:2;">
-        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);padding:7px 20px;border-radius:2px;margin-bottom:24px;">
+        <div class="wr-hero-float" data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);padding:7px 20px;border-radius:2px;margin-bottom:24px;">
           <span style="font-size:0.8rem;font-weight:700;color:#fcd34d;letter-spacing:0.18em;text-transform:uppercase;">CORPOX EXECUTIVE STRATEGIC PARTNERS · EST. 1994</span>
         </div>
-        <h1 class="hero-title" style="font-family:'Cinzel','Times New Roman',serif;font-size:clamp(2.8rem, 5.5vw, 4.8rem);line-height:1.08;font-weight:600;letter-spacing:-0.02em;max-width:880px;margin:0 0 24px;">
+        <h1 class="hero-title" data-reveal="fade-up" style="font-family:'Cinzel','Times New Roman',serif;font-size:clamp(2.8rem, 5.5vw, 4.8rem);line-height:1.08;font-weight:600;letter-spacing:-0.02em;max-width:880px;margin:0 0 24px;">
           ${esc(copy.headline)}
         </h1>
-        <p style="max-width:660px;color:#cbd5e1;font-size:1.22rem;line-height:1.7;margin:0 0 38px;">
+        <p data-reveal="fade-up" style="max-width:660px;color:#cbd5e1;font-size:1.22rem;line-height:1.7;margin:0 0 38px;">
           ${esc(copy.subtitle)}
         </p>
-        <div style="display:flex;gap:18px;flex-wrap:wrap;">
+        <div data-reveal="fade-up" style="display:flex;gap:18px;flex-wrap:wrap;">
           <a class="button" style="background:#d4af37;color:#071324;font-weight:800;border-radius:2px;padding:16px 36px;letter-spacing:0.06em;text-transform:uppercase;font-size:0.88rem;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
             ${esc(copy.cta || 'Engage Partners')} ↗
           </a>
@@ -50,7 +50,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
           </a>
         </div>
 
-        <div style="margin-top:45px;display:flex;gap:36px;flex-wrap:wrap;color:#cbd5e1;font-size:0.88rem;">
+        <div data-reveal="fade-up" style="margin-top:45px;display:flex;gap:36px;flex-wrap:wrap;color:#cbd5e1;font-size:0.88rem;">
           <div><strong style="color:#fcd34d;font-size:1.15rem;">$42B+</strong> Value Created</div>
           <div><strong style="color:#fcd34d;font-size:1.15rem;">180+</strong> Mergers & Acquisitions Advised</div>
           <div><strong style="color:#fcd34d;font-size:1.15rem;">94%</strong> Strategic Execution Rate</div>
@@ -66,22 +66,22 @@ export function renderConsultingHome(ctx: ThemeContext): string {
   const statsHtml = `
     <section id="consulting-metrics" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="42.8" data-suffix="B">$42.8B</span></div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="42.8" data-prefix="$" data-suffix="B">$42.8B</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Enterprise Value Engineered</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Compound shareholder returns realized across global holding companies.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="180" data-suffix="+">180+</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Cross-Border Transactions</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Due diligence, synergistic integration, and post-merger governance.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="30" data-suffix="+ Yrs">30+ Yrs</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Boardroom Advisory Heritage</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Direct trusted counsel to Fortune 500 CEOs and family office patriarchs.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="94" data-suffix="%">94%</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Implementation Success</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Execution frameworks that transcend PowerPoint to deliver realized EBITDA.</div>
@@ -109,7 +109,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
           const imgUrl = ctx.productMainImage(p);
           const icons = ['🏛️', '⚖️', '🌐', '📈', '🛡️', '♟️'];
           return `
-            <article class="product-card" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
               <div>
                 <div style="font-size:1.8rem;margin-bottom:14px;">${icons[idx % icons.length]}</div>
                 ${imgUrl ? `<div class="product-image" style="border-radius:2px;overflow:hidden;margin-bottom:16px;max-height:180px;"><img src="${esc(imgUrl)}" alt="${esc(t.name)}" loading="lazy"></div>` : ''}
@@ -137,22 +137,22 @@ export function renderConsultingHome(ctx: ThemeContext): string {
         <p style="color:#64748b;font-size:1.05rem;">From granular economic diagnostic to sustainable competitive moats.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:#d4af37;margin-bottom:8px;">PHASE I</div>
           <h3 style="font-size:1.2rem;color:#0f2b59;margin:0 0 10px;">Diagnostic Value Audit</h3>
           <p style="color:#64748b;font-size:0.9rem;line-height:1.6;">Rigorous unit-economics analysis dissecting profit pools, operating friction, and hidden balance sheet risks.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:#d4af37;margin-bottom:8px;">PHASE II</div>
           <h3 style="font-size:1.2rem;color:#0f2b59;margin:0 0 10px;">Competitive Moat Engineering</h3>
           <p style="color:#64748b;font-size:0.9rem;line-height:1.6;">Re-architecting business model positioning around high-barrier proprietary IP and network effects.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:#d4af37;margin-bottom:8px;">PHASE III</div>
           <h3 style="font-size:1.2rem;color:#0f2b59;margin:0 0 10px;">Market & Capital Modeling</h3>
           <p style="color:#64748b;font-size:0.9rem;line-height:1.6;">Structuring high-accretion bolt-on acquisitions and divesting non-core drag assets at premium valuations.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;color:#d4af37;margin-bottom:8px;">PHASE IV</div>
           <h3 style="font-size:1.2rem;color:#0f2b59;margin:0 0 10px;">Executive Implementation</h3>
           <p style="color:#64748b;font-size:0.9rem;line-height:1.6;">Embedding operating partners directly into senior steering committees to guarantee realized financial metrics.</p>
@@ -169,7 +169,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
         <h2 style="font-family:'Cinzel',serif;font-size:2.1rem;color:#0f2b59;margin:8px 0;">Perspectives from Global Executive Leadership</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#d4af37;font-size:1.2rem;margin-bottom:12px;">“</div>
           <p style="color:#334155;line-height:1.75;font-size:0.95rem;margin:0 0 18px;font-style:italic;">"Corpox provided the definitive quantitative clarity our board required to execute a $4.8B cross-border acquisition with total alignment."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -177,7 +177,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Henrik Bergstrom</div><div style="color:#64748b;font-size:0.8rem;">Chairman of the Supervisory Board, Nordic Industrial plc</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#d4af37;font-size:1.2rem;margin-bottom:12px;">“</div>
           <p style="color:#334155;line-height:1.75;font-size:0.95rem;margin:0 0 18px;font-style:italic;">"Unlike traditional consultancies that leave binders of theory, Corpox stayed embedded until the EBITDA improvements were locked in."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -185,7 +185,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Victoria Sterling</div><div style="color:#64748b;font-size:0.8rem;">Managing Partner, Apex Capital Partners</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#d4af37;font-size:1.2rem;margin-bottom:12px;">“</div>
           <p style="color:#334155;line-height:1.75;font-size:0.95rem;margin:0 0 18px;font-style:italic;">"The peerless standard in strategic advisory. Their economic models uncovered $350M in stranded enterprise value."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -200,7 +200,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
   // 7. Executive Consultation CTA Band
   const contactBandHtml = `
     <section class="contact-band" style="background:#071324;color:#ffffff;padding:80px 0;border-top:2px solid #d4af37;">
-      <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
+      <div class="wrap" data-reveal="fade-up" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
           <span class="eyebrow" style="color:#fcd34d;font-weight:800;letter-spacing:0.18em;">DISCRETE ENGAGEMENT</span>
           <h2 style="font-family:'Cinzel',serif;font-size:2.4rem;margin:10px 0;max-width:680px;color:#ffffff;">
@@ -246,23 +246,23 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
   const statsHtml = `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">$42.8B</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="42.8" data-prefix="$" data-suffix="B">$42.8B</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Enterprise Value Created</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Direct board advisory delivering realized, auditable EBITDA expansion.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">180+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="180" data-suffix="+">180+</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Cross-Border Transactions</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">High-stakes M&A, divestitures, and post-merger integration milestones.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">30+ Yrs</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="30" data-suffix="+ Yrs">30+ Yrs</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Boardroom Advisory Heritage</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Continuous trusted counsel to Fortune 500 CEOs and sovereign wealth funds.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
-          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">94%</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+          <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;"><span data-counter="94" data-suffix="%">94%</span></div>
           <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">Execution Success Rate</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">Structured milestone governance ensuring full realization of target synergies.</div>
         </div>
@@ -273,7 +273,7 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
   const heritageHtml = `
     <section class="wrap" style="padding:50px 0 70px;">
       <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#d4af37;font-weight:800;letter-spacing:0.15em;">THE ADVISORY CHARTER</span>
           <h2 style="font-family:'Cinzel',serif;font-size:2.3rem;line-height:1.15;color:#0f2b59;margin:10px 0 20px;">
             Rigorous Quantitative Diagnostics Coupled with Battle-Tested Senior Counsel
@@ -296,7 +296,7 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#071324;color:#ffffff;border-top:3px solid #d4af37;border-radius:4px;padding:40px;">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#071324;color:#ffffff;border-top:3px solid #d4af37;border-radius:4px;padding:40px;">
           <h3 style="font-family:'Cinzel',serif;font-size:1.3rem;color:#fcd34d;margin:0 0 24px;letter-spacing:0.05em;">Four Core Pillars of Governance</h3>
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div>
@@ -328,25 +328,25 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
         <p style="color:#64748b;max-width:620px;margin:0 auto;font-size:1rem;">Senior advisors commanding decades of executive experience across sovereign funds, investment banking, and global conglomerates.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#071324;color:#d4af37;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">AS</div>
           <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;color:#0f2b59;margin:0 0 4px;">Sir Alistair Sterling</h3>
           <div style="color:#d4af37;font-size:0.82rem;font-weight:700;text-transform:uppercase;margin-bottom:10px;">Senior Partner & Chairman</div>
           <p style="color:#64748b;font-size:0.85rem;line-height:1.5;margin:0;">32 years steering international M&A, state divestitures, and sovereign fund boardrooms across Europe and North America.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#0f2b59;color:#fcd34d;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">VD</div>
           <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;color:#0f2b59;margin:0 0 4px;">Vivienne Delacroix</h3>
           <div style="color:#d4af37;font-size:0.82rem;font-weight:700;text-transform:uppercase;margin-bottom:10px;">Managing Partner, EMEA Strategy</div>
           <p style="color:#64748b;font-size:0.85rem;line-height:1.5;margin:0;">Specializes in antitrust regulatory clearances, cross-border corporate charters, and post-merger integration milestones.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#071324;color:#d4af37;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">JV</div>
           <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;color:#0f2b59;margin:0 0 4px;">Jonathan Vance</h3>
           <div style="color:#d4af37;font-size:0.82rem;font-weight:700;text-transform:uppercase;margin-bottom:10px;">Head of Private Equity & M&A</div>
           <p style="color:#64748b;font-size:0.85rem;line-height:1.5;margin:0;">Former bulge-bracket M&A managing director having advised on over $18B in realized transaction value.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#d4af37;color:#071324;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">HL</div>
           <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;color:#0f2b59;margin:0 0 4px;">Helena Lindqvist</h3>
           <div style="color:#d4af37;font-size:0.82rem;font-weight:700;text-transform:uppercase;margin-bottom:10px;">Partner, Restructuring & Turnaround</div>
@@ -358,7 +358,7 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
 
   const ctaHtml = `
     <section class="wrap" style="padding:60px 0 80px;">
-      <div style="background:#071324;border-top:3px solid #d4af37;border-radius:4px;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;">
+      <div class="wr-card-hover" data-reveal="fade-up" style="background:#071324;border-top:3px solid #d4af37;border-radius:4px;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;">
         <div>
           <span style="font-family:'Cinzel',serif;color:#fcd34d;font-weight:700;font-size:0.82rem;letter-spacing:0.15em;">DIRECT BOARDROOM ACCESS</span>
           <h2 style="font-family:'Cinzel',serif;font-size:2.2rem;color:#ffffff;margin:8px 0;">Engage the Senior Partner Council</h2>
@@ -399,7 +399,7 @@ export function renderConsultingContact(ctx: ThemeContext): string {
     <section class="wrap" style="padding:60px 0 80px;">
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
         <!-- Left: Partner Desks & Confidentiality -->
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:36px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:36px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <span class="eyebrow" style="color:#d4af37;font-weight:800;letter-spacing:0.15em;">DIRECT ACCESS</span>
           <h3 style="font-family:'Cinzel',serif;font-size:1.35rem;color:#0f2b59;margin:8px 0 24px;">Executive Desks & Hubs</h3>
 
@@ -440,7 +440,7 @@ export function renderConsultingContact(ctx: ThemeContext): string {
         </div>
 
         <!-- Right: Mandate Intake Form -->
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:36px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;padding:36px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <h2 style="font-family:'Cinzel',serif;font-size:1.6rem;color:#0f2b59;margin:0 0 8px;">Request Executive Mandate Consultation</h2>
           <p style="color:#64748b;font-size:0.95rem;margin:0 0 28px;">Specify your transaction scope, board restructuring timeline, or corporate initiative.</p>
 
@@ -490,15 +490,15 @@ export function renderConsultingContact(ctx: ThemeContext): string {
         <h2 style="font-family:'Cinzel',serif;font-size:2.2rem;color:#0f2b59;margin:8px 0;">Boardroom Mandate FAQ</h2>
       </div>
       <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:24px;">
-          <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">What are the typical retainer structures for strategic advisory?</h3>
-          <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">We operate on fixed quarterly board retainers that include direct access to named managing partners, augmented by milestone-based success bonuses tied directly to realized balance-sheet outcomes.</p>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:24px;">
+          <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">What is the typical engagement lead time for emergency M&A?</h3>
+          <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Upon clearance of bilateral conflict checks, our senior partner taskforce deploys on-site within 48 hours for urgent takeover defense or distressed capital recapitalization.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:24px;">
-          <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">How are cross-border regulatory approvals handled?</h3>
-          <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Our senior counsel works in tandem with your domestic and international outside legal counsel to coordinate merger filings, anti-trust inquiries, and sovereign investment review boards.</p>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:24px;">
+          <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">How are partner compensation incentives aligned with clients?</h3>
+          <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">A significant portion of our advisory fees are structured as success fees tied directly to closing transaction milestones or audited EBITDA expansion benchmarks.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;padding:24px;">
           <h3 style="font-family:'Cinzel',serif;color:#0f2b59;font-size:1.15rem;margin:0 0 8px;">Can Corpox partners serve as independent board directors?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Subject to formal nomination committee approval and governance clearances, senior partners regularly accept independent non-executive directorships to oversee complex multi-year turnaround programs.</p>
         </div>
@@ -536,7 +536,7 @@ export function renderConsultingCatalog(ctx: ThemeContext): string {
           const t = translateProduct(p);
           const imgUrl = asset(p.imageAssetId);
           return `
-            <article style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.03);display:flex;flex-direction:column;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0f2b59;border-radius:4px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.03);display:flex;flex-direction:column;">
               ${imgUrl ? `
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#071324;overflow:hidden;">
                   <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">

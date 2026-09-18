@@ -63,23 +63,23 @@ export function renderAccountingHome(ctx: ThemeContext): string {
   const statsHtml = `
     <section id="stats" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="850">$850M+</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="850" data-suffix="M+">$850M+</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">Assets Under Tax Advisory</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Protecting corporate treasuries and high-net-worth multi-generational family offices.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="120">120+</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="120" data-suffix="+">120+</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">CPAs & Accredited Attorneys</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Senior Big-4 alumni with specialized forensic, cross-border, and M&A experience.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="99.8">99.8%</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="99.8" data-suffix="%">99.8%</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">Audit Defense Success</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Rigorous documentation standards with zero unmitigated penalties across 25 years.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;">100%</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;font-weight:700;color:#2b2b2b;" data-counter="100" data-suffix="%">100%</div>
           <div style="font-weight:700;color:#2b2b2b;margin-top:6px;font-size:1rem;">Transparent Retainers</div>
           <div style="font-size:0.85rem;color:#666666;margin-top:4px;line-height:1.5;">Predictable monthly flat billing with zero surprise hourly overage surcharges.</div>
         </div>
@@ -91,7 +91,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
   const products = draft.products.slice(0, 6);
   const productsHtml = `
     <section class="wrap chapter" style="padding:60px 0;">
-      <div class="section-top" style="margin-bottom:36px;">
+      <div class="section-top" data-reveal="fade-up" style="margin-bottom:36px;">
         <div>
           <span class="eyebrow" style="color:#d90a2c;font-weight:700;">Excellence in Practice</span>
           <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2rem, 3.5vw, 2.8rem);margin-top:8px;color:#2b2b2b;">Comprehensive Accounting &amp; Fiduciary Services</h2>
@@ -106,7 +106,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
           const imgUrl = ctx.productMainImage(p);
           const icons = ['📑', '⚖️', '💼', '📊', '🏛️', '🔍'];
           return `
-            <article class="product-card" style="background:#ffffff;border:1px solid #e8d8d9;border-top:4px solid #d90a2c;border-radius:4px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:4px solid #d90a2c;border-radius:4px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
               <div>
                 <div style="font-size:2rem;margin-bottom:14px;">${icons[idx % icons.length]}</div>
                 ${imgUrl ? `<div class="product-image" style="border-radius:4px;overflow:hidden;margin-bottom:16px;max-height:180px;"><img src="${esc(imgUrl)}" alt="${esc(t.name)}" loading="lazy"></div>` : ''}
@@ -129,7 +129,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
   const whyChooseHtml = `
     <section class="wrap" style="padding:60px 0;border-top:1px solid #e8d8d9;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#d90a2c;font-weight:700;">WHY PORTO ADVISORY</span>
           <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.4rem;line-height:1.18;color:#2b2b2b;margin:12px 0 20px;">
             A Fiduciary Commitment Built on Rigorous Accuracy
@@ -153,7 +153,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.06);">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.06);">
           <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid #f3e8e8;margin-bottom:24px;">
             <div style="font-size:2.5rem;margin-bottom:8px;">🏛️</div>
             <h3 style="font-family:'Playfair Display',Georgia,serif;font-size:1.4rem;color:#2b2b2b;margin:0 0 6px;">Porto Partner Governance</h3>
@@ -177,13 +177,13 @@ export function renderAccountingHome(ctx: ThemeContext): string {
 
   // 6. Testimonials
   const testimonialsHtml = `
-    <section class="wrap" style="padding:60px 0;">
+    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#d90a2c;font-weight:700;">CLIENT TESTIMONIALS</span>
         <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.1rem;color:#2b2b2b;margin:8px 0;">Trusted by Business Owners and High-Net-Worth Families</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#d90a2c;font-size:1.2rem;margin-bottom:12px;">“</div>
           <p style="color:#444444;line-height:1.75;font-size:0.95rem;margin:0 0 18px;font-style:italic;">"Their cross-border restructuring saved our manufacturing group over $1.4M in corporate taxes while remaining in full bilateral compliance."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -191,7 +191,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#2b2b2b;font-size:0.9rem;">William Kohler</div><div style="color:#777777;font-size:0.8rem;">Managing Director, Continental Precision AG</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#d90a2c;font-size:1.2rem;margin-bottom:12px;">“</div>
           <p style="color:#444444;line-height:1.75;font-size:0.95rem;margin:0 0 18px;font-style:italic;">"The audit representation was flawless. The Porto team handled every examiner question with poise and pristine documentation."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -199,7 +199,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#2b2b2b;font-size:0.9rem;">Claire Montgomery</div><div style="color:#777777;font-size:0.8rem;">Trustee, The Montgomery Family Office</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#d90a2c;font-size:1.2rem;margin-bottom:12px;">“</div>
           <p style="color:#444444;line-height:1.75;font-size:0.95rem;margin:0 0 18px;font-style:italic;">"Their flat-rate retainer gave us predictable financial overhead and dedicated CPA partner access whenever we needed it."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -213,7 +213,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
 
   // 7. Contact / Advisory Band
   const contactBandHtml = `
-    <section class="contact-band" style="background:#2b2b2b;color:#ffffff;padding:80px 0;border-top:3px solid #d90a2c;">
+    <section class="contact-band" data-reveal="fade-up" style="background:#2b2b2b;color:#ffffff;padding:80px 0;border-top:3px solid #d90a2c;">
       <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
           <span class="eyebrow" style="color:#d90a2c;font-weight:700;">PREMIER FINANCIAL COUNSEL</span>
@@ -560,7 +560,7 @@ export function renderAccountingCatalog(ctx: ThemeContext): string {
           const t = translateProduct(p);
           const imgUrl = asset(p.imageAssetId);
           return `
-            <article style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.02);display:flex;flex-direction:column;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-radius:4px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.02);display:flex;flex-direction:column;">
               ${imgUrl ? `
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#f5f5f5;overflow:hidden;">
                   <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">

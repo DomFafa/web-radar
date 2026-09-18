@@ -30,17 +30,17 @@ export function renderToysHome(ctx: ThemeContext): string {
   const heroHtml = `
     <section class="hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(135deg,#fef08a 0%,#fed7aa 50%,#fbcfe8 100%);color:#451a03;padding:90px 0 80px;position:relative;overflow:hidden;">
       <div class="wrap hero-content" style="position:relative;z-index:2;text-align:center;align-items:center;margin:0 auto;">
-        <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #fde047;padding:8px 22px;border-radius:9999px;margin-bottom:24px;box-shadow:0 4px 14px rgba(245,158,11,0.15);">
+        <div class="wr-hero-float" data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #fde047;padding:8px 22px;border-radius:9999px;margin-bottom:24px;box-shadow:0 4px 14px rgba(245,158,11,0.15);">
           <span style="font-size:1.1rem;">🧸</span>
           <span style="font-size:0.84rem;font-weight:900;color:#92400e;letter-spacing:0.06em;text-transform:uppercase;">SUSTAINABLE PLAY · JUNO TOYS COLLECTION</span>
         </div>
-        <h1 class="hero-title" style="font-size:clamp(2.8rem, 5.8vw, 4.8rem);line-height:1.08;font-weight:900;letter-spacing:-0.03em;color:#78350f;max-width:900px;margin:0 auto 20px;text-align:center;">
+        <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(2.8rem, 5.8vw, 4.8rem);line-height:1.08;font-weight:900;letter-spacing:-0.03em;color:#78350f;max-width:900px;margin:0 auto 20px;text-align:center;">
           ${esc(copy.headline)}
         </h1>
-        <p style="max-width:680px;color:#92400e;font-size:1.22rem;line-height:1.65;margin:0 auto 36px;text-align:center;">
+        <p data-reveal="fade-up" style="max-width:680px;color:#92400e;font-size:1.22rem;line-height:1.65;margin:0 auto 36px;text-align:center;">
           ${esc(copy.subtitle)}
         </p>
-        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <div data-reveal="fade-up" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
           <a class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:16px 36px;box-shadow:0 8px 24px rgba(245,158,11,0.4);font-size:0.92rem;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
             ${esc(copy.cta || 'Shop Bestsellers')} ↗
           </a>
@@ -49,7 +49,7 @@ export function renderToysHome(ctx: ThemeContext): string {
           </a>
         </div>
 
-        <div style="margin-top:42px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;color:#92400e;font-size:0.9rem;font-weight:700;">
+        <div data-reveal="fade-up" style="margin-top:42px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;color:#92400e;font-size:0.9rem;font-weight:700;">
           <div>✨ Non-Toxic Natural Dyes</div>
           <div>🪵 FSC-Certified Beechwood</div>
           <div>❤️ Loved by 150,000+ Happy Families</div>
@@ -63,22 +63,22 @@ export function renderToysHome(ctx: ThemeContext): string {
   const safetyHtml = `
     <section id="safety" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
           <div style="font-size:2.5rem;margin-bottom:8px;">🌱</div>
           <div style="font-weight:900;color:#78350f;font-size:1.1rem;">100% Non-Toxic</div>
           <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">Food-grade water-based lacquers and natural vegetable dyes safe for teething babies.</div>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
           <div style="font-size:2.5rem;margin-bottom:8px;">🪵</div>
           <div style="font-weight:900;color:#78350f;font-size:1.1rem;">FSC-Certified Wood</div>
           <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">Responsibly harvested European beech and maple that will last for generations.</div>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
           <div style="font-size:2.5rem;margin-bottom:8px;">🛡️</div>
           <div style="font-weight:900;color:#78350f;font-size:1.1rem;">ASTM & EN71 Tested</div>
           <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">Independently certified by global laboratory testing for drop, choke, and chemical safety.</div>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:20px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.08);">
           <div style="font-size:2.5rem;margin-bottom:8px;">🎁</div>
           <div style="font-weight:900;color:#78350f;font-size:1.1rem;">100-Day Happiness</div>
           <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">Love your toys or return them completely free of charge. No questions asked.</div>
@@ -106,7 +106,7 @@ export function renderToysHome(ctx: ThemeContext): string {
           const imgUrl = ctx.productMainImage(p);
           const badges = ['Ages 0 - 2', 'Ages 3-5', 'STEM 6+', 'Creative', 'Montessori', 'Toddler'];
           return `
-            <article class="product-card" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 20px rgba(245,158,11,0.08);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 8px 20px rgba(245,158,11,0.08);">
               <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                   <span style="font-size:0.75rem;font-weight:900;color:#b45309;background:#fef3c7;padding:4px 12px;border-radius:9999px;">${badges[idx % badges.length]}</span>
@@ -136,22 +136,22 @@ export function renderToysHome(ctx: ThemeContext): string {
         <h2 style="font-size:2.2rem;color:#78350f;font-weight:900;margin:8px 0;">Find the Perfect Toy for Every Milestone</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
-        <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
           <div style="font-size:2.8rem;margin-bottom:8px;">👶</div>
           <h4 style="color:#78350f;font-weight:900;margin:0 0 6px;font-size:1.15rem;">Baby & Toddler</h4>
           <div style="font-size:0.85rem;color:#92400e;">Teethers, grasping rattles & sensory play mats (0-2 Yrs)</div>
         </div>
-        <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
           <div style="font-size:2.8rem;margin-bottom:8px;">🎨</div>
           <h4 style="color:#78350f;font-weight:900;margin:0 0 6px;font-size:1.15rem;">Preschool Creators</h4>
           <div style="font-size:0.85rem;color:#92400e;">Pretend kitchens, stacking blocks & wooden train tracks (3-5 Yrs)</div>
         </div>
-        <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
           <div style="font-size:2.8rem;margin-bottom:8px;">🔬</div>
           <h4 style="color:#78350f;font-weight:900;margin:0 0 6px;font-size:1.15rem;">STEM & Building</h4>
           <div style="font-size:0.85rem;color:#92400e;">Magnetic construction sets, science kits & gears (6-8 Yrs)</div>
         </div>
-        <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#fffbeb;border:2px solid #fef08a;border-radius:20px;padding:24px;text-align:center;">
           <div style="font-size:2.8rem;margin-bottom:8px;">🎲</div>
           <h4 style="color:#78350f;font-weight:900;margin:0 0 6px;font-size:1.15rem;">Family Games</h4>
           <div style="font-size:0.85rem;color:#92400e;">Board games, cooperative puzzles & outdoor classics (8+ Yrs)</div>
@@ -168,7 +168,7 @@ export function renderToysHome(ctx: ThemeContext): string {
         <h2 style="font-size:2.1rem;color:#78350f;font-weight:900;margin:8px 0;">Real Stories from Playrooms Around the World</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:28px;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:28px;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
           <div style="color:#f59e0b;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#78350f;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"The quality of the wooden train set is incredible. My 3-year-old hasn't stopped playing with it for three months straight!"</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -176,7 +176,7 @@ export function renderToysHome(ctx: ThemeContext): string {
             <div><div style="font-weight:900;color:#78350f;font-size:0.9rem;">Emily Simmons</div><div style="color:#92400e;font-size:0.8rem;">Mom of two, Seattle WA</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:28px;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:28px;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
           <div style="color:#f59e0b;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#78350f;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Knowing every edge is smooth and all the paints are completely non-toxic gives me so much peace of mind."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -184,7 +184,7 @@ export function renderToysHome(ctx: ThemeContext): string {
             <div><div style="font-weight:900;color:#78350f;font-size:0.9rem;">Jonathan Taylor</div><div style="color:#92400e;font-size:0.8rem;">Father of toddler, Austin TX</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:28px;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:28px;box-shadow:0 4px 14px rgba(245,158,11,0.06);">
           <div style="color:#f59e0b;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#78350f;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Beautiful design that looks gorgeous in the living room rather than plastic clutter. Absolutely love Juno Toys!"</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -199,7 +199,7 @@ export function renderToysHome(ctx: ThemeContext): string {
   // 7. Juno Club Newsletter / CTA Banner
   const contactBandHtml = `
     <section class="contact-band" style="background:#78350f;color:#fffdf5;padding:80px 0;border-top:4px solid #f59e0b;">
-      <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
+      <div class="wrap" data-reveal="fade-up" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
           <span class="eyebrow" style="color:#fde047;font-weight:900;">JOIN THE JUNO FAMILY CLUB</span>
           <h2 style="font-size:2.4rem;margin:10px 0;max-width:650px;color:#fffdf5;font-weight:900;">
@@ -245,23 +245,23 @@ export function renderToysAbout(ctx: ThemeContext): string {
   const statsHtml = `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;">150K+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;"><span data-counter="150" data-suffix="K+">150K+</span></div>
           <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:4px;">Smiling Families</div>
           <div style="font-size:0.85rem;color:#92400e;margin-top:4px;line-height:1.5;">Filling living rooms and nurseries across 35 countries with laughter.</div>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;">100%</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;"><span data-counter="100" data-suffix="%">100%</span></div>
           <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:4px;">Plastic-Free Natural Toys</div>
           <div style="font-size:0.85rem;color:#92400e;margin-top:4px;line-height:1.5;">Responsibly harvested FSC European beech, organic cotton, and vegetable dyes.</div>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;">0</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;"><span data-counter="0">0</span></div>
           <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:4px;">Toxic Chemicals</div>
           <div style="font-size:0.85rem;color:#92400e;margin-top:4px;line-height:1.5;">Zero BPA, zero phthalates, zero lead. Independently lab-tested to ASTM & EN71.</div>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;">14 Yrs</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;"><span data-counter="14" data-suffix=" Yrs">14 Yrs</span></div>
           <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:4px;">Dedicated Craftsmanship</div>
           <div style="font-size:0.85rem;color:#92400e;margin-top:4px;line-height:1.5;">Designing heirloom-quality wooden play sets that siblings pass down.</div>
         </div>
@@ -272,7 +272,7 @@ export function renderToysAbout(ctx: ThemeContext): string {
   const workshopHtml = `
     <section class="wrap" style="padding:50px 0 70px;">
       <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#d97706;font-weight:900;">FROM OUR WOODEN BENCH TO YOUR PLAYROOM</span>
           <h2 style="font-size:2.4rem;line-height:1.15;color:#78350f;font-weight:900;margin:10px 0 20px;">
             Designed to Nurture Wonder, Not Screens
@@ -295,7 +295,7 @@ export function renderToysAbout(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#fffbeb;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#fffbeb;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
           <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 20px;">Our Four Guarantees to Parents</h3>
           <div style="display:flex;flex-direction:column;gap:18px;">
             <div style="display:flex;gap:14px;align-items:flex-start;">
@@ -340,25 +340,25 @@ export function renderToysAbout(ctx: ThemeContext): string {
         <p style="color:#92400e;max-width:620px;margin:0 auto;font-size:1rem;">A passionate crew of parents, woodturners, and early learning researchers designing with heart.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
           <div style="width:64px;height:64px;border-radius:50%;background:#fde047;color:#78350f;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">CL</div>
           <h3 style="font-size:1.2rem;color:#78350f;font-weight:900;margin:0 0 4px;">Clara Lindqvist</h3>
           <div style="color:#d97706;font-size:0.85rem;font-weight:800;margin-bottom:10px;">Founder & Master Toymaker</div>
           <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:0;">Passionate woodturner and mother of three with 16 years designing sensory developmental toys.</p>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
           <div style="width:64px;height:64px;border-radius:50%;background:#fed7aa;color:#78350f;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">JS</div>
           <h3 style="font-size:1.2rem;color:#78350f;font-weight:900;margin:0 0 4px;">Dr. Julian Sterling</h3>
           <div style="color:#d97706;font-size:0.85rem;font-weight:800;margin-bottom:10px;">Child Development Psychologist</div>
           <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:0;">Advises on Montessori-aligned milestones, fine motor dexterity, and cooperative play mechanics.</p>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
           <div style="width:64px;height:64px;border-radius:50%;background:#fbcfe8;color:#78350f;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">HS</div>
           <h3 style="font-size:1.2rem;color:#78350f;font-weight:900;margin:0 0 4px;">Hana Sato</h3>
           <div style="color:#d97706;font-size:0.85rem;font-weight:800;margin-bottom:10px;">Eco-Material & Safety Director</div>
           <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:0;">Pioneers non-toxic vegetable finishes and audits European FSC forestry supply chains.</p>
         </div>
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
           <div style="width:64px;height:64px;border-radius:50%;background:#fef08a;color:#78350f;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">TB</div>
           <h3 style="font-size:1.2rem;color:#78350f;font-weight:900;margin:0 0 4px;">Tobias Brennan</h3>
           <div style="color:#d97706;font-size:0.85rem;font-weight:800;margin-bottom:10px;">Chief Toy Tester & Community Lead</div>
@@ -408,9 +408,9 @@ export function renderToysContact(ctx: ThemeContext): string {
     <section class="wrap" style="padding:60px 0 80px;">
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
         <!-- Left: Customer Care & Workshop -->
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
-          <span class="eyebrow" style="color:#d97706;font-weight:900;">DIRECT DESK</span>
-          <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:8px 0 24px;">Playroom Support & Workshop</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+          <span class="eyebrow" style="color:#d97706;font-weight:900;">GET IN TOUCH</span>
+          <h3 style="font-size:1.4rem;font-weight:900;color:#78350f;margin:8px 0 24px;">Family Support & Workshop</h3>
 
           <div style="display:flex;flex-direction:column;gap:20px;font-size:0.95rem;">
             <div>
@@ -449,7 +449,7 @@ export function renderToysContact(ctx: ThemeContext): string {
         </div>
 
         <!-- Right: Inquiry Form -->
-        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
           <h2 style="font-size:1.6rem;font-weight:900;color:#78350f;margin:0 0 8px;">Send Us a Note</h2>
           <p style="color:#92400e;font-size:0.95rem;margin:0 0 28px;">Whether you need toy advice or wholesale information, our family team will reply within 24 hours.</p>
 
@@ -499,15 +499,15 @@ export function renderToysContact(ctx: ThemeContext): string {
         <h2 style="font-size:2.2rem;color:#78350f;font-weight:900;margin:8px 0;">Safety, Shipping & Care FAQ</h2>
       </div>
       <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
-        <div style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:24px;">
           <h3 style="color:#78350f;font-size:1.15rem;font-weight:900;margin:0 0 8px;">How should we clean and care for wooden toys?</h3>
           <p style="color:#92400e;font-size:0.92rem;line-height:1.6;margin:0;">Simply wipe gently with a damp cloth and mild soapy water, then air dry. Never submerge wooden toys in water or use harsh chemical disinfectants.</p>
         </div>
-        <div style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:24px;">
           <h3 style="color:#78350f;font-size:1.15rem;font-weight:900;margin:0 0 8px;">Are the paints safe if my teething baby puts the toy in their mouth?</h3>
           <p style="color:#92400e;font-size:0.92rem;line-height:1.6;margin:0;">Yes, 100%! All our paints are certified non-toxic water-based organic dyes, complying fully with stringent ASTM F963 (US) and EN71 (EU) baby safety mandates.</p>
         </div>
-        <div style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #fef08a;border-radius:20px;padding:24px;">
           <h3 style="color:#78350f;font-size:1.15rem;font-weight:900;margin:0 0 8px;">Do you offer custom engraved birthday or nursery gift messages?</h3>
           <p style="color:#92400e;font-size:0.92rem;line-height:1.6;margin:0;">Yes! Select custom packaging during order inquiry and our workshop will laser-engrave a child's name and include a handwritten seed-paper gift card.</p>
         </div>
@@ -546,7 +546,7 @@ export function renderToysCatalog(ctx: ThemeContext): string {
           const imgUrl = asset(p.imageAssetId);
           const badges = ['Montessori', 'Baby Safe', 'STEM Play', 'Eco Wood', 'Creative', 'Heirloom'];
           return `
-            <article style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:24px;display:flex;flex-direction:column;box-shadow:0 8px 20px rgba(245,158,11,0.06);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:24px;display:flex;flex-direction:column;box-shadow:0 8px 20px rgba(245,158,11,0.06);">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                 <span style="font-size:0.75rem;font-weight:900;color:#b45309;background:#fef3c7;padding:4px 12px;border-radius:9999px;">${badges[idx % badges.length]}</span>
                 <span style="color:#f59e0b;font-size:0.85rem;">★★★★★</span>

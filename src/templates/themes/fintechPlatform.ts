@@ -16,7 +16,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
   const heroHtml = `
     <section class="hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(135deg,#091322 0%,#0f172a 60%,#1e293b 100%);color:#ffffff;padding:90px 0 80px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:-120px;right:-80px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(2,132,199,0.18) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
-      <div class="wrap hero-content" style="position:relative;z-index:2;">
+      <div class="wrap hero-content" data-reveal="fade-up" style="position:relative;z-index:2;">
         <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(2,132,199,0.15);border:1px solid rgba(56,189,248,0.35);padding:7px 18px;border-radius:9999px;margin-bottom:24px;width:fit-content;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;"></span>
           <span style="font-size:0.82rem;font-weight:700;color:#e0f2fe;letter-spacing:0.06em;">ENTERPRISE TREASURY OS · VERSION 4.2</span>
@@ -55,23 +55,23 @@ export function renderFintechHome(ctx: ThemeContext): string {
   const securityBandHtml = `
     <section id="kpis" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0284c7;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#0284c7;font-weight:900;letter-spacing:-0.03em;" data-counter="18.4">$18.4B+</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0284c7;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#0284c7;font-weight:900;letter-spacing:-0.03em;" data-counter="18.4" data-suffix="B+">$18.4B+</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Annual Settlement Volume</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Real-time clearing across SWIFT, FedNow & SEPA networks with zero slippage.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #06b6d4;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#06b6d4;font-weight:900;letter-spacing:-0.03em;" data-counter="140">140+ Currencies</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #06b6d4;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#06b6d4;font-weight:900;letter-spacing:-0.03em;" data-counter="140" data-suffix="+ Currencies">140+ Currencies</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Direct FX Liquidity</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Competitive institutional interbank spreads with automated hedging triggers.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #10b981;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#10b981;font-weight:900;letter-spacing:-0.03em;">SOC 2 Type II</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #10b981;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#10b981;font-weight:900;letter-spacing:-0.03em;" data-counter="100" data-suffix="% SOC 2 Type II">SOC 2 Type II</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Bank-Grade Encryption</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Hardware Security Module (HSM) key isolation with continuous 24/7 audits.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #8b5cf6;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2.2rem;color:#8b5cf6;font-weight:900;letter-spacing:-0.03em;" data-counter="0.02">0.02s Latency</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #8b5cf6;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+          <div style="font-size:2.2rem;color:#8b5cf6;font-weight:900;letter-spacing:-0.03em;" data-counter="0.02" data-suffix="s Latency">0.02s Latency</div>
           <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">Ledger Reconciliation</div>
           <div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">Eliminate manual month-end closing delays with continuous algorithmic matching.</div>
         </div>
@@ -83,7 +83,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
   const products = draft.products.slice(0, 6);
   const productsHtml = `
     <section class="wrap chapter" style="padding:60px 0;">
-      <div class="section-top" style="margin-bottom:36px;">
+      <div class="section-top" data-reveal="fade-up" style="margin-bottom:36px;">
         <div>
           <span class="eyebrow" style="color:#0284c7;font-weight:700;">ENTERPRISE FINANCIAL CAPABILITIES</span>
           <h2 style="font-size:clamp(2rem, 3.5vw, 2.8rem);margin-top:8px;color:#0f172a;">Tailored Liquidity & Settlement Solutions</h2>
@@ -99,7 +99,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
           const icons = ['💳', '📈', '🏦', '⚖️', '🔒', '🌐'];
           const tags = ['Treasury', 'Liquidity', 'Compliance', 'Hedging', 'Settlement', 'Audit'];
           return `
-            <article class="product-card" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
               <div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                   <span style="font-size:1.8rem;">${icons[idx % icons.length]}</span>
@@ -125,7 +125,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
   const deepDiveHtml = `
     <section class="wrap" style="padding:60px 0;border-top:1px solid #e2e8f0;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#0284c7;font-weight:700;">INTELLIGENT TREASURY ENGINE</span>
           <h2 style="font-size:2.4rem;line-height:1.15;color:#0f172a;margin:12px 0 20px;">Automated Liquidity Pooling Across Global Entities</h2>
           <p style="color:#475569;line-height:1.75;font-size:1.05rem;margin-bottom:24px;">
@@ -134,22 +134,22 @@ export function renderFintechHome(ctx: ThemeContext): string {
           <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
             <div style="display:flex;align-items:flex-start;gap:12px;">
               <div style="width:24px;height:24px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">✓</div>
-              <div style="color:#334155;font-size:0.95rem;"><strong>Predictive Cash Flow Forecasting</strong> using deep neural time-series models.</div>
+              <div style="color:#344155;font-size:0.95rem;"><strong>Predictive Cash Flow Forecasting</strong> using deep neural time-series models.</div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:12px;">
               <div style="width:24px;height:24px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">✓</div>
-              <div style="color:#334155;font-size:0.95rem;"><strong>Multi-Tenant Entity Segregation</strong> with role-based audit logs and dual authorization.</div>
+              <div style="color:#344155;font-size:0.95rem;"><strong>Multi-Tenant Entity Segregation</strong> with role-based audit logs and dual authorization.</div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:12px;">
               <div style="width:24px;height:24px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">✓</div>
-              <div style="color:#334155;font-size:0.95rem;"><strong>Direct ERP Integration</strong> into SAP, Oracle NetSuite, and Workday.</div>
+              <div style="color:#344155;font-size:0.95rem;"><strong>Direct ERP Integration</strong> into SAP, Oracle NetSuite, and Workday.</div>
             </div>
           </div>
           <a class="button" style="background:#0f172a;color:#ffffff;border-radius:8px;font-weight:600;" href="${path('about/index.html')}" ${navAttrs('about')}>
             Read Institutional Whitepaper ↗
           </a>
         </div>
-        <div style="background:#091322;border:1px solid #1e293b;border-radius:16px;padding:32px;color:#ffffff;box-shadow:0 20px 40px rgba(15,23,42,0.15);">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#091322;border:1px solid #1e293b;border-radius:16px;padding:32px;color:#ffffff;box-shadow:0 20px 40px rgba(15,23,42,0.15);">
           <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;padding-bottom:16px;margin-bottom:20px;">
             <div style="display:flex;align-items:center;gap:10px;">
               <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#10b981;"></span>
@@ -186,7 +186,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
 
   // 5. Global Banking & Integration Partners
   const bankingPartnersHtml = `
-    <section class="wrap" style="padding:60px 0 40px;border-top:1px solid #e2e8f0;">
+    <section class="wrap" style="padding:60px 0 40px;border-top:1px solid #e2e8f0;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#0284c7;font-weight:700;">GLOBAL CLEARING INFRASTRUCTURE</span>
         <h2 style="font-size:2rem;color:#0f172a;margin:8px 0;">Direct Network Integrations & Tier-1 Rails</h2>
@@ -194,7 +194,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
         ${['SWIFT gpi', 'FedNow Realtime', 'SEPA Instant', 'ACH Direct', 'CHAPS UK', 'Visa B2B Connect', 'Mastercard Send', 'JPMorgan Access'].map(name => `
-          <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:18px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:18px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
             <div style="font-size:1.5rem;margin-bottom:6px;">🌐</div>
             <div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${name}</div>
           </div>
@@ -205,13 +205,13 @@ export function renderFintechHome(ctx: ThemeContext): string {
 
   // 6. Testimonials
   const testimonialsHtml = `
-    <section class="wrap" style="padding:60px 0;">
+    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#0284c7;font-weight:700;">CLIENT ENDORSEMENTS</span>
         <h2 style="font-size:2rem;color:#0f172a;margin:8px 0;">Trusted by Multinational CFOs & Treasurers</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#f59e0b;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"The multi-currency concentration sweeps saved our global group over $3.2M in foreign exchange hedging costs in year one."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -219,7 +219,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Alexander Hayes</div><div style="color:#64748b;font-size:0.8rem;">Group Treasurer, Vantage Logistics</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#f59e0b;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Reconciliation that used to take three accountants four days every month-end is now finalized continuously in sub-seconds."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -227,7 +227,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#0f172a;font-size:0.9rem;">Elena Wagner</div><div style="color:#64748b;font-size:0.8rem;">Chief Financial Officer, Nordic Energy AG</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#f59e0b;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Institutional security architecture is unparalleled. Passes all tier-1 banking security questionnaires effortlessly."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -241,7 +241,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
 
   // 7. Contact / Institutional Advisory Band
   const contactBandHtml = `
-    <section class="contact-band" style="background:#0f172a;color:#ffffff;padding:80px 0;">
+    <section class="contact-band" data-reveal="fade-up" style="background:#0f172a;color:#ffffff;padding:80px 0;">
       <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
           <span class="eyebrow" style="color:#38bdf8;font-weight:700;">INSTITUTIONAL ADVISORY</span>
@@ -588,7 +588,7 @@ export function renderFintechCatalog(ctx: ThemeContext): string {
           const t = translateProduct(p);
           const imgUrl = asset(p.imageAssetId);
           return `
-            <article style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.03);display:flex;flex-direction:column;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,0.03);display:flex;flex-direction:column;">
               ${imgUrl ? `
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#f1f5f9;overflow:hidden;">
                   <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">

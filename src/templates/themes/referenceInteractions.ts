@@ -192,26 +192,27 @@ export function referenceInteractions() {
       });
     });
 
-  // Number Counter / Odometer animation
+  // Number Counter / Odometer animation (Apple-style exponential easing)
   const animateCounter = (el: HTMLElement) => {
     if (el.dataset.wrCounted) return;
-    const rawValue = el.getAttribute('data-count') || el.getAttribute('data-to') || el.textContent || '';
+    const rawValue = el.getAttribute('data-counter') || el.getAttribute('data-count') || el.getAttribute('data-to') || el.textContent || '';
     const numericStr = rawValue.replace(/[^\d.]/g, '');
     if (!numericStr) return;
     const target = parseFloat(numericStr);
     if (isNaN(target)) return;
     el.dataset.wrCounted = 'true';
+    const suffix = el.getAttribute('data-suffix') || '';
 
-    const hasComma = rawValue.includes(',');
-    const duration = 1200;
+    const dec = numericStr.includes('.') ? numericStr.split('.')[1].length : 0;
+    const duration = 1400;
     const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
     const update = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      const current = Math.floor(ease * target);
-      el.textContent = hasComma ? current.toLocaleString() : String(current);
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = dec > 0 ? (ease * target).toFixed(dec) : Math.floor(ease * target).toLocaleString();
+      el.textContent = current + suffix;
       if (progress < 1) {
         if (typeof requestAnimationFrame !== 'undefined') {
           requestAnimationFrame(update);
@@ -219,7 +220,7 @@ export function referenceInteractions() {
           setTimeout(() => update(Date.now()), 16);
         }
       } else {
-        el.textContent = hasComma ? target.toLocaleString() : String(target);
+        el.textContent = (dec > 0 ? target.toFixed(dec) : target.toLocaleString()) + suffix;
       }
     };
     if (typeof requestAnimationFrame !== 'undefined') {
@@ -247,7 +248,7 @@ export function referenceInteractions() {
 
     document
       .querySelectorAll<HTMLElement>(
-        '.wr-reveal, [data-reveal], .wr-product-card, .single-ai-service, .single-modern-case-studies, .signle-fun-facts-one, .service-layout-presentation-box, .blog-card-text'
+        '.wr-reveal, [data-reveal], .wr-product-card, .product-card, .single-ai-service, .single-modern-case-studies, .signle-fun-facts-one, .service-layout-presentation-box, .blog-card-text'
       )
       .forEach((el) => {
         if (!el.classList.contains('wr-reveal')) {
@@ -289,6 +290,22 @@ export function referenceInteractions() {
       el.style.width = '0%';
       el.style.transition = 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)';
       progressObserver.observe(el);
+    });
+
+    // 3D Card Tilt & Spotlight
+    const cards = document.querySelectorAll<HTMLElement>(
+      '.senseng-p-card, .wr-candy-card, .wr-wonder-card, .wr-arcade-card, .wr-nature-card, .wr-minimal-card, .wr-card-hover, .product-card, .wr-product-card'
+    );
+    cards.forEach((card) => {
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(1000px) rotateX(${(-y * 6).toFixed(2)}deg) rotateY(${(x * 6).toFixed(2)}deg) translateY(-8px) scale3d(1.015,1.015,1.015)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
     });
   } else {
     document.querySelectorAll<HTMLElement>('.wr-reveal, [data-reveal]').forEach((el) => el.classList.add('wr-revealed'));

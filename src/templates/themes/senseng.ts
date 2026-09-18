@@ -135,7 +135,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // Shared on every page in both Senseng variants. Capture requests through the
   // existing inquiry endpoint; no external mailing-list provider is configured.
   const newsletterHtml = `
-    <section class="senseng-newsletter" aria-labelledby="newsletter-heading">
+    <section class="senseng-newsletter" aria-labelledby="newsletter-heading" data-reveal="fade-up">
       <div class="senseng-newsletter-inner">
         <div class="senseng-newsletter-copy">
           <h2 id="newsletter-heading">Stay Updated on New Squishy Lines</h2>
@@ -206,7 +206,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
 
   // 8-Card Showcase Grid helper
   const renderProductGrid8 = (heading: string, showViewAll = true, withSpecs = false) => `
-    <section class="senseng-showcase-box">
+    <section class="senseng-showcase-box" data-reveal="fade-up">
       <div class="senseng-showcase-card">
         <div class="senseng-showcase-top">
           <h2 style="font-size:32px;font-weight:900;color:#073b91;letter-spacing:-0.5px;margin:0;">${heading}</h2>
@@ -214,7 +214,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
         <div class="senseng-grid-8">
           ${allProducts.slice(0, 8).map((p) => `
-            <article class="senseng-p-card">
+            <article class="senseng-p-card wr-card-hover" data-reveal="fade-up">
               <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:contents;">
                 <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy">
                 <h4>${esc(p.name)}</h4>
@@ -249,7 +249,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             ${heroVideo?`<source src="${esc(heroVideo)}" type="video/mp4">`:''}
           </video>
           <div class="senseng-hero-video-overlay"></div>
-          <div class="senseng-hero-video-content">
+          <div class="senseng-hero-video-content" data-reveal="fade-up">
             <p class="senseng-eyebrow" style="color:#c9f4ff;">SQUISHY TOYS FOR BRIGHTER DAYS</p>
             <h1 class="senseng-hero-h1" style="color:#ffffff;">Character-led squishy toys with clearer shelf cues</h1>
             <p class="senseng-hero-sub" style="color:#eaf8ff;">A senseng B2B showcase for kids, adults, gifting, and texture/effect-led squishy toy lines.</p>
@@ -273,9 +273,9 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
           <div class="senseng-hero-inner">
             <div class="senseng-hero-scene" aria-hidden="true">
               ${materialsMode?'':'<img class="senseng-hero-sky" src="/templates/senseng/hero-sky-v2.png" alt="" fetchpriority="high">'}
-              <img class="senseng-hero-products" src="/templates/senseng/hero-bg.jpg" alt="" fetchpriority="high">
+              <img class="senseng-hero-products wr-hero-float" src="/templates/senseng/hero-bg.jpg" alt="" fetchpriority="high">
             </div>
-            <div class="senseng-hero-left">
+            <div class="senseng-hero-left" data-reveal="fade-up">
               <p class="senseng-eyebrow">SQUISHY TOYS FOR BRIGHTER DAYS</p>
               <h1 class="senseng-hero-h1">Character-led squishy<br>toys with clearer<br>shelf cues</h1>
               <p class="senseng-hero-sub">A senseng B2B showcase for kids, adults, gifting, and texture/effect-led squishy toy lines.</p>
@@ -295,7 +295,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
 
     const valuePropsHtml = `
       <div id="senseng-props" class="senseng-value-props">
-        <div class="senseng-vp-item">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
           <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h15l-2 8H8L6 3H3"></path><circle cx="9" cy="20" r="1.4"></circle><circle cx="18" cy="20" r="1.4"></circle></svg>
           </div>
@@ -304,7 +304,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>senseng presents character-led squishy toys with paperboard packaging and clear front-label naming for easier shelf sorting and buyer comparison.</p>
           </div>
         </div>
-        <div class="senseng-vp-item">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
           <div class="senseng-vp-icon" style="background:#ffd7ec;color:#ef348d;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M21 21v-2a4 4 0 0 0-3-3.87"></path></svg>
           </div>
@@ -313,7 +313,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>The range includes kids-facing, adults desk-facing, mixed-age gifting, and texture/effect-led versions, each using distinct visual cues while keeping a compact merchandising format.</p>
           </div>
         </div>
-        <div class="senseng-vp-item">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
           <div class="senseng-vp-icon" style="background:#c8f5e9;color:#11a886;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
           </div>
@@ -326,25 +326,25 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
     `;
     // "Why Choose" trust section (video variant only)
     const whyChooseSection = isVideoFullscreen ? `
-      <section class="senseng-partners" style="max-width:1536px;margin:0 auto;padding:64px 40px;">
+      <section class="senseng-partners" style="max-width:1536px;margin:0 auto;padding:64px 40px;" data-reveal="fade-up">
         <h2 style="font-size:36px;font-weight:900;color:#073b91;text-align:center;letter-spacing:-0.5px;margin:0 0 48px;">Why Partner with senseng?</h2>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px;">
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
             <div style="width:64px;height:64px;border-radius:50%;background:#c9f4ff;color:#0c9de6;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">🏭</div>
             <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Direct Factory Access</h3>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Work directly with verified manufacturers for competitive pricing and custom orders.</p>
           </div>
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
             <div style="width:64px;height:64px;border-radius:50%;background:#ffd7ec;color:#ef348d;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">📦</div>
             <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Low MOQ Available</h3>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Flexible minimum order quantities to support businesses of all sizes.</p>
           </div>
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
             <div style="width:64px;height:64px;border-radius:50%;background:#c8f5e9;color:#11a886;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">🌍</div>
             <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Global Shipping</h3>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Reliable worldwide logistics with door-to-door delivery and customs support.</p>
           </div>
-          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;">
+          <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
             <div style="width:64px;height:64px;border-radius:50%;background:#fff0c9;color:#d4a017;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:28px;">✅</div>
             <h3 style="font-size:18px;font-weight:900;color:#073b91;margin:0 0 8px;">Quality Assured</h3>
             <p style="font-size:14px;color:#3b5066;line-height:1.5;margin:0;">Every product passes strict quality checks before shipment to ensure customer satisfaction.</p>
@@ -361,7 +361,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // -------------------------------------------------------------
   if (page === 'catalog') {
     const catalogHero = `
-      <div class="senseng-cat-hero">
+      <div class="senseng-cat-hero" data-reveal="fade-up">
         <div class="cat-hero-left">
           <h1 style="font-size:52px;font-weight:900;color:#073b91;letter-spacing:-1.5px;line-height:1;margin:0 0 8px;">Product Catalog</h1>
           <h2 style="font-size:24px;font-weight:900;color:#073b91;margin:0 0 6px;">Character-led squishy toys with clearer shelf cues</h2>
@@ -371,7 +371,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
           <img src="/templates/senseng/hero-catalog-star.jpg" alt="Small Squish Big Smiles" style="max-height:175px;object-fit:contain;">
         </div>
       </div>
-      <div class="senseng-cat-filter-bar">
+      <div class="senseng-cat-filter-bar" data-reveal="fade-up">
         <div style="display:flex;align-items:center;gap:12px;">
           <button type="button" class="senseng-filter-pill active">All Products</button>
           <button type="button" class="senseng-filter-pill">Kids</button>
@@ -387,7 +387,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
     `;
 
     const section1 = `
-      <section class="senseng-cat-section">
+      <section class="senseng-cat-section" data-reveal="fade-up">
         <div class="senseng-cat-section-hdr">
           <div class="senseng-vp-icon" style="width:48px;height:48px;min-width:48px;background:#ffd7ec;color:#ef348d;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="10" cy="7" r="4"></circle><path d="M21 21v-2a4 4 0 0 0-3-3.87"></path></svg>
@@ -399,7 +399,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
         <div class="senseng-cat-cards-4">
           ${allProducts.slice(0, 4).map((p) => `
-            <article class="senseng-catalog-card">
+            <article class="senseng-catalog-card wr-card-hover" data-reveal="fade-up">
               <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:flex;align-items:center;">
                 <img src="${esc(p.img)}" alt="${esc(p.name)}">
               </a>
@@ -417,7 +417,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
     `;
 
     const section2 = `
-      <div class="senseng-cat-2col">
+      <div class="senseng-cat-2col" data-reveal="fade-up">
         <!-- Left: Texture and effect-led styles -->
         <section style="margin:0;">
           <div class="senseng-cat-section-hdr">
@@ -431,7 +431,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             ${(materialsMode?allProducts.slice(4,4+Math.ceil(Math.max(0,allProducts.length-4)/2)):[allProducts[4], allProducts[6]]).map((p) => `
-              <article class="senseng-catalog-card">
+              <article class="senseng-catalog-card wr-card-hover" data-reveal="fade-up">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:flex;align-items:center;">
                   <img src="${esc(p.img)}" alt="${esc(p.name)}">
                 </a>
@@ -460,7 +460,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             ${(materialsMode?allProducts.slice(4+Math.ceil(Math.max(0,allProducts.length-4)/2)):[allProducts[5], allProducts[7]]).map((p) => `
-              <article class="senseng-catalog-card">
+              <article class="senseng-catalog-card wr-card-hover" data-reveal="fade-up">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:flex;align-items:center;">
                   <img src="${esc(p.img)}" alt="${esc(p.name)}">
                 </a>
@@ -495,7 +495,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
       </div>
       <div class="senseng-detail-grid">
         <!-- Col 1: Big Image & Thumbs -->
-        <div>
+        <div data-reveal="fade-up">
           <div class="senseng-detail-img-box">
             <img id="detailMainImg" src="${esc(currentProduct.img)}" alt="${esc(currentProduct.name)}">
           </div>
@@ -511,7 +511,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
 
         <!-- Col 2: Info, Specs, Tiles -->
-        <div>
+        <div data-reveal="fade-up">
           <span class="senseng-badge-pill">${esc(currentProduct.badge)}</span>
           <h1 class="senseng-detail-h1">${esc(currentProduct.name)}</h1>
           <p class="senseng-detail-desc">${esc(currentProduct.desc)}</p>
@@ -596,7 +596,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
 
         <!-- Col 3: Wholesale Inquiry Box -->
-        <aside class="senseng-inquiry-box">
+        <aside class="senseng-inquiry-box" data-reveal="fade-up">
           <h3 style="font-size:32px;font-weight:900;color:#073b91;letter-spacing:-0.5px;margin:0 0 8px;">Wholesale inquiry</h3>
           <p style="font-size:14.5px;line-height:1.45;color:#102033;margin:0 0 18px;">Send the style name, estimated order quantity, destination market, and any packaging or labeling questions so senseng can follow up with the relevant information.</p>
           <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" class="senseng-form">
@@ -658,7 +658,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // -------------------------------------------------------------
   if (page === 'about') {
     const aboutHero = `
-      <div class="senseng-about-hero">
+      <div class="senseng-about-hero" data-reveal="fade-up">
         <div class="senseng-about-hero-inner">
           <div class="senseng-reference-scene" aria-hidden="true"><img src="/templates/senseng/about-reference.jpg" alt=""></div>
           <div class="senseng-reference-copy">
@@ -674,7 +674,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
       </div>
       <div class="senseng-value-props">
-        <div class="senseng-vp-item">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
           <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18v12H3z"></path><path d="m3 9 2-5h14l2 5"></path><path d="M9 21v-6h6v6"></path></svg>
           </div>
@@ -683,7 +683,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>senseng is a trader focused on squishy toy products, including character-led concepts and paperboard-packaged sales versions for buyer review.</p>
           </div>
         </div>
-        <div class="senseng-vp-item">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
           <div class="senseng-vp-icon" style="background:#ffd7ec;color:#ef348d;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 16-9 5-9-5V8l9-5 9 5z"></path><path d="M3.3 7.6 12 12.5l8.7-4.9"></path><path d="M12 22V12"></path></svg>
           </div>
@@ -692,7 +692,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
             <p>The current showcase emphasizes age-led, gift-led, desk-led, and texture/effect-led packaging cues so buyers can compare the assortment more efficiently.</p>
           </div>
         </div>
-        <div class="senseng-vp-item">
+        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up">
           <div class="senseng-vp-icon" style="background:#c8f5e9;color:#11a886;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg>
           </div>
@@ -713,7 +713,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // -------------------------------------------------------------
   if (page === 'contact') {
     const contactHero = `
-      <div class="senseng-contact-hero">
+      <div class="senseng-contact-hero" data-reveal="fade-up">
         <div class="senseng-contact-hero-inner">
           <div class="senseng-reference-scene" aria-hidden="true"><img src="/templates/senseng/contact-reference.jpg" alt=""></div>
           <div class="senseng-reference-copy">
@@ -730,7 +730,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
       </div>
       <div class="senseng-contact-2col">
         <!-- Left: Form -->
-        <div style="background:#ffffff;border:1px solid #d8ecf8;border-radius:24px;padding:30px 32px;box-shadow:0 6px 20px rgba(7,59,145,0.04);">
+        <div style="background:#ffffff;border:1px solid #d8ecf8;border-radius:24px;padding:30px 32px;box-shadow:0 6px 20px rgba(7,59,145,0.04);" class="wr-card-hover" data-reveal="fade-up">
           <h2 style="font-size:28px;font-weight:900;color:#073b91;margin:0 0 6px;">Send a wholesale inquiry</h2>
           <p style="font-size:15.5px;color:#27405b;margin:0 0 20px;">Tell us about your interest and we'll be in touch.</p>
           <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" class="senseng-form">
@@ -760,7 +760,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
         </div>
 
         <!-- Right: Info cards -->
-        <div style="background:#eef8ff;border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:28px;">
+        <div style="background:#eef8ff;border-radius:24px;padding:32px;display:flex;flex-direction:column;gap:28px;" class="wr-card-hover" data-reveal="fade-up">
           <div style="display:flex;align-items:flex-start;gap:18px;">
             <div class="senseng-vp-icon" style="width:52px;height:52px;min-width:52px;background:#c9f4ff;color:#0c9de6;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>

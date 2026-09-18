@@ -49,7 +49,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
     <section class="wr-minimal-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:85px 0 95px;position:relative;border-bottom:1px solid #e5e7eb;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:60px;align-items:center;">
         <!-- Left Editorial Column -->
-        <div class="wr-minimal-hero-left">
+        <div class="wr-minimal-hero-left" data-reveal="fade-up">
           <div style="font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;color:#c59b27;font-weight:800;margin-bottom:20px;">
             № 2026 COLLECTION // OBJECT STUDY
           </div>
@@ -74,19 +74,19 @@ export function renderMinimalHome(ctx: ThemeContext): string {
           <!-- Precision Counters -->
           <div style="margin-top:48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:24px;border-top:1px solid #e5e7eb;padding-top:28px;">
             <div>
-              <div style="font-size:2rem;font-weight:900;color:#111827;letter-spacing:-0.02em;" data-counter="36" data-suffix=" GATES">
+              <div style="font-size:2rem;font-weight:900;color:#111827;letter-spacing:-0.02em;" data-counter>
                 36 GATES
               </div>
               <div style="font-size:0.75rem;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;">${isZh ? '精密品质工序' : 'Quality Gates'}</div>
             </div>
             <div>
-              <div style="font-size:2rem;font-weight:900;color:#c59b27;letter-spacing:-0.02em;" data-counter="500" data-suffix="+ STORES">
+              <div style="font-size:2rem;font-weight:900;color:#c59b27;letter-spacing:-0.02em;" data-counter>
                 500+ STORES
               </div>
               <div style="font-size:0.75rem;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;">${isZh ? '全球设计买手店' : 'Design Boutiques'}</div>
             </div>
             <div>
-              <div style="font-size:2rem;font-weight:900;color:#111827;letter-spacing:-0.02em;" data-counter="99" data-suffix=".4%">
+              <div style="font-size:2rem;font-weight:900;color:#111827;letter-spacing:-0.02em;" data-counter>
                 99.4%
               </div>
               <div style="font-size:0.75rem;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;">${isZh ? '触觉满意度' : 'Client Rating'}</div>
@@ -99,8 +99,8 @@ export function renderMinimalHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Spotlight Podium -->
-        <div class="wr-minimal-hero-right" style="position:relative;text-align:center;">
-          <div class="wr-minimal-podium" style="background:#f9fafb;border:1px solid #e5e7eb;padding:50px 30px;position:relative;max-width:460px;margin:0 auto;box-shadow:0 20px 40px rgba(0,0,0,0.03);">
+        <div class="wr-minimal-hero-right" style="position:relative;text-align:center;" data-reveal="fade-up">
+          <div class="wr-minimal-podium wr-hero-float wr-card-hover" style="background:#f9fafb;border:1px solid #e5e7eb;padding:50px 30px;position:relative;max-width:460px;margin:0 auto;box-shadow:0 20px 40px rgba(0,0,0,0.03);">
             <div style="position:absolute;top:16px;left:16px;font-size:0.72rem;letter-spacing:0.1em;color:#9ca3af;text-transform:uppercase;">
               EXHIBIT // № 01
             </div>
@@ -118,7 +118,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
   // 3. Precision Damping & Calibration Progress Bars
   const calibrationProgressHtml = `
     <section id="minimal-exhibit" class="wrap" style="padding:60px 0;" data-reveal="fade-up">
-      <div style="border:1px solid #e5e7eb;background:#ffffff;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.02);">
+      <div class="wr-card-hover" style="border:1px solid #e5e7eb;background:#ffffff;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.02);">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
           <div>
             <span style="font-size:0.75rem;letter-spacing:0.16em;text-transform:uppercase;color:#c59b27;font-weight:800;">CALIBRATION METRICS</span>
@@ -186,7 +186,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
 
   // 4. Exhibition Roster Grid
   const exhibitionGridHtml = `
-    <section class="wrap" style="padding:40px 0 80px;">
+    <section class="wrap" style="padding:40px 0 80px;" data-reveal="fade-up">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap;gap:16px;">
         <div>
           <span style="font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;color:#c59b27;font-weight:800;">EXHIBITION ROSTER</span>
@@ -201,7 +201,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
 
       <div class="wr-minimal-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:32px;">
         ${products.slice(0, 8).map((p, idx) => `
-          <div class="wr-minimal-card" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
+          <div class="wr-minimal-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
             <div style="background:#f9fafb;padding:32px 24px;text-align:center;position:relative;border-bottom:1px solid #f3f4f6;">
               <span style="position:absolute;top:14px;left:14px;font-size:0.74rem;letter-spacing:0.1em;font-weight:800;color:#9ca3af;">
                 № 0${idx + 1}
@@ -266,7 +266,7 @@ export function renderMinimalCatalog(ctx: ThemeContext): string {
 
         <div class="wr-minimal-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:32px;">
           ${products.map((p, idx) => `
-            <div class="wr-minimal-card" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;">
+            <div class="wr-minimal-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;">
               <div style="background:#f9fafb;padding:32px 24px;text-align:center;position:relative;border-bottom:1px solid #f3f4f6;">
                 <span style="position:absolute;top:14px;left:14px;font-size:0.74rem;letter-spacing:0.1em;font-weight:800;color:#9ca3af;">
                   № 0${(idx % 8) + 1}
@@ -332,7 +332,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:60px;align-items:start;">
           <!-- Left: Big Artwork Specimen -->
-          <div style="background:#f9fafb;border:1px solid #e5e7eb;padding:48px;text-align:center;">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#f9fafb;border:1px solid #e5e7eb;padding:48px;text-align:center;">
             <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;filter:drop-shadow(0 16px 28px rgba(0,0,0,0.06));">
             <div style="margin-top:28px;display:flex;justify-content:center;gap:16px;font-size:0.75rem;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;">
               <span>EN71 & ASTM</span>
@@ -344,7 +344,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
           </div>
 
           <!-- Right: Anatomy & Form Inquiry -->
-          <div>
+          <div data-reveal="fade-up">
             <div style="font-size:0.76rem;letter-spacing:0.2em;text-transform:uppercase;color:#c59b27;font-weight:800;margin-bottom:12px;">
               ${esc(p.badge)}
             </div>
@@ -357,7 +357,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
               ${esc(p.desc)}
             </p>
 
-            <div style="border:1px solid #e5e7eb;padding:24px;margin-bottom:32px;">
+            <div class="wr-card-hover" style="border:1px solid #e5e7eb;padding:24px;margin-bottom:32px;">
               <div style="font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;margin-bottom:14px;font-weight:800;">
                 TECHNICAL ANATOMY //
               </div>
@@ -382,7 +382,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
             </div>
 
             <!-- Swiss Precision Damping Progress Bars -->
-            <div style="border:1px solid #e5e7eb;padding:24px;margin-bottom:32px;">
+            <div class="wr-card-hover" style="border:1px solid #e5e7eb;padding:24px;margin-bottom:32px;">
               <div style="font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:#c59b27;margin-bottom:14px;font-weight:800;">
                 PRECISION DAMPING CALIBRATION //
               </div>
@@ -432,13 +432,13 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
 
         <!-- Related Exhibit Objects -->
         ${related.length > 0 ? `
-          <div style="margin-top:70px;border-top:1px solid #e5e7eb;padding-top:40px;">
+          <div style="margin-top:70px;border-top:1px solid #e5e7eb;padding-top:40px;" data-reveal="fade-up">
             <div style="font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;color:#c59b27;margin-bottom:20px;font-weight:800;">
               // PARALLEL OBJECT STUDIES
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
               ${related.map((r) => `
-                <div style="border:1px solid #e5e7eb;background:#ffffff;padding:24px;text-align:center;">
+                <div class="wr-minimal-card wr-card-hover" data-reveal="fade-up" style="border:1px solid #e5e7eb;background:#ffffff;padding:24px;text-align:center;">
                   <img src="${esc(r.img)}" alt="${esc(r.name)}" style="max-height:160px;object-fit:contain;margin-bottom:14px;">
                   <div style="font-size:0.75rem;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">${esc(r.badge)}</div>
                   <h4 style="font-size:0.95rem;font-weight:800;color:#111827;margin:0 0 12px;">${esc(r.name)}</h4>
@@ -476,7 +476,7 @@ export function renderMinimalAbout(ctx: ThemeContext): string {
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;margin-bottom:70px;">
-          <div data-reveal="fade-up" style="border:1px solid #e5e7eb;padding:36px;">
+          <div data-reveal="fade-up" class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;">
             <div style="font-size:0.8rem;letter-spacing:0.12em;color:#c59b27;font-weight:800;margin-bottom:12px;">01 // REDUCTION</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#111827;margin:0 0 10px;">${isZh ? '极致减法与留白' : 'Disciplined Reduction'}</h3>
             <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
@@ -484,7 +484,7 @@ export function renderMinimalAbout(ctx: ThemeContext): string {
             </p>
           </div>
 
-          <div data-reveal="fade-up" style="border:1px solid #e5e7eb;padding:36px;">
+          <div data-reveal="fade-up" class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;">
             <div style="font-size:0.8rem;letter-spacing:0.12em;color:#c59b27;font-weight:800;margin-bottom:12px;">02 // TOLERANCE</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#111827;margin:0 0 10px;">${isZh ? '0.05mm 开模精密公差' : '0.05mm Precision'}</h3>
             <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
@@ -492,7 +492,7 @@ export function renderMinimalAbout(ctx: ThemeContext): string {
             </p>
           </div>
 
-          <div data-reveal="fade-up" style="border:1px solid #e5e7eb;padding:36px;">
+          <div data-reveal="fade-up" class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;">
             <div style="font-size:0.8rem;letter-spacing:0.12em;color:#c59b27;font-weight:800;margin-bottom:12px;">03 // INTEGRITY</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#111827;margin:0 0 10px;">${isZh ? '严苛食品级安全准则' : 'Uncompromising Safety'}</h3>
             <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
@@ -526,7 +526,7 @@ export function renderMinimalContact(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:start;">
           <!-- Minimal Form -->
-          <div data-reveal="fade-up" style="border:1px solid #e5e7eb;padding:36px;">
+          <div data-reveal="fade-up" class="wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;">
             <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:20px;">
               <div>
                 <label for="name" style="display:block;font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;color:#111827;margin-bottom:6px;">${isZh ? '姓名 / 公司' : 'Name / Organization'}</label>
@@ -560,7 +560,7 @@ export function renderMinimalContact(ctx: ThemeContext): string {
 
           <!-- Right Details -->
           <div data-reveal="fade-up" style="display:grid;gap:24px;">
-            <div style="border:1px solid #e5e7eb;padding:30px;">
+            <div class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:30px;">
               <div style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:#c59b27;font-weight:800;margin-bottom:8px;">LIAISON</div>
               <h3 style="font-size:1.15rem;font-weight:900;color:#111827;margin:0 0 14px;">${esc(company.name)}</h3>
               <p style="color:#6b7280;font-size:0.9rem;margin:0 0 8px;"><strong>Email:</strong> <a style="color:#111827;" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p>
@@ -568,7 +568,7 @@ export function renderMinimalContact(ctx: ThemeContext): string {
               ${company.phone ? `<p style="color:#6b7280;font-size:0.9rem;margin:0 0 8px;"><strong>Phone:</strong> ${esc(company.phone)}</p>` : ''}
             </div>
 
-            <div style="border:1px solid #e5e7eb;padding:30px;">
+            <div class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:30px;">
               <h4 style="font-size:0.95rem;font-weight:800;color:#111827;letter-spacing:0.04em;text-transform:uppercase;margin:0 0 10px;">${isZh ? '私模定制说明' : 'Bespoke Tooling Protocols'}</h4>
               <p style="color:#6b7280;font-size:0.88rem;line-height:1.7;margin:0;">
                 ${isZh ? '支持专属 3D 造型打样，提供高精度 CNC 铝模与钢模雕刻，专属哑光烫金卡盒。' : 'Rapid prototyping with precision CNC aluminum and steel tooling for custom designer editions.'}

@@ -44,9 +44,8 @@ export function renderWonderHome(ctx: ThemeContext): string {
     <section class="wr-wonder-hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(180deg, #fbf8f3 0%, #f4ede1 100%);padding:80px 0 90px;position:relative;overflow:hidden;border-bottom:1px solid #e9dfd0;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:54px;align-items:center;">
         <!-- Left Editorial Copy -->
-        <div>
-          <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:1px solid #e0d4c1;padding:6px 18px;border-radius:9999px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <span style="font-size:0.9rem;">🌾</span>
+        <div class="wr-wonder-hero-left" data-reveal="fade-up">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:1px solid #c9bda8;padding:6px 18px;border-radius:9999px;margin-bottom:24px;box-shadow:0 2px 8px rgba(38,70,83,0.06);">
             <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.06em;text-transform:uppercase;">
               ${isZh ? '北欧自然主义 · 触觉美学玩具' : 'NORDIC PLAY & TACTILE WELLNESS'}
             </span>
@@ -82,8 +81,8 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
         <!-- Right Visual Showcase -->
         <div style="text-align:center;">
-          <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:40px;box-shadow:0 24px 60px rgba(38,70,83,0.1);max-width:480px;margin:0 auto;position:relative;">
-            <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-height:360px;object-fit:contain;animation:wrFloat 4.5s ease-in-out infinite alternate;">
+          <div class="wr-hero-float" style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:40px;box-shadow:0 24px 60px rgba(38,70,83,0.1);max-width:480px;margin:0 auto;position:relative;">
+            <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-height:360px;object-fit:contain;">
             <div style="margin-top:20px;padding-top:20px;border-top:1px solid #f0e6d8;display:flex;justify-content:space-between;align-items:center;text-align:left;">
               <div>
                 <span style="font-size:0.75rem;font-weight:800;color:#e76f51;text-transform:uppercase;">${esc(heroProduct.badge)}</span>
@@ -101,7 +100,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
   // Bento Box Grid (北欧便当盒五格精选画廊)
   const bentoHtml = `
-    <section id="wonder-bento" class="wrap" style="padding:70px 0 40px;">
+    <section id="wonder-bento" class="wrap" style="padding:70px 0 40px;" data-reveal="fade-up">
       <div style="text-align:center;max-width:680px;margin:0 auto 48px;">
         <span class="eyebrow" style="color:#2a9d8f;font-weight:800;letter-spacing:0.06em;">${isZh ? '匠心工坊解构' : 'BENTO BOX SHOWCASE'}</span>
         <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.7rem);color:#264653;font-weight:900;margin:8px 0 12px;">
@@ -114,7 +113,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
       <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:24px;">
         <!-- Big Bento Card (Col 1-2, Row 1-2) -->
-        <div style="grid-column: span 2;background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="grid-column: span 2;background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;" class="wr-wonder-card wr-card-hover" data-reveal="fade-up">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">
             <div>
               <span style="font-size:0.8rem;font-weight:800;color:#e76f51;letter-spacing:0.04em;">HERO CRAFT · 爆珠手感</span>
@@ -136,7 +135,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Top Right Bento -->
-        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.04);display:flex;flex-direction:column;justify-content:space-between;" class="wr-wonder-card wr-card-hover" data-reveal="fade-up">
           <div>
             <span style="font-size:0.78rem;font-weight:800;color:#2a9d8f;letter-spacing:0.04em;">THERMAL MAGIC · 温感变色</span>
             <h3 style="font-size:1.3rem;font-weight:900;color:#264653;margin:6px 0 8px;">
@@ -152,7 +151,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Bottom Row Bento 1 -->
-        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.04);" class="wr-wonder-card wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">🛡️</div>
           <h4 style="font-size:1.1rem;font-weight:900;color:#264653;margin:0 0 6px;">
             ${isZh ? '欧洲 CE & 美标 ASTM 权威实验室' : 'Certified Child-Safe'}
@@ -163,7 +162,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Bottom Row Bento 2 -->
-        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.04);" class="wr-wonder-card wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">📦</div>
           <h4 style="font-size:1.1rem;font-weight:900;color:#264653;margin:0 0 6px;">
             ${isZh ? '大豆油墨环保礼盒包装' : 'Eco Paperboard Packaging'}
@@ -174,7 +173,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Bottom Row Bento 3 -->
-        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+        <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.04);" class="wr-wonder-card wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">🤝</div>
           <h4 style="font-size:1.1rem;font-weight:900;color:#264653;margin:0 0 6px;">
             ${isZh ? '全球柔性外贸直采与打样' : 'Wholesale & Quick Sampling'}
@@ -191,7 +190,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
   const storyChaptersHtml = `
     <section class="wrap" style="padding:60px 0;">
       <!-- Chapter 1 -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;margin-bottom:70px;">
+      <div data-reveal="fade-up" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;margin-bottom:70px;">
         <div style="background:#f4ede1;border-radius:24px;padding:40px;text-align:center;">
           <img src="${esc(pAt(1).img)}" alt="" style="max-height:280px;object-fit:contain;">
         </div>
@@ -212,7 +211,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
       </div>
 
       <!-- Chapter 2 -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+      <div data-reveal="fade-up" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
         <div>
           <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;text-transform:uppercase;">CHAPTER 02 · DESK COMPANIONS</span>
           <h3 style="font-size:1.9rem;font-weight:900;color:#264653;margin:8px 0 16px;">
@@ -236,7 +235,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
   // Curated Products Wall
   const productsWallHtml = `
-    <section class="wrap chapter" style="padding:60px 0;">
+    <section class="wrap chapter" style="padding:60px 0;" data-reveal="fade-up">
       <div class="section-top" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
         <div>
           <span class="eyebrow" style="color:#2a9d8f;font-weight:800;">${isZh ? 'Senseng 画廊陈列' : 'THE COMPLETE COLLECTION'}</span>
@@ -251,7 +250,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px;">
         ${products.map((p) => `
-          <div class="wr-wonder-card" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
             <div style="background:#fbf8f3;padding:28px;text-align:center;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0e6d8;">
               <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:210px;object-fit:contain;" loading="lazy">
             </div>
@@ -276,7 +275,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
   // FAQ Section
   const faqHtml = `
-    <section class="wrap" style="padding:40px 0 70px;">
+    <section class="wrap" style="padding:40px 0 70px;" data-reveal="fade-up">
       <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
         <span class="eyebrow" style="color:#2a9d8f;font-weight:800;">${isZh ? '采购与工艺问答' : 'FREQUENTLY ASKED QUESTIONS'}</span>
         <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);color:#264653;font-weight:900;margin:6px 0 0;">
@@ -285,7 +284,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
       </div>
 
       <div style="max-width:800px;margin:0 auto;display:grid;gap:16px;">
-        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;">
+        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;" class="wr-card-hover">
           <summary style="font-weight:900;font-size:1.05rem;color:#264653;outline:none;">
             ${isZh ? '1. Senseng 捏捏乐使用的材质符合哪些国际安全标准？' : '1. Which international safety standards do Senseng squishies meet?'}
           </summary>
@@ -294,7 +293,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
           </p>
         </details>
 
-        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;">
+        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;" class="wr-card-hover">
           <summary style="font-weight:900;font-size:1.05rem;color:#264653;outline:none;">
             ${isZh ? '2. 玩具如果脏了应该如何清洗与保养？' : '2. How should the squishies be cleaned if they get dusty?'}
           </summary>
@@ -303,7 +302,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
           </p>
         </details>
 
-        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;">
+        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;" class="wr-card-hover">
           <summary style="font-weight:900;font-size:1.05rem;color:#264653;outline:none;">
             ${isZh ? '3. 支持哪些定制服务？定制包装的起订量 (MOQ) 是多少？' : '3. What custom OEM services are supported, and what is the MOQ?'}
           </summary>
@@ -312,7 +311,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
           </p>
         </details>
 
-        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;">
+        <details style="background:#ffffff;border:1px solid #e7dcce;border-radius:16px;padding:20px 24px;cursor:pointer;" class="wr-card-hover">
           <summary style="font-weight:900;font-size:1.05rem;color:#264653;outline:none;">
             ${isZh ? '4. 海外采购商如何索取样品？' : '4. How can international buyers request physical sample kits?'}
           </summary>
@@ -326,8 +325,8 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
   // Workshop Direct Wholesale CTA
   const ctaHtml = `
-    <section class="wrap" style="padding:0 0 80px;">
-      <div style="background:#264653;color:#ffffff;border-radius:24px;padding:54px 40px;text-align:center;">
+    <section class="wrap" style="padding:0 0 80px;" data-reveal="fade-up">
+      <div style="background:#264653;color:#ffffff;border-radius:24px;padding:54px 40px;text-align:center;" class="wr-card-hover">
         <h2 style="font-size:clamp(2rem, 3.5vw, 2.8rem);font-weight:900;color:#ffffff;margin:0 0 14px;">
           ${isZh ? '与 Senseng 工坊直通全球优质玩具供应链' : 'Connect with the Senseng Toy Workshop'}
         </h2>
@@ -366,7 +365,7 @@ export function renderWonderCatalog(ctx: ThemeContext): string {
 
   return `
     <main class="wr-inner wr-senseng-wonder-inner" data-wr-page="catalog" style="padding-top:100px;background:#fbf8f3;">
-      <section class="wrap" style="padding:40px 0 70px;">
+      <section class="wrap" style="padding:40px 0 70px;" data-reveal="fade-up">
         <div style="text-align:center;max-width:700px;margin:0 auto 48px;">
           <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.06em;text-transform:uppercase;">
             ${isZh ? '工坊产品画廊' : 'WORKSHOP CATALOGUE'}
@@ -381,7 +380,7 @@ export function renderWonderCatalog(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:28px;">
           ${products.map((p) => `
-            <div class="wr-wonder-card" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
+            <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
               <div style="background:#fbf8f3;padding:28px;text-align:center;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0e6d8;">
                 <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:220px;object-fit:contain;" loading="lazy">
               </div>
@@ -435,7 +434,7 @@ export function renderWonderDetail(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:start;">
           <!-- Left: Big Product Image -->
-          <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:28px;padding:48px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.06);">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e7dcce;border-radius:28px;padding:48px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.06);">
             <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;">
             <div style="margin-top:24px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
               <span style="background:#f4ede1;color:#264653;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:800;">✓ 100% Non-Toxic</span>
@@ -445,7 +444,7 @@ export function renderWonderDetail(ctx: ThemeContext): string {
           </div>
 
           <!-- Right: Details -->
-          <div>
+          <div data-reveal="fade-up">
             <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.04em;">${esc(p.badge)}</span>
             <h1 style="font-size:clamp(2rem, 3.5vw, 2.8rem);font-weight:900;color:#264653;margin:8px 0 14px;line-height:1.2;">
               ${esc(p.name)}
@@ -457,7 +456,7 @@ export function renderWonderDetail(ctx: ThemeContext): string {
               ${esc(p.desc)}
             </p>
 
-            <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:24px;margin-bottom:32px;">
+            <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:24px;margin-bottom:32px;" class="wr-card-hover">
               <h3 style="font-size:1.05rem;font-weight:900;color:#264653;margin:0 0 16px;">
                 ${isZh ? '工坊技术参数' : 'Workshop Specifications'}
               </h3>
@@ -482,7 +481,7 @@ export function renderWonderDetail(ctx: ThemeContext): string {
             </div>
 
             <!-- Tactile & Craft Progress Bars -->
-            <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:22px;margin-bottom:32px;">
+            <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:22px;margin-bottom:32px;" class="wr-card-hover">
               <h4 style="font-size:0.95rem;font-weight:900;color:#264653;margin:0 0 14px;">
                 🌿 ${isZh ? '工坊材质与触感实测标定' : 'Material & Tactile Calibration'}
               </h4>
@@ -531,13 +530,13 @@ export function renderWonderDetail(ctx: ThemeContext): string {
         </div>
 
         <!-- Related -->
-        <div style="margin-top:80px;">
+        <div style="margin-top:80px;" data-reveal="fade-up">
           <h2 style="font-size:1.8rem;font-weight:900;color:#264653;margin:0 0 24px;">
             ${isZh ? '同系列绘本玩具推荐' : 'Other Companions in this Collection'}
           </h2>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
             ${related.map((item) => `
-              <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:20px;text-align:center;">
+              <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:18px;padding:20px;text-align:center;">
                 <img src="${esc(item.img)}" alt="${esc(item.name)}" style="width:100%;max-height:180px;object-fit:contain;margin-bottom:12px;">
                 <h4 style="font-size:1.05rem;font-weight:900;color:#264653;margin:0 0 6px;">${esc(item.name)}</h4>
                 <a class="text-link" style="color:#2a9d8f;font-weight:800;font-size:0.9rem;" href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)}>
@@ -558,7 +557,7 @@ export function renderWonderAbout(ctx: ThemeContext): string {
   return `
     <main class="wr-inner wr-senseng-wonder-inner" data-wr-page="about" style="padding-top:100px;background:#fbf8f3;">
       <section class="wrap" style="padding:40px 0 70px;">
-        <div style="text-align:center;max-width:760px;margin:0 auto 50px;">
+        <div style="text-align:center;max-width:760px;margin:0 auto 50px;" data-reveal="fade-up">
           <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.06em;text-transform:uppercase;">
             ${isZh ? '工坊起源' : 'OUR PHILOSOPHY'}
           </span>
@@ -573,40 +572,40 @@ export function renderWonderAbout(ctx: ThemeContext): string {
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:60px;">
-          <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
             <div style="font-size:2.4rem;margin-bottom:12px;">🌿</div>
             <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '天然无毒环保' : 'Pure & Non-Toxic'}</h3>
             <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '全线产品通过国际权威毒理与重金属迁移检验，零异味零负担。' : 'Certified against international toxicology limits with zero odor and zero plasticizer bleed.'}</p>
           </div>
-          <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
             <div style="font-size:2.4rem;margin-bottom:12px;">📐</div>
             <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '人体工学阻尼' : 'Tactile Ergonomics'}</h3>
             <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '科学调校软硬度与回弹时间，给掌心恰到好处的充实感。' : 'Precisely calibrated resistance curves to comfortably cradle palm anatomy without fatigue.'}</p>
           </div>
-          <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
             <div style="font-size:2.4rem;margin-bottom:12px;">📦</div>
             <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '可持续包装' : 'Eco Packaging'}</h3>
             <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '采用环保纸板与大豆油墨印刷，向减少环境塑料足迹迈进。' : 'FSC paperboard boxes printed with soy inks, minimizing our collective environmental footprint.'}</p>
           </div>
         </div>
 
-        <div style="background:#264653;color:#ffffff;border-radius:24px;padding:50px 40px;text-align:center;">
+        <div style="background:#264653;color:#ffffff;border-radius:24px;padding:50px 40px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
           <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 12px;">${isZh ? '外贸制造与出口实力' : 'Global Export Performance'}</h2>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-top:36px;">
             <div>
-              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;">10,000+ m²</div>
+              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;" data-counter>10,000 m²</div>
               <div style="font-size:0.9rem;opacity:0.85;margin-top:4px;">${isZh ? '洁净车间面积' : 'Factory Floor'}</div>
             </div>
             <div>
-              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;">1,200,000+</div>
+              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;" data-counter>1,200,000+</div>
               <div style="font-size:0.9rem;opacity:0.85;margin-top:4px;">${isZh ? '月均出海玩具产能' : 'Monthly Units'}</div>
             </div>
             <div>
-              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;">60+</div>
+              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;" data-counter>60+</div>
               <div style="font-size:0.9rem;opacity:0.85;margin-top:4px;">${isZh ? '出口合作国家' : 'Export Destinations'}</div>
             </div>
             <div>
-              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;">100%</div>
+              <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;" data-counter>100%</div>
               <div style="font-size:0.9rem;opacity:0.85;margin-top:4px;">${isZh ? '全检出库合格率' : 'Pass Rate'}</div>
             </div>
           </div>
@@ -626,7 +625,7 @@ export function renderWonderContact(ctx: ThemeContext): string {
   return `
     <main class="wr-inner wr-senseng-wonder-inner" data-wr-page="contact" style="padding-top:100px;background:#fbf8f3;">
       <section class="wrap" style="padding:40px 0 70px;">
-        <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
+        <div style="text-align:center;max-width:680px;margin:0 auto 40px;" data-reveal="fade-up">
           <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.06em;text-transform:uppercase;">
             ${isZh ? '联络工坊' : 'GET IN TOUCH'}
           </span>
@@ -641,7 +640,7 @@ export function renderWonderContact(ctx: ThemeContext): string {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start;">
           <!-- Contact Info -->
           <div>
-            <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;box-shadow:0 6px 18px rgba(0,0,0,0.03);margin-bottom:24px;">
+            <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;box-shadow:0 6px 18px rgba(0,0,0,0.03);margin-bottom:24px;">
               <h3 style="font-size:1.25rem;font-weight:900;color:#264653;margin:0 0 18px;">
                 ${isZh ? '工坊联系信息' : 'Direct Contacts'}
               </h3>
@@ -679,7 +678,7 @@ export function renderWonderContact(ctx: ThemeContext): string {
           </div>
 
           <!-- Form -->
-          <div style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
             <h3 style="font-size:1.35rem;font-weight:900;color:#264653;margin:0 0 8px;">
               ${isZh ? '在线询盘与样品申请' : 'Send an Inquiry / Request Samples'}
             </h3>

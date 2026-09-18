@@ -53,7 +53,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:52px;align-items:center;">
         <!-- Left Editorial Copy -->
-        <div class="wr-nature-hero-left">
+        <div class="wr-nature-hero-left" data-reveal="fade-up">
           <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:1px solid #c8d3c5;padding:6px 18px;border-radius:9999px;margin-bottom:20px;box-shadow:0 2px 8px rgba(45,74,34,0.06);">
             <span style="color:#2d4a22;font-size:0.85rem;font-weight:800;">
               🌱 SUSTAINABLE SENSORY PLAY
@@ -80,19 +80,19 @@ export function renderNatureHome(ctx: ThemeContext): string {
           <!-- Dynamic Environmental Impact Counters -->
           <div style="margin-top:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:20px;border-top:1px solid #d5cec0;padding-top:24px;">
             <div>
-              <div style="font-size:1.8rem;font-weight:900;color:#2d4a22;" data-counter="2000" data-suffix="+ ACRES">
+              <div style="font-size:1.8rem;font-weight:900;color:#2d4a22;" data-counter>
                 2,000+ ACRES
               </div>
               <div style="font-size:0.8rem;color:#6b7280;margin-top:4px;">${isZh ? '生态林地协同守护' : 'Protected Forest'}</div>
             </div>
             <div>
-              <div style="font-size:1.8rem;font-weight:900;color:#4a7c59;" data-counter="360" data-suffix=" TONS">
+              <div style="font-size:1.8rem;font-weight:900;color:#4a7c59;" data-counter>
                 360 TONS
               </div>
               <div style="font-size:0.8rem;color:#6b7280;margin-top:4px;">${isZh ? '原生塑料淘汰减碳' : 'Plastic Replaced'}</div>
             </div>
             <div>
-              <div style="font-size:1.8rem;font-weight:900;color:#c89f77;" data-counter="100" data-suffix="% BIO">
+              <div style="font-size:1.8rem;font-weight:900;color:#c89f77;" data-counter>
                 100% BIO
               </div>
               <div style="font-size:0.8rem;color:#6b7280;margin-top:4px;">${isZh ? '大豆油墨纸盒包装' : 'Soy-Ink Box'}</div>
@@ -105,8 +105,8 @@ export function renderNatureHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Visual Showcase -->
-        <div class="wr-nature-hero-right" style="position:relative;text-align:center;">
-          <div class="wr-nature-frame" style="background:#ffffff;border:1px solid #d5cec0;border-radius:32px;padding:40px;box-shadow:0 16px 36px rgba(45,74,34,0.08);position:relative;max-width:480px;margin:0 auto;">
+        <div class="wr-nature-hero-right" style="position:relative;text-align:center;" data-reveal="fade-up">
+          <div class="wr-nature-frame wr-hero-float wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:32px;padding:40px;box-shadow:0 16px 36px rgba(45,74,34,0.08);position:relative;max-width:480px;margin:0 auto;">
             <img src="${esc(heroProduct.img || '/templates/senseng/products-2.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;transition:transform 0.4s ease;">
             <div style="margin-top:20px;display:flex;justify-content:center;gap:12px;font-size:0.82rem;font-weight:800;color:#2d4a22;">
               <span>🌱 0 Phthalates</span>
@@ -124,7 +124,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
   // 3. Eco Footprint Progress Bars
   const ecoProgressHtml = `
     <section id="nature-manifesto" class="wrap" style="padding:60px 0;" data-reveal="fade-up">
-      <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:24px;padding:36px 40px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+      <div class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:24px;padding:36px 40px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
           <div>
             <span style="color:#4a7c59;font-weight:800;font-size:0.82rem;text-transform:uppercase;">// SUSTAINABILITY SCORECARD</span>
@@ -192,7 +192,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
 
   // 4. Products Botanical Flow
   const productsFlowHtml = `
-    <section class="wrap" style="padding:40px 0 70px;">
+    <section class="wrap" style="padding:40px 0 70px;" data-reveal="fade-up">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
         <div>
           <span style="color:#4a7c59;font-weight:800;font-size:0.84rem;text-transform:uppercase;">THE BOTANICAL COLLECTION</span>
@@ -207,7 +207,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
 
       <div class="wr-nature-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:30px;">
         ${products.slice(0, 8).map((p, idx) => `
-          <div class="wr-nature-card" data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
+          <div class="wr-nature-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.25s,box-shadow 0.25s;">
             <div style="background:#f4f1ea;padding:28px 20px;text-align:center;position:relative;">
               <span style="position:absolute;top:12px;left:12px;background:#ffffff;color:#2d4a22;font-size:0.75rem;font-weight:800;padding:3px 10px;border-radius:9999px;border:1px solid #d5cec0;">
                 № 0${idx + 1}
@@ -272,7 +272,7 @@ export function renderNatureCatalog(ctx: ThemeContext): string {
 
         <div class="wr-nature-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:30px;">
           ${products.map((p, idx) => `
-            <div class="wr-nature-card" data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
+            <div class="wr-nature-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.03);display:flex;flex-direction:column;justify-content:space-between;">
               <div style="background:#f4f1ea;padding:28px 20px;text-align:center;position:relative;">
                 <span style="position:absolute;top:12px;left:12px;background:#ffffff;color:#2d4a22;font-size:0.75rem;font-weight:800;padding:3px 10px;border-radius:9999px;border:1px solid #d5cec0;">
                   № 0${(idx % 8) + 1}
@@ -338,7 +338,7 @@ export function renderNatureDetail(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:start;">
           <!-- Left: Big Specimen Image -->
-          <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:24px;padding:48px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:24px;padding:48px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
             <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;">
             <div style="margin-top:24px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
               <span style="background:#f4f1ea;color:#2d4a22;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:800;">✓ 100% Non-Toxic</span>
@@ -348,7 +348,7 @@ export function renderNatureDetail(ctx: ThemeContext): string {
           </div>
 
           <!-- Right: Details, Botanical Notes, Direct Inquiry -->
-          <div>
+          <div data-reveal="fade-up">
             <div style="display:inline-block;background:#4a7c59;color:#ffffff;font-size:0.8rem;font-weight:800;padding:4px 12px;border-radius:9999px;margin-bottom:12px;">
               ${esc(p.badge)}
             </div>
@@ -361,7 +361,7 @@ export function renderNatureDetail(ctx: ThemeContext): string {
               ${esc(p.desc)}
             </p>
 
-            <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:24px;margin-bottom:28px;">
+            <div class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:24px;margin-bottom:28px;">
               <h4 style="font-size:0.95rem;font-weight:800;color:#1e3318;margin:0 0 12px;">${isZh ? '原野工艺与物性规格' : 'Material & Dimension Specs'}</h4>
               <div style="display:grid;gap:8px;font-size:0.88rem;color:#4a5546;">
                 <div><strong>${isZh ? '规格尺寸' : 'Dimensions'}:</strong> ${esc(p.dimensions)}</div>
@@ -372,7 +372,7 @@ export function renderNatureDetail(ctx: ThemeContext): string {
             </div>
 
             <!-- Eco & Tactile Calibration Progress Bars -->
-            <div style="background:#ffffff;border:1px solid #d5cec0;border-left:3px solid #2d4a22;border-radius:16px;padding:22px;margin-bottom:28px;">
+            <div class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-left:3px solid #2d4a22;border-radius:16px;padding:22px;margin-bottom:28px;">
               <h4 style="font-size:0.95rem;font-weight:800;color:#1e3318;margin:0 0 14px;">
                 🍃 ${isZh ? '生态物性与触感评测' : 'Eco-Tactile Performance Index'}
               </h4>
@@ -422,13 +422,13 @@ export function renderNatureDetail(ctx: ThemeContext): string {
 
         <!-- Related Specimen -->
         ${related.length > 0 ? `
-          <div style="margin-top:70px;border-top:1px solid #d5cec0;padding-top:40px;">
+          <div style="margin-top:70px;border-top:1px solid #d5cec0;padding-top:40px;" data-reveal="fade-up">
             <h3 style="font-size:1.4rem;font-weight:900;color:#1e3318;margin-bottom:24px;">
               ${isZh ? '更多自然原野系列标本' : 'More Botanical & Forest Specimens'}
             </h3>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
               ${related.map((r) => `
-                <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:20px;text-align:center;">
+                <div class="wr-nature-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:20px;text-align:center;">
                   <img src="${esc(r.img)}" alt="${esc(r.name)}" style="max-height:150px;object-fit:contain;margin-bottom:12px;">
                   <h4 style="font-size:0.95rem;font-weight:800;color:#1e3318;margin:0 0 8px;">${esc(r.name)}</h4>
                   <a class="button" style="background:#f4f1ea;color:#2d4a22;font-size:0.82rem;font-weight:800;padding:8px 16px;border-radius:6px;display:inline-block;" href="${path(`products/${r.id}/index.html`)}" ${navAttrs('detail', r.id)}>
@@ -465,7 +465,7 @@ export function renderNatureAbout(ctx: ThemeContext): string {
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-bottom:60px;">
-          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:32px;">
+          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:32px;">
             <div style="font-size:2rem;margin-bottom:12px;">🌿</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#1e3318;margin:0 0 10px;">${isZh ? '100% 零塑环保原则' : 'Zero Virgin Plastic'}</h3>
             <p style="font-size:0.92rem;color:#5c6b73;line-height:1.65;margin:0;">
@@ -473,7 +473,7 @@ export function renderNatureAbout(ctx: ThemeContext): string {
             </p>
           </div>
 
-          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:32px;">
+          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:32px;">
             <div style="font-size:2rem;margin-bottom:12px;">☀️</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#1e3318;margin:0 0 10px;">${isZh ? '分布式太阳能智造' : 'Solar-Powered Plant'}</h3>
             <p style="font-size:0.92rem;color:#5c6b73;line-height:1.65;margin:0;">
@@ -481,7 +481,7 @@ export function renderNatureAbout(ctx: ThemeContext): string {
             </p>
           </div>
 
-          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:32px;">
+          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:32px;">
             <div style="font-size:2rem;margin-bottom:12px;">🛡️</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#1e3318;margin:0 0 10px;">${isZh ? '全龄段安全认证' : 'Universal Child Safe'}</h3>
             <p style="font-size:0.92rem;color:#5c6b73;line-height:1.65;margin:0;">
@@ -515,7 +515,7 @@ export function renderNatureContact(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:44px;align-items:start;">
           <!-- Form -->
-          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
             <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:20px;">
               <div>
                 <label for="name" style="display:block;font-size:0.85rem;font-weight:800;color:#1e3318;margin-bottom:6px;">${isZh ? '您的姓名 / 称谓' : 'Full Name'}</label>
@@ -549,7 +549,7 @@ export function renderNatureContact(ctx: ThemeContext): string {
 
           <!-- Direct Info -->
           <div data-reveal="fade-up" style="display:grid;gap:20px;">
-            <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:28px;">
+            <div class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:28px;">
               <h3 style="font-size:1.15rem;font-weight:900;color:#1e3318;margin:0 0 14px;">${esc(company.name)}</h3>
               <p style="color:#5c6b73;font-size:0.92rem;margin:0 0 8px;"><strong>Email:</strong> <a style="color:#2d4a22;" href="mailto:${esc(company.email)}">${esc(company.email)}</a></p>
               ${company.contactName ? `<p style="color:#5c6b73;font-size:0.92rem;margin:0 0 8px;"><strong>Contact:</strong> ${esc(company.contactName)}</p>` : ''}
@@ -557,7 +557,7 @@ export function renderNatureContact(ctx: ThemeContext): string {
               ${company.whatsapp ? `<p style="color:#5c6b73;font-size:0.92rem;margin:0 0 8px;"><strong>WhatsApp:</strong> ${esc(company.whatsapp)}</p>` : ''}
             </div>
 
-            <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:28px;">
+            <div class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:16px;padding:28px;">
               <h4 style="font-size:1.05rem;font-weight:900;color:#1e3318;margin:0 0 10px;">${isZh ? '绿色包装打样说明' : 'Sustainable Packaging Options'}</h4>
               <p style="color:#5c6b73;font-size:0.9rem;line-height:1.6;margin:0;">
                 ${isZh ? '支持高克重纯白环保卡盒、牛皮纸盒与透明植物基降解膜，提供免费条码与外箱标签设计。' : 'FSC certified paperboard, custom die-cut windows, and soy-ink branding for global eco retailers.'}

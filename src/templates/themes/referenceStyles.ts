@@ -1053,16 +1053,71 @@ a.button:hover {
   transition: transform 0.25s ease;
 }
 
-/* Scroll reveal classes */
-.wr-reveal {
+/* Apple-Grade Motion System for Reference Templates */
+.wr-reveal, [data-reveal] {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  transform: translateY(32px) scale(0.97);
+  filter: blur(8px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
 }
-.wr-reveal.wr-revealed {
+.wr-reveal.wr-revealed, [data-reveal].wr-revealed {
   opacity: 1 !important;
-  transform: translateY(0) !important;
+  transform: none !important;
+  filter: blur(0px) !important;
+}
+
+/* Staggered Delay Cascade */
+.wr-reveal:nth-child(1), [data-reveal]:nth-child(1) { transition-delay: 0.04s; }
+.wr-reveal:nth-child(2), [data-reveal]:nth-child(2) { transition-delay: 0.09s; }
+.wr-reveal:nth-child(3), [data-reveal]:nth-child(3) { transition-delay: 0.14s; }
+.wr-reveal:nth-child(4), [data-reveal]:nth-child(4) { transition-delay: 0.19s; }
+.wr-reveal:nth-child(5), [data-reveal]:nth-child(5) { transition-delay: 0.24s; }
+.wr-reveal:nth-child(6), [data-reveal]:nth-child(6) { transition-delay: 0.29s; }
+.wr-reveal:nth-child(7), [data-reveal]:nth-child(7) { transition-delay: 0.34s; }
+.wr-reveal:nth-child(8), [data-reveal]:nth-child(8) { transition-delay: 0.39s; }
+
+/* 3D Card Hover Physics & Apple Spotlight */
+.product-card, .wr-product-card, .wr-card-hover {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  will-change: transform;
+}
+.product-card:hover, .wr-product-card:hover, .wr-card-hover:hover {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Apple Keynote Floating Levitation */
+@keyframes wrAppleHeroFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.08));
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.6deg);
+    filter: drop-shadow(0 25px 40px rgba(0, 0, 0, 0.13));
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.08));
+  }
+}
+.wr-hero-float {
+  animation: wrAppleHeroFloat 5s ease-in-out infinite alternate;
+  will-change: transform, filter;
+}
+
+/* Apple Spring Micro-Interactions on Buttons */
+.button, a.button, .tmp-btn {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, filter 0.2s ease !important;
+}
+.button:hover, a.button:hover, .tmp-btn:hover {
+  transform: scale(1.03) translateY(-2px) !important;
+  filter: brightness(1.08) !important;
+}
+.button:active, a.button:active, .tmp-btn:active {
+  transform: scale(0.96) translateY(1px) !important;
 }
 
 `;

@@ -50,23 +50,23 @@ export function renderMarketingHome(ctx: ThemeContext): string {
   const statsHtml = `
     <section id="stats" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #d946ef;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(217,70,239,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#d946ef;letter-spacing:-1px;" data-counter="380">+380%</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #d946ef;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(217,70,239,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#d946ef;letter-spacing:-1px;" data-counter="380" data-suffix="%">+380%</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Organic Traffic Lift</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Across enterprise brands with structured entity SEO & topical authority content.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #ec4899;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(236,72,153,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#ec4899;letter-spacing:-1px;" data-counter="4.2">4.2x</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #ec4899;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(236,72,153,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#ec4899;letter-spacing:-1px;" data-counter="4.2" data-suffix="x">4.2x</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Blended ROAS Multiplier</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Validated through algorithmic bid optimization and high-intent audience lookalikes.</div>
         </div>
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #8b5cf6;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(139,92,246,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#8b5cf6;letter-spacing:-1px;" data-counter="120">$120M+</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #8b5cf6;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(139,92,246,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#8b5cf6;letter-spacing:-1px;" data-counter="120" data-suffix="M+">$120M+</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Managed Client Ad Spend</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Scaling performance marketing across 38 competitive global consumer verticals.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #06b6d4;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(6,182,212,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">-45%</div>
+        <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #06b6d4;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(6,182,212,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;" data-counter="45" data-suffix="%">-45%</div>
           <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">Cost Per Acquisition</div>
           <div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">Via hyper-converting landing page variants and rapid creative testing matrices.</div>
         </div>
@@ -78,7 +78,7 @@ export function renderMarketingHome(ctx: ThemeContext): string {
   const products = draft.products.slice(0, 6);
   const productsHtml = `
     <section class="wrap chapter" style="padding:60px 0;">
-      <div class="section-top" style="margin-bottom:36px;">
+      <div class="section-top" data-reveal="fade-up" style="margin-bottom:36px;">
         <div>
           <span class="eyebrow" style="color:#d946ef;font-weight:700;">OUR GROWTH SUITE</span>
           <h2 style="font-size:clamp(2rem, 3.5vw, 2.8rem);margin-top:8px;color:#18181b;">Full-Funnel Creative & Acquisition Capabilities</h2>
@@ -94,7 +94,7 @@ export function renderMarketingHome(ctx: ThemeContext): string {
           const icons = ['🎯', '✨', '⚡', '📊', '📈', '🚀'];
           const tags = ['Paid Media', 'SEO Growth', 'Creative Ads', 'Lifecycle', 'CRO Engine', 'Data Analytics'];
           return `
-            <article class="product-card" style="background:#faf5ff;border:1px solid #f3e8ff;border-radius:18px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#faf5ff;border:1px solid #f3e8ff;border-radius:18px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s;">
               <div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                   <span style="font-size:1.8rem;">${icons[idx % icons.length]}</span>
@@ -118,29 +118,29 @@ export function renderMarketingHome(ctx: ThemeContext): string {
 
   // 4. Full Funnel Architecture Section
   const funnelHtml = `
-    <section class="wrap" style="padding:60px 0;border-top:1px solid #f3e8ff;">
+    <section class="wrap" style="padding:60px 0;border-top:1px solid #f3e8ff;" data-reveal="fade-up">
       <div style="text-align:center;max-width:700px;margin:0 auto 48px;">
         <span class="eyebrow" style="color:#d946ef;font-weight:700;">PROVEN METHODOLOGY</span>
         <h2 style="font-size:2.4rem;color:#18181b;margin:10px 0;">The 4-Stage Revenue Flywheel Engine</h2>
         <p style="color:#71717a;font-size:1.05rem;">We build self-reinforcing acquisition systems that turn cold traffic into dedicated brand advocates.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-size:0.8rem;font-weight:800;color:#d946ef;margin-bottom:8px;">STAGE 01</div>
           <h3 style="font-size:1.25rem;color:#18181b;margin:0 0 10px;">Algorithmic Discovery</h3>
           <p style="color:#71717a;font-size:0.9rem;line-height:1.6;">High-velocity creative testing across Meta, TikTok, and YouTube Shorts to identify winning consumer hooks.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-size:0.8rem;font-weight:800;color:#ec4899;margin-bottom:8px;">STAGE 02</div>
           <h3 style="font-size:1.25rem;color:#18181b;margin:0 0 10px;">Conversion Architecture</h3>
           <p style="color:#71717a;font-size:0.9rem;line-height:1.6;">Ultra-fast headless landing pages tuned for sub-second load speeds and maximum frictionless checkout rate.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-size:0.8rem;font-weight:800;color:#8b5cf6;margin-bottom:8px;">STAGE 03</div>
           <h3 style="font-size:1.25rem;color:#18181b;margin:0 0 10px;">Audience Retargeting</h3>
           <p style="color:#71717a;font-size:0.9rem;line-height:1.6;">Dynamic product ads and behavioral segmentation keeping your brand top-of-mind across the entire buying journey.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
           <div style="font-size:0.8rem;font-weight:800;color:#06b6d4;margin-bottom:8px;">STAGE 04</div>
           <h3 style="font-size:1.25rem;color:#18181b;margin:0 0 10px;">LTV & Retention Loops</h3>
           <p style="color:#71717a;font-size:0.9rem;line-height:1.6;">Automated email/SMS lifecycle flows that drive repeat purchase velocity and maximize total customer lifetime value.</p>
@@ -151,14 +151,14 @@ export function renderMarketingHome(ctx: ThemeContext): string {
 
   // 5. Tech Stack & Channel Integrations
   const channelsHtml = `
-    <section class="wrap" style="padding:50px 0 35px;border-top:1px solid #f3e8ff;">
+    <section class="wrap" style="padding:50px 0 35px;border-top:1px solid #f3e8ff;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:32px;">
         <span class="eyebrow" style="color:#d946ef;font-weight:700;">CHANNELS & AD STACK</span>
         <h2 style="font-size:1.9rem;color:#18181b;margin:8px 0;">Certified Marketing & Analytics Integrations</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;">
         ${['Google Ads 360', 'Meta Ads Manager', 'TikTok Business', 'LinkedIn Marketing', 'Klaviyo Email', 'Shopify Plus', 'Google Analytics 4', 'AppsFlyer'].map(name => `
-          <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:10px;padding:16px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:10px;padding:16px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
             <div style="font-size:1.4rem;margin-bottom:6px;">📈</div>
             <div style="font-size:0.84rem;font-weight:700;color:#3f3f46;">${name}</div>
           </div>
@@ -169,13 +169,13 @@ export function renderMarketingHome(ctx: ThemeContext): string {
 
   // 6. Testimonials & Case Studies
   const testimonialsHtml = `
-    <section class="wrap" style="padding:60px 0;">
+    <section class="wrap" style="padding:60px 0;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#d946ef;font-weight:700;">WHAT CLIENTS SAY</span>
         <h2 style="font-size:2rem;color:#18181b;margin:8px 0;">Exceptional Growth Validated by Brand Founders</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;padding:28px;box-shadow:0 6px 18px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;padding:28px;box-shadow:0 6px 18px rgba(0,0,0,0.03);">
           <div style="color:#eab308;font-size:1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#3f3f46;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Within 90 days, our monthly revenue scaled from $80k to $420k while keeping ROAS above 3.8x. Simply phenomenal creative execution."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -551,7 +551,7 @@ export function renderMarketingCatalog(ctx: ThemeContext): string {
           const t = translateProduct(p);
           const imgUrl = asset(p.imageAssetId);
           return `
-            <article style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.03);display:flex;flex-direction:column;">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.03);display:flex;flex-direction:column;">
               ${imgUrl ? `
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#faf5ff;overflow:hidden;">
                   <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">

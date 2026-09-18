@@ -15,17 +15,17 @@ export function renderCraftoHome(ctx: ThemeContext): string {
     <section class="hero" aria-label="${esc(copy.headline)}" style="background:#0b1120;color:#ffffff;padding:95px 0 85px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(0,71,255,0.2) 0%,transparent 70%);pointer-events:none;"></div>
       <div class="wrap hero-content" style="position:relative;z-index:2;">
-        <div style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(0,71,255,0.4);background:rgba(0,71,255,0.12);padding:7px 18px;margin-bottom:24px;">
+        <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(0,71,255,0.4);background:rgba(0,71,255,0.12);padding:7px 18px;margin-bottom:24px;">
           <span style="display:inline-block;width:8px;height:8px;background:#0047ff;"></span>
           <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;">CRAFTO GLOBAL ENTERPRISE GROUP · ADVISORY 2026</span>
         </div>
-        <h1 class="hero-title" style="font-size:clamp(3rem, 6.2vw, 5.2rem);line-height:1.02;font-weight:900;letter-spacing:-0.04em;text-transform:uppercase;max-width:960px;margin:0 0 24px;">
+        <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(3rem, 6.2vw, 5.2rem);line-height:1.02;font-weight:900;letter-spacing:-0.04em;text-transform:uppercase;max-width:960px;margin:0 0 24px;">
           ${esc(copy.headline)}
         </h1>
-        <p style="max-width:680px;color:#94a3b8;font-size:1.22rem;line-height:1.65;margin:0 0 38px;">
+        <p data-reveal="fade-up" style="max-width:680px;color:#94a3b8;font-size:1.22rem;line-height:1.65;margin:0 0 38px;">
           ${esc(copy.subtitle)}
         </p>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div data-reveal="fade-up" style="display:flex;gap:16px;flex-wrap:wrap;">
           <a class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.85rem;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
             ${esc(copy.cta || 'Consult Advisory')} ↗
           </a>
@@ -42,21 +42,21 @@ export function renderCraftoHome(ctx: ThemeContext): string {
   const pillarsHtml = `
     <section id="pillars" style="background:#0f172a;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;color:#ffffff;padding:32px 0;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-        <div data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;">
           <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">01</div>
           <div>
             <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Enterprise Strategy</h4>
             <p style="margin:0;color:#94a3b8;font-size:0.88rem;line-height:1.5;">Modernizing business models to navigate complex global geopolitical realities.</p>
           </div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:16px;padding:12px;border-left:1px solid #1e293b;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;border-left:1px solid #1e293b;">
           <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">02</div>
           <div>
             <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Cross-Border Governance</h4>
             <p style="margin:0;color:#94a3b8;font-size:0.88rem;line-height:1.5;">Comprehensive risk oversight, regulatory compliance, and ESG audit assurance.</p>
           </div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:16px;padding:12px;border-left:1px solid #1e293b;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;border-left:1px solid #1e293b;">
           <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">03</div>
           <div>
             <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Digital Modernization</h4>
@@ -71,23 +71,23 @@ export function renderCraftoHome(ctx: ThemeContext): string {
   const metricsHtml = `
     <section class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">500+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="500" data-suffix="+">500+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Enterprise Deployments</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Proven institutional implementation track record across 42 countries.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">35+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="35" data-suffix="+">35+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Countries & Regions</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Direct executive presence in New York, London, Zurich, Tokyo, and Singapore.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">98%</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="98" data-suffix="%">98%</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Client Retention Rate</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Multi-year advisory engagements with Fortune 500 board executives.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">$45B+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="45" data-prefix="$" data-suffix="B+">$45B+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Market Cap Advised</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Strategic guidance driving sustained enterprise shareholder value.</div>
         </div>
@@ -114,7 +114,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
           const imgUrl = ctx.productMainImage(p);
           const codes = ['P-01', 'P-02', 'P-03', 'P-04', 'P-05', 'P-06'];
           return `
-            <article class="product-card" style="background:#ffffff;border:1px solid #0f172a;border-radius:0;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;border-radius:0;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
               <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                   <span style="font-size:0.8rem;font-weight:800;font-family:monospace;color:#0047ff;">${codes[idx % codes.length]}</span>
@@ -140,7 +140,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
   const presenceHtml = `
     <section class="wrap" style="padding:60px 0;border-top:1px solid #e5e7eb;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">TRANSFORMATION FRAMEWORK</span>
           <h2 style="font-size:2.4rem;line-height:1.12;color:#0f172a;margin:12px 0 20px;text-transform:uppercase;font-weight:900;">
             Institutional Rigor at Global Scale
@@ -169,7 +169,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#0b1120;border:1px solid #1e293b;padding:36px;color:#ffffff;">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;padding:36px;color:#ffffff;">
           <h3 style="font-size:1.2rem;text-transform:uppercase;letter-spacing:0.08em;color:#93c5fd;margin:0 0 20px;">Global Command Hubs</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
             <div style="border-left:2px solid #0047ff;padding-left:14px;">
@@ -200,12 +200,12 @@ export function renderCraftoHome(ctx: ThemeContext): string {
   // 6. Testimonials
   const testimonialsHtml = `
     <section class="wrap" style="padding:60px 0;">
-      <div style="text-align:center;margin-bottom:36px;">
+      <div data-reveal="fade-up" style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">EXECUTIVE ENDORSEMENTS</span>
         <h2 style="font-size:2rem;color:#0f172a;text-transform:uppercase;font-weight:900;margin:8px 0;">Trusted by Fortune 500 Board Leadership</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#0047ff;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
           <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Crafto guided our multinational merger across three continents with unmatched legal and organizational precision."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -213,7 +213,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
             <div><div style="font-weight:800;color:#0f172a;font-size:0.9rem;">Edward Anderson</div><div style="color:#64748b;font-size:0.8rem;">Chairman of the Board, Global Infrastructure plc</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#0047ff;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
           <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Their digital modernization framework trimmed $180M in recurring IT overhead while increasing operational throughput by 40%."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -221,7 +221,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
             <div><div style="font-weight:800;color:#0f172a;font-size:0.9rem;">Miriam Sommer</div><div style="color:#64748b;font-size:0.8rem;">Chief Strategy Officer, Zurich Heavy Industries</div></div>
           </div>
         </div>
-        <div style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <div style="color:#0047ff;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
           <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"The definitive standard for institutional governance. Their strategic roadmap aligned our 14 business units seamlessly."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -236,7 +236,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
   // 7. Contact / Advisory Band
   const contactBandHtml = `
     <section class="contact-band" style="background:#0047ff;color:#ffffff;padding:80px 0;">
-      <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
+      <div class="wrap" data-reveal="fade-up" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
           <span class="eyebrow" style="color:#93c5fd;font-weight:800;letter-spacing:0.15em;">EXECUTIVE PARTNERSHIP</span>
           <h2 style="font-size:2.4rem;margin:10px 0;max-width:680px;color:#ffffff;text-transform:uppercase;font-weight:900;">
@@ -284,23 +284,23 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
   const statsHtml = `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">$45B+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="45" data-prefix="$" data-suffix="B+">$45B+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1rem;text-transform:uppercase;">Market Cap Advised</div>
           <div style="font-size:0.85rem;color:#64748b;margin-top:4px;line-height:1.5;">Direct board advisory guiding multi-billion enterprise restructurings worldwide.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">45+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="45" data-suffix="+">45+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1rem;text-transform:uppercase;">Global Markets</div>
           <div style="font-size:0.85rem;color:#64748b;margin-top:4px;line-height:1.5;">Active cross-border regulatory counsel across EMEA, Americas, and APAC.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">500+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="500" data-suffix="+">500+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1rem;text-transform:uppercase;">Enterprise Mandates</div>
           <div style="font-size:0.85rem;color:#64748b;margin-top:4px;line-height:1.5;">Executed corporate modernization programs with 98% multi-year client retention.</div>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">25+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="25" data-suffix="+">25+</span></div>
           <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1rem;text-transform:uppercase;">Years Executive Trust</div>
           <div style="font-size:0.85rem;color:#64748b;margin-top:4px;line-height:1.5;">Unbroken record of fiduciary responsibility and corporate resilience.</div>
         </div>
@@ -311,7 +311,7 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
   const missionHtml = `
     <section class="wrap" style="padding:50px 0 70px;">
       <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">THE CRAFTO DOCTRINE</span>
           <h2 style="font-size:2.4rem;line-height:1.12;color:#0f172a;margin:10px 0 20px;text-transform:uppercase;font-weight:900;">
             Institutional Modernization Built on Uncompromising Rigor
@@ -334,7 +334,7 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#0f172a;color:#ffffff;border:1px solid #1e293b;padding:40px;">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#0f172a;color:#ffffff;border:1px solid #1e293b;padding:40px;">
           <h3 style="font-size:1.3rem;text-transform:uppercase;letter-spacing:0.08em;color:#93c5fd;margin:0 0 24px;">Core Operating Principles</h3>
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div style="display:flex;gap:16px;">
@@ -372,25 +372,25 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
         <p style="color:#64748b;max-width:620px;margin:0 auto;font-size:1rem;">Seasoned managing directors combining sovereign governance, investment banking, and enterprise technology.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
           <div style="width:60px;height:60px;background:#0b1120;color:#0047ff;font-weight:900;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">MV</div>
           <h3 style="font-size:1.15rem;margin:0 0 4px;color:#0f172a;text-transform:uppercase;font-weight:800;">Marcus Vance</h3>
           <div style="color:#0047ff;font-size:0.82rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">Managing Director, Americas</div>
           <p style="color:#64748b;font-size:0.86rem;line-height:1.5;margin:0;">Former Fortune 100 COO with 28 years directing global supply networks and enterprise restructuring.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
           <div style="width:60px;height:60px;background:#0047ff;color:#ffffff;font-weight:900;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">ES</div>
           <h3 style="font-size:1.15rem;margin:0 0 4px;color:#0f172a;text-transform:uppercase;font-weight:800;">Dame Eleanor Sterling</h3>
           <div style="color:#0047ff;font-size:0.82rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">Head of Sovereign Advisory, EMEA</div>
           <p style="color:#64748b;font-size:0.86rem;line-height:1.5;margin:0;">Senior advisor to multilateral finance institutions and central sovereign investment portfolios.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
           <div style="width:60px;height:60px;background:#0f172a;color:#0047ff;font-weight:900;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">KT</div>
           <h3 style="font-size:1.15rem;margin:0 0 4px;color:#0f172a;text-transform:uppercase;font-weight:800;">Kenji Takahashi</h3>
           <div style="color:#0047ff;font-size:0.82rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">Managing Director, APAC & Technology</div>
           <p style="color:#64748b;font-size:0.86rem;line-height:1.5;margin:0;">Specializes in cross-border digital architecture integration, fintech infrastructure, and algorithmic governance.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
           <div style="width:60px;height:60px;background:#1e293b;color:#ffffff;font-weight:900;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">SR</div>
           <h3 style="font-size:1.15rem;margin:0 0 4px;color:#0f172a;text-transform:uppercase;font-weight:800;">Sophia Rostova, LL.M.</h3>
           <div style="color:#0047ff;font-size:0.82rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">Partner, Governance & M&A</div>
@@ -402,7 +402,7 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
 
   const ctaHtml = `
     <section class="wrap" style="padding:60px 0 80px;">
-      <div style="background:#0b1120;border:1px solid #0047ff;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;">
+      <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #0047ff;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;">
         <div>
           <span style="font-family:monospace;color:#93c5fd;font-weight:800;font-size:0.82rem;letter-spacing:0.12em;">SCHEDULE DIRECT DIALOGUE</span>
           <h2 style="font-size:2.2rem;color:#ffffff;margin:8px 0;text-transform:uppercase;font-weight:900;">Engage the Executive Taskforce</h2>
@@ -444,7 +444,7 @@ export function renderCraftoContact(ctx: ThemeContext): string {
     <section class="wrap" style="padding:60px 0 80px;">
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
         <!-- Left: Global Hubs & Dispatch -->
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:36px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:36px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">DIRECT CHANNELS</span>
           <h3 style="font-size:1.3rem;text-transform:uppercase;font-weight:800;color:#0f172a;margin:8px 0 24px;">Executive Desks & Hubs</h3>
 
@@ -485,7 +485,7 @@ export function renderCraftoContact(ctx: ThemeContext): string {
         </div>
 
         <!-- Right: Inquiry Form -->
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:36px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:36px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
           <h2 style="font-size:1.6rem;text-transform:uppercase;font-weight:900;color:#0f172a;margin:0 0 8px;">Submit Executive Mandate</h2>
           <p style="color:#64748b;font-size:0.95rem;margin:0 0 28px;">Specify your organizational objectives and required taskforce lead time.</p>
 
@@ -535,15 +535,15 @@ export function renderCraftoContact(ctx: ThemeContext): string {
         <h2 style="font-size:2.2rem;color:#0f172a;text-transform:uppercase;font-weight:900;margin:8px 0;">Client Mandate Protocols</h2>
       </div>
       <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
           <h3 style="color:#0f172a;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">What is the typical engagement deployment timeline?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Upon bilateral conflict clearance and NDA execution, our executive taskforces typically deploy within 72 hours for urgent transactions and within two weeks for full enterprise restructuring.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
           <h3 style="color:#0f172a;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">How does Crafto manage multi-jurisdictional conflict of interest checks?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Our independent legal compliance committee runs proprietary cross-party audits against global statutory registries before accepting any M&A or restructuring mandate.</p>
         </div>
-        <div style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
           <h3 style="color:#0f172a;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">Can Crafto provide interim C-suite executive placement?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Yes. Our senior managing directors frequently step into interim Chief Restructuring Officer (CRO) or Chief Transformation Officer (CTO) roles during transition milestones.</p>
         </div>
@@ -583,7 +583,7 @@ export function renderCraftoCatalog(ctx: ThemeContext): string {
           const imgUrl = asset(p.imageAssetId);
           const code = `UNIT-${String(idx + 1).padStart(2, '0')}`;
           return `
-            <article style="background:#ffffff;border:1px solid #0f172a;padding:26px;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:26px;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                 <span style="font-family:monospace;font-weight:800;color:#0047ff;font-size:0.85rem;">${code}</span>
                 <span style="font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;">Enterprise Mandate</span>

@@ -209,7 +209,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;position:relative;z-index:2;">
         <!-- Left Column: Copy & CTAs -->
-        <div>
+        <div data-reveal="fade-up">
           <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #ffccd5;padding:8px 20px;border-radius:9999px;box-shadow:0 4px 14px rgba(255,107,139,0.15);margin-bottom:24px;">
             <span style="font-size:1.1rem;">🧸</span>
             <span style="font-size:0.85rem;font-weight:900;color:#e63946;letter-spacing:0.04em;text-transform:uppercase;">
@@ -248,16 +248,16 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
         <!-- Right Column: Interactive 3D Stage -->
         <div style="position:relative;text-align:center;">
-          <div class="wr-candy-stage" style="background:radial-gradient(circle, #ffffff 40%, #fff1f3 100%);border:4px solid #ffccd5;border-radius:40px;padding:36px;box-shadow:0 20px 48px rgba(255,107,139,0.18);position:relative;max-width:480px;margin:0 auto;">
-            <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:380px;height:auto;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.1));animation:wrFloat 4s ease-in-out infinite alternate;">
+          <div class="wr-candy-stage wr-hero-float" style="background:radial-gradient(circle, #ffffff 40%, #fff1f3 100%);border:4px solid #ffccd5;border-radius:40px;padding:36px;box-shadow:0 20px 48px rgba(255,107,139,0.18);position:relative;max-width:480px;margin:0 auto;">
+            <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:380px;height:auto;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.1));">
 
             <!-- Floating Pill 1 -->
-            <div style="position:absolute;top:20px;left:-20px;background:#ffffff;border:2px solid #ffd166;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#b45309;box-shadow:0 6px 16px rgba(245,158,11,0.2);display:flex;align-items:center;gap:6px;animation:wrFloatReverse 3.5s ease-in-out infinite alternate;">
+            <div style="position:absolute;top:20px;left:-20px;background:#ffffff;border:2px solid #ffd166;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#b45309;box-shadow:0 6px 16px rgba(245,158,11,0.2);display:flex;align-items:center;gap:6px;">
               <span>✨</span> ${isZh ? '独家微爆珠软充' : 'Crunchy Soft-Fill'}
             </div>
 
             <!-- Floating Pill 2 -->
-            <div style="position:absolute;bottom:30px;right:-15px;background:#ffffff;border:2px solid #48cae4;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#0077b6;box-shadow:0 6px 16px rgba(72,202,228,0.25);display:flex;align-items:center;gap:6px;animation:wrFloat 3.8s ease-in-out infinite alternate;">
+            <div style="position:absolute;bottom:30px;right:-15px;background:#ffffff;border:2px solid #48cae4;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#0077b6;box-shadow:0 6px 16px rgba(72,202,228,0.25);display:flex;align-items:center;gap:6px;">
               <span>🌈</span> ${isZh ? '温感变色黑科技' : 'Thermo Color Shift'}
             </div>
 
@@ -273,7 +273,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // Sensory Magic 4-Pill Bar
   const sensoryBarHtml = `
-    <section id="candy-sensory" class="wrap" style="padding:40px 0 20px;">
+    <section id="candy-sensory" class="wrap" style="padding:40px 0 20px;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:30px;">
         <span class="eyebrow" style="color:#ff6b8b;font-weight:900;letter-spacing:0.08em;">${isZh ? '感官魔力解密' : 'SENSORY TOUCH MAGIC'}</span>
         <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);color:#2b2d42;font-weight:900;margin:6px 0 0;">
@@ -282,25 +282,25 @@ export function renderCandyHome(ctx: ThemeContext): string {
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;">
-        <div style="background:#fff5f7;border:2px solid #ffd0d8;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(255,107,139,0.06);transition:transform 0.25s;">
+        <div style="background:#fff5f7;border:2px solid #ffd0d8;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(255,107,139,0.06);" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2.4rem;margin-bottom:10px;">🫧</div>
           <div style="font-weight:900;color:#c9184a;font-size:1.08rem;">${isZh ? '爆珠颗粒感' : 'Crunchy Beads'}</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:8px;line-height:1.5;">${isZh ? '高弹微爆珠软充，揉捏时沙沙脆响，极度满足解压。' : 'Filled with patented micro-elastic beads for crisp, deeply satisfying sensory pops.'}</div>
         </div>
 
-        <div style="background:#fffbeb;border:2px solid #fed7aa;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);transition:transform 0.25s;">
+        <div style="background:#fffbeb;border:2px solid #fed7aa;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2.4rem;margin-bottom:10px;">☁️</div>
           <div style="font-weight:900;color:#b45309;font-size:1.08rem;">${isZh ? '5秒慢回弹' : 'Cloud Slow-Rise'}</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:8px;line-height:1.5;">${isZh ? '科学调校记忆节奏，平缓抚平焦虑，让心率恢复平静。' : 'Carefully calibrated 5-second rebound to rhythmically soothe busy minds and hands.'}</div>
         </div>
 
-        <div style="background:#f0f9ff;border:2px solid #bae6fd;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(2,132,199,0.06);transition:transform 0.25s;">
+        <div style="background:#f0f9ff;border:2px solid #bae6fd;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(2,132,199,0.06);" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2.4rem;margin-bottom:10px;">🌈</div>
           <div style="font-weight:900;color:#0284c7;font-size:1.08rem;">${isZh ? '温感渐变色' : 'Thermo Color Shift'}</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:8px;line-height:1.5;">${isZh ? '体温触碰即刻显现奇幻渐变，点亮孩子的好奇探索心。' : 'Magically changes hue with hand temperature, sparking curiosity and joy.'}</div>
         </div>
 
-        <div style="background:#f5f3ff;border:2px solid #ddd6fe;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(124,58,237,0.06);transition:transform 0.25s;">
+        <div style="background:#f5f3ff;border:2px solid #ddd6fe;border-radius:24px;padding:24px;text-align:center;box-shadow:0 6px 16px rgba(124,58,237,0.06);" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2.4rem;margin-bottom:10px;">🍓</div>
           <div style="font-weight:900;color:#6d28d9;font-size:1.08rem;">${isZh ? '天然微甜果香' : 'Aroma Therapy'}</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:8px;line-height:1.5;">${isZh ? '微甜草莓与香草自然清香，零刺鼻化学味，安全亲肤。' : 'Subtle food-safe berry and vanilla sweetness with zero harsh chemical odors.'}</div>
@@ -311,7 +311,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // Products Grid
   const productsGridHtml = `
-    <section class="wrap chapter" style="padding:60px 0 50px;">
+    <section class="wrap chapter" style="padding:60px 0 50px;" data-reveal="fade-up">
       <div class="section-top" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
         <div>
           <span class="eyebrow" style="color:#ff6b8b;font-weight:900;">${isZh ? '甄选萌宠潮玩矩阵' : 'CURATED TOY SHOWCASE'}</span>
@@ -326,7 +326,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:28px;">
         ${products.map((p) => `
-          <div class="wr-candy-card" style="background:#ffffff;border:3px solid #fff0f3;border-radius:28px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.05);display:flex;flex-direction:column;transition:transform 0.25s,box-shadow 0.25s;position:relative;">
+          <div class="wr-candy-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fff0f3;border-radius:28px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.05);display:flex;flex-direction:column;position:relative;">
             <!-- Badge -->
             <div style="position:absolute;top:16px;left:16px;z-index:2;background:#ffffff;border:2px solid #ffccd5;padding:4px 12px;border-radius:9999px;font-size:0.75rem;font-weight:900;color:#e63946;box-shadow:0 3px 8px rgba(255,107,139,0.15);">
               ${esc(p.badge)}
@@ -334,7 +334,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
             <!-- Image Container -->
             <div style="background:radial-gradient(circle, #ffffff 40%, #fff7f8 100%);padding:28px;text-align:center;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;">
-              <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:210px;object-fit:contain;transition:transform 0.3s;" loading="lazy">
+              <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:210px;object-fit:contain;" loading="lazy">
             </div>
 
             <!-- Content -->
@@ -369,7 +369,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // The Science of Squishing (Dual Audience: Kids vs Adults)
   const scienceHtml = `
-    <section class="wrap" style="padding:40px 0 60px;">
+    <section class="wrap" style="padding:40px 0 60px;" data-reveal="fade-up">
       <div style="background:linear-gradient(135deg, #fff5f7 0%, #fffbf0 50%, #f0f9ff 100%);border:3px solid #ffccd5;border-radius:36px;padding:50px 40px;box-shadow:0 12px 36px rgba(255,107,139,0.08);">
         <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
           <span class="eyebrow" style="color:#ff6b8b;font-weight:900;">${isZh ? '科学益智与情绪健康' : 'THE SCIENCE OF SQUEEZING'}</span>
@@ -383,7 +383,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px;">
           <!-- Kids Column -->
-          <div style="background:#ffffff;border:2px solid #ffd0d8;border-radius:28px;padding:32px;box-shadow:0 6px 18px rgba(0,0,0,0.03);">
+          <div style="background:#ffffff;border:2px solid #ffd0d8;border-radius:28px;padding:32px;box-shadow:0 6px 18px rgba(0,0,0,0.03);" class="wr-card-hover" data-reveal="fade-up">
             <div style="display:inline-flex;padding:6px 16px;background:#ffeef2;color:#e63946;border-radius:9999px;font-weight:900;font-size:0.85rem;margin-bottom:16px;">
               🧒 ${isZh ? '针对 3-12 岁儿童' : 'FOR GROWING LITTLE HANDS'}
             </div>
@@ -398,7 +398,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
           </div>
 
           <!-- Adults Column -->
-          <div style="background:#ffffff;border:2px solid #bae6fd;border-radius:28px;padding:32px;box-shadow:0 6px 18px rgba(0,0,0,0.03);">
+          <div style="background:#ffffff;border:2px solid #bae6fd;border-radius:28px;padding:32px;box-shadow:0 6px 18px rgba(0,0,0,0.03);" class="wr-card-hover" data-reveal="fade-up">
             <div style="display:inline-flex;padding:6px 16px;background:#e0f2fe;color:#0284c7;border-radius:9999px;font-weight:900;font-size:0.85rem;margin-bottom:16px;">
               💼 ${isZh ? '针对职场与办公人群' : 'FOR MODERN DESK WORKERS'}
             </div>
@@ -418,7 +418,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // Factory Assurance & Certifications
   const factoryHtml = `
-    <section class="wrap" style="padding:20px 0 60px;">
+    <section class="wrap" style="padding:20px 0 60px;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#ff6b8b;font-weight:900;">${isZh ? '出海制造实力与品质背书' : 'FACTORY DIRECT & CERTIFIED EXCELLENCE'}</span>
         <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);color:#2b2d42;font-weight:900;margin:6px 0 0;">
@@ -427,22 +427,22 @@ export function renderCandyHome(ctx: ThemeContext): string {
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;">
-        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;">
+        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">🏭</div>
-          <div style="font-size:1.8rem;font-weight:900;color:#ff6b8b;">10,000 m²</div>
+          <div style="font-size:1.8rem;font-weight:900;color:#ff6b8b;" data-counter="10000" data-suffix=" m²">10,000 m²</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:4px;font-weight:700;">${isZh ? '现代化无尘生产基地' : 'Cleanroom Facility'}</div>
         </div>
-        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;">
+        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">📦</div>
-          <div style="font-size:1.8rem;font-weight:900;color:#ff6b8b;">1,200,000+</div>
+          <div style="font-size:1.8rem;font-weight:900;color:#ff6b8b;" data-counter="1200000" data-suffix="+">1,200,000+</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:4px;font-weight:700;">${isZh ? '月产出海产能 (Pcs)' : 'Monthly Capacity'}</div>
         </div>
-        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;">
+        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">🛡️</div>
           <div style="font-size:1.8rem;font-weight:900;color:#ff6b8b;">EN71 / ASTM</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:4px;font-weight:700;">${isZh ? '国际玩具检测认证' : 'Global Safety Lab Tests'}</div>
         </div>
-        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;">
+        <div style="background:#ffffff;border:2px solid #e9ecef;border-radius:20px;padding:24px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
           <div style="font-size:2rem;margin-bottom:8px;">🤝</div>
           <div style="font-size:1.8rem;font-weight:900;color:#ff6b8b;">OEM & ODM</div>
           <div style="font-size:0.88rem;color:#6c757d;margin-top:4px;font-weight:700;">${isZh ? '开模定制与彩盒包装' : 'Custom Mold & Box'}</div>
@@ -453,7 +453,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // Customer Reviews
   const reviewsHtml = `
-    <section class="wrap" style="padding:20px 0 60px;">
+    <section class="wrap" style="padding:20px 0 60px;" data-reveal="fade-up">
       <div style="text-align:center;margin-bottom:36px;">
         <span class="eyebrow" style="color:#ff6b8b;font-weight:900;">${isZh ? '真实好评与微笑分享' : 'HAPPY SMILES EVERYWHERE'}</span>
         <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);color:#2b2d42;font-weight:900;margin:6px 0 0;">
@@ -462,7 +462,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-        <div style="background:#ffffff;border:2px solid #ffd0d8;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(255,107,139,0.06);position:relative;">
+        <div style="background:#ffffff;border:2px solid #ffd0d8;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(255,107,139,0.06);position:relative;" class="wr-card-hover" data-reveal="fade-up">
           <div style="color:#f59e0b;font-size:1.2rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#495057;font-size:0.95rem;line-height:1.6;margin:0 0 16px;">
             ${isZh ? '“柴犬爆珠手感太神奇了！儿子一捏就停不下来，放在书桌上做作业烦躁时捏两下很快就冷静下来了，而且没有任何异味，非常放心。”' : '“The crunchy Shiba squishy is pure magic! My 7-year-old loves the subtle pop sounds, and I find myself borrowing it during work calls. Top tier quality!”'}
@@ -470,7 +470,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
           <div style="font-weight:900;color:#2b2d42;font-size:0.92rem;">— Sarah M., Parent (USA)</div>
         </div>
 
-        <div style="background:#ffffff;border:2px solid #bae6fd;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(2,132,199,0.06);position:relative;">
+        <div style="background:#ffffff;border:2px solid #bae6fd;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(2,132,199,0.06);position:relative;" class="wr-card-hover" data-reveal="fade-up">
           <div style="color:#f59e0b;font-size:1.2rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#495057;font-size:0.95rem;line-height:1.6;margin:0 0 16px;">
             ${isZh ? '“作为欧洲精品玩具采购商，我们在 Senseng 定制了 50,000 套彩盒装猫咪捏捏乐，包装印刷精美，欧洲 CE 报告齐全，上架两周售罄！”' : '“We ordered 50,000 units for our European boutique toy retail chain. Flawless packaging, full EN71 compliance certificates, and incredible customer reception.”'}
@@ -478,7 +478,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
           <div style="font-weight:900;color:#2b2d42;font-size:0.92rem;">— Thomas K., Toy Buyer (Germany)</div>
         </div>
 
-        <div style="background:#ffffff;border:2px solid #fed7aa;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(245,158,11,0.06);position:relative;">
+        <div style="background:#ffffff;border:2px solid #fed7aa;border-radius:24px;padding:28px;box-shadow:0 8px 24px rgba(245,158,11,0.06);position:relative;" class="wr-card-hover" data-reveal="fade-up">
           <div style="color:#f59e0b;font-size:1.2rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#495057;font-size:0.95rem;line-height:1.6;margin:0 0 16px;">
             ${isZh ? '“温感变色独角鲸真的会随手温渐变！送给闺蜜当生日礼物，她整天摆在办公室电脑前。超级慢回弹，非常治愈。”' : '“The color-changing narwhal really shifts colors when you hold it! The slow rise memory feel is unmatched. Hands down the cutest stress toy ever.”'}
@@ -491,7 +491,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
   // Newsletter & CTA Banner
   const ctaHtml = `
-    <section class="wrap" style="padding:0 0 70px;">
+    <section class="wrap" style="padding:0 0 70px;" data-reveal="fade-up">
       <div style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 50%, #ffa07a 100%);color:#ffffff;border-radius:32px;padding:50px 36px;text-align:center;box-shadow:0 16px 40px rgba(255,107,139,0.3);position:relative;overflow:hidden;">
         <h2 style="font-size:clamp(2rem, 3.8vw, 3rem);font-weight:900;margin:0 0 14px;color:#ffffff;">
           ${isZh ? '加入 Senseng 萌趣俱乐部 · 获取专属样品与采购方案' : 'Join the Senseng Joy Club · Get Free Sample Kits'}
@@ -533,7 +533,7 @@ export function renderCandyCatalog(ctx: ThemeContext): string {
   return `
     <main class="wr-inner wr-senseng-candy-inner" data-wr-page="catalog" style="padding-top:100px;background:#fffdfa;">
       <section class="wrap" style="padding:40px 0 60px;">
-        <div style="text-align:center;max-width:700px;margin:0 auto 40px;">
+        <div data-reveal="fade-up" style="text-align:center;max-width:700px;margin:0 auto 40px;">
           <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
             🧸 ${isZh ? 'Senseng 全部产品目录' : 'FULL SENSORY SQUISHY CATALOG'}
           </div>
@@ -547,7 +547,7 @@ export function renderCandyCatalog(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:28px;">
           ${products.map((p) => `
-            <div class="wr-candy-card" style="background:#ffffff;border:3px solid #fff0f3;border-radius:28px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.05);display:flex;flex-direction:column;transition:transform 0.25s,box-shadow 0.25s;position:relative;">
+            <div class="wr-candy-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fff0f3;border-radius:28px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.05);display:flex;flex-direction:column;position:relative;">
               <div style="position:absolute;top:16px;left:16px;z-index:2;background:#ffffff;border:2px solid #ffccd5;padding:4px 12px;border-radius:9999px;font-size:0.75rem;font-weight:900;color:#e63946;box-shadow:0 3px 8px rgba(255,107,139,0.15);">
                 ${esc(p.badge)}
               </div>
@@ -575,7 +575,7 @@ export function renderCandyCatalog(ctx: ThemeContext): string {
         </div>
 
         <!-- B2B Wholesale Banner -->
-        <div style="margin-top:60px;background:linear-gradient(135deg, #fff0f5 0%, #fffbf0 100%);border:2px solid #ffd0d8;border-radius:28px;padding:40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;">
+        <div data-reveal="fade-up" style="margin-top:60px;background:linear-gradient(135deg, #fff0f5 0%, #fffbf0 100%);border:2px solid #ffd0d8;border-radius:28px;padding:40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;">
           <div>
             <h3 style="font-size:1.4rem;font-weight:900;color:#2b2d42;margin:0 0 6px;">
               ${isZh ? '需要专属定制包装或大批量外贸集装箱出货？' : 'Looking for Custom OEM Packaging or Container Shipments?'}
@@ -622,7 +622,7 @@ export function renderCandyDetail(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start;">
           <!-- Left: Big Product Image -->
-          <div style="background:radial-gradient(circle, #ffffff 40%, #fff7f8 100%);border:4px solid #ffccd5;border-radius:36px;padding:48px;text-align:center;box-shadow:0 16px 40px rgba(255,107,139,0.12);">
+          <div data-reveal="fade-up" style="background:radial-gradient(circle, #ffffff 40%, #fff7f8 100%);border:4px solid #ffccd5;border-radius:36px;padding:48px;text-align:center;box-shadow:0 16px 40px rgba(255,107,139,0.12);">
             <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.08));">
             <div style="margin-top:28px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
               <span style="background:#fff0f3;border:1px solid #ffccd5;color:#e63946;padding:6px 14px;border-radius:9999px;font-size:0.8rem;font-weight:800;">✨ ${isZh ? '高弹抗撕裂' : 'Tear Resistant'}</span>
@@ -632,7 +632,7 @@ export function renderCandyDetail(ctx: ThemeContext): string {
           </div>
 
           <!-- Right: Details & Order -->
-          <div>
+          <div data-reveal="fade-up">
             <div style="display:inline-flex;padding:4px 14px;background:#ffeef2;border:2px solid #ffd0d8;border-radius:9999px;font-size:0.8rem;font-weight:900;color:#e63946;margin-bottom:14px;">
               ${esc(p.badge)}
             </div>
@@ -722,13 +722,13 @@ export function renderCandyDetail(ctx: ThemeContext): string {
         </div>
 
         <!-- Related Products -->
-        <div style="margin-top:80px;">
+        <div style="margin-top:80px;" data-reveal="fade-up">
           <h2 style="font-size:1.8rem;font-weight:900;color:#2b2d42;margin:0 0 24px;">
             ${isZh ? '您可能也喜欢的萌宠玩具' : 'You May Also Love'}
           </h2>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
             ${related.map((item) => `
-              <div style="background:#ffffff;border:2px solid #ffeef2;border-radius:24px;padding:20px;text-align:center;">
+              <div class="wr-candy-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:2px solid #ffeef2;border-radius:24px;padding:20px;text-align:center;">
                 <img src="${esc(item.img)}" alt="${esc(item.name)}" style="width:100%;max-height:180px;object-fit:contain;margin-bottom:12px;">
                 <h4 style="font-size:1.05rem;font-weight:900;color:#2b2d42;margin:0 0 6px;">${esc(item.name)}</h4>
                 <a class="text-link" style="color:#ff6b8b;font-weight:800;font-size:0.9rem;" href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)}>
@@ -749,7 +749,7 @@ export function renderCandyAbout(ctx: ThemeContext): string {
   return `
     <main class="wr-inner wr-senseng-candy-inner" data-wr-page="about" style="padding-top:100px;background:#fffdfa;">
       <section class="wrap" style="padding:40px 0 60px;">
-        <div style="text-align:center;max-width:760px;margin:0 auto 50px;">
+        <div data-reveal="fade-up" style="text-align:center;max-width:760px;margin:0 auto 50px;">
           <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
             🍭 ${isZh ? '关于 Senseng 糖果乐园' : 'ABOUT SENSENG PLAY'}
           </div>
@@ -765,22 +765,22 @@ export function renderCandyAbout(ctx: ThemeContext): string {
 
         <!-- 4 Core Pillars -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-bottom:60px;">
-          <div style="background:#ffffff;border:3px solid #ffd0d8;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(255,107,139,0.06);">
+          <div style="background:#ffffff;border:3px solid #ffd0d8;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(255,107,139,0.06);" class="wr-card-hover" data-reveal="fade-up">
             <div style="font-size:2.5rem;margin-bottom:12px;">🛡️</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '极致安全标准' : 'Uncompromising Safety'}</h3>
             <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '严格遵循欧盟 EN71、美标 ASTM F963 及 CPC 标准，每一批次均经过重金属与毒理检验。' : 'Certified against EN71, ASTM F963, and CPSIA. Strict zero-toxic materials tested at independent labs.'}</p>
           </div>
-          <div style="background:#ffffff;border:3px solid #fed7aa;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+          <div style="background:#ffffff;border:3px solid #fed7aa;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.06);" class="wr-card-hover" data-reveal="fade-up">
             <div style="font-size:2.5rem;margin-bottom:12px;">✨</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '独创触觉工艺' : 'Tactile Innovation'}</h3>
             <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '自主研发微爆珠软充与温感渐变材质，赋予每一个玩具不可思议的奇妙触感。' : 'Proprietary crunchy bead soft-fill, calibrated 5s slow rise memory, and thermochromic color shifts.'}</p>
           </div>
-          <div style="background:#ffffff;border:3px solid #bae6fd;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(2,132,199,0.06);">
+          <div style="background:#ffffff;border:3px solid #bae6fd;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(2,132,199,0.06);" class="wr-card-hover" data-reveal="fade-up">
             <div style="font-size:2.5rem;margin-bottom:12px;">🌱</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '绿色环保责任' : 'Eco-Conscious Vision'}</h3>
             <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '采用环保大豆油墨印刷彩盒与可循环纸板包装，积极减少一次性塑料使用。' : 'Soy-ink printed paperboard boxes and recyclable packaging to protect our planet for future generations.'}</p>
           </div>
-          <div style="background:#ffffff;border:3px solid #ddd6fe;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(124,58,237,0.06);">
+          <div style="background:#ffffff;border:3px solid #ddd6fe;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(124,58,237,0.06);" class="wr-card-hover" data-reveal="fade-up">
             <div style="font-size:2.5rem;margin-bottom:12px;">❤️</div>
             <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '跨越年龄的治愈' : 'Joy For All Ages'}</h3>
             <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '无论是幼儿园萌娃还是写字楼白领，软萌公仔都能带来纯粹而专注的心灵疗愈。' : 'Bridging childhood play and adult desk mindfulness, bringing quiet emotional comfort to everyone.'}</p>
@@ -788,7 +788,7 @@ export function renderCandyAbout(ctx: ThemeContext): string {
         </div>
 
         <!-- Factory Statistics -->
-        <div style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;border-radius:32px;padding:48px;box-shadow:0 16px 40px rgba(255,107,139,0.25);">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;border-radius:32px;padding:48px;box-shadow:0 16px 40px rgba(255,107,139,0.25);">
           <div style="text-align:center;margin-bottom:36px;">
             <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${isZh ? '出海制造实力与供应链保障' : 'Global Manufacturing & Supply Chain Prowess'}</h2>
             <p style="opacity:0.9;font-size:1.05rem;max-width:600px;margin:0 auto;">${isZh ? '十余年外贸玩具制造沉淀，为您提供从工业设计到全球报关出海的一站式服务。' : 'Decade of specialized toy manufacturing serving tier-1 retailers across 60+ countries.'}</p>
@@ -796,19 +796,19 @@ export function renderCandyAbout(ctx: ThemeContext): string {
 
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;text-align:center;">
             <div>
-              <div style="font-size:2.8rem;font-weight:900;">10,000+</div>
+              <div style="font-size:2.8rem;font-weight:900;" data-counter="10000" data-suffix="+">10,000+</div>
               <div style="font-size:0.92rem;opacity:0.9;margin-top:4px;">${isZh ? '平方米无尘洁净车间' : 'Square Meter Facility'}</div>
             </div>
             <div>
-              <div style="font-size:2.8rem;font-weight:900;">1,200,000+</div>
+              <div style="font-size:2.8rem;font-weight:900;" data-counter="1200000" data-suffix="+">1,200,000+</div>
               <div style="font-size:0.92rem;opacity:0.9;margin-top:4px;">${isZh ? '件月均稳定产能' : 'Monthly Toy Capacity'}</div>
             </div>
             <div>
-              <div style="font-size:2.8rem;font-weight:900;">60+</div>
+              <div style="font-size:2.8rem;font-weight:900;" data-counter="60" data-suffix="+">60+</div>
               <div style="font-size:0.92rem;opacity:0.9;margin-top:4px;">${isZh ? '出口国家与地区' : 'Global Export Markets'}</div>
             </div>
             <div>
-              <div style="font-size:2.8rem;font-weight:900;">100%</div>
+              <div style="font-size:2.8rem;font-weight:900;" data-counter="100" data-suffix="%">100%</div>
               <div style="font-size:0.92rem;opacity:0.9;margin-top:4px;">${isZh ? '出厂全检合格率' : 'Inspection Pass Rate'}</div>
             </div>
           </div>
@@ -828,7 +828,7 @@ export function renderCandyContact(ctx: ThemeContext): string {
   return `
     <main class="wr-inner wr-senseng-candy-inner" data-wr-page="contact" style="padding-top:100px;background:#fffdfa;">
       <section class="wrap" style="padding:40px 0 70px;">
-        <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
+        <div data-reveal="fade-up" style="text-align:center;max-width:680px;margin:0 auto 40px;">
           <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
             📬 ${isZh ? '快速联系与样品索取' : 'CONNECT WITH SENSENG TOYS'}
           </div>
@@ -842,8 +842,8 @@ export function renderCandyContact(ctx: ThemeContext): string {
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start;">
           <!-- Contact Info Cards -->
-          <div>
-            <div style="background:#ffffff;border:3px solid #ffccd5;border-radius:28px;padding:32px;box-shadow:0 8px 24px rgba(255,107,139,0.06);margin-bottom:24px;">
+          <div data-reveal="fade-up">
+            <div style="background:#ffffff;border:3px solid #ffccd5;border-radius:28px;padding:32px;box-shadow:0 8px 24px rgba(255,107,139,0.06);margin-bottom:24px;" class="wr-card-hover">
               <h3 style="font-size:1.3rem;font-weight:900;color:#2b2d42;margin:0 0 18px;">
                 ${isZh ? '直接联络方式' : 'Direct Contacts'}
               </h3>
@@ -879,7 +879,7 @@ export function renderCandyContact(ctx: ThemeContext): string {
               </div>
             </div>
 
-            <div style="background:#fff5f7;border:2px solid #ffd0d8;border-radius:24px;padding:24px;">
+            <div style="background:#fff5f7;border:2px solid #ffd0d8;border-radius:24px;padding:24px;" class="wr-card-hover">
               <h4 style="font-size:1.05rem;font-weight:900;color:#c9184a;margin:0 0 8px;">
                 🎁 ${isZh ? '样品政策 (Sample Policy)' : 'Sample Kit Policy'}
               </h4>
@@ -890,7 +890,7 @@ export function renderCandyContact(ctx: ThemeContext): string {
           </div>
 
           <!-- Functional Inquiry Form -->
-          <div style="background:#ffffff;border:3px solid #ffccd5;border-radius:28px;padding:36px;box-shadow:0 12px 32px rgba(255,107,139,0.08);">
+          <div style="background:#ffffff;border:3px solid #ffccd5;border-radius:28px;padding:36px;box-shadow:0 12px 32px rgba(255,107,139,0.08);" class="wr-card-hover" data-reveal="fade-up">
             <h3 style="font-size:1.4rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">
               ${isZh ? '在线询盘与样品申请表' : 'Inquiry & Sample Request Form'}
             </h3>

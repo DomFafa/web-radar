@@ -15,17 +15,17 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
     <section class="hero" aria-label="${esc(copy.headline)}" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:95px 0 85px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(circle,rgba(6,182,212,0.18) 0%,rgba(99,102,241,0.12) 50%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
       <div class="wrap hero-content" style="position:relative;z-index:2;text-align:center;align-items:center;margin:0 auto;">
-        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);padding:7px 20px;border-radius:9999px;margin-bottom:24px;">
+        <div class="wr-hero-float" data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.3);padding:7px 20px;border-radius:9999px;margin-bottom:24px;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
           <span style="font-size:0.84rem;font-weight:700;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">CORPOX AI LABS · AGENTIC REASONING ENGINE V4</span>
         </div>
-        <h1 class="hero-title" style="font-size:clamp(2.8rem, 5.8vw, 5rem);line-height:1.06;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:940px;margin:0 auto 24px;text-align:center;">
+        <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(2.8rem, 5.8vw, 5rem);line-height:1.06;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:940px;margin:0 auto 24px;text-align:center;">
           ${esc(copy.headline)}
         </h1>
-        <p style="max-width:720px;color:#94a3b8;font-size:1.22rem;line-height:1.65;margin:0 auto 36px;text-align:center;">
+        <p data-reveal="fade-up" style="max-width:720px;color:#94a3b8;font-size:1.22rem;line-height:1.65;margin:0 auto 36px;text-align:center;">
           ${esc(copy.subtitle)}
         </p>
-        <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;">
+        <div data-reveal="fade-up" style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;">
           <a class="button" style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 30px rgba(6,182,212,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
             ${esc(copy.cta || 'Deploy Autonomous Agents')} ↗
           </a>
@@ -34,7 +34,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
           </a>
         </div>
 
-        <div style="margin-top:48px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;color:#94a3b8;font-size:0.86rem;font-family:monospace;">
+        <div data-reveal="fade-up" style="margin-top:48px;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;color:#94a3b8;font-size:0.86rem;font-family:monospace;">
           <div><span style="color:#06b6d4;">[✓]</span> LOW-LATENCY INFERENCE &lt;18ms</div>
           <div><span style="color:#06b6d4;">[✓]</span> ON-PREMISE AIR-GAPPED DEPLOYMENT</div>
           <div><span style="color:#06b6d4;">[✓]</span> ZERO DATA RETENTION RETENTION</div>
@@ -50,22 +50,22 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
   const metricsHtml = `
     <section id="ai-metrics" class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.08);">
           <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;"><span data-counter="5.2" data-suffix="x">5.2x</span> Faster</div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Autonomous Agent Deployments</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">FP8 & AWQ kernel optimizations delivering sub-20ms first-token latency.</div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(129,140,248,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(129,140,248,0.08);">
           <div style="font-size:2.8rem;font-weight:900;color:#818cf8;letter-spacing:-1px;"><span data-counter="99.4" data-suffix="%">99.4%</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Retrieval Precision (RAG)</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Deterministic JSON schema enforcement eliminating hallucinated tool outputs.</div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(192,132,252,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(192,132,252,0.08);">
           <div style="font-size:2.8rem;font-weight:900;color:#c084fc;letter-spacing:-1px;"><span data-counter="240" data-suffix="M+">240M+</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Tokens Processed Daily</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Auto-scaling vLLM clusters orchestrating parallel reasoning workloads.</div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #38bdf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(56,189,248,0.08);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #38bdf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(56,189,248,0.08);">
           <div style="font-size:2.8rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">Zero Trust</div>
           <div style="font-weight:700;color:#f8fafc;margin-top:6px;font-size:1.05rem;">Air-Gapped Sovereign Security</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Complete IP privacy with self-hosted weights and encrypted vector storage.</div>
@@ -94,7 +94,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
           const icons = ['🧠', '🤖', '⚡', '📊', '🔍', '🛡️'];
           const tags = ['Agent Swarm', 'Fine-Tuned LLM', 'Vision-Language', 'RAG Engine', 'Code Synthesis', 'Security Gate'];
           return `
-            <article class="product-card" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 0 30px rgba(6,182,212,0.06);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 0 30px rgba(6,182,212,0.06);">
               <div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                   <span style="font-size:1.8rem;">${icons[idx % icons.length]}</span>
@@ -120,7 +120,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
   const architectureHtml = `
     <section class="wrap" style="padding:60px 0;border-top:1px solid #1e293b;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#06b6d4;font-weight:700;">AGENTIC FRAMEWORK</span>
           <h2 style="font-size:2.4rem;line-height:1.15;color:#f8fafc;margin:12px 0 20px;">
             Deterministic Tool Execution with Self-Correction Loops
@@ -149,7 +149,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:32px;box-shadow:0 0 40px rgba(6,182,212,0.12);">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:32px;box-shadow:0 0 40px rgba(6,182,212,0.12);">
           <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b;padding-bottom:14px;margin-bottom:20px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#06b6d4;animation:pulse 2s infinite;"></span>
@@ -185,7 +185,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;">
         ${['DeepSeek-R1', 'Claude 3.7 Sonnet', 'GPT-4o Vision', 'Llama 3.3 70B', 'vLLM Engine', 'Qdrant Vector DB', 'LangGraph Cluster', 'Triton Server'].map(name => `
-          <div style="background:#0b1120;border:1px solid #1e293b;border-radius:10px;padding:16px;text-align:center;">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:10px;padding:16px;text-align:center;">
             <div style="font-size:1.4rem;margin-bottom:6px;">⚡</div>
             <div style="font-size:0.84rem;font-weight:700;color:#e2e8f0;">${name}</div>
           </div>
@@ -202,7 +202,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
         <h2 style="font-size:2rem;color:#f8fafc;margin:8px 0;">Validated by Chief AI Officers & Engineering VPs</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
           <div style="color:#06b6d4;font-size:1.1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#cbd5e1;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Corpox replaced 12 fragmented Python microservices with an autonomous multi-agent cluster that operates 24/7 without intervention."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -210,7 +210,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#f8fafc;font-size:0.9rem;">Dr. Aris Thorne</div><div style="color:#64748b;font-size:0.8rem;">VP AI Research, Synthetix Corp</div></div>
           </div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
           <div style="color:#06b6d4;font-size:1.1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#cbd5e1;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Inference latency dropped by 80% with their custom quantization kernels while maintaining 99.8% precision on financial math."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -218,7 +218,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
             <div><div style="font-weight:700;color:#f8fafc;font-size:0.9rem;">Nadia Zhou</div><div style="color:#64748b;font-size:0.8rem;">Chief Data Scientist, QuantEdge Global</div></div>
           </div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:28px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
           <div style="color:#06b6d4;font-size:1.1rem;margin-bottom:12px;">★★★★★</div>
           <p style="color:#cbd5e1;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"The on-premise air-gapped deployment gave our bank the exact security certifications needed for full production rollout."</p>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -233,7 +233,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
   // 7. Contact / Cyber CTA Band
   const contactBandHtml = `
     <section class="contact-band" style="background:#080d1a;color:#ffffff;padding:80px 0;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;">
-      <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
+      <div class="wrap" data-reveal="fade-up" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
           <span class="eyebrow" style="color:#06b6d4;font-weight:700;">AUTONOMOUS ENTERPRISE</span>
           <h2 style="font-size:2.4rem;margin:10px 0;max-width:680px;color:#ffffff;">
@@ -280,23 +280,23 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
   const statsHtml = `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">1,200+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;"><span data-counter="1200" data-suffix="+">1,200+</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">Deployed Neural Agents</div>
           <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Operating in high-throughput enterprise pipelines across finance and logistics.</div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(129,140,248,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#818cf8;letter-spacing:-1px;">240M+</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #818cf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(129,140,248,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#818cf8;letter-spacing:-1px;"><span data-counter="240" data-suffix="M+">240M+</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">Daily Token Inferences</div>
           <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Low-latency FP8 quantized inference clusters with 99.99% system availability.</div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(192,132,252,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#c084fc;letter-spacing:-1px;">&lt;18ms</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(192,132,252,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#c084fc;letter-spacing:-1px;"><span data-counter="18" data-prefix="&lt;" data-suffix="ms">&lt;18ms</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">First-Token Latency</div>
           <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Sub-20ms streaming token generation via hardware-optimized custom kernels.</div>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #38bdf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(56,189,248,0.06);">
-          <div style="font-size:2.8rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;">100%</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #38bdf8;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(56,189,248,0.06);">
+          <div style="font-size:2.8rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;"><span data-counter="100" data-suffix="%">100%</span></div>
           <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">Air-Gapped Sovereign Data</div>
           <div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">Zero external model calls. Full on-premise execution with encrypted vector state.</div>
         </div>
@@ -307,7 +307,7 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
   const missionHtml = `
     <section class="wrap" style="padding:50px 0 70px;">
       <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;">
-        <div>
+        <div data-reveal="fade-up">
           <span class="eyebrow" style="color:#06b6d4;font-weight:700;">ENGINEERED REASONING</span>
           <h2 style="font-size:2.4rem;line-height:1.15;color:#f8fafc;margin:10px 0 20px;">
             Beyond Conversational AI: Deterministic Autonomous Execution
@@ -330,7 +330,7 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
           </div>
         </div>
 
-        <div style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.08);">
+        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.08);">
           <h3 style="font-size:1.3rem;font-weight:700;color:#f8fafc;margin:0 0 20px;">Core Engineering Disciplines</h3>
           <div style="display:flex;flex-direction:column;gap:18px;">
             <div style="border-left:3px solid #06b6d4;padding-left:14px;">
@@ -359,25 +359,25 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
         <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">Pioneering synthetic reasoning, distributed GPU clusters, and multimodal foundation models.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#06b6d4;color:#050811;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">ER</div>
           <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Dr. Elena Rostova</h3>
           <div style="color:#06b6d4;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Chief AI Scientist & Co-Founder</div>
           <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Ex-DeepMind research scientist with 40+ citations in reasoning models and autonomous swarms.</p>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#818cf8;color:#ffffff;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">MS</div>
           <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Marcus Sterling</h3>
           <div style="color:#818cf8;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Head of Agentic Frameworks</div>
           <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Pioneered dynamic DAG task decomposition engines powering our 24/7 autonomous production clusters.</p>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#c084fc;color:#050811;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">TA</div>
           <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Dr. Tariq Al-Mansoor</h3>
           <div style="color:#c084fc;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Director of Inference & Quantization</div>
           <p style="color:#94a3b8;font-size:0.85rem;line-height:1.5;margin:0;">Specializes in custom Triton kernel development, FP8 execution pipelines, and high-bandwidth memory caches.</p>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:14px;padding:28px;text-align:center;">
           <div style="width:64px;height:64px;border-radius:50%;background:#38bdf8;color:#050811;font-weight:900;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">VK</div>
           <h3 style="font-size:1.15rem;color:#f8fafc;font-weight:700;margin:0 0 4px;">Vera Kross, Ph.D.</h3>
           <div style="color:#38bdf8;font-size:0.82rem;font-weight:700;margin-bottom:10px;">Lead Security & AI Alignment</div>
@@ -389,7 +389,7 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
 
   const ctaHtml = `
     <section class="wrap" style="padding:60px 0 80px;">
-      <div style="background:#080d1a;border:1px solid #06b6d4;border-radius:16px;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 0 40px rgba(6,182,212,0.15);">
+      <div class="wr-card-hover" data-reveal="fade-up" style="background:#080d1a;border:1px solid #06b6d4;border-radius:16px;padding:48px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 0 40px rgba(6,182,212,0.15);">
         <div>
           <span style="font-family:monospace;color:#06b6d4;font-weight:700;font-size:0.85rem;">[DEPLOY AUTONOMOUS CLUSTERS]</span>
           <h2 style="font-size:2.2rem;color:#f8fafc;margin:8px 0;font-weight:900;">Deploy Sovereign Neural Workflows</h2>
@@ -522,15 +522,15 @@ export function renderAiAgencyContact(ctx: ThemeContext): string {
         <h2 style="font-size:2.2rem;color:#f8fafc;margin:8px 0;">Agent Architecture & Cluster Deployment FAQ</h2>
       </div>
       <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
           <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">Can we deploy your models within an air-gapped on-premise data center?</h3>
           <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Yes. We package complete containerized vLLM inference runtimes that require zero external internet access, ensuring full HIPAA and defense-grade sovereign data isolation.</p>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
           <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">What level of customization is performed on the foundation weights?</h3>
           <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">We perform targeted LoRA/DoRA adapter tuning alongside direct preference optimization (DPO) on your private proprietary datasets, keeping customer weights completely isolated.</p>
         </div>
-        <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:24px;">
           <h3 style="color:#f8fafc;font-size:1.15rem;margin:0 0 8px;">How do the autonomous agents handle edge cases and execution failures?</h3>
           <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0;">Our multi-agent consensus protocol triggers automated replanning and tool retry loops upon detecting assertion failures. If certainty falls below a configurable threshold, the task escalates to human review.</p>
         </div>
@@ -570,7 +570,7 @@ export function renderAiAgencyCatalog(ctx: ThemeContext): string {
           const imgUrl = asset(p.imageAssetId);
           const tags = ['Agent Swarm', 'Fine-Tuned LLM', 'Vision-Language', 'RAG Engine', 'Code Synthesis', 'Security Gate'];
           return `
-            <article style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:26px;display:flex;flex-direction:column;box-shadow:0 0 25px rgba(6,182,212,0.05);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-radius:16px;padding:26px;display:flex;flex-direction:column;box-shadow:0 0 25px rgba(6,182,212,0.05);">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                 <span style="font-size:0.75rem;font-weight:700;color:#38bdf8;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);padding:4px 12px;border-radius:9999px;">${tags[idx % tags.length]}</span>
                 <span style="font-family:monospace;font-size:0.8rem;color:#67e8f9;">FP8 / AWQ</span>
