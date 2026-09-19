@@ -663,137 +663,161 @@ function renderModernNatureAbout(ctx: ThemeContext): string {
 
   return `
     <main class="wr-inner wr-senseng-nature-inner" data-wr-page="about" style="padding-top:100px;background:#fdfcf9;color:#2c3e2e;min-height:100vh;">
-      <section class="wrap" style="padding:40px 0 70px;">
-        <!-- Editorial Hero Split -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;margin-bottom:60px;" data-reveal="fade-up">
-          <div>
-            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(74,124,89,0.12);border:1px solid rgba(74,124,89,0.3);padding:6px 16px;border-radius:9999px;margin-bottom:18px;">
-              <span style="font-size:0.9rem;">🌿</span>
-              <span style="color:#2d4a22;font-weight:800;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.06em;">
-                ${isZh ? `生态工坊契约 // 绿色循环制造 · ${esc(company.name)}` : `ECO SANCTUARY // CIRCULAR MANUFACTURING · ${esc(company.name.toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
-              </span>
+      <!-- 1. APPLE-STYLE ENVIRONMENTAL MANIFESTO HERO WITH 3 PILLARS DIRECTLY BELOW TITLE (NO 2-COLUMN SPLIT) -->
+      <section style="padding:40px 24px 70px;max-width:1200px;margin:0 auto;text-align:center;">
+        <div data-reveal="fade-up">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(74,124,89,0.12);border:1px solid rgba(74,124,89,0.3);padding:6px 18px;border-radius:9999px;margin-bottom:20px;">
+            <span style="font-size:0.9rem;">🌱</span>
+            <span style="color:#2d4a22;font-weight:800;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.12em;">
+              APPLE & NATURE INSPIRED // 100% CIRCULAR SUPPLY CHAIN · ${esc(company.name.toUpperCase())}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+            </span>
+          </div>
+
+          <h1 style="font-size:clamp(2.5rem, 5vw, 4.2rem);font-weight:900;color:#1e3318;line-height:1.15;letter-spacing:-0.03em;margin:0 0 24px;">
+            ${esc(headline)}
+          </h1>
+
+          <div style="color:#4a5546;font-size:1.15rem;line-height:1.8;max-width:820px;margin:0 auto 36px;">
+            ${storyParagraphs.map((p) => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('')}
+          </div>
+
+          <!-- 3 TOP ECO-PILLARS -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-bottom:36px;text-align:left;">
+            <div class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:24px;display:flex;gap:16px;align-items:center;">
+              <span style="font-size:2rem;background:#f4f1ea;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">☀️</span>
+              <div>
+                <strong style="font-size:1rem;color:#1e3318;display:block;">100% Solar Clean Power</strong>
+                <span style="font-size:0.85rem;color:#5c6b73;">屋顶分布式清洁光伏电网</span>
+              </div>
             </div>
-            <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.4rem);font-weight:900;color:#1e3318;line-height:1.15;letter-spacing:-0.02em;margin:0 0 20px;">
-              ${esc(headline)}
-            </h1>
-            <div style="color:#4a5546;font-size:1.1rem;line-height:1.8;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
-              ${storyParagraphs.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+
+            <div class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:24px;display:flex;gap:16px;align-items:center;">
+              <span style="font-size:2rem;background:#f4f1ea;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🌽</span>
+              <div>
+                <strong style="font-size:1rem;color:#1e3318;display:block;">90-Day Compostable</strong>
+                <span style="font-size:0.85rem;color:#5c6b73;">玉米淀粉工业堆肥降解内衬</span>
+              </div>
             </div>
-            <div style="background:#f4f1ea;border-left:4px solid #4a7c59;padding:16px 20px;border-radius:0 12px 12px 0;margin-bottom:24px;">
-              <div style="font-weight:800;color:#1e3318;font-size:0.95rem;">${isZh ? '“让每一件治愈玩具，都源于自然且归于自然。”' : '“Every tactile companion born from nature, returning to nature.”'}</div>
-              <div style="color:#718355;font-size:0.8rem;margin-top:4px;">${esc(company.name)} · ${isZh ? '绿色工坊制造守则' : 'Green Manufacturing Charter'}</div>
-            </div>
-            <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
-              <a class="button" style="background:#1e3318;color:#ffffff;font-weight:900;padding:15px 32px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 8px 24px rgba(30,51,24,0.25);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-                ${isZh ? '索取环保样品与大宗询盘 ↗' : 'Inquire & Request Samples ↗'}
-              </a>
-              ${company.capabilities ? `
-                <div style="padding:8px 18px;background:rgba(74,124,89,0.1);border:1px solid rgba(74,124,89,0.25);border-radius:9999px;color:#1e3318;font-size:0.88rem;font-weight:800;">
-                  🌱 ${esc(company.capabilities.slice(0, 45))}
-                </div>
-              ` : ''}
+
+            <div class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:24px;display:flex;gap:16px;align-items:center;">
+              <span style="font-size:2rem;background:#f4f1ea;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🌿</span>
+              <div>
+                <strong style="font-size:1rem;color:#1e3318;display:block;">Zero Virgin Plastics</strong>
+                <span style="font-size:0.85rem;color:#5c6b73;">100% 杜绝石化塑料吸塑包装</span>
+              </div>
             </div>
           </div>
 
-          <div class="wr-card-hover" style="position:relative;">
-            <div style="border-radius:28px;overflow:hidden;border:2px solid #d5cec0;box-shadow:0 16px 40px rgba(45,74,34,0.08);background:#f4f1ea;">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
-            </div>
-            <div style="position:absolute;bottom:20px;left:20px;background:rgba(255,255,255,0.96);backdrop-filter:blur(8px);border:1px solid #d5cec0;border-radius:9999px;padding:8px 20px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(0,0,0,0.06);">
-              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4a7c59;"></span>
-              <span style="font-weight:800;font-size:0.82rem;color:#1e3318;">${isZh ? '🌱 100% 食品级环保软胶 · 零塑吸塑' : '🌱 100% Bio-Based Eco-Polymer'}</span>
-            </div>
+          <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
+            <a class="button" style="background:#1e3318;color:#ffffff;font-weight:900;padding:15px 36px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 8px 24px rgba(30,51,24,0.25);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+              ${isZh ? '获取环保样品与大宗询盘 ↗' : 'Inquire for Eco Wholesale Terms ↗'}
+            </a>
           </div>
         </div>
+      </section>
 
-        <!-- FEATURED MEDIA + COPY SHOWCASE (Apple / Anker Style Eco Progress Sanctuary) -->
-        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #d5cec0;border-radius:32px;padding:40px;box-shadow:0 12px 36px rgba(45,74,34,0.06);margin-bottom:60px;">
-          <div style="text-align:center;max-width:800px;margin:0 auto 36px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,124,89,0.12);color:#2d4a22;font-weight:900;font-size:0.82rem;padding:6px 16px;border-radius:9999px;margin-bottom:12px;letter-spacing:0.08em;text-transform:uppercase;">
-              <span>☀️</span>
-              <span>${isZh ? 'CLOSED-LOOP SUSTAINABLE SANCTUARY // 零碳循环工坊与生态契约' : 'CLOSED-LOOP SUSTAINABLE SANCTUARY // CIRCULAR PROGRESS REPORT'}</span>
-            </div>
-            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#1e3318;margin:0 0 12px;line-height:1.2;">
-              ${isZh ? '生态闭环 · 分布式光伏微电网、生物基聚合物与全降解缓冲包材' : 'Closed-Loop Ecosystem // Solar Microgrid, Bio-Polymers & Zero Virgin Plastic'}
+      <!-- 2. THE 4-PHASE CIRCULAR LIFECYCLE ARCHITECTURE (HORIZONTAL INFOGRAPHIC FLOW) -->
+      <section style="padding:0 24px 80px;max-width:1280px;margin:0 auto;" data-reveal="fade-up">
+        <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:32px;padding:48px 40px;box-shadow:0 12px 36px rgba(45,74,34,0.06);">
+          <div style="text-align:center;max-width:760px;margin:0 auto 40px;">
+            <span style="font-size:0.8rem;font-weight:800;color:#4a7c59;letter-spacing:0.12em;text-transform:uppercase;">
+              THE CIRCULAR LIFECYCLE INFOGRAPHIC
+            </span>
+            <h2 style="font-size:2.2rem;font-weight:900;color:#1e3318;margin:6px 0 0;">
+              ${isZh ? '闭环生态制造：从农田到掌心的无废旅程' : 'From Farm to Palm // The Closed-Loop Flow'}
             </h2>
-            <p style="color:#5c6b73;font-size:1.02rem;line-height:1.7;margin:0;">
-              ${isZh
-                ? `在 ${esc(company.name)} 绿色制造基地，可持续不仅是一个口号，更是写入每一道注塑工序的刚性契约。我们利用屋顶分布式太阳能清洁电网驱动生产，彻底淘汰一次性原生塑料吸塑，以玉米淀粉可降解缓冲材料护航每一批出海玩具。`
-                : `At ${esc(company.name)} green manufacturing centers, ecological circularity is built into every mold. Powered by rooftop solar microgrids, our closed-loop facilities eliminate single-use virgin plastic packaging.`}
-            </p>
           </div>
 
-          <!-- Video / Photo + Eco Specs Bento Split -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;align-items:stretch;">
-            <!-- Media Window with Simulated 4K Eco-Documentary -->
-            <div class="wr-card-hover" style="position:relative;border-radius:24px;overflow:hidden;background:#f4f1ea;border:1px solid #d5cec0;display:flex;flex-direction:column;justify-content:flex-end;min-height:360px;">
-              <img src="${esc(secondaryImage || primaryImage)}" alt="${esc(company.name)} clean manufacturing plant" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
-              <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(30,51,24,0.88) 0%, rgba(30,51,24,0.2) 50%, rgba(0,0,0,0.1) 100%);"></div>
-
-              <!-- Eco Telemetry Pill -->
-              <div style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:9999px;padding:6px 14px;font-size:0.75rem;font-weight:900;color:#1e3318;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4a7c59;animation:wr-pulse 1.8s infinite;"></span>
-                <span>${isZh ? '▶ 4K 生态工坊纪实 · 零碳微电网航拍' : '▶ 4K ECO-LAB DOCUMENTARY'}</span>
-              </div>
-
-              <div style="position:relative;padding:24px;color:#ffffff;z-index:2;">
-                <div style="font-size:0.82rem;font-weight:800;color:#d5cec0;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">
-                  ${isZh ? '100% 屋顶光伏绿电 + 闭环工业循环水体系' : '100% ROOFTOP SOLAR MICROGRID & CLOSED-LOOP WATER RECYCLING'}
-                </div>
-                <div style="font-size:1.15rem;font-weight:900;line-height:1.3;margin-bottom:14px;">
-                  ${isZh ? '玉米淀粉 90 天全降解内衬 + 零重金属食品级硅胶' : 'Cornstarch 90-Day Biodegradable Cushioning & Lead-Free Tooling'}
-                </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:800;">
-                    ☀️ 100% Clean Solar
-                  </span>
-                  <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:800;">
-                    🌽 90-Day Compostable
-                  </span>
-                  <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:800;">
-                    🌿 Zero Virgin Plastic
-                  </span>
-                </div>
-              </div>
+          <!-- 4 Horizontal Phase Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+            <div class="wr-card-hover" style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:20px;padding:28px 22px;">
+              <div style="font-size:0.75rem;font-weight:900;color:#4a7c59;letter-spacing:0.08em;margin-bottom:8px;">STAGE 01 // RAW MATERIAL</div>
+              <h3 style="font-size:1.15rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '可再生植物基与天然软胶' : 'Renewable Bio-Polymers'}</h3>
+              <p style="font-size:0.88rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '从非转基因农作物淀粉中提取环保高分子，彻底告别化石燃料依赖。' : 'Plant-derived polymers reduce dependency on fossil fuel chemicals.'}</p>
             </div>
 
-            <!-- Eco Architecture Specifications Column -->
-            <div style="display:flex;flex-direction:column;gap:16px;justify-content:center;">
-              <div style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:18px;padding:20px 24px;" class="wr-card-hover">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                  <span style="font-size:1.4rem;">🌱</span>
-                  <strong style="font-size:1.05rem;font-weight:900;color:#1e3318;">${isZh ? '可再生植物基与环保软胶' : 'Bio-Based Polymeric Formulations'}</strong>
-                </div>
-                <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-                  ${isZh ? '采用环保发泡与食品接触级软胶配方，19 项重金属与邻苯二甲酸酯筛查零检出，即使长时间握持亦温润无害。' : 'Certified free from plasticizers and toxic heavy metals. Chemically neutral under prolonged body temperature contact.'}
-                </p>
-              </div>
+            <div class="wr-card-hover" style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:20px;padding:28px 22px;">
+              <div style="font-size:0.75rem;font-weight:900;color:#4a7c59;letter-spacing:0.08em;margin-bottom:8px;">STAGE 02 // PRODUCTION</div>
+              <h3 style="font-size:1.15rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '太阳能光伏与循环水系' : 'Solar Power & Closed Loop'}</h3>
+              <p style="font-size:0.88rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '屋顶光伏提供 100% 洁净电力，模具冷却水实现零工业废水外排。' : '100% solar microgrid assembly with zero toxic wastewater discharge.'}</p>
+            </div>
 
-              <div style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:18px;padding:20px 24px;" class="wr-card-hover">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                  <span style="font-size:1.4rem;">💧</span>
-                  <strong style="font-size:1.05rem;font-weight:900;color:#1e3318;">${isZh ? '闭环工业循环水体系' : 'Closed-Loop Water Recycling System'}</strong>
-                </div>
-                <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-                  ${isZh ? '模具降温采用三级物理沉淀与冷凝循环回用技术，车间不向市政管网排放工业废水，全力呵护水域生态。' : 'Multi-stage physical filtration preserves municipal water resources and eliminates hazardous wastewater discharge.'}
-                </p>
-              </div>
+            <div class="wr-card-hover" style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:20px;padding:28px 22px;">
+              <div style="font-size:0.75rem;font-weight:900;color:#4a7c59;letter-spacing:0.08em;margin-bottom:8px;">STAGE 03 // PACKAGING</div>
+              <h3 style="font-size:1.15rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? 'FSC大豆油墨纸板包装' : 'Soy-Ink Recycled Kraft'}</h3>
+              <p style="font-size:0.88rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '100% 消费后废弃再生纤维纸盒，植物大豆油墨印刷，易降解。' : 'FSC certified post-consumer recycled paperboard printed with soy inks.'}</p>
+            </div>
 
-              <div style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:18px;padding:20px 24px;" class="wr-card-hover">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                  <span style="font-size:1.4rem;">📦</span>
-                  <strong style="font-size:1.05rem;font-weight:900;color:#1e3318;">${isZh ? '100% 废弃再生纸板与玉米淀粉包材' : 'Compostable Cushioning & FSC Packaging'}</strong>
-                </div>
-                <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-                  ${isZh ? '彻底剔除传统一次性塑料吸塑泡壳，采用 90 天可自然堆肥降解的玉米淀粉缓冲膜和大豆油墨瓦楞盒。' : 'Replaces single-use blister plastics with 90-day compostable cornstarch liners and soy-ink printed boxes.'}
-                </p>
+            <div class="wr-card-hover" style="background:#fdfcf9;border:1px solid #d5cec0;border-radius:20px;padding:28px 22px;">
+              <div style="font-size:0.75rem;font-weight:900;color:#4a7c59;letter-spacing:0.08em;margin-bottom:8px;">STAGE 04 // RETURN</div>
+              <h3 style="font-size:1.15rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '90天全降解自然还田' : '90-Day Natural Compost'}</h3>
+              <p style="font-size:0.88rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '丢弃后在工业堆肥环境下 90 天完全分解，不留任何微塑料碎片。' : 'Decomposes completely in compost without generating microplastics.'}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. INDEPENDENT LAB AUDIT & BOTANICAL MEDIA SHOWCASE (NEVER BLANK) -->
+      <section style="padding:0 24px 80px;max-width:1280px;margin:0 auto;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:36px;align-items:center;">
+          <!-- Botanical Media Frame with Vector Background (GUARANTEED NEVER BLANK) -->
+          <div class="wr-card-hover" style="position:relative;border-radius:28px;overflow:hidden;background:#f4f1ea;border:2px solid #d5cec0;min-height:380px;display:flex;align-items:center;justify-content:center;">
+            <!-- Eco Solar Vector Art -->
+            <svg width="100%" height="100%" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:0.35;">
+              <defs>
+                <radialGradient id="natureG" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#4a7c59" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#f4f1ea" stop-opacity="1"/>
+                </radialGradient>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#natureG)"/>
+              <circle cx="250" cy="190" r="120" fill="none" stroke="#2d4a22" stroke-width="2" stroke-dasharray="6 6"/>
+              <path d="M 250 80 Q 350 190 250 300 Q 150 190 250 80" fill="none" stroke="#4a7c59" stroke-width="2.5"/>
+            </svg>
+
+            ${primaryImage ? `<img src="${esc(primaryImage)}" alt="${esc(company.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" onerror="this.style.display=\'none\'">` : ''}
+
+            <div style="position:relative;z-index:2;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border:1px solid #d5cec0;border-radius:20px;padding:20px 28px;text-align:center;box-shadow:0 8px 24px rgba(45,74,34,0.08);max-width:280px;">
+              <div style="font-size:2.2rem;margin-bottom:6px;">🌿</div>
+              <strong style="font-size:1rem;color:#1e3318;display:block;">100% CIRCULAR COMPLIANT</strong>
+              <span style="font-size:0.8rem;color:#4a7c59;font-weight:700;">Clean solar microgrid certified</span>
+            </div>
+          </div>
+
+          <!-- Independent Lab Audit Specs Table -->
+          <div style="background:#ffffff;border:1px solid #d5cec0;border-radius:28px;padding:36px;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
+            <span style="font-size:0.8rem;font-weight:800;color:#4a7c59;letter-spacing:0.1em;text-transform:uppercase;">INDEPENDENT LABORATORY AUDIT</span>
+            <h3 style="font-size:1.6rem;font-weight:900;color:#1e3318;margin:6px 0 16px;">
+              ${isZh ? '19项重金属与邻苯二甲酸酯零检出' : 'Full-Spectrum Purity & Safety Compliance'}
+            </h3>
+            <p style="color:#5c6b73;font-size:0.95rem;line-height:1.7;margin:0 0 20px;">
+              ${isZh ? '每一批次出厂产品均在独立实验室进行耐撕拉、热稳定性及唾液可溶性重金属测试，全项通过。' : 'Independently tested by third-party testing bodies for chemical purity and physical endurance.'}
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="background:#fdfcf9;border:1px solid #d5cec0;padding:12px;border-radius:10px;">
+                <strong style="color:#1e3318;font-size:0.85rem;display:block;">✓ EN71 Part 1-3</strong>
+                <span style="color:#718355;font-size:0.78rem;">欧盟玩具全项安全</span>
+              </div>
+              <div style="background:#fdfcf9;border:1px solid #d5cec0;padding:12px;border-radius:10px;">
+                <strong style="color:#1e3318;font-size:0.85rem;display:block;">✓ ASTM F963</strong>
+                <span style="color:#718355;font-size:0.78rem;">美标物理与化学</span>
+              </div>
+              <div style="background:#fdfcf9;border:1px solid #d5cec0;padding:12px;border-radius:10px;">
+                <strong style="color:#1e3318;font-size:0.85rem;display:block;">✓ CPSIA Lead-Free</strong>
+                <span style="color:#718355;font-size:0.78rem;">儿童产品无铅标准</span>
+              </div>
+              <div style="background:#fdfcf9;border:1px solid #d5cec0;padding:12px;border-radius:10px;">
+                <strong style="color:#1e3318;font-size:0.85rem;display:block;">✓ RoHS / REACH</strong>
+                <span style="color:#718355;font-size:0.78rem;">欧盟环境有害物质</span>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Dynamic Counter Highlights Grid -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-bottom:60px;" data-reveal="fade-up">
+      <!-- 4. DYNAMIC GREEN COUNTER STATS BAR -->
+      <section style="padding:0 24px 80px;max-width:1280px;margin:0 auto;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;">
           ${highlights.map((h) => `
             <div class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:28px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.03);">
               <div style="font-size:2.6rem;font-weight:900;color:#2d4a22;line-height:1;margin-bottom:8px;">
@@ -806,81 +830,6 @@ function renderModernNatureAbout(ctx: ThemeContext): string {
               </div>
             </div>
           `).join('')}
-        </div>
-
-        <!-- 4 Ecological Pillars -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-bottom:60px;">
-          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:32px;text-align:center;">
-            <div style="font-size:2.4rem;margin-bottom:12px;">🌿</div>
-            <h3 style="font-size:1.18rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '100% 生物基原则' : 'Zero Virgin Plastic'}</h3>
-            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-              ${isZh ? '产品主体选用经独立实验室检测的食品级环保软胶，杜绝石化塑料吸塑。' : 'Crafted with food-grade non-toxic polymers and plastic-free packaging.'}
-            </p>
-          </div>
-
-          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:32px;text-align:center;">
-            <div style="font-size:2.4rem;margin-bottom:12px;">☀️</div>
-            <h3 style="font-size:1.18rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '分布式太阳能智造' : 'Solar-Powered Plant'}</h3>
-            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-              ${isZh ? '工厂车间全面采用清洁屋顶光伏绿电，每生产 10 万件玩具减少 18 吨碳足迹。' : 'Manufacturing with clean solar energy to minimize ecological footprint.'}
-            </p>
-          </div>
-
-          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:32px;text-align:center;">
-            <div style="font-size:2.4rem;margin-bottom:12px;">🛡️</div>
-            <h3 style="font-size:1.18rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '全龄段安全认证' : 'Universal Child Safe'}</h3>
-            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-              ${isZh ? '经欧美权威实验室跌落抗冲击、物理拉伸与唾液可溶性化学测试，无毒无害。' : 'Independently tested for drop, pull, and heavy metal limits.'}
-            </p>
-          </div>
-
-          <div data-reveal="fade-up" class="wr-nature-card wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:20px;padding:32px;text-align:center;">
-            <div style="font-size:2.4rem;margin-bottom:12px;">🔄</div>
-            <h3 style="font-size:1.18rem;font-weight:900;color:#1e3318;margin:0 0 8px;">${isZh ? '全降解循环包装' : 'Circular Lifecycle'}</h3>
-            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
-              ${isZh ? '内衬可在堆肥环境下 90 天降解还田，实现从摇篮到摇篮的无废生态。' : 'Fully compostable packaging dissolves naturally without leaving microplastic residues.'}
-            </p>
-          </div>
-        </div>
-
-        <!-- Secondary Workshop & Compliance Badges -->
-        <div style="background:#f4f1ea;border:1px solid #d5cec0;border-radius:28px;padding:40px;margin-bottom:60px;" data-reveal="fade-up">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:36px;align-items:center;">
-            ${secondaryImage ? `
-              <div class="wr-card-hover" style="border-radius:20px;overflow:hidden;border:1px solid #d5cec0;box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-                <img src="${esc(secondaryImage)}" alt="${isZh ? '无菌洁净注塑车间' : 'Eco Production Plant'}" style="width:100%;height:280px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            ` : ''}
-            <div>
-              <span style="color:#4a7c59;font-weight:800;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.06em;">${isZh ? '闭环生态工坊准则' : 'CIRCULAR CRAFTSMANSHIP'}</span>
-              <h3 style="font-size:1.6rem;font-weight:900;color:#1e3318;margin:8px 0 16px;">
-                ${isZh ? '从大豆油墨到无铅模具的生态坚守' : 'Soy Inks, Lead-Free Tooling & Clean Energy'}
-              </h3>
-              <p style="color:#5c6b73;font-size:0.95rem;line-height:1.7;margin:0 0 20px;">
-                ${isZh
-                  ? '每一批次出厂产品均在自有实验室进行耐撕拉、热稳定性及有害物质析出测试，确保符合欧盟 EN71-3、美标 ASTM F963 及中国 GB 6675 全项严苛标准。'
-                  : 'Every production batch undergoes comprehensive tensile, thermal, and saliva-solubility testing to guarantee full compliance with European EN71-3, ASTM F963, and GB 6675 toy safety standards.'}
-              </p>
-              <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                <span style="background:#ffffff;border:1px solid #d5cec0;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:800;color:#2d4a22;">✓ EN71 Part 1-3</span>
-                <span style="background:#ffffff;border:1px solid #d5cec0;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:800;color:#2d4a22;">✓ ASTM F963</span>
-                <span style="background:#ffffff;border:1px solid #d5cec0;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:800;color:#2d4a22;">✓ RoHS / REACH</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Inquiry CTA Banner -->
-        <div data-reveal="fade-up" style="text-align:center;background:linear-gradient(135deg,#2d4a22 0%,#1e3318 100%);color:#ffffff;border-radius:28px;padding:50px 24px;box-shadow:0 16px 40px rgba(30,51,24,0.25);">
-          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;margin:0 0 12px;color:#ffffff;">
-            ${isZh ? '探索自然治愈系列 · 索取外贸样品盒' : 'Curate Mindful Tactile Goods for Your Market'}
-          </h2>
-          <p style="color:#d5cec0;font-size:1.05rem;max-width:600px;margin:0 auto 24px;">
-            ${isZh ? '提供全系产品外贸大宗起订量、环保包材定制选项与第三方质检报告。' : 'Direct factory support, customized packaging, and expedited worldwide sample dispatch.'}
-          </p>
-          <a class="button" style="background:#ffffff;color:#1e3318;font-weight:900;padding:15px 34px;border-radius:9999px;font-size:1rem;display:inline-block;text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-            ${isZh ? '与我们取得联系 ↗' : 'Inquire & Request Samples ↗'}
-          </a>
         </div>
       </section>
     </main>
