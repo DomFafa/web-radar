@@ -61,6 +61,11 @@ export interface Company {
   targetMarkets?: string;
   customerTypes?: string;
   cooperationProcess?: string;
+  aboutImageAssetId?: string;
+  aboutSecondaryImageAssetId?: string;
+  aboutHeadline?: string;
+  aboutStory?: string;
+  aboutHighlights?: string;
   linkedin?: string;
   facebook: string;
   instagram: string;

@@ -1,4 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderAccountingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -232,10 +234,16 @@ export function renderAccountingHome(ctx: ThemeContext): string {
   return `${topBarHtml}${heroHtml}${statsHtml}${productsHtml}${whyChooseHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderAccountingAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+function renderLegacyAccountingAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
+
+  const headline = company.aboutHeadline || 'Accredited Accounting, Tax & Corporate Advisory';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const aboutText = copy?.about || company.description || 'With over two decades of accredited excellence, our certified public accountants and tax attorneys provide bulletproof compliance, proactive wealth preservation, and transparent financial stewardship.';
 
   const heroHtml = `
@@ -245,7 +253,7 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
           <span style="font-size:0.8rem;font-weight:700;color:#fdf1f3;letter-spacing:0.1em;text-transform:uppercase;">ACCREDITED CPA PRACTICE · EST. ${esc(company.establishedYear || '1998')}</span>
         </div>
         <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.4rem,4.8vw,4.2rem);line-height:1.12;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;color:#ffffff;">
-          Accredited Accounting, Tax & Corporate Advisory
+          ${esc(headline)}
         </h1>
         <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#d1d5db;margin:0;">
           ${esc(copy?.subtitle || 'Strategic wealth management, cross-border corporate structuring, and rigorous tax compliance for expanding enterprises and high-net-worth families.')}
@@ -254,7 +262,23 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:48px 0 32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <div style="font-size:2.4rem;color:#d90a2c;font-weight:800;font-family:'Playfair Display',Georgia,serif;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:700;margin-top:6px;color:#262626;font-size:1.05rem;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.88rem;color:#666666;margin-top:6px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
@@ -288,8 +312,10 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
           <span class="eyebrow" style="color:#d90a2c;font-weight:700;">FIRM HERITAGE & PHILOSOPHY</span>
           <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#262626;margin:12px 0 20px;line-height:1.2;">Proactive Tax Strategy Built on Uncompromising Integrity</h2>
           <div style="color:#4d4d4d;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-            <p>${esc(aboutText)}</p>
-            <p>Unlike standard reactive tax filing services, our partners maintain continuous quarterly audits, multi-jurisdiction nexus reviews, and strategic capital structuring to prevent fiscal vulnerabilities before they emerge.</p>
+            ${customStoryParas ? customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('') : `
+              <p>${esc(aboutText)}</p>
+              <p>Unlike standard reactive tax filing services, our partners maintain continuous quarterly audits, multi-jurisdiction nexus reviews, and strategic capital structuring to prevent fiscal vulnerabilities before they emerge.</p>
+            `}
           </div>
           ${company.certifications ? `
             <div style="margin-top:24px;padding:20px;background:#fdf1f3;border-left:4px solid #d90a2c;border-radius:0 4px 4px 0;">
@@ -299,7 +325,13 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
           ` : ''}
         </div>
         <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:6px;padding:36px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2rem;color:#d90a2c;margin-bottom:16px;">⚖️</div>
+          ${customImg ? `
+            <div style="border-radius:4px;overflow:hidden;border:1px solid #e8d8d9;margin-bottom:18px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : `
+            <div style="font-size:2rem;color:#d90a2c;margin-bottom:16px;">⚖️</div>
+          `}
           <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.35rem;margin:0 0 10px;">Fiduciary Duty & Transparency</h3>
           <p style="color:#666666;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Our practice adheres to the highest statutory accounting ethics, ensuring your business preserves wealth legally and strategically.</p>
           <div style="display:flex;flex-direction:column;gap:12px;">
@@ -398,6 +430,421 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${statsHtml}${heritageHtml}${practicePillarsHtml}${partnersHtml}${ctaHtml}`;
+}
+
+function renderModernAccountingAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang];
+  const isZh = (ctx.lang as string) === 'zh';
+
+  const defaultHeadline = isZh
+    ? '恪尽信义义务，构筑跨国财税合规与审慎资产治理架构'
+    : 'Accredited Accounting, Global Tax & Fiduciary Corporate Advisory';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 汇聚二十余年注册会计师与跨国税务律师专业积淀，长期服务于全球跨国企业、高净值家族办公室及跨国投资实体。我们以捍卫企业法定合规与资产安全为最高准则，提供贯穿企业全生命周期的审慎财税规划、法定审计鉴证与跨境并购尽调服务。`
+      : `With over two decades of accredited excellence, ${company.name} provides certified public accountancy, cross-border corporate structuring, and rigorous tax compliance for high-net-worth entities and multinational enterprises.`,
+    isZh
+      ? '不同于传统事后记账报税代理，我们的资深合伙人团队深入客户核心业务场景，依托全流程审慎风控模型与双边税收协定网络，在合法合规框架下深度优化税负结构、消除跨法域双重课税风险，保障企业行稳致远。'
+      : 'Our multidisciplinary partners maintain continuous quarterly audit oversight, transfer pricing governance, and double-taxation treaty alignment to insulate clients from statutory liabilities while preserving capital efficiency.',
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg } = getAboutImages(ctx, path('templates/accounting/about-office.jpg'));
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '25+', num: 25, suffix: '+', label: isZh ? '执业信赖年限' : 'Years of Fiduciary Trust', desc: isZh ? '四分之一世纪持续合规坚守' : 'Continuous corporate advisory excellence' },
+    { value: '99.8%', num: 99.8, suffix: '%', label: isZh ? '无保留法定审计通过率' : 'Clean Audit Defense Rate', desc: isZh ? '经受全球多边税务主管机关严苛审查' : 'Flawless statutory audit outcomes worldwide' },
+    { value: '$850M+', num: 850, prefix: '$', suffix: 'M+', label: isZh ? '年化咨询监督企业资本' : 'Advised Corporate Capital', desc: isZh ? '跨国财资优化与并购风险隔离' : 'Managed treasuries, M&A, and asset shielding' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '资深持牌合伙人直通服务' : 'Licensed CPA & Legal Staff', desc: isZh ? '国家会计师公会与执业律师亲理' : 'AICPA members and enrolled attorneys on duty' },
+  ]);
+
+  // Anti-Blank Box Vector SVG: Archival General Ledger & Wax Seal Folio
+  const ledgerSvg = `
+    <svg viewBox="0 0 720 460" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:block;background:#181615;">
+      <defs>
+        <radialGradient id="portoLedgerGlow" cx="50%" cy="50%" r="65%">
+          <stop offset="0%" stop-color="#2c2825" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#141211" stop-opacity="1"/>
+        </radialGradient>
+        <linearGradient id="goldRibbon" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#d4af37"/>
+          <stop offset="50%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#b45309"/>
+        </linearGradient>
+        <filter id="waxShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6"/>
+        </filter>
+      </defs>
+
+      <!-- Folio Slate Canvas -->
+      <rect width="720" height="460" fill="url(#portoLedgerGlow)"/>
+      <rect x="16" y="16" width="688" height="428" rx="4" fill="none" stroke="#3d3733" stroke-width="1.5"/>
+      <rect x="22" y="22" width="676" height="416" rx="2" fill="none" stroke="#d90a2c" stroke-width="0.75" stroke-opacity="0.4"/>
+
+      <!-- Folio Header / Watermark -->
+      <g transform="translate(42, 48)">
+        <text x="0" y="0" fill="#d4af37" font-size="10" font-family="'Georgia',serif" font-weight="700" letter-spacing="3">ACCREDITED STATUTORY GENERAL LEDGER // FOLIO NO. 904-CPA</text>
+        <text x="0" y="18" fill="#a8a29e" font-size="11" font-family="'Courier New',monospace" letter-spacing="1">JURISDICTION: IFRS · US-GAAP · OECD BEPS COMPLIANT</text>
+        <line x1="0" y1="28" x2="636" y2="28" stroke="#d4af37" stroke-width="1" stroke-opacity="0.5"/>
+      </g>
+
+      <!-- Ledger Table Structure -->
+      <g transform="translate(42, 98)">
+        <!-- Table Column Headers -->
+        <rect x="0" y="0" width="636" height="26" fill="#24201e" rx="2"/>
+        <text x="12" y="17" fill="#e7e5e4" font-size="10" font-family="'Courier New',monospace" font-weight="700">CODE / REF</text>
+        <text x="120" y="17" fill="#e7e5e4" font-size="10" font-family="'Courier New',monospace" font-weight="700">FIDUCIARY ACCOUNT TITLE</text>
+        <text x="360" y="17" fill="#e7e5e4" font-size="10" font-family="'Courier New',monospace" font-weight="700">DEBIT ($USD)</text>
+        <text x="490" y="17" fill="#e7e5e4" font-size="10" font-family="'Courier New',monospace" font-weight="700">CREDIT ($USD)</text>
+
+        <!-- Ledger Row 1 -->
+        <line x1="0" y1="56" x2="636" y2="56" stroke="#2d2926" stroke-width="1"/>
+        <text x="12" y="47" fill="#78716c" font-size="11" font-family="'Courier New',monospace">GL-1010</text>
+        <text x="120" y="47" fill="#f5f5f4" font-size="11" font-family="'Georgia',serif">Escrow Trust & Treasury Reserves</text>
+        <text x="360" y="47" fill="#10b981" font-size="11" font-family="'Courier New',monospace" font-weight="700">45,820,000.00</text>
+        <text x="490" y="47" fill="#78716c" font-size="11" font-family="'Courier New',monospace">—</text>
+
+        <!-- Ledger Row 2 -->
+        <line x1="0" y1="88" x2="636" y2="88" stroke="#2d2926" stroke-width="1"/>
+        <text x="12" y="79" fill="#78716c" font-size="11" font-family="'Courier New',monospace">GL-2040</text>
+        <text x="120" y="79" fill="#f5f5f4" font-size="11" font-family="'Georgia',serif">Cross-Border Tax Shield Capital</text>
+        <text x="360" y="79" fill="#78716c" font-size="11" font-family="'Courier New',monospace">—</text>
+        <text x="490" y="79" fill="#e7e5e4" font-size="11" font-family="'Courier New',monospace" font-weight="700">45,820,000.00</text>
+
+        <!-- Ledger Row 3 -->
+        <line x1="0" y1="120" x2="636" y2="120" stroke="#2d2926" stroke-width="1"/>
+        <text x="12" y="111" fill="#78716c" font-size="11" font-family="'Courier New',monospace">GL-3080</text>
+        <text x="120" y="111" fill="#f5f5f4" font-size="11" font-family="'Georgia',serif">Transfer Pricing Intercompany Pool</text>
+        <text x="360" y="111" fill="#10b981" font-size="11" font-family="'Courier New',monospace" font-weight="700">12,450,000.00</text>
+        <text x="490" y="111" fill="#78716c" font-size="11" font-family="'Courier New',monospace">—</text>
+
+        <!-- Ledger Row 4 -->
+        <line x1="0" y1="152" x2="636" y2="152" stroke="#2d2926" stroke-width="1"/>
+        <text x="12" y="143" fill="#78716c" font-size="11" font-family="'Courier New',monospace">GL-3095</text>
+        <text x="120" y="143" fill="#f5f5f4" font-size="11" font-family="'Georgia',serif">Statutory Retained Earnings Allocation</text>
+        <text x="360" y="143" fill="#78716c" font-size="11" font-family="'Courier New',monospace">—</text>
+        <text x="490" y="143" fill="#e7e5e4" font-size="11" font-family="'Courier New',monospace" font-weight="700">12,450,000.00</text>
+
+        <!-- Double Line Total / Balanced Stamp -->
+        <line x1="0" y1="172" x2="636" y2="172" stroke="#d4af37" stroke-width="1" stroke-opacity="0.8"/>
+        <line x1="0" y1="176" x2="636" y2="176" stroke="#d4af37" stroke-width="1" stroke-opacity="0.8"/>
+        <text x="12" y="196" fill="#d4af37" font-size="11" font-family="'Georgia',serif" font-weight="700" letter-spacing="1">Σ DUAL-ENTRY EQUALITY (TALLY VERIFIED)</text>
+        <text x="360" y="196" fill="#10b981" font-size="12" font-family="'Courier New',monospace" font-weight="700">$58,270,000.00</text>
+        <text x="490" y="196" fill="#10b981" font-size="12" font-family="'Courier New',monospace" font-weight="700">$58,270,000.00</text>
+      </g>
+
+      <!-- Official Wax Seal & Partner Notary Stamp -->
+      <g transform="translate(540, 340)" filter="url(#waxShadow)">
+        <!-- Outer Wax Seal Rings -->
+        <circle cx="0" cy="0" r="54" fill="#991b1b" stroke="#d90a2c" stroke-width="3"/>
+        <circle cx="0" cy="0" r="48" fill="#b91c1c" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <circle cx="0" cy="0" r="41" fill="#7f1d1d" stroke="#fef08a" stroke-width="0.75"/>
+
+        <!-- Scales of Fiduciary Justice Symbol -->
+        <path d="M-1 -18 L1 -18 L1 18 L-1 18 Z M-18 -10 L18 -10 L0 -16 Z M-18 -10 L-22 6 L-14 6 Z M18 -10 L14 6 L22 6 Z" fill="#d4af37"/>
+        <circle cx="0" cy="-16" r="3" fill="#fef08a"/>
+        
+        <!-- Arc Text / Monogram -->
+        <text x="0" y="27" fill="#fef08a" font-size="7" font-family="'Georgia',serif" font-weight="700" text-anchor="middle" letter-spacing="1">ACCREDITED CPA</text>
+      </g>
+
+      <!-- Partner Signature Simulation -->
+      <g transform="translate(42, 330)">
+        <text x="0" y="0" fill="#a8a29e" font-size="10" font-family="'Georgia',serif" font-style="italic">Signed & Attested under Professional Code of Ethics:</text>
+        <path d="M0 24 Q 30 5, 60 28 T 120 18 T 180 32 T 220 20" fill="none" stroke="#d4af37" stroke-width="1.75" stroke-linecap="round"/>
+        <text x="0" y="44" fill="#78716c" font-size="10" font-family="'Courier New',monospace">SENIOR MANAGING PARTNER // LICENSE #NY-CPA-498102</text>
+        <rect x="0" y="54" width="130" height="18" rx="2" fill="#d90a2c" fill-opacity="0.2" stroke="#d90a2c" stroke-width="0.8"/>
+        <text x="8" y="66" fill="#fca5a5" font-size="9" font-family="'Courier New',monospace" font-weight="700">STATUS: AUDITED & LOCKED</text>
+      </g>
+    </svg>
+  `;
+
+  return `
+    <div class="porto-about-modern" style="background:#fdfcf9;color:#1c1917;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;">
+      <!-- Asymmetrical Fiduciary Ledger Folio Hero -->
+      <section style="background:linear-gradient(135deg, #181615 0%, #24201e 55%, #322b27 100%);color:#ffffff;padding:88px 0 76px;border-bottom:3px solid #d90a2c;position:relative;overflow:hidden;">
+        <!-- Delicate Gold & Parchment Background Accents -->
+        <div style="position:absolute;top:0;right:0;width:550px;height:550px;background:radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:0;left:0;width:400px;height:400px;background:radial-gradient(circle, rgba(217,10,44,0.08) 0%, transparent 70%);pointer-events:none;"></div>
+
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
+          <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;">
+            <!-- Left Hero Folio Docket -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);padding:6px 18px;border-radius:3px;margin-bottom:22px;">
+                <span style="color:#d4af37;font-size:0.82rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;font-family:'Georgia',serif;">
+                  ${isZh ? `特许执业会计事务所 · 创立于 ${esc(company.establishedYear || '1998')}` : `CHARTERED FIDUCIARY PRACTICE · EST. ${esc(company.establishedYear || '1998')}`}
+                </span>
+              </div>
+
+              <div style="font-family:'Georgia',serif;font-style:italic;color:#d4af37;font-size:1.05rem;letter-spacing:0.04em;margin-bottom:12px;">
+                “Fiat Justitia, Praestare Fide — In Fiduciary Trust We Shield Enterprise Capital”
+              </div>
+
+              <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.3rem, 4.4vw, 3.8rem);line-height:1.15;font-weight:700;letter-spacing:-0.02em;margin:0 0 22px;color:#ffffff;">
+                ${esc(headline)}
+              </h1>
+
+              <div style="border-left:3px solid #d90a2c;padding-left:18px;margin-bottom:28px;">
+                <p style="font-size:1.12rem;line-height:1.75;color:#d6d3d1;margin:0;">
+                  ${esc(copy?.subtitle || (isZh ? '为跨国领军企业、高净值家族办公室及新兴企业提供穿透式全球税务筹划、法定独立审计与审慎财务治理。' : 'Specialized CPA and legal counsel covering all facets of enterprise financial governance.'))}
+                </p>
+              </div>
+
+              <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#d90a2c;color:#ffffff;font-weight:700;padding:16px 34px;border-radius:3px;letter-spacing:0.04em;text-transform:uppercase;font-size:0.88rem;text-decoration:none;display:inline-block;box-shadow:0 6px 20px rgba(217,10,44,0.4);transition:all 0.2s ease;">
+                  ${isZh ? '预约资深合伙人保密咨询 ↗' : 'Book Senior Partner Consultation ↗'}
+                </a>
+                <div style="display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,0.2);padding:14px 20px;border-radius:3px;font-size:0.86rem;color:#e7e5e4;background:rgba(0,0,0,0.25);">
+                  <span style="color:#d4af37;">⚖️</span>
+                  <span>${esc(company.certifications ? company.certifications.slice(0, 38) : (isZh ? 'AICPA 国家注册执业会员资格认证' : 'AICPA Peer-Reviewed Practice'))}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Hero Anti-Blank Box Ledger Window -->
+            <div data-reveal="fade-up" style="position:relative;">
+              <div style="background:#141211;border:1px solid #3d3733;border-radius:6px;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,0.45);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1e1b19;border-bottom:1px solid #2d2926;border-radius:4px 4px 0 0;font-size:0.8rem;color:#a8a29e;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:10px;height:10px;border-radius:50%;background:#d90a2c;display:inline-block;"></span>
+                    <span style="font-family:'Courier New',monospace;font-weight:700;color:#e7e5e4;">SECURE LEDGER VIEWPORT</span>
+                  </div>
+                  <span style="font-family:'Courier New',monospace;color:#d4af37;">HASH: SHA-256 VERIFIED</span>
+                </div>
+
+                <!-- Fallback Container: vector SVG underneath, image on top with onerror="this.style.display='none'" -->
+                <div style="position:relative;min-height:380px;border-radius:0 0 4px 4px;overflow:hidden;background:#181615;">
+                  <div style="position:absolute;inset:0;z-index:1;">
+                    ${ledgerSvg}
+                  </div>
+                  ${aboutImg ? `
+                    <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0.92;transition:opacity 0.3s ease;" onerror="this.style.display='none'">
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Floating Seal Badge -->
+              <div style="position:absolute;bottom:-18px;left:-16px;background:#24201e;border:1.5px solid #d4af37;padding:10px 18px;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;z-index:3;">
+                <span style="font-size:1.6rem;">🏛️</span>
+                <div>
+                  <div style="font-size:0.75rem;font-weight:800;color:#d4af37;letter-spacing:0.08em;text-transform:uppercase;">Statutory Verification</div>
+                  <div style="font-size:0.88rem;font-weight:700;color:#ffffff;">100% Unqualified Audit Defense</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Archival Double-Entry Balance Bar (复式借贷平衡度量栏) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 20px;">
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-top:3px solid #d90a2c;border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,0.03);overflow:hidden;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+            ${stats.map((s, idx) => `
+              <div style="padding:28px 24px;border-right:${idx < stats.length - 1 ? '1px solid #f0eee9' : 'none'};position:relative;">
+                <div style="font-family:'Courier New',monospace;font-size:0.75rem;color:#991b1b;font-weight:700;letter-spacing:0.1em;margin-bottom:6px;">
+                  REF // STAT-0${idx + 1}
+                </div>
+                <div style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.1rem, 3.4vw, 2.7rem);font-weight:700;color:#1c1917;line-height:1.1;">
+                  <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                    ${esc(s.value)}
+                  </span>
+                </div>
+                <div style="font-weight:700;color:#292524;margin-top:8px;font-size:1rem;">
+                  ${esc(s.label)}
+                </div>
+                ${s.desc ? `
+                  <div style="font-size:0.84rem;color:#78716c;margin-top:6px;line-height:1.5;">
+                    ${esc(s.desc)}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+
+      <!-- Firm Heritage & Fiduciary Philosophy (Archival Parchment Layout) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 60px;">
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:48px;align-items:flex-start;">
+          <!-- Left: Narrative & Fiduciary Charter -->
+          <div data-reveal="fade-up">
+            <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.14em;color:#d90a2c;text-transform:uppercase;">
+              ${isZh ? '执业源流与信义治理章程' : 'FIRM HERITAGE & FIDUCIARY CHARTER'}
+            </span>
+            <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.9rem, 3vw, 2.5rem);font-weight:700;line-height:1.25;color:#1c1917;margin:12px 0 22px;">
+              ${isZh ? '立足恪尽信义义务，以严苛审慎构筑跨国基业长青' : 'Uncompromising Statutory Rigor & Strategic Tax Protection'}
+            </h2>
+            <div style="color:#44403c;font-size:1.04rem;line-height:1.8;display:flex;flex-direction:column;gap:18px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+
+            ${company.capabilities ? `
+              <div style="margin-top:28px;padding:20px 24px;background:#fef2f2;border-left:4px solid #d90a2c;border-radius:0 4px 4px 0;">
+                <div style="font-size:0.8rem;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:0.08em;">
+                  ${isZh ? '特许执业资质与专业管辖覆盖' : 'Accredited Fiduciary Capabilities'}
+                </div>
+                <div style="color:#1c1917;margin-top:6px;font-size:0.95rem;font-weight:600;line-height:1.6;">
+                  ${esc(company.capabilities)}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Right: Fiduciary Attestation Dossier (合伙人法定鉴证案卷) -->
+          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-radius:4px;padding:34px;box-shadow:0 8px 24px rgba(0,0,0,0.04);position:relative;">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7e5e4;padding-bottom:14px;margin-bottom:18px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;color:#991b1b;">DOSSIER: CERT-2026-CPA</span>
+              <span style="font-size:0.75rem;background:#fef2f2;color:#991b1b;padding:3px 8px;border-radius:2px;font-weight:700;">OFFICIAL PRIVILEGE</span>
+            </div>
+
+            <h3 style="font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;font-weight:700;color:#1c1917;margin:0 0 12px;">
+              ${isZh ? '独立法定审计与信义承诺书' : 'Statutory Independence & Ethics Pledge'}
+            </h3>
+
+            <p style="color:#57534e;font-size:0.92rem;line-height:1.65;margin:0 0 22px;">
+              ${isZh ? '本所严格恪守执业注册会计师职业道德规范，坚持利益冲突全面回避机制与终身保密特权，确保向企业决策层与审计委员会提供客观真实的穿透式审鉴报告。' : 'Adhering to strict professional ethics and complete client-attorney-CPA confidentiality privileges across all bilateral jurisdictions.'}
+            </p>
+
+            <div style="display:flex;flex-direction:column;gap:14px;border-top:1px solid #f5f5f4;padding-top:18px;">
+              <div style="display:flex;align-items:flex-start;gap:12px;">
+                <span style="color:#d90a2c;font-size:1.1rem;line-height:1;">⚖️</span>
+                <div style="font-size:0.9rem;color:#292524;line-height:1.5;">
+                  <strong>${isZh ? '国家会计师公会与执业监督委员会注册' : 'State Board of Accountancy License'}</strong>
+                  <div style="font-size:0.8rem;color:#78716c;">${isZh ? '持牌执业会计师与联邦出庭税务律师终身资质' : 'Continuous peer-review and statutory licensing compliance'}</div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:flex-start;gap:12px;">
+                <span style="color:#d90a2c;font-size:1.1rem;line-height:1;">🌐</span>
+                <div style="font-size:0.9rem;color:#292524;line-height:1.5;">
+                  <strong>${isZh ? 'OECD BEPS 与跨国双边协定咨询专长' : 'OECD BEPS Action Plan Alignment'}</strong>
+                  <div style="font-size:0.8rem;color:#78716c;">${isZh ? '转让定价同期资料准备与多边事前定价安排（APA）' : 'Full international transfer pricing and treaty coverage'}</div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:flex-start;gap:12px;">
+                <span style="color:#d90a2c;font-size:1.1rem;line-height:1;">🛡️</span>
+                <div style="font-size:0.9rem;color:#292524;line-height:1.5;">
+                  <strong>${isZh ? '全面受托人责任险与资产安全隔离' : '$20M Professional Liability Insurance'}</strong>
+                  <div style="font-size:0.8rem;color:#78716c;">${isZh ? '跨国司库资金与尽职调查过程全程法律防火墙' : 'Underwritten by tier-1 institutional syndicates'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Three Archival Fiduciary Practice Pillars (三大法定执业立柱) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 70px;border-top:1px solid #e7e5e4;" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.14em;color:#d90a2c;text-transform:uppercase;">
+            ${isZh ? '三大法定执业支柱' : 'THREE STATUTORY PRACTICE PILLARS'}
+          </span>
+          <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:700;color:#1c1917;margin:10px 0;">
+            ${isZh ? '贯穿资本全生命周期的合规防护与财税规划矩阵' : 'End-to-End Fiduciary Governance & Audit Architecture'}
+          </h2>
+          <p style="color:#78716c;max-width:680px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '以合规为基石，以法律条约为护盾，为企业跨国扩张与代际资产传承构筑坚不可摧的合规防线。' : 'Rigorous audit defense, proactive tax planning, and strategic fiduciary advisory engineered for multinational resilience.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:28px;">
+          <!-- Pillar I -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-top:3px solid #d90a2c;border-radius:4px;padding:32px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#991b1b;">PILLAR I // TAX-BEPS</span>
+              <span style="font-size:1.6rem;">📑</span>
+            </div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.3rem;font-weight:700;margin:0 0 12px;">
+              ${isZh ? '跨国企业税务筹划与转让定价' : 'Cross-Border Tax & Transfer Pricing'}
+            </h3>
+            <p style="color:#57534e;font-size:0.92rem;line-height:1.65;margin:0 0 18px;">
+              ${isZh ? '跨辖区控股架构搭建、无形资产知识产权（IP）转让定价报告、OECD Pillar Two 全球最低税合规应对与增值税/GST 穿透式申报。' : 'Cross-border holding company structuring, OECD Pillar Two global minimum tax compliance, and intercompany transfer pricing masterfile documentation.'}
+            </p>
+            <div style="font-size:0.82rem;font-weight:700;color:#991b1b;display:flex;align-items:center;gap:6px;">
+              <span>✓</span> ${isZh ? 'OECD BEPS 13 条款全面合规' : 'OECD BEPS Action 13 Compliant'}
+            </div>
+          </div>
+
+          <!-- Pillar II -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-top:3px solid #1c1917;border-radius:4px;padding:32px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition-delay:0.08s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#44403c;">PILLAR II // AUDIT-ISA</span>
+              <span style="font-size:1.6rem;">🔍</span>
+            </div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.3rem;font-weight:700;margin:0 0 12px;">
+              ${isZh ? '法定独立审计与法证鉴证' : 'Statutory Audits & Financial Forensics'}
+            </h3>
+            <p style="color:#57534e;font-size:0.92rem;line-height:1.65;margin:0 0 18px;">
+              ${isZh ? '严谨遵循 IFRS/US-GAAP 国际会计准则，出具法定无保留审计意见书；提供企业内部舞弊排查、资金流穿透式法证调查与萨班斯（SOX）合规审阅。' : 'Independent statutory financial statement audits, forensic fraud investigations, and Sarbanes-Oxley (SOX) internal control attestations.'}
+            </p>
+            <div style="font-size:0.82rem;font-weight:700;color:#1c1917;display:flex;align-items:center;gap:6px;">
+              <span>✓</span> ${isZh ? 'PCAOB / ISA 700 审计鉴证标准' : 'PCAOB & ISA 700 Assurance Standard'}
+            </div>
+          </div>
+
+          <!-- Pillar III -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-top:3px solid #d4af37;border-radius:4px;padding:32px;box-shadow:0 4px 14px rgba(0,0,0,0.03);transition-delay:0.16s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#b45309;">PILLAR III // M&A-FO</span>
+              <span style="font-size:1.6rem;">🏛️</span>
+            </div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.3rem;font-weight:700;margin:0 0 12px;">
+              ${isZh ? '跨境并购尽调与家族信托' : 'M&A Due Diligence & Family Office'}
+            </h3>
+            <p style="color:#57534e;font-size:0.92rem;line-height:1.65;margin:0 0 18px;">
+              ${isZh ? '标的企业财务真实性法证调查、历史潜在税负风险排查；家族信托顶层架构设计、多代际跨国财富平稳传承与离岸资产法律防火墙。' : 'Buy-side pre-deal financial and tax due diligence, complex valuation modeling, and cross-generational offshore trust structuring.'}
+            </p>
+            <div style="font-size:0.82rem;font-weight:700;color:#b45309;display:flex;align-items:center;gap:6px;">
+              <span>✓</span> ${isZh ? '严苛保密协议与资产穿透式保护' : 'Strict Attorney-Client Privileged'}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- The Private Audit Chamber CTA (高级合伙人保密闭门咨询席) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:20px 24px 85px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #181615 0%, #292524 60%, #1f1c1a 100%);border-top:3px solid #d4af37;border-bottom:3px solid #d90a2c;border-radius:4px;padding:52px 40px;color:#ffffff;box-shadow:0 12px 36px rgba(0,0,0,0.18);">
+          <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:40px;align-items:center;">
+            <div>
+              <div style="font-family:'Courier New',monospace;font-size:0.8rem;color:#d4af37;letter-spacing:0.12em;margin-bottom:10px;text-transform:uppercase;">
+                CONFIDENTIAL AUDIT & TAX CHAMBER
+              </div>
+              <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.9rem, 3.2vw, 2.6rem);color:#ffffff;font-weight:700;margin:0 0 14px;line-height:1.2;">
+                ${isZh ? '开启资深高级合伙人一对一保密咨询' : 'Engage Senior Partners for Confidential Fiduciary Review'}
+              </h2>
+              <p style="color:#d6d3d1;margin:0;font-size:1.05rem;line-height:1.7;">
+                ${isZh ? '我们的资深合伙人将深入梳理您的企业申报与跨国资金架构，识别合规薄弱环节并提供量身定制的筹划建议。所有问询均在严格职业保密特权下进行。' : 'Our managing partners personally evaluate your corporate tax filings, cross-border jurisdictions, and risk exposures under strict attorney-client fiduciary privilege.'}
+              </p>
+            </div>
+
+            <div style="text-align:center;background:rgba(0,0,0,0.3);border:1px solid #3d3733;border-radius:4px;padding:28px;">
+              <div style="font-size:0.82rem;color:#a8a29e;margin-bottom:18px;">
+                ${isZh ? '支持中文 / 英语双语跨国服务 · 24小时内安排电话或线下面谈' : 'Direct Lead Partner Response within 24 Hours'}
+              </div>
+              <a class="button" style="background:#d90a2c;color:#ffffff;font-weight:700;border-radius:3px;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.06em;text-decoration:none;box-shadow:0 4px 18px rgba(217,10,44,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${isZh ? '立即开启保密咨询对话 ↗' : 'Schedule Private Briefing ↗'}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderAccountingAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyAccountingAbout(ctx);
+  }
+  return renderModernAccountingAbout(ctx);
 }
 
 export function renderAccountingContact(ctx: ThemeContext): string {

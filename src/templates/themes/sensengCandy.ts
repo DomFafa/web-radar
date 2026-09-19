@@ -2,6 +2,7 @@ import type { Product } from '../../shared/model';
 import { bannerLink, selectedBanner } from '../../shared/banner-config';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { isTypedMaterialsSource } from '../materials-typed';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
 
 export const CANDY_DEFAULT_PRODUCTS = [
   {
@@ -795,13 +796,131 @@ export function renderCandyDetail(ctx: ThemeContext): string {
   `;
 }
 
-export function renderCandyAbout(ctx: ThemeContext): string {
+function renderLegacyCandyAbout(ctx: ThemeContext): string {
   const isZh = (ctx.lang as string) === 'zh';
+  const company = ctx.draft.company;
+  const { path, navAttrs } = ctx;
+  const hasCustomAbout = !!(company.aboutHighlights || company.aboutStory || company.aboutImageAssetId || company.aboutHeadline);
+
+  if (hasCustomAbout) {
+    const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'));
+    const headline = getAboutHeadline(company, isZh ? '用软萌触觉，点亮每一颗纯真童心' : 'Crafting Joy & Calm, One Squeeze at a Time');
+    const storyParas = getAboutStoryParagraphs(
+      company,
+      isZh
+        ? 'Senseng 诞生于对“触觉疗愈”与“童年欢笑”的无限热爱。我们坚信，无论是正在探索世界的小朋友，还是在现代高压下奋斗的成年人，都需要一份柔软温暖的治愈力量。'
+        : 'Senseng was founded with a joyful mission: to bring gentle tactile comfort, developmental sensory stimulation, and infectious smiles to both kids and busy adults around the globe.',
+    );
+    const stats = parseAboutHighlights(company.aboutHighlights, [
+      { value: '10,000+', num: 10000, suffix: '+', label: isZh ? '平方米洁净车间' : 'Square Meter Facility', desc: isZh ? '国际标准无尘车间' : 'Certified cleanroom facility' },
+      { value: '1,200,000+', num: 1200000, suffix: '+', label: isZh ? '件月均稳定产能' : 'Monthly Toy Capacity', desc: isZh ? '自动化柔性产线' : 'Automated agile assembly' },
+      { value: '60+', num: 60, suffix: '+', label: isZh ? '出口国家与地区' : 'Global Export Markets', desc: isZh ? '欧美主流商超准入' : 'Tier-1 global retail compliance' },
+      { value: '100%', num: 100, suffix: '%', label: isZh ? '出厂全检合格率' : 'Inspection Pass Rate', desc: isZh ? 'EN71与ASTM标准' : 'EN71 & ASTM strict pass' },
+    ]);
+
+    return `
+      <main class="wr-inner wr-senseng-candy-inner" data-wr-page="about" style="padding-top:100px;background:#fffdfa;">
+        <section class="wrap" style="padding:40px 0 60px;">
+          <div class="about-split" data-reveal="fade-up" style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;margin-bottom:60px;">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
+                🍭 ${isZh ? `关于 ${esc(company.name || 'SENSENG')}` : `ABOUT ${esc((company.name || 'SENSENG').toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+              </div>
+              <h1 style="font-size:clamp(2.4rem, 4.2vw, 3.4rem);color:#2b2d42;font-weight:900;margin:0 0 18px;line-height:1.15;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#555b6e;font-size:1.12rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;font-weight:900;padding:14px 32px;border-radius:9999px;box-shadow:0 8px 20px rgba(255,107,139,0.3);font-size:0.95rem;text-decoration:none;">
+                  ${isZh ? '开启批发合作洽谈 ↗' : 'Send Wholesale Inquiry ↗'}
+                </a>
+                ${company.capabilities ? `
+                  <span style="font-size:0.88rem;color:#e63946;font-weight:700;background:#ffeef2;padding:8px 16px;border-radius:9999px;">
+                    ✨ ${esc(company.capabilities.slice(0, 45))}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+            <div class="wr-card-hover" style="position:relative;border-radius:32px;overflow:hidden;border:4px solid #ffd0d8;box-shadow:0 16px 40px rgba(255,107,139,0.18);">
+              <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.5s ease;">
+              <div style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:9999px;padding:8px 18px;font-size:0.82rem;font-weight:900;color:#e63946;box-shadow:0 4px 16px rgba(0,0,0,0.08);display:flex;align-items:center;gap:6px;">
+                <span>🍬 ${esc(company.type === 'factory' ? (isZh ? '自有高标生产基地' : 'Direct Verified Factory') : (isZh ? '专业出口贸易伙伴' : 'Certified Trading Partner'))}</span>
+              </div>
+            </div>
+          </div>
+
+          ${secondaryImg ? `
+            <div data-reveal="fade-up" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;background:#ffffff;border:3px solid #ffd0d8;border-radius:32px;padding:36px;box-shadow:0 12px 30px rgba(255,107,139,0.08);margin-bottom:60px;">
+              <div style="border-radius:24px;overflow:hidden;" class="wr-card-hover">
+                <img src="${esc(secondaryImg)}" alt="${esc(company.name)} workshop" style="width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div>
+                <div style="display:inline-block;background:#ffeef2;color:#e63946;font-weight:900;font-size:0.8rem;padding:4px 12px;border-radius:9999px;margin-bottom:10px;">${isZh ? '车间实景与品质承诺' : 'WORKSHOP & CRAFTSMANSHIP'}</div>
+                <h2 style="font-size:1.8rem;font-weight:900;color:#2b2d42;margin:0 0 14px;">${isZh ? '精工智造 · 每一批次严格质检' : 'Precision Crafted For Endless Smiles'}</h2>
+                <p style="color:#6c757d;font-size:1rem;line-height:1.7;margin:0 0 18px;">
+                  ${esc(company.capabilities || (isZh ? '我们采用现代化洁净车间与自动化灌装工艺，所有触觉解压玩偶出厂前均经过重金属迁移、拉力测试与回弹周期检测。' : 'Equipped with automated cleanroom production lines and batch toxicology assays to safeguard child play.'))}
+                </p>
+                ${company.certifications ? `
+                  <div style="background:#fff8f9;border-left:4px solid #ff6b8b;padding:12px 16px;border-radius:0 12px 12px 0;">
+                    <strong style="color:#e63946;font-size:0.85rem;display:block;">${isZh ? '持有权威认证' : 'Verified Certifications'}</strong>
+                    <span style="color:#2b2d42;font-size:0.92rem;font-weight:700;">${esc(company.certifications)}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- 4 Core Pillars -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-bottom:60px;">
+            <div style="background:#ffffff;border:3px solid #ffd0d8;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(255,107,139,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">🛡️</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '极致安全标准' : 'Uncompromising Safety'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '严格遵循欧盟 EN71、美标 ASTM F963 及 CPC 标准，每一批次均经过重金属与毒理检验。' : 'Certified against EN71, ASTM F963, and CPSIA. Strict zero-toxic materials tested at independent labs.'}</p>
+            </div>
+            <div style="background:#ffffff;border:3px solid #fed7aa;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">✨</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '独创触觉工艺' : 'Tactile Innovation'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '自主研发微爆珠软充与温感渐变材质，赋予每一个玩具不可思议的奇妙触感。' : 'Proprietary crunchy bead soft-fill, calibrated 5s slow rise memory, and thermochromic color shifts.'}</p>
+            </div>
+            <div style="background:#ffffff;border:3px solid #bae6fd;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(2,132,199,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">🌱</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '绿色环保责任' : 'Eco-Conscious Vision'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '采用环保大豆油墨印刷彩盒与可循环纸板包装，积极减少一次性塑料使用。' : 'Soy-ink printed paperboard boxes and recyclable packaging to protect our planet for future generations.'}</p>
+            </div>
+            <div style="background:#ffffff;border:3px solid #ddd6fe;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(124,58,237,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">❤️</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '跨越年龄的治愈' : 'Joy For All Ages'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '无论是幼儿园萌娃还是写字楼白领，软萌公仔都能带来纯粹而专注的心灵疗愈。' : 'Bridging childhood play and adult desk mindfulness, bringing quiet emotional comfort to everyone.'}</p>
+            </div>
+          </div>
+
+          <!-- Factory Statistics -->
+          <div data-reveal="fade-up" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;border-radius:32px;padding:48px;box-shadow:0 16px 40px rgba(255,107,139,0.25);">
+            <div style="text-align:center;margin-bottom:36px;">
+              <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${isZh ? '出海制造实力与供应链保障' : 'Global Manufacturing & Supply Chain Prowess'}</h2>
+              <p style="opacity:0.9;font-size:1.05rem;max-width:600px;margin:0 auto;">${isZh ? '十余年外贸玩具制造沉淀，为您提供从工业设计到全球报关出海的一站式服务。' : 'Decade of specialized toy manufacturing serving tier-1 retailers across 60+ countries.'}</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;text-align:center;">
+              ${stats.map((s) => `
+                <div>
+                  <div style="font-size:2.8rem;font-weight:900;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                  <div style="font-size:0.92rem;opacity:0.9;margin-top:4px;">${esc(s.label)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </section>
+      </main>
+    `;
+  }
 
   return `
     <main class="wr-inner wr-senseng-candy-inner" data-wr-page="about" style="padding-top:100px;background:#fffdfa;">
       <section class="wrap" style="padding:40px 0 60px;">
-        <div data-reveal="fade-up" style="text-align:center;max-width:760px;margin:0 auto 50px;">
+        <div data-reveal="fade-up" style="max-width:760px;margin-bottom:50px;">
           <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
             🍭 ${isZh ? '关于 Senseng 糖果乐园' : 'ABOUT SENSENG PLAY'}
           </div>
@@ -868,6 +987,237 @@ export function renderCandyAbout(ctx: ThemeContext): string {
       </section>
     </main>
   `;
+}
+
+
+function renderModernCandyAbout(ctx: ThemeContext): string {
+  const isZh = (ctx.lang as string) === 'zh';
+  const company = ctx.draft.company;
+  const { path, navAttrs } = ctx;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'), path('assets/hero-candy.jpg'));
+  const headline = getAboutHeadline(company, isZh ? '用软萌触觉，点亮每一颗纯真童心' : 'Crafting Joy & Calm, One Squeeze at a Time');
+  const storyParas = getAboutStoryParagraphs(
+    company,
+    isZh
+      ? [
+          `${company.name || 'Senseng'} 诞生于对“触觉疗愈”与“纯真童趣”的无限热爱。我们坚信，无论是正在探索世界的小朋友，还是在现代高压下奋斗的成年人，都需要一份柔软温暖的治愈力量。`,
+          '依托国际标准的无尘洁净车间与高精度自动化注塑灌装设备，我们精选食品级环保聚合物原料，经由上百次发泡密度与回弹曲线的科学调校，打造出零毛孔、温润亲肤且具备持久慢回弹质感的系列解压手办与潮玩公仔。',
+          '每一批次出厂产品均经独立权威第三方实验室全项严苛检测，彻底杜绝塑化剂、重金属及有害挥发物，为全球品牌零售商、精品连锁店及跨境买手提供兼具极致货架吸引力与合规品质保障的一站式供应链服务。'
+        ]
+      : [
+          `${company.name || 'Senseng'} was founded with a joyful mission: to bring gentle tactile comfort, developmental sensory stimulation, and infectious smiles to both kids and busy adults around the globe.`,
+          'Backed by international cleanroom facilities and precision automated tooling, we formulate food-grade eco-polymers to achieve velvety, slow-rebound tactile perfection that stands up to hundreds of thousands of squeezes.',
+          'Every batch is certified against EN71, ASTM F963, and CPSIA frameworks at independent testing laboratories, ensuring seamless customs clearance and proven shelf appeal for global retailers and distributors.'
+        ]
+  );
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '10,000+ m²', num: 10000, suffix: ' m²', label: isZh ? '国际标准洁净车间' : 'Cleanroom Facility', desc: isZh ? '十万级无尘智造标准' : 'Class 100,000 cleanroom specs' },
+    { value: '1,200,000+', num: 1200000, suffix: '+', label: isZh ? '月均稳定出海产能' : 'Monthly Unit Capacity', desc: isZh ? '高速精密模具注压产线' : 'High-speed automated molding' },
+    { value: '60+', num: 60, suffix: '+', label: isZh ? '全球出口合作国家' : 'Global Export Destinations', desc: isZh ? '直通欧美亚主流商超连锁' : 'Direct delivery to worldwide retailers' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '出厂全检合格率' : 'Lab Inspection Pass Rate', desc: isZh ? 'EN71 / ASTM / CPSIA 全检达标' : 'Zero-defect chemical & physical QA' },
+  ]);
+
+  return `
+    <main class="wr-inner wr-senseng-candy-inner" data-wr-page="about" style="padding-top:100px;background:#fffdfa;">
+      <!-- 1. CENTERED PLAYGROUND HERO WITH FLOATING MACARON CARDS CLUSTER (NO 2-COLUMN LEFT/RIGHT SPLIT) -->
+      <section style="padding:40px 24px 70px;max-width:1280px;margin:0 auto;text-align:center;">
+        <div data-reveal="fade-up" style="max-width:900px;margin:0 auto 48px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#ffeef2;border:2px solid #ffd0d8;padding:7px 22px;border-radius:9999px;font-size:0.85rem;font-weight:900;color:#e63946;margin-bottom:20px;">
+            <span>🍭</span>
+            <span>${isZh ? `SENSENG 软萌触觉乐园 · ${esc(company.name || 'SENSENG')}` : `SENSENG CANDY SENSORY PLAYGROUND · ${esc((company.name || 'SENSENG').toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}</span>
+          </div>
+
+          <h1 style="font-size:clamp(2.4rem, 4.8vw, 3.8rem);color:#2b2d42;font-weight:900;margin:0 0 20px;line-height:1.15;letter-spacing:-0.02em;">
+            ${esc(headline)}
+          </h1>
+
+          <div style="color:#555b6e;font-size:1.15rem;line-height:1.8;max-width:820px;margin:0 auto 32px;display:flex;flex-direction:column;gap:14px;">
+            ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+          </div>
+
+          <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;font-weight:900;padding:15px 36px;border-radius:9999px;box-shadow:0 8px 24px rgba(255,107,139,0.3);font-size:1rem;text-decoration:none;">
+              ${isZh ? '开启外贸批发合作洽谈 ↗' : 'Initiate Wholesale Inquiry ↗'}
+            </a>
+            ${company.capabilities ? `
+              <span style="font-size:0.9rem;color:#e63946;font-weight:800;background:#ffeef2;border:1px solid #ffd0d8;padding:10px 22px;border-radius:9999px;">
+                ✨ ${esc(company.capabilities.slice(0, 45))}
+              </span>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- ASYMMETRICAL 3-CARD FLOATING CANDY CLUSTER -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;align-items:center;margin-bottom:80px;" data-reveal="fade-up">
+          <!-- Card 1: Marshmallow Softness (-2 deg tilt) -->
+          <div class="wr-card-hover" style="background:#ffffff;border:3px solid #ffd0d8;border-radius:32px;padding:36px 28px;text-align:left;box-shadow:0 14px 36px rgba(255,107,139,0.1);transform:rotate(-2deg);transition:transform 0.3s ease;">
+            <div style="width:56px;height:56px;border-radius:20px;background:#ffeef2;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:18px;">
+              ☁️
+            </div>
+            <div style="font-size:0.8rem;font-weight:900;color:#ff6b8b;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+              0-GRAVITY FORMULA // 棉花糖触觉
+            </div>
+            <h3 style="font-size:1.3rem;font-weight:900;color:#2b2d42;margin:0 0 10px;">
+              ${isZh ? '零重力软弹微孔发泡' : 'Cloud-Soft Micro-Pore Foaming'}
+            </h3>
+            <p style="font-size:0.92rem;color:#6c757d;line-height:1.65;margin:0;">
+              ${isZh ? '气孔微米级均一分布，不仅阻断撕裂纹路，而且按压手感丝滑温润，杜绝异味。' : 'Uniform micro-cellular matrix prevents tears while delivering cloud-like velvety softness.'}
+            </p>
+          </div>
+
+          <!-- Card 2: 5.2s Slow Rise Memory (Elevated Center Card) -->
+          <div class="wr-card-hover" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;border-radius:36px;padding:42px 32px;text-align:center;box-shadow:0 20px 48px rgba(255,107,139,0.3);transform:scale(1.04);position:relative;z-index:2;">
+            <div style="display:inline-block;background:rgba(255,255,255,0.25);backdrop-filter:blur(8px);padding:6px 16px;border-radius:9999px;font-size:0.8rem;font-weight:900;margin-bottom:14px;border:1px solid rgba(255,255,255,0.4);">
+              ★ FLAGSHIP TACTILE ENGINE ★
+            </div>
+            <div style="font-size:3.5rem;font-weight:900;line-height:1;margin-bottom:8px;">
+              5.2s
+            </div>
+            <h3 style="font-size:1.4rem;font-weight:900;color:#ffffff;margin:0 0 12px;">
+              ${isZh ? '科学慢回弹记忆曲线' : 'Calibrated Slow-Rise Memory'}
+            </h3>
+            <p style="font-size:0.95rem;color:rgba(255,255,255,0.92);line-height:1.65;margin:0;">
+              ${isZh ? '每一件手办出厂前经过精密回弹秒速校正，释放掌心压力，带来深度解压冥想。' : 'Precisely tuned kinetic damping absorbs stress and brings calming sensory restoration.'}
+            </p>
+          </div>
+
+          <!-- Card 3: Food-Grade Fruit Dyes (+2 deg tilt) -->
+          <div class="wr-card-hover" style="background:#ffffff;border:3px solid #ddd6fe;border-radius:32px;padding:36px 28px;text-align:left;box-shadow:0 14px 36px rgba(124,58,237,0.08);transform:rotate(2deg);transition:transform 0.3s ease;">
+            <div style="width:56px;height:56px;border-radius:20px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:18px;">
+              🍓
+            </div>
+            <div style="font-size:0.8rem;font-weight:900;color:#8b5cf6;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+              PURE & NON-TOXIC // 水性果味安全
+            </div>
+            <h3 style="font-size:1.3rem;font-weight:900;color:#2b2d42;margin:0 0 10px;">
+              ${isZh ? '食品接触级水性安全色浆' : 'Food-Contact Safe Colorants'}
+            </h3>
+            <p style="font-size:0.92rem;color:#6c757d;line-height:1.65;margin:0;">
+              ${isZh ? '通过欧盟 EN71 与美标 ASTM F963 严苛检测，耐唾液侵蚀，零塑化剂、零重金属。' : 'Certified against EN71 & ASTM standards. Saliva-resistant dyes free from phthalates and heavy metals.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. THE TACTILE VENDING SHOWCASE WINDOW (GRAPHICAL VECTOR WITH NEVER-BLANK MEDIA) -->
+      <section style="padding:0 24px 80px;max-width:1280px;margin:0 auto;">
+        <div data-reveal="fade-up" style="background:#ffffff;border:3px solid #ffd0d8;border-radius:40px;overflow:hidden;box-shadow:0 20px 50px rgba(255,107,139,0.1);">
+          <!-- Vending Header -->
+          <div style="background:#ffeef2;border-bottom:2px solid #ffd0d8;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:1.4rem;">🍬</span>
+              <strong style="font-size:1.1rem;font-weight:900;color:#e63946;letter-spacing:0.04em;">
+                ${isZh ? 'SENSENG 糖果玩具工坊实景展台' : 'SENSENG ATELIER SENSORY SHOWCASE'}
+              </strong>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span style="background:#ffffff;border:1px solid #ffd0d8;color:#e63946;padding:4px 12px;border-radius:9999px;font-size:0.75rem;font-weight:800;">
+                ● 4K MACRO DEMO
+              </span>
+              <span style="background:#ffffff;border:1px solid #fed7aa;color:#f59e0b;padding:4px 12px;border-radius:9999px;font-size:0.75rem;font-weight:800;">
+                ★ 100,000 SQUEEZES
+              </span>
+            </div>
+          </div>
+
+          <!-- Interactive Showcase Body -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:stretch;">
+            <!-- Illustrated Media Window (GUARANTEED NEVER BLANK) -->
+            <div style="position:relative;background:radial-gradient(circle at center, #fff0f5 0%, #fff7ed 100%);min-height:380px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-right:2px solid #ffd0d8;">
+              <!-- Rich Vector Background Art -->
+              <svg width="100%" height="100%" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:0.35;">
+                <circle cx="250" cy="190" r="140" fill="#ffd0d8" opacity="0.4"/>
+                <circle cx="250" cy="190" r="80" fill="#fed7aa" opacity="0.5"/>
+                <path d="M 50 190 Q 250 80 450 190 T 50 190" fill="none" stroke="#ff6b8b" stroke-width="3" stroke-dasharray="6 6"/>
+              </svg>
+
+              <!-- Optional Image Overlay with fallback -->
+              ${aboutImg ? `<img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" onerror="this.style.display=\'none\'">` : ''}
+
+              <!-- Visual Badge Centerpiece -->
+              <div style="position:relative;z-index:2;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:3px solid #ffd0d8;border-radius:28px;padding:24px 32px;text-align:center;box-shadow:0 12px 30px rgba(255,107,139,0.15);max-width:320px;">
+                <div style="font-size:2.8rem;margin-bottom:8px;">🧸</div>
+                <div style="font-size:1.15rem;font-weight:900;color:#2b2d42;margin-bottom:4px;">
+                  ${esc(company.name || 'SENSENG')} TOY LAB
+                </div>
+                <div style="font-size:0.85rem;color:#ff6b8b;font-weight:800;">
+                  ${isZh ? '十万级无尘洁净车间出品' : 'Class 100,000 Cleanroom Certified'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: 3 Sensory Feature Cards -->
+            <div style="padding:40px;display:flex;flex-direction:column;justify-content:center;gap:20px;background:#ffffff;">
+              <div>
+                <span style="font-size:0.8rem;font-weight:900;color:#ff6b8b;letter-spacing:0.1em;text-transform:uppercase;">CANDY LAB SPECIFICATIONS</span>
+                <h3 style="font-size:1.7rem;font-weight:900;color:#2b2d42;margin:6px 0 16px;">
+                  ${isZh ? '精工软弹 · 每一件都经历微克级品控' : 'Precision Crafted For Joy & Relaxation'}
+                </h3>
+              </div>
+
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <span style="font-size:1.5rem;background:#ffeef2;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🛡️</span>
+                <div>
+                  <strong style="color:#2b2d42;font-size:1rem;display:block;">${isZh ? '欧盟 EN71 & 美标 ASTM F963 全检' : 'EN71 & ASTM F963 Lab Verified'}</strong>
+                  <span style="color:#6c757d;font-size:0.9rem;line-height:1.5;">${isZh ? '全线通过独立权威毒理检测，零塑化剂、零重金属残留，畅行欧美。' : 'Independently tested for heavy metals and mechanical pull-drop endurance.'}</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <span style="font-size:1.5rem;background:#fff7ed;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🔬</span>
+                <div>
+                  <strong style="color:#2b2d42;font-size:1rem;display:block;">${isZh ? '99.8% 微观微孔均匀分布' : '99.8% Cellular Homogeneity'}</strong>
+                  <span style="color:#6c757d;font-size:0.9rem;line-height:1.5;">${isZh ? '真空脱泡注模，杜绝表面粗糙孔洞，触感丝滑如高级天鹅绒。' : 'Vacuum degassed foaming eliminates bubbles and surface defects completely.'}</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <span style="font-size:1.5rem;background:#f3e8ff;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📦</span>
+                <div>
+                  <strong style="color:#2b2d42;font-size:1rem;display:block;">${isZh ? '环保大豆油墨印刷彩盒' : 'Soy-Ink Recyclable Paperboard'}</strong>
+                  <span style="color:#6c757d;font-size:0.9rem;line-height:1.5;">${isZh ? '货架就绪型精品礼品盒包装，满足全球连锁商超与礼品零售。' : 'Shelf-ready presentation boxes optimized for global retail and gifting displays.'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. RAINBOW STRIP BOUNCY COUNTER MARQUEE -->
+      <section style="padding:0 24px 80px;max-width:1280px;margin:0 auto;" data-reveal="fade-up">
+        <div style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 50%, #8b5cf6 100%);color:#ffffff;border-radius:36px;padding:48px 32px;box-shadow:0 18px 44px rgba(255,107,139,0.25);text-align:center;">
+          <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 10px;">
+            ${isZh ? '出海制造实力与供应链保障' : 'Global Supply Chain Prowess'}
+          </h2>
+          <p style="opacity:0.92;font-size:1.05rem;max-width:640px;margin:0 auto 36px;">
+            ${isZh ? '十余年外贸玩具制造沉淀，为您提供从工业设计到全球报关出海的一站式服务。' : 'Decade of specialized toy manufacturing serving tier-1 retailers across 60+ countries.'}
+          </p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;">
+            ${stats.map((s) => `
+              <div style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.3);border-radius:24px;padding:24px 16px;">
+                <div style="font-size:2.6rem;font-weight:900;color:#ffffff;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">
+                  ${esc(s.value)}
+                </div>
+                <div style="font-size:0.92rem;opacity:0.95;margin-top:6px;font-weight:800;">
+                  ${esc(s.label)}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+export function renderCandyAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyCandyAbout(ctx);
+  }
+  return renderModernCandyAbout(ctx);
 }
 
 export function renderCandyContact(ctx: ThemeContext): string {

@@ -15,7 +15,7 @@ import {
 } from './components';
 
 type AdminData = { quotas: Quota[]; services: ServiceStatus[]; jobs: Job[] };
-export function Admin() {
+export default function Admin() {
   const [metrics, setMetrics] = useState<{
     jobs: { kind: string; status: string; count: number; averageElapsedMs: number | null }[];
   } | null>(null);

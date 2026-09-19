@@ -129,6 +129,18 @@ export function Icon({ name, size = 18 }: { name: string; size?: number }) {
         <path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3" />
       </>
     ),
+    alert: (
+      <>
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+        <path d="M12 9v4m0 4h.01" />
+      </>
+    ),
+    copy: (
+      <>
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </>
+    ),
   };
   return (
     <svg

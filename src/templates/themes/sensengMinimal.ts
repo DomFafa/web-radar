@@ -1,6 +1,8 @@
 import type { Product } from '../../shared/model';
+import { isTypedMaterialsSource } from '../materials-typed';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { CANDY_DEFAULT_PRODUCTS, getCandyProducts } from './sensengCandy';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
 
 export function renderMinimalHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
@@ -455,10 +457,135 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
   `;
 }
 
-export function renderMinimalAbout(ctx: ThemeContext): string {
+function renderLegacyMinimalAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const isZh = (ctx.lang as string) === 'zh';
   const company = draft.company;
+
+  const hasCustomAbout = Boolean(
+    company.aboutHighlights ||
+    company.aboutStory ||
+    company.aboutImageAssetId ||
+    company.aboutHeadline
+  );
+
+  if (hasCustomAbout) {
+    const defaultHeadline = isZh
+      ? '极简美学与现代材料工坊哲学'
+      : 'The Pursuit of Quiet Sensory Form';
+    const headline = getAboutHeadline(company, defaultHeadline);
+
+    const defaultStory = [
+      isZh
+        ? `${company.name} 致力于将日常感官解压公仔转化为极具雕塑感的美学器物。我们剔除多余的装饰，保留纯粹的线条与治愈的手感，服务于全球注重生活品质的当代空间。`
+        : `${company.name} explores the balance between sculptural minimalism and tactile stress alleviation. We strip away ornamental clutter to focus on pure silhouette, velvety surface touch, and therapeutic weight.`,
+      isZh
+        ? '在我们的设计工坊中，每一道微弧度与分模线都经过以微米计的反复推敲。我们精选食品级与医疗级聚合物，融合无光泽哑光表面处理，呈现宛若鹅卵石般温润的触觉共鸣。'
+        : 'In our minimalist atelier, every subtle curve and parting line is machined within 0.05mm tolerance. Matte-finished medical grade polymers harmonize with modern interiors, offering contemplative tactile respite.'
+    ];
+    const storyParagraphs = getAboutStoryParagraphs(company, defaultStory);
+
+    const defaultHighlights = [
+      { value: '0.05', suffix: 'mm', label: isZh ? '精密开模接缝公差' : 'Tooling Precision' },
+      { value: '100', suffix: '%', label: isZh ? '食品级环保安全合规' : 'Food-Grade Safety' },
+      { value: '18', suffix: '+', label: isZh ? '出口全球设计买手店' : 'Boutique Destinations' },
+      { value: '99.8', suffix: '%', label: isZh ? '无气孔微发泡良率' : 'Zero-Pore Yield' },
+    ];
+    const highlights = parseAboutHighlights(company.aboutHighlights, defaultHighlights);
+
+    const defaultMinimalImg = path('assets/hero-minimal.jpg');
+    const defaultMinimalSecImg = path('assets/about-reference.jpg');
+
+    const { primary: primaryImage, secondary: secondaryImage } = getAboutImages(ctx, defaultMinimalImg, defaultMinimalSecImg);
+
+    return `
+    <main class="wr-inner wr-senseng-minimal-inner" data-wr-page="about" style="padding-top:100px;background:#ffffff;color:#111827;min-height:100vh;">
+      <section class="wrap" style="padding:40px 0 60px;">
+        <!-- Editorial Hero Split -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;margin-bottom:70px;">
+          <div data-reveal="fade-up">
+            <span style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#c59b27;font-weight:800;display:block;margin-bottom:12px;">ATELIER MANIFESTO // № 01</span>
+            <h1 style="font-size:clamp(2.4rem, 4.2vw, 3.5rem);font-weight:900;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin:0 0 24px;">
+              ${esc(headline)}
+            </h1>
+            <div style="color:#4b5563;font-size:1.1rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${storyParagraphs.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="border-left:2px solid #c59b27;padding-left:18px;">
+              <div style="font-weight:800;color:#111827;font-size:0.95rem;letter-spacing:-0.01em;">${isZh ? '“剔除繁杂，仅留纯粹触感。”' : '“Eliminating ornamental clutter to arrive at quiet sensory presence.”'}</div>
+              <div style="color:#9ca3af;font-size:0.8rem;margin-top:4px;">${esc(company.name)} · ATELIER CURATOR</div>
+            </div>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-card-hover" style="position:relative;">
+            <div style="border:1px solid #111827;padding:12px;background:#ffffff;box-shadow:0 12px 36px rgba(0,0,0,0.06);">
+              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+            <div style="position:absolute;top:28px;right:28px;background:#111827;color:#ffffff;padding:6px 14px;font-size:0.75rem;letter-spacing:0.15em;font-weight:800;text-transform:uppercase;">
+              ATELIER ARCHIVE
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Counter Metrics Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-bottom:70px;" data-reveal="fade-up">
+          ${highlights.map((h) => `
+            <div class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:32px;text-align:center;background:#ffffff;">
+              <div style="font-size:2.6rem;font-weight:900;color:#111827;letter-spacing:-0.03em;line-height:1;margin-bottom:8px;">
+                <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                  ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+                </span>
+              </div>
+              <div style="font-size:0.88rem;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;">
+                ${esc(h.label)}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Secondary Workshop & Three Pillars -->
+        <div style="border-top:1px solid #e5e7eb;padding-top:60px;margin-bottom:70px;" data-reveal="fade-up">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center;">
+            ${secondaryImage ? `
+              <div class="wr-card-hover" style="border:1px solid #e5e7eb;padding:8px;">
+                <img src="${esc(secondaryImage)}" alt="${isZh ? '模具研发工坊' : 'Precision Tooling Atelier'}" style="width:100%;height:300px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <div>
+              <span style="font-size:0.75rem;letter-spacing:0.18em;color:#c59b27;font-weight:800;text-transform:uppercase;">02 // PHILOSOPHY & TOLERANCE</span>
+              <h3 style="font-size:1.8rem;font-weight:900;color:#111827;letter-spacing:-0.02em;margin:8px 0 16px;">
+                ${isZh ? '微米级公差与食品级安全准则' : 'Micron Precision & Universal Child Safety'}
+              </h3>
+              <p style="color:#6b7280;font-size:0.95rem;line-height:1.75;margin:0 0 20px;">
+                ${isZh
+                  ? '我们坚信解压器物不仅关乎视觉，更取决于合模线处的微触觉平滑度。经过独立实验室跌落抗冲击、物理拉伸与唾液可溶性化学测试，无毒无味，通过欧盟 EN71 与美标 ASTM F963 权威认证。'
+                  : 'We maintain that tactile objects are judged by the seamless smoothness of the parting line. Each batch is verified by independent safety laboratories for tensile endurance and chemical neutrality.'}
+              </p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <span style="border:1px solid #111827;padding:5px 12px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">EN71 CERTIFIED</span>
+                <span style="border:1px solid #111827;padding:5px 12px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">ASTM F963</span>
+                <span style="border:1px solid #111827;padding:5px 12px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">REACH COMPLIANT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Minimalist Concierge CTA -->
+        <div data-reveal="fade-up" style="background:#111827;color:#ffffff;padding:50px 32px;text-align:center;border-radius:2px;">
+          <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;letter-spacing:-0.02em;margin:0 0 12px;color:#ffffff;">
+            ${isZh ? '独立设计买手与大宗定制洽谈' : 'Acquisitions & Boutique Partnership'}
+          </h2>
+          <p style="color:#9ca3af;font-size:1rem;max-width:580px;margin:0 auto 24px;line-height:1.6;">
+            ${isZh ? '我们为全球高品质生活方式买手店、艺术空间与独立品牌提供快速打样与专属柔性直供。' : 'Connect with our curatorial liaison for bespoke wholesale terms and expedited samples.'}
+          </p>
+          <a class="button" style="background:#c59b27;color:#111827;font-weight:900;padding:14px 32px;font-size:0.92rem;letter-spacing:0.06em;text-transform:uppercase;display:inline-block;text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '开启合作洽谈 ↗' : 'Inquire & Sample ↗'}
+          </a>
+        </div>
+      </section>
+    </main>
+  `;
+  }
 
   return `
     <main class="wr-inner wr-senseng-minimal-inner" data-wr-page="about" style="padding-top:100px;background:#ffffff;color:#111827;min-height:100vh;">
@@ -503,6 +630,189 @@ export function renderMinimalAbout(ctx: ThemeContext): string {
       </section>
     </main>
   `;
+}
+
+
+function renderModernMinimalAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs } = ctx;
+  const isZh = (ctx.lang as string) === 'zh';
+  const company = draft.company;
+
+  const defaultHeadline = isZh
+    ? '极简美学与现代材料工坊哲学'
+    : 'The Pursuit of Quiet Sensory Form';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 致力于将日常感官解压公仔转化为极具雕塑感的美学器物。我们剔除多余的装饰，保留纯粹的线条与治愈的手感，服务于全球注重生活品质的当代空间。`
+      : `${company.name} explores the balance between sculptural minimalism and tactile stress alleviation. We strip away ornamental clutter to focus on pure silhouette, velvety surface touch, and therapeutic weight.`,
+    isZh
+      ? '在我们的设计工坊中，每一道微弧度与分模线都经过以微米计的反复推敲。我们精选食品级与医疗级聚合物，融合无光泽哑光表面处理，呈现宛若鹅卵石般温润的触觉共鸣。'
+      : 'In our minimalist atelier, every subtle curve and parting line is machined within 0.05mm tolerance. Matte-finished medical grade polymers harmonize with modern interiors, offering contemplative tactile respite.',
+    isZh
+      ? '我们常年与欧美顶级设计买手店、艺术空间及极简生活品牌保持深度供应链合作，遵循 EN71 与 ASTM 严苛实验室标准，实现工业精度与当代艺术温度的完美统一。'
+      : 'Collaborating closely with leading design concept stores, contemporary art spaces, and minimalist brands worldwide, our creations uphold full EN71 and ASTM safety compliance, uniting industrial precision with artful soul.'
+  ];
+  const storyParagraphs = getAboutStoryParagraphs(company, defaultStory);
+
+  const defaultHighlights = [
+    { value: '0.05', suffix: 'mm', label: isZh ? '精密开模接缝公差' : 'Tooling Precision' },
+    { value: '100', suffix: '%', label: isZh ? '食品级环保安全合规' : 'Food-Grade Safety' },
+    { value: '18', suffix: '+', label: isZh ? '出口全球设计买手店' : 'Boutique Destinations' },
+    { value: '99.8', suffix: '%', label: isZh ? '无气孔微发泡良率' : 'Zero-Pore Yield' },
+  ];
+  const highlights = parseAboutHighlights(company.aboutHighlights, defaultHighlights);
+
+  const defaultMinimalImg = path('assets/hero-minimal.jpg');
+  const defaultMinimalSecImg = path('assets/about-reference.jpg');
+  const { primary: primaryImage, secondary: secondaryImage } = getAboutImages(ctx, defaultMinimalImg, defaultMinimalSecImg);
+
+  return `
+    <main class="wr-inner wr-senseng-minimal-inner" data-wr-page="about" style="padding-top:100px;background:#ffffff;color:#111827;min-height:100vh;">
+      <!-- 1. FULL-WIDTH TEXT-ONLY MONOLITHIC ARCHITECTURAL MANIFESTO (NO HERO IMAGE BOX) -->
+      <section style="padding:48px 24px 60px;max-width:1200px;margin:0 auto;">
+        <div data-reveal="fade-up">
+          <div style="font-size:0.75rem;letter-spacing:0.25em;text-transform:uppercase;color:#c59b27;font-weight:800;margin-bottom:18px;">
+            // № 01 ESSENCE // ${esc(company.name.toUpperCase())}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+          </div>
+
+          <h1 style="font-size:clamp(2.6rem, 5.5vw, 4.4rem);font-weight:900;color:#111827;letter-spacing:-0.03em;line-height:1.1;margin:0 0 36px;">
+            ${esc(headline)}
+          </h1>
+
+          <!-- Swiss 2-Column Text Grid with Delicate Hairline Rule -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;border-top:1px solid #e5e7eb;padding-top:36px;margin-bottom:40px;">
+            <div style="color:#4b5563;font-size:1.12rem;line-height:1.85;">
+              <p style="margin:0 0 16px;">${esc(storyParagraphs[0] || '')}</p>
+              <p style="margin:0;">${esc(storyParagraphs[1] || '')}</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;justify-content:space-between;">
+              <div style="border-left:3px solid #c59b27;padding-left:20px;margin-bottom:24px;">
+                <div style="font-weight:800;color:#111827;font-size:1.05rem;letter-spacing:-0.01em;line-height:1.5;">
+                  ${isZh ? '“剔除一切多余矫饰，探寻形式、材质与重力之间的极致张力。”' : '“Eliminating ornamental clutter to arrive at quiet sensory presence and pure form.”'}
+                </div>
+                <div style="color:#9ca3af;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">
+                  ${esc(company.name)} · CURATORIAL LIAISON
+                </div>
+              </div>
+
+              <div>
+                <a class="button" style="background:#111827;color:#ffffff;font-weight:800;padding:15px 36px;font-size:0.9rem;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;border-radius:2px;display:inline-block;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                  ${isZh ? '开启买手采购洽谈 ↗' : 'Inquire & Sample ↗'}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. THE EXHIBITION PLINTH SHOWCASE (CENTERED SCULPTURE DISPLAY WITH NEVER-BLANK VECTOR SILHOUETTE) -->
+      <section style="padding:0 24px 80px;max-width:1200px;margin:0 auto;" data-reveal="fade-up">
+        <div style="border:1px solid #e5e7eb;background:#fafafa;padding:60px 40px;position:relative;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+            <!-- Museum Plinth Display Area (GUARANTEED NEVER BLANK) -->
+            <div class="wr-card-hover" style="position:relative;background:#ffffff;border:1px solid #e5e7eb;padding:24px;box-shadow:0 20px 45px rgba(0,0,0,0.06);min-height:360px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+              <!-- Architectural Monochrome Vector Art -->
+              <svg width="280" height="260" viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" style="opacity:0.25;">
+                <ellipse cx="140" cy="180" rx="90" ry="24" fill="#111827" opacity="0.3"/>
+                <path d="M 70 160 C 70 80, 210 80, 210 160 C 210 190, 70 190, 70 160 Z" fill="#111827"/>
+                <line x1="140" y1="30" x2="140" y2="210" stroke="#c59b27" stroke-width="1.5" stroke-dasharray="3 3"/>
+              </svg>
+
+              ${primaryImage ? `<img src="${esc(primaryImage)}" alt="${esc(company.name)}" style="position:absolute;inset:24px;width:calc(100% - 48px);height:calc(100% - 48px);object-fit:cover;z-index:1;" onerror="this.style.display=\'none\'">` : ''}
+
+              <div style="position:absolute;bottom:16px;right:16px;background:#111827;color:#ffffff;padding:5px 12px;font-size:0.7rem;letter-spacing:0.15em;font-weight:800;z-index:2;">
+                EXHIBIT № 402
+              </div>
+            </div>
+
+            <!-- Museum Placard & Technical Anatomy -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
+              <span style="font-size:0.75rem;letter-spacing:0.2em;color:#c59b27;font-weight:800;text-transform:uppercase;">
+                GALLERY PLACARD // 0.05MM PARTING LINE
+              </span>
+              <h3 style="font-size:2rem;font-weight:900;color:#111827;margin:0;letter-spacing:-0.02em;line-height:1.2;">
+                ${isZh ? '减法之美：如鹅卵石般的微触觉雕塑' : 'Monolithic Form // The 0.05mm Micro-Seam Atelier'}
+              </h3>
+              <p style="color:#6b7280;font-size:1rem;line-height:1.75;margin:0;">
+                ${isZh ? '在微观视角下，解压玩具不再是儿童专属，而是具备纯粹几何张力的沉思器物。采用医疗级二次硫化铂金硅胶，表面呈现哑光亲肤微摩擦力。' : 'Sculptural haptic objects cast in platinum-cured medical silicone, delivering soothing sensory presence to contemporary workspaces.'}
+              </p>
+              <div style="border-top:1px solid #e5e7eb;padding-top:16px;display:flex;gap:20px;font-size:0.8rem;color:#111827;font-weight:700;">
+                <span>// EN71-3 VERIFIED</span>
+                <span>// ASTM F963 PASSED</span>
+                <span>// 100% PHTHALATE FREE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. THE 4 PRINCIPLES OF TACTILE MINIMALISM (DIETER RAMS STYLE ROWS) -->
+      <section style="padding:0 24px 80px;max-width:1200px;margin:0 auto;" data-reveal="fade-up">
+        <div style="margin-bottom:32px;">
+          <span style="font-size:0.75rem;letter-spacing:0.2em;color:#c59b27;font-weight:800;text-transform:uppercase;">
+            CANONICAL PRINCIPLES // 极简信条
+          </span>
+          <h2 style="font-size:2.2rem;font-weight:900;color:#111827;letter-spacing:-0.02em;margin:6px 0 0;">
+            ${isZh ? '极简触觉四大设计原则' : 'The Four Principles of Sensory Reduction'}
+          </h2>
+        </div>
+
+        <div style="display:flex;flex-direction:column;border-bottom:1px solid #e5e7eb;">
+          <div style="border-top:1px solid #e5e7eb;padding:24px 0;display:grid;grid-template-columns:80px 1.2fr 2fr;gap:20px;align-items:baseline;">
+            <span style="font-weight:900;color:#c59b27;font-size:1.1rem;">01</span>
+            <strong style="color:#111827;font-size:1.1rem;">${isZh ? '极简克制' : 'Disciplined Reduction'}</strong>
+            <span style="color:#6b7280;font-size:0.95rem;line-height:1.6;">${isZh ? '剔除多余装饰与浮夸色彩，保留纯粹几何轮廓与温和重力感。' : 'Eliminates non-essential ornamentation to let form and tactile resistance speak.'}</span>
+          </div>
+
+          <div style="border-top:1px solid #e5e7eb;padding:24px 0;display:grid;grid-template-columns:80px 1.2fr 2fr;gap:20px;align-items:baseline;">
+            <span style="font-weight:900;color:#c59b27;font-size:1.1rem;">02</span>
+            <strong style="color:#111827;font-size:1.1rem;">${isZh ? '微米级公差' : '0.05mm Precision Tooling'}</strong>
+            <span style="color:#6b7280;font-size:0.95rem;line-height:1.6;">${isZh ? '镜面钢模微米精雕，分模接缝丝滑顺畅，无任何刺手瑕疵。' : 'Optical-grade mold finishing eliminates micro-burrs for pebble-like continuity.'}</span>
+          </div>
+
+          <div style="border-top:1px solid #e5e7eb;padding:24px 0;display:grid;grid-template-columns:80px 1.2fr 2fr;gap:20px;align-items:baseline;">
+            <span style="font-weight:900;color:#c59b27;font-size:1.1rem;">03</span>
+            <strong style="color:#111827;font-size:1.1rem;">${isZh ? '铂金硫化硅胶' : 'Platinum-Cured Biocompatibility'}</strong>
+            <span style="color:#6b7280;font-size:0.95rem;line-height:1.6;">${isZh ? '高温二次脱气硫化，彻底脱除微量挥发物，纯净无味，亲肤安全。' : 'Zero volatile solvent release, ensuring odorless, hypoallergenic warmth.'}</span>
+          </div>
+
+          <div style="border-top:1px solid #e5e7eb;padding:24px 0;display:grid;grid-template-columns:80px 1.2fr 2fr;gap:20px;align-items:baseline;">
+            <span style="font-weight:900;color:#c59b27;font-size:1.1rem;">04</span>
+            <strong style="color:#111827;font-size:1.1rem;">${isZh ? '历久弥新' : 'Generational Timelessness'}</strong>
+            <span style="color:#6b7280;font-size:0.95rem;line-height:1.6;">${isZh ? '高抗撕拉抗老化分子架构，即使经年累月抚触依然如初。' : 'Designed to endure tens of thousands of compressions without structural decay.'}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. ARCHITECTURAL HAIRLINE TABLE METRICS -->
+      <section style="padding:0 24px 80px;max-width:1200px;margin:0 auto;" data-reveal="fade-up">
+        <div style="border:1px solid #e5e7eb;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+          ${highlights.map((h, i) => `
+            <div style="padding:36px 24px;text-align:center;${i > 0 ? 'border-left:1px solid #e5e7eb;' : ''}">
+              <div style="font-size:2.8rem;font-weight:900;color:#111827;letter-spacing:-0.03em;line-height:1;margin-bottom:8px;">
+                <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                  ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+                </span>
+              </div>
+              <div style="font-size:0.8rem;color:#9ca3af;letter-spacing:0.1em;text-transform:uppercase;font-weight:800;">
+                ${esc(h.label)}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+export function renderMinimalAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyMinimalAbout(ctx);
+  }
+  return renderModernMinimalAbout(ctx);
 }
 
 export function renderMinimalContact(ctx: ThemeContext): string {

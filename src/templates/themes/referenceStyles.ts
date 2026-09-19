@@ -765,8 +765,16 @@ body.wr-reference {
   color: #cbd5e1 !important;
 }
 .wr-corpox-ai-agency-inner {
-  background: #050811 !important;
-  color: #f8fafc !important;
+  background: #ffffff !important;
+  color: #161616 !important;
+}
+.wr-crafto-corporate-inner {
+  background: #ffffff !important;
+  color: #23253d !important;
+}
+.wr-digital-marketing-inner {
+  background: #ffffff !important;
+  color: #18181b !important;
 }
 .wr-inner .saas-inner-hero,
 .wr-inner .fintech-inner-hero,

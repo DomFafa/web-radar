@@ -222,7 +222,7 @@ const CATEGORIES = [
   { id: 'creative', label: '艺术与创意生活 (4)' },
 ] as const;
 
-export function TemplateSelector({
+export default function TemplateSelector({
   draft,
   onUpdateDraft,
   onProceedToPublish,

@@ -1,5 +1,7 @@
 import type { Product } from '../../shared/model';
 import { esc, safeUrl, type ThemeContext } from './types';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
+import { renderLegacySensengPage } from '../materials-legacy-senseng';
 
 export const SENSENG_DEFAULT_PRODUCTS = [
   {
@@ -667,55 +669,530 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // PAGE 4: ABOUT (webimg/aboutus.jpg)
   // -------------------------------------------------------------
   if (page === 'about') {
-    const aboutHero = `
-      <div data-wr-hero class="senseng-about-hero" data-reveal="fade-up">
-        <div class="senseng-about-hero-inner">
-          <div class="senseng-reference-scene" aria-hidden="true"><img src="/templates/senseng/about-reference.jpg" alt=""></div>
-          <div class="senseng-reference-copy">
-            <p class="senseng-eyebrow" style="letter-spacing:0.36em;">ABOUT SENSENG</p>
-            <h1 class="senseng-hero-h1">Character-led squishy<br>toys with clearer shelf cues</h1>
-            <p class="senseng-hero-sub">A senseng B2B showcase for kids, adults, gifting, and texture/effect-led squishy toy lines.</p>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="senseng-btn-pill" style="padding:12px 28px;font-size:16px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
-              <span>Send a wholesale inquiry</span>
+    if (materialsMode) {
+      return renderLegacySensengPage(ctx, isVideoFullscreen, true);
+    }
+
+    const isZh = (ctx.lang as string) === 'zh';
+
+    const renderCleanAbout = () => {
+      const defaultHeadline = isZh
+        ? '高标准品质工贸与货架就绪型触觉解压玩具供应链'
+        : 'Character-Led Tactile Toys & High-Standard Global B2B Supply Chain';
+      const headline = getAboutHeadline(company, defaultHeadline);
+
+      const defaultStory = [
+        isZh
+          ? `${company.name} 专注于高品质触觉解压玩具与潮玩公仔的研发设计、精密工模制造及全球出口。我们以严苛的国际玩具安全标准为底线，深度融合现代货架包装美学与无毒环保材料科技，为全球品牌买手、跨境连锁及礼品分销商提供一站式柔性直供。`
+          : `${company.name} specializes in high-grade character squishy toys, combining bespoke tactile ergonomics with export-ready packaging. We partner with global retail brands, cross-border importers, and gift distributors to deliver certified, market-ready tactile collections.`,
+        isZh
+          ? '我们拥有现代化高精度模具加工中心与十万级无尘洁净车间，全系产品通过欧盟 EN71、美标 ASTM F963 及 CPSIA 权威实验室全项检测，零气孔、高回弹、无毒无味，确保每一件出海产品都具备极致的触觉治愈感与清关合规保障。'
+          : 'Backed by modern precision tooling centers and dust-free cleanroom packaging facilities, our entire catalog complies with European EN71, US ASTM F963, and CPSIA safety frameworks with verified test reports for seamless customs clearance.'
+      ];
+      const storyParas = getAboutStoryParagraphs(company, defaultStory);
+
+      const defaultStats = [
+        { value: '50,000 m²', num: 50000, suffix: ' m²', label: isZh ? '现代化洁净生产基地' : 'Production Facility', desc: isZh ? 'ISO & GMP 洁净车间制造规范' : 'ISO & Cleanroom standard facility' },
+        { value: '1,500,000+', num: 1500000, suffix: '+', label: isZh ? '月均出海玩具产能' : 'Monthly Export Capacity', desc: isZh ? '多条高精度自动化注塑流水线' : 'High-throughput automated lines' },
+        { value: '60+', num: 60, suffix: '+', label: isZh ? '出口合作国家与地区' : 'Global Export Destinations', desc: isZh ? '直通欧美亚主流商超与跨境零售' : 'Direct delivery to worldwide markets' },
+        { value: '99.9%', num: 99.9, suffix: '%', label: isZh ? '出厂全检首检合格率' : 'Lab Certified Quality Rate', desc: isZh ? 'EN71 / ASTM / CPSIA 全项达标' : 'Full-batch chemical & physical QA' },
+      ];
+      const stats = parseAboutHighlights(company.aboutHighlights, defaultStats);
+
+      const defaultCleanImg = path('assets/about-reference.jpg');
+      const defaultCleanSecImg = path('assets/hero-bg.jpg');
+      const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, defaultCleanImg, defaultCleanSecImg);
+
+      return `
+        <div class="senseng-clean-about-wrap" style="max-width:1440px;margin:0 auto;padding:40px 24px 70px;">
+          <!-- Editorial Hero Split -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;margin-bottom:60px;" data-reveal="fade-up">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#eef8ff;border:1px solid #c9f4ff;padding:6px 16px;border-radius:9999px;margin-bottom:18px;">
+                <span style="font-size:14px;">🏭</span>
+                <span style="font-size:12px;font-weight:800;letter-spacing:0.18em;color:#073b91;text-transform:uppercase;">
+                  ${isZh ? '认证出口工贸一体 // 国际品质货架供应链' : 'VERIFIED OEM/ODM MANUFACTURER // GLOBAL B2B SUPPLY CHAIN'}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+                </span>
+              </div>
+              <h1 style="font-size:clamp(2.2rem, 3.8vw, 3.2rem);font-weight:900;color:#073b91;line-height:1.15;letter-spacing:-0.02em;margin:0 0 20px;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#1e3a63;font-size:1.05rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+
+              <!-- Factory Assurance Quote -->
+              <div style="background:#f0f8ff;border-left:4px solid #0c9de6;border-radius:0 14px 14px 0;padding:16px 20px;margin-bottom:28px;">
+                <div style="font-weight:800;color:#073b91;font-size:0.95rem;line-height:1.5;">
+                  ${isZh
+                    ? '“微米级工模开模公差，十万级无菌洁净组装，以透明合规的检测报告护航每一柜出海订单。”'
+                    : '“Precision micro-molding, dust-free cleanroom assembly, and independent lab certification ensuring seamless global customs clearance.”'}
+                </div>
+                <div style="color:#5f748d;font-size:0.82rem;margin-top:6px;font-weight:700;">
+                  ${esc(company.name || 'SENSENG')} · ${isZh ? '全球出口贸易与代工事业部' : 'GLOBAL TRADE & OEM DIVISION'}
+                </div>
+              </div>
+
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="senseng-btn-pill" style="padding:14px 32px;font-size:16px;box-shadow:0 8px 20px rgba(7,59,145,0.18);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
+                  <span>${isZh ? '发起外贸批发询盘 ↗' : 'Send a Wholesale Inquiry ↗'}</span>
+                </a>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:#073b91;font-weight:800;font-size:15px;padding:12px 20px;border:1px solid #cbd5e1;border-radius:9999px;background:#ffffff;">
+                  ${isZh ? '浏览全系商品图册 →' : 'Browse Product Catalog →'}
+                </a>
+                ${company.capabilities ? `
+                  <div style="display:inline-flex;align-items:center;gap:6px;background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:9999px;font-size:0.85rem;font-weight:700;color:#073b91;">
+                    <span>✨ ${esc(company.capabilities.slice(0, 45))}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Primary Showcase Media Box -->
+            <div data-reveal="fade-up" class="wr-card-hover" style="position:relative;">
+              <div style="border-radius:24px;overflow:hidden;border:1px solid #dcebfa;box-shadow:0 20px 48px rgba(7,59,145,0.12);background:radial-gradient(circle at center, #f0f9ff 0%, #e0f2fe 100%);min-height:360px;position:relative;display:flex;align-items:center;justify-content:center;">
+                <!-- Rich Trade & Factory Vector Graphic -->
+                <svg width="100%" height="100%" viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;opacity:0.35;">
+                  <defs>
+                    <linearGradient id="cleanG" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.3"/>
+                      <stop offset="100%" stop-color="#073b91" stop-opacity="0.6"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="240" cy="180" r="130" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="6 6"/>
+                  <circle cx="240" cy="180" r="80" fill="url(#cleanG)"/>
+                  <path d="M 160 180 L 220 230 L 320 140" fill="none" stroke="#073b91" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+
+                ${aboutImg ? `<img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;" loading="lazy" onerror="this.style.display='none'">` : ''}
+
+                <!-- Center Quality Badge -->
+                <div style="position:relative;z-index:2;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border:1px solid #c9f4ff;border-radius:20px;padding:20px 28px;text-align:center;box-shadow:0 12px 30px rgba(7,59,145,0.12);max-width:280px;">
+                  <div style="font-size:2.4rem;margin-bottom:6px;">🏭</div>
+                  <strong style="font-size:1rem;color:#073b91;display:block;margin-bottom:4px;">${esc(company.name || 'SENSENG')}</strong>
+                  <span style="font-size:0.8rem;color:#0284c7;font-weight:800;">VERIFIED OEM/ODM FACILITY</span>
+                </div>
+              </div>
+              <div style="position:absolute;bottom:20px;left:20px;z-index:3;background:rgba(255,255,255,0.96);backdrop-filter:blur(8px);border:1px solid #c9f4ff;border-radius:9999px;padding:8px 18px;box-shadow:0 8px 24px rgba(7,59,145,0.12);font-weight:800;font-size:0.84rem;color:#073b91;display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0c9de6;"></span>
+                <span>${isZh ? '🌱 100% 食品级环保软胶 · 零邻苯无毒认证' : '🌱 100% Non-Toxic & Food-Grade Certified'}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Highlights & Metrics Grid -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin-bottom:60px;" data-reveal="fade-up">
+            ${stats.map((s, idx) => {
+              const colors = [
+                { bg: '#c9f4ff', text: '#0c9de6', icon: '🏭' },
+                { bg: '#ffd7ec', text: '#ef348d', icon: '📦' },
+                { bg: '#c8f5e9', text: '#11a886', icon: '🌍' },
+                { bg: '#fff0c9', text: '#d4a017', icon: '✅' },
+              ];
+              const c = colors[idx % colors.length]!;
+              return `
+                <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;border:1px solid #e0f2fe;" class="wr-card-hover" data-reveal="fade-up">
+                  <div style="width:56px;height:56px;border-radius:50%;background:${c.bg};color:${c.text};display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:24px;">${c.icon}</div>
+                  <h3 style="font-size:16px;font-weight:900;color:#073b91;margin:0 0 6px;">${esc(s.label)}</h3>
+                  <div style="font-size:2.2rem;font-weight:900;color:${c.text};margin-bottom:6px;line-height:1.1;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                  ${s.desc ? `<p style="font-size:13px;color:#475569;line-height:1.5;margin:0;">${esc(s.desc)}</p>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Four Pillars of Clean Trade Excellence -->
+          <div style="margin-bottom:60px;" data-reveal="fade-up">
+            <div style="text-align:center;max-width:700px;margin:0 auto 36px;">
+              <span style="font-size:12px;font-weight:800;letter-spacing:0.2em;color:#0c9de6;text-transform:uppercase;">WHY GLOBAL BUYERS CHOOSE US</span>
+              <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:#073b91;margin:8px 0 12px;">
+                ${isZh ? '外贸出口核心竞争优势' : 'Four Pillars of Clean Trade Excellence'}
+              </h2>
+              <p style="color:#5f748d;font-size:1rem;margin:0;">
+                ${isZh ? '从模具精密雕刻到独立实验室检测，全程透明化品控与快速柔性供应链支持。' : 'From micro-precision tooling to transparent batch testing, ensuring frictionless global retail distribution.'}
+              </p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:32px;box-shadow:0 4px 16px rgba(7,59,145,0.04);">
+                <div style="width:48px;height:48px;border-radius:12px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;">📐</div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#0c9de6;text-transform:uppercase;margin-bottom:6px;">01 // PROTOTYPING</div>
+                <h3 style="font-size:1.15rem;font-weight:900;color:#073b91;margin:0 0 10px;">${isZh ? '快速 3D 打样与专属开模' : 'Rapid Tooling & OEM/ODM'}</h3>
+                <p style="font-size:0.9rem;color:#5f748d;line-height:1.65;margin:0;">
+                  ${isZh ? '拥有五轴数控精密雕刻机，支持手板快速 3D 打印与专属开模，Pantone 色彩精确调配，打样周期短至 7 天。' : 'High-precision CNC tooling and 3D additive prototyping with tailored Pantone color matching in 7 business days.'}
+                </p>
+              </div>
+
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:32px;box-shadow:0 4px 16px rgba(7,59,145,0.04);">
+                <div style="width:48px;height:48px;border-radius:12px;background:#fce7f3;color:#db2777;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;">🏭</div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#ef348d;text-transform:uppercase;margin-bottom:6px;">02 // CLEANROOM</div>
+                <h3 style="font-size:1.15rem;font-weight:900;color:#073b91;margin:0 0 10px;">${isZh ? '十万级无尘洁净包装' : 'Dust-Free Automated Assembly'}</h3>
+                <p style="font-size:0.9rem;color:#5f748d;line-height:1.65;margin:0;">
+                  ${isZh ? '十万级空气净化组装车间，自动化封口与充气检验，杜绝静电吸尘与二次表面污损，开箱即达专柜上架陈列标准。' : 'Class-100,000 cleanroom packaging lines eliminating static dust attraction and secondary surface contamination.'}
+                </p>
+              </div>
+
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:32px;box-shadow:0 4px 16px rgba(7,59,145,0.04);">
+                <div style="width:48px;height:48px;border-radius:12px;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;">🛡️</div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#11a886;text-transform:uppercase;margin-bottom:6px;">03 // LAB COMPLIANCE</div>
+                <h3 style="font-size:1.15rem;font-weight:900;color:#073b91;margin:0 0 10px;">${isZh ? '欧美双标安全权威认证' : 'Independent Safety Testing'}</h3>
+                <p style="font-size:0.9rem;color:#5f748d;line-height:1.65;margin:0;">
+                  ${isZh ? '每批次严格进行跌落抗冲击、物理拉伸强度及重金属元素迁移检测，全项符合欧盟 EN71 与美标 ASTM F963。' : 'Comprehensive physical tensile testing, heavy metal migration audits, and non-toxic chemical testing for global compliance.'}
+                </p>
+              </div>
+
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:32px;box-shadow:0 4px 16px rgba(7,59,145,0.04);">
+                <div style="width:48px;height:48px;border-radius:12px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;">🚢</div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.12em;color:#d4a017;text-transform:uppercase;margin-bottom:6px;">04 // FULFILLMENT</div>
+                <h3 style="font-size:1.15rem;font-weight:900;color:#073b91;margin:0 0 10px;">${isZh ? '无忧跨境进出口履约' : 'Frictionless Global Logistics'}</h3>
+                <p style="font-size:0.9rem;color:#5f748d;line-height:1.65;margin:0;">
+                  ${isZh ? '提供正规原产地证、英文 MSDS、海关 HS Code 编码归类，支持海运拼箱、整柜直发及 FOB/CIF 国际贸易条款。' : 'Complete export documentation, verified HS codes, and direct container booking for frictionless sea/air shipping.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary Facility & Standards Spotlight -->
+          ${secondaryImg ? `
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:28px;padding:44px 36px;box-shadow:0 10px 30px rgba(7,59,145,0.05);margin-bottom:60px;" data-reveal="fade-up">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:44px;align-items:center;">
+                <div style="overflow:hidden;border-radius:20px;box-shadow:0 8px 24px rgba(7,59,145,0.08);" class="wr-card-hover">
+                  <img src="${esc(secondaryImg)}" alt="${esc(company.name)} workshop" style="width:100%;height:320px;object-fit:cover;display:block;" loading="lazy">
+                </div>
+                <div>
+                  <span style="font-size:12px;font-weight:800;letter-spacing:0.2em;color:#0c9de6;text-transform:uppercase;">MANUFACTURING PEDIGREE</span>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.3rem);font-weight:900;color:#073b91;margin:8px 0 16px;">
+                    ${isZh ? '规模化洁净车间与全流程质量溯源体系' : 'Scalable Cleanroom Infrastructure & Full Batch Traceability'}
+                  </h2>
+                  <p style="color:#5f748d;font-size:0.98rem;line-height:1.75;margin:0 0 24px;">
+                    ${esc(company.capabilities || (isZh
+                      ? '工厂车间全面配置自动化无菌注塑机群与微发泡压力调控系统。针对每批次出厂产品均进行 36 道品质关卡检验，杜绝出油、异味与气孔不良，满足全球主流大型连锁买手的高严苛验收准则。'
+                      : 'Our advanced facility features automated cleanroom injection molding systems with micro-foam pressure control. Each batch passes 36 precision inspection checkpoints to eliminate oil bleeding and surface defects.'))}
+                  </p>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <span style="background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:8px;font-size:0.84rem;font-weight:800;color:#073b91;">✓ EN71 Part 1-3</span>
+                    <span style="background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:8px;font-size:0.84rem;font-weight:800;color:#073b91;">✓ ASTM F963-17</span>
+                    <span style="background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:8px;font-size:0.84rem;font-weight:800;color:#073b91;">✓ CPSIA / CPSC</span>
+                    <span style="background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:8px;font-size:0.84rem;font-weight:800;color:#073b91;">✓ REACH & RoHS</span>
+                    <span style="background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:8px;font-size:0.84rem;font-weight:800;color:#073b91;">✓ ISO 9001:2015</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Clean Trade Wholesale CTA Banner -->
+          <div data-reveal="fade-up" style="background:linear-gradient(135deg, #073b91 0%, #0a4dbf 100%);color:#ffffff;border-radius:24px;padding:50px 32px;text-align:center;margin-bottom:60px;box-shadow:0 16px 40px rgba(7,59,145,0.2);">
+            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;margin:0 0 12px;color:#ffffff;">
+              ${isZh ? '开启外贸直采合作 · 索取样品测试盒' : 'Partner with Our Global B2B Supply Chain'}
+            </h2>
+            <p style="color:#dbeafe;font-size:1.05rem;max-width:620px;margin:0 auto 28px;line-height:1.65;">
+              ${isZh ? '我们为全球批发商、跨境独立站与大型商超买手提供灵活 MOQ 起订、定制纸盒包装与专属样品快寄。' : 'Direct factory support, customized packaging, and expedited worldwide sample dispatch. Contact our export team today.'}
+            </p>
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#ffffff;color:#073b91;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:1rem;display:inline-block;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,0.15);">
+              ${isZh ? '立即咨询外贸报价 ↗' : 'Inquire & Request Samples ↗'}
             </a>
           </div>
 
+          <!-- Featured Collections Grid -->
+          ${renderProductGrid8(isZh ? '全系出海货架精选推荐' : 'Featured Export Product Collections', true, true)}
         </div>
-      </div>
-      <div class="senseng-value-props">
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.04s;">
-          <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18v12H3z"></path><path d="m3 9 2-5h14l2 5"></path><path d="M9 21v-6h6v6"></path></svg>
-          </div>
-          <div class="senseng-vp-text">
-            <h3>Squishy toy trader</h3>
-            <p>senseng is a trader focused on squishy toy products, including character-led concepts and paperboard-packaged sales versions for buyer review.</p>
-          </div>
-        </div>
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.12s;">
-          <div class="senseng-vp-icon" style="background:#ffd7ec;color:#ef348d;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 16-9 5-9-5V8l9-5 9 5z"></path><path d="M3.3 7.6 12 12.5l8.7-4.9"></path><path d="M12 22V12"></path></svg>
-          </div>
-          <div class="senseng-vp-text">
-            <h3>Clear assortment framing</h3>
-            <p>The current showcase emphasizes age-led, gift-led, desk-led, and texture/effect-led packaging cues so buyers can compare the assortment more efficiently.</p>
-          </div>
-        </div>
-        <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.20s;">
-          <div class="senseng-vp-icon" style="background:#c8f5e9;color:#11a886;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg>
-          </div>
-          <div class="senseng-vp-text">
-            <h3>Information transparency</h3>
-            <p>Product materials and dimensions are listed as to be confirmed where final specifications are not yet supplied.</p>
-          </div>
-        </div>
-      </div>
-      ${renderProductGrid8('Our Squishy Toy Lines', true, true)}
-    `;
+      `;
+    };
 
-    return `${headerHtml}<main>${aboutHero}</main>${footerHtml}`;
+    const renderVideoAbout = () => {
+      const defaultHeadline = isZh
+        ? '沉浸式动态感官工坊 · 慢动作电影感科技与高精智造'
+        : 'Cinematic Tactile Engineering // High-Speed Sensory Mechanics';
+      const headline = getAboutHeadline(company, defaultHeadline);
+
+      const defaultStory = [
+        isZh
+          ? `${company.name} 以声画光影与动态慢回弹解压科技为核心，探索视觉震撼与触觉疗愈的深层结合。我们打破传统玩具的边界，将微米级精密注塑工艺与全闭环环保聚合物融合，为全球新一代潮流空间与品牌买手提供充满张力的感官体验。`
+          : `${company.name} explores the synergy between cinematic visual motion and tactile mindfulness. We engineer precision slow-rise polymers that bridge modern desk aesthetics with therapeutic sensory relief, trusted by leading lifestyle brands and international retailers worldwide.`,
+        isZh
+          ? '在我们的数字动态工坊中，每一款触觉器物均经过高速摄像跌落回弹分析与严苛毒理检测。全流程 100% 洁净室机器人自动化作业，赋予每一只公仔宛如天鹅绒般的细腻触感与恒久耐用性。'
+          : 'In our automated production atelier, every tactile companion undergoes high-speed video rebound telemetry and rigorous chemical neutral testing, ensuring an immaculate sensory experience backed by global safety certifications.'
+      ];
+      const storyParas = getAboutStoryParagraphs(company, defaultStory);
+
+      const defaultStats = [
+        { value: '100%', num: 100, suffix: '%', label: isZh ? '高速摄像全检质保' : 'Video-Verified QA', desc: isZh ? '全自动视觉微瑕疵扫描' : 'Optical automated inspection' },
+        { value: '24/7', num: 24, suffix: '/7', label: isZh ? '自动化洁净车间生产' : 'Automated Production', desc: isZh ? '高产能自动化微发泡流水线' : 'Robotic cleanroom molding' },
+        { value: '120+', num: 120, suffix: '+', label: isZh ? '全球分销物流枢纽' : 'Worldwide Destinations', desc: isZh ? '直通欧美亚主流潮流买手店' : 'Global lifestyle retail partners' },
+        { value: '0.05 mm', num: 0.05, suffix: ' mm', label: isZh ? '极窄隐形分模线公差' : 'Tooling Precision', desc: isZh ? '温润无棱微触觉接缝' : 'Seamless tactile parting line' },
+      ];
+      const stats = parseAboutHighlights(company.aboutHighlights, defaultStats);
+
+      const customHeroVideo = asset(draft.heroAssetId);
+      const heroVideo = customHeroVideo || (materialsMode ? '' : '/templates/senseng/hero-video.mp4');
+      const poster = asset(draft.posterAssetId) || '/templates/senseng/video-poster.jpg';
+
+      const defaultVideoImg = path('assets/about-reference.jpg');
+      const defaultVideoSecImg = path('assets/hero-bg.jpg');
+      const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, defaultVideoImg, defaultVideoSecImg);
+
+      return `
+        <!-- 1. FULL-WIDTH CINEMATIC 16:9 WIDESCREEN THEATER STAGE -->
+        <div data-wr-hero class="senseng-video-theater" style="position:relative;background:#030712;color:#f8fafc;overflow:hidden;border-bottom:1px solid rgba(56,189,248,0.25);">
+          <!-- Top Director's Marquee Bar -->
+          <div style="background:rgba(15,23,42,0.95);border-bottom:1px solid rgba(56,189,248,0.2);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;font-family:monospace;font-size:12px;color:#38bdf8;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:wr-pulse 1.6s infinite;"></span>
+              <span style="font-weight:900;letter-spacing:0.1em;">LIVE SENSORY BROADCAST // ATELIER IN MOTION</span>
+            </div>
+            <div style="display:flex;gap:18px;align-items:center;color:#94a3b8;">
+              <span>FRAME RATE: 60.00 FPS</span>
+              <span style="color:#00f5d4;">AUDIO CH: 48kHz STEREO</span>
+              <span style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.4);color:#38bdf8;padding:2px 8px;border-radius:4px;font-weight:800;">4K MASTER</span>
+            </div>
+          </div>
+
+          <!-- Master Video Canvas Frame -->
+          <div style="position:relative;min-height:72vh;display:flex;align-items:center;justify-content:center;padding:70px 24px 80px;">
+            <!-- Background Video / Rich Vector Fallback -->
+            <div style="position:absolute;inset:0;overflow:hidden;z-index:0;">
+              ${heroVideo ? `
+                <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="${esc(poster)}" style="width:100%;height:100%;object-fit:cover;opacity:0.45;">
+                  <source src="${esc(heroVideo)}" type="video/mp4">
+                </video>
+              ` : `
+                <!-- Generative Cinematic Film Studio Backdrop -->
+                <svg width="100%" height="100%" style="position:absolute;inset:0;opacity:0.35;" preserveAspectRatio="none" viewBox="0 0 1440 800" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="vGrad" cx="50%" cy="40%" r="60%">
+                      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.6"/>
+                      <stop offset="60%" stop-color="#0f172a" stop-opacity="0.9"/>
+                      <stop offset="100%" stop-color="#030712" stop-opacity="1"/>
+                    </radialGradient>
+                    <pattern id="filmGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(56,189,248,0.08)" stroke-width="1"/>
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#vGrad)"/>
+                  <rect width="100%" height="100%" fill="url(#filmGrid)"/>
+                  <circle cx="720" cy="400" r="300" fill="none" stroke="rgba(56,189,248,0.15)" stroke-width="1" stroke-dasharray="8 6"/>
+                  <circle cx="720" cy="400" r="180" fill="none" stroke="rgba(0,245,212,0.2)" stroke-width="1.5"/>
+                  <line x1="720" y1="80" x2="720" y2="720" stroke="rgba(56,189,248,0.12)" stroke-width="1"/>
+                  <line x1="120" y1="400" x2="1320" y2="400" stroke="rgba(56,189,248,0.12)" stroke-width="1"/>
+                </svg>
+              `}
+              <div style="position:absolute;inset:0;background:radial-gradient(circle at center, rgba(3,7,18,0.4) 0%, rgba(3,7,18,0.92) 80%);"></div>
+            </div>
+
+            <!-- Overlaid Cinematic Content -->
+            <div style="position:relative;z-index:2;max-width:980px;text-align:center;margin:0 auto;" data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(2,132,199,0.2);border:1px solid rgba(56,189,248,0.45);backdrop-filter:blur(10px);padding:7px 20px;border-radius:9999px;margin-bottom:24px;">
+                <span style="color:#00f5d4;font-family:monospace;font-size:12px;font-weight:900;">DIRECTOR\'S CUT</span>
+                <span style="color:#ffffff;font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;">
+                  ${isZh ? `声画光影工坊 · ${esc(company.name)}` : `CINEMATIC ATELIER · ${esc(company.name.toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+                </span>
+              </div>
+
+              <h1 style="font-size:clamp(2.4rem, 4.8vw, 4rem);font-weight:900;color:#ffffff;letter-spacing:-0.03em;line-height:1.12;margin:0 0 24px;text-shadow:0 4px 30px rgba(0,0,0,0.8);">
+                ${esc(headline)}
+              </h1>
+
+              <div style="background:rgba(15,23,42,0.85);backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:28px 32px;margin:0 auto 36px;box-shadow:0 20px 50px rgba(0,0,0,0.6);text-align:left;">
+                <div style="color:#e2e8f0;font-size:1.12rem;line-height:1.8;display:flex;flex-direction:column;gap:14px;">
+                  ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+                </div>
+              </div>
+
+              <!-- Interactive Video Player Scrub Controls -->
+              <div style="background:rgba(3,7,18,0.85);border:1px solid rgba(56,189,248,0.35);border-radius:14px;padding:12px 20px;display:flex;align-items:center;gap:16px;max-width:760px;margin:0 auto 32px;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+                <button type="button" style="background:#0284c7;border:none;color:#ffffff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;box-shadow:0 0 16px rgba(2,132,199,0.6);">
+                  ▶
+                </button>
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                  <div style="display:flex;justify-content:space-between;font-family:monospace;font-size:11px;color:#94a3b8;">
+                    <span>01:42</span>
+                    <span style="color:#00f5d4;">SCENE: AUTOMATED_TOOLING_PRECISION.RAW</span>
+                    <span>04:15</span>
+                  </div>
+                  <div style="width:100%;height:6px;background:rgba(255,255,255,0.15);border-radius:9999px;overflow:hidden;position:relative;">
+                    <div style="width:42%;height:100%;background:linear-gradient(90deg, #0284c7, #00f5d4);border-radius:9999px;"></div>
+                  </div>
+                </div>
+                <div style="font-family:monospace;font-size:11px;color:#38bdf8;padding:4px 8px;border:1px solid rgba(56,189,248,0.3);border-radius:4px;">
+                  4K / 240FPS
+                </div>
+              </div>
+
+              <!-- CTA Buttons -->
+              <div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg,#0284c7,#06b6d4);color:#ffffff;padding:15px 36px;font-size:1rem;font-weight:900;border-radius:9999px;box-shadow:0 0 30px rgba(6,182,212,0.45);text-decoration:none;">
+                  ${isZh ? '预约工坊现场视频连线与打样 ↗' : 'Schedule Live Facility Video Tour ↗'}
+                </a>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.3);color:#ffffff;padding:14px 30px;font-size:0.95rem;font-weight:800;border-radius:9999px;text-decoration:none;">
+                  ${isZh ? '探索全系商品图册 →' : 'Explore Collections →'}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. HORIZONTAL 3-CAMERA MULTIVIEWER FILM REEL (Clip 01, Clip 02, Clip 03) -->
+        <div style="background:#071426;color:#e2e8f0;padding:60px 24px 80px;">
+          <div style="max-width:1440px;margin:0 auto;">
+            <div style="text-align:center;max-width:800px;margin:0 auto 40px;" data-reveal="fade-up">
+              <span style="font-family:monospace;font-size:12px;font-weight:900;color:#38bdf8;letter-spacing:0.2em;text-transform:uppercase;">
+                // MULTI-CAMERA PRODUCTION LOG // 3 维工坊机位纪实
+              </span>
+              <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#ffffff;margin:8px 0 14px;">
+                ${isZh ? '光影下的精密力学 · 慢动作回弹、自动化洁净注塑与毒理全检' : 'The Mechanics of Motion // 240 FPS Telemetry & Robotic Injection'}
+              </h2>
+              <p style="color:#94a3b8;font-size:1.02rem;line-height:1.7;margin:0;">
+                ${isZh ? '我们通过多机位高速视觉监测系统，记录每一只触觉玩偶从高分子分子交联、模具微米合模到终端疲劳挤压的全过程。' : 'Continuous optical monitoring records polymer cellular foaming, parting-line alignment, and cyclic fatigue endurance in real time.'}
+              </p>
+            </div>
+
+            <!-- 3 Camera Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;margin-bottom:70px;" data-reveal="fade-up">
+              <!-- Clip 01 -->
+              <div class="wr-card-hover" style="background:#0f172a;border:1px solid rgba(56,189,248,0.25);border-radius:20px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,0.4);">
+                <div style="position:relative;height:240px;background:#030712;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                  <img src="${esc(aboutImg)}" alt="Slow motion rebound" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.75;" loading="lazy">
+                  <div style="position:absolute;top:14px;left:14px;background:rgba(3,7,18,0.85);backdrop-filter:blur(6px);border:1px solid rgba(56,189,248,0.4);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:11px;color:#38bdf8;font-weight:800;">
+                    CAM 01 · 240 FPS REBOUND
+                  </div>
+                  <div style="position:absolute;bottom:14px;right:14px;background:rgba(3,7,18,0.85);padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;color:#00f5d4;">
+                    TC 00:14:22:08
+                  </div>
+                </div>
+                <div style="padding:24px;">
+                  <h3 style="font-size:1.2rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${isZh ? '240帧微距回弹力学' : '240 FPS Micro-Rebound Analysis'}</h3>
+                  <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0 0 16px;">
+                    ${isZh ? '利用高速显微摄像机捕捉指尖捏合后的气孔微形变，调校出 5.2 秒无震荡平滑慢回弹曲线。' : 'High-speed camera telemetry captures microscopic cell deformation to calibrate a 5.2s uniform slow-rise curve.'}
+                  </p>
+                  <div style="font-family:monospace;font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.1);padding:6px 12px;border-radius:6px;border:1px solid rgba(56,189,248,0.2);">
+                    // METRIC: 99.9% ZERO-VIBRATION RETURN
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clip 02 -->
+              <div class="wr-card-hover" style="background:#0f172a;border:1px solid rgba(56,189,248,0.25);border-radius:20px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,0.4);">
+                <div style="position:relative;height:240px;background:#030712;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                  <img src="${esc(secondaryImg || aboutImg)}" alt="Automated cleanroom" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.75;" loading="lazy">
+                  <div style="position:absolute;top:14px;left:14px;background:rgba(3,7,18,0.85);backdrop-filter:blur(6px);border:1px solid rgba(56,189,248,0.4);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:11px;color:#00f5d4;font-weight:800;">
+                    CAM 02 · CLEANROOM ROBOTICS
+                  </div>
+                  <div style="position:absolute;bottom:14px;right:14px;background:rgba(3,7,18,0.85);padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;color:#00f5d4;">
+                    TC 00:28:44:19
+                  </div>
+                </div>
+                <div style="padding:24px;">
+                  <h3 style="font-size:1.2rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${isZh ? '十万级洁净自动化注塑' : 'Class 100,000 Cleanroom Robotics'}</h3>
+                  <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0 0 16px;">
+                    ${isZh ? '机械手臂全自动注塑灌装，全程无尘闭环成型，杜绝异物微粒吸附与分模线偏差。' : 'Automated robotic arms execute precise liquid injection molding in sterile cleanroom conditions.'}
+                  </p>
+                  <div style="font-family:monospace;font-size:11px;color:#00f5d4;background:rgba(0,245,212,0.1);padding:6px 12px;border-radius:6px;border:1px solid rgba(0,245,212,0.2);">
+                    // SPEC: 0.05MM PARTING-LINE TOLERANCE
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clip 03 -->
+              <div class="wr-card-hover" style="background:#0f172a;border:1px solid rgba(56,189,248,0.25);border-radius:20px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,0.4);">
+                <div style="position:relative;height:240px;background:#030712;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                  <!-- High-Tech Laboratory Waveform Illustration -->
+                  <svg width="100%" height="100%" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="400" height="240" fill="#090d16"/>
+                    <path d="M 0 120 Q 50 40 100 120 T 200 120 T 300 120 T 400 120" fill="none" stroke="#f72585" stroke-width="2" opacity="0.6"/>
+                    <path d="M 0 120 Q 70 80 140 120 T 280 120 T 400 120" fill="none" stroke="#00f5d4" stroke-width="2.5"/>
+                    <circle cx="200" cy="120" r="6" fill="#00f5d4"/>
+                    <circle cx="200" cy="120" r="14" fill="none" stroke="#00f5d4" opacity="0.5"/>
+                  </svg>
+                  <div style="position:absolute;top:14px;left:14px;background:rgba(3,7,18,0.85);backdrop-filter:blur(6px);border:1px solid rgba(247,37,133,0.4);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:11px;color:#f72585;font-weight:800;">
+                    CAM 03 · TOXICOLOGY LAB
+                  </div>
+                  <div style="position:absolute;bottom:14px;right:14px;background:rgba(3,7,18,0.85);padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;color:#00f5d4;">
+                    TC 01:03:15:02
+                  </div>
+                </div>
+                <div style="padding:24px;">
+                  <h3 style="font-size:1.2rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${isZh ? '欧盟与美标毒理全检' : 'EN71 & ASTM Purity Spectrum'}</h3>
+                  <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0 0 16px;">
+                    ${isZh ? '每批次原料均经光谱仪进行重金属迁移与塑化剂分析，100% 具备权威出海质检报告。' : 'Mass spectrometry verifies non-toxic chemical neutrality for zero plasticizer migration.'}
+                  </p>
+                  <div style="font-family:monospace;font-size:11px;color:#f72585;background:rgba(247,37,133,0.1);padding:6px 12px;border-radius:6px;border:1px solid rgba(247,37,133,0.2);">
+                    // VERIFIED: EN71 · ASTM F963 · CPSIA
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. LUMINOUS TELEMETRY COUNTER ARRAY -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin-bottom:70px;" data-reveal="fade-up">
+              ${stats.map((s) => `
+                <div class="wr-card-hover" style="background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.25);border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 12px 32px rgba(0,0,0,0.35);">
+                  <div style="font-size:2.5rem;font-weight:900;background:linear-gradient(135deg, #38bdf8 0%, #00f5d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin-bottom:8px;">
+                    <span data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">
+                      ${esc(s.prefix || '')}${esc(s.value)}${esc(s.suffix || '')}
+                    </span>
+                  </div>
+                  <div style="font-size:15px;font-weight:800;color:#f8fafc;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px;">
+                    ${esc(s.label)}
+                  </div>
+                  ${s.desc ? `<div style="font-size:13px;color:#94a3b8;line-height:1.5;">${esc(s.desc)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- 4. BEHIND-THE-SCENES FACILITY BLUEPRINT BENTO -->
+            <div style="background:rgba(15,23,42,0.8);border:1px solid rgba(56,189,248,0.25);border-radius:28px;padding:44px;margin-bottom:70px;box-shadow:0 16px 40px rgba(0,0,0,0.4);" data-reveal="fade-up">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:44px;align-items:center;">
+                <div>
+                  <span style="font-family:monospace;font-size:12px;font-weight:800;letter-spacing:0.15em;color:#38bdf8;text-transform:uppercase;">
+                    FACILITY BLUEPRINT // 智能制造闭环
+                  </span>
+                  <h3 style="font-size:clamp(1.8rem, 3vw, 2.3rem);font-weight:900;color:#ffffff;margin:8px 0 16px;line-height:1.2;">
+                    ${isZh ? '全温控防尘注塑车间与敏捷出海供应链' : 'Precision Molding Infrastructure & Container Logistics'}
+                  </h3>
+                  <p style="color:#94a3b8;font-size:1.02rem;line-height:1.75;margin:0 0 24px;">
+                    ${esc(company.capabilities || (isZh ? '工厂拥有现代化高精度模具加工中心与多条全封闭自动化流水线，全面支持从 3D 快速打样、包装定制到集装箱海运出口的一站式交付。' : 'Equipped with precision CNC machining centers and dust-free automated molding lines, delivering rapid prototypes and global container fulfillment.'))}
+                  </p>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <span style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:800;color:#38bdf8;">✓ EN71 Part 1-3</span>
+                    <span style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:800;color:#38bdf8;">✓ ASTM F963</span>
+                    <span style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:800;color:#38bdf8;">✓ CPSIA / CPSC</span>
+                    <span style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:800;color:#38bdf8;">✓ RoHS / REACH</span>
+                  </div>
+                </div>
+
+                <div class="wr-card-hover" style="position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(56,189,248,0.3);box-shadow:0 12px 36px rgba(0,0,0,0.5);">
+                  <img src="${esc(secondaryImg || aboutImg)}" alt="Cleanroom" style="width:100%;height:340px;object-fit:cover;display:block;" loading="lazy">
+                  <div style="position:absolute;bottom:16px;left:16px;background:rgba(3,7,18,0.9);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,0.4);border-radius:6px;padding:6px 14px;font-family:monospace;font-size:11px;color:#00f5d4;">
+                    // AIR QUALITY: CLASS 100,000 CERTIFIED
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. VIP WHOLESALE INQUIRY BANNER -->
+            <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(2,132,199,0.25) 0%, rgba(15,23,42,0.95) 100%);border:1px solid rgba(56,189,248,0.4);border-radius:28px;padding:50px 32px;text-align:center;box-shadow:0 0 50px rgba(6,182,212,0.18);margin-bottom:70px;">
+              <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;margin:0 0 12px;color:#ffffff;">
+                ${isZh ? '全球品牌买手与供应链大宗定制通道' : 'Global Buyer Wholesale & Bespoke Tooling Access'}
+              </h2>
+              <p style="color:#94a3b8;font-size:1.05rem;max-width:640px;margin:0 auto 30px;line-height:1.7;">
+                ${isZh ? '我们为全球潮流买手店、国际商超及跨境分销商提供免费样品寄送、快速工模开打与海关双清支持。' : 'Fast-track prototype sampling, customized retail display packaging, and seamless worldwide container shipping.'}
+              </p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg,#0284c7,#06b6d4);color:#ffffff;font-weight:900;padding:16px 40px;border-radius:9999px;font-size:1rem;display:inline-block;text-decoration:none;box-shadow:0 0 28px rgba(6,182,212,0.45);">
+                ${isZh ? '即刻发起外贸采购洽谈 ↗' : 'Inquire for Wholesale Rates ↗'}
+              </a>
+            </div>
+
+            <!-- Product Showcase -->
+            ${renderProductGrid8(isZh ? '高光感官触觉系列' : 'Kinetic & Tactile Product Lines', true, true)}
+          </div>
+        </div>
+      `;
+    };
+
+    const aboutContent = isVideoFullscreen ? renderVideoAbout() : renderCleanAbout();
+    return `${headerHtml}<main data-wr-page="about">${aboutContent}</main>${footerHtml}`;
   }
 
   // -------------------------------------------------------------

@@ -1,4 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderSaasHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -203,10 +205,16 @@ export function renderSaasHome(ctx: ThemeContext): string {
   return `${heroHtml}${metricsHtml}${productsHtml}${storyHtml}${integrationHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderSaasAbout(ctx: ThemeContext): string {
+export function renderLegacySaasAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
+
+  const headline = company.aboutHeadline || 'Empowering Scalable, Autonomous Workflows';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const aboutText = copy?.about || company.description || 'We build enterprise-grade automation infrastructure that connects data pipelines, accelerates conversions, and reduces operational overhead.';
 
   const heroHtml = `
@@ -217,7 +225,7 @@ export function renderSaasAbout(ctx: ThemeContext): string {
           <span style="font-size:0.8rem;font-weight:700;color:#bef264;letter-spacing:0.06em;">AUTONOMOUS WORKFLOW OS · EST. ${esc(company.establishedYear || '2021')}</span>
         </div>
         <h1 style="font-size:clamp(2.4rem,4.8vw,4rem);line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 20px;color:#ffffff;">
-          Empowering Scalable, Autonomous Workflows
+          ${esc(headline)}
         </h1>
         <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#94a3b8;margin:0;">
           ${esc(copy?.subtitle || 'Connecting heterogeneous cloud data pipelines, accelerating event conversions, and eliminating repetitive operational friction.')}
@@ -226,7 +234,23 @@ export function renderSaasAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const metricsHtml = `
+  const metricsHtml = customHighlights ? `
+    <section class="wrap" style="padding:48px 0 32px;" data-reveal="fade-up">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+            <div style="font-size:2.4rem;font-weight:900;color:#bef264;letter-spacing:-1px;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.8rem;color:#64748b;margin-top:4px;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:48px 0 32px;" data-reveal="fade-up">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
         <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
@@ -256,8 +280,10 @@ export function renderSaasAbout(ctx: ThemeContext): string {
           <span class="eyebrow" style="color:#bef264;font-weight:700;">OUR ORIGIN & PURPOSE</span>
           <h2 style="font-size:2.2rem;color:#f8fafc;margin:12px 0 20px;line-height:1.2;">Architected to Replace Repetitive Drag With Intelligent Velocity</h2>
           <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-            <p>${esc(aboutText)}</p>
-            <p>From initial trigger payload ingestion to cross-platform reconciliation, our infrastructure eliminates data fragmentation across globally distributed tech stacks.</p>
+            ${customStoryParas ? customStoryParas.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('') : `
+              <p>${esc(aboutText)}</p>
+              <p>From initial trigger payload ingestion to cross-platform reconciliation, our infrastructure eliminates data fragmentation across globally distributed tech stacks.</p>
+            `}
           </div>
           ${company.capabilities ? `
             <div style="margin-top:24px;padding:20px;background:#121826;border-left:4px solid #bef264;border-radius:0 8px 8px 0;">
@@ -267,7 +293,13 @@ export function renderSaasAbout(ctx: ThemeContext): string {
           ` : ''}
         </div>
         <div style="background:#121826;border:1px solid #1e293b;border-radius:20px;padding:36px;text-align:center;">
-          <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:16px;background:rgba(190,242,100,0.12);color:#bef264;font-size:2rem;margin-bottom:20px;">⚡</div>
+          ${customImg ? `
+            <div style="border-radius:12px;overflow:hidden;border:1px solid #334155;margin-bottom:18px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : `
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:16px;background:rgba(190,242,100,0.12);color:#bef264;font-size:2rem;margin-bottom:20px;">⚡</div>
+          `}
           <h3 style="color:#f8fafc;font-size:1.4rem;margin:0 0 10px;">High-Concurrency Event Mesh</h3>
           <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Sub-millisecond routing across multitenant clusters with automated backoff and self-healing consumer groups.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;">
@@ -365,6 +397,247 @@ export function renderSaasAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${metricsHtml}${originHtml}${pillarsHtml}${teamHtml}${ctaHtml}`;
+}
+
+function renderModernSaasAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs } = ctx;
+  const company = draft.company;
+  const isZh = (ctx.lang as string) === 'zh';
+  const copy = draft.copy[ctx.lang];
+
+  const defaultHeadline = isZh
+    ? '构筑超低延迟分布式事件总线，释放企业级自主工作流潜能'
+    : 'Autonomous Event Mesh & Sub-Millisecond Cloud Workflow Orchestration';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 致力于为全球高并发、高可用要求的技术型企业提供下一代分布式事件总线与自动化编排 OS。我们彻底打破不同 SaaS 系统、云服务与微服务之间的协议孤岛，实现亚毫秒级的流式路由与数据同步。`
+      : `${company.name} builds the mission-critical event mesh infrastructure powering high-throughput enterprises worldwide. We eliminate cross-platform protocol silos to synchronize data across microservices with sub-millisecond deterministic velocity.`,
+    isZh
+      ? '系统基于现代云原生分布式架构研发，原生支持 gRPC、Webhook 及 Kafka 协议双向桥接，内置自愈式死信队列、智能动态退避算法与不可逆审计追踪，确保在极端网络抖动或流量波峰下达成 100% 幂等落账。'
+      : 'Architected on modern cloud-native primitives, our platform bridges heterogeneous systems with native zero-allocation routing, autonomous backoff retry topologies, and immutable replayable audit logs for zero data loss.',
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg } = getAboutImages(ctx);
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '14.2B+', num: 14.2, suffix: 'B+', label: isZh ? '每日实时路由事件峰值' : 'Daily Event Ingress', desc: isZh ? '全球边缘节点亚毫秒级流式分发' : 'Sub-millisecond global edge delivery' },
+    { value: '< 0.8ms', num: 0.8, prefix: '< ', suffix: 'ms', label: isZh ? '端到端事件管道延迟' : 'P99 Pipeline Latency', desc: isZh ? '自研流式内存引擎无锁调度' : 'Deterministic zero-allocation memory bus' },
+    { value: '99.999%', num: 99.999, suffix: '%', label: isZh ? '生产环境 SLA 高可用性' : 'System Availability SLA', desc: isZh ? '跨洲际双活多集群自愈容灾' : 'Active-active multi-region cloud pods' },
+    { value: '320+', num: 320, suffix: '+', label: isZh ? '全球边缘加速节点部署' : 'Global Edge PoPs', desc: isZh ? '近源计算与端侧轻量过滤隔离' : 'Edge filtering with WASM isolates' },
+  ]);
+
+  return `
+    <div class="saas-about-modern" style="background:#070b14;color:#f8fafc;font-family:'Inter Tight',-apple-system,sans-serif;padding-bottom:80px;">
+      <!-- 1. MISSION CONTROL DUAL-PANE HERO -->
+      <section class="saas-inner-hero" style="background:radial-gradient(ellipse at 50% -10%, rgba(190,242,100,0.14) 0%, #070b14 75%);padding:80px 0 60px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;">
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;">
+          <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+            <!-- Left: High-density Architecture Manifesto -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(190,242,100,0.1);border:1px solid rgba(190,242,100,0.3);padding:6px 18px;border-radius:9999px;margin-bottom:22px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#bef264;box-shadow:0 0 10px #bef264;"></span>
+                <span style="font-size:0.8rem;font-weight:800;color:#bef264;letter-spacing:0.08em;text-transform:uppercase;">
+                  ${isZh ? `云原生自动化 OS · 始于 ${esc(company.establishedYear || '2021')}` : `AUTONOMOUS WORKFLOW OS · EST. ${esc(company.establishedYear || '2021')}`}
+                </span>
+              </div>
+              <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.6rem);line-height:1.12;font-weight:900;letter-spacing:-0.03em;color:#ffffff;margin:0 0 20px;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#94a3b8;font-size:1.1rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+                ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#bef264;color:#070b14;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 24px rgba(190,242,100,0.35);display:inline-block;">
+                  ${isZh ? '开启企业级技术架构会谈 ↗' : 'Schedule Architecture Briefing ↗'}
+                </a>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);padding:14px 22px;border-radius:9999px;font-family:monospace;font-size:0.85rem;color:#cbd5e1;">
+                  $ curl -sSL get.mesh.io | sh
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Real-time Event Mesh Topology SVG (Anti-blank) -->
+            <div data-reveal="fade-up">
+              <div class="wr-card-hover" style="border:1px solid rgba(190,242,100,0.25);border-radius:24px;overflow:hidden;position:relative;background:#090e1a;box-shadow:0 0 45px rgba(190,242,100,0.08);min-height:360px;">
+                <!-- Vector Event Pipeline SVG -->
+                <svg viewBox="0 0 460 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;min-height:360px;object-fit:cover;display:block;">
+                  <defs>
+                    <linearGradient id="saasGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#bef264" stop-opacity="0.8"/>
+                      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.8"/>
+                    </linearGradient>
+                    <pattern id="saasGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+                    </pattern>
+                  </defs>
+                  <rect width="460" height="320" fill="#090e1a"/>
+                  <rect width="460" height="320" fill="url(#saasGrid)"/>
+                  <!-- Terminal window top bar -->
+                  <rect x="0" y="0" width="460" height="34" fill="#111827" stroke="rgba(255,255,255,0.08)"/>
+                  <circle cx="20" cy="17" r="4" fill="#ef4444"/>
+                  <circle cx="34" cy="17" r="4" fill="#f59e0b"/>
+                  <circle cx="48" cy="17" r="4" fill="#10b981"/>
+                  <text x="68" y="21" fill="#94a3b8" font-family="monospace" font-size="11">mesh-daemon // live_telemetry.log</text>
+                  <!-- Ingress Node -->
+                  <rect x="25" y="65" width="105" height="55" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+                  <text x="35" y="88" fill="#38bdf8" font-family="monospace" font-weight="bold" font-size="11">INGRESS</text>
+                  <text x="35" y="106" fill="#94a3b8" font-family="monospace" font-size="9">gRPC / Webhook</text>
+                  <path d="M130 92 L180 92" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 2"/>
+                  <!-- Kafka Broker -->
+                  <rect x="180" y="65" width="105" height="55" rx="10" fill="#1e293b" stroke="#bef264" stroke-width="1.5"/>
+                  <text x="190" y="88" fill="#bef264" font-family="monospace" font-weight="bold" font-size="11">STREAM CORE</text>
+                  <text x="190" y="106" fill="#94a3b8" font-family="monospace" font-size="9">1.4M events/s</text>
+                  <path d="M285 92 L335 92" stroke="#bef264" stroke-width="2" stroke-dasharray="4 2"/>
+                  <!-- WASM Sandbox -->
+                  <rect x="335" y="65" width="100" height="55" rx="10" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+                  <text x="345" y="88" fill="#a855f7" font-family="monospace" font-weight="bold" font-size="11">WASM ISOLATE</text>
+                  <text x="345" y="106" fill="#94a3b8" font-family="monospace" font-size="9">&lt; 0.3ms logic</text>
+                  <!-- Converge to Settle -->
+                  <path d="M385 120 L385 180 L290 205" stroke="#a855f7" stroke-width="2" stroke-dasharray="4 2"/>
+                  <path d="M232 120 L232 180" stroke="#bef264" stroke-width="2"/>
+                  <!-- Sink Node -->
+                  <rect x="175" y="180" width="115" height="60" rx="12" fill="#0f172a" stroke="url(#saasGlow)" stroke-width="2"/>
+                  <text x="188" y="206" fill="#bef264" font-family="monospace" font-weight="bold" font-size="12">ACID SINK</text>
+                  <text x="188" y="224" fill="#cbd5e1" font-family="monospace" font-size="9">Zero-Loss Commit</text>
+                  <!-- Bottom Bar -->
+                  <rect x="25" y="260" width="410" height="34" rx="8" fill="rgba(190,242,100,0.08)" stroke="rgba(190,242,100,0.2)"/>
+                  <circle cx="45" cy="277" r="4" fill="#4ade80"/>
+                  <text x="58" y="281" fill="#bef264" font-family="monospace" font-size="11">P99 LATENCY: 0.78ms // CONSENSUS: VERIFIED</text>
+                </svg>
+
+                ${aboutImg ? `
+                  <img src="${esc(aboutImg)}" alt="${esc(company.name)}" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                ` : ''}
+
+                <!-- Corner Live Pill -->
+                <div style="position:absolute;top:44px;right:16px;background:rgba(0,0,0,0.75);border:1px solid rgba(190,242,100,0.4);border-radius:9999px;padding:4px 12px;display:flex;align-items:center;gap:6px;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;"></span>
+                  <span style="font-size:0.75rem;font-family:monospace;color:#bef264;">LIVE MESH</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. HIGH-CONCURRENCY TELEMETRY BAR -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:44px 24px 28px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+          ${stats.map((s, idx) => `
+            <div class="wr-card-hover" style="background:rgba(18,24,38,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:30px 24px;box-shadow:0 8px 30px rgba(0,0,0,0.3);backdrop-filter:blur(10px);">
+              <div style="font-size:clamp(2.4rem, 3.8vw, 3rem);font-weight:900;color:#bef264;letter-spacing:-1px;margin-bottom:8px;font-family:monospace;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
+              </div>
+              <div style="font-size:1.05rem;font-weight:800;color:#ffffff;margin-bottom:6px;">${esc(s.label)}</div>
+              ${s.desc ? `<div style="font-size:0.86rem;color:#94a3b8;line-height:1.5;">${esc(s.desc)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- 3. FOUR-STAGE PIPELINE DECOMPOSITION -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 60px;" data-reveal="fade-up">
+        <div style="text-align:center;max-width:760px;margin:0 auto 48px;">
+          <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#bef264;text-transform:uppercase;">
+            ${isZh ? '全链路事件生命周期' : 'END-TO-END EVENT PIPELINE'}
+          </span>
+          <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;color:#ffffff;margin:8px 0 12px;">
+            ${isZh ? '四阶流式管道：消除传统脚本与死锁' : 'From Event Ingress to Guaranteed ACID Settle'}
+          </h2>
+          <p style="color:#94a3b8;font-size:1.05rem;line-height:1.6;margin:0;">
+            ${isZh ? '统一多源协议接入、无服务器轻量变换、智能拓扑避障与分布式不可逆落账。' : 'Eliminate middleware cron script fragility with deterministic, self-healing event primitives.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:24px;">
+          <!-- Step 1 -->
+          <div class="wr-card-hover" style="background:#0d1322;border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:30px;">
+            <div style="font-family:monospace;font-size:0.8rem;color:#38bdf8;font-weight:800;margin-bottom:12px;">PHASE 01 // INGEST</div>
+            <h3 style="font-size:1.3rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? '多协议统合接入' : 'Unified Protocol Ingress'}</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0 0 16px;">${isZh ? '自动解析 gRPC、HTTP Webhook、MQTT 及 Kafka 消息格式，统一序列化为标准 CloudEvents 载荷。' : 'Ingest heterogeneous webhooks, gRPC payloads, and MQTT streams into standardized CloudEvents.'}</p>
+            <div style="font-family:monospace;font-size:0.78rem;color:#38bdf8;background:rgba(56,189,248,0.08);padding:8px 12px;border-radius:8px;">&lt; 0.1ms wire parse</div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="wr-card-hover" style="background:#0d1322;border:1px solid rgba(190,242,100,0.3);border-radius:20px;padding:30px;">
+            <div style="font-family:monospace;font-size:0.8rem;color:#bef264;font-weight:800;margin-bottom:12px;">PHASE 02 // TRANSFORM</div>
+            <h3 style="font-size:1.3rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? 'WASM 无锁轻量算子' : 'Serverless WASM Filter'}</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0 0 16px;">${isZh ? '在边缘隔离沙箱中执行实时数据清洗、脱敏与模式校验，零启动冷延迟，消除中间件堆积。' : 'Execute low-latency enrichment and filtering in isolated V8/WASM sandboxes with zero cold-starts.'}</p>
+            <div style="font-family:monospace;font-size:0.78rem;color:#bef264;background:rgba(190,242,100,0.08);padding:8px 12px;border-radius:8px;">0.3ms sandbox exec</div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="wr-card-hover" style="background:#0d1322;border:1px solid rgba(168,85,247,0.3);border-radius:20px;padding:30px;">
+            <div style="font-family:monospace;font-size:0.8rem;color:#a855f7;font-weight:800;margin-bottom:12px;">PHASE 03 // ROUTE</div>
+            <h3 style="font-size:1.3rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? '自适应拓扑避障' : 'Dynamic Backoff Routing'}</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0 0 16px;">${isZh ? '当下游第三方 API 出现限流或瞬时宕机，自动启动退避重试缓冲，保障核心消息零丢失。' : 'Autonomous circuit breakers buffer events during downstream spikes, routing seamlessly to failover pods.'}</p>
+            <div style="font-family:monospace;font-size:0.78rem;color:#a855f7;background:rgba(168,85,247,0.08);padding:8px 12px;border-radius:8px;">100% circuit guarded</div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="wr-card-hover" style="background:#0d1322;border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:30px;">
+            <div style="font-family:monospace;font-size:0.8rem;color:#f59e0b;font-weight:800;margin-bottom:12px;">PHASE 04 // SETTLE</div>
+            <h3 style="font-size:1.3rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? '幂等最终一致落账' : 'Idempotent ACID Settle'}</h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin:0 0 16px;">${isZh ? '自带全局去重键与分布式一致性日志，即便网络发生分区，也能实现完全可重放的可靠落账。' : 'Global deduplication keys guarantee exactly-once processing with cryptographically immutable history.'}</p>
+            <div style="font-family:monospace;font-size:0.78rem;color:#f59e0b;background:rgba(245,158,11,0.08);padding:8px 12px;border-radius:8px;">Zero-drop guarantee</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. STATUTORY ACCREDITATION BAR -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px 60px;" data-reveal="fade-up">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+          <div>
+            <span style="color:#bef264;font-size:0.8rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;">ENTERPRISE COMPLIANCE & SECURITY</span>
+            <div style="color:#ffffff;font-size:1.05rem;font-weight:800;margin-top:4px;">
+              ${esc(company.certifications || 'SOC 2 Type II · ISO/IEC 27001 · GDPR / CCPA Ready · HIPAA Compliant · TLS 1.3 E2EE')}
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;font-family:monospace;font-size:0.8rem;color:#94a3b8;">
+            <span style="border:1px solid rgba(255,255,255,0.1);padding:6px 14px;border-radius:8px;">AES-256</span>
+            <span style="border:1px solid rgba(255,255,255,0.1);padding:6px 14px;border-radius:8px;">Zero-Trust RBAC</span>
+            <span style="border:1px solid rgba(255,255,255,0.1);padding:6px 14px;border-radius:8px;">BYOK Available</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. DARK TERMINAL CTA BANNER -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;" data-reveal="fade-up">
+        <div style="background:linear-gradient(135deg, rgba(17,24,39,0.95) 0%, rgba(10,15,28,0.98) 100%);border:1px solid rgba(190,242,100,0.3);border-radius:28px;padding:50px 36px;text-align:center;box-shadow:0 0 50px rgba(190,242,100,0.1);position:relative;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(190,242,100,0.12);padding:6px 16px;border-radius:9999px;color:#bef264;font-size:0.82rem;font-weight:800;margin-bottom:16px;">
+            ⚡ SPEED UP PRODUCTION VELOCITY
+          </div>
+          <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.7rem);color:#ffffff;font-weight:900;margin:0 0 14px;">
+            ${isZh ? '准备好为您的核心业务注入自动化加速度了吗？' : 'Ready to Unleash Deterministic Flow Velocity?'}
+          </h2>
+          <p style="color:#cbd5e1;max-width:620px;margin:0 auto 30px;font-size:1.1rem;line-height:1.65;">
+            ${isZh ? '即刻预约我们的分布式架构师，评估生产环境下的高并发吞吐基准与迁移路径。' : 'Connect with our systems architects to evaluate latency benchmarks under your production peak load.'}
+          </p>
+          <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+            <a class="button" style="background:#bef264;color:#090d16;font-weight:900;border-radius:9999px;padding:17px 38px;display:inline-block;text-decoration:none;box-shadow:0 0 24px rgba(190,242,100,0.35);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+              ${isZh ? '预约技术架构闭门会议 ↗' : 'Schedule Technical Briefing ↗'}
+            </a>
+            <a class="button" style="background:rgba(255,255,255,0.06);color:#ffffff;border:1px solid rgba(255,255,255,0.2);font-weight:900;border-radius:9999px;padding:17px 32px;display:inline-block;text-decoration:none;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
+              ${isZh ? '浏览工作流连接器套件 →' : 'Browse Integration Suite →'}
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderSaasAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacySaasAbout(ctx);
+  }
+  return renderModernSaasAbout(ctx);
 }
 
 export function renderSaasContact(ctx: ThemeContext): string {
