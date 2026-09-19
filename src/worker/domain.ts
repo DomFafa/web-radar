@@ -346,8 +346,8 @@ export function validateDraft(input: unknown): Draft {
 export function canManage(project: Project, principal: Principal): boolean {
   return (
     principal.systemRole === 'super_admin' ||
-    project.ownerId === principal.userId ||
-    (principal.workspaceRole === 'admin' && principal.workspaceId === project.workspaceId)
+    (principal.workspaceId === project.workspaceId &&
+      (project.ownerId === principal.userId || principal.workspaceRole === 'admin'))
   );
 }
 export function videoInputKey(d: Draft): string {

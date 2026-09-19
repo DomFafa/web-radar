@@ -1,5 +1,7 @@
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
+import type { ProjectServiceStatus, ProjectServicePreview } from '../shared/project-service';
+import { projectPreviewHtml, projectPreviewRuntime } from './project-preview';
 import { currentMaterialsPrincipal } from './materials-auth';
 import { materialsImageAssetIds, validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
@@ -182,13 +184,13 @@ export class DomainService {
   }
   private async project(id: string, principal: Principal): Promise<Project> {
     const p = await this.store.one<Project>('projects', id);
+    const current = p?.materials ? await currentMaterialsPrincipal(this.env, principal) : principal;
     requireCondition(
-      p && canManage(p, principal),
+      p && canManage(p, current),
       404,
       'project_not_found',
       '项目不存在或没有访问权限。',
     );
-    if(p.materials)await currentMaterialsPrincipal(this.env,principal);
     return p;
   }
   private async body(request: Request): Promise<Record<string, unknown>> {
@@ -249,6 +251,8 @@ export class DomainService {
     )
       return this.submitInquiry(request, path[3]);
     const principal = this.principal(request);
+    if (path[0] === 'internal' && path[1] === 'product-radar-projects')
+      return this.productRadarProject(request, principal, path.slice(2));
     if(path[0]==='internal'&&path[1]==='materials-submissions'&&method==='POST'){
       const receipt=path[2]&&path[3]==='status'?await this.materials.status(principal,path[2]):await this.materials.submit(principal,await this.body(request));
       return json(receipt,receipt.state==='receiving'?202:200);
@@ -740,6 +744,60 @@ export class DomainService {
       return json({ inquiry: await this.retryInquiry(project, path[4]) });
     throw new DomainError(404, 'not_found', '接口不存在。');
   }
+  private async productRadarProject(request: Request, identity: Principal, path: string[]): Promise<Response> {
+    const principal = await currentMaterialsPrincipal(this.env, identity);
+    const project = await this.project(path[0], principal);
+    requireCondition(project.materials && project.draft.materials, 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
+    const action = path[1], url = new URL(request.url);
+    if (action === 'assets' && path[2] && request.method === 'GET')
+      return this.assetResponse(request, await this.projectAsset(project.id, path[2]));
+    if (action === 'preview' && request.method === 'GET') {
+      if (url.searchParams.has('expectedVersion')) expectedVersion(project, Number(url.searchParams.get('expectedVersion')));
+      const draft = project.draft, lang = (url.searchParams.get('lang') || draft.languages[0]) as Language;
+      const page = (url.searchParams.get('page') || 'home') as DesignPage;
+      const productId = url.searchParams.get('productId') || draft.primaryProductId;
+      requireCondition(draft.languages.includes(lang), 400, 'invalid_language', '没有配置这种网站语言。');
+      requireCondition(plannedPages(draft).includes(page), 400, 'invalid_page', '页面不存在。');
+      requireCondition(draft.products.some(p => p.id === productId), 400, 'invalid_product', '没有配置这个产品。');
+      const proxyBasePath = url.searchParams.get('proxyBasePath') || `/api/web-radar/projects/${project.id}`;
+      const html = await this.renderPage(draft, { projectId: project.id, page, lang, productId,
+        assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
+      const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
+        projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntime,
+        html: projectPreviewHtml(html, proxyBasePath, this.origin(), { page, lang, productId, expectedVersion: project.version }) };
+      return json(response);
+    }
+    if (action === 'publish' && request.method === 'POST') {
+      const job = await this.publish(project, principal, await this.body(request), false);
+      return json(await this.projectServiceStatus(project, job.id));
+    }
+    if (['status', 'publication-status'].includes(action) && request.method === 'GET')
+      return json(await this.projectServiceStatus(project, url.searchParams.get('jobId') || undefined));
+    throw new DomainError(404, 'not_found', '接口不存在。');
+  }
+  private async projectServiceStatus(project: Project, jobId?: string): Promise<ProjectServiceStatus> {
+    const job = jobId ? await this.store.one<Job>('jobs', jobId)
+      : (await this.store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC'))[0];
+    if (jobId) requireCondition(job?.projectId === project.id && job.kind === 'publish', 404, 'job_not_found', '发布任务不存在。');
+    const release = job?.input.releaseId ? await this.store.one<Release>('releases', String(job.input.releaseId)) : undefined;
+    const base = `/api/integrations/product-radar/projects/${project.id}`;
+    return { schemaVersion: 'wr-project-service-v1', projectId: project.id, projectVersion: project.version,
+      name: project.name, template: project.draft.template, languages: project.draft.languages,
+      pages: plannedPages(project.draft), products: project.draft.products.map(({id, name}) => ({id, name})),
+      primaryProductId: project.draft.primaryProductId,
+      publication: job ? { status: job.status,
+        phase: job.status === 'succeeded' ? 'complete' : ['failed', 'paused', 'cancelled'].includes(job.status) ? 'failed'
+          : job.input.publishResult || job.status === 'unknown' ? 'recovering'
+          : job.input.mediaPreparation && !job.input.publicationStarted ? 'preparing_media'
+          : job.input.publicationStarted ? 'deploying' : 'queued',
+        jobId: job.id, releaseId: release?.id, inputVersion: job.inputVersion,
+        ...(job.status === 'succeeded' && release?.status === 'succeeded' && !project.offline ? {url: release.url} : {}),
+        ...(job.error ? {error: job.error} : {}), retryable: job.status === 'failed', updatedAt: job.updatedAt,
+      } : { status: 'idle', phase: 'idle', retryable: false },
+      ...(!project.offline && project.publishedReleaseId && project.siteUrl ? {publishedUrl: project.siteUrl} : {}),
+      previewEndpoint: base + '/preview', publishEndpoint: base + '/publish', statusEndpoint: base + '/publication-status',
+    };
+  }
   private publicHistoryJob(job: Job): Job {
     if (job.kind === 'clone') return this.clones.publicJob(job);
     const { draft, products, principal, publishResult, ...input } = job.input;
@@ -770,9 +828,7 @@ export class DomainService {
     }) };
   }
   private async deleteProject(id: string, principal: Principal): Promise<void> {
-    const p = await this.store.one<Project>('projects', id);
-    requireCondition(p && canManage(p, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
-    if(p.materials)await currentMaterialsPrincipal(this.env,principal);
+    const p = await this.project(id, principal);
     const domains = await this.env.DB.prepare('SELECT count(*) AS n FROM project_domains WHERE project_id=?').bind(id).first<{n:number}>();
     requireCondition(!domains?.n, 409, 'domains_bound', '请先解除该网站的自定义域名，再删除网站。');
     await this.store.batch([
@@ -2866,6 +2922,7 @@ export class DomainService {
           'hosting_binding_missing',
           '发布版本缺少一致的持久化托管绑定，请先核对项目归属。',
         );
+        await this.verifyJobAccess(job);
         await this.lock(async () => {
           const persisted = await this.store.one<Job>('jobs', job.id);
           requireCondition(
