@@ -222,24 +222,18 @@ export function renderCandyHome(ctx: ThemeContext): string {
     path('contact/index.html');
 
   const defaultTags = isZh
-    ? ['🌱 100% 无毒不含BPA', '🛡️ 欧美玩具实验室安全认证', '☁️ 5秒柔和慢回弹']
-    : ['🌱 100% BPA-Free', '🛡️ ASTM & EN71 Certified', '☁️ 5s Slow Rebound'];
-  const qualityTags =
-    banner?.tags && banner.tags.filter(Boolean).length > 0
-      ? banner.tags.filter(Boolean)
-      : draft.copy?.[ctx.lang]?.tags && draft.copy[ctx.lang]!.tags!.filter(Boolean).length > 0
-        ? draft.copy[ctx.lang]!.tags!.filter(Boolean)
-        : defaultTags;
+    ? ['100% 无毒不含BPA', '欧美玩具实验室安全认证', '5秒柔和慢回弹']
+    : ['100% BPA-Free', 'ASTM & EN71 Certified', '5s Slow Rebound'];
+  const tag1 = banner?.tags?.[0] || draft.copy?.[ctx.lang]?.tags?.[0] || defaultTags[0];
+  const tag2 = banner?.tags?.[1] || draft.copy?.[ctx.lang]?.tags?.[1] || defaultTags[1];
+  const tag3 = banner?.tags?.[2] || draft.copy?.[ctx.lang]?.tags?.[2] || defaultTags[2];
 
   const defaultPills = isZh
-    ? ['✨ 独家微爆珠软充', '🌈 温感变色黑科技', '☁️ 5s Slow-Rise']
-    : ['✨ Crunchy Soft-Fill', '🌈 Thermo Color Shift', '☁️ 5s Slow-Rise'];
-  const floatingPills =
-    banner?.floatingPills && banner.floatingPills.filter(Boolean).length > 0
-      ? banner.floatingPills.filter(Boolean)
-      : draft.copy?.[ctx.lang]?.floatingPills && draft.copy[ctx.lang]!.floatingPills!.filter(Boolean).length > 0
-        ? draft.copy[ctx.lang]!.floatingPills!.filter(Boolean)
-        : defaultPills;
+    ? ['独家微爆珠软充', '温感变色黑科技', '5s Slow-Rise']
+    : ['Crunchy Soft-Fill', 'Thermo Color Shift', '5s Slow-Rise'];
+  const pill1 = banner?.floatingPills?.[0] || draft.copy?.[ctx.lang]?.floatingPills?.[0] || defaultPills[0];
+  const pill2 = banner?.floatingPills?.[1] || draft.copy?.[ctx.lang]?.floatingPills?.[1] || defaultPills[1];
+  const pill3 = banner?.floatingPills?.[2] || draft.copy?.[ctx.lang]?.floatingPills?.[2] || defaultPills[2];
 
   // Top Notice Ribbon
   const ribbonHtml = `
@@ -267,10 +261,10 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;position:relative;z-index:2;">
         <!-- Left Column: Copy & CTAs -->
-        <div data-reveal="fade-up" class="hero-left">
+        <div data-reveal="fade-up">
           <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #ffccd5;padding:8px 20px;border-radius:9999px;box-shadow:0 4px 14px rgba(255,107,139,0.15);margin-bottom:24px;">
             <span style="font-size:1.1rem;">🧸</span>
-            <span class="eyebrow" style="font-size:0.85rem;font-weight:900;color:#e63946;letter-spacing:0.04em;text-transform:uppercase;">
+            <span style="font-size:0.85rem;font-weight:900;color:#e63946;letter-spacing:0.04em;text-transform:uppercase;">
               ${esc(eyebrowText)}
             </span>
           </div>
@@ -279,7 +273,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
             ${esc(headlineText)}
           </h1>
 
-          <p class="hero-sub" style="font-size:1.12rem;line-height:1.7;color:#555b6e;margin:0 0 32px;max-width:540px;">
+          <p style="font-size:1.12rem;line-height:1.7;color:#555b6e;margin:0 0 32px;max-width:540px;">
             ${esc(subtitleText)}
           </p>
 
@@ -294,7 +288,9 @@ export function renderCandyHome(ctx: ThemeContext): string {
 
           <!-- Quality Tags -->
           <div style="margin-top:36px;display:flex;gap:20px;flex-wrap:wrap;color:#6c757d;font-size:0.88rem;font-weight:700;">
-            ${qualityTags.map((tag) => `<div style="display:flex;align-items:center;gap:6px;">${esc(tag)}</div>`).join('')}
+            <div style="display:flex;align-items:center;gap:6px;"><span>🌱</span> ${esc(tag1)}</div>
+            <div style="display:flex;align-items:center;gap:6px;"><span>🛡️</span> ${esc(tag2)}</div>
+            <div style="display:flex;align-items:center;gap:6px;"><span>☁️</span> ${esc(tag3)}</div>
           </div>
 
           <div style="margin-top:28px;">
@@ -303,27 +299,24 @@ export function renderCandyHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Column: Interactive 3D Stage -->
-        <div class="stage" style="position:relative;text-align:center;">
+        <div style="position:relative;text-align:center;">
           <div class="wr-candy-stage wr-hero-float" style="background:radial-gradient(circle, #ffffff 40%, #fff1f3 100%);border:4px solid #ffccd5;border-radius:40px;padding:36px;box-shadow:0 20px 48px rgba(255,107,139,0.18);position:relative;max-width:480px;margin:0 auto;">
             <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:380px;height:auto;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.1));">
 
-            ${floatingPills[0] ? `
             <!-- Floating Pill 1 -->
             <div style="position:absolute;top:20px;left:-20px;background:#ffffff;border:2px solid #ffd166;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#b45309;box-shadow:0 6px 16px rgba(245,158,11,0.2);display:flex;align-items:center;gap:6px;">
-              ${esc(floatingPills[0])}
-            </div>` : ''}
+              <span>✨</span> ${esc(pill1)}
+            </div>
 
-            ${floatingPills[1] ? `
             <!-- Floating Pill 2 -->
             <div style="position:absolute;bottom:30px;right:-15px;background:#ffffff;border:2px solid #48cae4;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#0077b6;box-shadow:0 6px 16px rgba(72,202,228,0.25);display:flex;align-items:center;gap:6px;">
-              ${esc(floatingPills[1])}
-            </div>` : ''}
+              <span>🌈</span> ${esc(pill2)}
+            </div>
 
-            ${floatingPills[2] ? `
             <!-- Floating Pill 3 -->
             <div style="position:absolute;top:50%;right:-25px;background:#ffffff;border:2px solid #a0c4ff;padding:8px 14px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#3a0ca3;box-shadow:0 6px 16px rgba(160,196,255,0.25);display:flex;align-items:center;gap:6px;">
-              ${esc(floatingPills[2])}
-            </div>` : ''}
+              <span>☁️</span> ${esc(pill3)}
+            </div>
           </div>
         </div>
       </div>

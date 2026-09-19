@@ -167,7 +167,7 @@ export function withBanner(
       if (banner.eyebrow) {
         const eyebrowNode = elements(hero).find((node) => {
           const cls = attr(node, 'class');
-          return cls.includes('eyebrow') || cls.includes('badge') || cls.includes('tag');
+          return /(?:^|[\s_-])(?:eyebrow|badge)(?:[\s_-]|$)/i.test(cls);
         });
         if (eyebrowNode) {
           eyebrowNode.childNodes = [

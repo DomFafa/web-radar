@@ -218,27 +218,64 @@ export function BannerEditor({
               </div>
             )}
             {(banner.mode === 'background' || banner.kind === 'video') && (
-              <div
-                className="banner-custom-copy-card"
+              <details
+                className="banner-custom-copy-details"
                 style={{
                   background: '#f8fafc',
                   border: '1px solid #e2e8f0',
                   borderRadius: '10px',
-                  padding: '16px 18px',
                   margin: '16px 0',
+                  overflow: 'hidden',
                 }}
               >
-                <div style={{ marginBottom: '14px' }}>
+                <summary
+                  style={{
+                    padding: '14px 18px',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#ffffff',
+                    fontWeight: 600,
+                    listStyle: 'none',
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '1.1rem' }}>✏️</span>
-                    <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700, color: '#1e293b' }}>
+                    <span style={{ fontSize: '0.96rem', fontWeight: 700, color: '#1e293b' }}>
                       首屏文字与按钮自定义（选填）
-                    </h5>
+                    </span>
+                    {(banner.eyebrow ||
+                      banner.headline ||
+                      banner.subtitle ||
+                      banner.primaryButtonText ||
+                      banner.secondaryButtonText ||
+                      (banner.tags && banner.tags.some(Boolean)) ||
+                      (banner.floatingPills && banner.floatingPills.some(Boolean))) && (
+                      <span
+                        style={{
+                          background: '#e0e7ff',
+                          color: '#3730a3',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                        }}
+                      >
+                        已自定义
+                      </span>
+                    )}
                   </div>
-                  <p className="muted" style={{ margin: '4px 0 0', fontSize: '0.82rem' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                    点击展开 / 折叠 ▾
+                  </span>
+                </summary>
+
+                <div style={{ padding: '16px 18px', borderTop: '1px solid #e2e8f0' }}>
+                  <p className="muted" style={{ margin: '0 0 14px', fontSize: '0.82rem' }}>
                     留空时使用整站默认文案与设置。填写后将直接覆盖所选页面的首屏徽标、标题、副标题、按钮及卖点标签。
                   </p>
-                </div>
 
                 <div className="form-grid">
                   <Field label="顶部小徽标 (Eyebrow Badge)">
@@ -384,6 +421,7 @@ export function BannerEditor({
                   </div>
                 </div>
               </div>
+              </details>
             )}
             {banner.kind === 'images' ? (
               <>
