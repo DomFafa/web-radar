@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
 
 export function renderMarketingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -225,9 +226,15 @@ export function renderMarketingHome(ctx: ThemeContext): string {
 }
 
 export function renderMarketingAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+  const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
+
+  const headline = company.aboutHeadline || 'Transforming Market Velocity Through Creative Science';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const aboutText = copy?.about || company.description || 'Our agency combines predictive consumer analytics, viral creative production, and international SEO to deliver exponential customer lifetime value.';
 
   const heroHtml = `
@@ -238,7 +245,7 @@ export function renderMarketingAbout(ctx: ThemeContext): string {
           <span style="font-size:0.82rem;font-weight:700;color:#fdf4ff;letter-spacing:0.08em;text-transform:uppercase;">THE GROWTH ARCHITECTS · EST. ${esc(company.establishedYear || '2020')}</span>
         </div>
         <h1 style="font-size:clamp(2.4rem,4.8vw,4.2rem);line-height:1.1;font-weight:900;letter-spacing:-0.035em;margin:0 auto 20px;max-width:880px;color:#ffffff;">
-          Transforming Market Velocity Through Creative Science
+          ${esc(headline)}
         </h1>
         <p style="max-width:720px;font-size:1.2rem;line-height:1.65;color:#f5d0fe;margin:0 auto;">
           ${esc(copy?.subtitle || 'We combine quantitative consumer telemetry, high-converting creative narrative engineering, and cross-channel media buying to scale industry-defining brands.')}
@@ -247,7 +254,23 @@ export function renderMarketingAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:48px 0 32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #d946ef;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(217,70,239,0.06);">
+            <div style="font-size:2.8rem;font-weight:900;color:#d946ef;letter-spacing:-1px;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:800;color:#18181b;margin-top:6px;font-size:1.1rem;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.86rem;color:#71717a;margin-top:6px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#ffffff;border:1px solid #f3e8ff;border-top:4px solid #d946ef;border-radius:16px;padding:28px;text-align:center;box-shadow:0 4px 20px rgba(217,70,239,0.06);">
@@ -281,8 +304,10 @@ export function renderMarketingAbout(ctx: ThemeContext): string {
           <span class="eyebrow" style="color:#d946ef;font-weight:700;">THE GROWTH MANIFESTO</span>
           <h2 style="font-size:2.2rem;color:#18181b;margin:12px 0 20px;line-height:1.2;">Eliminating Marketing Bureaucracy With Agile Experimentation</h2>
           <div style="color:#52525b;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-            <p>${esc(aboutText)}</p>
-            <p>Traditional agencies sell billable hours; we deliver measurable market velocity. Every sprint is grounded in unit economics, customer acquisition cost compression, and scalable revenue expansion.</p>
+            ${customStoryParas ? customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('') : `
+              <p>${esc(aboutText)}</p>
+              <p>Traditional agencies sell billable hours; we deliver measurable market velocity. Every sprint is grounded in unit economics, customer acquisition cost compression, and scalable revenue expansion.</p>
+            `}
           </div>
           ${company.capabilities ? `
             <div style="margin-top:24px;padding:20px;background:#fdf4ff;border-left:4px solid #d946ef;border-radius:0 8px 8px 0;">
@@ -292,7 +317,13 @@ export function renderMarketingAbout(ctx: ThemeContext): string {
           ` : ''}
         </div>
         <div style="background:#18181b;color:#ffffff;border-radius:20px;padding:36px;box-shadow:0 10px 30px rgba(0,0,0,0.15);">
-          <div style="font-size:2rem;margin-bottom:16px;">⚡</div>
+          ${customImg ? `
+            <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);margin-bottom:16px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : `
+            <div style="font-size:2rem;margin-bottom:16px;">⚡</div>
+          `}
           <h3 style="color:#ffffff;font-size:1.35rem;margin:0 0 10px;">Algorithmic Creative Engine</h3>
           <p style="color:#a1a1aa;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Our creative studio deploys 40+ ad iterations weekly, testing hook rates, visual contrast, and emotional triggers to find 10x breakthrough assets.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">

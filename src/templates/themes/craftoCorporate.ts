@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { parseAboutHighlights, getAboutStoryParagraphs } from './aboutHelper';
 
 export function renderCraftoHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -263,6 +264,12 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
     about: 'Crafto Corporate delivers sovereign-level advisory, digital infrastructure modernization, and operational restructuring backed by decades of executive leadership.',
   };
 
+  const headline = company.aboutHeadline || 'Institutional Rigor & Sovereign Governance';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const secondaryCustomImg = company.aboutSecondaryImageAssetId ? asset(company.aboutSecondaryImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const heroHtml = `
     <section class="crafto-inner-hero" style="background:#0b1120;color:#ffffff;padding:80px 0 60px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
       <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(0,71,255,0.2) 0%,transparent 70%);pointer-events:none;"></div>
@@ -272,7 +279,7 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
           <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;">INSTITUTIONAL CHARTER · GLOBAL ADVISORY</span>
         </div>
         <h1 style="font-size:clamp(2.5rem,5.5vw,4.4rem);line-height:1.05;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 20px;max-width:900px;color:#ffffff;">
-          Institutional Rigor & Sovereign Governance
+          ${esc(headline)}
         </h1>
         <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0;">
           ${esc(copy.about)}
@@ -281,7 +288,23 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:50px 0 30px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
+            <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1rem;text-transform:uppercase;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.85rem;color:#64748b;margin-top:4px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:28px;">
@@ -316,12 +339,18 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
           <h2 style="font-size:2.4rem;line-height:1.12;color:#0f172a;margin:10px 0 20px;text-transform:uppercase;font-weight:900;">
             Institutional Modernization Built on Uncompromising Rigor
           </h2>
-          <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
-            Modern enterprises face unprecedented volatility across supply chains, statutory frameworks, and technological paradigms. Crafto was founded on a singular conviction: lasting market dominance requires sovereign operational resilience, not reactive optimization.
-          </p>
-          <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
-            We pair elite executive practitioners with proprietary analytical infrastructure to advise sovereign wealth funds, multinational conglomerates, and high-growth boards on structural value preservation.
-          </p>
+          ${customStoryParas ? `
+            <div style="color:#475569;font-size:1.05rem;line-height:1.75;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+          ` : `
+            <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
+              Modern enterprises face unprecedented volatility across supply chains, statutory frameworks, and technological paradigms. Crafto was founded on a singular conviction: lasting market dominance requires sovereign operational resilience, not reactive optimization.
+            </p>
+            <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
+              We pair elite executive practitioners with proprietary analytical infrastructure to advise sovereign wealth funds, multinational conglomerates, and high-growth boards on structural value preservation.
+            </p>
+          `}
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
             <div style="border-left:3px solid #0047ff;padding-left:14px;">
               <strong style="color:#0f172a;display:block;font-size:1.1rem;text-transform:uppercase;">Independent</strong>
@@ -335,6 +364,11 @@ export function renderCraftoAbout(ctx: ThemeContext): string {
         </div>
 
         <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#0f172a;color:#ffffff;border:1px solid #1e293b;padding:40px;">
+          ${customImg ? `
+            <div style="border:1px solid #1e293b;overflow:hidden;margin-bottom:20px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : ''}
           <h3 style="font-size:1.3rem;text-transform:uppercase;letter-spacing:0.08em;color:#93c5fd;margin:0 0 24px;">Core Operating Principles</h3>
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div style="display:flex;gap:16px;">

@@ -1005,6 +1005,104 @@ export default function Editor({
                   </div>
                 </div>
                 </div></details>
+                <details className="optional-setup">
+                  <summary>
+                    关于我们（About Us）页面图文与实力定制（选填）
+                    {draft.company.aboutImageAssetId || draft.company.aboutSecondaryImageAssetId || draft.company.aboutHeadline || draft.company.aboutStory || draft.company.aboutHighlights ? ' · 已配置' : ''}
+                  </summary>
+                  <p className="muted" style={{ margin: '8px 0 16px' }}>
+                    可为全站所有模版的关于我们（About Us）页面定制图文共存展示、专属大标、企业深度使命与动态数据亮点。留空时模版将使用公司简介并自动匹配高品质视觉。
+                  </p>
+                  <div className="brand-upload-grid" style={{ marginBottom: 20 }}>
+                    <div className="logo-upload-row">
+                      <AssetView
+                        projectId={project.id}
+                        assetId={draft.company.aboutImageAssetId}
+                        alt="关于页主视觉图"
+                      />
+                      <div>
+                        <strong>关于页主视觉图 <span className="optional">选填</span></strong>
+                        <p>展示于关于页核心图文区。推荐上传企业全景、现代化厂房、研发团队或主展厅实景照（16:9 或 4:3 比例佳）。</p>
+                        <UploadButton
+                          label="上传关于页主图"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={!!busy}
+                          onFile={(file) => upload(file, (asset) => company({ aboutImageAssetId: asset.id }))}
+                        />
+                        {draft.company.aboutImageAssetId && (
+                          <Button kind="quiet" onClick={() => company({ aboutImageAssetId: undefined })}>
+                            移除主图
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="logo-upload-row">
+                      <AssetView
+                        projectId={project.id}
+                        assetId={draft.company.aboutSecondaryImageAssetId}
+                        alt="车间/实验室/环境副图"
+                      />
+                      <div>
+                        <strong>车间/实验室/环境副图 <span className="optional">选填</span></strong>
+                        <p>展示于实力保障或生产制造专区。推荐上传生产线细节、精密检验设备或资质展位照。</p>
+                        <UploadButton
+                          label="上传环境副图"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={!!busy}
+                          onFile={(file) => upload(file, (asset) => company({ aboutSecondaryImageAssetId: asset.id }))}
+                        />
+                        {draft.company.aboutSecondaryImageAssetId && (
+                          <Button kind="quiet" onClick={() => company({ aboutSecondaryImageAssetId: undefined })}>
+                            移除副图
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="form-grid">
+                    <Field
+                      className="full-width"
+                      label="关于页专属主标语（选填）"
+                      hint="展示在关于页面的首屏大标题，留空时使用模版默认推荐标语或品牌一句话介绍。"
+                    >
+                      <input
+                        aria-label="关于页专属主标语（选填）"
+                        value={draft.company.aboutHeadline || ''}
+                        onChange={(e) => company({ aboutHeadline: e.target.value })}
+                        placeholder="例如：15年专注高精密智能制造与全球出海交付"
+                        maxLength={300}
+                      />
+                    </Field>
+                    <Field
+                      className="full-width"
+                      label="企业深度故事与使命（选填）"
+                      hint="详细阐述企业创立初衷、核心价值观、工艺理念与客户承诺；支持多段落。留空时使用公司简介。"
+                    >
+                      <textarea
+                        aria-label="企业深度故事与使命（选填）"
+                        rows={4}
+                        value={draft.company.aboutStory || ''}
+                        onChange={(e) => company({ aboutStory: e.target.value })}
+                        placeholder="描述企业的创立历程、制造哲学、全球服务足迹与对客户的坚定承诺..."
+                        maxLength={20000}
+                      />
+                    </Field>
+                    <Field
+                      className="full-width"
+                      label="核心优势与数据亮点（选填）"
+                      hint="每行一条，可填写数字与说明（支持 '数值 | 说明' 格式，如 '10,000+ m² | 生产制造基地'，页面将自动驱动动态计数动画）。"
+                    >
+                      <textarea
+                        aria-label="核心优势与数据亮点（选填）"
+                        rows={3}
+                        value={draft.company.aboutHighlights || ''}
+                        onChange={(e) => company({ aboutHighlights: e.target.value })}
+                        placeholder={'例如：\n10,000+ m² | 现代化智能厂区\n60+ | 全球出海合作国家与地区\n99.8% | 交付准时率与满意度\n100% | 环保原材料与国际安全认证'}
+                        maxLength={2000}
+                      />
+                    </Field>
+                  </div>
+                </details>
               </section>
               <details className="optional-setup"><summary>页面 Banner / 视频（选填，也可在预览后设置）</summary>
               <BannerEditor projectId={project.id} draft={draft} disabled={!!busy}

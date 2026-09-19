@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { parseAboutHighlights, getAboutStoryParagraphs } from './aboutHelper';
 
 export function renderConsultingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -221,10 +222,17 @@ export function renderConsultingHome(ctx: ThemeContext): string {
 }
 
 export function renderConsultingAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
     about: 'Corpox Consulting brings peerless strategic rigor, quantitative market diagnostics, and battle-tested execution frameworks to solve the most consequential challenges confronting global enterprises.',
   };
+
+  const headline = company.aboutHeadline || 'Executive Strategic Counsel & Value Creation';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const secondaryCustomImg = company.aboutSecondaryImageAssetId ? asset(company.aboutSecondaryImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
 
   const heroHtml = `
     <section class="consulting-inner-hero" style="background:linear-gradient(135deg,#071324 0%,#0a192f 50%,#0f2b59 100%);color:#ffffff;padding:80px 0 60px;position:relative;overflow:hidden;border-bottom:2px solid #d4af37;">
@@ -234,7 +242,7 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
           <span style="font-size:0.8rem;font-weight:700;color:#fcd34d;letter-spacing:0.18em;text-transform:uppercase;">CORPOX ADVISORY DOCTRINE · EST. 1994</span>
         </div>
         <h1 style="font-family:'Cinzel','Times New Roman',serif;font-size:clamp(2.5rem,5.5vw,4.4rem);line-height:1.08;font-weight:600;letter-spacing:-0.02em;margin:0 0 20px;max-width:900px;color:#ffffff;">
-          Executive Strategic Counsel & Value Creation
+          ${esc(headline)}
         </h1>
         <p style="max-width:720px;color:#cbd5e1;font-size:1.2rem;line-height:1.7;margin:0;">
           ${esc(copy.about)}
@@ -243,7 +251,23 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:50px 0 30px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
+            <div style="font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:#0f2b59;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:700;color:#0f172a;margin-top:6px;font-size:1.05rem;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.86rem;color:#64748b;margin-top:4px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #d4af37;border-radius:4px;padding:26px;box-shadow:0 4px 14px rgba(0,0,0,0.03);">
@@ -278,12 +302,18 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
           <h2 style="font-family:'Cinzel',serif;font-size:2.3rem;line-height:1.15;color:#0f2b59;margin:10px 0 20px;">
             Rigorous Quantitative Diagnostics Coupled with Battle-Tested Senior Counsel
           </h2>
-          <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
-            Founded in 1994 by former investment banking heads and multinational chairmen, Corpox Consulting was created to dismantle the superficiality of conventional management consulting. We believe real strategic value is not discovered in slide templates, but forged at the intersection of granular balance-sheet economics and fearless organizational leadership.
-          </p>
-          <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
-            Every mandate is led directly by an equity managing partner who has successfully steered multi-billion-dollar P&L structures through severe economic downturns, regulatory transformations, and hostile market cycles.
-          </p>
+          ${customStoryParas ? `
+            <div style="color:#475569;font-size:1.05rem;line-height:1.75;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+          ` : `
+            <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
+              Founded in 1994 by former investment banking heads and multinational chairmen, Corpox Consulting was created to dismantle the superficiality of conventional management consulting. We believe real strategic value is not discovered in slide templates, but forged at the intersection of granular balance-sheet economics and fearless organizational leadership.
+            </p>
+            <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
+              Every mandate is led directly by an equity managing partner who has successfully steered multi-billion-dollar P&L structures through severe economic downturns, regulatory transformations, and hostile market cycles.
+            </p>
+          `}
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
             <div style="border-left:3px solid #d4af37;padding-left:14px;">
               <strong style="color:#0f2b59;display:block;font-size:1.1rem;font-family:'Cinzel',serif;">Skin in the Game</strong>
@@ -297,6 +327,11 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
         </div>
 
         <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#071324;color:#ffffff;border-top:3px solid #d4af37;border-radius:4px;padding:40px;">
+          ${customImg ? `
+            <div style="position:relative;height:200px;overflow:hidden;border-radius:2px;margin-bottom:20px;border:1px solid rgba(212,175,55,0.3);">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : ''}
           <h3 style="font-family:'Cinzel',serif;font-size:1.3rem;color:#fcd34d;margin:0 0 24px;letter-spacing:0.05em;">Four Core Pillars of Governance</h3>
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div>

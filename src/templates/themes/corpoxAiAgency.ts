@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { parseAboutHighlights, getAboutStoryParagraphs } from './aboutHelper';
 
 export function renderAiAgencyHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -254,10 +255,17 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
 }
 
 export function renderAiAgencyAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
     about: 'Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.',
   };
+
+  const headline = company.aboutHeadline || 'Autonomous Neural Intelligence & Synthetic Reasoning';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const secondaryCustomImg = company.aboutSecondaryImageAssetId ? asset(company.aboutSecondaryImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
 
   const heroHtml = `
     <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:80px 0 60px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
@@ -268,7 +276,7 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
           <span style="font-size:0.84rem;font-weight:700;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">CORPOX AI LABS · RESEARCH CHARTER</span>
         </div>
         <h1 style="font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1.06;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:920px;margin:0 auto 20px;">
-          Autonomous Neural Intelligence & Synthetic Reasoning
+          ${esc(headline)}
         </h1>
         <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0 auto;">
           ${esc(copy.about)}
@@ -277,7 +285,23 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:50px 0 30px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+            <div style="font-size:2.8rem;font-weight:900;color:#06b6d4;letter-spacing:-1px;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:700;color:#f8fafc;margin-top:4px;font-size:1.05rem;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.85rem;color:#94a3b8;margin-top:4px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div class="wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:26px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
@@ -312,12 +336,18 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
           <h2 style="font-size:2.4rem;line-height:1.15;color:#f8fafc;margin:10px 0 20px;">
             Beyond Conversational AI: Deterministic Autonomous Execution
           </h2>
-          <p style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
-            At Corpox AI Labs, we reject the notion that enterprises must choose between creative neural generation and deterministic reliability. We build agentic reasoning loops where mathematical logic, code compilers, and relational databases act as self-correcting grounding layers.
-          </p>
-          <p style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
-            Our proprietary multi-agent orchestrator decomposes complex business directives into parallel execution graphs, ensuring every single tool call is schema-validated and auditable down to individual floating-point tensor activations.
-          </p>
+          ${customStoryParas ? `
+            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+          ` : `
+            <p style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
+              At Corpox AI Labs, we reject the notion that enterprises must choose between creative neural generation and deterministic reliability. We build agentic reasoning loops where mathematical logic, code compilers, and relational databases act as self-correcting grounding layers.
+            </p>
+            <p style="color:#cbd5e1;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
+              Our proprietary multi-agent orchestrator decomposes complex business directives into parallel execution graphs, ensuring every single tool call is schema-validated and auditable down to individual floating-point tensor activations.
+            </p>
+          `}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
             <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
               <strong style="color:#06b6d4;display:block;font-size:1rem;margin-bottom:4px;">⚡ Real-Time Tool Binding</strong>
@@ -331,6 +361,11 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
         </div>
 
         <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.08);">
+          ${customImg ? `
+            <div style="border-radius:10px;overflow:hidden;border:1px solid #1e293b;margin-bottom:20px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : ''}
           <h3 style="font-size:1.3rem;font-weight:700;color:#f8fafc;margin:0 0 20px;">Core Engineering Disciplines</h3>
           <div style="display:flex;flex-direction:column;gap:18px;">
             <div style="border-left:3px solid #06b6d4;padding-left:14px;">

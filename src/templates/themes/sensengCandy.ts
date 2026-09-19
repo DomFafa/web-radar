@@ -2,6 +2,7 @@ import type { Product } from '../../shared/model';
 import { bannerLink, selectedBanner } from '../../shared/banner-config';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { isTypedMaterialsSource } from '../materials-typed';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
 
 export const CANDY_DEFAULT_PRODUCTS = [
   {
@@ -797,11 +798,129 @@ export function renderCandyDetail(ctx: ThemeContext): string {
 
 export function renderCandyAbout(ctx: ThemeContext): string {
   const isZh = (ctx.lang as string) === 'zh';
+  const company = ctx.draft.company;
+  const { path, navAttrs } = ctx;
+  const hasCustomAbout = !!(company.aboutHighlights || company.aboutStory || company.aboutImageAssetId || company.aboutHeadline);
+
+  if (hasCustomAbout) {
+    const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'));
+    const headline = getAboutHeadline(company, isZh ? '用软萌触觉，点亮每一颗纯真童心' : 'Crafting Joy & Calm, One Squeeze at a Time');
+    const storyParas = getAboutStoryParagraphs(
+      company,
+      isZh
+        ? 'Senseng 诞生于对“触觉疗愈”与“童年欢笑”的无限热爱。我们坚信，无论是正在探索世界的小朋友，还是在现代高压下奋斗的成年人，都需要一份柔软温暖的治愈力量。'
+        : 'Senseng was founded with a joyful mission: to bring gentle tactile comfort, developmental sensory stimulation, and infectious smiles to both kids and busy adults around the globe.',
+    );
+    const stats = parseAboutHighlights(company.aboutHighlights, [
+      { value: '10,000+', num: 10000, suffix: '+', label: isZh ? '平方米洁净车间' : 'Square Meter Facility', desc: isZh ? '国际标准无尘车间' : 'Certified cleanroom facility' },
+      { value: '1,200,000+', num: 1200000, suffix: '+', label: isZh ? '件月均稳定产能' : 'Monthly Toy Capacity', desc: isZh ? '自动化柔性产线' : 'Automated agile assembly' },
+      { value: '60+', num: 60, suffix: '+', label: isZh ? '出口国家与地区' : 'Global Export Markets', desc: isZh ? '欧美主流商超准入' : 'Tier-1 global retail compliance' },
+      { value: '100%', num: 100, suffix: '%', label: isZh ? '出厂全检合格率' : 'Inspection Pass Rate', desc: isZh ? 'EN71与ASTM标准' : 'EN71 & ASTM strict pass' },
+    ]);
+
+    return `
+      <main class="wr-inner wr-senseng-candy-inner" data-wr-page="about" style="padding-top:100px;background:#fffdfa;">
+        <section class="wrap" style="padding:40px 0 60px;">
+          <div class="about-split" data-reveal="fade-up" style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;margin-bottom:60px;">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
+                🍭 ${isZh ? `关于 ${esc(company.name || 'SENSENG')}` : `ABOUT ${esc((company.name || 'SENSENG').toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+              </div>
+              <h1 style="font-size:clamp(2.4rem, 4.2vw, 3.4rem);color:#2b2d42;font-weight:900;margin:0 0 18px;line-height:1.15;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#555b6e;font-size:1.12rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;font-weight:900;padding:14px 32px;border-radius:9999px;box-shadow:0 8px 20px rgba(255,107,139,0.3);font-size:0.95rem;text-decoration:none;">
+                  ${isZh ? '开启批发合作洽谈 ↗' : 'Send Wholesale Inquiry ↗'}
+                </a>
+                ${company.capabilities ? `
+                  <span style="font-size:0.88rem;color:#e63946;font-weight:700;background:#ffeef2;padding:8px 16px;border-radius:9999px;">
+                    ✨ ${esc(company.capabilities.slice(0, 45))}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+            <div class="wr-card-hover" style="position:relative;border-radius:32px;overflow:hidden;border:4px solid #ffd0d8;box-shadow:0 16px 40px rgba(255,107,139,0.18);">
+              <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.5s ease;">
+              <div style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:9999px;padding:8px 18px;font-size:0.82rem;font-weight:900;color:#e63946;box-shadow:0 4px 16px rgba(0,0,0,0.08);display:flex;align-items:center;gap:6px;">
+                <span>🍬 ${esc(company.type === 'factory' ? (isZh ? '自有高标生产基地' : 'Direct Verified Factory') : (isZh ? '专业出口贸易伙伴' : 'Certified Trading Partner'))}</span>
+              </div>
+            </div>
+          </div>
+
+          ${secondaryImg ? `
+            <div data-reveal="fade-up" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;background:#ffffff;border:3px solid #ffd0d8;border-radius:32px;padding:36px;box-shadow:0 12px 30px rgba(255,107,139,0.08);margin-bottom:60px;">
+              <div style="border-radius:24px;overflow:hidden;" class="wr-card-hover">
+                <img src="${esc(secondaryImg)}" alt="${esc(company.name)} workshop" style="width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div>
+                <div style="display:inline-block;background:#ffeef2;color:#e63946;font-weight:900;font-size:0.8rem;padding:4px 12px;border-radius:9999px;margin-bottom:10px;">${isZh ? '车间实景与品质承诺' : 'WORKSHOP & CRAFTSMANSHIP'}</div>
+                <h2 style="font-size:1.8rem;font-weight:900;color:#2b2d42;margin:0 0 14px;">${isZh ? '精工智造 · 每一批次严格质检' : 'Precision Crafted For Endless Smiles'}</h2>
+                <p style="color:#6c757d;font-size:1rem;line-height:1.7;margin:0 0 18px;">
+                  ${esc(company.capabilities || (isZh ? '我们采用现代化洁净车间与自动化灌装工艺，所有触觉解压玩偶出厂前均经过重金属迁移、拉力测试与回弹周期检测。' : 'Equipped with automated cleanroom production lines and batch toxicology assays to safeguard child play.'))}
+                </p>
+                ${company.certifications ? `
+                  <div style="background:#fff8f9;border-left:4px solid #ff6b8b;padding:12px 16px;border-radius:0 12px 12px 0;">
+                    <strong style="color:#e63946;font-size:0.85rem;display:block;">${isZh ? '持有权威认证' : 'Verified Certifications'}</strong>
+                    <span style="color:#2b2d42;font-size:0.92rem;font-weight:700;">${esc(company.certifications)}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- 4 Core Pillars -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-bottom:60px;">
+            <div style="background:#ffffff;border:3px solid #ffd0d8;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(255,107,139,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">🛡️</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '极致安全标准' : 'Uncompromising Safety'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '严格遵循欧盟 EN71、美标 ASTM F963 及 CPC 标准，每一批次均经过重金属与毒理检验。' : 'Certified against EN71, ASTM F963, and CPSIA. Strict zero-toxic materials tested at independent labs.'}</p>
+            </div>
+            <div style="background:#ffffff;border:3px solid #fed7aa;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">✨</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '独创触觉工艺' : 'Tactile Innovation'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '自主研发微爆珠软充与温感渐变材质，赋予每一个玩具不可思议的奇妙触感。' : 'Proprietary crunchy bead soft-fill, calibrated 5s slow rise memory, and thermochromic color shifts.'}</p>
+            </div>
+            <div style="background:#ffffff;border:3px solid #bae6fd;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(2,132,199,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">🌱</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '绿色环保责任' : 'Eco-Conscious Vision'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '采用环保大豆油墨印刷彩盒与可循环纸板包装，积极减少一次性塑料使用。' : 'Soy-ink printed paperboard boxes and recyclable packaging to protect our planet for future generations.'}</p>
+            </div>
+            <div style="background:#ffffff;border:3px solid #ddd6fe;border-radius:28px;padding:32px;text-align:center;box-shadow:0 8px 24px rgba(124,58,237,0.06);" class="wr-card-hover" data-reveal="fade-up">
+              <div style="font-size:2.5rem;margin-bottom:12px;">❤️</div>
+              <h3 style="font-size:1.2rem;font-weight:900;color:#2b2d42;margin:0 0 8px;">${isZh ? '跨越年龄的治愈' : 'Joy For All Ages'}</h3>
+              <p style="font-size:0.9rem;color:#6c757d;line-height:1.6;margin:0;">${isZh ? '无论是幼儿园萌娃还是写字楼白领，软萌公仔都能带来纯粹而专注的心灵疗愈。' : 'Bridging childhood play and adult desk mindfulness, bringing quiet emotional comfort to everyone.'}</p>
+            </div>
+          </div>
+
+          <!-- Factory Statistics -->
+          <div data-reveal="fade-up" style="background:linear-gradient(135deg, #ff6b8b 0%, #ff8e72 100%);color:#ffffff;border-radius:32px;padding:48px;box-shadow:0 16px 40px rgba(255,107,139,0.25);">
+            <div style="text-align:center;margin-bottom:36px;">
+              <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 8px;">${isZh ? '出海制造实力与供应链保障' : 'Global Manufacturing & Supply Chain Prowess'}</h2>
+              <p style="opacity:0.9;font-size:1.05rem;max-width:600px;margin:0 auto;">${isZh ? '十余年外贸玩具制造沉淀，为您提供从工业设计到全球报关出海的一站式服务。' : 'Decade of specialized toy manufacturing serving tier-1 retailers across 60+ countries.'}</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;text-align:center;">
+              ${stats.map((s) => `
+                <div>
+                  <div style="font-size:2.8rem;font-weight:900;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                  <div style="font-size:0.92rem;opacity:0.9;margin-top:4px;">${esc(s.label)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </section>
+      </main>
+    `;
+  }
 
   return `
     <main class="wr-inner wr-senseng-candy-inner" data-wr-page="about" style="padding-top:100px;background:#fffdfa;">
       <section class="wrap" style="padding:40px 0 60px;">
-        <div data-reveal="fade-up" style="text-align:center;max-width:760px;margin:0 auto 50px;">
+        <div data-reveal="fade-up" style="max-width:760px;margin-bottom:50px;">
           <div style="display:inline-flex;align-items:center;gap:6px;background:#ffeef2;border:2px solid #ffd0d8;padding:6px 18px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#e63946;margin-bottom:16px;">
             🍭 ${isZh ? '关于 Senseng 糖果乐园' : 'ABOUT SENSENG PLAY'}
           </div>

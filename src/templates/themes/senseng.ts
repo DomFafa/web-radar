@@ -1,5 +1,6 @@
 import type { Product } from '../../shared/model';
 import { esc, safeUrl, type ThemeContext } from './types';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
 
 export const SENSENG_DEFAULT_PRODUCTS = [
   {
@@ -667,7 +668,124 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // PAGE 4: ABOUT (webimg/aboutus.jpg)
   // -------------------------------------------------------------
   if (page === 'about') {
-    const aboutHero = `
+    const hasCustomAbout = !!(company.aboutHighlights || company.aboutStory || company.aboutImageAssetId || company.aboutHeadline);
+
+    const aboutHero = hasCustomAbout ? (() => {
+      const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'));
+      const headline = getAboutHeadline(company, 'Character-led tactile products with clearer shelf cues');
+      const storyParas = getAboutStoryParagraphs(company, 'A dedicated B2B showcase designed for international buyers, wholesale importers, and retail distributors seeking premium certified tactile toy collections.');
+      const stats = parseAboutHighlights(company.aboutHighlights, [
+        { value: '50,000 m²', num: 50000, suffix: ' m²', label: 'Production Facility', desc: 'ISO & cleanroom manufacturing standard' },
+        { value: '500 pcs', num: 500, suffix: ' pcs', label: 'Flexible Wholesale MOQ', desc: 'Supporting test runs and expanding retail lines' },
+        { value: '120+', num: 120, suffix: '+', label: 'Export Destinations', desc: 'Direct global logistics across 5 continents' },
+        { value: '100%', num: 100, suffix: '%', label: 'Lab Certified Quality', desc: 'EN71, ASTM F963 & CPSIA laboratory compliance' },
+      ]);
+
+      return `
+        <div data-wr-hero class="senseng-about-hero" data-reveal="fade-up">
+          <div class="senseng-about-hero-inner">
+            <div class="senseng-reference-scene wr-card-hover" aria-hidden="true" style="overflow:hidden;border-radius:24px;box-shadow:0 12px 32px rgba(7,59,145,0.12);">
+              <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease;">
+            </div>
+            <div class="senseng-reference-copy">
+              <p class="senseng-eyebrow" style="letter-spacing:0.36em;">ABOUT ${esc((company.name || 'SENSENG').toUpperCase())}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}</p>
+              <h1 class="senseng-hero-h1" style="word-break:break-word;">${esc(headline)}</h1>
+              <div class="senseng-hero-sub" style="font-size:17px;line-height:1.6;color:#1e3a63;display:flex;flex-direction:column;gap:10px;">
+                ${storyParas.slice(0, 2).map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:20px;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="senseng-btn-pill" style="padding:12px 28px;font-size:16px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.8 6.2 8.2 6.4 8.2-6.4"></path></svg>
+                  <span>Send a wholesale inquiry</span>
+                </a>
+                ${company.capabilities ? `
+                  <div style="display:inline-flex;align-items:center;gap:6px;background:#eef8ff;border:1px solid #c9f4ff;padding:8px 16px;border-radius:9999px;font-size:0.85rem;font-weight:700;color:#073b91;">
+                    <span>✨ ${esc(company.capabilities.slice(0, 45))}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Senseng Dynamic Highlights & Metrics Grid -->
+        <section class="senseng-partners" style="max-width:1536px;margin:0 auto;padding:48px 40px;" data-reveal="fade-up">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+            ${stats.map((s, idx) => {
+              const colors = [
+                { bg: '#c9f4ff', text: '#0c9de6', icon: '🏭' },
+                { bg: '#ffd7ec', text: '#ef348d', icon: '📦' },
+                { bg: '#c8f5e9', text: '#11a886', icon: '🌍' },
+                { bg: '#fff0c9', text: '#d4a017', icon: '✅' },
+              ];
+              const c = colors[idx % colors.length]!;
+              return `
+                <div style="text-align:center;padding:32px 20px;background:#eef8ff;border-radius:20px;" class="wr-card-hover" data-reveal="fade-up">
+                  <div style="width:60px;height:60px;border-radius:50%;background:${c.bg};color:${c.text};display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;">${c.icon}</div>
+                  <h3 style="font-size:17px;font-weight:900;color:#073b91;margin:0 0 6px;">${esc(s.label)}</h3>
+                  <div style="font-size:1.9rem;font-weight:900;color:${c.text};margin-bottom:6px;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                  ${s.desc ? `<p style="font-size:13px;color:#475569;line-height:1.5;margin:0;">${esc(s.desc)}</p>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+
+        ${secondaryImg ? `
+          <section style="max-width:1440px;margin:0 auto 60px;padding:0 40px;" data-reveal="fade-up">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;background:#ffffff;border:2px solid #e2e8f0;border-radius:28px;padding:40px;box-shadow:0 8px 24px rgba(7,59,145,0.05);">
+              <div style="overflow:hidden;border-radius:20px;max-height:360px;" class="wr-card-hover">
+                <img src="${esc(secondaryImg)}" alt="${esc(company.name)} manufacturing environment" style="width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div>
+                <p class="senseng-eyebrow" style="letter-spacing:0.25em;">FACILITY & QUALITY STANDARDS</p>
+                <h2 style="font-size:32px;font-weight:900;color:#073b91;margin:8px 0 16px;">Scale, Safety & Global Compliance</h2>
+                <p style="font-size:15px;line-height:1.7;color:#3b5066;margin:0 0 20px;">
+                  ${esc(company.capabilities || 'Our facilities combine modern production lines, dust-free packaging rooms, and continuous lab sampling to ensure every shipment adheres to stringent worldwide safety standards.')}
+                </p>
+                ${company.certifications ? `
+                  <div style="background:#eef8ff;border-left:4px solid #073b91;padding:14px 18px;border-radius:0 12px 12px 0;">
+                    <strong style="color:#073b91;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;display:block;">Verified Accreditations</strong>
+                    <span style="color:#1e3a63;font-size:14px;font-weight:600;">${esc(company.certifications)}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </section>
+        ` : ''}
+
+        <div class="senseng-value-props" style="margin-top:20px;">
+          <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.04s;">
+            <div class="senseng-vp-icon" style="background:#c9f4ff;color:#0c9de6;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18v12H3z"></path><path d="m3 9 2-5h14l2 5"></path><path d="M9 21v-6h6v6"></path></svg>
+            </div>
+            <div class="senseng-vp-text">
+              <h3>${esc(company.type === 'factory' ? 'Direct Manufacturer' : 'Professional Trade Partner')}</h3>
+              <p>${esc(company.description ? company.description.slice(0, 160) : 'Focused on high-grade product design, strict material selection, and presentation for international buyer review.')}</p>
+            </div>
+          </div>
+          <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.12s;">
+            <div class="senseng-vp-icon" style="background:#ffd7ec;color:#ef348d;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m21 16-9 5-9-5V8l9-5 9 5z"></path><path d="M3.3 7.6 12 12.5l8.7-4.9"></path><path d="M12 22V12"></path></svg>
+            </div>
+            <div class="senseng-vp-text">
+              <h3>Clear Assortment Framing</h3>
+              <p>Emphasizes shelf-ready packaging, gift-ready presentation, and retail cues so buyers can compare line items with maximum efficiency.</p>
+            </div>
+          </div>
+          <div class="senseng-vp-item wr-card-hover" data-reveal="fade-up" style="transition-delay: 0.20s;">
+            <div class="senseng-vp-icon" style="background:#c8f5e9;color:#11a886;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg>
+            </div>
+            <div class="senseng-vp-text">
+              <h3>Quality & Information Transparency</h3>
+              <p>Dimensions, materials, and certificates are fully verified, providing transparent spec sheets for frictionless import customs clearance.</p>
+            </div>
+          </div>
+        </div>
+        ${renderProductGrid8('Our Featured Collections', true, true)}
+      `;
+    })() : `
       <div data-wr-hero class="senseng-about-hero" data-reveal="fade-up">
         <div class="senseng-about-hero-inner">
           <div class="senseng-reference-scene" aria-hidden="true"><img src="/templates/senseng/about-reference.jpg" alt=""></div>
@@ -680,7 +798,6 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
               <span>Send a wholesale inquiry</span>
             </a>
           </div>
-
         </div>
       </div>
       <div class="senseng-value-props">

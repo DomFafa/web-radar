@@ -1,6 +1,7 @@
 import type { Product } from '../../shared/model';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { CANDY_DEFAULT_PRODUCTS, getCandyProducts } from './sensengCandy';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
 
 export function renderWonderHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
@@ -553,6 +554,119 @@ export function renderWonderDetail(ctx: ThemeContext): string {
 
 export function renderWonderAbout(ctx: ThemeContext): string {
   const isZh = (ctx.lang as string) === 'zh';
+  const company = ctx.draft.company;
+  const { path, navAttrs } = ctx;
+
+  const hasCustomAbout = Boolean(
+    company.aboutHighlights ||
+    company.aboutStory ||
+    company.aboutImageAssetId ||
+    company.aboutHeadline
+  );
+
+  if (hasCustomAbout) {
+    const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'));
+    const headline = getAboutHeadline(company, isZh ? '让触觉成为治愈生活的一束温暖微光' : 'Crafting Tactile Solace for Modern Hearts');
+    const storyParas = getAboutStoryParagraphs(
+      company,
+      isZh
+        ? 'Senseng 玩具工坊融合了北欧现代极简美学与高精尖工贸制造工艺。我们致力于重新定义日常触觉玩具体验，不仅让孩子们享受无毒纯净的探索快乐，也让成年人在忙碌节奏中拥有一座随身携带的心灵绿洲。'
+        : 'Senseng Workshop brings together Nordic aesthetic minimalism and rigorous export toy manufacturing. We create tactile companions that nurture fine motor skills in young explorers while offering gentle grounding mindfulness to busy adults.',
+    );
+    const stats = parseAboutHighlights(company.aboutHighlights, [
+      { value: '10,000 m²', num: 10000, suffix: ' m²', label: isZh ? '洁净车间面积' : 'Factory Floor', desc: isZh ? '符合国际GMP洁净要求' : 'International cleanroom standard' },
+      { value: '1,200,000+', num: 1200000, suffix: '+', label: isZh ? '月均出海玩具产能' : 'Monthly Units', desc: isZh ? '高产能自动化灌装' : 'High-throughput injection lines' },
+      { value: '60+', num: 60, suffix: '+', label: isZh ? '出口合作国家' : 'Export Destinations', desc: isZh ? '直通欧美亚主流市场' : 'Global retail partners' },
+      { value: '100%', num: 100, suffix: '%', label: isZh ? '全检出库合格率' : 'Pass Rate', desc: isZh ? 'EN71/ASTM全项合规' : 'Zero-toxic compliant batches' },
+    ]);
+
+    return `
+    <main class="wr-inner wr-senseng-wonder-inner" data-wr-page="about" style="padding-top:100px;background:#fbf8f3;">
+      <section class="wrap" style="padding:40px 0 70px;">
+        <div class="about-split" data-reveal="fade-up" style="display:grid;grid-template-columns:1.15fr 1fr;gap:48px;align-items:center;margin-bottom:60px;">
+          <div>
+            <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.12em;text-transform:uppercase;">
+              ${isZh ? `工坊起源 · ${esc(company.name || 'SENSENG')}` : `OUR PHILOSOPHY · ${esc((company.name || 'SENSENG').toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+            </span>
+            <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.4rem);color:#264653;font-weight:900;margin:8px 0 20px;line-height:1.15;">
+              ${esc(headline)}
+            </h1>
+            <div style="color:#5c6b73;font-size:1.12rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+              ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#2a9d8f;color:#ffffff;font-weight:700;padding:14px 30px;border-radius:12px;font-size:0.95rem;text-decoration:none;">
+                ${isZh ? '发起外贸批发询盘 ↗' : 'Initiate Wholesale Inquiry ↗'}
+              </a>
+              ${company.capabilities ? `
+                <div style="padding:8px 16px;background:#e9f5f3;border:1px solid #cce8e3;border-radius:10px;color:#264653;font-size:0.88rem;font-weight:700;">
+                  🌿 ${esc(company.capabilities.slice(0, 45))}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          <div class="wr-card-hover" style="position:relative;border-radius:24px;overflow:hidden;border:2px solid #e7dcce;box-shadow:0 16px 36px rgba(38,70,83,0.1);">
+            <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.5s ease;">
+            <div style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:10px;padding:8px 16px;font-size:0.82rem;font-weight:800;color:#264653;box-shadow:0 4px 14px rgba(0,0,0,0.06);display:flex;align-items:center;gap:6px;">
+              <span>🌱 ${esc(company.type === 'factory' ? (isZh ? '北欧极简质造工坊' : 'Verified Nordic Craft Facility') : (isZh ? '认证国际贸易伙伴' : 'Certified Global Partner'))}</span>
+            </div>
+          </div>
+        </div>
+
+        ${secondaryImg ? `
+          <div data-reveal="fade-up" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:36px;box-shadow:0 8px 24px rgba(38,70,83,0.05);margin-bottom:60px;">
+            <div style="border-radius:18px;overflow:hidden;" class="wr-card-hover">
+              <img src="${esc(secondaryImg)}" alt="${esc(company.name)} workshop" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div>
+              <span style="font-size:0.8rem;font-weight:800;color:#2a9d8f;letter-spacing:0.08em;text-transform:uppercase;">${isZh ? '工匠精神与制造规范' : 'WORKSHOP STANDARDS'}</span>
+              <h2 style="font-size:1.8rem;font-weight:900;color:#264653;margin:8px 0 14px;">${isZh ? '严选食品级材质 · 纯粹安心触觉' : 'Artisan Precision Meets Rigorous Compliance'}</h2>
+              <p style="color:#5c6b73;font-size:1rem;line-height:1.7;margin:0 0 18px;">
+                ${esc(company.capabilities || (isZh ? '我们采用严苛的北欧环保设计准则与自动化精密合模工艺，所有批次均遵循国际安全毒理检测。' : 'Combining Scandinavian minimalist ergonomics with multi-stage QA to deliver pure, tactile tranquility.'))}
+              </p>
+              ${company.certifications ? `
+                <div style="background:#f4f9f8;border-left:4px solid #2a9d8f;padding:12px 16px;border-radius:0 10px 10px 0;">
+                  <strong style="color:#2a9d8f;font-size:0.85rem;display:block;">${isZh ? '合规与资质认证' : 'Verified Accreditations'}</strong>
+                  <span style="color:#264653;font-size:0.92rem;font-weight:700;">${esc(company.certifications)}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        ` : ''}
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:60px;">
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">🌿</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '天然无毒环保' : 'Pure & Non-Toxic'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '全线产品通过国际权威毒理与重金属迁移检验，零异味零负担。' : 'Certified against international toxicology limits with zero odor and zero plasticizer bleed.'}</p>
+          </div>
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">📐</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '人体工学阻尼' : 'Tactile Ergonomics'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '科学调校软硬度与回弹时间，给掌心恰到好处的充实感。' : 'Precisely calibrated resistance curves to comfortably cradle palm anatomy without fatigue.'}</p>
+          </div>
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:20px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">📦</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '可持续包装' : 'Eco Packaging'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '采用环保纸板与大豆油墨印刷，向减少环境塑料足迹迈进。' : 'FSC paperboard boxes printed with soy inks, minimizing our collective environmental footprint.'}</p>
+          </div>
+        </div>
+
+        <div style="background:#264653;color:#ffffff;border-radius:24px;padding:50px 40px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
+          <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 12px;">${isZh ? '外贸制造与出口实力' : 'Global Export Performance'}</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-top:36px;">
+            ${stats.map((s) => `
+              <div>
+                <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                <div style="font-size:0.9rem;opacity:0.85;margin-top:4px;">${esc(s.label)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    </main>
+  `;
+  }
 
   return `
     <main class="wr-inner wr-senseng-wonder-inner" data-wr-page="about" style="padding-top:100px;background:#fbf8f3;">

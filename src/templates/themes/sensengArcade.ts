@@ -1,6 +1,7 @@
 import type { Product } from '../../shared/model';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { CANDY_DEFAULT_PRODUCTS, getCandyProducts } from './sensengCandy';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
 
 export function renderArcadeHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
@@ -534,6 +535,143 @@ export function renderArcadeAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const isZh = (ctx.lang as string) === 'zh';
   const company = draft.company;
+  const hasCustomAbout = !!(company.aboutHighlights || company.aboutStory || company.aboutImageAssetId || company.aboutHeadline);
+
+  if (hasCustomAbout) {
+    const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'));
+    const headline = getAboutHeadline(company, isZh ? '解压潮玩机能工坊 · 为全球快乐护航' : 'Engineered for Joy // The Science of Sensory Toys');
+    const storyParas = getAboutStoryParagraphs(
+      company,
+      isZh
+        ? `${company.name || 'SENSENG'} 专注于新一代触觉潮玩与解压科技公仔的研发设计与规模化智造。我们坚持将最严苛的欧美玩具安全标准与最具潮流感的赛博机能语言相融合。`
+        : `${company.name || 'SENSENG'} is dedicated to tactile sensory innovations and modern stress relief toys, bridging international safety standards with cyberpunk aesthetics.`,
+    );
+    const stats = parseAboutHighlights(company.aboutHighlights, [
+      { value: '10,000 m²', num: 10000, suffix: ' m²', label: isZh ? '洁净智造中枢' : 'Cleanroom Facility', desc: isZh ? '万级无尘智造标准' : 'Class 10,000 cleanroom specs' },
+      { value: '1,200,000+', num: 1200000, suffix: '+', label: isZh ? '月均峰值产能' : 'Monthly Unit Capacity', desc: isZh ? '高速精密模具注压' : 'High-speed automated molding' },
+      { value: '60+', num: 60, suffix: '+', label: isZh ? '全球出海口岸' : 'Global Export Ports', desc: isZh ? '覆盖全球主流消费区' : 'Seamless multi-port logistics' },
+      { value: '100%', num: 100, suffix: '%', label: isZh ? '国际安全合规率' : 'Safety Compliance Rate', desc: isZh ? 'EN71/ASTM全检合格' : 'Zero-defect lab certified' },
+    ]);
+
+    return `
+      <main class="wr-inner wr-senseng-arcade-inner" data-wr-page="about" style="padding-top:100px;background:#090d16;color:#f8fafc;min-height:100vh;">
+        <section class="wrap" style="padding:40px 0 80px;">
+          <div class="about-split" data-reveal="fade-up" style="display:grid;grid-template-columns:1.15fr 1fr;gap:48px;align-items:center;margin-bottom:60px;">
+            <div>
+              <span style="color:#00f5d4;font-family:monospace;font-size:0.85rem;font-weight:900;">
+                [ SYSTEM // SPEC_${esc((company.name || 'SENSENG').toUpperCase())} · EST. ${esc(company.establishedYear || '2020')} ]
+              </span>
+              <h1 style="font-size:clamp(2.4rem, 4.2vw, 3.4rem);font-weight:900;color:#ffffff;margin:8px 0 20px;line-height:1.15;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#94a3b8;font-size:1.1rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#00f5d4;color:#090d16;font-family:monospace;font-weight:900;padding:14px 28px;border-radius:4px;box-shadow:0 0 20px rgba(0,245,212,0.3);text-decoration:none;letter-spacing:0.04em;">
+                  &gt; INITIALIZE WHOLESALE PROTOCOL ↗
+                </a>
+                ${company.capabilities ? `
+                  <div style="font-family:monospace;font-size:0.85rem;color:#00f5d4;border:1px solid #1e293b;background:#0f172a;padding:8px 14px;border-radius:4px;">
+                    // ${esc(company.capabilities.slice(0, 40))}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <div class="wr-card-hover" style="position:relative;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:12px;box-shadow:0 0 35px rgba(0,245,212,0.12);">
+              <div style="position:relative;overflow:hidden;border-radius:8px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.5s ease;">
+                <div style="position:absolute;inset:0;border:1px solid rgba(0,245,212,0.25);pointer-events:none;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:4px 6px;font-family:monospace;font-size:0.75rem;color:#00f5d4;">
+                <span>// HUD_OVERLAY: VERIFIED</span>
+                <span style="color:#f72585;">STATUS: 100% OPERATIONAL</span>
+              </div>
+            </div>
+          </div>
+
+          ${secondaryImg ? `
+            <div data-reveal="fade-up" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;margin-bottom:60px;">
+              <div style="overflow:hidden;border-radius:8px;border:1px solid #1e293b;" class="wr-card-hover">
+                <img src="${esc(secondaryImg)}" alt="${esc(company.name)} manufacturing line" style="width:100%;height:100%;object-fit:cover;">
+              </div>
+              <div>
+                <span style="font-family:monospace;color:#f72585;font-weight:900;font-size:0.85rem;">[ FACILITY // AUTOMATION INFRASTRUCTURE ]</span>
+                <h2 style="font-size:1.8rem;font-weight:900;color:#ffffff;margin:8px 0 14px;">Next-Gen Precision Robotics & Testing</h2>
+                <p style="color:#94a3b8;font-size:0.95rem;line-height:1.7;margin:0 0 18px;">
+                  ${esc(company.capabilities || 'Engineered with automated silicone injection units, high-speed acoustic tuning pods, and laser metrology stations to eliminate dimensional variances.')}
+                </p>
+                ${company.certifications ? `
+                  <div style="background:#090d16;border-left:3px solid #00f5d4;padding:12px 16px;border-radius:0 4px 4px 0;">
+                    <strong style="color:#00f5d4;font-family:monospace;font-size:0.85rem;display:block;">[ ACCREDITED STANDARDS ]</strong>
+                    <span style="color:#f8fafc;font-size:0.92rem;font-weight:700;">${esc(company.certifications)}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- 3 Core Technological Pillars -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-bottom:70px;">
+            <div data-reveal="fade-up" class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
+              <div style="font-size:2.2rem;margin-bottom:14px;">🧪</div>
+              <h3 style="font-size:1.25rem;font-weight:900;color:#00f5d4;margin:0 0 10px;font-family:monospace;">01 // 100% FOOD-GRADE SILICONE</h3>
+              <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0;">
+                ${isZh ? '选用纯净无气味食品级高弹 TPR 与硅胶原料，彻底杜绝重金属、塑化剂与甲醛隐患。' : 'Purified food-grade polymers free from plasticizers, heavy metals, and toxic additives.'}
+              </p>
+            </div>
+
+            <div data-reveal="fade-up" class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
+              <div style="font-size:2.2rem;margin-bottom:14px;">🧬</div>
+              <h3 style="font-size:1.25rem;font-weight:900;color:#f72585;margin:0 0 10px;font-family:monospace;">02 // ACOUSTIC MICRO-BEADS</h3>
+              <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0;">
+                ${isZh ? '独创微爆珠流体阻尼技术，手指揉捏发出细密治愈的爆破音浪，形成视听触三重释压闭环。' : 'Patented micro-bead resonance offering crisp auditory feedback and tactile dampening.'}
+              </p>
+            </div>
+
+            <div data-reveal="fade-up" class="wr-arcade-card wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:32px;">
+              <div style="font-size:2.2rem;margin-bottom:14px;">🌐</div>
+              <h3 style="font-size:1.25rem;font-weight:900;color:#38bdf8;margin:0 0 10px;font-family:monospace;">03 // GLOBAL EXPORT COMPLIANCE</h3>
+              <p style="font-size:0.92rem;color:#94a3b8;line-height:1.65;margin:0;">
+                ${isZh ? '全线产品常年具备欧盟 CE、EN71 及美标 ASTM F963、CPSIA 检测报告，保障全球合规清关。' : 'Comprehensive lab test reports supporting seamless export clearance across Europe, America, and Asia.'}
+              </p>
+            </div>
+          </div>
+
+          <!-- Dynamic Laser Metrics & Timeline -->
+          <div data-reveal="fade-up" class="wr-card-hover" style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:40px;margin-bottom:60px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-bottom:36px;border-bottom:1px solid #1e293b;padding-bottom:30px;">
+              ${stats.map((s) => `
+                <div>
+                  <div style="font-size:2.4rem;font-weight:900;color:#00f5d4;font-family:monospace;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                  <div style="font-size:0.88rem;color:#94a3b8;font-family:monospace;margin-top:4px;">${esc(s.label)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <h2 style="font-size:1.4rem;font-weight:900;color:#ffffff;font-family:monospace;margin:0 0 24px;">
+              // EVOLUTION TIMELINE // 2018 - 2026
+            </h2>
+            <div style="display:grid;gap:20px;border-left:2px solid #00f5d4;padding-left:24px;margin-left:12px;">
+              <div>
+                <span style="font-family:monospace;color:#00f5d4;font-weight:900;">2018 · THE GENESIS</span>
+                <p style="color:#94a3b8;font-size:0.92rem;margin:4px 0 0;">${isZh ? '工坊初创，首创高弹慢回弹配方在海外潮玩社区走红。' : 'First experimental formula developed, viral across global sensory toy communities.'}</p>
+              </div>
+              <div>
+                <span style="font-family:monospace;color:#f72585;font-weight:900;">2022 · CLEANROOM EXPANSION</span>
+                <p style="color:#94a3b8;font-size:0.92rem;margin:4px 0 0;">${isZh ? '落成 10,000㎡ 万级洁净智能制造中心，月产能突破 100 万件。' : 'Expanded to 10,000m² cleanroom facilities, crossing 1M monthly unit capacity.'}</p>
+              </div>
+              <div>
+                <span style="font-family:monospace;color:#38bdf8;font-weight:900;">2026 · CYBER SENSORY ERA</span>
+                <p style="color:#94a3b8;font-size:0.92rem;margin:4px 0 0;">${isZh ? '全面推出温感变色、微爆珠声学振动与机能潮玩全系列产品。' : 'Launching next-gen thermochromic, soundwave resonance, and cyber sensory product lines.'}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    `;
+  }
 
   return `
     <main class="wr-inner wr-senseng-arcade-inner" data-wr-page="about" style="padding-top:100px;background:#090d16;color:#f8fafc;min-height:100vh;">

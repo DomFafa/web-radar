@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
 
 export function renderToysHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -220,10 +221,16 @@ export function renderToysHome(ctx: ThemeContext): string {
 }
 
 export function renderToysAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
     about: 'At Juno Toys, we believe childhood is sacred. Every toy we create undergoes rigorous multi-stage safety testing to spark curiosity, motor skills, and joyful family memories.',
   };
+
+  const headline = company.aboutHeadline || 'Handcrafted Joy for Curious Minds';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
 
   const heroHtml = `
     <section class="juno-inner-hero" style="background:linear-gradient(135deg,#fef08a 0%,#fed7aa 50%,#fbcfe8 100%);color:#451a03;padding:80px 0 60px;position:relative;overflow:hidden;border-bottom:3px solid #fde047;">
@@ -233,7 +240,7 @@ export function renderToysAbout(ctx: ThemeContext): string {
           <span style="font-size:0.84rem;font-weight:900;color:#92400e;letter-spacing:0.06em;text-transform:uppercase;">THE JUNO WORKSHOP STORY</span>
         </div>
         <h1 style="font-size:clamp(2.6rem,5.5vw,4.4rem);line-height:1.08;font-weight:900;letter-spacing:-0.03em;color:#78350f;max-width:880px;margin:0 auto 20px;">
-          Handcrafted Joy for Curious Minds
+          ${esc(headline)}
         </h1>
         <p style="max-width:680px;color:#92400e;font-size:1.2rem;line-height:1.65;margin:0 auto;">
           ${esc(copy.about)}
@@ -242,7 +249,23 @@ export function renderToysAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:50px 0 30px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
+            <div style="font-size:2.8rem;font-weight:900;color:#f59e0b;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:4px;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.85rem;color:#92400e;margin-top:4px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:50px 0 30px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:26px;text-align:center;box-shadow:0 6px 16px rgba(245,158,11,0.06);">
@@ -277,12 +300,18 @@ export function renderToysAbout(ctx: ThemeContext): string {
           <h2 style="font-size:2.4rem;line-height:1.15;color:#78350f;font-weight:900;margin:10px 0 20px;">
             Designed to Nurture Wonder, Not Screens
           </h2>
-          <p style="color:#92400e;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
-            Juno Toys was born in a modest Scandinavian woodworking studio with a simple wooden rocking horse made for a newborn daughter. Frustrated by disposable plastic toys with harsh sounds and fragile hinges, we resolved to return to heirloom craftsmanship.
-          </p>
-          <p style="color:#92400e;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
-            Every contour is hand-sanded to a velvet-smooth touch, ensuring there are no sharp edges or splinters. Our finishes use food-grade plant oils and organic water-based pigments, making them entirely safe for teething and gentle exploring.
-          </p>
+          ${customStoryParas ? `
+            <div style="color:#92400e;font-size:1.05rem;line-height:1.75;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+          ` : `
+            <p style="color:#92400e;font-size:1.05rem;line-height:1.75;margin-bottom:20px;">
+              Juno Toys was born in a modest Scandinavian woodworking studio with a simple wooden rocking horse made for a newborn daughter. Frustrated by disposable plastic toys with harsh sounds and fragile hinges, we resolved to return to heirloom craftsmanship.
+            </p>
+            <p style="color:#92400e;font-size:1.05rem;line-height:1.75;margin:0 0 28px;">
+              Every contour is hand-sanded to a velvet-smooth touch, ensuring there are no sharp edges or splinters. Our finishes use food-grade plant oils and organic water-based pigments, making them entirely safe for teething and gentle exploring.
+            </p>
+          `}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
             <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:18px;padding:18px;">
               <strong style="color:#78350f;display:block;font-size:1rem;margin-bottom:4px;">🪵 FSC Certified Beech</strong>
@@ -296,6 +325,11 @@ export function renderToysAbout(ctx: ThemeContext): string {
         </div>
 
         <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#fffbeb;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+          ${customImg ? `
+            <div style="border-radius:20px;overflow:hidden;border:2px solid #fef08a;margin-bottom:20px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : ''}
           <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 20px;">Our Four Guarantees to Parents</h3>
           <div style="display:flex;flex-direction:column;gap:18px;">
             <div style="display:flex;gap:14px;align-items:flex-start;">

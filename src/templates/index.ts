@@ -23,6 +23,7 @@ import { renderMinimalHome, renderMinimalPage } from './themes/sensengMinimal';
 import { materialProductImage,materialsSensengBody,materialsSeo,materialsThemeStyle } from './materials-render';
 import { materialsRuntime } from '../shared/materials-runtime';
 import { isTypedMaterials, isTypedMaterialsSource, renderTypedMaterialsSite } from './materials-typed';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline } from './themes/aboutHelper';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -189,8 +190,89 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   }
   if (page === 'catalog')
     content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(company.name)}</span><h1>${esc(ui.catalog)}</h1></header><section class="chapter" style="padding-top:0">${cards(draft.products)}</section></div>${contactBand}`;
-  if (page === 'about')
-    content = `<div class="wrap"><header class="page-heading"><span class="eyebrow">${esc(ui.about)}</span><h1>${esc(company.name)}</h1><p>${esc(company.type === 'factory' ? ui.factory : ui.trader)}</p></header>${aboutText ? `<div class="about-full">${esc(aboutText)}</div>` : ''}${company.establishedYear || company.certifications || company.capabilities ? `<div class="about-highlights grid" style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">${company.establishedYear ? `<div style="background:rgba(0,0,0,0.02);padding:16px;border-radius:8px;border:1px solid #e5e7eb"><h4 style="margin:0 0 6px;font-size:13px;color:var(--brand)">ESTABLISHED</h4><p style="margin:0;font-weight:600">${esc(company.establishedYear)}</p></div>` : ''}${company.certifications ? `<div style="background:rgba(0,0,0,0.02);padding:16px;border-radius:8px;border:1px solid #e5e7eb"><h4 style="margin:0 0 6px;font-size:13px;color:var(--brand)">CERTIFICATIONS</h4><p style="margin:0;font-weight:600">${esc(company.certifications)}</p></div>` : ''}${company.capabilities ? `<div style="background:rgba(0,0,0,0.02);padding:16px;border-radius:8px;border:1px solid #e5e7eb"><h4 style="margin:0 0 6px;font-size:13px;color:var(--brand)">CAPABILITIES</h4><p style="margin:0;font-weight:600">${esc(company.capabilities)}</p></div>` : ''}</div>` : ''}</div>${hero}${contactBand}`;
+  if (page === 'about') {
+    const headline = getAboutHeadline(company, company.name);
+    const storyParas = getAboutStoryParagraphs(company, copy.about);
+    const aboutImg = asset(company.aboutImageAssetId) || poster || defaultProductImg;
+    const secondaryImg = asset(company.aboutSecondaryImageAssetId);
+    const stats = parseAboutHighlights(company.aboutHighlights, [
+      { value: company.establishedYear ? `${company.establishedYear}` : '10+ Yrs', num: company.establishedYear ? parseInt(company.establishedYear, 10) || 10 : 10, suffix: company.establishedYear ? '' : ' Yrs', label: 'Industry Experience', desc: 'Proven export reliability & track record' },
+      { value: '99.8%', num: 99.8, suffix: '%', label: 'Delivery On-Time Rate', desc: 'Strict milestone & quality assurance' },
+      { value: '50+', num: 50, suffix: '+', label: 'Export Markets', desc: 'Worldwide partner network across continents' },
+      { value: '100%', num: 100, suffix: '%', label: 'Quality Compliance', desc: 'Rigorous manufacturing standards' },
+    ]);
+
+    const statsHtml = `
+      <div class="about-stats wrap" data-reveal="fade-up">
+        ${stats.map((s) => `
+          <div class="about-stat-card wr-card-hover" data-reveal="fade-up">
+            <div class="about-stat-val" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+            <div class="about-stat-label">${esc(s.label)}</div>
+            ${s.desc ? `<div class="about-stat-desc">${esc(s.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    const secondaryHtml = secondaryImg ? `
+      <section class="about-secondary-grid wrap" data-reveal="fade-up">
+        <div class="about-media-box wr-card-hover">
+          <img src="${esc(secondaryImg)}" alt="${esc(company.name)} facility" loading="lazy">
+        </div>
+        <div>
+          <span class="eyebrow">${esc(ui.about)} · CAPABILITIES</span>
+          <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);margin:12px 0 16px;">Precision Manufacturing & Scalable Delivery</h2>
+          <p style="font-size:1.05rem;line-height:1.75;opacity:0.85;">${esc(company.capabilities || 'State-of-the-art facility equipped for high-throughput precision, strict batch testing, and streamlined global fulfillment.')}</p>
+          ${company.certifications ? `
+            <div style="margin-top:20px;padding:16px;background:var(--paper);border-radius:0 8px 8px 0;border:1px solid var(--line);border-left:4px solid var(--brand);">
+              <strong style="display:block;font-size:0.85rem;text-transform:uppercase;color:var(--brand);margin-bottom:4px;">Verified Certifications</strong>
+              <span style="font-size:0.92rem;font-weight:600;">${esc(company.certifications)}</span>
+            </div>
+          ` : ''}
+        </div>
+      </section>
+    ` : '';
+
+    content = `
+      <div class="wrap">
+        <header class="page-heading" data-reveal="fade-up">
+          <span class="eyebrow">${esc(ui.about)} · ${esc(company.type === 'factory' ? ui.factory : ui.trader)}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}</span>
+          <h1>${esc(headline)}</h1>
+          ${copy.subtitle ? `<p>${esc(copy.subtitle)}</p>` : ''}
+        </header>
+        <section class="about-split" data-reveal="fade-up">
+          <div>
+            <span class="eyebrow" style="color:var(--brand);">${esc(company.name)}</span>
+            <h2 style="margin:12px 0 20px;">${esc(company.slogan || 'Dedicated to Quality, Reliability & Partnership')}</h2>
+            <div style="display:flex;flex-direction:column;gap:16px;font-size:1.05rem;line-height:1.8;opacity:.9;">
+              ${storyParas.length > 0 ? storyParas.map((p) => `<p>${esc(p)}</p>`).join('') : `<p>${esc(aboutText || company.description)}</p>`}
+            </div>
+            ${company.capabilities ? `
+              <div style="margin-top:24px;padding:18px 22px;background:var(--soft);border-radius:8px;border:1px solid var(--line);">
+                <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.08em;color:var(--brand);text-transform:uppercase;">Core Competence & Capability</div>
+                <div style="margin-top:6px;font-size:0.95rem;font-weight:550;">${esc(company.capabilities)}</div>
+              </div>
+            ` : ''}
+            <div style="margin-top:28px;">
+              <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${esc(ui.inquire)} <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </div>
+          <div class="about-media-box wr-card-hover" data-reveal="fade-up">
+            <img src="${esc(aboutImg)}" alt="${esc(company.name)}" loading="lazy">
+            <div class="about-badge-floating">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brand);"></span>
+              <span>${esc(company.type === 'factory' ? 'Direct Factory Exporter' : 'Established Trading Partner')}</span>
+            </div>
+          </div>
+        </section>
+      </div>
+      ${statsHtml}
+      ${secondaryHtml}
+      ${contactBand}
+    `;
+  }
   if (page === 'detail') {
     const p = draft.products.find((item) => item.id === options.productId);
     content = p

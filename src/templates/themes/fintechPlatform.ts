@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
 
 export function renderFintechHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -261,9 +262,15 @@ export function renderFintechHome(ctx: ThemeContext): string {
 }
 
 export function renderFintechAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+  const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
+
+  const headline = company.aboutHeadline || 'Institutional Capital Infrastructure & Governance';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const aboutText = copy?.about || company.description || 'Our financial management platform enables cross-border enterprises to eliminate transaction latency, forecast treasury cash flows, and safeguard assets with tier-1 cryptographic security.';
 
   const heroHtml = `
@@ -274,7 +281,7 @@ export function renderFintechAbout(ctx: ThemeContext): string {
           <span style="font-size:0.82rem;font-weight:700;color:#e0f2fe;letter-spacing:0.06em;">CAPITAL GOVERNANCE & COMPLIANCE · EST. ${esc(company.establishedYear || '2018')}</span>
         </div>
         <h1 style="font-size:clamp(2.4rem,4.8vw,4rem);line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 20px;color:#ffffff;">
-          Institutional Capital Infrastructure & Governance
+          ${esc(headline)}
         </h1>
         <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#94a3b8;margin:0;">
           ${esc(copy?.subtitle || 'Empowering global corporations and financial institutions with unified liquidity, algorithmic foreign exchange hedging, and automated multi-currency settlements.')}
@@ -283,7 +290,23 @@ export function renderFintechAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const kpiHtml = `
+  const kpiHtml = customHighlights ? `
+    <section class="wrap" style="padding:48px 0 32px;" data-reveal="fade-up">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0284c7;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+            <div style="font-size:2.2rem;color:#0284c7;font-weight:900;letter-spacing:-0.03em;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:700;margin-top:6px;color:#0f172a;font-size:1.05rem;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.88rem;color:#64748b;margin-top:6px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-top:3px solid #0284c7;border-radius:12px;padding:26px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
@@ -317,8 +340,10 @@ export function renderFintechAbout(ctx: ThemeContext): string {
           <span class="eyebrow" style="color:#0284c7;font-weight:700;">INSTITUTIONAL HERITAGE</span>
           <h2 style="font-size:2.2rem;color:#0f172a;margin:12px 0 20px;line-height:1.2;">Eliminating Cross-Border Capital Latency and Friction</h2>
           <div style="color:#475569;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-            <p>${esc(aboutText)}</p>
-            <p>Our infrastructure operates as a non-custodial and segregated fiduciary layer connecting multinational treasuries directly to central bank real-time payment rails.</p>
+            ${customStoryParas ? customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('') : `
+              <p>${esc(aboutText)}</p>
+              <p>Our infrastructure operates as a non-custodial and segregated fiduciary layer connecting multinational treasuries directly to central bank real-time payment rails.</p>
+            `}
           </div>
           ${company.certifications ? `
             <div style="margin-top:24px;padding:20px;background:#f8fafc;border-left:4px solid #0284c7;border-radius:0 8px 8px 0;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
@@ -328,7 +353,13 @@ export function renderFintechAbout(ctx: ThemeContext): string {
           ` : ''}
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px;box-shadow:0 6px 20px rgba(0,0,0,0.03);">
-          <div style="font-size:2rem;color:#0284c7;margin-bottom:16px;">🏛️</div>
+          ${customImg ? `
+            <div style="border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:18px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : `
+            <div style="font-size:2rem;color:#0284c7;margin-bottom:16px;">🏛️</div>
+          `}
           <h3 style="color:#0f172a;font-size:1.35rem;margin:0 0 10px;">Fiduciary Security & Segregation</h3>
           <p style="color:#64748b;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">All corporate funds are isolated in bankruptcy-remote accounts with tier-1 global clearing banks.</p>
           <div style="display:flex;flex-direction:column;gap:12px;">

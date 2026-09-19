@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
 
 export function renderSaasHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -207,6 +208,12 @@ export function renderSaasAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
+
+  const headline = company.aboutHeadline || 'Empowering Scalable, Autonomous Workflows';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const aboutText = copy?.about || company.description || 'We build enterprise-grade automation infrastructure that connects data pipelines, accelerates conversions, and reduces operational overhead.';
 
   const heroHtml = `
@@ -217,7 +224,7 @@ export function renderSaasAbout(ctx: ThemeContext): string {
           <span style="font-size:0.8rem;font-weight:700;color:#bef264;letter-spacing:0.06em;">AUTONOMOUS WORKFLOW OS · EST. ${esc(company.establishedYear || '2021')}</span>
         </div>
         <h1 style="font-size:clamp(2.4rem,4.8vw,4rem);line-height:1.12;font-weight:800;letter-spacing:-0.03em;margin:0 0 20px;color:#ffffff;">
-          Empowering Scalable, Autonomous Workflows
+          ${esc(headline)}
         </h1>
         <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#94a3b8;margin:0;">
           ${esc(copy?.subtitle || 'Connecting heterogeneous cloud data pipelines, accelerating event conversions, and eliminating repetitive operational friction.')}
@@ -226,7 +233,23 @@ export function renderSaasAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const metricsHtml = `
+  const metricsHtml = customHighlights ? `
+    <section class="wrap" style="padding:48px 0 32px;" data-reveal="fade-up">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
+            <div style="font-size:2.4rem;font-weight:900;color:#bef264;letter-spacing:-1px;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-size:0.9rem;color:#94a3b8;margin-top:4px;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.8rem;color:#64748b;margin-top:4px;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:48px 0 32px;" data-reveal="fade-up">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;">
         <div class="wr-card-hover" data-reveal="fade-up" style="background:#121826;border:1px solid #1e293b;border-radius:16px;padding:32px;">
@@ -256,8 +279,10 @@ export function renderSaasAbout(ctx: ThemeContext): string {
           <span class="eyebrow" style="color:#bef264;font-weight:700;">OUR ORIGIN & PURPOSE</span>
           <h2 style="font-size:2.2rem;color:#f8fafc;margin:12px 0 20px;line-height:1.2;">Architected to Replace Repetitive Drag With Intelligent Velocity</h2>
           <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-            <p>${esc(aboutText)}</p>
-            <p>From initial trigger payload ingestion to cross-platform reconciliation, our infrastructure eliminates data fragmentation across globally distributed tech stacks.</p>
+            ${customStoryParas ? customStoryParas.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('') : `
+              <p>${esc(aboutText)}</p>
+              <p>From initial trigger payload ingestion to cross-platform reconciliation, our infrastructure eliminates data fragmentation across globally distributed tech stacks.</p>
+            `}
           </div>
           ${company.capabilities ? `
             <div style="margin-top:24px;padding:20px;background:#121826;border-left:4px solid #bef264;border-radius:0 8px 8px 0;">
@@ -267,7 +292,13 @@ export function renderSaasAbout(ctx: ThemeContext): string {
           ` : ''}
         </div>
         <div style="background:#121826;border:1px solid #1e293b;border-radius:20px;padding:36px;text-align:center;">
-          <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:16px;background:rgba(190,242,100,0.12);color:#bef264;font-size:2rem;margin-bottom:20px;">⚡</div>
+          ${customImg ? `
+            <div style="border-radius:12px;overflow:hidden;border:1px solid #334155;margin-bottom:18px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : `
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:16px;background:rgba(190,242,100,0.12);color:#bef264;font-size:2rem;margin-bottom:20px;">⚡</div>
+          `}
           <h3 style="color:#f8fafc;font-size:1.4rem;margin:0 0 10px;">High-Concurrency Event Mesh</h3>
           <p style="color:#94a3b8;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Sub-millisecond routing across multitenant clusters with automated backoff and self-healing consumer groups.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;">

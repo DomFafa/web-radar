@@ -1,4 +1,5 @@
 import { esc, safeUrl, type ThemeContext } from './types';
+import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
 
 export function renderAccountingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -233,9 +234,15 @@ export function renderAccountingHome(ctx: ThemeContext): string {
 }
 
 export function renderAccountingAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs } = ctx;
+  const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
+
+  const headline = company.aboutHeadline || 'Accredited Accounting, Tax & Corporate Advisory';
+  const customImg = company.aboutImageAssetId ? asset(company.aboutImageAssetId) : '';
+  const customHighlights = company.aboutHighlights ? parseAboutHighlights(company.aboutHighlights) : null;
+  const customStoryParas = company.aboutStory ? getAboutStoryParagraphs(company) : null;
+
   const aboutText = copy?.about || company.description || 'With over two decades of accredited excellence, our certified public accountants and tax attorneys provide bulletproof compliance, proactive wealth preservation, and transparent financial stewardship.';
 
   const heroHtml = `
@@ -245,7 +252,7 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
           <span style="font-size:0.8rem;font-weight:700;color:#fdf1f3;letter-spacing:0.1em;text-transform:uppercase;">ACCREDITED CPA PRACTICE · EST. ${esc(company.establishedYear || '1998')}</span>
         </div>
         <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.4rem,4.8vw,4.2rem);line-height:1.12;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;color:#ffffff;">
-          Accredited Accounting, Tax & Corporate Advisory
+          ${esc(headline)}
         </h1>
         <p style="max-width:760px;font-size:1.2rem;line-height:1.7;color:#d1d5db;margin:0;">
           ${esc(copy?.subtitle || 'Strategic wealth management, cross-border corporate structuring, and rigorous tax compliance for expanding enterprises and high-net-worth families.')}
@@ -254,7 +261,23 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
     </section>
   `;
 
-  const statsHtml = `
+  const statsHtml = customHighlights ? `
+    <section class="wrap" style="padding:48px 0 32px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+        ${customHighlights.map((h) => `
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <div style="font-size:2.4rem;color:#d90a2c;font-weight:800;font-family:'Playfair Display',Georgia,serif;">
+              <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+              </span>
+            </div>
+            <div style="font-weight:700;margin-top:6px;color:#262626;font-size:1.05rem;">${esc(h.label)}</div>
+            ${h.desc ? `<div style="font-size:0.88rem;color:#666666;margin-top:6px;line-height:1.5;">${esc(h.desc)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : `
     <section class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#ffffff;border:1px solid #e8d8d9;border-top:3px solid #d90a2c;border-radius:4px;padding:26px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
@@ -288,8 +311,10 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
           <span class="eyebrow" style="color:#d90a2c;font-weight:700;">FIRM HERITAGE & PHILOSOPHY</span>
           <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:2.2rem;color:#262626;margin:12px 0 20px;line-height:1.2;">Proactive Tax Strategy Built on Uncompromising Integrity</h2>
           <div style="color:#4d4d4d;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-            <p>${esc(aboutText)}</p>
-            <p>Unlike standard reactive tax filing services, our partners maintain continuous quarterly audits, multi-jurisdiction nexus reviews, and strategic capital structuring to prevent fiscal vulnerabilities before they emerge.</p>
+            ${customStoryParas ? customStoryParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('') : `
+              <p>${esc(aboutText)}</p>
+              <p>Unlike standard reactive tax filing services, our partners maintain continuous quarterly audits, multi-jurisdiction nexus reviews, and strategic capital structuring to prevent fiscal vulnerabilities before they emerge.</p>
+            `}
           </div>
           ${company.certifications ? `
             <div style="margin-top:24px;padding:20px;background:#fdf1f3;border-left:4px solid #d90a2c;border-radius:0 4px 4px 0;">
@@ -299,7 +324,13 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
           ` : ''}
         </div>
         <div style="background:#ffffff;border:1px solid #e8d8d9;border-radius:6px;padding:36px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
-          <div style="font-size:2rem;color:#d90a2c;margin-bottom:16px;">⚖️</div>
+          ${customImg ? `
+            <div style="border-radius:4px;overflow:hidden;border:1px solid #e8d8d9;margin-bottom:18px;">
+              <img src="${esc(customImg)}" alt="${esc(company.name)}" style="width:100%;height:200px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+          ` : `
+            <div style="font-size:2rem;color:#d90a2c;margin-bottom:16px;">⚖️</div>
+          `}
           <h3 style="font-family:'Playfair Display',Georgia,serif;color:#262626;font-size:1.35rem;margin:0 0 10px;">Fiduciary Duty & Transparency</h3>
           <p style="color:#666666;font-size:0.95rem;line-height:1.6;margin:0 0 24px;">Our practice adheres to the highest statutory accounting ethics, ensuring your business preserves wealth legally and strategically.</p>
           <div style="display:flex;flex-direction:column;gap:12px;">
