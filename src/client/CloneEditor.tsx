@@ -30,7 +30,7 @@ const ROLE_LABELS: Record<CloneUiImageRole, string> = {
   asset: '🎨 核心素材 (Asset)',
 };
 
-export function CloneEditor({
+export default function CloneEditor({
   onActivityChange,
   projectId,
   testMode,

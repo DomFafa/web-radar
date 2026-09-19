@@ -1,5 +1,5 @@
 import type { ProjectSummary, ProjectList } from '../shared/model';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Principal, Project, ServiceStatus, TemplateId } from '../shared/model';
 import {
   api,
@@ -26,9 +26,14 @@ import {
   ServiceList,
   dateTime,
 } from './components';
-import { Editor } from './Editor';
-import { Admin } from './Admin';
+const Editor = lazy(() => import('./Editor'));
+const Admin = lazy(() => import('./Admin'));
+import { ErrorBoundary } from './ErrorBoundary';
 import { nextDraftStep, projectStatus, workflowSteps } from './workflow';
+
+function ChunkFallback() {
+  return <div className="chunk-loading"><span className="chunk-spinner" />正在加载…</div>;
+}
 
 type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: string[] };
 const embedded = window.location.pathname === '/embed/product-radar';
@@ -273,15 +278,25 @@ export default function App() {
         </div>
       )}
       {selected && editorPrincipal ? (
-        <Editor
-          key={`${editorPrincipal.userId}:${editorPrincipal.workspaceId}:${selected}`}
-          projectId={selected}
-          principal={editorPrincipal}
-          services={config?.services || []}
-          testMode={!!config?.testMode}
-          embedded={embedded}
+        <ErrorBoundary
+          scope="section"
+          title="项目编辑器加载异常"
+          description="当前项目编辑过程中遇到未预期的错误。您可以点击重试，或安全返回网站项目列表。"
           onBack={() => setSelected(null)}
-        />
+          backText="返回项目列表"
+        >
+          <Suspense fallback={<ChunkFallback />}>
+            <Editor
+              key={`${editorPrincipal.userId}:${editorPrincipal.workspaceId}:${selected}`}
+              projectId={selected}
+              principal={editorPrincipal}
+              services={config?.services || []}
+              testMode={!!config?.testMode}
+              embedded={embedded}
+              onBack={() => setSelected(null)}
+            />
+          </Suspense>
+        </ErrorBoundary>
       ) : !needsLogin ? (
         <div className={`app-shell ${embedded ? 'is-embedded' : ''}`}>
           <aside className="sidebar">
@@ -347,7 +362,15 @@ export default function App() {
             {view === 'projects' ? (
               <Projects onOpen={setSelected} />
             ) : view === 'admin' ? (
-              <Admin />
+              <ErrorBoundary
+                scope="section"
+                title="平台管理加载异常"
+                description="平台管理组件遇到错误。您可以尝试重试，或切换回网站项目列表。"
+                onBack={() => setView('projects')}
+                backText="返回网站项目"
+              >
+                <Suspense fallback={<ChunkFallback />}><Admin /></Suspense>
+              </ErrorBoundary>
             ) : (
               <>
                 <div className="page-heading">

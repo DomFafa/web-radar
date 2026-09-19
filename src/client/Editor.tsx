@@ -8,7 +8,7 @@ import { UploadProgress, type UploadState } from './UploadProgress';
 import { hasCloneOutput } from '../shared/clone-output';
 import { liveJob } from './task-polling';
 import { samePublishedDraft } from '../shared/publication';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type {
   Asset,
   Company,
@@ -51,8 +51,9 @@ import {
 } from '../shared/site-design';
 import { briefConfirmed, plannedPages, resetConsultationForEdit } from '../shared/site-brief';
 import { draftChecklist, getWorkflowSteps, resolveWorkflowTab, type WorkflowStep } from './workflow';
-import { TemplateSelector } from './TemplateSelector';
-import { CloneEditor } from './CloneEditor';
+const TemplateSelector = lazy(() => import('./TemplateSelector'));
+const CloneEditor = lazy(() => import('./CloneEditor'));
+import { ErrorBoundary } from './ErrorBoundary';
 import { MaterialsEditor } from './MaterialsEditor';
 
 const languageNames: Record<Language, string> = {
@@ -87,7 +88,7 @@ const jobKinds: Record<string, string> = {
   email: '询盘邮件',
 };
 
-export function Editor({
+export default function Editor({
   projectId,
   principal,
   services,
@@ -169,6 +170,17 @@ export function Editor({
     baseRef = useRef<Project | null>(null),
     dirtyRef = useRef(false),
     busyRef = useRef('');
+  const savingRef = useRef(false);
+  savingRef.current = saving;
+  const uploadStateRef = useRef<UploadState | null>(null);
+  uploadStateRef.current = uploadState;
+  const cloneActivityRef = useRef(false);
+  cloneActivityRef.current = cloneActivity;
+  const [hasBackup, setHasBackup] = useState(false);
+
+  const hasUnsavedChanges = useCallback(() => {
+    return dirtyRef.current || savingRef.current || !!uploadStateRef.current || cloneActivityRef.current;
+  }, []);
   const actionRequests = useRef(new PendingOperations());
   projectRef.current = project;
   dirtyRef.current = dirty;
@@ -182,6 +194,10 @@ export function Editor({
     baseRef.current = next;
     dirtyRef.current = false;
     setDirty(false);
+    try {
+      sessionStorage.removeItem(`wr_draft_${next.id}`);
+    } catch {}
+    setHasBackup(false);
   }, []);
   const refresh = useCallback(
     async (force = false) => {
@@ -202,6 +218,17 @@ export function Editor({
         if (active) {
           setDetail(next);
           install(next.project);
+          try {
+            const raw = sessionStorage.getItem(`wr_draft_${next.project.id}`);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed?.draft && JSON.stringify(parsed.draft) !== JSON.stringify(next.project.draft)) {
+                setHasBackup(true);
+              } else {
+                sessionStorage.removeItem(`wr_draft_${next.project.id}`);
+              }
+            }
+          } catch {}
           const q = new URL(window.location.href).searchParams.get('tab') as Tab | null;
           setTab(resolveWorkflowTab(next.project.draft, q));
         }
@@ -242,14 +269,35 @@ export function Editor({
   }, [tab]);
   useEffect(() => {
     const prevent = (event: BeforeUnloadEvent) => {
-      if (dirtyRef.current) {
+      if (dirtyRef.current || savingRef.current || uploadStateRef.current || cloneActivityRef.current) {
         event.preventDefault();
         event.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', prevent);
-    return () => window.removeEventListener('beforeunload', prevent);
-  }, []);
+
+    try {
+      window.history.pushState({ wrEditor: projectId }, '', window.location.href);
+    } catch {}
+
+    const onPopState = () => {
+      if (dirtyRef.current || savingRef.current || uploadStateRef.current || cloneActivityRef.current) {
+        try {
+          window.history.pushState({ wrEditor: projectId }, '', window.location.href);
+        } catch {}
+        setLeaveOpen(true);
+      } else {
+        onBack();
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', prevent);
+      window.removeEventListener('popstate', onPopState);
+    };
+  }, [projectId, onBack]);
   useEffect(()=>{
     if(!dirty||!project||busy||conflict||autoSaveFailed.current===project||detail?.jobs.some(j=>j.kind==='clone'&&['queued','running','paused'].includes(j.status)))return;
     const timer=setTimeout(()=>{
@@ -286,6 +334,32 @@ export function Editor({
       setTab(mode === 'template' ? 'template' : 'clone-generate');
     }, '建站方式已保存，资料与素材已保留。');
   }
+  const restoreBackup = useCallback(() => {
+    try {
+      const raw = sessionStorage.getItem(`wr_draft_${projectId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.draft) {
+          update(() => parsed.draft);
+          if (parsed.name && projectRef.current) {
+            const next = { ...projectRef.current, name: parsed.name };
+            projectRef.current = next;
+            setProject(next);
+          }
+          setNotice('已恢复未保存的本地草稿修改。');
+        }
+      }
+    } catch {}
+    setHasBackup(false);
+  }, [projectId]);
+
+  const discardBackup = useCallback(() => {
+    try {
+      sessionStorage.removeItem(`wr_draft_${projectId}`);
+    } catch {}
+    setHasBackup(false);
+  }, [projectId]);
+
   function update(updater: (draft: Draft) => Draft) {
     const current = projectRef.current;
     if (!current) return;
@@ -298,6 +372,16 @@ export function Editor({
     dirtyRef.current = changed;
     setDirty(changed);
     setProject(next);
+    try {
+      if (changed) {
+        sessionStorage.setItem(
+          `wr_draft_${projectId}`,
+          JSON.stringify({ name: next.name, draft: next.draft, updatedAt: Date.now() }),
+        );
+      } else {
+        sessionStorage.removeItem(`wr_draft_${projectId}`);
+      }
+    } catch {}
   }
   function patch(fields: Partial<Draft>) {
     update((draft) => ({ ...draft, ...fields }));
@@ -652,7 +736,7 @@ export function Editor({
             正在打开网站工作室…
           </p>
         )}
-        <Button onClick={onBack}>
+        <Button onClick={() => (hasUnsavedChanges() ? setLeaveOpen(true) : onBack())}>
           <Icon name="back" />
           返回网站列表
         </Button>
@@ -701,7 +785,7 @@ export function Editor({
         <div className="editor-brand">
           <Button
             kind="quiet"
-            onClick={() => (dirty ? setLeaveOpen(true) : onBack())}
+            onClick={() => (hasUnsavedChanges() ? setLeaveOpen(true) : onBack())}
             aria-label="返回网站列表"
           >
             <Icon name="back" />
@@ -844,6 +928,21 @@ export function Editor({
           {uploadState && <UploadProgress state={uploadState} onCancel={() => uploadController.current?.abort()} />}
           {error && <Notice tone="error">{error}</Notice>}
           {notice && <Notice tone="success">{notice}</Notice>}
+          {hasBackup && (
+            <Notice tone="warning">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                <span>检测到上次会话中有未同步的本地草稿修改。</span>
+                <div style={{ display: 'inline-flex', gap: 8 }}>
+                  <Button kind="secondary" style={{ padding: '2px 10px', fontSize: 12 }} onClick={restoreBackup}>
+                    恢复草稿
+                  </Button>
+                  <Button kind="quiet" style={{ padding: '2px 8px', fontSize: 12 }} onClick={discardBackup}>
+                    忽略
+                  </Button>
+                </div>
+              </div>
+            </Notice>
+          )}
           {detail.project.version !== project.version && dirty && (
             <Notice tone="warning">
               服务器上已有更新。你的本地修改已保留，保存时会显示版本差异。
@@ -1214,32 +1313,50 @@ export function Editor({
             </>
           )}
           {tab === 'template' && (
-            project.materials&&draft.materials?<MaterialsEditor projectId={project.id} draft={draft} disabled={!!busy||saving} onChange={patch} onUpload={upload} onPreview={openPreview}/>:<TemplateSelector
-              onPreview={(template) => {
-                const current = projectRef.current!;
-                setPreviewProject({ ...current, draft: { ...current.draft, buildBranch: 'template', template: template.id, brandColor: template.accentColor, cloneConfig: undefined, siteDesign: undefined } });
-                setPreviewOpen(true);
-              }}
-              draft={draft}
-              onUpdateDraft={(patchObj) => patch(patchObj)}
-              onProceedToPublish={() => void goTo('publish')}
-              onBackToBasics={() => void goTo('basics')}
-              onSwitchToClone={() => void switchBuildMode('clone')}
-            />
+            project.materials&&draft.materials?<MaterialsEditor projectId={project.id} draft={draft} disabled={!!busy||saving} onChange={patch} onUpload={upload} onPreview={openPreview}/>:(
+              <ErrorBoundary
+                scope="section"
+                title="模板选择器加载异常"
+                description="模板组件渲染出错，您可以点击重试。"
+              >
+                <Suspense fallback={<div className="chunk-loading"><span className="chunk-spinner" />正在加载…</div>}>
+                  <TemplateSelector
+                    onPreview={(template) => {
+                      const current = projectRef.current!;
+                      setPreviewProject({ ...current, draft: { ...current.draft, buildBranch: 'template', template: template.id, brandColor: template.accentColor, cloneConfig: undefined, siteDesign: undefined } });
+                      setPreviewOpen(true);
+                    }}
+                    draft={draft}
+                    onUpdateDraft={(patchObj) => patch(patchObj)}
+                    onProceedToPublish={() => void goTo('publish')}
+                    onBackToBasics={() => void goTo('basics')}
+                    onSwitchToClone={() => void switchBuildMode('clone')}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )
           )}
           {tab === 'clone-generate' && (
-            <CloneEditor
-              onActivityChange={setCloneActivity}
-              testMode={testMode}
-              projectId={project.id}
-              draft={draft}
-              onUpdateDraft={(patchObj) => patch(patchObj)}
-              onProceedToPublish={() => void goTo('publish')}
-              onBackToBasics={() => void goTo('basics')}
-              onRefresh={refresh}
-              onGenerate={generateClone}
-              onPublish={publishClone}
-            />
+            <ErrorBoundary
+              scope="section"
+              title="站点克隆器加载异常"
+              description="克隆组件渲染出错，您可以点击重试。"
+            >
+              <Suspense fallback={<div className="chunk-loading"><span className="chunk-spinner" />正在加载…</div>}>
+                <CloneEditor
+                  onActivityChange={setCloneActivity}
+                  testMode={testMode}
+                  projectId={project.id}
+                  draft={draft}
+                  onUpdateDraft={(patchObj) => patch(patchObj)}
+                  onProceedToPublish={() => void goTo('publish')}
+                  onBackToBasics={() => void goTo('basics')}
+                  onRefresh={refresh}
+                  onGenerate={generateClone}
+                  onPublish={publishClone}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
           {tab === 'consultation' && (
             <>
@@ -1921,22 +2038,65 @@ export function Editor({
         </Modal>
       )}
       {leaveOpen && (
-        <Modal title="还有未保存的修改" onClose={() => setLeaveOpen(false)}>
-          <p>保存后返回网站列表，可以稍后从相同草稿继续。</p>
+        <Modal
+          title={
+            uploadState
+              ? '素材正在上传中'
+              : saving
+                ? '正在保存草稿'
+                : '还有未保存的修改'
+          }
+          onClose={() => setLeaveOpen(false)}
+        >
+          {uploadState ? (
+            <p>
+              当前仍有素材文件正在上传（已完成 {Math.floor(uploadState.fraction * 100)}%）。如果现在返回，上传操作将被中止。
+            </p>
+          ) : saving ? (
+            <p>正在向服务器保存当前草稿，请稍候…</p>
+          ) : (
+            <p>您有尚未保存的修改。保存后返回网站列表，可以稍后从相同草稿继续。</p>
+          )}
           <div className="modal-actions">
-            <Button onClick={onBack}>放弃修改并返回</Button>
             <Button
-              kind="primary"
-              busy={busy === 'save-leave'}
-              onClick={() =>
-                action('save-leave', async () => {
-                  await save();
-                  onBack();
-                })
-              }
+              kind="danger"
+              onClick={() => {
+                dirtyRef.current = false;
+                setDirty(false);
+                if (uploadState) {
+                  uploadController.current?.abort();
+                  setUploadState(null);
+                }
+                try {
+                  sessionStorage.removeItem(`wr_draft_${projectId}`);
+                } catch {}
+                setHasBackup(false);
+                setLeaveOpen(false);
+                onBack();
+              }}
             >
-              保存并返回
+              放弃修改并返回
             </Button>
+            {!uploadState && (
+              <Button
+                kind="primary"
+                busy={busy === 'save-leave' || saving}
+                onClick={() =>
+                  action('save-leave', async () => {
+                    await save();
+                    try {
+                      sessionStorage.removeItem(`wr_draft_${projectId}`);
+                    } catch {}
+                    setHasBackup(false);
+                    setLeaveOpen(false);
+                    onBack();
+                  })
+                }
+              >
+                保存并返回
+              </Button>
+            )}
+            <Button onClick={() => setLeaveOpen(false)}>继续编辑</Button>
           </div>
         </Modal>
       )}
