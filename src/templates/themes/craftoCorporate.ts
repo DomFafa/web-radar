@@ -12,26 +12,26 @@ export function renderCraftoHome(ctx: ThemeContext): string {
     cta: 'Consult Corporate Advisory',
   };
 
-  // 1. Hero Section
+  // 1. Hero Section (Quartz White Corporate Canvas)
   const heroHtml = `
-    <section class="hero" aria-label="${esc(copy.headline)}" style="background:#0b1120;color:#ffffff;padding:95px 0 85px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(0,71,255,0.2) 0%,transparent 70%);pointer-events:none;"></div>
+    <section class="hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(180deg,#f4f5fa 0%,#ffffff 100%);color:#23253d;padding:95px 0 85px;position:relative;overflow:hidden;border-bottom:1px solid #e5e7eb;">
+      <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(87,88,223,0.12) 0%,transparent 70%);pointer-events:none;"></div>
       <div class="wrap hero-content" style="position:relative;z-index:2;">
-        <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(0,71,255,0.4);background:rgba(0,71,255,0.12);padding:7px 18px;margin-bottom:24px;">
-          <span style="display:inline-block;width:8px;height:8px;background:#0047ff;"></span>
-          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;">CRAFTO GLOBAL ENTERPRISE GROUP · ADVISORY 2026</span>
+        <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(87,88,223,0.3);background:rgba(87,88,223,0.08);padding:7px 18px;border-radius:6px;margin-bottom:24px;">
+          <span style="display:inline-block;width:8px;height:8px;background:#5758df;border-radius:2px;"></span>
+          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#5758df;">CRAFTO GLOBAL ENTERPRISE GROUP · ADVISORY 2026</span>
         </div>
-        <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(3rem, 6.2vw, 5.2rem);line-height:1.02;font-weight:900;letter-spacing:-0.04em;text-transform:uppercase;max-width:960px;margin:0 0 24px;">
+        <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(3rem, 6.2vw, 5.2rem);line-height:1.02;font-weight:900;letter-spacing:-0.04em;text-transform:uppercase;color:#23253d;max-width:960px;margin:0 0 24px;">
           ${esc(copy.headline)}
         </h1>
-        <p data-reveal="fade-up" style="max-width:680px;color:#94a3b8;font-size:1.22rem;line-height:1.65;margin:0 0 38px;">
+        <p data-reveal="fade-up" style="max-width:680px;color:#64748b;font-size:1.22rem;line-height:1.65;margin:0 0 38px;">
           ${esc(copy.subtitle)}
         </p>
         <div data-reveal="fade-up" style="display:flex;gap:16px;flex-wrap:wrap;">
-          <a class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.85rem;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+          <a class="button" style="background:#5758df;color:#ffffff;font-weight:800;border-radius:6px;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.85rem;box-shadow:0 4px 15px rgba(87,88,223,0.25);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
             ${esc(copy.cta || 'Consult Advisory')} ↗
           </a>
-          <a class="button" style="background:transparent;border:1px solid #334155;color:#ffffff;border-radius:0;padding:16px 32px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.85rem;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
+          <a class="button" style="background:#ffffff;border:1px solid #cbd5e1;color:#23253d;border-radius:6px;padding:16px 32px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.85rem;box-shadow:0 2px 8px rgba(0,0,0,0.04);" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
             Explore Capabilities →
           </a>
         </div>
@@ -42,27 +42,27 @@ export function renderCraftoHome(ctx: ThemeContext): string {
 
   // 2. Three Pillar Feature Strip directly below hero
   const pillarsHtml = `
-    <section id="pillars" style="background:#0f172a;border-top:1px solid #1e293b;border-bottom:1px solid #1e293b;color:#ffffff;padding:32px 0;">
+    <section id="pillars" style="background:#ffffff;border-bottom:1px solid #e5e7eb;color:#23253d;padding:36px 0;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;">
-          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">01</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:16px;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;">
+          <div style="font-size:1.8rem;color:#5758df;font-weight:900;line-height:1;">01</div>
           <div>
-            <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Enterprise Strategy</h4>
-            <p style="margin:0;color:#94a3b8;font-size:0.88rem;line-height:1.5;">Modernizing business models to navigate complex global geopolitical realities.</p>
+            <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:800;color:#23253d;text-transform:uppercase;letter-spacing:0.04em;">Enterprise Strategy</h4>
+            <p style="margin:0;color:#64748b;font-size:0.88rem;line-height:1.5;">Modernizing business models to navigate complex global geopolitical realities.</p>
           </div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;border-left:1px solid #1e293b;">
-          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">02</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:16px;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;">
+          <div style="font-size:1.8rem;color:#5758df;font-weight:900;line-height:1;">02</div>
           <div>
-            <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Cross-Border Governance</h4>
-            <p style="margin:0;color:#94a3b8;font-size:0.88rem;line-height:1.5;">Comprehensive risk oversight, regulatory compliance, and ESG audit assurance.</p>
+            <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:800;color:#23253d;text-transform:uppercase;letter-spacing:0.04em;">Cross-Border Governance</h4>
+            <p style="margin:0;color:#64748b;font-size:0.88rem;line-height:1.5;">Comprehensive risk oversight, regulatory compliance, and ESG audit assurance.</p>
           </div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:12px;border-left:1px solid #1e293b;">
-          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;line-height:1;">03</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="display:flex;align-items:flex-start;gap:16px;padding:16px;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;">
+          <div style="font-size:1.8rem;color:#5758df;font-weight:900;line-height:1;">03</div>
           <div>
-            <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:700;color:#f8fafc;text-transform:uppercase;letter-spacing:0.04em;">Digital Modernization</h4>
-            <p style="margin:0;color:#94a3b8;font-size:0.88rem;line-height:1.5;">Deploying autonomous enterprise architectures that unlock exponential productivity.</p>
+            <h4 style="margin:0 0 4px;font-size:1.05rem;font-weight:800;color:#23253d;text-transform:uppercase;letter-spacing:0.04em;">Digital Modernization</h4>
+            <p style="margin:0;color:#64748b;font-size:0.88rem;line-height:1.5;">Deploying autonomous enterprise architectures that unlock exponential productivity.</p>
           </div>
         </div>
       </div>
@@ -73,24 +73,24 @@ export function renderCraftoHome(ctx: ThemeContext): string {
   const metricsHtml = `
     <section class="wrap" style="padding:48px 0 32px;">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="500" data-suffix="+">500+</span></div>
-          <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Enterprise Deployments</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:2.8rem;font-weight:900;color:#5758df;letter-spacing:-1px;"><span data-counter="500" data-suffix="+">500+</span></div>
+          <div style="font-weight:800;color:#23253d;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Enterprise Deployments</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Proven institutional implementation track record across 42 countries.</div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="35" data-suffix="+">35+</span></div>
-          <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Countries & Regions</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:2.8rem;font-weight:900;color:#5758df;letter-spacing:-1px;"><span data-counter="35" data-suffix="+">35+</span></div>
+          <div style="font-weight:800;color:#23253d;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Countries & Regions</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Direct executive presence in New York, London, Zurich, Tokyo, and Singapore.</div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="98" data-suffix="%">98%</span></div>
-          <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Client Retention Rate</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:2.8rem;font-weight:900;color:#5758df;letter-spacing:-1px;"><span data-counter="98" data-suffix="%">98%</span></div>
+          <div style="font-weight:800;color:#23253d;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Client Retention Rate</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Multi-year advisory engagements with Fortune 500 board executives.</div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;">
-          <div style="font-size:2.8rem;font-weight:900;color:#0047ff;letter-spacing:-1px;"><span data-counter="45" data-prefix="$" data-suffix="B+">$45B+</span></div>
-          <div style="font-weight:800;color:#0f172a;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Market Cap Advised</div>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:2.8rem;font-weight:900;color:#5758df;letter-spacing:-1px;"><span data-counter="45" data-prefix="$" data-suffix="B+">$45B+</span></div>
+          <div style="font-weight:800;color:#23253d;margin-top:6px;font-size:1.05rem;text-transform:uppercase;">Market Cap Advised</div>
           <div style="font-size:0.86rem;color:#64748b;margin-top:6px;line-height:1.5;">Strategic guidance driving sustained enterprise shareholder value.</div>
         </div>
       </div>
@@ -103,10 +103,10 @@ export function renderCraftoHome(ctx: ThemeContext): string {
     <section class="wrap chapter" style="padding:60px 0;">
       <div class="section-top" style="margin-bottom:36px;">
         <div>
-          <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">STRATEGIC PRACTICES</span>
-          <h2 style="font-size:clamp(2rem, 3.5vw, 2.8rem);margin-top:8px;color:#0f172a;text-transform:uppercase;font-weight:900;">Core Executive Practices</h2>
+          <span class="eyebrow" style="color:#5758df;font-weight:800;letter-spacing:0.1em;">STRATEGIC BUSINESS UNITS</span>
+          <h2 style="font-size:clamp(2rem, 3.5vw, 2.8rem);margin-top:8px;color:#23253d;text-transform:uppercase;font-weight:900;">Advisory & Operational Practices</h2>
         </div>
-        <a class="text-link" style="color:#0047ff;font-weight:800;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
+        <a class="text-link" style="color:#5758df;font-weight:800;text-transform:uppercase;font-size:0.88rem;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
           ${esc(ui.allProducts)} ↗
         </a>
       </div>
@@ -114,21 +114,21 @@ export function renderCraftoHome(ctx: ThemeContext): string {
         ${products.map((p, idx) => {
           const t = translateProduct(p);
           const imgUrl = ctx.productMainImage(p);
-          const codes = ['P-01', 'P-02', 'P-03', 'P-04', 'P-05', 'P-06'];
+          const units = ['SBU-01', 'SBU-02', 'SBU-03', 'SBU-04', 'SBU-05', 'SBU-06'];
           return `
-            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;border-radius:0;padding:26px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
               <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                  <span style="font-size:0.8rem;font-weight:800;font-family:monospace;color:#0047ff;">${codes[idx % codes.length]}</span>
-                  <span style="font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;">Enterprise Unit</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                  <span style="font-size:0.8rem;font-weight:900;color:#5758df;letter-spacing:0.1em;">${units[idx % units.length]}</span>
+                  <span style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Institutional Mandate</span>
                 </div>
-                ${imgUrl ? `<div class="product-image" style="border-radius:0;overflow:hidden;margin-bottom:16px;max-height:180px;"><img src="${esc(imgUrl)}" alt="${esc(t.name)}" loading="lazy"></div>` : ''}
-                <h3 style="color:#0f172a;margin:0 0 10px;font-size:1.3rem;font-weight:800;text-transform:uppercase;">${esc(t.name)}</h3>
-                <p style="color:#64748b;line-height:1.6;font-size:0.92rem;margin:0 0 20px;">${esc(t.description || 'Institutional business unit dedicated to enterprise operational excellence.')}</p>
+                ${imgUrl ? `<div class="product-image" style="margin-bottom:16px;border-radius:4px;overflow:hidden;"><img src="${esc(imgUrl)}" alt="${esc(t.name)}" loading="lazy"></div>` : ''}
+                <h3 style="color:#23253d;margin:0 0 10px;font-size:1.3rem;font-weight:800;text-transform:uppercase;">${esc(t.name)}</h3>
+                <p style="color:#64748b;line-height:1.6;font-size:0.92rem;margin:0 0 20px;">${esc(t.description || 'Enterprise advisory mandate focused on operational governance and shareholder value.')}</p>
               </div>
               <div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:auto;">
-                <a class="text-link" style="color:#0047ff;font-weight:800;font-size:0.88rem;text-transform:uppercase;letter-spacing:0.05em;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
-                  Review Case Study →
+                <a class="text-link" style="color:#5758df;font-weight:800;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.04em;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
+                  View Mandate Brief →
                 </a>
               </div>
             </article>
@@ -138,116 +138,55 @@ export function renderCraftoHome(ctx: ThemeContext): string {
     </section>
   `;
 
-  // 5. Global Presence & Transformation Roadmap
-  const presenceHtml = `
-    <section class="wrap" style="padding:60px 0;border-top:1px solid #e5e7eb;">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-        <div data-reveal="fade-up">
-          <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">TRANSFORMATION FRAMEWORK</span>
-          <h2 style="font-size:2.4rem;line-height:1.12;color:#0f172a;margin:12px 0 20px;text-transform:uppercase;font-weight:900;">
-            Institutional Rigor at Global Scale
-          </h2>
-          <p style="color:#475569;font-size:1.05rem;line-height:1.75;margin-bottom:28px;">
-            We engineer organizational structures capable of sustaining compound advantages across market cycles. Our cross-disciplinary taskforces embed directly with executive leadership to implement decisive operational restructuring.
-          </p>
-          <div style="display:flex;flex-direction:column;gap:14px;">
-            <div style="display:flex;gap:14px;align-items:center;">
-              <div style="width:28px;height:28px;background:#0047ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">✓</div>
-              <div style="color:#1e293b;font-weight:600;font-size:0.95rem;">Multi-Jurisdictional Cross-Border Structuring</div>
-            </div>
-            <div style="display:flex;gap:14px;align-items:center;">
-              <div style="width:28px;height:28px;background:#0047ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">✓</div>
-              <div style="color:#1e293b;font-weight:600;font-size:0.95rem;">Supply Chain Decoupling & Sovereign Resilience</div>
-            </div>
-            <div style="display:flex;gap:14px;align-items:center;">
-              <div style="width:28px;height:28px;background:#0047ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">✓</div>
-              <div style="color:#1e293b;font-weight:600;font-size:0.95rem;">Capital Allocation & Shareholder Return Strategy</div>
-            </div>
-          </div>
-          <div style="margin-top:32px;">
-            <a class="button" style="background:#0f172a;color:#ffffff;border-radius:0;text-transform:uppercase;font-weight:800;font-size:0.85rem;" href="${path('about/index.html')}" ${navAttrs('about')}>
-              Review Institutional Credentials ↗
-            </a>
-          </div>
-        </div>
-
-        <div class="wr-hero-float wr-card-hover" data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;padding:36px;color:#ffffff;">
-          <h3 style="font-size:1.2rem;text-transform:uppercase;letter-spacing:0.08em;color:#93c5fd;margin:0 0 20px;">Global Command Hubs</h3>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-            <div style="border-left:2px solid #0047ff;padding-left:14px;">
-              <div style="font-weight:800;font-size:1rem;color:#f8fafc;">NEW YORK</div>
-              <div style="font-size:0.82rem;color:#94a3b8;margin-top:2px;">Wall Street Tower · Americas HQ</div>
-            </div>
-            <div style="border-left:2px solid #0047ff;padding-left:14px;">
-              <div style="font-weight:800;font-size:1rem;color:#f8fafc;">LONDON</div>
-              <div style="font-size:0.82rem;color:#94a3b8;margin-top:2px;">Bank Square · EMEA Advisory</div>
-            </div>
-            <div style="border-left:2px solid #0047ff;padding-left:14px;">
-              <div style="font-weight:800;font-size:1rem;color:#f8fafc;">ZURICH</div>
-              <div style="font-size:0.82rem;color:#94a3b8;margin-top:2px;">Bahnhofstrasse · Private Wealth</div>
-            </div>
-            <div style="border-left:2px solid #0047ff;padding-left:14px;">
-              <div style="font-weight:800;font-size:1rem;color:#f8fafc;">SINGAPORE</div>
-              <div style="font-size:0.82rem;color:#94a3b8;margin-top:2px;">Marina Bay · APAC Treasury</div>
-            </div>
-          </div>
-          <div style="margin-top:28px;padding-top:20px;border-top:1px solid #1e293b;font-size:0.85rem;color:#94a3b8;">
-            Direct telephone dispatch available 24/7 for emergency M&A transactions.
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-
-  // 6. Testimonials
+  // 5. Executive Endorsements
   const testimonialsHtml = `
     <section class="wrap" style="padding:60px 0;">
       <div data-reveal="fade-up" style="text-align:center;margin-bottom:36px;">
-        <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">EXECUTIVE ENDORSEMENTS</span>
-        <h2 style="font-size:2rem;color:#0f172a;text-transform:uppercase;font-weight:900;margin:8px 0;">Trusted by Fortune 500 Board Leadership</h2>
+        <span class="eyebrow" style="color:#5758df;font-weight:800;letter-spacing:0.12em;">EXECUTIVE ENDORSEMENTS</span>
+        <h2 style="font-size:2rem;color:#23253d;text-transform:uppercase;font-weight:900;margin:8px 0;">Trusted by Fortune 500 Board Leadership</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-          <div style="color:#0047ff;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
-          <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Crafto guided our multinational merger across three continents with unmatched legal and organizational precision."</p>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="color:#5758df;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
+          <p style="color:#475569;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Crafto guided our multinational merger across three continents with unmatched legal and organizational precision."</p>
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">EA</div>
-            <div><div style="font-weight:800;color:#0f172a;font-size:0.9rem;">Edward Anderson</div><div style="color:#64748b;font-size:0.8rem;">Chairman of the Board, Global Infrastructure plc</div></div>
+            <div style="width:40px;height:40px;background:#23253d;color:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">EA</div>
+            <div><div style="font-weight:800;color:#23253d;font-size:0.9rem;">Edward Anderson</div><div style="color:#64748b;font-size:0.8rem;">Chairman of the Board, Global Infrastructure plc</div></div>
           </div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-          <div style="color:#0047ff;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
-          <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Their digital modernization framework trimmed $180M in recurring IT overhead while increasing operational throughput by 40%."</p>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="color:#5758df;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
+          <p style="color:#475569;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"Their digital modernization framework trimmed $180M in recurring IT overhead while increasing operational throughput by 40%."</p>
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;background:#0047ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">MS</div>
-            <div><div style="font-weight:800;color:#0f172a;font-size:0.9rem;">Miriam Sommer</div><div style="color:#64748b;font-size:0.8rem;">Chief Strategy Officer, Zurich Heavy Industries</div></div>
+            <div style="width:40px;height:40px;background:#5758df;color:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">MS</div>
+            <div><div style="font-weight:800;color:#23253d;font-size:0.9rem;">Miriam Sommer</div><div style="color:#64748b;font-size:0.8rem;">Chief Strategy Officer, Zurich Heavy Industries</div></div>
           </div>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-          <div style="color:#0047ff;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
-          <p style="color:#334155;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"The definitive standard for institutional governance. Their strategic roadmap aligned our 14 business units seamlessly."</p>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+          <div style="color:#5758df;font-size:1.4rem;font-weight:900;margin-bottom:8px;">“</div>
+          <p style="color:#475569;line-height:1.7;font-size:0.95rem;margin:0 0 18px;">"The definitive standard for institutional governance. Their strategic roadmap aligned our 14 business units seamlessly."</p>
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">KK</div>
-            <div><div style="font-weight:800;color:#0f172a;font-size:0.9rem;">Kenji Kurata</div><div style="color:#64748b;font-size:0.8rem;">Managing Director, Asia-Pacific Holdings</div></div>
+            <div style="width:40px;height:40px;background:#334155;color:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;">KK</div>
+            <div><div style="font-weight:800;color:#23253d;font-size:0.9rem;">Kenji Kurata</div><div style="color:#64748b;font-size:0.8rem;">Managing Director, Asia-Pacific Holdings</div></div>
           </div>
         </div>
       </div>
     </section>
   `;
 
-  // 7. Contact / Advisory Band
+  // 6. Contact / Advisory Band
   const contactBandHtml = `
-    <section class="contact-band" style="background:#0047ff;color:#ffffff;padding:80px 0;">
+    <section class="contact-band" style="background:#f4f5fa;color:#23253d;padding:80px 0;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;">
       <div class="wrap" data-reveal="fade-up" style="display:flex;justify-content:space-between;align-items:center;gap:40px;flex-wrap:wrap;">
         <div>
-          <span class="eyebrow" style="color:#93c5fd;font-weight:800;letter-spacing:0.15em;">EXECUTIVE PARTNERSHIP</span>
-          <h2 style="font-size:2.4rem;margin:10px 0;max-width:680px;color:#ffffff;text-transform:uppercase;font-weight:900;">
+          <span class="eyebrow" style="color:#5758df;font-weight:800;letter-spacing:0.15em;">EXECUTIVE PARTNERSHIP</span>
+          <h2 style="font-size:2.4rem;margin:10px 0;max-width:680px;color:#23253d;text-transform:uppercase;font-weight:900;">
             Elevate your organization to enterprise excellence.
           </h2>
-          <p style="color:#dbeafe;font-size:1.1rem;margin:0;max-width:550px;">Initiate a confidential strategic dialogue with our senior managing directors.</p>
+          <p style="color:#64748b;font-size:1.1rem;margin:0;max-width:550px;">Initiate a confidential strategic dialogue with our senior managing directors.</p>
         </div>
         <div style="display:flex;gap:14px;flex-wrap:wrap;">
-          <a class="button" style="background:#ffffff;color:#0047ff;font-weight:900;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+          <a class="button" style="background:#5758df;color:#ffffff;font-weight:900;border-radius:6px;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;box-shadow:0 4px 15px rgba(87,88,223,0.25);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
             Initiate Executive Consultation ↗
           </a>
         </div>
@@ -255,7 +194,7 @@ export function renderCraftoHome(ctx: ThemeContext): string {
     </section>
   `;
 
-  return `${heroHtml}${pillarsHtml}${metricsHtml}${productsHtml}${presenceHtml}${testimonialsHtml}${contactBandHtml}`;
+  return `${heroHtml}${pillarsHtml}${metricsHtml}${productsHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
 function renderLegacyCraftoAbout(ctx: ThemeContext): string {
@@ -486,188 +425,148 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
     { value: '25+', num: 25, suffix: '+', label: isZh ? '董事会信赖与战略治理年限' : 'Years Executive Trust', desc: isZh ? '历经多轮经济周期的严苛检验' : 'Unbroken record of fiduciary responsibility and resilience' },
   ]);
 
-  // Anti-Blank Box Vector SVG: Global Multi-Screen Conglomerate Command Deck
+  // Anti-Blank Box Vector SVG: Quartz-White Global Fleet Command Deck (Light Corporate Matrix)
   const fleetSvg = `
-    <svg viewBox="0 0 720 460" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:block;background:#050914;">
+    <svg viewBox="0 0 720 460" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:block;background:#f4f5fa;">
       <defs>
-        <radialGradient id="craftoCommandGlow" cx="60%" cy="40%" r="70%">
-          <stop offset="0%" stop-color="#0e1e38" stop-opacity="0.95"/>
-          <stop offset="100%" stop-color="#03060f" stop-opacity="1"/>
+        <radialGradient id="craftoCommandLight" cx="60%" cy="40%" r="70%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#f0f2f8" stop-opacity="1"/>
         </radialGradient>
-        <linearGradient id="craftoLaser" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#0047ff" stop-opacity="0"/>
-          <stop offset="50%" stop-color="#38bdf8" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#0047ff" stop-opacity="0"/>
-        </linearGradient>
       </defs>
 
       <!-- Chassis Background -->
-      <rect width="720" height="460" fill="url(#craftoCommandGlow)"/>
-      <rect x="14" y="14" width="692" height="432" fill="none" stroke="#1e293b" stroke-width="1.5"/>
-      <rect x="20" y="20" width="680" height="420" fill="none" stroke="#0047ff" stroke-width="1" stroke-opacity="0.35"/>
+      <rect width="720" height="460" fill="url(#craftoCommandLight)"/>
+      <rect x="14" y="14" width="692" height="432" fill="none" stroke="#e2e8f0" stroke-width="1.5" rx="6"/>
+      <rect x="20" y="20" width="680" height="420" fill="none" stroke="#5758df" stroke-width="1" stroke-opacity="0.25" rx="4"/>
 
       <!-- Command Header -->
       <g transform="translate(36, 46)">
-        <circle cx="6" cy="6" r="4" fill="#38bdf8"/>
-        <text x="18" y="10" fill="#38bdf8" font-size="11" font-family="'Courier New',monospace" font-weight="700" letter-spacing="2">GLOBAL INDUSTRIAL FLEET COMMAND // CONGLOMERATE CENTRAL DECK</text>
-        <text x="520" y="10" fill="#64748b" font-size="10" font-family="'Courier New',monospace">TELEMETRY: ACTIVE</text>
-        <line x1="0" y1="20" x2="648" y2="20" stroke="#1e293b" stroke-width="1"/>
+        <circle cx="6" cy="6" r="4" fill="#5758df"/>
+        <text x="18" y="10" fill="#23253d" font-size="11" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800" letter-spacing="2">GLOBAL INDUSTRIAL FLEET COMMAND // CONGLOMERATE CENTRAL DECK</text>
+        <text x="520" y="10" fill="#5758df" font-size="10" font-family="'Plus Jakarta Sans',sans-serif" font-weight="700">TELEMETRY: ACTIVE</text>
+        <line x1="0" y1="20" x2="648" y2="20" stroke="#e2e8f0" stroke-width="1"/>
       </g>
 
       <!-- World Node Mesh & Vector Flight Paths (Panel A) -->
       <g transform="translate(36, 80)">
-        <!-- Node Grid Frame -->
-        <rect x="0" y="0" width="410" height="240" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
+        <rect x="0" y="0" width="410" height="240" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="6"/>
         
-        <!-- Radar Grid Lines -->
-        <line x1="0" y1="60" x2="410" y2="60" stroke="#0f172a" stroke-width="1"/>
-        <line x1="0" y1="120" x2="410" y2="120" stroke="#0f172a" stroke-width="1"/>
-        <line x1="0" y1="180" x2="410" y2="180" stroke="#0f172a" stroke-width="1"/>
-        <line x1="100" y1="0" x2="100" y2="240" stroke="#0f172a" stroke-width="1"/>
-        <line x1="200" y1="0" x2="200" y2="240" stroke="#0f172a" stroke-width="1"/>
-        <line x1="300" y1="0" x2="300" y2="240" stroke="#0f172a" stroke-width="1"/>
+        <!-- Grid Lines -->
+        <line x1="0" y1="60" x2="410" y2="60" stroke="#f1f5f9" stroke-width="1"/>
+        <line x1="0" y1="120" x2="410" y2="120" stroke="#f1f5f9" stroke-width="1"/>
+        <line x1="0" y1="180" x2="410" y2="180" stroke="#f1f5f9" stroke-width="1"/>
+        <line x1="100" y1="0" x2="100" y2="240" stroke="#f1f5f9" stroke-width="1"/>
+        <line x1="200" y1="0" x2="200" y2="240" stroke="#f1f5f9" stroke-width="1"/>
+        <line x1="300" y1="0" x2="300" y2="240" stroke="#f1f5f9" stroke-width="1"/>
 
         <!-- Radar Sweep Circles -->
-        <circle cx="205" cy="120" r="85" fill="none" stroke="#0047ff" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="4,4"/>
-        <circle cx="205" cy="120" r="45" fill="none" stroke="#38bdf8" stroke-width="1" stroke-opacity="0.4"/>
-        <circle cx="205" cy="120" r="4" fill="#38bdf8"/>
+        <circle cx="205" cy="120" r="85" fill="none" stroke="#5758df" stroke-width="1" stroke-opacity="0.2" stroke-dasharray="4,4"/>
+        <circle cx="205" cy="120" r="45" fill="none" stroke="#5758df" stroke-width="1" stroke-opacity="0.3"/>
+        <circle cx="205" cy="120" r="4" fill="#5758df"/>
 
         <!-- Intercontinental Arcs -->
-        <path d="M 60 85 Q 140 30, 205 70 T 340 100" fill="none" stroke="#0047ff" stroke-width="2" stroke-dasharray="6,4"/>
-        <path d="M 75 160 Q 180 190, 290 145" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <path d="M 60 85 Q 140 30, 205 70 T 340 100" fill="none" stroke="#5758df" stroke-width="2" stroke-dasharray="6,4"/>
+        <path d="M 75 160 Q 180 190, 290 145" fill="none" stroke="#23253d" stroke-width="1.5" stroke-dasharray="4,3"/>
 
         <!-- Hub Markers -->
-        <!-- New York Hub -->
-        <circle cx="60" cy="85" r="5" fill="#0047ff"/>
-        <text x="70" y="88" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace" font-weight="700">AMER // NYC</text>
+        <circle cx="60" cy="85" r="5" fill="#5758df"/>
+        <text x="70" y="88" fill="#23253d" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">AMER // NYC</text>
 
-        <!-- Frankfurt Hub -->
-        <circle cx="205" cy="70" r="5" fill="#38bdf8"/>
-        <text x="215" y="73" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace" font-weight="700">EMEA // FRA</text>
+        <circle cx="205" cy="70" r="5" fill="#23253d"/>
+        <text x="215" y="73" fill="#23253d" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">EMEA // FRA</text>
 
-        <!-- Singapore Hub -->
-        <circle cx="340" cy="100" r="5" fill="#0047ff"/>
-        <text x="270" y="118" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace" font-weight="700">APAC // SGP</text>
+        <circle cx="340" cy="100" r="5" fill="#5758df"/>
+        <text x="270" y="118" fill="#23253d" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">APAC // SGP</text>
 
-        <!-- Dubai Hub -->
         <circle cx="250" cy="110" r="4" fill="#f59e0b"/>
-        <text x="258" y="113" fill="#fcd34d" font-size="8" font-family="'Courier New',monospace">DXB</text>
+        <text x="258" y="113" fill="#b45309" font-size="8" font-family="'Plus Jakarta Sans',sans-serif" font-weight="700">DXB</text>
 
         <!-- Bottom Panel Status -->
-        <rect x="0" y="210" width="410" height="30" fill="#0b1324" rx="0 0 4 4"/>
-        <text x="12" y="228" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">TRANS-OCEANIC PACKET LATENCY: 12.4ms // PACKET LOSS: 0.00%</text>
+        <rect x="0" y="210" width="410" height="30" fill="#f8fafc" stroke="#e2e8f0" rx="0 0 6 6"/>
+        <text x="12" y="228" fill="#64748b" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="700">TRANS-OCEANIC PACKET LATENCY: 12.4ms // PACKET LOSS: 0.00%</text>
       </g>
 
       <!-- SBU Cluster Telemetry (Panel B) -->
       <g transform="translate(460, 80)">
         <!-- SBU 1 -->
-        <rect x="0" y="0" width="224" height="74" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
-        <rect x="0" y="0" width="4" height="74" fill="#0047ff" rx="2 0 0 2"/>
-        <text x="14" y="18" fill="#93c5fd" font-size="9" font-family="'Courier New',monospace" font-weight="700">SBU-01 // ADVANCED FABRICATION</text>
-        <text x="14" y="38" fill="#ffffff" font-size="16" font-family="'Inter',sans-serif" font-weight="900">99.98%</text>
-        <text x="80" y="38" fill="#10b981" font-size="10" font-family="'Courier New',monospace">OEE OPTIMAL</text>
-        <text x="14" y="58" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Zero-defect robotics cluster</text>
+        <rect x="0" y="0" width="224" height="74" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="6"/>
+        <rect x="0" y="0" width="4" height="74" fill="#5758df" rx="3 0 0 3"/>
+        <text x="14" y="18" fill="#5758df" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">SBU-01 // ADVANCED FABRICATION</text>
+        <text x="14" y="38" fill="#23253d" font-size="16" font-family="'Plus Jakarta Sans',sans-serif" font-weight="900">99.98%</text>
+        <text x="80" y="38" fill="#10b981" font-size="10" font-family="'Plus Jakarta Sans',sans-serif" font-weight="700">OEE OPTIMAL</text>
+        <text x="14" y="58" fill="#64748b" font-size="9" font-family="'Plus Jakarta Sans',sans-serif">Zero-defect robotics cluster</text>
 
         <!-- SBU 2 -->
-        <rect x="0" y="83" width="224" height="74" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
-        <rect x="0" y="83" width="4" height="74" fill="#38bdf8" rx="2 0 0 2"/>
-        <text x="14" y="101" fill="#93c5fd" font-size="9" font-family="'Courier New',monospace" font-weight="700">SBU-02 // AUTONOMOUS LOGISTICS</text>
-        <text x="14" y="121" fill="#ffffff" font-size="16" font-family="'Inter',sans-serif" font-weight="900">4.8M TEU</text>
-        <text x="96" y="121" fill="#38bdf8" font-size="10" font-family="'Courier New',monospace">GLOBAL TRANSIT</text>
-        <text x="14" y="141" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Adaptive routing & port AI</text>
+        <rect x="0" y="83" width="224" height="74" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="6"/>
+        <rect x="0" y="83" width="4" height="74" fill="#23253d" rx="3 0 0 3"/>
+        <text x="14" y="101" fill="#23253d" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">SBU-02 // AUTONOMOUS LOGISTICS</text>
+        <text x="14" y="121" fill="#23253d" font-size="16" font-family="'Plus Jakarta Sans',sans-serif" font-weight="900">4.8M TEU</text>
+        <text x="96" y="121" fill="#5758df" font-size="10" font-family="'Plus Jakarta Sans',sans-serif" font-weight="700">GLOBAL TRANSIT</text>
+        <text x="14" y="141" fill="#64748b" font-size="9" font-family="'Plus Jakarta Sans',sans-serif">Adaptive routing & port AI</text>
 
         <!-- SBU 3 -->
-        <rect x="0" y="166" width="224" height="74" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
-        <rect x="0" y="166" width="4" height="74" fill="#10b981" rx="2 0 0 2"/>
-        <text x="14" y="184" fill="#93c5fd" font-size="9" font-family="'Courier New',monospace" font-weight="700">SBU-03 // CLEAN ENERGY GRID</text>
-        <text x="14" y="204" fill="#ffffff" font-size="16" font-family="'Inter',sans-serif" font-weight="900">18.4 GW</text>
-        <text x="88" y="204" fill="#10b981" font-size="10" font-family="'Courier New',monospace">NET-ZERO</text>
-        <text x="14" y="224" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Solar-hydrogen energy storage</text>
-      </g>
-
-      <!-- Telemetry Status Bar & Certification Strip -->
-      <g transform="translate(36, 335)">
-        <rect x="0" y="0" width="648" height="85" fill="#091020" stroke="#1e293b" stroke-width="1" rx="4"/>
-        
-        <g transform="translate(20, 24)">
-          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">SOVEREIGN ESG BENCHMARK</text>
-          <text x="0" y="22" fill="#38bdf8" font-size="16" font-family="'Courier New',monospace" font-weight="900">AAA RATING</text>
-          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">SBTi 2035 Net-Zero Pathway</text>
-        </g>
-
-        <line x1="220" y1="14" x2="220" y2="71" stroke="#1e293b" stroke-width="1"/>
-
-        <g transform="translate(245, 24)">
-          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">STATUTORY JURISDICTIONS</text>
-          <text x="0" y="22" fill="#ffffff" font-size="16" font-family="'Courier New',monospace" font-weight="900">45+ REGIONS</text>
-          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">EMEA · AMER · APAC Direct Desk</text>
-        </g>
-
-        <line x1="440" y1="14" x2="440" y2="71" stroke="#1e293b" stroke-width="1"/>
-
-        <g transform="translate(465, 24)">
-          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">GOVERNANCE PROTOCOL</text>
-          <text x="0" y="22" fill="#10b981" font-size="16" font-family="'Courier New',monospace" font-weight="900">ZERO CONFLICT</text>
-          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">ISO 37001 & Anti-Trust Cleared</text>
-        </g>
+        <rect x="0" y="166" width="224" height="74" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="6"/>
+        <rect x="0" y="166" width="4" height="74" fill="#10b981" rx="3 0 0 3"/>
+        <text x="14" y="184" fill="#10b981" font-size="9" font-family="'Plus Jakarta Sans',sans-serif" font-weight="800">SBU-03 // CLEAN ENERGY GRID</text>
+        <text x="14" y="204" fill="#23253d" font-size="16" font-family="'Plus Jakarta Sans',sans-serif" font-weight="900">14.2 GW</text>
+        <text x="86" y="204" fill="#10b981" font-size="10" font-family="'Plus Jakarta Sans',sans-serif" font-weight="700">ZERO CARBON</text>
+        <text x="14" y="224" fill="#64748b" font-size="9" font-family="'Plus Jakarta Sans',sans-serif">Decarbonized industrial grid</text>
       </g>
     </svg>
   `;
 
   return `
-    <div class="crafto-about-modern" style="background:#040711;color:#f8fafc;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;">
-      <!-- Sovereign Conglomerate Fleet Command Deck Hero -->
-      <section style="background:linear-gradient(135deg, #070d1a 0%, #0b1426 60%, #050a16 100%);color:#ffffff;padding:90px 0 76px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
-        <!-- High-Voltage Laser Mesh Accents -->
-        <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%, rgba(0,71,255,0.22) 0%, transparent 70%);pointer-events:none;"></div>
-        <div style="position:absolute;bottom:0;left:0;width:35%;height:50%;background:radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);pointer-events:none;"></div>
+    <div class="crafto-about-modern" style="background:#ffffff;color:#23253d;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;">
+      <!-- Quartz White Hero with Subtle Corporate Rings -->
+      <section class="crafto-inner-hero" style="background:linear-gradient(180deg,#f4f5fa 0%,#ffffff 100%);color:#23253d;padding:90px 0 76px;position:relative;overflow:hidden;border-bottom:1px solid #e5e7eb;">
+        <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(87,88,223,0.12) 0%,transparent 70%);pointer-events:none;"></div>
 
         <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
           <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;">
-            <!-- Left Column: Command Statement -->
+            <!-- Left Statement -->
             <div data-reveal="fade-up">
-              <div style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(0,71,255,0.6);background:rgba(0,71,255,0.12);padding:6px 18px;margin-bottom:22px;">
-                <span style="display:inline-block;width:8px;height:8px;background:#38bdf8;box-shadow:0 0 10px #38bdf8;"></span>
-                <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;font-family:'Courier New',monospace;">
-                  ${isZh ? `跨国工业企业集团 · 始创于 ${esc(company.establishedYear || '1998')}` : `SOVEREIGN ENTERPRISE FLEET · EST. ${esc(company.establishedYear || '1998')}`}
+              <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(87,88,223,0.08);border:1px solid rgba(87,88,223,0.25);padding:6px 18px;border-radius:6px;margin-bottom:22px;">
+                <span style="display:inline-block;width:8px;height:8px;background:#5758df;border-radius:2px;"></span>
+                <span style="font-size:0.8rem;font-weight:800;color:#5758df;letter-spacing:0.12em;text-transform:uppercase;">
+                  ${isZh ? `主权产业战略参谋 · 委任始于 ${esc(company.establishedYear || '1998')}` : `SOVEREIGN INDUSTRY CHARTER · EST. ${esc(company.establishedYear || '1998')}`}
                 </span>
               </div>
 
-              <h1 style="font-size:clamp(2.3rem, 4.4vw, 3.8rem);line-height:1.06;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 22px;color:#ffffff;">
+              <h1 style="font-size:clamp(2.3rem, 4.4vw, 3.8rem);line-height:1.05;font-weight:900;letter-spacing:-0.035em;text-transform:uppercase;color:#23253d;margin:0 0 22px;">
                 ${esc(headline)}
               </h1>
 
-              <div style="border-left:3px solid #0047ff;padding-left:18px;margin-bottom:28px;">
-                <p style="color:#94a3b8;font-size:1.15rem;line-height:1.7;margin:0;">
-                  ${esc(copy.about || (isZh ? '赋能全球 500 强董事会与跨国实体，以主权级顶层治理、工业级数智重塑与跨法域资本运作实现战略防御与增长突围。' : 'Crafto Corporate delivers sovereign-level advisory, digital infrastructure modernization, and operational restructuring backed by decades of executive leadership.'))}
+              <div style="border-left:3px solid #5758df;padding-left:18px;margin-bottom:28px;">
+                <p style="color:#64748b;font-size:1.15rem;line-height:1.7;margin:0;">
+                  ${esc(copy.about || (isZh ? '为跨国企业集团与主权投资实体交付顶层治理、资产兼并重组及数字化产业舰队现代化的全流程参谋。' : 'Crafto Corporate delivers sovereign-level advisory, digital infrastructure modernization, and operational restructuring backed by decades of executive leadership.'))}
                 </p>
               </div>
 
               <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;display:inline-block;box-shadow:0 0 24px rgba(0,71,255,0.45);transition:all 0.2s ease;">
-                  ${isZh ? '预约执行委员会闭门简报 ↗' : 'Request Executive Briefing ↗'}
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#5758df;color:#ffffff;font-weight:900;border-radius:6px;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.85rem;box-shadow:0 4px 15px rgba(87,88,223,0.25);text-decoration:none;display:inline-block;">
+                  ${isZh ? '启动董事会闭门咨询 ↗' : 'Initiate Executive Consultation ↗'}
                 </a>
                 ${company.capabilities ? `
-                  <div style="border:1px solid rgba(255,255,255,0.18);padding:14px 22px;font-size:0.84rem;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.04em;background:rgba(0,0,0,0.3);">
-                    🛡️ ${esc(company.capabilities.slice(0, 42))}
+                  <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:14px 20px;font-size:0.84rem;color:#23253d;font-weight:700;">
+                    <span>🏛️</span> ${esc(company.capabilities.slice(0, 42))}
                   </div>
                 ` : ''}
               </div>
             </div>
 
-            <!-- Right Column: Anti-Blank Box Multi-Screen HUD Viewport -->
+            <!-- Right: Anti-Blank Box Vector SVG HUD -->
             <div data-reveal="fade-up" style="position:relative;">
-              <div style="background:#070d1a;border:1px solid #1e293b;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,0.55);position:relative;">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0b1426;border-bottom:1px solid #1e293b;font-size:0.8rem;color:#94a3b8;">
+              <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;box-shadow:0 12px 36px rgba(35,37,61,0.06);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:4px 4px 0 0;font-size:0.8rem;color:#64748b;">
                   <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 8px #10b981;"></span>
-                    <span style="font-family:'Courier New',monospace;font-weight:700;color:#f8fafc;">CONGLOMERATE COMMAND HUD</span>
+                    <span style="width:8px;height:8px;background:#5758df;display:inline-block;border-radius:2px;"></span>
+                    <span style="font-weight:800;color:#23253d;text-transform:uppercase;">GLOBAL FLEET COMMAND MATRIX</span>
                   </div>
-                  <span style="font-family:'Courier New',monospace;color:#38bdf8;">GRID: SECURE ENCRYPTED</span>
+                  <span style="color:#5758df;font-weight:800;">ACTIVE TELEMETRY</span>
                 </div>
 
-                <!-- Fallback Container: vector SVG underneath, image on top with onerror="this.style.display='none'" -->
-                <div style="position:relative;min-height:380px;overflow:hidden;background:#050914;">
+                <div style="position:relative;min-height:380px;border-radius:0 0 4px 4px;overflow:hidden;background:#f4f5fa;">
                   <div style="position:absolute;inset:0;z-index:1;">
                     ${fleetSvg}
                   </div>
@@ -678,11 +577,11 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
               </div>
 
               <!-- Floating Live Telemetry Badge -->
-              <div style="position:absolute;bottom:-18px;left:-16px;background:#0b1324;border:1px solid #0047ff;padding:10px 18px;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;z-index:3;">
-                <span style="font-size:1.5rem;">🌐</span>
+              <div style="position:absolute;bottom:-18px;left:-16px;background:#ffffff;border:1px solid #d5d7f5;padding:10px 18px;border-radius:6px;box-shadow:0 8px 24px rgba(87,88,223,0.12);display:flex;align-items:center;gap:12px;z-index:3;">
+                <span style="font-size:1.5rem;">🌍</span>
                 <div>
-                  <div style="font-size:0.75rem;font-weight:800;color:#93c5fd;letter-spacing:0.08em;text-transform:uppercase;font-family:'Courier New',monospace;">Sovereign Coverage</div>
-                  <div style="font-size:0.88rem;font-weight:700;color:#ffffff;">45+ Global Jurisdictions</div>
+                  <div style="font-size:0.75rem;font-weight:800;color:#5758df;letter-spacing:0.08em;text-transform:uppercase;">Fiduciary Compliance</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:#23253d;">45+ Sovereign Markets</div>
                 </div>
               </div>
             </div>
@@ -690,21 +589,21 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
         </div>
       </section>
 
-      <!-- Conglomerate Governance Telemetry Strip (集团全球治理度量矩阵) -->
+      <!-- Fiduciary Governance & Operational Metrics Bar -->
       <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 20px;">
-        <div data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #0047ff;overflow:hidden;">
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-top:3px solid #5758df;border-radius:6px;box-shadow:0 4px 20px rgba(35,37,61,0.03);overflow:hidden;">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
             ${stats.map((s, idx) => `
-              <div style="padding:28px 24px;border-right:${idx < stats.length - 1 ? '1px solid #1e293b' : 'none'};position:relative;">
-                <div style="font-family:'Courier New',monospace;font-size:0.75rem;color:#38bdf8;font-weight:700;letter-spacing:0.1em;margin-bottom:6px;">
-                  METRIC // 0${idx + 1}
+              <div style="padding:28px 24px;border-right:${idx < stats.length - 1 ? '1px solid #e5e7eb' : 'none'};position:relative;">
+                <div style="font-size:0.75rem;color:#5758df;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">
+                  INDEX // PILLAR-0${idx + 1}
                 </div>
-                <div style="font-size:clamp(2.2rem, 3.6vw, 2.8rem);font-weight:900;color:#ffffff;line-height:1.1;letter-spacing:-0.03em;">
+                <div style="font-size:clamp(2.2rem, 3.6vw, 2.8rem);font-weight:900;color:#23253d;line-height:1.1;letter-spacing:-0.03em;">
                   <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
                     ${esc(s.value)}
                   </span>
                 </div>
-                <div style="font-weight:800;color:#93c5fd;margin-top:8px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;">
+                <div style="font-weight:800;color:#23253d;margin-top:8px;font-size:0.95rem;text-transform:uppercase;">
                   ${esc(s.label)}
                 </div>
                 ${s.desc ? `
@@ -718,183 +617,106 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
         </div>
       </section>
 
-      <!-- Crafto Doctrine & Operating Principles -->
+      <!-- Global Governance Architecture & Strategic SBU Clusters -->
       <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 60px;">
         <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:48px;align-items:flex-start;">
-          <!-- Left: Conglomerate Doctrine -->
+          <!-- Left Narrative -->
           <div data-reveal="fade-up">
-            <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;color:#0047ff;text-transform:uppercase;font-family:'Courier New',monospace;">
-              ${isZh ? '集团核心战略纲领' : 'THE CRAFTO CONGLOMERATE DOCTRINE'}
+            <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:#5758df;text-transform:uppercase;">
+              ${isZh ? '全球产业治理与跨法域抗脆弱体系' : 'GLOBAL GOVERNANCE & ANTI-FRAGILITY'}
             </span>
-            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.15;color:#ffffff;margin:12px 0 22px;text-transform:uppercase;font-weight:900;">
-              ${isZh ? '立足工业最高审计准则，以主权级韧性赋能跨国实体突围' : 'Institutional Modernization Built on Uncompromising Rigor'}
+            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.2;color:#23253d;margin:12px 0 22px;font-weight:900;text-transform:uppercase;">
+              ${isZh ? '构筑穿透周期的主权级企业治理航母' : 'Engineering Generational Resilience for Global Multinationals'}
             </h2>
-            <div style="color:#cbd5e1;font-size:1.04rem;line-height:1.8;display:flex;flex-direction:column;gap:18px;">
+            <div style="color:#475569;font-size:1.04rem;line-height:1.8;display:flex;flex-direction:column;gap:18px;">
               ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;">
-              <div style="background:#080e1c;border:1px solid #1e293b;border-left:3px solid #0047ff;padding:18px 20px;">
-                <strong style="color:#ffffff;display:block;font-size:1rem;text-transform:uppercase;margin-bottom:4px;">
-                  ${isZh ? '零承销冲突独立中立' : 'Zero Conflict Fiduciary'}
+              <div style="background:#ffffff;border:1px solid #e5e7eb;border-left:3px solid #5758df;border-radius:6px;padding:18px 20px;box-shadow:0 4px 15px rgba(0,0,0,0.02);">
+                <strong style="color:#5758df;display:block;font-size:0.95rem;margin-bottom:4px;text-transform:uppercase;">
+                  🏛️ ${isZh ? '多边法域监管穿透分析' : 'Cross-Border Compliance'}
                 </strong>
-                <span style="color:#94a3b8;font-size:0.86rem;line-height:1.5;">
-                  ${isZh ? '严格杜绝任何银团承销或自营交易利益冲突，百分之百捍卫客户利益。' : 'Pure independent advisory without underwriting, lending, or brokerage ties.'}
+                <span style="color:#64748b;font-size:0.86rem;line-height:1.5;">
+                  ${isZh ? '覆盖全球 45+ 核心经济体的监管合规穿透架构，确保跨国投资零阻碍合规运转。' : 'Seamless multi-jurisdictional compliance oversight safeguarding international operating assets.'}
                 </span>
               </div>
-              <div style="background:#080e1c;border:1px solid #1e293b;border-left:3px solid #38bdf8;padding:18px 20px;">
-                <strong style="color:#ffffff;display:block;font-size:1rem;text-transform:uppercase;margin-bottom:4px;">
-                  ${isZh ? '工业级抗脆弱压力测试' : 'Anti-Fragile Stress Testing'}
+              <div style="background:#ffffff;border:1px solid #e5e7eb;border-left:3px solid #23253d;border-radius:6px;padding:18px 20px;box-shadow:0 4px 15px rgba(0,0,0,0.02);">
+                <strong style="color:#23253d;display:block;font-size:0.95rem;margin-bottom:4px;text-transform:uppercase;">
+                  🛡️ ${isZh ? '资本纪律与反脆弱对冲' : 'Capital Discipline & Hedging'}
                 </strong>
-                <span style="color:#94a3b8;font-size:0.86rem;line-height:1.5;">
-                  ${isZh ? '每一套战略架构均通过极端宏观波动、地缘断链与尾部流动性极端模拟。' : 'All architectures pre-tested against systemic tail risks and cross-border supply shocks.'}
+                <span style="color:#64748b;font-size:0.86rem;line-height:1.5;">
+                  ${isZh ? '建立动态抗风险对冲闭环与充沛流动性防火墙，在极端宏观波动中保持强劲扩张动能。' : 'Dynamic liquidity reserves and risk-insulation firewalls guarding corporate valuation.'}
                 </span>
               </div>
             </div>
           </div>
 
-          <!-- Right: Strategic Operating Principles Docket -->
-          <div data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.4);">
-            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding-bottom:14px;margin-bottom:20px;">
-              <span style="font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;color:#38bdf8;">CHARTER: SOV-2026-HQ</span>
-              <span style="font-size:0.75rem;background:rgba(0,71,255,0.18);color:#93c5fd;padding:3px 8px;font-weight:700;text-transform:uppercase;">BOARD DIRECTIVE</span>
+          <!-- Right: Core SBU Clusters -->
+          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:32px;box-shadow:0 8px 30px rgba(35,37,61,0.04);">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:20px;">
+              <span style="font-size:0.8rem;font-weight:800;color:#5758df;text-transform:uppercase;">SBU DIVISIONS</span>
+              <span style="font-size:0.75rem;background:rgba(87,88,223,0.08);color:#5758df;padding:3px 8px;border-radius:4px;font-weight:800;">GLOBAL LEADERSHIP</span>
             </div>
 
-            <h3 style="font-size:1.25rem;font-weight:800;color:#ffffff;text-transform:uppercase;margin:0 0 16px;">
-              ${isZh ? '三大董事会运营公约' : 'Three Board Directives'}
+            <h3 style="font-size:1.25rem;font-weight:900;text-transform:uppercase;color:#23253d;margin:0 0 16px;">
+              ${isZh ? '三大支柱产业集群' : 'Strategic Industry Pillars'}
             </h3>
 
             <div style="display:flex;flex-direction:column;gap:18px;">
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <span style="font-family:'Courier New',monospace;font-weight:900;color:#0047ff;font-size:1.2rem;line-height:1;">01</span>
-                <div>
-                  <strong style="color:#f8fafc;font-size:0.92rem;text-transform:uppercase;">
-                    ${isZh ? '主权级合规与法律穿透' : 'Sovereign Compliance Assurance'}
-                  </strong>
-                  <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
-                    ${isZh ? '跨欧美亚多法域实体与反洗钱/反避税法律穿透式审阅，筑牢监管护城河。' : 'Multi-jurisdictional legal penetration across OECD, US, and APAC regulatory regimes.'}
-                  </p>
-                </div>
+              <div style="border-left:3px solid #5758df;padding-left:16px;">
+                <strong style="color:#23253d;font-size:0.92rem;text-transform:uppercase;">
+                  1. ${isZh ? '高端智能精密制造 (Advanced Fabrication)' : 'Advanced Industrial Precision'}
+                </strong>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '以微米级公差自适应闭环机器人集群，赋能航空、能源与半导体工业基石。' : 'Micron-level automated robotics clusters empowering aerospace, energy, and precision tooling.'}
+                </p>
               </div>
 
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <span style="font-family:'Courier New',monospace;font-weight:900;color:#38bdf8;font-size:1.2rem;line-height:1;">02</span>
-                <div>
-                  <strong style="color:#f8fafc;font-size:0.92rem;text-transform:uppercase;">
-                    ${isZh ? '周期跨越资本配置纪律' : 'Cycle-Resilient Capital Discipline'}
-                  </strong>
-                  <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
-                    ${isZh ? '构建穿越流动性周期的资本配置模型，保障跨国重大并购的长期价值增益。' : 'Engineered hurdle rates designed to preserve terminal equity value across debt cycles.'}
-                  </p>
-                </div>
+              <div style="border-left:3px solid #23253d;padding-left:16px;">
+                <strong style="color:#23253d;font-size:0.92rem;text-transform:uppercase;">
+                  2. ${isZh ? '洲际自适应物流网络 (Global Transit)' : 'Autonomous Intercontinental Logistics'}
+                </strong>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '调度超 480 万 TEU 吞吐量的智能自适应海运与港口 AI 调度中枢，平滑供应链波动。' : 'Orchestrating 4.8M+ TEU container throughput via predictive route scheduling.'}
+                </p>
               </div>
 
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <span style="font-family:'Courier New',monospace;font-weight:900;color:#10b981;font-size:1.2rem;line-height:1;">03</span>
-                <div>
-                  <strong style="color:#f8fafc;font-size:0.92rem;text-transform:uppercase;">
-                    ${isZh ? '自动化智能工业自治中枢' : 'Autonomous Platform Modernization'}
-                  </strong>
-                  <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
-                    ${isZh ? '将陈旧的层级化审批升级为基于事件驱动的实时决策流，提升集团协同效率。' : 'Transitioning legacy conglomerates into automated, auditable digital platforms.'}
-                  </p>
-                </div>
+              <div style="border-left:3px solid #10b981;padding-left:16px;">
+                <strong style="color:#23253d;font-size:0.92rem;text-transform:uppercase;">
+                  3. ${isZh ? '吉瓦级绿色能源电网 (Clean Energy Grid)' : 'Gigawatt-Scale Decarbonized Grid'}
+                </strong>
+                <p style="color:#64748b;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '管理 14.2 GW 零碳能源资产，协助大型跨国集团顺利达成 ESG 审计双重认证。' : 'Overseeing 14.2 GW of clean energy infrastructure supporting multinational ESG compliance.'}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Three Strategic Business Units (SBU 产业集群三维支柱) -->
-      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 70px;border-top:1px solid #1e293b;" data-reveal="fade-up">
-        <div style="text-align:center;margin-bottom:48px;">
-          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;color:#0047ff;text-transform:uppercase;font-family:'Courier New',monospace;">
-            ${isZh ? '三大战略业务集群' : 'THREE STRATEGIC BUSINESS UNITS (SBU)'}
-          </span>
-          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#ffffff;text-transform:uppercase;margin:10px 0;">
-            ${isZh ? '跨国工业实体核心产业支柱与数智基建矩阵' : 'Conglomerate Industrial Engines & Infrastructure Matrix'}
-          </h2>
-          <p style="color:#94a3b8;max-width:680px;margin:0 auto;font-size:1rem;">
-            ${isZh ? '融合高精尖智能制造、洲际自适应物流及零碳绿色电网，构筑跨国企业集群的底层护城河。' : 'Advanced manufacturing, automated maritime supply chains, and green decarbonization infrastructure.'}
-          </p>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:28px;">
-          <!-- SBU I -->
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #0047ff;padding:32px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#93c5fd;">SBU-01 // FABRICATION</span>
-              <span style="font-size:1.6rem;">⚙️</span>
-            </div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;text-transform:uppercase;margin:0 0 12px;">
-              ${isZh ? '先进智能制造与高精工业集群' : 'Advanced Intelligent Manufacturing'}
-            </h3>
-            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.65;margin:0 0 18px;">
-              ${isZh ? '万级洁净室环境与高精度机器人装配产线，覆盖航空航天与第三代半导体工业核心部件，实现 99.98% 零缺陷工艺交付。' : 'High-precision automated robotic assembly lines engineered for aerospace, semiconductors, and mission-critical hardware.'}
-            </p>
-            <div style="font-size:0.82rem;font-weight:700;color:#38bdf8;font-family:'Courier New',monospace;">
-              → 99.98% OEE QUALITY BENCHMARK
-            </div>
-          </div>
-
-          <!-- SBU II -->
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #38bdf8;padding:32px;transition-delay:0.08s;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#38bdf8;">SBU-02 // LOGISTICS</span>
-              <span style="font-size:1.6rem;">🚢</span>
-            </div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;text-transform:uppercase;margin:0 0 12px;">
-              ${isZh ? '洲际自适应物流与深海航运司库' : 'Autonomous Intercontinental Logistics'}
-            </h3>
-            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.65;margin:0 0 18px;">
-              ${isZh ? '覆盖全球 45+ 枢纽港口的动态运力对冲调度算法、端到端冷链高精追踪与自动化集装箱离岸关税清关系统。' : 'Dynamic freight hedging, automated deep-sea port terminals, and AI-governed multi-modal routing across 45+ world corridors.'}
-            </p>
-            <div style="font-size:0.82rem;font-weight:700;color:#38bdf8;font-family:'Courier New',monospace;">
-              → 4.8M TEU ANNUALIZED TRANSIT CAPACITY
-            </div>
-          </div>
-
-          <!-- SBU III -->
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #10b981;padding:32px;transition-delay:0.16s;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#34d399;">SBU-03 // CLEAN GRID</span>
-              <span style="font-size:1.6rem;">⚡</span>
-            </div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;text-transform:uppercase;margin:0 0 12px;">
-              ${isZh ? '绿色零碳电网与储能基础设施' : 'Sustainable Decarbonization & Clean Grid'}
-            </h3>
-            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.65;margin:0 0 18px;">
-              ${isZh ? '吉瓦级光伏氢能一体化储能电站、碳足迹全生命周期可信溯源，以及完全符合科学碳目标倡议（SBTi）的 2035 净零碳路径。' : 'Gigawatt-scale solar-hydrogen hybrid storage, audited lifecycle carbon tracking, and strict compliance with SBTi 2035 milestones.'}
-            </p>
-            <div style="font-size:0.82rem;font-weight:700;color:#34d399;font-family:'Courier New',monospace;">
-              → 18.4 GW GRID-TIED ASSET ASSETS
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Executive Committee Briefing Chamber (最高执行委员会闭门简报席 CTA) -->
+      <!-- Sovereign Executive CTA -->
       <section class="wrap" style="max-width:1240px;margin:0 auto;padding:20px 24px 85px;">
-        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #080e1c 0%, #0b1426 60%, #060b17 100%);border:1px solid #0047ff;padding:48px 40px;color:#ffffff;box-shadow:0 0 35px rgba(0,71,255,0.25);">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #f4f5fa 0%, #ffffff 60%, #eef0fa 100%);border:1px solid #d5d7f5;border-radius:6px;padding:48px 40px;color:#23253d;box-shadow:0 10px 30px rgba(87,88,223,0.06);">
           <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:40px;align-items:center;">
             <div>
-              <span style="font-family:'Courier New',monospace;color:#38bdf8;font-weight:800;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;">
-                ${isZh ? '董事会直达通道 // 高管简报室' : 'EXECUTIVE TASKFORCE BRIEFING CHAMBER'}
+              <span style="color:#5758df;font-weight:800;font-size:0.82rem;letter-spacing:0.12em;text-transform:uppercase;">
+                [EXECUTIVE TASKFORCE // DIRECT ENGAGEMENT]
               </span>
-              <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);color:#ffffff;margin:8px 0 14px;text-transform:uppercase;font-weight:900;">
-                ${isZh ? '开启执行咨询委员会保密战略对话' : 'Engage the Executive Taskforce'}
+              <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);color:#23253d;margin:8px 0 14px;font-weight:900;text-transform:uppercase;">
+                ${isZh ? '开启集团战略重组与治理委任磋商' : 'Initiate Sovereign Corporate Advisory Mandate'}
               </h2>
-              <p style="color:#94a3b8;font-size:1.02rem;line-height:1.7;margin:0;">
-                ${isZh ? '预约高级常务董事初步保密咨询，评估跨国重组、数智基建与资本优化方案。所有对话受最高商业特权与双边保密协议保护。' : 'Arrange a confidential strategy briefing with our managing directors to assess transnational restructuring, infrastructure modernization, and capital optimization.'}
+              <p style="color:#64748b;font-size:1.02rem;line-height:1.7;margin:0;">
+                ${isZh ? '由 Crafto 资深合伙人组成的专业任务组将在 48 小时内为您呈交保密初步案卷评估，保障董事会决策的稳健与决断。' : 'Deploy our senior executive taskforce to audit conglomerate risk vectors, optimize balance sheets, and ensure long-term competitive dominance.'}
               </p>
             </div>
 
-            <div style="text-align:center;background:rgba(0,0,0,0.35);border:1px solid #1e293b;padding:28px;">
-              <div style="font-size:0.82rem;color:#94a3b8;margin-bottom:18px;font-family:'Courier New',monospace;">
-                ${isZh ? '48小时内签署标准 NDA 并指派对口常务董事' : 'DIRECT EXECUTIVE TASKFORCE DISPATCH // 48-HR SLA'}
+            <div style="text-align:center;background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+              <div style="font-size:0.82rem;color:#64748b;margin-bottom:18px;">
+                ${isZh ? '执行委员会战略案卷闭门咨询开放' : 'CONFIDENTIAL BOARDROOM BRIEFING // BILATERAL NDA'}
               </div>
-              <a class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;box-shadow:0 0 24px rgba(0,71,255,0.5);display:inline-block;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-                ${isZh ? '预约执行简报 ↗' : 'Request Executive Briefing ↗'}
+              <a class="button" style="background:#5758df;color:#ffffff;font-weight:900;border-radius:6px;padding:16px 36px;box-shadow:0 4px 15px rgba(87,88,223,0.25);text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;display:inline-block;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${isZh ? '预约合伙人保密咨询 ↗' : 'Schedule Executive Consultation ↗'}
               </a>
             </div>
           </div>
@@ -916,17 +738,17 @@ export function renderCraftoContact(ctx: ThemeContext): string {
   const company = draft.company;
 
   const heroHtml = `
-    <section class="crafto-inner-hero" style="background:#0b1120;color:#ffffff;padding:80px 0 50px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
-      <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(0,71,255,0.2) 0%,transparent 70%);pointer-events:none;"></div>
+    <section class="crafto-inner-hero" style="background:linear-gradient(180deg,#f4f5fa 0%,#ffffff 100%);color:#23253d;padding:80px 0 50px;position:relative;overflow:hidden;border-bottom:1px solid #e5e7eb;">
+      <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(87,88,223,0.12) 0%,transparent 70%);pointer-events:none;"></div>
       <div class="wrap" style="position:relative;z-index:2;">
-        <div style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(0,71,255,0.4);background:rgba(0,71,255,0.12);padding:6px 16px;margin-bottom:20px;">
-          <span style="display:inline-block;width:8px;height:8px;background:#0047ff;"></span>
-          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;">EXECUTIVE ENGAGEMENT DESK</span>
+        <div style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(87,88,223,0.3);background:rgba(87,88,223,0.08);padding:6px 16px;border-radius:6px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;background:#5758df;border-radius:2px;"></span>
+          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#5758df;">EXECUTIVE ENGAGEMENT DESK</span>
         </div>
-        <h1 style="font-size:clamp(2.5rem,5.5vw,4.4rem);line-height:1.05;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 20px;max-width:900px;color:#ffffff;">
+        <h1 style="font-size:clamp(2.5rem,5.5vw,4.4rem);line-height:1.05;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 20px;max-width:900px;color:#23253d;">
           ${esc(ui.conversation || 'Initiate Executive Consultation')}
         </h1>
-        <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0;">
+        <p style="max-width:720px;color:#64748b;font-size:1.2rem;line-height:1.65;margin:0;">
           ${esc(ui.contactIntro || 'Connect directly with our senior managing directors for strategic corporate restructuring, cross-border M&A counsel, or sovereign enterprise governance.')}
         </p>
       </div>
@@ -937,80 +759,80 @@ export function renderCraftoContact(ctx: ThemeContext): string {
     <section class="wrap" style="padding:60px 0 80px;">
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:flex-start;">
         <!-- Left: Global Hubs & Dispatch -->
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:36px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-          <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">DIRECT CHANNELS</span>
-          <h3 style="font-size:1.3rem;text-transform:uppercase;font-weight:800;color:#0f172a;margin:8px 0 24px;">Executive Desks & Hubs</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:36px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <span class="eyebrow" style="color:#5758df;font-weight:800;letter-spacing:0.12em;">DIRECT CHANNELS</span>
+          <h3 style="font-size:1.3rem;text-transform:uppercase;font-weight:800;color:#23253d;margin:8px 0 24px;">Executive Desks & Hubs</h3>
 
           <div style="display:flex;flex-direction:column;gap:22px;font-size:0.92rem;">
             <div>
-              <div style="font-size:0.8rem;font-weight:800;color:#0047ff;text-transform:uppercase;margin-bottom:4px;">Managing Director Inquiries</div>
-              <a style="color:#0f172a;font-weight:800;font-size:1.05rem;text-decoration:none;" href="mailto:${esc(company.email)}">${esc(company.email)}</a>
+              <div style="font-size:0.8rem;font-weight:800;color:#5758df;text-transform:uppercase;margin-bottom:4px;">Managing Director Inquiries</div>
+              <a style="color:#23253d;font-weight:800;font-size:1.05rem;text-decoration:none;" href="mailto:${esc(company.email)}">${esc(company.email)}</a>
             </div>
 
             ${company.phone ? `
               <div>
-                <div style="font-size:0.8rem;font-weight:800;color:#0047ff;text-transform:uppercase;margin-bottom:4px;">Global Priority Line</div>
-                <a style="color:#0f172a;font-weight:800;text-decoration:none;" href="tel:${esc(company.phone)}">${esc(company.phone)}</a>
+                <div style="font-size:0.8rem;font-weight:800;color:#5758df;text-transform:uppercase;margin-bottom:4px;">Global Priority Line</div>
+                <a style="color:#23253d;font-weight:800;text-decoration:none;" href="tel:${esc(company.phone)}">${esc(company.phone)}</a>
               </div>
             ` : ''}
 
             ${company.whatsapp ? `
               <div>
-                <div style="font-size:0.8rem;font-weight:800;color:#0047ff;text-transform:uppercase;margin-bottom:4px;">Encrypted Messaging (Signal / WhatsApp)</div>
+                <div style="font-size:0.8rem;font-weight:800;color:#5758df;text-transform:uppercase;margin-bottom:4px;">Encrypted Messaging (Signal / WhatsApp)</div>
                 <a style="color:#10b981;font-weight:800;text-decoration:none;" target="_blank" rel="noopener noreferrer" href="https://wa.me/${esc(company.whatsapp.replace(/[^0-9]/g, ''))}">+${esc(company.whatsapp.replace(/[^0-9]/g, ''))} (Connect)</a>
               </div>
             ` : ''}
 
             ${company.address ? `
               <div>
-                <div style="font-size:0.8rem;font-weight:800;color:#0047ff;text-transform:uppercase;margin-bottom:4px;">Global Headquarters</div>
-                <span style="color:#334155;line-height:1.5;">${esc(company.address)}</span>
+                <div style="font-size:0.8rem;font-weight:800;color:#5758df;text-transform:uppercase;margin-bottom:4px;">Global Headquarters</div>
+                <span style="color:#475569;line-height:1.5;">${esc(company.address)}</span>
               </div>
             ` : ''}
           </div>
 
-          <div style="margin-top:32px;background:#0f172a;color:#ffffff;padding:24px;border:1px solid #1e293b;">
-            <div style="font-weight:800;text-transform:uppercase;font-size:0.85rem;color:#93c5fd;margin-bottom:6px;">Confidentiality Commitment</div>
-            <div style="font-size:0.84rem;color:#94a3b8;line-height:1.6;">
+          <div style="margin-top:32px;background:#f4f5fa;color:#23253d;padding:24px;border:1px solid #e2e8f0;border-radius:6px;">
+            <div style="font-weight:800;text-transform:uppercase;font-size:0.85rem;color:#5758df;margin-bottom:6px;">Confidentiality Commitment</div>
+            <div style="font-size:0.84rem;color:#64748b;line-height:1.6;">
               All corporate inquiries are immediately covered under standard Crafto bilateral non-disclosure protocols before substantive technical exchange.
             </div>
           </div>
         </div>
 
         <!-- Right: Inquiry Form -->
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:36px;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-          <h2 style="font-size:1.6rem;text-transform:uppercase;font-weight:900;color:#0f172a;margin:0 0 8px;">Submit Executive Mandate</h2>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:36px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <h2 style="font-size:1.6rem;text-transform:uppercase;font-weight:900;color:#23253d;margin:0 0 8px;">Submit Executive Mandate</h2>
           <p style="color:#64748b;font-size:0.95rem;margin:0 0 28px;">Specify your organizational objectives and required taskforce lead time.</p>
 
           <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-            <label style="display:flex;flex-direction:column;gap:6px;color:#0f172a;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
-              <span>${esc(ui.name)} <span style="color:#0047ff;">*</span></span>
-              <input name="name" autocomplete="name" required maxlength="120" style="background:#ffffff;border:1px solid #0f172a;padding:12px 14px;color:#0f172a;font:inherit;">
+            <label style="display:flex;flex-direction:column;gap:6px;color:#23253d;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
+              <span>${esc(ui.name)} <span style="color:#5758df;">*</span></span>
+              <input name="name" autocomplete="name" required maxlength="120" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:12px 14px;color:#23253d;font:inherit;">
             </label>
-            <label style="display:flex;flex-direction:column;gap:6px;color:#0f172a;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
-              <span>${esc(ui.email)} <span style="color:#0047ff;">*</span></span>
-              <input name="email" type="email" autocomplete="email" required maxlength="254" style="background:#ffffff;border:1px solid #0f172a;padding:12px 14px;color:#0f172a;font:inherit;">
+            <label style="display:flex;flex-direction:column;gap:6px;color:#23253d;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
+              <span>${esc(ui.email)} <span style="color:#5758df;">*</span></span>
+              <input name="email" type="email" autocomplete="email" required maxlength="254" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:12px 14px;color:#23253d;font:inherit;">
             </label>
-            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#0f172a;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#23253d;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
               <span>${esc(ui.company)} (${esc(ui.optional)})</span>
-              <input name="company" autocomplete="organization" maxlength="200" style="background:#ffffff;border:1px solid #0f172a;padding:12px 14px;color:#0f172a;font:inherit;">
+              <input name="company" autocomplete="organization" maxlength="200" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:12px 14px;color:#23253d;font:inherit;">
             </label>
-            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#0f172a;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#23253d;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
               <span>${esc(ui.product)} (${esc(ui.optional)})</span>
-              <select name="productId" style="background:#ffffff;border:1px solid #0f172a;padding:12px 14px;color:#0f172a;font:inherit;">
+              <select name="productId" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:12px 14px;color:#23253d;font:inherit;">
                 <option value="">— Select Target Practice Area —</option>
                 ${draft.products.map(p => `<option value="${esc(p.id)}"${p.id === options.productId ? ' selected' : ''}>${esc(ctx.translateProduct(p).name)}</option>`).join('')}
               </select>
             </label>
-            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#0f172a;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
-              <span>${esc(ui.message)} <span style="color:#0047ff;">*</span></span>
-              <textarea name="message" required maxlength="5000" rows="5" placeholder="Summary of transaction, modernization scope, or board advisory mandate..." style="background:#ffffff;border:1px solid #0f172a;padding:12px 14px;color:#0f172a;font:inherit;resize:vertical;"></textarea>
+            <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;color:#23253d;font-size:0.86rem;font-weight:700;text-transform:uppercase;">
+              <span>${esc(ui.message)} <span style="color:#5758df;">*</span></span>
+              <textarea name="message" required maxlength="5000" rows="5" placeholder="Summary of transaction, modernization scope, or board advisory mandate..." style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:12px 14px;color:#23253d;font:inherit;resize:vertical;"></textarea>
             </label>
             <div class="honeypot" aria-hidden="true" style="position:absolute;left:-9999px;">
               <label>Website<input name="website" tabindex="-1" autocomplete="off"></label>
             </div>
             <div style="grid-column:1/-1;">
-              <button class="button" type="submit"${options.preview ? ' disabled' : ''} style="background:#0047ff;color:#ffffff;font-weight:800;border:none;padding:15px 36px;cursor:pointer;font-size:0.88rem;text-transform:uppercase;letter-spacing:0.06em;">
+              <button class="button" type="submit"${options.preview ? ' disabled' : ''} style="background:#5758df;color:#ffffff;font-weight:900;border:none;border-radius:6px;padding:15px 36px;cursor:pointer;font-size:0.88rem;text-transform:uppercase;letter-spacing:0.06em;box-shadow:0 4px 15px rgba(87,88,223,0.25);">
                 ${esc(ui.send)} ↗
               </button>
             </div>
@@ -1024,20 +846,20 @@ export function renderCraftoContact(ctx: ThemeContext): string {
   const faqHtml = `
     <section class="wrap" style="padding:40px 0 80px;border-top:1px solid #e5e7eb;">
       <div style="text-align:center;margin-bottom:40px;">
-        <span class="eyebrow" style="color:#0047ff;font-weight:800;letter-spacing:0.12em;">ENGAGEMENT FAQ</span>
-        <h2 style="font-size:2.2rem;color:#0f172a;text-transform:uppercase;font-weight:900;margin:8px 0;">Client Mandate Protocols</h2>
+        <span class="eyebrow" style="color:#5758df;font-weight:800;letter-spacing:0.12em;">ENGAGEMENT FAQ</span>
+        <h2 style="font-size:2.2rem;color:#23253d;text-transform:uppercase;font-weight:900;margin:8px 0;">Client Mandate Protocols</h2>
       </div>
       <div style="max-width:840px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
-          <h3 style="color:#0f172a;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">What is the typical engagement deployment timeline?</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:24px;box-shadow:0 4px 15px rgba(0,0,0,0.02);">
+          <h3 style="color:#23253d;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">What is the typical engagement deployment timeline?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Upon bilateral conflict clearance and NDA execution, our executive taskforces typically deploy within 72 hours for urgent transactions and within two weeks for full enterprise restructuring.</p>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
-          <h3 style="color:#0f172a;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">How does Crafto manage multi-jurisdictional conflict of interest checks?</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:24px;box-shadow:0 4px 15px rgba(0,0,0,0.02);">
+          <h3 style="color:#23253d;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">How does Crafto manage multi-jurisdictional conflict of interest checks?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Our independent legal compliance committee runs proprietary cross-party audits against global statutory registries before accepting any M&A or restructuring mandate.</p>
         </div>
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:24px;">
-          <h3 style="color:#0f172a;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">Can Crafto provide interim C-suite executive placement?</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:24px;box-shadow:0 4px 15px rgba(0,0,0,0.02);">
+          <h3 style="color:#23253d;font-size:1.1rem;text-transform:uppercase;font-weight:800;margin:0 0 8px;">Can Crafto provide interim C-suite executive placement?</h3>
           <p style="color:#64748b;font-size:0.92rem;line-height:1.6;margin:0;">Yes. Our senior managing directors frequently step into interim Chief Restructuring Officer (CRO) or Chief Transformation Officer (CTO) roles during transition milestones.</p>
         </div>
       </div>
@@ -1051,17 +873,17 @@ export function renderCraftoCatalog(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
 
   const heroHtml = `
-    <section class="crafto-inner-hero" style="background:#0b1120;color:#ffffff;padding:80px 0 50px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
-      <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(0,71,255,0.2) 0%,transparent 70%);pointer-events:none;"></div>
+    <section class="crafto-inner-hero" style="background:linear-gradient(180deg,#f4f5fa 0%,#ffffff 100%);color:#23253d;padding:80px 0 50px;position:relative;overflow:hidden;border-bottom:1px solid #e5e7eb;">
+      <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(87,88,223,0.12) 0%,transparent 70%);pointer-events:none;"></div>
       <div class="wrap" style="position:relative;z-index:2;">
-        <div style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(0,71,255,0.4);background:rgba(0,71,255,0.12);padding:6px 16px;margin-bottom:20px;">
-          <span style="display:inline-block;width:8px;height:8px;background:#0047ff;"></span>
-          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;">PRACTICE & CAPABILITY DIRECTORY</span>
+        <div style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(87,88,223,0.3);background:rgba(87,88,223,0.08);padding:6px 16px;border-radius:6px;margin-bottom:20px;">
+          <span style="display:inline-block;width:8px;height:8px;background:#5758df;border-radius:2px;"></span>
+          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#5758df;">PRACTICE & CAPABILITY DIRECTORY</span>
         </div>
-        <h1 style="font-size:clamp(2.5rem,5.5vw,4.4rem);line-height:1.05;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 20px;max-width:900px;color:#ffffff;">
+        <h1 style="font-size:clamp(2.5rem,5.5vw,4.4rem);line-height:1.05;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 20px;max-width:900px;color:#23253d;">
           ${esc(ui.catalog || 'Core Executive Practices')}
         </h1>
-        <p style="max-width:720px;color:#94a3b8;font-size:1.2rem;line-height:1.65;margin:0;">
+        <p style="max-width:720px;color:#64748b;font-size:1.2rem;line-height:1.65;margin:0;">
           Explore our sovereign enterprise governance disciplines, digital modernization units, and cross-border restructuring taskforces.
         </p>
       </div>
@@ -1076,20 +898,20 @@ export function renderCraftoCatalog(ctx: ThemeContext): string {
           const imgUrl = asset(p.imageAssetId);
           const code = `UNIT-${String(idx + 1).padStart(2, '0')}`;
           return `
-            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:26px;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+            <article class="product-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:26px;display:flex;flex-direction:column;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                <span style="font-family:monospace;font-weight:800;color:#0047ff;font-size:0.85rem;">${code}</span>
+                <span style="font-family:monospace;font-weight:800;color:#5758df;font-size:0.85rem;">${code}</span>
                 <span style="font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;">Enterprise Mandate</span>
               </div>
               ${imgUrl ? `
-                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#f1f5f9;margin-bottom:16px;overflow:hidden;">
+                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="display:block;aspect-ratio:16/9;background:#f8fafc;border-radius:4px;margin-bottom:16px;overflow:hidden;border:1px solid #e2e8f0;">
                   <img src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
                 </a>
               ` : `
-                <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:28px 20px;text-align:center;font-size:2rem;margin-bottom:16px;">🏛️</div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:28px 20px;text-align:center;font-size:2rem;margin-bottom:16px;">🏛️</div>
               `}
-              <h3 style="font-size:1.25rem;font-weight:800;text-transform:uppercase;color:#0f172a;margin:0 0 10px;">
-                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="color:#0f172a;text-decoration:none;">
+              <h3 style="font-size:1.25rem;font-weight:800;text-transform:uppercase;color:#23253d;margin:0 0 10px;">
+                <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="color:#23253d;text-decoration:none;">
                   ${esc(t.name)}
                 </a>
               </h3>
@@ -1097,8 +919,8 @@ export function renderCraftoCatalog(ctx: ThemeContext): string {
                 ${esc(t.description || 'Institutional enterprise advisory practice area.')}
               </p>
               <div style="border-top:1px solid #e5e7eb;padding-top:16px;display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
-                <span style="font-size:0.82rem;font-weight:800;color:#0047ff;text-transform:uppercase;">Institutional Grade</span>
-                <a style="color:#0047ff;font-weight:800;font-size:0.88rem;text-transform:uppercase;text-decoration:none;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
+                <span style="font-size:0.82rem;font-weight:800;color:#5758df;text-transform:uppercase;">Institutional Grade</span>
+                <a style="color:#5758df;font-weight:800;font-size:0.88rem;text-transform:uppercase;text-decoration:none;" href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)}>
                   ${esc(ui.details || 'Review Mandate')} →
                 </a>
               </div>
@@ -1126,27 +948,27 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
 
   return `
     <!-- Top Breadcrumbs & Corporate Hero -->
-    <section class="crafto-inner-hero" style="background:#0b1120;color:#ffffff;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+    <section class="crafto-inner-hero" style="background:linear-gradient(180deg,#f4f5fa 0%,#ffffff 100%);color:#23253d;padding:50px 0 40px;position:relative;overflow:hidden;border-bottom:1px solid #e5e7eb;">
       <div class="wrap" style="position:relative;z-index:2;">
-        <div style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:#94a3b8;margin-bottom:16px;text-transform:uppercase;font-weight:700;">
-          <a href="${path('index.html')}" ${navAttrs('home')} style="color:#94a3b8;text-decoration:none;">${esc(ui.home)}</a>
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.88rem;color:#64748b;margin-bottom:16px;text-transform:uppercase;font-weight:700;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="color:#64748b;text-decoration:none;">${esc(ui.home)}</a>
           <span>/</span>
-          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#94a3b8;text-decoration:none;">${esc(ui.catalog)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#64748b;text-decoration:none;">${esc(ui.catalog)}</a>
           <span>/</span>
-          <span style="color:#93c5fd;">${esc(t.name)}</span>
+          <span style="color:#5758df;">${esc(t.name)}</span>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
           <div>
-            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,71,255,0.15);border:1px solid #0047ff;color:#93c5fd;padding:4px 14px;border-radius:0;font-size:0.78rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">
-              <span>⚙️</span> INDUSTRIAL & ENGINEERING SPECIFICATION
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(87,88,223,0.08);border:1px solid rgba(87,88,223,0.25);color:#5758df;padding:4px 14px;border-radius:6px;font-size:0.78rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">
+              <span>⚙️</span> INDUSTRIAL &amp; ENGINEERING SPECIFICATION
             </div>
-            <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;margin:0;color:#ffffff;">
+            <h1 style="font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.1;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;margin:0;color:#23253d;">
               ${esc(t.name)}
             </h1>
           </div>
-          <div style="background:#0f172a;border:1px solid #1e293b;padding:12px 20px;text-align:right;">
+          <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:12px 20px;text-align:right;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
             <div style="color:#64748b;font-size:0.8rem;text-transform:uppercase;font-weight:700;">Quality Standard</div>
-            <div style="color:#0047ff;font-weight:800;font-size:1.05rem;">ISO 9001 / 14001 Certified</div>
+            <div style="color:#5758df;font-weight:800;font-size:1.05rem;">ISO 9001 / 14001 Certified</div>
           </div>
         </div>
       </div>
@@ -1157,83 +979,83 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start;">
         <!-- Left Col: Engineering Visual -->
         <div>
-          <div class="wr-card-hover" style="background:#ffffff;border:1px solid #0f172a;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.04);text-align:center;">
+          <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:24px;box-shadow:0 8px 24px rgba(35,37,61,0.03);text-align:center;">
             ${imgUrl ? `
-              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;">
+              <img id="detailMainImg" src="${esc(imgUrl)}" alt="${esc(t.name)}" style="width:100%;max-height:440px;object-fit:cover;border-radius:4px;">
             ` : `
-              <div style="background:#0f172a;color:#ffffff;padding:70px 24px;text-align:center;font-size:5rem;">🏛️</div>
+              <div style="background:#f4f5fa;color:#23253d;border-radius:4px;padding:70px 24px;text-align:center;font-size:5rem;">🏛️</div>
             `}
           </div>
 
           <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
-            <span style="background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ Micron Tolerance</span>
-            <span style="background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ ISO 2768-m</span>
-            <span style="background:#f8fafc;border:1px solid #cbd5e1;color:#0f172a;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ Batch Traceability</span>
+            <span style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;color:#23253d;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ Micron Tolerance</span>
+            <span style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;color:#23253d;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ ISO 2768-m</span>
+            <span style="background:#ffffff;border:1px solid #e2e8f0;border-radius:4px;color:#23253d;padding:8px 14px;font-size:0.82rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">✓ Batch Traceability</span>
           </div>
         </div>
 
         <!-- Right Col: Narrative, Dynamic Progress Bars, Technical Parameters -->
         <div>
-          <h2 style="color:#0f172a;font-size:1.8rem;font-weight:900;text-transform:uppercase;margin:0 0 16px;">Engineering Scope & Specifications</h2>
-          <p style="font-size:1.15rem;line-height:1.75;color:#334155;margin:0 0 28px;">
+          <h2 style="color:#23253d;font-size:1.8rem;font-weight:900;text-transform:uppercase;margin:0 0 16px;">Engineering Scope &amp; Specifications</h2>
+          <p style="font-size:1.15rem;line-height:1.75;color:#475569;margin:0 0 28px;">
             ${esc(t.description || 'Advanced manufacturing and corporate engineering solution engineered for high repeatability, robust environmental resilience, and stringent quality control protocols.')}
           </p>
 
           <!-- Dynamic Engineering Quality Progress Bars -->
-          <div style="background:#f8fafc;border:1px solid #cbd5e1;border-top:3px solid #0047ff;padding:26px;margin-bottom:28px;">
-            <h3 style="color:#0f172a;font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
-              <span style="color:#0047ff;">⚙️</span> Manufacturing QA & Delivery Benchmarks
+          <div style="background:#ffffff;border:1px solid #e5e7eb;border-top:3px solid #5758df;border-radius:6px;padding:26px;margin-bottom:28px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+            <h3 style="color:#23253d;font-size:1rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 18px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#5758df;">⚙️</span> Manufacturing QA &amp; Delivery Benchmarks
             </h3>
             <div style="display:flex;flex-direction:column;gap:18px;">
               <div>
-                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#23253d;margin-bottom:6px;">
                   <span>Machining Tolerance (ISO 2768-m)</span>
-                  <span style="color:#0047ff;">99.9% Micron Precision</span>
+                  <span style="color:#5758df;">99.9% Micron Precision</span>
                 </div>
-                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;overflow:hidden;">
-                  <div class="wr-progress-bar" data-progress="100" style="background:#0047ff;height:100%;"></div>
-                </div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
-                  <span>Tensile & Stress Compliance</span>
-                  <span style="color:#0284c7;">97% Yield Strength</span>
-                </div>
-                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;overflow:hidden;">
-                  <div class="wr-progress-bar" data-progress="97" style="background:linear-gradient(90deg,#0284c7,#38bdf8);height:100%;"></div>
+                <div class="wr-progress-container" style="background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:#5758df;height:100%;"></div>
                 </div>
               </div>
               <div>
-                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#0f172a;margin-bottom:6px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#23253d;margin-bottom:6px;">
+                  <span>Tensile &amp; Stress Compliance</span>
+                  <span style="color:#23253d;">97% Yield Strength</span>
+                </div>
+                <div class="wr-progress-container" style="background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="97" style="background:linear-gradient(90deg,#5758df,#818cf8);height:100%;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.88rem;font-weight:700;color:#23253d;margin-bottom:6px;">
                   <span>Batch Quality Pass Rate</span>
-                  <span style="color:#16a34a;">99.8% First-Pass Yield</span>
+                  <span style="color:#10b981;">99.8% First-Pass Yield</span>
                 </div>
-                <div class="wr-progress-container" style="background:#e2e8f0;height:8px;overflow:hidden;">
-                  <div class="wr-progress-bar" data-progress="100" style="background:linear-gradient(90deg,#16a34a,#22c55e);height:100%;"></div>
+                <div class="wr-progress-container" style="background:#f1f5f9;height:8px;border-radius:4px;overflow:hidden;">
+                  <div class="wr-progress-bar" data-progress="100" style="background:#10b981;height:100%;"></div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Parameters Box -->
-          <div style="background:#ffffff;border:1px solid #0f172a;padding:24px;margin-bottom:32px;">
-            <h3 style="font-size:1.05rem;font-weight:800;text-transform:uppercase;color:#0f172a;margin:0 0 16px;">Mandate Blueprint</h3>
+          <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:24px;margin-bottom:32px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+            <h3 style="font-size:1.05rem;font-weight:800;text-transform:uppercase;color:#23253d;margin:0 0 16px;">Mandate Blueprint</h3>
             <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;">
               <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
                 <span style="color:#64748b;">Regulatory Jurisdiction</span>
-                <strong style="color:#0f172a;">${esc(p.material || 'Global Industrial ISO & CE Standard')}</strong>
+                <strong style="color:#23253d;">${esc(p.material || 'Global Industrial ISO & CE Standard')}</strong>
               </div>
               <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
                 <span style="color:#64748b;">Operational Model</span>
-                <strong style="color:#0f172a;">${esc(p.dimensions || 'High-Throughput Automated Production')}</strong>
+                <strong style="color:#23253d;">${esc(p.dimensions || 'High-Throughput Automated Production')}</strong>
               </div>
               <div style="display:flex;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">
                 <span style="color:#64748b;">Managing Desk</span>
-                <strong style="color:#0047ff;">Executive Taskforce Partner</strong>
+                <strong style="color:#5758df;">Executive Taskforce Partner</strong>
               </div>
               <div style="display:flex;justify-content:space-between;">
                 <span style="color:#64748b;">Material Traceability</span>
-                <strong style="color:#0f172a;">Full Heat-Lot Spectral Certification</strong>
+                <strong style="color:#23253d;">Full Heat-Lot Spectral Certification</strong>
               </div>
             </div>
           </div>
@@ -1244,27 +1066,27 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
     <!-- 3 Engineering / Strategic Pillars -->
     <section class="wrap" style="padding:20px 0 60px;">
       <div style="text-align:center;max-width:720px;margin:0 auto 40px;" data-reveal="fade-up">
-        <span style="color:#0047ff;font-size:0.85rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">INDUSTRIAL CAPABILITIES</span>
-        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#0f172a;font-weight:900;text-transform:uppercase;margin:8px 0 12px;">Engineered for Precision Scale</h2>
+        <span style="color:#5758df;font-size:0.85rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">INDUSTRIAL CAPABILITIES</span>
+        <h2 style="font-size:clamp(1.8rem,3vw,2.4rem);color:#23253d;font-weight:900;text-transform:uppercase;margin:8px 0 12px;">Engineered for Precision Scale</h2>
         <p style="color:#64748b;font-size:1.05rem;line-height:1.6;margin:0;">From initial rapid tooling validation to automated high-volume series delivery.</p>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;">
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;margin-bottom:16px;">01</div>
-          <h3 style="color:#0f172a;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">5-Axis Multi-Spindle CNC</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:32px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:1.8rem;color:#5758df;font-weight:900;margin-bottom:16px;">01</div>
+          <h3 style="color:#23253d;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">5-Axis Multi-Spindle CNC</h3>
           <p style="color:#475569;font-size:0.95rem;line-height:1.6;margin:0;">Micron-level repeatable tool positioning handling exotic alloys, aerospace-grade titanium, and hardened tool steels.</p>
         </div>
 
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;margin-bottom:16px;">02</div>
-          <h3 style="color:#0f172a;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">Spectrometric Testing</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:32px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:1.8rem;color:#5758df;font-weight:900;margin-bottom:16px;">02</div>
+          <h3 style="color:#23253d;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">Spectrometric Testing</h3>
           <p style="color:#475569;font-size:0.95rem;line-height:1.6;margin:0;">In-house metallurgical laboratories performing continuous X-ray diffraction, tensile stress testing, and chemical verification.</p>
         </div>
 
-        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #0f172a;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-          <div style="font-size:1.8rem;color:#0047ff;font-weight:900;margin-bottom:16px;">03</div>
-          <h3 style="color:#0f172a;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">Rapid DFM to Volume</h3>
+        <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:32px;box-shadow:0 4px 16px rgba(35,37,61,0.03);">
+          <div style="font-size:1.8rem;color:#5758df;font-weight:900;margin-bottom:16px;">03</div>
+          <h3 style="color:#23253d;font-size:1.15rem;font-weight:800;text-transform:uppercase;margin:0 0 10px;">Rapid DFM to Volume</h3>
           <p style="color:#475569;font-size:0.95rem;line-height:1.6;margin:0;">Design for Manufacturing feedback within 24 hours, bridging pilot prototype tooling to full-scale automated multi-cavity runs.</p>
         </div>
       </div>
@@ -1272,27 +1094,27 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
 
     <!-- Technical RFQ / Proposal Form -->
     <section class="wrap" style="padding:20px 0 60px;">
-      <div style="background:#0b1120;color:#ffffff;border:1px solid #1e293b;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;">
+      <div style="background:#ffffff;color:#23253d;border:1px solid #e5e7eb;border-radius:6px;padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:start;box-shadow:0 8px 30px rgba(35,37,61,0.04);">
         <div>
-          <span style="color:#0047ff;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">ENGINEERING RFQ</span>
-          <h2 style="color:#ffffff;font-size:1.8rem;font-weight:900;text-transform:uppercase;margin:8px 0 12px;">Commission ${esc(t.name)}</h2>
-          <p style="color:#94a3b8;font-size:1rem;line-height:1.6;margin:0 0 24px;">
+          <span style="color:#5758df;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">ENGINEERING RFQ</span>
+          <h2 style="color:#23253d;font-size:1.8rem;font-weight:900;text-transform:uppercase;margin:8px 0 12px;">Commission ${esc(t.name)}</h2>
+          <p style="color:#64748b;font-size:1rem;line-height:1.6;margin:0 0 24px;">
             Submit your CAD specifications or technical blueprint for immediate engineering review and formal quotation within 24 hours.
           </p>
-          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#cbd5e1;">
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:0.9rem;color:#475569;">
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="color:#0047ff;">✓</span> 24-Hour Guaranteed Engineering DFM Response
+              <span style="color:#5758df;">✓</span> 24-Hour Guaranteed Engineering DFM Response
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="color:#0047ff;">✓</span> Full First-Article Inspection Report (FAIR) Included
+              <span style="color:#5758df;">✓</span> Full First-Article Inspection Report (FAIR) Included
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="color:#0047ff;">✓</span> Direct Access to Lead Production Metallurgist
+              <span style="color:#5758df;">✓</span> Direct Access to Lead Production Metallurgist
             </div>
           </div>
           ${waDigits ? `
             <div style="margin-top:28px;">
-              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:0;text-decoration:none;font-size:0.95rem;">
+              <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#ffffff;font-weight:700;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:0.95rem;">
                 <span>WhatsApp Technical Inquiry ↗</span>
               </a>
             </div>
@@ -1302,35 +1124,35 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
         <div>
           <form id="inquiry" action="${esc(safeUrl(options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
-              <label style="color:#94a3b8;font-size:0.85rem;font-weight:600;">Selected Solution</label>
-              <input name="productName" value="${esc(t.name)}" readonly style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#93c5fd;font:inherit;font-weight:700;">
+              <label style="color:#64748b;font-size:0.85rem;font-weight:600;">Selected Solution</label>
+              <input name="productName" value="${esc(t.name)}" readonly style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:10px 14px;color:#23253d;font:inherit;font-weight:700;">
               <input type="hidden" name="productId" value="${esc(p.id)}">
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#0047ff;">*</span></label>
-              <input name="name" required placeholder="Lead engineer / buyer" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+              <label style="color:#334155;font-size:0.85rem;font-weight:600;">${esc(ui.name)} <span style="color:#5758df;">*</span></label>
+              <input name="name" required placeholder="Lead engineer / buyer" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:10px 14px;color:#23253d;font:inherit;">
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#0047ff;">*</span></label>
-              <input name="email" type="email" required placeholder="engineering@company.com" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+              <label style="color:#334155;font-size:0.85rem;font-weight:600;">${esc(ui.email)} <span style="color:#5758df;">*</span></label>
+              <input name="email" type="email" required placeholder="engineering@company.com" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:10px 14px;color:#23253d;font:inherit;">
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Company / Facility <span style="color:#0047ff;">*</span></label>
-              <input name="company" required placeholder="Enterprise organization" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+              <label style="color:#334155;font-size:0.85rem;font-weight:600;">Company / Facility <span style="color:#5758df;">*</span></label>
+              <input name="company" required placeholder="Enterprise organization" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:10px 14px;color:#23253d;font:inherit;">
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Estimated Production Volume</label>
-              <input name="quantity" placeholder="e.g. 5,000 - 50,000 pcs" style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;">
+              <label style="color:#334155;font-size:0.85rem;font-weight:600;">Estimated Production Volume</label>
+              <input name="quantity" placeholder="e.g. 5,000 - 50,000 pcs" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:10px 14px;color:#23253d;font:inherit;">
             </div>
             <div style="grid-column:1 / -1;display:flex;flex-direction:column;gap:6px;">
-              <label style="color:#cbd5e1;font-size:0.85rem;font-weight:600;">Material / Drawing Details</label>
-              <textarea name="message" rows="3" placeholder="Specify alloy grade, finish requirement, target tolerance, or delivery timeline..." style="background:#0f172a;border:1px solid #334155;border-radius:0;padding:10px 14px;color:#ffffff;font:inherit;resize:vertical;"></textarea>
+              <label style="color:#334155;font-size:0.85rem;font-weight:600;">Material / Drawing Details</label>
+              <textarea name="message" rows="3" placeholder="Specify alloy grade, finish requirement, target tolerance, or delivery timeline..." style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:10px 14px;color:#23253d;font:inherit;resize:vertical;"></textarea>
             </div>
             <div style="grid-column:1 / -1;margin-top:6px;">
-              <button type="submit" class="button" style="width:100%;background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:14px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.06em;border:none;cursor:pointer;">
+              <button type="submit" class="button" style="width:100%;background:#5758df;color:#ffffff;font-weight:800;border-radius:6px;padding:14px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.06em;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(87,88,223,0.25);">
                 ${esc(ui.inquire || 'Request Formal Technical Quotation')} ↗
               </button>
-              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#94a3b8;"></p>
+              <p class="form-status" role="status" aria-live="polite" style="margin:10px 0 0;font-size:0.85rem;text-align:center;color:#64748b;"></p>
             </div>
           </form>
         </div>
@@ -1341,8 +1163,8 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
     ${related.length > 0 ? `
       <section class="wrap" style="padding:20px 0 80px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
-          <h2 style="font-size:1.6rem;color:#0f172a;font-weight:900;text-transform:uppercase;margin:0;">Related Industrial Solutions</h2>
-          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#0047ff;font-weight:800;text-decoration:none;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;">
+          <h2 style="font-size:1.6rem;color:#23253d;font-weight:900;text-transform:uppercase;margin:0;">Related Industrial Solutions</h2>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#5758df;font-weight:800;text-decoration:none;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;">
             ${esc(ui.allProducts)} ↗
           </a>
         </div>
@@ -1351,24 +1173,24 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
             const it = translateProduct(item);
             const itemImg = asset(item.imageAssetId);
             return `
-              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #0f172a;padding:20px;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+              <div class="wr-card-hover" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;padding:20px;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(35,37,61,0.03);">
                 ${itemImg ? `
-                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#0f172a;overflow:hidden;margin-bottom:14px;">
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="display:block;aspect-ratio:16/9;background:#f8fafc;border-radius:4px;overflow:hidden;margin-bottom:14px;border:1px solid #e2e8f0;">
                     <img src="${esc(itemImg)}" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover;">
                   </a>
                 ` : `
-                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#0f172a;color:#fff;margin-bottom:14px;">🏛️</div>
+                  <div style="padding:28px;text-align:center;font-size:2.5rem;background:#f4f5fa;border-radius:4px;color:#23253d;margin-bottom:14px;">🏛️</div>
                 `}
                 <div style="display:flex;flex-direction:column;flex:1;">
                   <h4 style="font-size:1.1rem;font-weight:800;text-transform:uppercase;margin:0 0 8px;">
-                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#0f172a;text-decoration:none;">
+                    <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#23253d;text-decoration:none;">
                       ${esc(it.name)}
                     </a>
                   </h4>
                   <p style="color:#64748b;font-size:0.88rem;line-height:1.5;margin:0 0 16px;flex:1;">
                     ${esc(it.description || 'Enterprise industrial manufacturing solution.')}
                   </p>
-                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#0047ff;font-weight:800;font-size:0.88rem;text-transform:uppercase;letter-spacing:0.04em;text-decoration:none;margin-top:auto;">
+                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:#5758df;font-weight:800;font-size:0.88rem;text-transform:uppercase;letter-spacing:0.04em;text-decoration:none;margin-top:auto;">
                     ${esc(ui.details)} →
                   </a>
                 </div>
@@ -1380,4 +1202,3 @@ export function renderCraftoDetail(ctx: ThemeContext): string {
     ` : ''}
   `;
 }
-
