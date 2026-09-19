@@ -119,6 +119,35 @@ describe('confirmed materials presentation', () => {
       expect(attr(first, 'fetchpriority')).toBe('high');
     },
   );
+
+  it.each([
+    'saas-automation',
+    'fintech-platform',
+    'digital-marketing',
+    'crafto-corporate',
+    'corpox-ai-agency',
+    'corpox-consulting',
+  ])('%s keeps the real desktop navigation containers in document flow', async (template) => {
+    const draft = await fixture(template, 2),
+      html = renderSite(draft, options()),
+      nodes = elements(parse(html));
+    const header = nodes.find((n) => n.tagName === 'header')!;
+    expect(attr(header, 'data-wr-flow-header')).toBeDefined();
+    if (template.startsWith('corpox-')) {
+      const wrapper = nodes.find((n) =>
+        (attr(n, 'class') || '').split(' ').includes('header-transparent-with-topbar'),
+      );
+      if (wrapper) expect(attr(wrapper, 'data-wr-flow-header')).toBeDefined();
+    } else
+      expect(elements(header).some((n) => attr(n, 'data-wr-flow-nav') !== undefined)).toBe(true);
+    expect(html).toContain('[data-wr-flow-header]');
+    expect(html).toContain(
+      'position:relative!important;inset:auto!important;transform:none!important',
+    );
+    expect(renderSite({ ...draft, materials: undefined }, options())).not.toContain(
+      'data-wr-flow-header',
+    );
+  });
   it.each(Object.keys(templateMediaRequirements))(
     '%s groups only confirmed IDs and preserves stored products and original galleries',
     async (template) => {
@@ -226,6 +255,29 @@ describe('confirmed materials presentation', () => {
     expect(detail).not.toContain(product.material);
     product.material = 'Silicone';
     expect(text(parse(renderSite(draft, options('detail'))))).toContain('Silicone');
+  });
+
+  it('keeps a product inquiry preselection when a detail route is an explicit display alias', async () => {
+    const draft = grouped(await fixture('senseng-candy', 2));
+    draft.products[0].name = 'Contact Sales Sticker';
+    const cardLink = elements(parse(renderSite(draft, options()))).find(
+      (n) => n.tagName === 'a' && attr(n, 'title') === 'Contact Sales Sticker',
+    )!;
+    expect(attr(cardLink, 'data-wr-page')).toBe('detail');
+    const nodes = elements(parse(renderSite(draft, options('detail', 'p1'))));
+    const inquiry = nodes.find(
+      (n) =>
+        n.tagName === 'a' &&
+        attr(n, 'data-wr-page') === 'contact' &&
+        attr(n, 'data-wr-product-id') === 'p1',
+    )!;
+    expect(inquiry).toBeDefined();
+    expect(
+      new URL(
+        attr(inquiry, 'href')!,
+        'https://example.test/en/products/p1/index.html',
+      ).searchParams.get('productId'),
+    ).toBe('p0');
   });
   it.each(Object.keys(templateMediaRequirements))(
     '%s routes inquiry and language links correctly at every depth',
