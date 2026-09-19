@@ -2404,6 +2404,16 @@ export class DomainService {
       }
       await this.execute(job);
     } catch (error) {
+      if (job.kind === 'publish' && job.input.mediaPreparation && !job.input.publicationStarted) {
+        const detail = error && typeof error === 'object' ? error as { code?: unknown; status?: unknown } : {};
+        const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
+        console.error('Publication preparation failed', {
+          stage: 'prepublication', jobId: job.id, releaseId: job.input.releaseId,
+          errorClass: /^[A-Za-z][A-Za-z0-9_]{0,79}$/.test(errorClass) ? errorClass : 'Error',
+          ...(typeof detail.code === 'string' && /^[A-Za-z0-9_.-]{1,100}$/.test(detail.code) ? { code: detail.code } : {}),
+          ...(typeof detail.status === 'number' && Number.isInteger(detail.status) && detail.status >= 100 && detail.status <= 599 ? { status: detail.status } : {}),
+        });
+      }
       await this.fail(job, error);
     }
   }

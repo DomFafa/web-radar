@@ -4,6 +4,7 @@ import type { Asset, Job, Project, Release } from '../src/shared/model';
 import type { AppEnv } from '../src/worker/env';
 import * as publicMedia from '../src/worker/public-media';
 import { DomainError } from '../src/worker/domain';
+import { ApiError } from '../src/worker/http';
 import { DomainService } from '../src/worker/domain-service';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import type { ProviderSet } from '../src/worker/provider-contract';
@@ -256,11 +257,22 @@ describe('resumable prepublication responsive media', () => {
   });
   it('reuses the R2 output if a checkpoint failed after the immutable write', async () => {
     const job = await start();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     await env.DB.exec(
       `CREATE TRIGGER reject_variant_checkpoint BEFORE UPDATE ON releases WHEN EXISTS(SELECT 1 FROM json_each(NEW.data, '$.publicMedia.assets') WHERE json_array_length(json_extract(value,'$.variants'))>0) BEGIN SELECT RAISE(ABORT, 'checkpoint unavailable'); END`,
     );
     await service.tick();
     expect(transform).toHaveBeenCalledTimes(4);
+    expect(log).toHaveBeenCalledWith(
+      'Publication preparation failed',
+      expect.objectContaining({
+        stage: 'prepublication',
+        jobId: job.id,
+        releaseId: job.input.releaseId,
+        errorClass: 'Error',
+      }),
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain('checkpoint unavailable');
     expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('failed');
     expect(publish).not.toHaveBeenCalled();
     const firstUrl = transform.mock.calls[0][0];
@@ -274,6 +286,77 @@ describe('resumable prepublication responsive media', () => {
       new Set(Object.values(variants.assets).flatMap((a) => a.variants.map((v) => v.key))).size,
     );
   });
+  it('logs only safe prepublication ApiError diagnostics without secret-bearing error contents', async () => {
+    const job = await start();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const error = Object.assign(new ApiError(503, 'pr_context_failed', 'secret-message'), {
+      cause: new Error('secret-cause'),
+      headers: { Authorization: 'secret-token' },
+      body: 'secret-body',
+    });
+    vi.mocked(fetch).mockRejectedValueOnce(error);
+    await service.tick();
+    expect(log.mock.calls).toEqual([
+      [
+        'Publication preparation failed',
+        {
+          stage: 'prepublication',
+          jobId: job.id,
+          releaseId: job.input.releaseId,
+          errorClass: 'ApiError',
+          code: 'pr_context_failed',
+          status: 503,
+        },
+      ],
+    ]);
+    expect(JSON.stringify(log.mock.calls)).not.toContain('secret');
+    expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('failed');
+    expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('omits unsafe diagnostic metadata instead of serializing it', async () => {
+    const job = await start();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(publicMedia, 'preparePublicVariant').mockRejectedValue(
+      Object.assign(new Error('secret-message'), {
+        name: 'secret-name',
+        code: { token: 'secret-token' },
+        status: Infinity,
+      }),
+    );
+    await service.tick();
+    expect(log.mock.calls).toEqual([
+      [
+        'Publication preparation failed',
+        {
+          stage: 'prepublication',
+          jobId: job.id,
+          releaseId: job.input.releaseId,
+          errorClass: 'Error',
+        },
+      ],
+    ]);
+  });
+
+  it.each([
+    [false, false],
+    [true, true],
+  ])(
+    'does not log outside media preparation (preparation=%s, started=%s)',
+    async (mediaPreparation, publicationStarted) => {
+      const job = await start();
+      job.input.mediaPreparation = mediaPreparation;
+      job.input.publicationStarted = publicationStarted;
+      await service.store.update('jobs', job).run();
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(fetch).mockRejectedValueOnce(
+        new ApiError(503, 'pr_context_failed', 'secret-message'),
+      );
+      await service.tick();
+      expect(log).not.toHaveBeenCalled();
+    },
+  );
+
   it('retries a timeout then continues from the completed checkpoint', async () => {
     const job = await start();
     transform.mockImplementationOnce(async () => {
