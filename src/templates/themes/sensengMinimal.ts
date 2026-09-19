@@ -46,7 +46,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
 
   // 2. Sculptural Spotlight Hero
   const heroHtml = `
-    <section class="wr-minimal-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:85px 0 95px;position:relative;border-bottom:1px solid #e5e7eb;">
+    <section class="wr-minimal-hero" data-wr-hero aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:85px 0 95px;position:relative;border-bottom:1px solid #e5e7eb;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:60px;align-items:center;">
         <!-- Left Editorial Column -->
         <div class="wr-minimal-hero-left" data-reveal="fade-up">

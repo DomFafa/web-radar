@@ -73,6 +73,11 @@ export interface SiteCopy {
   subtitle: string;
   about: string;
   cta: string;
+  eyebrow?: string;
+  secondaryButtonText?: string;
+  secondaryButtonUrl?: string;
+  tags?: string[];
+  floatingPills?: string[];
 }
 export interface Scene {
   id: string;
@@ -191,10 +196,13 @@ export type BannerTarget = DesignPage | `product:${string}`;
 export interface BannerSlide {
   assetId: string;
   alt: string;
+  eyebrow?: string;
   headline?: string;
   subtitle?: string;
   buttonText?: string;
   buttonUrl?: string;
+  secondaryButtonText?: string;
+  secondaryButtonUrl?: string;
 }
 
 export interface PageBanner {
@@ -211,6 +219,15 @@ export interface PageBanner {
   height: 'auto' | 'screen';
   autoplay: boolean;
   interval: number;
+  eyebrow?: string;
+  headline?: string;
+  subtitle?: string;
+  primaryButtonText?: string;
+  primaryButtonUrl?: string;
+  secondaryButtonText?: string;
+  secondaryButtonUrl?: string;
+  tags?: string[];
+  floatingPills?: string[];
 }
 export interface Draft {
   materials?: import('./materials').AppliedMaterials;

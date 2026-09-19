@@ -6,6 +6,7 @@ import {getTypedMaterialsTemplate,renderTypedMaterialsSite} from '../src/templat
 import {renderSite} from '../src/templates';
 import {createHash} from 'node:crypto';
 import typedManifest from '../docs/materials-requirements/typed-2026-09-19.json';
+import {newBanner} from '../src/shared/banner-config';
 
 function fixture(id:string,count=2):Draft {
   const contract=getTypedMaterialsTemplate(id)!;
@@ -150,6 +151,27 @@ describe('typed materials preserve template layouts with confirmed content',()=>
         const walk=(n:any)=>{const a=Object.fromEntries((n.attrs||[]).map((a:any)=>[a.name,a.value]));if(a['data-wr-material-image'])seen.add(a['data-wr-material-image']);if(n.tagName==='img'&&a.srcset){expect(Number(a.height),id+':'+page+' intrinsic ratio').toBe(Number(a.width)/2);expect(a.src).not.toContain('?width=');}for(const c of n.childNodes||[])walk(c);};walk(parse(html));
       }
       expect(getTypedMaterialsTemplate(id)!.imageSlots.filter(s=>s.id!=='product-gallery'&&!seen.has(s.id)).map(s=>s.id),id+' missing optimized slot').toEqual([]);
+    }
+  });
+
+  it.each(['image','background'] as const)('preserves confirmed collections and responsive media with saved %s Banner settings',mode=>{
+    for(const id of Object.keys(templateMediaRequirements)){
+      const draft=fixture(id,2),contract=getTypedMaterialsTemplate(id)!;
+      draft.banners=[{...newBanner('saved-home',['home']),mode,headline:'Standalone Banner headline',subtitle:'Standalone Banner subtitle',tags:['Standalone Banner tag'],slides:[{assetId:'standalone-banner',alt:'Standalone Banner image'}]}];
+      const root=parse(renderSite(draft,{projectId:'typed',lang:'en',page:'home',assetUrl:assetId=>`/bound/${assetId}`,inquiryUrl:'/inquiry',imageVariants:(assetId,widths)=>widths.map(width=>({url:`/bound/${assetId}?width=${width}`,width,height:width/2}))}));
+      const images:any[]=[];let primaryHeadings=0,collectionHeroes=0,customBanners=0;
+      const walk=(n:any)=>{const a=Object.fromEntries((n.attrs||[]).map((a:any)=>[a.name,a.value]));if(n.tagName==='img')images.push(a);if(n.tagName==='h1')primaryHeadings++;if('data-wr-collection-hero'in a)collectionHeroes++;if(a['data-wr-banner']==='custom')customBanners++;for(const child of n.childNodes||[])walk(child);};walk(root);
+      expect(collectionHeroes,id+' collection hero').toBe(1);
+      expect(primaryHeadings,id+' primary heading').toBe(1);
+      expect(customBanners,id+' confirmed-material boundary').toBe(0);
+      for(const slot of contract.imageSlots.filter(s=>s.id.startsWith('hero-slide-'))){
+        const image=images.find(a=>a['data-wr-material-image']===slot.id);
+        expect(image,id+' '+slot.id).toBeDefined();
+        expect(image.src).toContain(`/bound/bound-${slot.id}-all`);
+        expect(image.srcset).toContain('?width=640 640w');
+        expect(Number(image.height)).toBe(Number(image.width)/2);
+        expect(image.style).toContain('object-fit:contain');
+      }
     }
   });
 

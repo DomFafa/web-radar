@@ -246,7 +246,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
       const customHeroVideo = asset(draft.heroAssetId);
       const heroVideo = customHeroVideo || (materialsMode?'':'/templates/senseng/hero-video.mp4');
       heroBlock = `
-        <div class="senseng-hero-video-full${customHeroVideo ? '' : ' senseng-hero-video-bundled'}">
+        <div data-wr-hero class="senseng-hero-video-full${customHeroVideo ? '' : ' senseng-hero-video-bundled'}">
           <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="${esc(asset(draft.posterAssetId) || '/templates/senseng/video-poster.jpg')}">
             ${heroVideo?`<source src="${esc(heroVideo)}" type="video/mp4">`:''}
           </video>
@@ -271,7 +271,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
       `;
     } else {
       heroBlock = `
-        <div class="senseng-hero">
+        <div data-wr-hero class="senseng-hero">
           <div class="senseng-hero-inner">
             <div class="senseng-hero-scene" aria-hidden="true">
               ${materialsMode?'':'<img class="senseng-hero-sky" src="/templates/senseng/hero-sky-v2.png" alt="" fetchpriority="high">'}
@@ -668,7 +668,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // -------------------------------------------------------------
   if (page === 'about') {
     const aboutHero = `
-      <div class="senseng-about-hero" data-reveal="fade-up">
+      <div data-wr-hero class="senseng-about-hero" data-reveal="fade-up">
         <div class="senseng-about-hero-inner">
           <div class="senseng-reference-scene" aria-hidden="true"><img src="/templates/senseng/about-reference.jpg" alt=""></div>
           <div class="senseng-reference-copy">

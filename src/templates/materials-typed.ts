@@ -41,7 +41,7 @@ function demo(id:TemplateId):Draft{
   return{template:id,company:{name:'__WR_COMPANY__',description:'__WR_DESCRIPTION__',type:'trader',email:'__WR_EMAIL__@example.invalid',contactName:'__WR_CONTACT__',phone:'__WR_PHONE__',whatsapp:'__WR_WHATSAPP__',address:'__WR_ADDRESS__',slogan:'__WR_SLOGAN__',capabilities:'__WR_CAPABILITIES__',certifications:'__WR_CERTIFICATIONS__',facebook:'',instagram:'',x:''},products,primaryProductId:'sample-0',country:'__WR_COUNTRY__',category:'',languages:['en'],brandColor:'#112233',copy:{en:{headline:'__WR_HEADLINE__',subtitle:'__WR_SUBTITLE__',about:'__WR_ABOUT__',cta:'__WR_CTA__'}},duration:8,direction:'',script:'',scriptRevision:0,scenes:[],storyboardRevision:0,heroAccepted:false};
 }
 function rawHtml(draft:Draft,options:RenderOptions):string{
-  const raw={...draft,materials:undefined,heroAssetId:undefined,banner:undefined};
+  const raw={...draft,materials:undefined,heroAssetId:undefined,banner:undefined,banners:undefined};
   rawDrafts.add(raw);
   try{return renderSite(raw,options);}finally{rawDrafts.delete(raw);}
 }
@@ -264,7 +264,7 @@ export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):stri
   const inv=inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
   const m=draft.materials,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
   if(inv.legacyText){
-    const legacy={...draft,materials:{...m,contractRevision:junoDisplayRevision,textBindings:m.textBindings.flatMap(b=>(inv.legacyText![b.slotId]||[b.slotId]).map(slotId=>({...b,slotId})))}};
+    const legacy={...draft,banner:undefined,banners:undefined,materials:{...m,contractRevision:junoDisplayRevision,textBindings:m.textBindings.flatMap(b=>(inv.legacyText![b.slotId]||[b.slotId]).map(slotId=>({...b,slotId})))}};
     const root=parse(renderSite(legacy,options));markPresentationRegions(root);prepare(root);
     const texts=new Map(m.textBindings.filter(b=>b.locale===options.lang).map(b=>[b.slotId,b.text]));
     walkCopy(root,(value,attribute)=>{const id=inv.text[page][key(value,attribute)];return id?texts.get(id)||'':value;});

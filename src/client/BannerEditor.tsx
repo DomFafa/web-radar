@@ -190,6 +190,241 @@ export function BannerEditor({
                 </select>
               </Field>
             </div>
+            {banner.kind === 'images' && banner.mode === 'image' && (
+              <div
+                className="banner-mode-notice"
+                style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  margin: '14px 0',
+                  color: '#166534',
+                  fontSize: '0.88rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                  <span>🖼️</span>
+                  <span>已启用「整张图片 · 不叠加文字」模式</span>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: '#15803d', lineHeight: 1.5 }}>
+                  前台页面将仅展示完整的 Banner 图片，并自动隐藏模板原有的文字标题、副标题、按钮、卖点标签与浮动微卡片。
+                  {banner.slides.length === 0 && (
+                    <strong style={{ display: 'block', marginTop: '6px', color: '#b91c1c' }}>
+                      ⚠️ 当前尚未上传图片：请在下方点击「上传 Banner 图片」添加图片。在上传图片前，前台也会隐藏默认文字与浮动卡片。
+                    </strong>
+                  )}
+                </p>
+              </div>
+            )}
+            {(banner.mode === 'background' || banner.kind === 'video') && (
+              <details
+                className="banner-custom-copy-details"
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  margin: '16px 0',
+                  overflow: 'hidden',
+                }}
+              >
+                <summary
+                  style={{
+                    padding: '14px 18px',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#ffffff',
+                    fontWeight: 600,
+                    listStyle: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.1rem' }}>✏️</span>
+                    <span style={{ fontSize: '0.96rem', fontWeight: 700, color: '#1e293b' }}>
+                      首屏文字与按钮自定义（选填）
+                    </span>
+                    {(banner.eyebrow ||
+                      banner.headline ||
+                      banner.subtitle ||
+                      banner.primaryButtonText ||
+                      banner.primaryButtonUrl ||
+                      banner.secondaryButtonText ||
+                      banner.secondaryButtonUrl ||
+                      (banner.tags && banner.tags.some(Boolean)) ||
+                      (banner.floatingPills && banner.floatingPills.some(Boolean))) && (
+                      <span
+                        style={{
+                          background: '#e0e7ff',
+                          color: '#3730a3',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                        }}
+                      >
+                        已自定义
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                    点击展开 / 折叠 ▾
+                  </span>
+                </summary>
+
+                <div style={{ padding: '16px 18px', borderTop: '1px solid #e2e8f0' }}>
+                  <p className="muted" style={{ margin: '0 0 14px', fontSize: '0.82rem' }}>
+                    留空时使用整站默认文案与设置。填写后将直接覆盖所选页面的首屏徽标、标题、副标题、按钮及卖点标签。
+                  </p>
+
+                <div className="form-grid">
+                  <Field label="顶部小徽标 (Eyebrow Badge)">
+                    <input
+                      aria-label="顶部小徽标"
+                      maxLength={120}
+                      placeholder="如：🧸 COMPACT SQUISHY FRIEND COLLECTION"
+                      disabled={disabled}
+                      value={banner.eyebrow || ''}
+                      onChange={(e) => change(banner.id, { eyebrow: e.target.value })}
+                    />
+                  </Field>
+
+                  <Field label="首屏主标题 (Headline)">
+                    <input
+                      aria-label="首屏主标题"
+                      maxLength={200}
+                      placeholder={draft.copy?.[draft.languages[0] || 'en']?.headline || '留空时使用全站主标题'}
+                      disabled={disabled}
+                      value={banner.headline || ''}
+                      onChange={(e) => change(banner.id, { headline: e.target.value })}
+                    />
+                  </Field>
+                </div>
+
+                <Field label="首屏副标题 / 描述 (Subtitle)">
+                  <textarea
+                    aria-label="首屏副标题"
+                    rows={3}
+                    maxLength={500}
+                    placeholder={draft.copy?.[draft.languages[0] || 'en']?.subtitle || '留空时使用全站副标题'}
+                    disabled={disabled}
+                    value={banner.subtitle || ''}
+                    onChange={(e) => change(banner.id, { subtitle: e.target.value })}
+                  />
+                </Field>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginTop: '8px' }}>
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>
+                      主操作按钮 (Primary CTA)
+                    </span>
+                    <Field label="主按钮文字">
+                      <input
+                        aria-label="主按钮文字"
+                        maxLength={50}
+                        placeholder="如：探索全部萌趣玩具 ↗"
+                        disabled={disabled}
+                        value={banner.primaryButtonText || ''}
+                        onChange={(e) => change(banner.id, { primaryButtonText: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="主按钮链接">
+                      <input
+                        aria-label="主按钮链接"
+                        maxLength={200}
+                        placeholder="如：catalog/index.html"
+                        disabled={disabled}
+                        value={banner.primaryButtonUrl || ''}
+                        onChange={(e) => change(banner.id, { primaryButtonUrl: e.target.value })}
+                      />
+                    </Field>
+                  </div>
+
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>
+                      次要按钮 (Secondary CTA)
+                    </span>
+                    <Field label="次按钮文字">
+                      <input
+                        aria-label="次按钮文字"
+                        maxLength={50}
+                        placeholder="如：索取样品与定制咨询 →"
+                        disabled={disabled}
+                        value={banner.secondaryButtonText || ''}
+                        onChange={(e) => change(banner.id, { secondaryButtonText: e.target.value })}
+                      />
+                    </Field>
+                    <Field label="次按钮链接">
+                      <input
+                        aria-label="次按钮链接"
+                        maxLength={200}
+                        placeholder="如：contact/index.html"
+                        disabled={disabled}
+                        value={banner.secondaryButtonUrl || ''}
+                        onChange={(e) => change(banner.id, { secondaryButtonUrl: e.target.value })}
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '2px' }}>
+                    特色卖点标签 (Quality Tags · 3项)
+                  </span>
+                  <p className="muted" style={{ margin: '0 0 8px', fontSize: '0.78rem' }}>
+                    显示在按钮下方，用于体现安全认证、材质特质等。
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                    {[0, 1, 2].map((idx) => (
+                      <input
+                        key={idx}
+                        aria-label={`卖点标签 ${idx + 1}`}
+                        maxLength={60}
+                        placeholder={['如：🌱 100% 无毒不含BPA', '如：🛡️ ASTM & EN71 认证', '如：☁️ 5秒柔和慢回弹'][idx]}
+                        disabled={disabled}
+                        value={banner.tags?.[idx] || ''}
+                        onChange={(e) => {
+                          const nextTags = [...(banner.tags || ['', '', ''])];
+                          while (nextTags.length < 3) nextTags.push('');
+                          nextTags[idx] = e.target.value;
+                          change(banner.id, { tags: nextTags });
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '2px' }}>
+                    右侧 3D 浮动微标签 (Floating Pills · 3项)
+                  </span>
+                  <p className="muted" style={{ margin: '0 0 8px', fontSize: '0.78rem' }}>
+                    针对特色模版（如童趣乐园等）首屏右侧卡片上的浮动小标签。
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                    {[0, 1, 2].map((idx) => (
+                      <input
+                        key={idx}
+                        aria-label={`浮动标签 ${idx + 1}`}
+                        maxLength={60}
+                        placeholder={['如：✨ 独家微爆珠软充', '如：🌈 温感变色黑科技', '如：☁️ 5s Slow-Rise'][idx]}
+                        disabled={disabled}
+                        value={banner.floatingPills?.[idx] || ''}
+                        onChange={(e) => {
+                          const nextPills = [...(banner.floatingPills || ['', '', ''])];
+                          while (nextPills.length < 3) nextPills.push('');
+                          nextPills[idx] = e.target.value;
+                          change(banner.id, { floatingPills: nextPills });
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              </details>
+            )}
             {banner.kind === 'images' ? (
               <>
                 <div className="banner-slides">
@@ -210,6 +445,22 @@ export function BannerEditor({
                             change(banner.id, {
                               slides: banner.slides.map((s, i) =>
                                 i === index ? { ...s, alt: e.target.value } : s,
+                              ),
+                            })
+                          }
+                        />
+                      </Field>
+                      <Field label={`幻灯片 ${index + 1} 顶部徽标（选填）`}>
+                        <input
+                          aria-label={`幻灯片 ${index + 1} 顶部徽标`}
+                          maxLength={120}
+                          placeholder="留空时使用 Banner 或全站设置"
+                          disabled={disabled}
+                          value={slide.eyebrow || ''}
+                          onChange={(e) =>
+                            change(banner.id, {
+                              slides: banner.slides.map((s, i) =>
+                                i === index ? { ...s, eyebrow: e.target.value } : s,
                               ),
                             })
                           }
@@ -248,7 +499,7 @@ export function BannerEditor({
                         />
                       </Field>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <Field label="按钮文字（选填）">
+                        <Field label="主按钮文字（选填）">
                           <input
                             aria-label={`幻灯片 ${index + 1} 按钮文字`}
                             maxLength={50}
@@ -264,7 +515,7 @@ export function BannerEditor({
                             }
                           />
                         </Field>
-                        <Field label="按钮链接（选填）">
+                        <Field label="主按钮链接（选填）">
                           <input
                             aria-label={`幻灯片 ${index + 1} 按钮链接`}
                             maxLength={200}
@@ -275,6 +526,40 @@ export function BannerEditor({
                               change(banner.id, {
                                 slides: banner.slides.map((s, i) =>
                                   i === index ? { ...s, buttonUrl: e.target.value } : s,
+                                ),
+                              })
+                            }
+                          />
+                        </Field>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <Field label="次按钮文字（选填）">
+                          <input
+                            aria-label={`幻灯片 ${index + 1} 次按钮文字`}
+                            maxLength={50}
+                            placeholder="如：索取样品"
+                            disabled={disabled}
+                            value={slide.secondaryButtonText || ''}
+                            onChange={(e) =>
+                              change(banner.id, {
+                                slides: banner.slides.map((s, i) =>
+                                  i === index ? { ...s, secondaryButtonText: e.target.value } : s,
+                                ),
+                              })
+                            }
+                          />
+                        </Field>
+                        <Field label="次按钮链接（选填）">
+                          <input
+                            aria-label={`幻灯片 ${index + 1} 次按钮链接`}
+                            maxLength={200}
+                            placeholder="如：contact/index.html"
+                            disabled={disabled}
+                            value={slide.secondaryButtonUrl || ''}
+                            onChange={(e) =>
+                              change(banner.id, {
+                                slides: banner.slides.map((s, i) =>
+                                  i === index ? { ...s, secondaryButtonUrl: e.target.value } : s,
                                 ),
                               })
                             }

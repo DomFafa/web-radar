@@ -1,4 +1,13 @@
 import type { BannerTarget, Draft, PageBanner } from './model';
+/** Banner CTAs accept site-relative destinations and ordinary web/contact links. */
+export function bannerLink(value: string): string {
+  try {
+    const url = new URL(value, 'https://banner.invalid/');
+    if (['https:', 'http:', 'mailto:', 'tel:'].includes(url.protocol) && !url.username && !url.password)
+      return value.trim();
+  } catch {}
+  return '';
+}
 export const newBanner = (id: string, targets: BannerTarget[] = []): PageBanner => ({
   id,
   targets,

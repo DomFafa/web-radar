@@ -183,3 +183,148 @@ it('omits unprovided contact names rather than displaying sample identities', ()
     expect(result).toContain('sales@example.test');
   }
 });
+
+it('hides overlay text, badges, and floating cards in senseng-candy when mode is image even with 0 slides', () => {
+  const draft: Draft = {
+    ...defaultDraft(),
+    template: 'senseng-candy' as any,
+    banners: [
+      {
+        id: 'home-banner',
+        targets: ['home'],
+        kind: 'images',
+        slides: [],
+        mode: 'image',
+        fit: 'cover',
+        position: 'center',
+        contrast: 'light',
+        height: 'auto',
+        autoplay: true,
+        interval: 5,
+      },
+    ],
+  };
+  const html = renderSite(draft, {
+    projectId: 'p',
+    assetUrl,
+    inquiryUrl: 'https://assets.example/inquiries',
+    lang: 'en',
+    page: 'home',
+  });
+  const heroMatch = html.match(/<section[^>]*class="[^"]*wr-candy-hero[^"]*"[^>]*>([\s\S]*?)<\/section>/)?.[0] || '';
+  // In pure image mode without slides, template copy/buttons and floating cards must NOT appear in the hero
+  expect(heroMatch).not.toContain('SENSORY PLAY');
+  expect(heroMatch).not.toContain('Request Sample Kit');
+  expect(heroMatch).not.toContain('100% BPA-Free');
+  expect(heroMatch).not.toContain('wr-candy-stage');
+  expect(heroMatch).not.toContain('Crunchy Soft-Fill');
+  expect(heroMatch).not.toContain('Thermo Color Shift');
+  expect(heroMatch).not.toContain('5s Slow-Rise');
+});
+
+it('renders customized eyebrow, headline, subtitle, buttons, tags, and floating pills in senseng-candy', () => {
+  const draft: Draft = {
+    ...defaultDraft(),
+    template: 'senseng-candy' as any,
+    banners: [
+      {
+        id: 'home-banner',
+        targets: ['home'],
+        kind: 'images',
+        slides: [],
+        mode: 'background',
+        fit: 'cover',
+        position: 'center',
+        contrast: 'light',
+        height: 'auto',
+        autoplay: true,
+        interval: 5,
+        eyebrow: 'CUSTOM EYEBROW 2026',
+        headline: 'Custom Candy Hero Headline',
+        subtitle: 'Customized description for testing banner copy.',
+        primaryButtonText: 'Custom Buy Now',
+        primaryButtonUrl: 'catalog/custom.html',
+        secondaryButtonText: 'Custom Contact Us',
+        secondaryButtonUrl: 'contact/custom.html',
+        tags: ['🌱 Pure Eco Silicone', '🛡️ CE Certified 2026', '☁️ Super Fast Rebound'],
+        floatingPills: ['✨ Ultra Squeeze', '🌈 Glow in Dark', '☁️ Micro Air Flow'],
+      },
+    ],
+  };
+  const html = renderSite(draft, {
+    projectId: 'p',
+    assetUrl,
+    inquiryUrl: 'https://assets.example/inquiries',
+    lang: 'en',
+    page: 'home',
+  });
+  expect(html).toContain('CUSTOM EYEBROW 2026');
+  expect(html).toContain('Custom Candy Hero Headline');
+  expect(html).toContain('Customized description for testing banner copy.');
+  expect(html).toContain('Custom Buy Now');
+  expect(html).toContain('catalog/custom.html');
+  expect(html).toContain('Custom Contact Us');
+  expect(html).toContain('contact/custom.html');
+  expect(html).toContain('🌱 Pure Eco Silicone');
+  expect(html).toContain('🛡️ CE Certified 2026');
+  expect(html).toContain('☁️ Super Fast Rebound');
+  expect(html).toContain('✨ Ultra Squeeze');
+  expect(html).toContain('🌈 Glow in Dark');
+  expect(html).toContain('☁️ Micro Air Flow');
+});
+
+it('persists banner custom copy and slide custom copy in editDraft', () => {
+  const initial = defaultDraft();
+  const modified = editDraft(initial, {
+    ...initial,
+    banners: [
+      {
+        id: 'b1',
+        targets: ['home'],
+        kind: 'images',
+        slides: [
+          {
+            assetId: 's1',
+            alt: 'Slide 1',
+            eyebrow: 'Slide Eyebrow',
+            headline: 'Slide Head',
+            subtitle: 'Slide Sub',
+            buttonText: 'Slide Btn',
+            buttonUrl: 'catalog/slide.html',
+            secondaryButtonText: 'Slide Sec Btn',
+            secondaryButtonUrl: 'contact/slide.html',
+          },
+        ],
+        mode: 'background',
+        fit: 'cover',
+        position: 'center',
+        contrast: 'light',
+        height: 'auto',
+        autoplay: true,
+        interval: 5,
+        eyebrow: 'Banner Eyebrow',
+        headline: 'Banner Headline',
+        subtitle: 'Banner Subtitle',
+        primaryButtonText: 'Banner Btn',
+        primaryButtonUrl: 'catalog/banner.html',
+        secondaryButtonText: 'Banner Sec Btn',
+        secondaryButtonUrl: 'contact/banner.html',
+        tags: ['Tag A', 'Tag B'],
+        floatingPills: ['Pill A', 'Pill B'],
+      },
+    ],
+  });
+  const b = modified.banners?.[0];
+  expect(b?.eyebrow).toBe('Banner Eyebrow');
+  expect(b?.headline).toBe('Banner Headline');
+  expect(b?.subtitle).toBe('Banner Subtitle');
+  expect(b?.primaryButtonText).toBe('Banner Btn');
+  expect(b?.primaryButtonUrl).toBe('catalog/banner.html');
+  expect(b?.secondaryButtonText).toBe('Banner Sec Btn');
+  expect(b?.secondaryButtonUrl).toBe('contact/banner.html');
+  expect(b?.tags).toEqual(['Tag A', 'Tag B']);
+  expect(b?.floatingPills).toEqual(['Pill A', 'Pill B']);
+  expect(b?.slides[0].eyebrow).toBe('Slide Eyebrow');
+  expect(b?.slides[0].secondaryButtonText).toBe('Slide Sec Btn');
+  expect(b?.slides[0].secondaryButtonUrl).toBe('contact/slide.html');
+});

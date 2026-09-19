@@ -47,7 +47,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
 
   // 2. Botanical Hero with Soft Wave Curves
   const heroHtml = `
-    <section class="wr-nature-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:75px 0 85px;position:relative;overflow:hidden;border-bottom:1px solid #dcd5c7;">
+    <section class="wr-nature-hero" data-wr-hero aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:75px 0 85px;position:relative;overflow:hidden;border-bottom:1px solid #dcd5c7;">
       <!-- Subtle Floating Leaves SVG / Decor -->
       <div style="position:absolute;width:380px;height:380px;border-radius:50%;background:rgba(74,124,89,0.08);filter:blur(60px);top:-60px;left:-60px;pointer-events:none;"></div>
 
