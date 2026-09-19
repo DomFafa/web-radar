@@ -154,10 +154,10 @@ describe('typed materials preserve template layouts with confirmed content',()=>
     }
   });
 
-  it.each(['image','background'] as const)('preserves confirmed collections and responsive media with saved %s Banner settings',mode=>{
+  it.each(['image','background'] as const)('preserves confirmed collections and responsive media with unassigned %s Banner settings',mode=>{
     for(const id of Object.keys(templateMediaRequirements)){
       const draft=fixture(id,2),contract=getTypedMaterialsTemplate(id)!;
-      draft.banners=[{...newBanner('saved-home',['home']),mode,headline:'Standalone Banner headline',subtitle:'Standalone Banner subtitle',tags:['Standalone Banner tag'],slides:[{assetId:'standalone-banner',alt:'Standalone Banner image'}]}];
+      draft.banners=[{...newBanner('saved-home',[]),mode,headline:'Standalone Banner headline',subtitle:'Standalone Banner subtitle',tags:['Standalone Banner tag'],slides:[{assetId:'standalone-banner',alt:'Standalone Banner image'}]}];
       const root=parse(renderSite(draft,{projectId:'typed',lang:'en',page:'home',assetUrl:assetId=>`/bound/${assetId}`,inquiryUrl:'/inquiry',imageVariants:(assetId,widths)=>widths.map(width=>({url:`/bound/${assetId}?width=${width}`,width,height:width/2}))}));
       const images:any[]=[];let primaryHeadings=0,collectionHeroes=0,customBanners=0;
       const walk=(n:any)=>{const a=Object.fromEntries((n.attrs||[]).map((a:any)=>[a.name,a.value]));if(n.tagName==='img')images.push(a);if(n.tagName==='h1')primaryHeadings++;if('data-wr-collection-hero'in a)collectionHeroes++;if(a['data-wr-banner']==='custom')customBanners++;for(const child of n.childNodes||[])walk(child);};walk(root);
