@@ -260,7 +260,7 @@ describe('resumable prepublication responsive media', () => {
       `CREATE TRIGGER reject_variant_checkpoint BEFORE UPDATE ON releases WHEN EXISTS(SELECT 1 FROM json_each(NEW.data, '$.publicMedia.assets') WHERE json_array_length(json_extract(value,'$.variants'))>0) BEGIN SELECT RAISE(ABORT, 'checkpoint unavailable'); END`,
     );
     await service.tick();
-    expect(transform).toHaveBeenCalledTimes(1);
+    expect(transform).toHaveBeenCalledTimes(4);
     expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('failed');
     expect(publish).not.toHaveBeenCalled();
     const firstUrl = transform.mock.calls[0][0];
@@ -274,10 +274,8 @@ describe('resumable prepublication responsive media', () => {
       new Set(Object.values(variants.assets).flatMap((a) => a.variants.map((v) => v.key))).size,
     );
   });
-  it('retries a timeout then continues from the completed checkpoint, with one active transform', async () => {
+  it('retries a timeout then continues from the completed checkpoint', async () => {
     const job = await start();
-    let active = 0,
-      peak = 0;
     transform.mockImplementationOnce(async () => {
       throw new DOMException('timed out', 'TimeoutError');
     });
@@ -285,19 +283,14 @@ describe('resumable prepublication responsive media', () => {
     expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('queued');
     expect(publish).not.toHaveBeenCalled();
     transform.mockImplementation(async () => {
-      active++;
-      peak = Math.max(peak, active);
-      await Promise.resolve();
-      active--;
       return new Response(output, {
         headers: { 'Content-Type': 'image/webp', 'X-Source-Width': '4', 'X-Source-Height': '3' },
       });
     });
     expect((await finish(job)).status).toBe('succeeded');
-    expect(peak).toBe(1);
   });
 
-  it('finishes 250 transforms across 63 successful batches plus a busy retry without spending the Pages attempt budget', async () => {
+  it('finishes 250 transforms across 63 batches including a busy retry without spending the Pages attempt budget', async () => {
     const job = await start(),
       release = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
     release.publicMedia = { policy: publicMedia.publicMediaPolicy, ready: false, assets: {} };
@@ -356,9 +349,160 @@ describe('resumable prepublication responsive media', () => {
       expect(current.input.publicationStarted).toBeUndefined();
       expect(publish).not.toHaveBeenCalled();
     }
-    expect(ticks + 1).toBe(64);
+    expect(ticks + 1).toBe(63);
     expect(completed.size).toBe(250);
     expect(publish).toHaveBeenCalledTimes(1);
     expect((await service.store.one<Job>('jobs', job.id))?.attempts).toBe(1);
+  });
+  it('keeps the 40 MiB tick budget and orders each asset width before reusing native-size results', async () => {
+    const job = await start();
+    const release = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
+    release.publicMedia = { policy: publicMedia.publicMediaPolicy, ready: false, assets: {} };
+    const assets = (await service.store.list<Asset>('assets')).slice(0, 3);
+    for (const asset of assets) {
+      asset.size = 15 * 1024 * 1024;
+      await service.store.update('assets', asset).run();
+      release.publicMedia.assets[asset.id] = {
+        sourceKey: asset.key,
+        sourceIdentity: 'sha256:' + asset.sha256,
+        widths: [320, 640, 1280],
+        variants: [],
+      };
+    }
+    await service.store.update('releases', release).run();
+    const active = new Set<string>();
+    let peak = 0;
+    const prepare = vi
+      .spyOn(publicMedia, 'preparePublicVariant')
+      .mockImplementation(async (_env, asset, _identity, width) => {
+        expect(active.has(asset.id)).toBe(false);
+        active.add(asset.id);
+        peak = Math.max(peak, active.size);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        active.delete(asset.id);
+        return {
+          key: asset.key + '/' + width,
+          requestedWidth: width,
+          width: Math.min(width, 400),
+          height: 200,
+          bytes: 10,
+          sha256: 'b'.repeat(64),
+          original: { width: 400, height: 200 },
+        };
+      });
+    for (let tick = 0; tick < 3; tick++) {
+      const before = prepare.mock.calls.length;
+      await service.tick();
+      const bytes = prepare.mock.calls.slice(before).reduce((sum, call) => sum + call[1].size, 0);
+      expect(bytes).toBe(30 * 1024 * 1024);
+      if (tick < 2) expect(publish).not.toHaveBeenCalled();
+    }
+    expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('succeeded');
+    expect(peak).toBe(2);
+    const prepared = (await service.store.one<Release>('releases', release.id))!.publicMedia!;
+    for (const asset of assets) {
+      expect(
+        prepare.mock.calls.filter((call) => call[1].id === asset.id).map((call) => call[3]),
+      ).toEqual([320, 640]);
+      const variants = prepared.assets[asset.id].variants;
+      expect(variants.map((variant) => variant.requestedWidth)).toEqual([320, 640, 1280]);
+      expect(variants[2].key).toBe(variants[1].key);
+    }
+  });
+
+  it('overlaps four distinct assets, settles the wave before checkpointing, and preserves mixed successes on retry', async () => {
+    const job = await start();
+    const calls: {
+      asset: Asset;
+      width: number;
+      resolve: () => void;
+      reject: (error: Error) => void;
+    }[] = [];
+    let unblock = false;
+    const result = (asset: Asset, width: number) => ({
+      key: asset.key + '/' + width,
+      requestedWidth: width,
+      width: 4,
+      height: 3,
+      bytes: 10,
+      sha256: 'b'.repeat(64),
+      original: { width: 4, height: 3 },
+    });
+    const prepare = vi
+      .spyOn(publicMedia, 'preparePublicVariant')
+      .mockImplementation(async (_env, asset, _identity, width) => {
+        if (unblock) return result(asset, width);
+        return new Promise((resolve, reject) =>
+          calls.push({ asset, width, resolve: () => resolve(result(asset, width)), reject }),
+        );
+      });
+    let finished = false;
+    const running = service.tick().then(() => {
+      finished = true;
+    });
+    try {
+      await vi.waitFor(() => expect(calls).toHaveLength(4), { timeout: 500 });
+      expect(new Set(calls.map((c) => c.asset.id)).size).toBe(4);
+      calls[0].resolve();
+      calls[1].reject(new DomainError(503, 'public_media_retry', 'busy'));
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(finished).toBe(false);
+      const during = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
+      expect(Object.values(during.publicMedia!.assets).flatMap((a) => a.variants)).toHaveLength(0);
+    } finally {
+      unblock = true;
+      calls.forEach((call) => call.resolve());
+      await running;
+    }
+    expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('queued');
+    const checkpoint = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
+    expect(Object.values(checkpoint.publicMedia!.assets).flatMap((a) => a.variants)).toHaveLength(
+      3,
+    );
+    expect(publish).not.toHaveBeenCalled();
+    expect((await finish(job)).status).toBe('succeeded');
+    for (const call of [calls[0], calls[2], calls[3]])
+      expect(prepare.mock.calls.filter((c) => c[1].id === call.asset.id)).toHaveLength(1);
+  });
+
+  it('waits for the complete in-flight wave after offline cancellation without persisting or activating its successes', async () => {
+    const job = await start();
+    let unblock = false;
+    const pending: (() => void)[] = [];
+    vi.spyOn(publicMedia, 'preparePublicVariant').mockImplementation(
+      async (_env, asset, _identity, width) => {
+        if (!unblock) await new Promise<void>((resolve) => pending.push(resolve));
+        return {
+          key: asset.key + '/' + width,
+          requestedWidth: width,
+          width: 4,
+          height: 3,
+          bytes: 10,
+          sha256: 'b'.repeat(64),
+          original: { width: 4, height: 3 },
+        };
+      },
+    );
+    let finished = false;
+    const running = service.tick().then(() => {
+      finished = true;
+    });
+    try {
+      await vi.waitFor(() => expect(pending).toHaveLength(4), { timeout: 500 });
+      await api('offline', {});
+      pending[0]();
+      await Promise.resolve();
+      expect(finished).toBe(false);
+    } finally {
+      unblock = true;
+      pending.forEach((resolve) => resolve());
+      await running;
+    }
+    expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('failed');
+    const release = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
+    expect(Object.values(release.publicMedia!.assets).flatMap((a) => a.variants)).toHaveLength(0);
+    expect(release.publicMedia!.ready).toBe(false);
+    expect(publish).not.toHaveBeenCalled();
   });
 });

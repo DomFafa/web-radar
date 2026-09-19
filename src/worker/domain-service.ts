@@ -26,6 +26,7 @@ import type {
   Principal,
   ProductSnapshot,
   Project,
+  PublicMediaAsset,
   Release,
   Scene,
 } from '../shared/model';
@@ -3010,7 +3011,7 @@ export class DomainService {
       assetUrl: id => `${this.origin()}/public/sites/${project.id}/assets/${encodeURIComponent(id)}`,
     };
   }
-  /** Prepare immutable bytes before Pages can see any candidate HTML. One transformer slot per job. */
+  /** Prepare immutable bytes before Pages can see any candidate HTML. At most four distinct assets overlap. */
   private async preparePublicationMedia(job: Job, release: Release, options: Parameters<typeof renderSiteFiles>[1]): Promise<boolean> {
     if (!release.publicMedia) {
       release.publicMedia = { policy: publicMediaPolicy, ready: false, assets: {} };
@@ -3034,31 +3035,55 @@ export class DomainService {
       await this.checkpointPublicationMedia(job, release);
     }
     const started = Date.now(); let count = 0, inputBytes = 0;
-    for (const [id, entry] of Object.entries(release.publicMedia.assets)) {
-      for (const width of entry.widths) {
-        if (entry.variants.some(v => v.requestedWidth === width)) continue;
-        const native = entry.variants.find(v => v.width < v.requestedWidth && v.requestedWidth < width);
-        if (native) {
-          entry.variants.push({ ...native, requestedWidth: width });
-          await this.checkpointPublicationMedia(job, release);
-          continue;
+    while (true) {
+      const wave: { asset: Asset; entry: PublicMediaAsset; width: number }[] = [];
+      let remaining = false, aliasesChanged = false;
+      for (const [id, entry] of Object.entries(release.publicMedia.assets)) {
+        for (const width of entry.widths) {
+          if (entry.variants.some(v => v.requestedWidth === width)) continue;
+          const native = entry.variants.find(v => v.width < v.requestedWidth && v.requestedWidth < width);
+          if (native) {
+            entry.variants.push({ ...native, requestedWidth: width });
+            aliasesChanged = true;
+            continue;
+          }
+          remaining = true;
+          if (count + wave.length >= 4 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
+          const asset = await this.projectAsset(job.projectId, id);
+          if (count + wave.length > 0 && inputBytes + asset.size > 40 * 1024 * 1024) break;
+          wave.push({ asset, entry, width }); inputBytes += asset.size;
+          // Only the next width of this asset may run; native-size reuse needs its result first.
+          break;
         }
-        const asset = await this.projectAsset(job.projectId, id);
-        if (count >= 4 || (count && (Date.now() - started >= 30_000 || inputBytes + asset.size > 40 * 1024 * 1024))) {
+      }
+      if (!wave.length) {
+        if (remaining) {
           await this.checkpointPublicationMedia(job, release, true);
           return false;
         }
-        await this.assertPublicationPreparing(job);
-        const { original, ...variant } = await preparePublicVariant(this.env, asset, entry.sourceIdentity, width);
-        entry.original = original;
-        entry.variants.push(variant); count++; inputBytes += asset.size;
-        // R2 may complete before this D1 write; retry reuses verified object metadata at the same key.
+        release.publicMedia.ready = true;
         await this.checkpointPublicationMedia(job, release);
+        return true;
       }
+      const results = await Promise.allSettled(wave.map(async ({ asset, entry, width }) => {
+        await this.assertPublicationPreparing(job);
+        return preparePublicVariant(this.env, asset, entry.sourceIdentity, width);
+      }));
+      count += wave.length;
+      let saved = false;
+      for (const [index, result] of results.entries()) {
+        if (result.status !== 'fulfilled') continue;
+        const { original, ...variant } = result.value;
+        wave[index].entry.original = original;
+        wave[index].entry.variants.push(variant);
+        saved = true;
+      }
+      // All transforms have settled: persist successes even if a sibling failed. R2 metadata
+      // recovers successful writes if this single locked checkpoint is itself interrupted.
+      if (saved || aliasesChanged) await this.checkpointPublicationMedia(job, release);
+      const failure = results.find(result => result.status === 'rejected');
+      if (failure?.status === 'rejected') throw failure.reason;
     }
-    release.publicMedia.ready = true;
-    await this.checkpointPublicationMedia(job, release);
-    return true;
   }
   private async assertPublicationPreparing(job: Job): Promise<Job> {
     const persisted = await this.store.one<Job>('jobs', job.id);
