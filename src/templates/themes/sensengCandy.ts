@@ -1,4 +1,5 @@
 import type { Product } from '../../shared/model';
+import { selectedBanner } from '../../shared/banner-config';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { isTypedMaterialsSource } from '../materials-typed';
 
@@ -191,6 +192,55 @@ export function renderCandyHome(ctx: ThemeContext): string {
     cta: isZh ? '探索全部萌趣玩具' : 'Explore Bestselling Squishies',
   };
 
+  const banner = selectedBanner(draft, 'home');
+  const isImageMode = banner?.mode === 'image';
+
+  const eyebrowText =
+    banner?.eyebrow ||
+    draft.copy?.[ctx.lang]?.eyebrow ||
+    (isZh ? 'Senseng 童趣感官潮玩 · 爆款推荐' : 'SENSORY PLAY & STRESS RELIEF · BESTSELLERS');
+  const headlineText = banner?.headline || copy.headline;
+  const subtitleText = banner?.subtitle || copy.subtitle;
+  const primaryBtnText =
+    banner?.primaryButtonText ||
+    banner?.slides?.[0]?.buttonText ||
+    copy.cta ||
+    (isZh ? '浏览全部系列' : 'Explore All Toys');
+  const primaryBtnUrl =
+    banner?.primaryButtonUrl ||
+    banner?.slides?.[0]?.buttonUrl ||
+    path('catalog/index.html');
+  const secondaryBtnText =
+    banner?.secondaryButtonText ||
+    banner?.slides?.[0]?.secondaryButtonText ||
+    draft.copy?.[ctx.lang]?.secondaryButtonText ||
+    (isZh ? '索取样品与定制咨询 →' : 'Request Sample Kit →');
+  const secondaryBtnUrl =
+    banner?.secondaryButtonUrl ||
+    banner?.slides?.[0]?.secondaryButtonUrl ||
+    draft.copy?.[ctx.lang]?.secondaryButtonUrl ||
+    path('contact/index.html');
+
+  const defaultTags = isZh
+    ? ['🌱 100% 无毒不含BPA', '🛡️ 欧美玩具实验室安全认证', '☁️ 5秒柔和慢回弹']
+    : ['🌱 100% BPA-Free', '🛡️ ASTM & EN71 Certified', '☁️ 5s Slow Rebound'];
+  const qualityTags =
+    banner?.tags && banner.tags.filter(Boolean).length > 0
+      ? banner.tags.filter(Boolean)
+      : draft.copy?.[ctx.lang]?.tags && draft.copy[ctx.lang]!.tags!.filter(Boolean).length > 0
+        ? draft.copy[ctx.lang]!.tags!.filter(Boolean)
+        : defaultTags;
+
+  const defaultPills = isZh
+    ? ['✨ 独家微爆珠软充', '🌈 温感变色黑科技', '☁️ 5s Slow-Rise']
+    : ['✨ Crunchy Soft-Fill', '🌈 Thermo Color Shift', '☁️ 5s Slow-Rise'];
+  const floatingPills =
+    banner?.floatingPills && banner.floatingPills.filter(Boolean).length > 0
+      ? banner.floatingPills.filter(Boolean)
+      : draft.copy?.[ctx.lang]?.floatingPills && draft.copy[ctx.lang]!.floatingPills!.filter(Boolean).length > 0
+        ? draft.copy[ctx.lang]!.floatingPills!.filter(Boolean)
+        : defaultPills;
+
   // Top Notice Ribbon
   const ribbonHtml = `
     <div class="wr-candy-ribbon" style="background:linear-gradient(90deg,#ff6b8b,#ffa07a,#ffd166,#48cae4);color:#ffffff;padding:8px 0;font-size:0.86rem;font-weight:800;text-align:center;letter-spacing:0.02em;">
@@ -203,44 +253,48 @@ export function renderCandyHome(ctx: ThemeContext): string {
   `;
 
   // Hero Split Stage
-  const heroHtml = `
-    <section class="wr-candy-hero" aria-label="${esc(copy.headline)}" style="background:radial-gradient(circle at 10% 20%, #fff0f5 0%, #fffaf0 40%, #f0f9ff 100%);padding:80px 0 70px;position:relative;overflow:hidden;border-bottom:3px solid #ffebf0;">
+  const heroHtml = isImageMode
+    ? `
+    <section class="wr-candy-hero" data-wr-hero aria-label="${esc(headlineText)}" style="background:radial-gradient(circle at 10% 20%, #fff0f5 0%, #fffaf0 40%, #f0f9ff 100%);min-height:0;padding:0;position:relative;overflow:hidden;border-bottom:3px solid #ffebf0;">
+      <h1 class="wr-banner-heading" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);">${esc(headlineText)}</h1>
+    </section>
+  `
+    : `
+    <section class="wr-candy-hero" data-wr-hero aria-label="${esc(headlineText)}" style="background:radial-gradient(circle at 10% 20%, #fff0f5 0%, #fffaf0 40%, #f0f9ff 100%);padding:80px 0 70px;position:relative;overflow:hidden;border-bottom:3px solid #ffebf0;">
       <!-- Floating Pastel Background Shapes -->
       <div style="position:absolute;width:350px;height:350px;border-radius:50%;background:rgba(255,107,139,0.08);filter:blur(50px);top:-80px;left:-80px;pointer-events:none;"></div>
       <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(72,202,228,0.1);filter:blur(60px);bottom:-100px;right:-80px;pointer-events:none;"></div>
 
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;position:relative;z-index:2;">
         <!-- Left Column: Copy & CTAs -->
-        <div data-reveal="fade-up">
+        <div data-reveal="fade-up" class="hero-left">
           <div style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #ffccd5;padding:8px 20px;border-radius:9999px;box-shadow:0 4px 14px rgba(255,107,139,0.15);margin-bottom:24px;">
             <span style="font-size:1.1rem;">🧸</span>
-            <span style="font-size:0.85rem;font-weight:900;color:#e63946;letter-spacing:0.04em;text-transform:uppercase;">
-              ${isZh ? 'Senseng 童趣感官潮玩 · 爆款推荐' : 'SENSORY PLAY & STRESS RELIEF · BESTSELLERS'}
+            <span class="eyebrow" style="font-size:0.85rem;font-weight:900;color:#e63946;letter-spacing:0.04em;text-transform:uppercase;">
+              ${esc(eyebrowText)}
             </span>
           </div>
 
           <h1 class="hero-title" style="font-size:clamp(2.4rem, 4.5vw, 3.8rem);line-height:1.15;font-weight:900;letter-spacing:-0.03em;color:#2b2d42;margin:0 0 20px;">
-            ${esc(copy.headline)}
+            ${esc(headlineText)}
           </h1>
 
-          <p style="font-size:1.12rem;line-height:1.7;color:#555b6e;margin:0 0 32px;max-width:540px;">
-            ${esc(copy.subtitle)}
+          <p class="hero-sub" style="font-size:1.12rem;line-height:1.7;color:#555b6e;margin:0 0 32px;max-width:540px;">
+            ${esc(subtitleText)}
           </p>
 
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
-            <a class="button" style="background:#ff6b8b;color:#ffffff;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:0.95rem;box-shadow:0 8px 24px rgba(255,107,139,0.35);transition:transform 0.2s;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
-              ${esc(copy.cta || (isZh ? '浏览全部系列' : 'Explore All Toys'))} ↗
+            <a class="button" style="background:#ff6b8b;color:#ffffff;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:0.95rem;box-shadow:0 8px 24px rgba(255,107,139,0.35);transition:transform 0.2s;" href="${safeUrl(primaryBtnUrl)}" ${navAttrs('catalog')}>
+              ${esc(primaryBtnText)} ↗
             </a>
-            <a class="button" style="background:#ffffff;color:#2b2d42;border:2px solid #e0e4ec;font-weight:800;padding:15px 30px;border-radius:9999px;font-size:0.95rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-              ${isZh ? '索取样品与定制咨询 →' : 'Request Sample Kit →'}
+            <a class="button" style="background:#ffffff;color:#2b2d42;border:2px solid #e0e4ec;font-weight:800;padding:15px 30px;border-radius:9999px;font-size:0.95rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);" href="${safeUrl(secondaryBtnUrl)}" ${navAttrs('contact')}>
+              ${esc(secondaryBtnText)}
             </a>
           </div>
 
           <!-- Quality Tags -->
           <div style="margin-top:36px;display:flex;gap:20px;flex-wrap:wrap;color:#6c757d;font-size:0.88rem;font-weight:700;">
-            <div style="display:flex;align-items:center;gap:6px;"><span>🌱</span> ${isZh ? '100% 无毒不含BPA' : '100% BPA-Free'}</div>
-            <div style="display:flex;align-items:center;gap:6px;"><span>🛡️</span> ${isZh ? '欧美玩具实验室安全认证' : 'ASTM & EN71 Certified'}</div>
-            <div style="display:flex;align-items:center;gap:6px;"><span>☁️</span> ${isZh ? '5秒柔和慢回弹' : '5s Slow Rebound'}</div>
+            ${qualityTags.map((tag) => `<div style="display:flex;align-items:center;gap:6px;">${esc(tag)}</div>`).join('')}
           </div>
 
           <div style="margin-top:28px;">
@@ -249,24 +303,27 @@ export function renderCandyHome(ctx: ThemeContext): string {
         </div>
 
         <!-- Right Column: Interactive 3D Stage -->
-        <div style="position:relative;text-align:center;">
+        <div class="stage" style="position:relative;text-align:center;">
           <div class="wr-candy-stage wr-hero-float" style="background:radial-gradient(circle, #ffffff 40%, #fff1f3 100%);border:4px solid #ffccd5;border-radius:40px;padding:36px;box-shadow:0 20px 48px rgba(255,107,139,0.18);position:relative;max-width:480px;margin:0 auto;">
             <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:380px;height:auto;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.1));">
 
+            ${floatingPills[0] ? `
             <!-- Floating Pill 1 -->
             <div style="position:absolute;top:20px;left:-20px;background:#ffffff;border:2px solid #ffd166;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#b45309;box-shadow:0 6px 16px rgba(245,158,11,0.2);display:flex;align-items:center;gap:6px;">
-              <span>✨</span> ${isZh ? '独家微爆珠软充' : 'Crunchy Soft-Fill'}
-            </div>
+              ${esc(floatingPills[0])}
+            </div>` : ''}
 
+            ${floatingPills[1] ? `
             <!-- Floating Pill 2 -->
             <div style="position:absolute;bottom:30px;right:-15px;background:#ffffff;border:2px solid #48cae4;padding:8px 16px;border-radius:9999px;font-size:0.84rem;font-weight:900;color:#0077b6;box-shadow:0 6px 16px rgba(72,202,228,0.25);display:flex;align-items:center;gap:6px;">
-              <span>🌈</span> ${isZh ? '温感变色黑科技' : 'Thermo Color Shift'}
-            </div>
+              ${esc(floatingPills[1])}
+            </div>` : ''}
 
+            ${floatingPills[2] ? `
             <!-- Floating Pill 3 -->
             <div style="position:absolute;top:50%;right:-25px;background:#ffffff;border:2px solid #a0c4ff;padding:8px 14px;border-radius:9999px;font-size:0.82rem;font-weight:900;color:#3a0ca3;box-shadow:0 6px 16px rgba(160,196,255,0.25);display:flex;align-items:center;gap:6px;">
-              <span>☁️</span> 5s Slow-Rise
-            </div>
+              ${esc(floatingPills[2])}
+            </div>` : ''}
           </div>
         </div>
       </div>

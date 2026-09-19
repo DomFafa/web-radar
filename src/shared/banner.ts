@@ -44,7 +44,19 @@ export function withBanner(
     page,
     typeof target === 'object' ? target.productId : undefined,
   );
-  if (!banner || (banner.kind === 'images' ? !banner.slides.length : !banner.videoAssetId))
+  if (!banner) return html;
+  const hasMedia = banner.kind === 'video' ? Boolean(banner.videoAssetId) : banner.slides.length > 0;
+  const isImageMode = banner.mode === 'image';
+  const hasCustomCopy = Boolean(
+    banner.eyebrow ||
+      banner.headline ||
+      banner.subtitle ||
+      banner.primaryButtonText ||
+      banner.secondaryButtonText ||
+      (banner.tags && banner.tags.length > 0) ||
+      (banner.floatingPills && banner.floatingPills.length > 0),
+  );
+  if (!hasMedia && !isImageMode && !hasCustomCopy)
     return html;
   const video = banner.kind === 'video';
   const document = parse(html);
@@ -65,7 +77,7 @@ export function withBanner(
       (node) =>
         ['section', 'div', 'header'].includes(node.tagName) &&
         !elements(node).some((child) => child.tagName === 'nav') &&
-        /(?:^|\s)(?:hero|hero-section|hero-banner|banner|banner-section|senseng-hero|senseng-hero-video-full|senseng-about-hero|senseng-contact-hero|cat-hero|wr-inner-title)(?:\s|$)/i.test(
+        /(?:^|[\s_-])(?:[a-z0-9_-]*-)?(?:hero|banner)(?:-[a-z0-9_-]+)?(?:\s|$)/i.test(
           `${attr(node, 'id')} ${attr(node, 'class')}`,
         ),
     );
@@ -87,7 +99,7 @@ export function withBanner(
   const slides = banner.slides
     .map(
       (slide, i) =>
-        `<div class="wr-banner-slide" data-wr-slide ${i ? 'hidden aria-hidden="true"' : 'aria-hidden="false"'}><img data-wr-banner-image src="${escape(assetUrl(slide.assetId))}" alt="${escape(slide.alt)}" loading="eager" ${i ? '' : 'fetchpriority="high"'} decoding="async">${(slide.headline || slide.subtitle || slide.buttonText) ? `<div class="wr-banner-slide-copy">${slide.headline ? `<h2 class="wr-banner-slide-title">${escape(slide.headline)}</h2>` : ''}${slide.subtitle ? `<p class="wr-banner-slide-desc">${escape(slide.subtitle)}</p>` : ''}${slide.buttonText ? `<a class="button wr-banner-slide-btn" href="${escape(slide.buttonUrl || 'contact/index.html')}">${escape(slide.buttonText)} ↗</a>` : ''}</div>` : ''}</div>`,
+        `<div class="wr-banner-slide" data-wr-slide ${i ? 'hidden aria-hidden="true"' : 'aria-hidden="false"'}><img data-wr-banner-image src="${escape(assetUrl(slide.assetId))}" alt="${escape(slide.alt)}" loading="eager" ${i ? '' : 'fetchpriority="high"'} decoding="async">${(slide.headline || slide.subtitle || slide.buttonText) ? `<div class="wr-banner-slide-copy">${slide.eyebrow ? `<div class="wr-banner-slide-eyebrow" style="font-size:0.9rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;opacity:0.9;">${escape(slide.eyebrow)}</div>` : ''}${slide.headline ? `<h2 class="wr-banner-slide-title">${escape(slide.headline)}</h2>` : ''}${slide.subtitle ? `<p class="wr-banner-slide-desc">${escape(slide.subtitle)}</p>` : ''}<div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">${slide.buttonText ? `<a class="button wr-banner-slide-btn" href="${escape(slide.buttonUrl || 'contact/index.html')}">${escape(slide.buttonText)} ↗</a>` : ''}${slide.secondaryButtonText ? `<a class="button wr-banner-slide-btn wr-banner-slide-btn-sub" style="background:rgba(255,255,255,0.2)!important;color:#fff!important;border:2px solid rgba(255,255,255,0.6)!important;" href="${escape(slide.secondaryButtonUrl || 'contact/index.html')}">${escape(slide.secondaryButtonText)}</a>` : ''}</div></div>` : ''}</div>`,
     )
     .join('');
   const poster = banner.posterAssetId ? escape(assetUrl(banner.posterAssetId)) : '';
@@ -98,8 +110,8 @@ export function withBanner(
     video || banner.slides.length > 1
       ? `<div class="wr-banner-controls" role="group" aria-label="Banner controls">${video ? '' : `<button type="button" data-wr-banner-prev aria-label="Previous banner">←</button><span data-wr-banner-status aria-live="off">1 / ${banner.slides.length}</span><button type="button" data-wr-banner-next aria-label="Next banner">→</button>`}<button type="button" data-wr-banner-toggle aria-label="Play banner">▶</button></div>`
       : '';
-  const fullImage = !video && (banner.mode === 'image' || !hero);
-  const image = `<div class="wr-banner-media">${media}</div>`;
+  const fullImage = !video && (banner.mode === 'image' || (!hero && hasMedia));
+  const image = hasMedia ? `<div class="wr-banner-media">${media}</div>` : '';
   if (!hero) {
     hero = parseFragment('<section></section>').childNodes[0] as Element;
     const main = all.find((node) => node.tagName === 'main') ?? body;
@@ -115,14 +127,102 @@ export function withBanner(
     { name: 'data-interval', value: String(banner.interval) },
   );
   if (fullImage) {
+    hero.attrs.push({ name: 'data-wr-banner-mode', value: 'image' });
     const heading = elements(hero).find((node) => node.tagName === 'h1');
-    hero.childNodes = parseFragment(image).childNodes;
-    if (heading) {
-      heading.attrs = heading.attrs.filter((a) => a.name !== 'class');
-      heading.attrs.push({ name: 'class', value: 'wr-banner-heading' });
-      hero.childNodes.push(heading);
+    if (hasMedia) {
+      hero.childNodes = parseFragment(image).childNodes;
+      if (heading) {
+        heading.attrs = heading.attrs.filter((a) => a.name !== 'class');
+        heading.attrs.push({ name: 'class', value: 'wr-banner-heading' });
+        heading.parentNode = hero;
+        hero.childNodes.push(heading);
+      }
+    } else {
+      hero.attrs.push({ name: 'data-wr-banner-hide-overlay', value: 'true' });
+      if (heading) {
+        heading.attrs = heading.attrs.filter((a) => a.name !== 'class');
+        heading.attrs.push({ name: 'class', value: 'wr-banner-heading' });
+        heading.parentNode = hero;
+        hero.childNodes = [heading];
+      } else {
+        hero.childNodes = [];
+      }
     }
   } else {
+    if (hasCustomCopy) {
+      if (banner.headline) {
+        const h1 = elements(hero).find((node) => node.tagName === 'h1');
+        if (h1) {
+          h1.childNodes = [{ nodeName: '#text', value: banner.headline, parentNode: h1 } as any];
+        }
+      }
+      if (banner.subtitle) {
+        const p = elements(hero).find(
+          (node) => node.tagName === 'p' && !attr(node, 'class').includes('eyebrow'),
+        );
+        if (p) {
+          p.childNodes = [{ nodeName: '#text', value: banner.subtitle, parentNode: p } as any];
+        }
+      }
+      if (banner.eyebrow) {
+        const eyebrowNode = elements(hero).find((node) => {
+          const cls = attr(node, 'class');
+          return cls.includes('eyebrow') || cls.includes('badge') || cls.includes('tag');
+        });
+        if (eyebrowNode) {
+          eyebrowNode.childNodes = [
+            { nodeName: '#text', value: banner.eyebrow, parentNode: eyebrowNode } as any,
+          ];
+        }
+      }
+      if (banner.primaryButtonText || banner.primaryButtonUrl) {
+        const buttons = elements(hero).filter(
+          (node) =>
+            node.tagName === 'a' &&
+            (attr(node, 'class').includes('button') || attr(node, 'class').includes('btn')),
+        );
+        if (buttons[0]) {
+          if (banner.primaryButtonText) {
+            buttons[0].childNodes = [
+              {
+                nodeName: '#text',
+                value: `${banner.primaryButtonText} ↗`,
+                parentNode: buttons[0],
+              } as any,
+            ];
+          }
+          if (banner.primaryButtonUrl) {
+            const hrefAttr = buttons[0].attrs.find((a) => a.name === 'href');
+            if (hrefAttr) hrefAttr.value = banner.primaryButtonUrl;
+            else buttons[0].attrs.push({ name: 'href', value: banner.primaryButtonUrl });
+          }
+        }
+      }
+      if (banner.secondaryButtonText || banner.secondaryButtonUrl) {
+        const buttons = elements(hero).filter(
+          (node) =>
+            node.tagName === 'a' &&
+            (attr(node, 'class').includes('button') || attr(node, 'class').includes('btn')),
+        );
+        if (buttons[1]) {
+          if (banner.secondaryButtonText) {
+            buttons[1].childNodes = [
+              {
+                nodeName: '#text',
+                value: banner.secondaryButtonText,
+                parentNode: buttons[1],
+              } as any,
+            ];
+          }
+          if (banner.secondaryButtonUrl) {
+            const hrefAttr = buttons[1].attrs.find((a) => a.name === 'href');
+            if (hrefAttr) hrefAttr.value = banner.secondaryButtonUrl;
+            else buttons[1].attrs.push({ name: 'href', value: banner.secondaryButtonUrl });
+          }
+        }
+      }
+    }
+    if (hasMedia) {
     // Remove old media to prevent both loading and playback underneath the chosen image.
     const strip = (node: Element) => {
       node.childNodes = node.childNodes.filter(
@@ -151,6 +251,7 @@ export function withBanner(
     };
     cleanEmptyMedia(hero);
     hero.childNodes.unshift(...parseFragment(image).childNodes);
+    }
   }
   hero.childNodes.push(...parseFragment(controls).childNodes);
   hero.childNodes.forEach((node) => {
@@ -161,8 +262,12 @@ export function withBanner(
     : 'center';
   const fit = banner.fit === 'contain' ? 'contain' : 'cover';
   let css = `[data-wr-banner=custom]{position:relative!important;isolation:isolate;overflow:hidden!important}[data-wr-banner=custom]::before,[data-wr-banner=custom]::after{display:none!important}.wr-banner-media{pointer-events:none}.wr-banner-media img,.wr-banner-media video{display:block!important;width:100%!important;max-width:none!important;height:100%!important;object-fit:${video ? 'cover' : fit}!important;object-position:center ${position}!important;transform:none!important;margin:0!important}.wr-banner-media [hidden]{visibility:hidden!important;opacity:0!important}.wr-banner-media [data-wr-slide]:not([hidden]){visibility:visible!important;opacity:1!important}.wr-banner-controls{position:absolute!important;bottom:20px!important;left:50%!important;transform:translateX(-50%)!important;display:flex!important;gap:12px!important;align-items:center!important;z-index:10!important;padding:6px 12px!important;border-radius:30px!important;background:#102030d9!important;color:#fff!important;font:14px system-ui!important}.wr-banner-controls button{display:inline-flex!important;align-items:center;justify-content:center;width:40px!important;height:40px!important;min-width:40px;border:1px solid #ffffff80!important;border-radius:50%!important;background:transparent!important;color:#fff!important;cursor:pointer;padding:0!important}.wr-banner-controls button:focus-visible{outline:3px solid #fff;outline-offset:2px}.wr-banner-heading{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important}`;
-  if (fullImage)
-    css += `[data-wr-banner=custom]{display:block!important;padding:0!important;height:auto!important;min-height:0!important;max-height:none!important;background:none!important}.wr-banner-media{display:grid!important;position:relative!important}.wr-banner-media img{grid-area:1/1!important;position:relative!important;height:auto!important;${banner.slides.length > 1 ? 'aspect-ratio:16/7;' : ''}}`;
+  if (fullImage) {
+    css += `[data-wr-banner=custom]{display:block!important;padding:0!important;height:auto!important;min-height:0!important;max-height:none!important;background:none!important}[data-wr-banner=custom]>:not(.wr-banner-media):not(.wr-banner-controls):not(.wr-banner-heading){display:none!important}[data-wr-banner=custom] [class*="hero-left"],[data-wr-banner=custom] [class*="stage"],[data-wr-banner=custom] [class*="candy-stage"],[data-wr-banner=custom] [class*="scroll-down"],[data-wr-banner=custom] .hero-title,[data-wr-banner=custom] .hero-sub,[data-wr-banner=custom] .button{display:none!important}.wr-banner-media{display:grid!important;position:relative!important}.wr-banner-media img{grid-area:1/1!important;position:relative!important;height:auto!important;${banner.slides.length > 1 ? 'aspect-ratio:16/7;' : ''}}`;
+    if (!hasMedia) {
+      css += `[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] h1,[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] h2,[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] p,[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] .button,[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] .senseng-btn-pill,[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] [class*="hero-left"],[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] [data-reveal="fade-up"]:first-child,[data-wr-banner=custom][data-wr-banner-hide-overlay="true"] .wr-scroll-down{display:none!important}`;
+    }
+  }
   else
     css += `[data-wr-banner=custom]{min-height:clamp(620px,50vw,960px);background:#17212b!important}[data-wr-banner=custom]>:not(.wr-banner-media):not(.wr-banner-controls){position:relative;z-index:2}[data-wr-banner=custom] [class*=hero-scene],[data-wr-banner=custom] [class*=video-overlay],[data-wr-banner=custom] .hero-controls,[data-wr-banner=custom] .hero-scroll-cue{display:none!important}[data-wr-banner=custom] [style*="background-image"]{background-image:none!important}.wr-banner-media{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:-1!important}.wr-banner-media img,.wr-banner-media video{position:absolute!important;inset:0!important}.wr-banner-slide{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important}.wr-banner-slide-copy{position:relative!important;z-index:3!important;max-width:960px!important;padding:60px 24px!important;text-align:center!important;color:#fff!important;text-shadow:0 3px 15px rgba(0,0,0,0.6)!important}.wr-banner-slide-title{font-size:clamp(2.4rem,5vw,4.4rem)!important;font-weight:800!important;line-height:1.12!important;margin:0 0 16px!important;color:#fff!important}.wr-banner-slide-desc{font-size:1.2rem!important;line-height:1.65!important;max-width:720px!important;margin:0 auto 24px!important;color:#f1f5f9!important}.wr-banner-slide-btn{background:var(--brand,#f59e0b)!important;color:#fff!important;font-weight:800!important;border-radius:9999px!important;padding:15px 36px!important;display:inline-block!important;box-shadow:0 8px 24px rgba(0,0,0,0.3)!important}`;
   if (hasSlideCopy)

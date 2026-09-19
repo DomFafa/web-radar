@@ -51,7 +51,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
   // 2. Hero HUD Stage
   const heroHtml = `
-    <section class="wr-arcade-hero" aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:70px 0 80px;position:relative;overflow:hidden;border-bottom:2px solid #00f5d4;color:#ffffff;">
+    <section class="wr-arcade-hero" data-wr-hero aria-label="${esc(copy.headline)}" style="background:${heroBg};padding:70px 0 80px;position:relative;overflow:hidden;border-bottom:2px solid #00f5d4;color:#ffffff;">
       <!-- Neon Grid Background Lines -->
       <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,245,212,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,212,0.05) 1px, transparent 1px);background-size:40px 40px;pointer-events:none;"></div>
       <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(247,37,133,0.12);filter:blur(80px);top:-100px;right:-50px;pointer-events:none;"></div>

@@ -41,7 +41,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
 
   // Hero Full-Width Story Stage
   const heroHtml = `
-    <section class="wr-wonder-hero" aria-label="${esc(copy.headline)}" style="background:linear-gradient(180deg, #fbf8f3 0%, #f4ede1 100%);padding:80px 0 90px;position:relative;overflow:hidden;border-bottom:1px solid #e9dfd0;">
+    <section class="wr-wonder-hero" data-wr-hero aria-label="${esc(copy.headline)}" style="background:linear-gradient(180deg, #fbf8f3 0%, #f4ede1 100%);padding:80px 0 90px;position:relative;overflow:hidden;border-bottom:1px solid #e9dfd0;">
       <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:54px;align-items:center;">
         <!-- Left Editorial Copy -->
         <div class="wr-wonder-hero-left" data-reveal="fade-up">

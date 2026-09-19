@@ -34,7 +34,17 @@ const short = z.string().max(300),
   id = z.string().min(1).max(200);
 const language = z.enum(['en', 'de', 'fr', 'es', 'pt', 'it']);
 const translation = z.object({ name: short, description: text });
-const copy = z.object({ headline: short, subtitle: text, about: text, cta: short });
+const copy = z.object({
+  headline: short,
+  subtitle: text,
+  about: text,
+  cta: short,
+  eyebrow: short.optional(),
+  secondaryButtonText: short.optional(),
+  secondaryButtonUrl: short.optional(),
+  tags: z.array(short).max(10).optional(),
+  floatingPills: z.array(short).max(10).optional(),
+});
 export { importProductSnapshotSchema as snapshotSchema } from '../shared/product-snapshot';
 import { productSnapshotSchema as source, productImageKind } from '../shared/product-snapshot';
 const draftSchema = z.object({
@@ -127,10 +137,29 @@ const draftSchema = z.object({
   storyboardConfirmedRevision: z.number().int().nonnegative().optional(),
   banners: z.array(z.object({
     id, targets: z.array((z.union([designPageSchema,z.string().startsWith('product:').min(9).max(210)]) as z.ZodType<BannerTarget>)).max(30),
-    kind:z.enum(['images','video']), slides:z.array(z.object({assetId:id,alt:z.string().max(300)})).max(12),
+    kind:z.enum(['images','video']),
+    slides:z.array(z.object({
+      assetId:id,alt:z.string().max(300),
+      eyebrow:short.optional(),
+      headline:short.optional(),
+      subtitle:short.optional(),
+      buttonText:short.optional(),
+      buttonUrl:short.optional(),
+      secondaryButtonText:short.optional(),
+      secondaryButtonUrl:short.optional(),
+    })).max(12),
     videoAssetId:id.optional(), posterAssetId:id.optional(), mode:z.enum(['background','image']),
     fit:z.enum(['cover','contain']), position:z.enum(['top','center','bottom']), contrast:z.enum(['light','dark','none']),
     height:z.enum(['auto','screen']), autoplay:z.boolean(), interval:z.number().int().min(3).max(30),
+    eyebrow:short.optional(),
+    headline:short.optional(),
+    subtitle:text.optional(),
+    primaryButtonText:short.optional(),
+    primaryButtonUrl:short.optional(),
+    secondaryButtonText:short.optional(),
+    secondaryButtonUrl:short.optional(),
+    tags:z.array(short).max(10).optional(),
+    floatingPills:z.array(short).max(10).optional(),
   })).max(20).superRefine((banners,ctx)=>{
     const targets=new Set<string>(), ids=new Set<string>();
     for(const banner of banners) {
