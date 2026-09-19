@@ -22,8 +22,8 @@ const text = (n: Node): string =>
     : 'childNodes' in n && !['style', 'script'].includes(n.nodeName)
       ? n.childNodes.map(text).join(' ')
       : '';
-async function fixture(template: string, count = 19) {
-  const input = await typedMaterialsFixture(template, count);
+async function fixture(template: string, count = 19, contractRevision?: string) {
+  const input = await typedMaterialsFixture(template, count, contractRevision);
   return draftFromMaterials(
     input,
     Object.fromEntries(input.materials.media.map((a) => [a.id, { id: a.id } as Asset])),
@@ -189,8 +189,8 @@ describe('confirmed materials presentation', () => {
       expect(draft.products).toHaveLength(19);
     },
   );
-  it('renders company facts only from company fields and product features without ratings', async () => {
-    const draft = await fixture('senseng-candy', 2);
+  it('preserves legacy company facts and product features without ratings', async () => {
+    const draft = await fixture('senseng-candy', 2, '2026-09-19.senseng-candy-materials.1');
     Object.assign(draft.company, {
       description: '',
       targetMarkets: '',

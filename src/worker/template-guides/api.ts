@@ -74,7 +74,7 @@ export function createTemplateGuidesApp() {
   app.get('/output-schema', (c) => c.json(outputJsonSchema));
   app.get('/materials/catalog',(c)=>c.json({schemaVersion:'wr-template-materials-v1',templates:templateGuides.map(g=>{
     const profile=getMaterialsTemplate(g.templateId);
-    return {templateId:g.templateId,name:g.name,guideRevision:g.revision,contractRevision:profile?.contractRevision??null,thumbnailUrl:`/templates/previews/${g.templateId}.jpg`,pages:[...materialsPages],materialsReady:!!profile?.materialsReady,requirementsPath:`/api/internal/template-guides/materials/${g.templateId}`,previewPath:`/api/internal/template-guides/materials/${g.templateId}/preview`};
+    return {templateId:g.templateId,name:g.name,guideRevision:profile?.guideRevision??g.revision,contractRevision:profile?.contractRevision??null,thumbnailUrl:`/templates/previews/${g.templateId}.jpg`,pages:[...materialsPages],materialsReady:!!profile?.materialsReady,requirementsPath:`/api/internal/template-guides/materials/${g.templateId}`,previewPath:`/api/internal/template-guides/materials/${g.templateId}/preview`};
   })}));
   app.get('/materials/:id/preview',(c)=>{
     const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));

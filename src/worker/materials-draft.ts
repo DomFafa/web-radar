@@ -30,6 +30,12 @@ export function preserveMaterialsEdit(previous:Draft,next:Draft){
   if(next.company.description!==previous.company.description&&next.copy.en?.about===previous.copy.en?.about&&next.copy.en)next.copy.en.about=next.company.description;
   const fields={ 'hero-headline':'headline','hero-subtitle':'subtitle','primary-cta':'cta','company-about':'about'}as const;
   for(const binding of m.textBindings){const field=fields[binding.slotId as keyof typeof fields];if(field)binding.text=next.copy[binding.locale]?.[field]||'';}
+  for(const [slot,field]of [['about-headline','aboutHeadline'],['about-story','aboutStory'],['about-highlights','aboutHighlights']]as const){
+    if(next.company[field]!==previous.company[field]){const binding=m.textBindings.find(b=>b.slotId===slot&&b.locale==='en');if(binding)binding.text=next.company[field]||'';}
+  }
+  for(const [slot,field]of [['about-primary-image','aboutImageAssetId'],['about-secondary-image','aboutSecondaryImageAssetId']]as const){
+    if(next.company[field]!==previous.company[field]){const binding=m.imageBindings.find(b=>b.slotId===slot);if(binding){if(!next.company[field])throw new ApiError(409,'materials_rebind_required','新版 About 配图为必需资料，请替换图片或重新确认资料。');binding.assetId=next.company[field]!;delete binding.mobileAssetId;}}
+  }
   m.imageBindings=m.imageBindings.filter(b=>!['product-main','product-gallery'].includes(b.slotId)||next.products.some(p=>p.id===b.productId));
   for(const p of next.products){
     const gallery=p.gallery||[];if(gallery.length&&p.imageAssetId)gallery[0]={...gallery[0],assetId:p.imageAssetId};

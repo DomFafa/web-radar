@@ -13,7 +13,7 @@ export function typedMaterialsDemoDraft(profile:MaterialsTemplateContract,lang:L
   const ids=draft.products.map(p=>p.id),selection={sceneProductIds:ids.slice(0,profile.selectionGroups?.scene||0),featuredProductIds:ids.slice(0,profile.selectionGroups?.featured||0)};
   const copy={headline:'Discover your next toy collection',subtitle:'Explore the illustrated collection and discuss your assortment with our team.',cta:'Request product details',about:draft.company.description};
   for(const locale of draft.languages)draft.copy[locale]={...copy};
-  const core:Record<string,string>={'hero-headline':copy.headline,'hero-subtitle':copy.subtitle,'primary-cta':copy.cta,'company-about':copy.about};
+  const core:Record<string,string>={'about-headline':'Explore our collection','about-story':'Discuss product options and your assortment with our team.','about-highlights':'✓ | Product options | Discuss your assortment','hero-headline':copy.headline,'hero-subtitle':copy.subtitle,'primary-cta':copy.cta,'company-about':copy.about};
   const interfaceCopy=/^(?:Home|About(?: us)?|Contact(?: us)?|Products?|Catalog(?:ue)?|All products|Search(?: products)?|Name|Email|Phone|Company|Message|Send(?: inquiry)?|Submit|View details|Related products|Specifications|Material|Dimensions|Next|Previous|Close|Menu|Privacy policy|Terms(?: of use)?|Explore|Learn more|Read more)$/i;
   const textBindings=profile.textSlots.flatMap(slot=>draft.languages.map(locale=>{
     const example=slot.exampleText?.trim()||'';

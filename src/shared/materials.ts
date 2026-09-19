@@ -136,3 +136,8 @@ export interface MaterialsProvenance {
 export function isMaterialsAccount(principal: Pick<Principal,'email'>):boolean {
   return principal.email.trim().toLowerCase()==='vc.ddom@gmail.com';
 }
+
+export function validAboutHighlights(text:string):boolean{
+  const lines=text.trim().split(/\r?\n/);
+  return lines.length>=1&&lines.length<=4&&lines.every(line=>{const parts=line.split(/[|丨]/).map(value=>value.trim());return parts.length===3&&parts.every(Boolean);});
+}

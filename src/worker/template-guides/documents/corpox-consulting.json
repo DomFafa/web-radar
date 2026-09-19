@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "revision": "2026-09-19.1",
+  "revision": "2026-09-20.1",
   "templateId": "corpox-consulting",
   "name": "Corpox 顶级战略咨询",
   "documentLanguage": "zh-CN",
@@ -63,9 +63,10 @@
       "产品图片、名称、简介与详情链接"
     ],
     "about": [
-      "已确认的公司简介",
-      "真实能力说明",
-      "联系行动"
+      "新版模板 About 布局，主图 about-primary-image；说明性配图不能宣称真实厂房或产能。",
+      "about-headline 公司标题、about-story 公司故事、about-highlights 采购亮点；均按语言绑定确认事实。",
+      "亮点为 1–4 行，每行 value | label | description；没有已确认数字时 value 使用 ✓。",
+      "其他可见文案与 SVG 文字按当前合同中的 textSlots 替换，不保留模板认证和业绩示例。"
     ],
     "contact": [
       "真实联系方式",
@@ -722,7 +723,8 @@
     "同一区域只显示同类图片；图、名称和目标链接同属一个产品，正面与包装对照行保持同产品同顺序；数量不足缩减或隐藏，不补示例产品。",
     "公共页每张 Banner 包含全部所选产品，多 Banner 构图不同。工厂、生产、仓储、物流可用 AI 配图且不冒充事实证据；证书和报告只能真实上传，无依据背书省略。",
     "confirmed-materials 使用稳定图片/文案槽位 ID、产品 ID 与确认事实提交；旧 Juno v2/v3 与旧 Senseng 资料继续按原合同解释，不自动升级。Standalone manifest 仍遵照 output-schema 和各 binding.strategy。",
-    "在 390、1440、2560 px 检查完整五页的文字、裁切、产品一致性与交互动效；确认计数器、后缀和进度条不会恢复示例事实。渲染成功不等于视觉验收，资料接收不发布客户网站。"
+    "在 390、1440、2560 px 检查完整五页的文字、裁切、产品一致性与交互动效；确认计数器、后缀和进度条不会恢复示例事实。渲染成功不等于视觉验收，资料接收不发布客户网站。",
+    "新版 About 使用 2026-09-20.corpox-consulting-materials.2。原 2026-09-19 typed 合同及更早合同保持可读、可确认、可渲染；已有资料必须按固定修订提交，不自动迁移。主辅图通过 imageBindings 传递 mediaId，接收后映射到 company.aboutImageAssetId/aboutSecondaryImageAssetId；标题、故事、亮点通过 textBindings 映射到同名 About 编辑字段，不在 brand 对象中发送 assetId。"
   ],
   "qualityChecks": [
     "实际像素、格式、时长与尺寸满足规格；字节预算为性能建议，不是上传接口的硬限制。",

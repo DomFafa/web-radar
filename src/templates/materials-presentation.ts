@@ -508,11 +508,12 @@ export function polishTypedMaterials(
   draft: Draft,
   options: RenderOptions,
   contract: MaterialsTemplateContract,
+  preserveAboutLayout = false,
 ) {
   collectionHero(root, draft, options, contract);
   fullCollections(root, draft, options, contract);
   productLists(root, draft, options, contract);
-  factualPanels(root, draft, options, contract);
+  if (!preserveAboutLayout) factualPanels(root, draft, options, contract);
   navigation(root, draft, options);
   // Candy leaves this pill behind when the unsupported demo badge text is omitted.
   if (draft.template === 'senseng-candy' && options.page === 'detail') {

@@ -1,0 +1,95 @@
+{
+  "guideRevision": "2026-09-20.1",
+  "templates": {
+    "senseng-clean": {
+      "contractRevision": "2026-09-20.senseng-clean-materials.2",
+      "sha256": "afad1c7a0f3cf3526db1b3a07eecc4a35b2b8c1703dddfbaf6fc2aeba931a17b",
+      "imageSlots": 7,
+      "textSlots": 220
+    },
+    "senseng-video": {
+      "contractRevision": "2026-09-20.senseng-video-materials.2",
+      "sha256": "b4debd43e6b3d2ce110d98dc4db6bade1e4a5e944ebbd37cb330b3be078f78d5",
+      "imageSlots": 7,
+      "textSlots": 239
+    },
+    "senseng-candy": {
+      "contractRevision": "2026-09-20.senseng-candy-materials.2",
+      "sha256": "b62b848e6f57894d3350a738cf2b3dac2e2421dadf1660a59109a0a87c90582d",
+      "imageSlots": 4,
+      "textSlots": 271
+    },
+    "senseng-wonder": {
+      "contractRevision": "2026-09-20.senseng-wonder-materials.2",
+      "sha256": "b43e1bf26f5b61d9cec2d27ffe06d18bb5891e44cfd759d551315a2782f70da5",
+      "imageSlots": 5,
+      "textSlots": 254
+    },
+    "senseng-arcade": {
+      "contractRevision": "2026-09-20.senseng-arcade-materials.2",
+      "sha256": "083b0515a7528002ed891b5e9b9277aaddbe4f17422937fda92d5fbd3b3a6446",
+      "imageSlots": 4,
+      "textSlots": 267
+    },
+    "senseng-nature": {
+      "contractRevision": "2026-09-20.senseng-nature-materials.2",
+      "sha256": "789a5b11d16a2454231b68e081c22ac5fa60c39b5ca70ed27f7e67f93014a20a",
+      "imageSlots": 4,
+      "textSlots": 242
+    },
+    "senseng-minimal": {
+      "contractRevision": "2026-09-20.senseng-minimal-materials.2",
+      "sha256": "1cbb201289f6b55ccd868e11bb9407b22c098dd7482af1e2645d4b6c055c3e52",
+      "imageSlots": 4,
+      "textSlots": 243
+    },
+    "saas-automation": {
+      "contractRevision": "2026-09-20.saas-automation-materials.2",
+      "sha256": "d5e8996414b2fc3c56598b97fc2fda33b29cce0b4057afe738afac74e59612fa",
+      "imageSlots": 16,
+      "textSlots": 489
+    },
+    "fintech-platform": {
+      "contractRevision": "2026-09-20.fintech-platform-materials.2",
+      "sha256": "cd86e3997c30998a30edc6fdb1bfbdfc849044db9ea71e9c1e10ee7d788539b7",
+      "imageSlots": 11,
+      "textSlots": 520
+    },
+    "digital-marketing": {
+      "contractRevision": "2026-09-20.digital-marketing-materials.2",
+      "sha256": "0149b309d4678e00f1fac3a83557247a722dd5413b7b111b56494c93eb1290d3",
+      "imageSlots": 8,
+      "textSlots": 437
+    },
+    "porto-accounting": {
+      "contractRevision": "2026-09-20.porto-accounting-materials.2",
+      "sha256": "c26d85ad8cc9d7663766ef8fdf4a1b234115d0a184db85279707abd1aea21bde",
+      "imageSlots": 6,
+      "textSlots": 480
+    },
+    "crafto-corporate": {
+      "contractRevision": "2026-09-20.crafto-corporate-materials.2",
+      "sha256": "5c28d2ef38ba546b24e138e2055888c7e98cf4ffb30e3f73441deb7d99ba636b",
+      "imageSlots": 11,
+      "textSlots": 466
+    },
+    "juno-toys": {
+      "contractRevision": "2026-09-20.juno-toys-materials.2",
+      "sha256": "abaa1679b8ae549d74cef2a3fe761aac68677e8de580af3be0b49dd3aeb632ab",
+      "imageSlots": 12,
+      "textSlots": 225
+    },
+    "corpox-ai-agency": {
+      "contractRevision": "2026-09-20.corpox-ai-agency-materials.2",
+      "sha256": "09ac4657dfeb847cae551c1aca2f3fd1a02746cf4b6fa0c6c9cc8fe031cfa15a",
+      "imageSlots": 8,
+      "textSlots": 394
+    },
+    "corpox-consulting": {
+      "contractRevision": "2026-09-20.corpox-consulting-materials.2",
+      "sha256": "e41783f40a1d1aea247548583d410ad71cf4b8c3f4b9bc48e4e56a5b7020fabd",
+      "imageSlots": 9,
+      "textSlots": 467
+    }
+  }
+}

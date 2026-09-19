@@ -18,9 +18,12 @@ type Page=typeof materialsPages[number];
 type ImageSlot=MaterialsTemplateContract['imageSlots'][number];
 type Binding=AppliedMaterials['imageBindings'][number];
 const rawDrafts=new WeakSet<Draft>();
+const modernAboutDrafts=new WeakSet<Draft>();
+export const isModernAboutSource=(draft:Draft)=>modernAboutDrafts.has(draft);
 /** Internal render context, never serialized into a project or exposed to standalone builds. */
 export const isTypedMaterialsSource=(draft:Draft)=>rawDrafts.has(draft);
-export const isTypedMaterials=(draft:Draft)=>draft.materials?.contractRevision===`2026-09-19.${draft.template}-materials.1`;
+export const modernMaterialsRevision=(id:string)=>`2026-09-20.${id}-materials.2`;
+export const isTypedMaterials=(draft:Draft)=>draft.materials?.contractRevision===`2026-09-19.${draft.template}-materials.1`||draft.materials?.contractRevision===modernMaterialsRevision(draft.template);
 const attr=(node:Element,name:string)=>node.attrs.find(a=>a.name===name)?.value||'';
 const set=(node:Element,name:string,value:string)=>{const a=node.attrs.find(a=>a.name===name);if(a)a.value=value;else node.attrs.push({name,value});};
 const clean=(s:string)=>s.trim().replace(/\s+/g,' ');
@@ -40,8 +43,14 @@ function demo(id:TemplateId):Draft{
   const products=Array.from({length:20},(_,i)=>({id:`sample-${i}`,name:`__WR_PRODUCT_NAME_${i}__`,description:`__WR_PRODUCT_DESCRIPTION_${i}__`,material:`__WR_MATERIAL_${i}__`,dimensions:`__WR_DIMENSIONS_${i}__`,imageAssetId:`sample-${i}`,gallery:[{assetId:`sample-${i}`,sourceImageId:`sample-${i}`,kind:'original' as const,caption:'__WR_MAIN__'},{assetId:`gallery-${i}`,sourceImageId:`gallery-${i}`,kind:'detail' as const,caption:'__WR_GALLERY__'}]}));
   return{template:id,company:{name:'__WR_COMPANY__',description:'__WR_DESCRIPTION__',type:'trader',email:'__WR_EMAIL__@example.invalid',contactName:'__WR_CONTACT__',phone:'__WR_PHONE__',whatsapp:'__WR_WHATSAPP__',address:'__WR_ADDRESS__',slogan:'__WR_SLOGAN__',capabilities:'__WR_CAPABILITIES__',certifications:'__WR_CERTIFICATIONS__',facebook:'',instagram:'',x:''},products,primaryProductId:'sample-0',country:'__WR_COUNTRY__',category:'',languages:['en'],brandColor:'#112233',copy:{en:{headline:'__WR_HEADLINE__',subtitle:'__WR_SUBTITLE__',about:'__WR_ABOUT__',cta:'__WR_CTA__'}},duration:8,direction:'',script:'',scriptRevision:0,scenes:[],storyboardRevision:0,heroAccepted:false};
 }
-function rawHtml(draft:Draft,options:RenderOptions):string{
+function rawHtml(draft:Draft,options:RenderOptions,modernAbout=false):string{
   const raw={...draft,materials:undefined,heroAssetId:undefined,banner:undefined,banners:undefined};
+  if(modernAbout){
+    // Bind by stable position even when two slots reuse the same asset URL.
+    raw.company={...raw.company,aboutImageAssetId:'__WR_ABOUT_PRIMARY__',aboutSecondaryImageAssetId:'__WR_ABOUT_SECONDARY__'};
+    const aboutOptions={...options,assetUrl:(id:string)=>id==='__WR_ABOUT_PRIMARY__'?'/__WR_ABOUT__/about-primary-image':id==='__WR_ABOUT_SECONDARY__'?'/__WR_ABOUT__/about-secondary-image':options.assetUrl(id)};
+    modernAboutDrafts.add(raw);try{return renderSite(raw,aboutOptions);}finally{modernAboutDrafts.delete(raw);}
+  }
   rawDrafts.add(raw);
   try{return renderSite(raw,options);}finally{rawDrafts.delete(raw);}
 }
@@ -119,14 +128,14 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
     for(const child of [...n.childNodes])walk(child,[...parents,n]);
   };walk(root,[]);
 }
-function walkCopy(root:Node,onText:(text:string,attribute:string,node:Node,parents:Element[])=>string){
+function walkCopy(root:Node,onText:(text:string,attribute:string,node:Node,parents:Element[])=>string,modern=false){
   const visit=(n:Node,parents:Element[])=>{
     if('tagName'in n){
-      if(['script','style','svg','title'].includes(n.tagName))return;
-      for(const a of n.attrs)if(['placeholder','aria-label','title'].includes(a.name)&&a.value&&!/__WR_|sample-\d|gallery-\d/.test(a.value))a.value=onText(a.value,a.name,n,parents);
+      if(['script','style','title',...(modern?[]:['svg'])].includes(n.tagName))return;
+      for(const a of n.attrs)if(['placeholder','aria-label','title'].includes(a.name)&&a.value&&!(modern?/^__WR_\w+__$|sample-\d|gallery-\d/:/__WR_|sample-\d|gallery-\d/).test(a.value))a.value=onText(a.value,a.name,n,parents);
       for(const c of [...n.childNodes])visit(c,[...parents,n]);
     }else if(n.nodeName==='#text'){
-      if(clean(n.value)&&/[\p{L}\p{N}]/u.test(n.value)&&!/__WR_/.test(n.value))n.value=onText(n.value,'',n,parents);
+      if(clean(n.value)&&/[\p{L}\p{N}]/u.test(n.value)&&!(modern?/^__WR_\w+__$/:/__WR_/).test(clean(n.value)))n.value=onText(n.value,'',n,parents);
     }else if('childNodes'in n)for(const c of [...n.childNodes])visit(c,parents);
   };visit(root,[]);
 }
@@ -160,7 +169,7 @@ function junoInventory():Inventory{
   }
   return result;
 }
-function collectCopy(root:Node,page:Page,result:Inventory,contract:MaterialsTemplateContract){
+function collectCopy(root:Node,page:Page,result:Inventory,contract:MaterialsTemplateContract,modern=false){
   walkCopy(root,(value,attribute,_node,parents)=>{
     const k=key(value,attribute);if(result.text[page][k])return value;
     const normalized=clean(value),heading=parents.some(p=>/^h[1-6]$/.test(p.tagName));
@@ -168,7 +177,7 @@ function collectCopy(root:Node,page:Page,result:Inventory,contract:MaterialsTemp
     result.text[page][k]=id;
     if(!contract.textSlots.some(s=>s.id===id))contract.textSlots.push(textSlot(id,page,`${heading?'Heading':attribute||'Visible copy'} in original ${contract.templateId} ${page} layout: ${normalized}`,attribute?140:Math.max(100,Math.min(600,normalized.length*2)),normalized));
     return value;
-  });
+  },modern);
 }
 function inventory(id:string):Inventory|undefined{
   if(!templateMediaRequirements[id as TemplateId])return;
@@ -192,6 +201,31 @@ function inventory(id:string):Inventory|undefined{
   contract.imageSlots.push({...imageSlot('product-main','catalog','main',size[0],size[1],'Original main image of every selected product; reused by all product cards and detail pages'),repeat:'per-product'}, {...imageSlot('product-gallery','detail','detail',size[0],size[1],'Every selected product original gallery, unchanged order and identity; itemIndex starts at 1'),repeat:'per-product-gallery',min:0,max:10,required:false});
   for(const s of contract.imageSlots)if(s.id==='product-main'||s.id==='product-gallery')delete s.role;
   inventories.set(id,result);return result;
+}
+const modernInventories=new Map<string,Inventory>();
+function modernInventory(id:string):Inventory|undefined{
+  const cached=modernInventories.get(id);if(cached)return cached;
+  const previous=inventory(id);if(!previous)return;
+  const result=structuredClone(previous),contract=result.contract;
+  contract.guideRevision='2026-09-20.1';contract.contractRevision=modernMaterialsRevision(id);
+  contract.imageSlots=contract.imageSlots.filter(s=>s.page!=='about');
+  // Juno's legacy copy map also contains shared chrome used on other pages.
+  contract.textSlots=contract.textSlots.filter(s=>s.page!=='about'||s.id==='company-about'||s.id.includes('-seo-')||!!result.legacyText?.[s.id]);
+  contract.imageSlots.push({...imageSlot('about-primary-image','about','facility',1536,1024,'About lead editorial image representing the approved business, without implying an owned factory'),fit:'cover'});
+  if(id==='senseng-clean'||id==='senseng-video')contract.imageSlots.push({...imageSlot('about-secondary-image','about','facility',1536,1024,'About supporting process illustration; a distinct composition from the lead image'),fit:'cover'});
+  contract.textSlots.push(textSlot('about-headline','about','About page headline from saved brand and product facts',160),textSlot('about-story','about','About company story, one to six paragraphs using saved facts only',2500),{...textSlot('about-highlights','about','One to four lines, each: value | label | description. Use ✓ as value when no verified numeric metric exists. Never copy template sample statistics.',1000),maxLines:4});
+  result.text.about={};result.media.about={};
+  const draft=demo(id as TemplateId);
+  draft.company={...draft.company,establishedYear:'__WR_YEAR__',aboutImageAssetId:'about-primary-image',aboutSecondaryImageAssetId:'about-secondary-image',aboutHeadline:'__WR_ABOUT_HEADLINE__',aboutStory:'__WR_ABOUT_STORY__',aboutHighlights:'✓ | __WR_ABOUT_LABEL__ | __WR_ABOUT_DETAIL__'};
+  for(const sample of [draft,withoutOptionalFacts(draft)]){
+    const root=parse(rawHtml(sample,{projectId:'inventory',page:'about',lang:'en',assetUrl:id=>`/__WR_ASSET__/${id}`,inquiryUrl:'/inquiry',preview:true},true));prepare(root);collectCopy(root,'about',result,contract,true);
+  }
+  modernInventories.set(id,result);return result;
+}
+export function getModernMaterialsTemplate(id:string):MaterialsTemplateContract|undefined{const value=modernInventory(id);return value?structuredClone(value.contract):undefined;}
+function aboutDraft(draft:Draft,lang:RenderOptions['lang']):Draft{
+  const m=draft.materials!,text=(id:string)=>m.textBindings.find(b=>b.slotId===id&&b.locale===lang)?.text||'';
+  return {...draft,company:{...draft.company,aboutHeadline:text('about-headline'),aboutStory:text('about-story'),aboutHighlights:text('about-highlights'),aboutImageAssetId:m.imageBindings.find(b=>b.slotId==='about-primary-image')?.assetId,aboutSecondaryImageAssetId:m.imageBindings.find(b=>b.slotId==='about-secondary-image')?.assetId}};
 }
 export function getTypedMaterialsTemplate(id:string):MaterialsTemplateContract|undefined{const value=inventory(id);return value?structuredClone(value.contract):undefined;}
 function bindImage(node:Element,b:Binding,options:RenderOptions,kind:MediaTarget['kind']){
@@ -261,9 +295,11 @@ function removeUnboundTemplateBackgrounds(root:Node){
   }
 }
 export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):string{
-  const inv=inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
-  const m=draft.materials,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
-  if(inv.legacyText){
+  const modern=draft.materials?.contractRevision===modernMaterialsRevision(draft.template);
+  const inv=modern?modernInventory(draft.template):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
+  const modernAbout=modern&&options.page==='about';if(modernAbout)draft=aboutDraft(draft,options.lang);
+  const m=draft.materials!,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
+  if(inv.legacyText&&!modernAbout){
     const legacy={...draft,banner:undefined,banners:undefined,materials:{...m,contractRevision:junoDisplayRevision,textBindings:m.textBindings.flatMap(b=>(inv.legacyText![b.slotId]||[b.slotId]).map(slotId=>({...b,slotId})))}};
     const root=parse(renderSite(legacy,options));markPresentationRegions(root);prepare(root);
     const texts=new Map(m.textBindings.filter(b=>b.locale===options.lang).map(b=>[b.slotId,b.text]));
@@ -278,9 +314,19 @@ export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):stri
     polishTypedMaterials(root,draft,options,inv.contract);
     return serialize(root).replace('</head>','<style>.wr-juno-display [data-wr-display-role="scene"] .wr-display-photo{aspect-ratio:650/572}.wr-juno-display .wr-display-grid{grid-template-columns:repeat(min(var(--wr-display-count),4),minmax(0,1fr))}@media(max-width:767px){.wr-juno-display .wr-display-grid{grid-template-columns:repeat(min(var(--wr-display-count),2),minmax(0,1fr))}}</style></head>');
   }
-  const root=parse(rawHtml(draft,options));markPresentationRegions(root);prepare(root);
+  const root=parse(rawHtml(draft,options,modernAbout));markPresentationRegions(root);prepare(root);
   const textBindings=new Map(m.textBindings.filter(b=>b.locale===options.lang).map(b=>[b.slotId,b.text]));
-  walkCopy(root,(value,attribute)=>{const id=inv.text[page][key(value,attribute)];return id?textBindings.get(id)||'':value;});
+  const confirmedAbout=new Set([draft.company.aboutHeadline||'',...(draft.company.aboutStory||'').split(/\r?\n/),...(draft.company.aboutHighlights||'').split(/[|丨\r\n]/)].map(clean));
+  walkCopy(root,(value,attribute)=>{
+    if(modernAbout&&confirmedAbout.has(clean(value)))return value;
+    let source=value;
+    if(modernAbout)for(const [actual,marker]of [[draft.company.name.toUpperCase(),'__WR_COMPANY__'],[draft.company.name,'__WR_COMPANY__'],[draft.company.establishedYear||'','__WR_YEAR__']])if(actual)source=source.split(actual).join(marker);
+    const id=inv.text[page][key(source,attribute)];return id?textBindings.get(id)||'':value;
+  },modernAbout);
+  if(modernAbout)for(const node of elements(root))if(node.tagName==='img'){
+    const b=m.imageBindings.find(b=>attr(node,'src')===`/__WR_ABOUT__/${b.slotId}`);
+    if(b){node.attrs=node.attrs.filter(a=>a.name!=='onerror');bindImage(node,b,options,'image');}
+  }
   walkMedia(root,draft.template,page,(node,target,_spec,parents,kind)=>{
     const plan=inv.media[page][target];if(!plan)return;
     const bindings=m.imageBindings.filter(b=>b.slotId===plan.slotId);
@@ -301,9 +347,26 @@ export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):stri
   for(const node of elements(root))if(node.tagName==='video'){
     const hero=m.imageBindings.find(b=>b.slotId==='hero-slide-0');if(hero){set(node,'poster',safeUrl(options.assetUrl(hero.assetId),options.preview));set(node,'data-wr-material-photo','');}
   }
+  if(modernAbout)for(const node of elements(root)){
+    if(node.tagName==='main')set(node,'data-wr-modern-about','');
+    const style=attr(node,'style');
+    if(/grid-template-columns:/.test(style))set(node,'data-wr-about-grid','');
+    const padding=style.match(/(?:^|;)\s*padding:\s*([\d.]+)px(?:\s+([\d.]+)px)?\s*;/);
+    if(padding&&Number(padding[2]||padding[1])>24)set(node,'data-wr-about-wide-padding','');
+  }
   applyCore(root,draft,options);
   retainGallery(root,draft,options);
   removeUnboundTemplateBackgrounds(root);
-  polishTypedMaterials(root,draft,options,inv.contract);
-  return serialize(root).replace('</head>',materialsThemeStyle(draft)+((newSenseng.test(draft.template)||draft.template.startsWith('corpox-')||hasFixedInnerColumns(draft,options))?typedMobileHeaderStyle:'')+'</head>').replace('<script>','<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`);
+  polishTypedMaterials(root,draft,options,inv.contract,modernAbout);
+  return serialize(root).replace('</head>',materialsThemeStyle(draft)+(modernAbout?modernAboutStyle:'')+((newSenseng.test(draft.template)||draft.template.startsWith('corpox-')||hasFixedInnerColumns(draft,options))?typedMobileHeaderStyle:'')+'</head>').replace('<script>','<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`);
 }
+
+const modernAboutStyle=`<style id="wr-modern-about-responsive">
+[data-wr-modern-about]{overflow-wrap:anywhere}
+@media(max-width:767px){
+ [data-wr-modern-about] [data-wr-about-grid]{grid-template-columns:minmax(0,1fr)!important;gap:24px!important}
+ [data-wr-modern-about] [data-wr-about-grid]>*{min-width:0;max-width:100%;grid-column:auto!important}
+ [data-wr-modern-about] [data-wr-about-wide-padding]{padding-left:20px!important;padding-right:20px!important}
+ [data-wr-modern-about] svg{max-width:100%}
+}
+</style>`;

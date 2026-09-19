@@ -70,7 +70,7 @@ export const SENSENG_DEFAULT_PRODUCTS = [
   },
 ];
 
-export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, materialsMode=Boolean(ctx.draft.materials)): string {
+export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, materialsMode=Boolean(ctx.draft.materials), modernAbout=false): string {
   const { draft, options, page, path, navAttrs, asset, translateProduct } = ctx;
   const company = draft.company;
 
@@ -669,7 +669,7 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // PAGE 4: ABOUT (webimg/aboutus.jpg)
   // -------------------------------------------------------------
   if (page === 'about') {
-    if (materialsMode) {
+    if (materialsMode && !modernAbout) {
       return renderLegacySensengPage(ctx, isVideoFullscreen, true);
     }
 

@@ -1,10 +1,11 @@
+import {validAboutHighlights} from '../shared/materials';
 import { parseFragment, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import type { ConfirmedMaterials, MaterialsTemplateContract } from '../shared/materials';
 import { materialsPages } from '../shared/materials';
 import { referenceLayouts } from './themes/referenceLayouts';
 import { sensengMaterialInventory } from './materials-senseng';
 import { junoDisplayContract, junoDisplayRevision, junoLegacyRevision, validateJunoDisplay } from './juno-display';
-import { getTypedMaterialsTemplate } from './materials-typed';
+import { getModernMaterialsTemplate,getTypedMaterialsTemplate } from './materials-typed';
 import { validateTypedMaterials } from './materials-typed-validation';
 
 type Node=DefaultTreeAdapterMap['node'];
@@ -104,8 +105,10 @@ export function getMaterialsTemplate(id:string,contractRevision?:string):Materia
     if(contractRevision===junoLegacyRevision)return structuredClone(prepareJuno().contract);
     if(contractRevision===junoDisplayRevision)return junoDisplayContract(prepareJuno().contract);
   }
-  const profile=getTypedMaterialsTemplate(id);
-  return profile&&(!contractRevision||profile.contractRevision===contractRevision)?profile:undefined;
+  const current=getModernMaterialsTemplate(id);
+  if(current&&(!contractRevision||current.contractRevision===contractRevision))return current;
+  const previous=getTypedMaterialsTemplate(id);
+  return previous?.contractRevision===contractRevision?previous:undefined;
 }
 export function prepareMaterialsReference(id:string):string {
   if(id!=='juno-toys')throw new Error('Unsupported materials template');
@@ -131,6 +134,8 @@ export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
       if(slot.repeat==='once'&&b.itemIndex!==undefined)add(`materials.${kind}Bindings`,'invalid_target',b.slotId);
       if(b.productId&&!m.products.some(p=>p.id===b.productId))add(`materials.${kind}Bindings`,'unknown_product',b.slotId);
       if((slot.repeat.startsWith('per-product')||slot.repeat==='per-selection')&&!b.productId)add(`materials.${kind}Bindings`,'missing_product',b.slotId);
+      if('text'in b&&['about-headline','about-story'].includes(b.slotId)&&!b.text.trim())add('materials.textBindings','empty_about_copy',b.slotId);
+      if('text'in b&&b.slotId==='about-highlights'&&!validAboutHighlights(b.text))add('materials.textBindings','invalid_about_highlights',b.slotId);
       if('text' in b&&'maxCodePoints' in slot&&[...b.text].length>slot.maxCodePoints)add('materials.textBindings','copy_too_long',b.slotId);
       if(kind==='image'&&'mediaId' in b&&'allowedMimeTypes' in slot){
         for(const locale of m.locales)if(!b.alt[locale]?.trim())add('materials.imageBindings','missing_alt',`${b.slotId}:${locale}`);
