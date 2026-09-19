@@ -168,6 +168,22 @@ describe('private preview asset references', () => {
     expect(node.getAttribute('data-wr-poster')).toBe('poster');
   });
 
+  it('routes selected gallery originals through the authorized preview Blob bridge', () => {
+    const node = mediaNode({
+      'data-src': '/api/projects/project-1/assets/side',
+      'data-large': '/api/projects/project-1/assets/full-side',
+    });
+    rewritePreviewMedia(node, 'project-1');
+    expect(node.getAttribute('data-src')).toBeNull();
+    expect(node.getAttribute('data-large')).toBeNull();
+    expect(node.getAttribute('data-wr-data-src')).toBe('side');
+    expect(node.getAttribute('data-wr-data-large')).toBe('full-side');
+    const foreign = mediaNode({ 'data-large': '/api/projects/project-2/assets/full-side' });
+    rewritePreviewMedia(foreign, 'project-1');
+    expect(foreign.getAttribute('data-large')).toBeNull();
+    expect(foreign.getAttribute('data-wr-data-large')).toBeNull();
+  });
+
   it.each([
     '/api/projects/project-2/assets/photo',
     '/public/sites/project-1/assets/photo',

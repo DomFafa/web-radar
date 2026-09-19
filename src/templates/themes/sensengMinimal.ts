@@ -335,7 +335,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:60px;align-items:start;">
           <!-- Left: Big Artwork Specimen -->
           <div data-reveal="fade-up" class="wr-card-hover" style="background:#f9fafb;border:1px solid #e5e7eb;padding:48px;text-align:center;">
-            <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;filter:drop-shadow(0 16px 28px rgba(0,0,0,0.06));">
+            <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;filter:drop-shadow(0 16px 28px rgba(0,0,0,0.06));">
             <div style="margin-top:28px;display:flex;justify-content:center;gap:16px;font-size:0.75rem;letter-spacing:0.08em;color:#6b7280;text-transform:uppercase;">
               <span>EN71 & ASTM</span>
               <span>·</span>

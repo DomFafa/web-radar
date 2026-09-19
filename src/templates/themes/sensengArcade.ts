@@ -416,7 +416,7 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start;">
           <!-- Left: Big Product Image in HUD Stand -->
           <div class="wr-arcade-hud wr-card-hover" data-reveal="fade-up" style="background:#0f172a;border:2px solid #00f5d4;border-radius:16px;padding:48px;text-align:center;box-shadow:0 0 30px rgba(0,245,212,0.2);">
-            <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;filter:drop-shadow(0 15px 25px rgba(0,0,0,0.5));">
+            <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;filter:drop-shadow(0 15px 25px rgba(0,0,0,0.5));">
             <div style="margin-top:28px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
               <span style="background:rgba(0,245,212,0.1);color:#00f5d4;border:1px solid #00f5d4;padding:4px 12px;border-radius:4px;font-family:monospace;font-size:0.75rem;">✓ FOOD-GRADE TPR</span>
               <span style="background:rgba(247,37,133,0.1);color:#f72585;border:1px solid #f72585;padding:4px 12px;border-radius:4px;font-family:monospace;font-size:0.75rem;">✓ EN71 / ASTM CERTIFIED</span>

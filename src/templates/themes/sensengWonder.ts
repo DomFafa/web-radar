@@ -437,7 +437,7 @@ export function renderWonderDetail(ctx: ThemeContext): string {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:start;">
           <!-- Left: Big Product Image -->
           <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e7dcce;border-radius:28px;padding:48px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.06);">
-            <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;">
+            <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;">
             <div style="margin-top:24px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
               <span style="background:#f4ede1;color:#264653;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:800;">✓ 100% Non-Toxic</span>
               <span style="background:#f4ede1;color:#264653;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:800;">✓ EN71 & ASTM</span>

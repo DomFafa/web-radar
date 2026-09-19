@@ -676,7 +676,7 @@ export function renderCandyDetail(ctx: ThemeContext): string {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start;">
           <!-- Left: Big Product Image -->
           <div data-reveal="fade-up" style="background:radial-gradient(circle, #ffffff 40%, #fff7f8 100%);border:4px solid #ffccd5;border-radius:36px;padding:48px;text-align:center;box-shadow:0 16px 40px rgba(255,107,139,0.12);">
-            <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.08));">
+            <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.08));">
             <div style="margin-top:28px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
               <span style="background:#fff0f3;border:1px solid #ffccd5;color:#e63946;padding:6px 14px;border-radius:9999px;font-size:0.8rem;font-weight:800;">✨ ${isZh ? '高弹抗撕裂' : 'Tear Resistant'}</span>
               <span style="background:#fff0f3;border:1px solid #ffccd5;color:#e63946;padding:6px 14px;border-radius:9999px;font-size:0.8rem;font-weight:800;">🌱 ${isZh ? '食品级环保' : 'Food Grade'}</span>

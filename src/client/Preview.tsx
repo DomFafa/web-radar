@@ -1,5 +1,6 @@
 import { bannerRuntime } from '../shared/banner-runtime';
 import { materialsRuntime } from '../shared/materials-runtime';
+import { productImageViewerRuntime } from '../shared/product-image-viewer';
 import { useEffect, useRef, useState } from 'react';
 import type { DesignPage, Language, Project } from '../shared/model';
 import { pageLabel, plannedPages } from '../shared/site-brief';
@@ -31,7 +32,7 @@ export function rewritePreviewMedia(
   },
   projectId: string,
 ) {
-  for (const attribute of ['src', 'poster']) {
+  for (const attribute of ['src', 'poster', 'data-src', 'data-large']) {
     const value = node.getAttribute(attribute) || '';
     if (!value || /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(value))
       continue;
@@ -135,12 +136,12 @@ export function SitePreview({
           'script,base,meta[http-equiv="refresh"],meta[http-equiv="Content-Security-Policy"]',
         )
         .forEach((node) => node.remove());
-      const targets = [...doc.querySelectorAll('[src],[poster]')];
+      const targets = [...doc.querySelectorAll('[src],[poster],[data-src],[data-large]')];
       const materialsIds=project.materials?[...doc.querySelectorAll('[style],[srcset],[data-wr-desktop-poster],[data-wr-mobile-poster]')].flatMap(node=>rewriteMaterialsPreviewMedia(node,project.id)):[];
       const ids = [
         ...new Set(
           [...materialsIds,...targets.flatMap((node) =>
-            ['src', 'poster']
+            ['src', 'poster', 'data-src', 'data-large']
               .map((attribute) => privateAssetId(node.getAttribute(attribute) || '', project.id))
               .filter((id): id is string => !!id),
           )],
@@ -167,6 +168,7 @@ export function SitePreview({
         var __name = typeof __name === 'function' ? __name : (v) => v;
         (${referenceInteractions.toString()})();
         (${materialsRuntime.toString()})();
+        (${productImageViewerRuntime.toString()})();
         ${bannerRuntime}
         for (const search of document.querySelectorAll('[data-product-search]')) search.addEventListener('input', () => {
           for (const card of document.querySelectorAll('[data-product-card]')) card.hidden = !(card.dataset.productName || card.textContent).toLowerCase().includes(search.value.toLowerCase());
@@ -210,8 +212,8 @@ export function SitePreview({
           const urls = new Map(event.data.items.map(item => {
             const url = URL.createObjectURL(item.blob); mediaUrls.push(url); return [item.id, url];
           }));
-          document.querySelectorAll('[data-wr-src],[data-wr-poster]').forEach(node => {
-            for (const attribute of ['src', 'poster']) {
+          document.querySelectorAll('[data-wr-src],[data-wr-poster],[data-wr-data-src],[data-wr-data-large]').forEach(node => {
+            for (const attribute of ['src', 'poster', 'data-src', 'data-large']) {
               const url = urls.get(node.getAttribute('data-wr-' + attribute));
               if (url) node.setAttribute(attribute, url);
             }

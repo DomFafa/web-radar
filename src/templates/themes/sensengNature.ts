@@ -341,7 +341,7 @@ export function renderNatureDetail(ctx: ThemeContext): string {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:start;">
           <!-- Left: Big Specimen Image -->
           <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:24px;padding:48px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
-            <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;">
+            <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;">
             <div style="margin-top:24px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
               <span style="background:#f4f1ea;color:#2d4a22;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:800;">✓ 100% Non-Toxic</span>
               <span style="background:#f4f1ea;color:#2d4a22;padding:6px 14px;border-radius:6px;font-size:0.8rem;font-weight:800;">✓ EN71 & ASTM</span>
