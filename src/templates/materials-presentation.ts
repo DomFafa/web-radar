@@ -315,7 +315,7 @@ function productLists(
 function companyFacts(draft: Draft, options: RenderOptions) {
   const c = draft.company,
     ui = labels[options.lang];
-  const facts = [c.description, c.targetMarkets, c.customerTypes, c.cooperationProcess].filter(
+  const facts = [options.page === 'about' ? copy(draft, options, 'company-about').trim() : '', c.description, c.targetMarkets, c.customerTypes, c.cooperationProcess].filter(
     (v): v is string => Boolean(v?.trim()),
   );
   return `<section class="wr-confirmed-company wrap" data-wr-company-facts=""><span class="eyebrow">${esc(ui.about)}</span><h2>${esc(c.name)}</h2><p>${esc(ui[c.type])}</p>${[...new Set(facts)].map((value) => `<p>${esc(value)}</p>`).join('')}${c.contactName ? `<p>${esc(c.contactName)}</p>` : ''}${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}<p><a href="${esc(path(options, 'contact/index.html'))}" data-wr-page="contact">${esc(ui.contact)} ↗</a></p></section>`;

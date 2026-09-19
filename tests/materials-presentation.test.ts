@@ -209,7 +209,8 @@ describe('confirmed materials presentation', () => {
       const about = nodes.find((n) => attr(n, 'data-wr-company-facts') !== undefined)!;
       expect(about).toBeDefined();
       expect(text(about)).toContain(draft.company.name);
-      expect(text(about)).not.toContain('rounded cheeks');
+      if (page === 'about') expect(text(about)).toContain('rounded cheeks');
+      else expect(text(about)).not.toContain('rounded cheeks');
       expect(text(about)).not.toContain('Soft toy');
       expect(elements(about).some((n) => attr(n, 'data-wr-company-metric') !== undefined)).toBe(
         false,
@@ -401,4 +402,29 @@ describe('explicit display group draft metadata', () => {
     input.materials.products = input.materials.products.filter((p) => p.id !== 'p1');
     expect(receive(input, assets, previous, oldAssets).productDisplayGroups).toBeUndefined();
   });
+});
+
+it.each(Object.keys(templateMediaRequirements))('%s restores confirmed About copy in old drafts without changing their contract', async template => {
+  const revision = `2026-09-19.${template}-materials.1`;
+  const draft = await fixture(template, 2, revision);
+  Object.assign(draft.company, {description: '', targetMarkets: '', customerTypes: '', cooperationProcess: ''});
+  const introduction = 'Confirmed brand introduction for retail buyers <script>alert(1)</script>';
+  draft.materials!.textBindings.find(b => b.slotId === 'company-about')!.text = introduction;
+  draft.copy.en!.about = 'Unbound draft introduction';
+  const before = JSON.stringify(draft);
+  const html = renderSite(draft, options('about'));
+  const main = elements(parse(html)).find(n => n.tagName === 'main')!;
+  expect(text(main)).toContain(introduction);
+  expect(text(main)).not.toContain('Unbound draft introduction');
+  expect(html).not.toContain('<script>alert(1)</script>');
+  expect(JSON.stringify(draft)).toBe(before);
+});
+it('uses the requested locale for legacy About copy and displays duplicate facts once', async () => {
+  const draft = await fixture('senseng-arcade', 2, '2026-09-19.senseng-arcade-materials.1');
+  draft.company.description = 'Nuestra colección para compradores';
+  draft.materials!.textBindings.push({slotId: 'company-about', locale: 'es', text: draft.company.description, factReferences: ['f1']});
+  const html = renderSite(draft, options('about', 'p0', 'es'));
+  const main = elements(parse(html)).find(n => n.tagName === 'main')!;
+  expect(text(main).split(draft.company.description)).toHaveLength(2);
+  expect(text(main)).not.toContain('A confirmed brand');
 });
