@@ -183,7 +183,11 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
 
     @application.post("/v1/media/preview")
     async def preview(request: Request):
-        from thumbnails import make_preview
+        from thumbnails import make_preview, RESPONSIVE_WIDTHS
+        requested_width = request.query_params.get('width')
+        if requested_width is not None and requested_width not in {str(w) for w in RESPONSIVE_WIDTHS}:
+            raise HTTPException(422, 'Unsupported preview width')
+        width = int(requested_width) if requested_width is not None else None
         limit = 20 * 1024 * 1024
         if int(request.headers.get('content-length', '0')) > limit:
             raise HTTPException(413, 'Preview input exceeds limit')
@@ -198,10 +202,11 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
                     raise HTTPException(413, 'Preview input exceeds limit')
                 body.extend(chunk)
             try:
-                result = await asyncio.to_thread(make_preview, bytes(body))
+                dimensions = {}
+                result = await asyncio.to_thread(make_preview, bytes(body), width=width, source_dimensions=dimensions)
             except (ValueError, OSError, Image.DecompressionBombError):
                 raise HTTPException(422, 'Invalid preview image') from None
-            return Response(result, media_type='image/webp', headers={'Cache-Control': 'no-store'})
+            return Response(result, media_type='image/webp', headers={'Cache-Control': 'no-store', 'X-Source-Width': str(dimensions['width']), 'X-Source-Height': str(dimensions['height'])})
         finally:
             preview_slots.release()
 

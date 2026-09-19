@@ -235,6 +235,8 @@ export interface Draft {
   templateConfirmed?: boolean;
   company: Company;
   products: Product[];
+  /** Explicitly confirmed display equivalents; the first ID is canonical. Records stay intact. */
+  productDisplayGroups?: string[][];
   primaryProductId: string;
   category: string;
   country: string;
@@ -321,7 +323,29 @@ export interface Quota {
   imageReserved: number;
   videoReserved: number;
 }
+export interface PublicMediaVariant {
+  requestedWidth: number;
+  width: number;
+  height: number;
+  key: string;
+  sha256: string;
+  bytes: number;
+}
+export interface PublicMediaAsset {
+  original?: { width: number; height: number };
+  sourceKey: string;
+  sourceIdentity: string;
+  widths: number[];
+  variants: PublicMediaVariant[];
+}
+export interface PublicMediaManifest {
+  policy: string;
+  ready: boolean;
+  assets: Record<string, PublicMediaAsset>;
+}
 export interface Release {
+  rendererVersion?: string;
+  publicMedia?: PublicMediaManifest;
   seo?: { policyVersion: number; origin: string };
   hostingTarget?: HostingTarget;
   id: string;

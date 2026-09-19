@@ -1,7 +1,7 @@
-import { selectedBanner } from './banner-config';
+import { bannerLink, selectedBanner } from './banner-config';
 import { bannerRuntime } from './banner-runtime';
 import { parse, parseFragment, serialize, type DefaultTreeAdapterMap } from 'parse5';
-import type { Draft } from './model';
+import type { BannerSlide, Draft } from './model';
 
 type Node = DefaultTreeAdapterMap['node'];
 type Element = DefaultTreeAdapterMap['element'];
@@ -52,7 +52,9 @@ export function withBanner(
       banner.headline ||
       banner.subtitle ||
       banner.primaryButtonText ||
+      banner.primaryButtonUrl ||
       banner.secondaryButtonText ||
+      banner.secondaryButtonUrl ||
       (banner.tags && banner.tags.length > 0) ||
       (banner.floatingPills && banner.floatingPills.length > 0),
   );
@@ -65,8 +67,12 @@ export function withBanner(
   const body = all.find((node) => node.tagName === 'body');
   const head = all.find((node) => node.tagName === 'head');
   if (!body || !head) return html;
+  const materialsPage = attr(body, 'class').split(/\s+/).includes('wr-materials-site');
+  // The confirmed hero contains collection controls, not the site navigation.
+  const collectionHero = all.find((node) => node.attrs.some((a) => a.name === 'data-wr-collection-hero'));
   // Prefer an explicit model marker, then known top-level hero names. Never replace navigation.
   let hero =
+    collectionHero ??
     all.find(
       (node) =>
         ['section', 'div', 'header'].includes(node.tagName) &&
@@ -77,7 +83,7 @@ export function withBanner(
       (node) =>
         ['section', 'div', 'header'].includes(node.tagName) &&
         !elements(node).some((child) => child.tagName === 'nav') &&
-        /(?:^|[\s_-])(?:[a-z0-9_-]*-)?(?:hero|banner)(?:-[a-z0-9_-]+)?(?:\s|$)/i.test(
+        /(?:^|[\s_-])(?:(?:[a-z0-9_-]*-)?(?:hero|banner)(?:-[a-z0-9_-]+)?|wr-inner-title)(?:\s|$)/i.test(
           `${attr(node, 'id')} ${attr(node, 'class')}`,
         ),
     );
@@ -95,11 +101,15 @@ export function withBanner(
       parent = parent.parentNode;
     }
   }
-  const hasSlideCopy = banner.slides.some((s) => s.headline || s.subtitle || s.buttonText);
+  const fullImage = !video && (banner.mode === 'image' || (!hero && hasMedia));
+  const slideHasCopy = (slide: BannerSlide) => !fullImage && Boolean(
+    slide.eyebrow || slide.headline || slide.subtitle || slide.buttonText || slide.secondaryButtonText,
+  );
+  const hasSlideCopy = banner.slides.some(slideHasCopy);
   const slides = banner.slides
     .map(
       (slide, i) =>
-        `<div class="wr-banner-slide" data-wr-slide ${i ? 'hidden aria-hidden="true"' : 'aria-hidden="false"'}><img data-wr-banner-image src="${escape(assetUrl(slide.assetId))}" alt="${escape(slide.alt)}" loading="eager" ${i ? '' : 'fetchpriority="high"'} decoding="async">${(slide.headline || slide.subtitle || slide.buttonText) ? `<div class="wr-banner-slide-copy">${slide.eyebrow ? `<div class="wr-banner-slide-eyebrow" style="font-size:0.9rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;opacity:0.9;">${escape(slide.eyebrow)}</div>` : ''}${slide.headline ? `<h2 class="wr-banner-slide-title">${escape(slide.headline)}</h2>` : ''}${slide.subtitle ? `<p class="wr-banner-slide-desc">${escape(slide.subtitle)}</p>` : ''}<div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">${slide.buttonText ? `<a class="button wr-banner-slide-btn" href="${escape(slide.buttonUrl || 'contact/index.html')}">${escape(slide.buttonText)} ↗</a>` : ''}${slide.secondaryButtonText ? `<a class="button wr-banner-slide-btn wr-banner-slide-btn-sub" style="background:rgba(255,255,255,0.2)!important;color:#fff!important;border:2px solid rgba(255,255,255,0.6)!important;" href="${escape(slide.secondaryButtonUrl || 'contact/index.html')}">${escape(slide.secondaryButtonText)}</a>` : ''}</div></div>` : ''}</div>`,
+        `<div class="wr-banner-slide" data-wr-slide ${i ? 'hidden aria-hidden="true"' : 'aria-hidden="false"'}><img data-wr-banner-image src="${escape(assetUrl(slide.assetId))}" alt="${escape(slide.alt)}" loading="eager" ${i ? '' : 'fetchpriority="high"'} decoding="async">${slideHasCopy(slide) ? `<div class="wr-banner-slide-copy">${slide.eyebrow ? `<div class="wr-banner-slide-eyebrow" style="font-size:0.9rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;opacity:0.9;">${escape(slide.eyebrow)}</div>` : ''}${slide.headline ? `<h2 class="wr-banner-slide-title">${escape(slide.headline)}</h2>` : ''}${slide.subtitle ? `<p class="wr-banner-slide-desc">${escape(slide.subtitle)}</p>` : ''}<div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">${slide.buttonText ? `<a class="button wr-banner-slide-btn" href="${escape(bannerLink(slide.buttonUrl || 'contact/index.html'))}">${escape(slide.buttonText)} ↗</a>` : ''}${slide.secondaryButtonText ? `<a class="button wr-banner-slide-btn wr-banner-slide-btn-sub" style="background:rgba(255,255,255,0.2)!important;color:#fff!important;border:2px solid rgba(255,255,255,0.6)!important;" href="${escape(bannerLink(slide.secondaryButtonUrl || 'contact/index.html'))}">${escape(slide.secondaryButtonText)}</a>` : ''}</div></div>` : ''}</div>`,
     )
     .join('');
   const poster = banner.posterAssetId ? escape(assetUrl(banner.posterAssetId)) : '';
@@ -110,10 +120,14 @@ export function withBanner(
     video || banner.slides.length > 1
       ? `<div class="wr-banner-controls" role="group" aria-label="Banner controls">${video ? '' : `<button type="button" data-wr-banner-prev aria-label="Previous banner">←</button><span data-wr-banner-status aria-live="off">1 / ${banner.slides.length}</span><button type="button" data-wr-banner-next aria-label="Next banner">→</button>`}<button type="button" data-wr-banner-toggle aria-label="Play banner">▶</button></div>`
       : '';
-  const fullImage = !video && (banner.mode === 'image' || (!hero && hasMedia));
   const image = hasMedia ? `<div class="wr-banner-media">${media}</div>` : '';
+  const createdHero = !hero;
+  const defaultButtonText = draft.copy[draft.languages[0]]?.cta || 'Contact';
+  const defaultButtonUrl = `${page === 'home' ? '' : '../'}contact/index.html`;
   if (!hero) {
-    hero = parseFragment('<section></section>').childNodes[0] as Element;
+    const heading = all.some((node) => node.tagName === 'h1') ? 'h2' : 'h1';
+    const copy = hasCustomCopy ? `<div class="wr-confirmed-hero-copy">${banner.eyebrow ? `<span class="eyebrow">${escape(banner.eyebrow)}</span>` : ''}${banner.headline ? `<${heading}>${escape(banner.headline)}</${heading}>` : ''}${banner.subtitle ? `<p>${escape(banner.subtitle)}</p>` : ''}${banner.primaryButtonText || banner.primaryButtonUrl ? `<a class="button" href="${escape(bannerLink(banner.primaryButtonUrl || defaultButtonUrl))}">${escape(banner.primaryButtonText || defaultButtonText)}</a>` : ''}</div>` : '';
+    hero = parseFragment(`<section>${copy}</section>`).childNodes[0] as Element;
     const main = all.find((node) => node.tagName === 'main') ?? body;
     const header = main.childNodes.findIndex(
       (node) => 'tagName' in node && node.tagName === 'header',
@@ -126,6 +140,19 @@ export function withBanner(
     { name: 'data-autoplay', value: String(banner.autoplay) },
     { name: 'data-interval', value: String(banner.interval) },
   );
+  if (collectionHero && fullImage && !hasMedia) {
+    // Pure-image mode without an upload keeps the bound collection, only hiding its copy.
+    const copy = elements(hero).find((node) => attr(node, 'class') === 'wr-confirmed-hero-copy');
+    const heading = elements(hero).find((node) => node.tagName === 'h1');
+    hero.childNodes = hero.childNodes.filter((node) => node !== copy);
+    hero.attrs.push({ name: 'data-wr-banner-mode', value: 'image' });
+    if (heading) {
+      heading.attrs.push({ name: 'style', value: 'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)' });
+      heading.parentNode = hero;
+      hero.childNodes.push(heading);
+    }
+    return serialize(document);
+  }
   if (fullImage) {
     hero.attrs.push({ name: 'data-wr-banner-mode', value: 'image' });
     const heading = elements(hero).find((node) => node.tagName === 'h1');
@@ -149,6 +176,27 @@ export function withBanner(
       }
     }
   } else {
+    const copy = elements(hero).find((node) => attr(node, 'class') === 'wr-confirmed-hero-copy') || (materialsPage ? hero : undefined);
+    if (copy) {
+      const appendCopy = (html: string) => {
+        for (const node of parseFragment(html).childNodes) {
+          node.parentNode = copy;
+          copy.childNodes.push(node);
+        }
+      };
+      if (banner.eyebrow && !elements(copy).some((node) => /(?:^|[\s_-])(?:eyebrow|badge)(?:[\s_-]|$)/i.test(attr(node, 'class')))) appendCopy(`<span class="eyebrow">${escape(banner.eyebrow)}</span>`);
+      if (banner.subtitle && !elements(copy).some((node) => node.tagName === 'p')) appendCopy('<p></p>');
+      const buttons = () => elements(copy).filter((node) => node.tagName === 'a' && (attr(node, 'class').includes('button') || attr(node, 'class').includes('btn')));
+      if ((banner.primaryButtonText || banner.primaryButtonUrl) && !buttons().length) appendCopy(`<a class="button" href="${escape(bannerLink(banner.primaryButtonUrl || defaultButtonUrl))}">${escape(banner.primaryButtonText || defaultButtonText)}</a>`);
+      if (banner.secondaryButtonText || banner.secondaryButtonUrl) {
+        const primary = buttons()[0];
+        if (buttons().length < 2) appendCopy(`<a class="button" style="margin:8px" href="${escape(bannerLink(banner.secondaryButtonUrl || (primary ? attr(primary, 'href') : defaultButtonUrl)))}">${escape(banner.secondaryButtonText || (primary ? visibleText(primary) : defaultButtonText))}</a>`);
+      }
+      for (const [name, values] of [['tags', banner.tags], ['pills', banner.floatingPills]] as const) {
+        const supplied = values?.filter((value) => value.trim());
+        if (supplied?.length) appendCopy(`<div class="wr-banner-custom-${name}" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:18px">${supplied.map((value) => `<span style="padding:8px 14px;border:1px solid currentColor;border-radius:999px">${escape(value)}</span>`).join('')}</div>`);
+      }
+    }
     if (hasCustomCopy) {
       if (banner.headline) {
         const h1 = elements(hero).find((node) => node.tagName === 'h1');
@@ -193,8 +241,8 @@ export function withBanner(
           }
           if (banner.primaryButtonUrl) {
             const hrefAttr = buttons[0].attrs.find((a) => a.name === 'href');
-            if (hrefAttr) hrefAttr.value = banner.primaryButtonUrl;
-            else buttons[0].attrs.push({ name: 'href', value: banner.primaryButtonUrl });
+            if (hrefAttr) hrefAttr.value = bannerLink(banner.primaryButtonUrl);
+            else buttons[0].attrs.push({ name: 'href', value: bannerLink(banner.primaryButtonUrl) });
           }
         }
       }
@@ -216,13 +264,18 @@ export function withBanner(
           }
           if (banner.secondaryButtonUrl) {
             const hrefAttr = buttons[1].attrs.find((a) => a.name === 'href');
-            if (hrefAttr) hrefAttr.value = banner.secondaryButtonUrl;
-            else buttons[1].attrs.push({ name: 'href', value: banner.secondaryButtonUrl });
+            if (hrefAttr) hrefAttr.value = bannerLink(banner.secondaryButtonUrl);
+            else buttons[1].attrs.push({ name: 'href', value: bannerLink(banner.secondaryButtonUrl) });
           }
         }
       }
     }
+    // Copy-only edits keep the uncropped collection track and its responsive layout.
+    if ((materialsPage || createdHero) && !hasMedia) return serialize(document);
     if (hasMedia) {
+    if (collectionHero) hero.childNodes = hero.childNodes.filter((node) =>
+      !('tagName' in node && ['wr-confirmed-collection-track', 'wr-confirmed-collection-nav'].includes(attr(node, 'class'))),
+    );
     // Remove old media to prevent both loading and playback underneath the chosen image.
     const strip = (node: Element) => {
       node.childNodes = node.childNodes.filter(

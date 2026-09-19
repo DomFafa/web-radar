@@ -328,4 +328,3 @@ it('persists banner custom copy and slide custom copy in editDraft', () => {
   expect(b?.slides[0].secondaryButtonText).toBe('Slide Sec Btn');
   expect(b?.slides[0].secondaryButtonUrl).toBe('contact/slide.html');
 });
-

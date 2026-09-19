@@ -11,11 +11,26 @@ type Binding=AppliedMaterials['imageBindings'][number];
 const position=(p:Binding['focalPoint'])=>`${p.x*100}% ${p.y*100}%`;
 const cssUrl=(url:string)=>`url(${JSON.stringify(url).replace(/</g,'\\3c ')})`;
 function imageStyle(binding:Binding){return`object-fit:${binding.fit};object-position:${position(binding.focalPoint)};--wr-material-fit:${binding.fit};--wr-material-position:${position(binding.focalPoint)};--wr-mobile-position:${position(binding.mobileFocalPoint||binding.focalPoint)};`;}
+export function materialBackgroundUrl(binding:Binding,options:RenderOptions,mobile=false):string{
+  if(!mobile)return safeUrl(options.assetUrl(binding.assetId),options.preview);
+  const id=binding.mobileAssetId||binding.assetId;
+  const variants=options.imageVariants?.(id,[640]);
+  return safeUrl(variants?.at(-1)?.url||options.assetUrl(id),options.preview);
+}
 export function materialImage(binding:Binding,options:RenderOptions,assetId=binding.assetId,alt?:string):string{
   const url=safeUrl(options.assetUrl(assetId),options.preview);
   const mobile=assetId===binding.assetId&&binding.mobileAssetId?safeUrl(options.assetUrl(binding.mobileAssetId),options.preview):'';
-  const img=`<img data-wr-material-photo="" src="${esc(url)}" alt="${esc(alt||binding.alt[options.lang]||binding.alt.en||'')}" style="${esc(imageStyle(binding))}" loading="lazy">`;
-  return mobile?`<picture><source media="(max-width:767px)" srcset="${esc(mobile)}">${img}</picture>`:img;
+  const card=binding.slotId==='product-main'||binding.slotId==='product-gallery';
+  const detail=binding.slotId==='product-main'&&options.page==='detail'&&options.productId===binding.productId;
+  const banner=binding.role==='collection'||/hero|banner/.test(binding.slotId);
+  const widths=card?(detail?[320,640,1280]:[320,640]):banner?[640,1280,1600]:[640,1280];
+  const sizes=card?(detail?'(max-width:767px) 100vw, 50vw':'(max-width:767px) 50vw, (max-width:1100px) 33vw, 320px'):banner?'100vw':'(max-width:767px) 100vw, 50vw';
+  const variants=options.imageVariants?.(assetId,widths,banner||detail),largest=variants?.at(-1);
+  const srcset=(items:NonNullable<typeof variants>)=>items.map(v=>`${safeUrl(v.url,options.preview)} ${v.width}w`).join(', ');
+  const responsive=largest?` srcset="${esc(srcset(variants!))}" sizes="${sizes}" width="${largest.width}" height="${largest.height}"`:'';
+  const img=`<img data-wr-material-photo="" src="${esc(url)}"${responsive} alt="${esc(alt||binding.alt[options.lang]||binding.alt.en||'')}" style="${esc(imageStyle(binding))}" loading="lazy">`;
+  const mobileVariants=mobile?options.imageVariants?.(binding.mobileAssetId!,widths,banner||detail):undefined;
+  return mobile?`<picture><source media="(max-width:767px)" srcset="${esc(mobileVariants?.length?srcset(mobileVariants):mobile)}"${mobileVariants?.length?` sizes="${sizes}"`:''}>${img}</picture>`:img;
 }
 export function materialProductImage(draft:Draft,options:RenderOptions,product:Product,assetId=product.imageAssetId):string|undefined{
   if(!draft.materials||!assetId)return;

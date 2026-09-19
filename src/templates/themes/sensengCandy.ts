@@ -1,5 +1,5 @@
 import type { Product } from '../../shared/model';
-import { selectedBanner } from '../../shared/banner-config';
+import { bannerLink, selectedBanner } from '../../shared/banner-config';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { isTypedMaterialsSource } from '../materials-typed';
 
@@ -193,7 +193,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
   };
 
   const banner = selectedBanner(draft, 'home');
-  const isImageMode = banner?.mode === 'image';
+  const isImageMode = banner?.kind === 'images' && banner.mode === 'image';
 
   const eyebrowText =
     banner?.eyebrow ||
@@ -278,10 +278,10 @@ export function renderCandyHome(ctx: ThemeContext): string {
           </p>
 
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
-            <a class="button" style="background:#ff6b8b;color:#ffffff;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:0.95rem;box-shadow:0 8px 24px rgba(255,107,139,0.35);transition:transform 0.2s;" href="${safeUrl(primaryBtnUrl)}" ${navAttrs('catalog')}>
+            <a class="button" style="background:#ff6b8b;color:#ffffff;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:0.95rem;box-shadow:0 8px 24px rgba(255,107,139,0.35);transition:transform 0.2s;" href="${esc(bannerLink(primaryBtnUrl))}" ${navAttrs('catalog')}>
               ${esc(primaryBtnText)} ↗
             </a>
-            <a class="button" style="background:#ffffff;color:#2b2d42;border:2px solid #e0e4ec;font-weight:800;padding:15px 30px;border-radius:9999px;font-size:0.95rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);" href="${safeUrl(secondaryBtnUrl)}" ${navAttrs('contact')}>
+            <a class="button" style="background:#ffffff;color:#2b2d42;border:2px solid #e0e4ec;font-weight:800;padding:15px 30px;border-radius:9999px;font-size:0.95rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);" href="${esc(bannerLink(secondaryBtnUrl))}" ${navAttrs('contact')}>
               ${esc(secondaryBtnText)}
             </a>
           </div>

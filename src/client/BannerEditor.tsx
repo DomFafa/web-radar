@@ -250,7 +250,9 @@ export function BannerEditor({
                       banner.headline ||
                       banner.subtitle ||
                       banner.primaryButtonText ||
+                      banner.primaryButtonUrl ||
                       banner.secondaryButtonText ||
+                      banner.secondaryButtonUrl ||
                       (banner.tags && banner.tags.some(Boolean)) ||
                       (banner.floatingPills && banner.floatingPills.some(Boolean))) && (
                       <span

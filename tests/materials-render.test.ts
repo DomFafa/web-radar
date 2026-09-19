@@ -53,3 +53,31 @@ describe('approved materials rendering',()=>{
     for(const id of ['6f48de11','67fddce','7b2b7e3','87636bb','54828a1'])expect(html).toContain(`data-id="${id}"`);
   });
 });
+
+it('advertises prepared accurate candidates while preserving original identity and separate mobile sources', async()=>{
+  const {materialImage}=await import('../src/templates/materials-render');
+  const d=await draft(),binding={...d.materials!.imageBindings[0],slotId:'hero-slide-0',assetId:'desktop',mobileAssetId:'mobile',role:'collection' as const};
+  const calls:string[]=[];
+  const html=materialImage(binding,{...options,preview:false,imageVariants:(id,widths)=>{calls.push(id);return [{url:`/media/${id}?width=640`,width:400,height:200},{url:`/media/${id}?width=1280`,width:400,height:200}].filter((_,i)=>i===0);}});
+  expect(html).toContain('src="/media/desktop"');
+  expect(html).toContain('srcset="/media/desktop?width=640 400w"');
+  expect(html).toContain('srcset="/media/mobile?width=640 400w"');
+  expect(html).toContain('sizes="100vw"');
+  expect(html).toContain('width="400" height="200"');
+  expect(calls).toEqual(['desktop','mobile']);
+});
+
+it('collects only the emitted mobile background variant and keeps the desktop original',async()=>{
+  const {materialBackgroundUrl}=await import('../src/templates/materials-render');
+  const d=await draft(),binding={...d.materials!.imageBindings[0],assetId:'desktop',mobileAssetId:'mobile',role:'collection' as const};
+  const calls:{id:string;widths:number[];includeOriginal?:boolean}[]=[];
+  const responsive={...options,imageVariants:(id:string,widths:number[],includeOriginal?:boolean)=>{calls.push({id,widths,includeOriginal});return widths.map(width=>({url:`/media/${id}?width=${width}`,width,height:width/2}));}};
+  expect(materialBackgroundUrl(binding,responsive)).toBe('/media/desktop');
+  expect(calls).toEqual([]);
+  expect(materialBackgroundUrl(binding,responsive,true)).toBe('/media/mobile?width=640');
+  expect(calls).toEqual([{id:'mobile',widths:[640],includeOriginal:undefined}]);
+  calls.length=0;
+  expect(materialBackgroundUrl({...binding,mobileAssetId:undefined},responsive,true)).toBe('/media/desktop?width=640');
+  expect(calls).toEqual([{id:'desktop',widths:[640],includeOriginal:undefined}]);
+  expect(materialBackgroundUrl(binding,options,true)).toBe('/media/mobile');
+});

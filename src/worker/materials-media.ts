@@ -3,7 +3,7 @@ import { ApiError } from './http';
 import { limitedBytes } from './providers/http';
 import { ProviderError } from './provider-contract';
 
-function dimensions(bytes:Uint8Array,mime:string):{width:number;height:number}|undefined{
+export function dimensions(bytes:Uint8Array,mime:string):{width:number;height:number}|undefined{
   const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
   const ascii=(i:number,n:number)=>String.fromCharCode(...bytes.slice(i,i+n));
   if(mime==='image/png'&&bytes.length>=33&&ascii(1,3)==='PNG'&&bytes[0]===137&&ascii(12,4)==='IHDR')return{width:view.getUint32(16),height:view.getUint32(20)};
