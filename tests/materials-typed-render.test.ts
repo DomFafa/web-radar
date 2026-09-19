@@ -78,7 +78,7 @@ describe('typed materials preserve template layouts with confirmed content',()=>
       }for(const c of n.childNodes||[])walk(c);};walk(root);expect(remaining,id).toEqual([]);
     }
   });
-  it.each(['candy','wonder','arcade','nature','minimal'])('lets the confirmed %s header wrap complete navigation labels on mobile only',theme=>{
+  it.each(['candy','wonder','arcade','nature','minimal'])('keeps complete confirmed %s labels inside the native mobile menu',theme=>{
     const draft=fixture(`senseng-${theme}`,2);
     const catalogSlot=getTypedMaterialsTemplate(draft.template)!.textSlots.find(s=>s.page==='home'&&s.exampleText==='Collection')!;
     draft.materials!.textBindings.find(b=>b.slotId===catalogSlot.id)!.text='Explore the collection';
@@ -89,7 +89,8 @@ describe('typed materials preserve template layouts with confirmed content',()=>
     expect(Boolean(style),'scoped responsive header style').toBe(true);
     const css=style.childNodes.map((n:any)=>n.value||'').join('');
     expect(css).toContain('@media(max-width:767px)');
-    expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
+    expect(html).toContain('data-wr-mobile-menu=""');
+    expect(html).toContain('<summary aria-label=');
     expect(css).toContain('overflow-wrap:anywhere');
     expect(visible(html)).toContain('Explore the collection');
     expect(renderSite({...draft,materials:undefined},options).includes('id="wr-typed-mobile-header"')).toBe(false);
@@ -115,17 +116,16 @@ describe('typed materials preserve template layouts with confirmed content',()=>
   it('preserves the published contract manifest through render-only corrections',()=>{
     for(const [id,locked] of Object.entries(typedManifest.templates))expect(createHash('sha256').update(JSON.stringify(getTypedMaterialsTemplate(id))).digest('hex'),id).toBe(locked.sha256);
   });
-  it('lets approved Arcade fact copy wrap inside the existing two-column mobile grid',()=>{
+  it('replaces Arcade demo metrics with supported company facts',()=>{
     const draft=fixture('senseng-arcade',2),contract=getTypedMaterialsTemplate(draft.template)!;
     const slot=contract.textSlots.find(s=>s.page==='home'&&s.exampleText==='60+')!;
     const approved='Manufacturing details available on request';
     draft.materials!.textBindings.find(b=>b.slotId===slot.id)!.text=approved;
     const options={projectId:'typed',lang:'en' as const,page:'home',assetUrl:(id:string)=>`/bound/${id}`,inquiryUrl:'/inquiry',preview:true};
     const html=renderTypedMaterialsSite(draft,options);
-    expect(html.match(/data-wr-typed-facts-grid=""/g)).toHaveLength(1);
-    expect(html).toContain('[data-wr-typed-facts-grid]{grid-template-columns:repeat(2,minmax(0,1fr))!important;min-width:0}');
-    expect(html).toContain('[data-wr-typed-facts-grid]>.wr-card-hover{min-width:0;overflow-wrap:anywhere}');
-    expect(visible(html)).toContain(approved);
+    expect(html).toContain('data-wr-company-facts=""');
+    expect(visible(html)).toContain('Confirmed company description');
+    expect(visible(html)).not.toContain(approved);
     expect(renderSite({...draft,materials:undefined},options).includes('data-wr-typed-facts-grid')).toBe(false);
   });
   it.each(['saas-automation','fintech-platform','digital-marketing'])('stacks fixed %s inner-page columns on mobile without changing standalone layouts',id=>{

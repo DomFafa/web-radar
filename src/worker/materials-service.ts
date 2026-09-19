@@ -1,4 +1,5 @@
 import type { Asset, Draft, Principal, Project } from '../shared/model';
+import { retainedProductDisplayGroups } from '../shared/product-display';
 import type { MaterialsReceipt, MaterialsSubmission } from '../shared/materials';
 import { materialsSubmissionSchema } from '../shared/materials';
 import { validateMaterialsPositions } from '../templates/materials';
@@ -18,7 +19,19 @@ interface Hooks {lock<T>(fn:()=>Promise<T>):Promise<T>;schedule(time:number):Pro
 const receiveConcurrency=4,receiveTickLimit=32,receiveTickMs=10_000,receiveBatchBytes=20*1024*1024;
 const time=()=>new Date().toISOString();
 const scopeFor=async(p:Principal)=>'materials:'+await sha256(canonical([p.userId,p.workspaceId]));
-export function draftFromMaterials(submission:MaterialsSubmission,assets:Record<string,Asset>):Draft{
+/** Display equivalence survives an import only while every relevant visual is unchanged.
+ * Asset IDs change between receipts, so compare verified bytes and binding positions. */
+function productVisualFingerprint(draft:Draft,productId:string,hashes:Map<string,string|undefined>):string|undefined{
+  const product=draft.products.find(p=>p.id===productId);if(!product?.imageAssetId)return;
+  const refs:Array<[string,string|undefined]>=[['main',product.imageAssetId],...(product.gallery||[]).map((image,index)=>[`gallery:${index}`,image.assetId] as [string,string])];
+  for(const b of draft.materials?.imageBindings.filter(b=>b.productId===productId)||[]){
+    const key=`${b.slotId}:${b.itemIndex||0}`;refs.push([key,b.assetId]);if(b.mobileAssetId)refs.push([key+':mobile',b.mobileAssetId]);
+  }
+  const values=refs.map(([position,id])=>[position,id?hashes.get(id):undefined]);
+  if(values.some(([,hash])=>!hash||!/^[a-f0-9]{64}$/i.test(hash)))return;
+  return JSON.stringify(values.sort(([a],[b])=>a!.localeCompare(b!)));
+}
+export function draftFromMaterials(submission:MaterialsSubmission,assets:Record<string,Asset>,previous?:Draft,previousAssets:Asset[]=[]):Draft{
   const m=submission.materials,b=m.brand,c=m.contact,d=defaultDraft();
   const asset=(id:string|undefined)=>id?assets[id]?.id:undefined;
   d.buildBranch='template';d.templateConfirmed=true;d.template=m.template.id as Draft['template'];d.languages=[...m.locales];d.country=m.country;d.primaryProductId=m.primaryProductId;d.brandColor=m.visual.palette.primary;
@@ -27,6 +40,12 @@ export function draftFromMaterials(submission:MaterialsSubmission,assets:Record<
   d.products=m.products.map(p=>({id:p.id,name:p.name,description:p.description,material:p.material,dimensions:p.dimensions,imageAssetId:asset(p.primaryMediaId),gallery:p.galleryMediaIds.map((id,i)=>({assetId:asset(id)!,sourceImageId:id,kind:i===0?'original':'detail',caption:m.imageBindings.find(b=>b.productId===p.id&&b.mediaId===id)?.alt.en||p.name})),tagline:p.tagline,sellingPoints:p.sellingPoints,applications:p.applications,translations:p.translations}));
   for(const lang of m.locales){const copy=(id:string)=>m.textBindings.find(b=>b.slotId===id&&b.locale===lang)?.text||'';d.copy[lang]={headline:copy('hero-headline'),subtitle:copy('hero-subtitle'),cta:copy('primary-cta'),about:copy('company-about')};}
   d.materials={templateId:m.template.id,contractRevision:m.template.contractRevision,visual:structuredClone(m.visual),...(m.displaySelection?{displaySelection:structuredClone(m.displaySelection)}:{}),imageBindings:m.imageBindings.map(({mediaId,mobileMediaId,evidenceMediaIds,...binding})=>({...binding,assetId:asset(mediaId)!,mobileAssetId:asset(mobileMediaId),...(evidenceMediaIds?{evidenceAssetIds:evidenceMediaIds.map(id=>asset(id)!)}:{})})),textBindings:structuredClone(m.textBindings),omittedSectionIds:[...m.omittedSectionIds]};
+  const groups=retainedProductDisplayGroups(previous,d.products);
+  if(groups&&previous){
+    const oldHashes=new Map(previousAssets.map(a=>[a.id,a.sha256])),newHashes=new Map(Object.values(assets).map(a=>[a.id,a.sha256]));
+    const unchanged=groups.filter(group=>group.every(id=>{const old=productVisualFingerprint(previous,id,oldHashes);return old!==undefined&&old===productVisualFingerprint(d,id,newHashes);}));
+    if(unchanged.length)d.productDisplayGroups=unchanged;
+  }
   return validateDraft(d);
 }
 /** Called only behind the Coordinator. Network copying runs outside its short mutation lock. */
@@ -140,7 +159,9 @@ export class MaterialsService {
       if(operation.receipt.receivedMedia===operation.receipt.totalMedia){
         const current=await currentMaterialsPrincipal(this.env,principal);
         await this.hooks.lock(async()=>{
-          const target=await this.target(current,input),draft=draftFromMaterials(input,operation.assets);
+          const target=await this.target(current,input);
+          const previousAssets=target?.draft.productDisplayGroups?.length?await this.store.list<Asset>('assets','project_id=?',[target.id]):[];
+          const draft=draftFromMaterials(input,operation.assets,target?.draft,previousAssets);
           const project:Project={...(target||{id:operation.projectId,ownerId:current.userId,workspaceId:current.workspaceId,name:input.target.mode==='create'?input.target.name:'',version:0,createdAt:operation.createdAt,offline:false}),draft,version:(target?.version||0)+1,updatedAt:time(),materials:{submissionId:input.submissionId,source:input.source,contentSha256:operation.receipt.contentSha256,snapshotKey:operation.snapshotKey,acceptedAt:time()}};
           operation.receipt={...operation.receipt,state:'accepted',projectId:project.id,projectVersion:project.version,nextAction:'open-web-radar',entry:'prepared-materials'};
           await this.store.batch([target?this.store.update('projects',project):this.store.insert('projects',project),...Object.values(operation.assets).map(a=>this.store.insert('assets',a)),this.update(scope,operation)]);

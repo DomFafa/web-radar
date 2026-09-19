@@ -2,6 +2,7 @@ import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
 import { z } from 'zod';
+import { retainedProductDisplayGroups, validProductDisplayGroups } from '../shared/product-display';
 import { appliedMaterialsSchema } from '../shared/materials';
 import { preserveMaterialsEdit } from './materials-draft';
 import type { Draft, Principal, Project } from '../shared/model';
@@ -38,6 +39,7 @@ const copy = z.object({ headline: short, subtitle: text, about: text, cta: short
 export { importProductSnapshotSchema as snapshotSchema } from '../shared/product-snapshot';
 import { productSnapshotSchema as source, productImageKind } from '../shared/product-snapshot';
 const draftSchema = z.object({
+  productDisplayGroups: z.array(z.array(id).min(2).max(20)).max(10).optional(),
   materials: appliedMaterialsSchema.optional(),
   buildBranch: z.enum(['template', 'custom', 'clone']).optional(),
   templateConfirmed: z.boolean().optional(),
@@ -263,6 +265,7 @@ export function validateDraft(input: unknown): Draft {
     throw new DomainError(400, 'invalid_draft', `无法保存：${details.join('；')}。`);
   }
   const d = result.data;
+  requireCondition(validProductDisplayGroups(d.productDisplayGroups || [], d.products), 400, 'invalid_display_groups', '展示分组必须使用当前产品且不可重复或交叉。');
   if (d.banners !== undefined) d.banners = pageBanners(d);
   requireCondition(
     d.languages[0] === 'en' && new Set(d.languages).size === d.languages.length,
@@ -332,6 +335,7 @@ export function videoInputKey(d: Draft): string {
 }
 export function editDraft(previous: Draft, input: unknown): Draft {
   const next = validateDraft(input);
+  if (next.productDisplayGroups === undefined) next.productDisplayGroups = retainedProductDisplayGroups(previous, next.products);
   preserveMaterialsEdit(previous,next);
   // Provenance is written only through the authenticated source importer.
   next.products = next.products.map((p) => {

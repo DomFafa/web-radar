@@ -10,6 +10,7 @@ import {materialImage,materialsThemeStyle} from './materials-render';
 import {esc,safeUrl,productPath} from './themes/types';
 import {materialsRuntime} from '../shared/materials-runtime';
 import {labels} from './labels';
+import {markPresentationRegions,polishTypedMaterials} from './materials-presentation';
 
 type Node=DefaultTreeAdapterMap['node'];
 type Element=DefaultTreeAdapterMap['element'];
@@ -71,15 +72,7 @@ const hasFixedInnerColumns=(draft:Draft,options:RenderOptions)=>['saas-automatio
  * visible while retaining the original desktop header and standalone renderer. */
 const typedMobileHeaderStyle=`<style id="wr-typed-mobile-header">
 @media(max-width:767px){
- .wr-materials-site :is(.wr-candy-header,.wr-wonder-header,.wr-arcade-header,.wr-nature-header,.wr-minimal-header)>.wrap{flex-wrap:wrap;gap:12px!important;padding:14px 0!important}
- .wr-materials-site :is(.wr-candy-header,.wr-wonder-header,.wr-arcade-header,.wr-nature-header,.wr-minimal-header)>.wrap>*{min-width:0;max-width:100%}
- .wr-materials-site :is(.wr-candy-header,.wr-wonder-header,.wr-arcade-header,.wr-nature-header,.wr-minimal-header)>.wrap>a{flex:1 1 45%;overflow-wrap:anywhere}
- .wr-materials-site :is(.wr-candy-header,.wr-wonder-header,.wr-arcade-header,.wr-nature-header,.wr-minimal-header)>.wrap>div{flex-wrap:wrap;gap:8px!important}
- .wr-materials-site :is(.wr-candy-header,.wr-wonder-header,.wr-arcade-header,.wr-nature-header,.wr-minimal-header) nav{order:3;flex:1 1 100%;width:100%;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px!important}
- .wr-materials-site :is(.wr-candy-header,.wr-wonder-header,.wr-arcade-header,.wr-nature-header,.wr-minimal-header) :is(nav a,.button){min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
  .wr-materials-site:is(.corpox-ai-agency,.corpox-consulting) .logo .wr-reference-brand{display:flex!important;align-items:center;line-height:1.2!important;height:100%;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
- .wr-materials-site.senseng-arcade [data-wr-typed-facts-grid]{grid-template-columns:repeat(2,minmax(0,1fr))!important;min-width:0}
- .wr-materials-site.senseng-arcade [data-wr-typed-facts-grid]>.wr-card-hover{min-width:0;overflow-wrap:anywhere}
  .wr-materials-site [data-wr-typed-inner-grid]{grid-template-columns:minmax(0,1fr)!important;min-width:0;max-width:100%;overflow-wrap:anywhere}
  .wr-materials-site [data-wr-typed-inner-grid]>*{min-width:0;max-width:100%;grid-column:auto!important}
  .wr-materials-site [data-wr-typed-inner-grid] :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea){min-width:0;max-width:100%;width:100%;box-sizing:border-box}
@@ -236,7 +229,6 @@ function applyCore(root:Node,draft:Draft,options:RenderOptions){
     if(n.tagName==='meta'&&attr(n,'name')==='description')set(n,'content',copy(`${options.page}-seo-description`));
     if(n.tagName==='body'){set(n,'class',attr(n,'class')+' wr-materials-site');set(n,'data-template',draft.template);}
     if(options.preview&&(n.tagName==='button'&&attr(n,'type')==='submit'||n.tagName==='input'&&attr(n,'type')==='submit'))set(n,'disabled','');
-    if(draft.template==='senseng-arcade'&&/grid-template-columns:\s*1fr 1fr\s*;/.test(attr(n,'style'))&&n.childNodes.filter(c=>'tagName'in c&&attr(c,'class').split(/\s+/).includes('wr-card-hover')).length===4)set(n,'data-wr-typed-facts-grid','');
     if(hasFixedInnerColumns(draft,options)&&/grid-template-columns:\s*1fr\s+1(?:\.2)?fr\s*;/.test(attr(n,'style')))set(n,'data-wr-typed-inner-grid','');
   }
   // This literal belongs to the Minimal theme, not the confirmed company. It is
@@ -273,7 +265,7 @@ export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):stri
   const m=draft.materials,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
   if(inv.legacyText){
     const legacy={...draft,materials:{...m,contractRevision:junoDisplayRevision,textBindings:m.textBindings.flatMap(b=>(inv.legacyText![b.slotId]||[b.slotId]).map(slotId=>({...b,slotId})))}};
-    const root=parse(renderSite(legacy,options));prepare(root);
+    const root=parse(renderSite(legacy,options));markPresentationRegions(root);prepare(root);
     const texts=new Map(m.textBindings.filter(b=>b.locale===options.lang).map(b=>[b.slotId,b.text]));
     walkCopy(root,(value,attribute)=>{const id=inv.text[page][key(value,attribute)];return id?texts.get(id)||'':value;});
     for(const node of elements(root))if(node.tagName==='img'&&!attr(node,'data-wr-material-image')){
@@ -283,9 +275,10 @@ export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):stri
     applyCore(root,draft,options);
     retainGallery(root,draft,options);
     removeUnboundTemplateBackgrounds(root);
+    polishTypedMaterials(root,draft,options,inv.contract);
     return serialize(root).replace('</head>','<style>.wr-juno-display [data-wr-display-role="scene"] .wr-display-photo{aspect-ratio:650/572}.wr-juno-display .wr-display-grid{grid-template-columns:repeat(min(var(--wr-display-count),4),minmax(0,1fr))}@media(max-width:767px){.wr-juno-display .wr-display-grid{grid-template-columns:repeat(min(var(--wr-display-count),2),minmax(0,1fr))}}</style></head>');
   }
-  const root=parse(rawHtml(draft,options));prepare(root);
+  const root=parse(rawHtml(draft,options));markPresentationRegions(root);prepare(root);
   const textBindings=new Map(m.textBindings.filter(b=>b.locale===options.lang).map(b=>[b.slotId,b.text]));
   walkCopy(root,(value,attribute)=>{const id=inv.text[page][key(value,attribute)];return id?textBindings.get(id)||'':value;});
   walkMedia(root,draft.template,page,(node,target,_spec,parents,kind)=>{
@@ -311,5 +304,6 @@ export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):stri
   applyCore(root,draft,options);
   retainGallery(root,draft,options);
   removeUnboundTemplateBackgrounds(root);
+  polishTypedMaterials(root,draft,options,inv.contract);
   return serialize(root).replace('</head>',materialsThemeStyle(draft)+((newSenseng.test(draft.template)||draft.template.startsWith('corpox-')||hasFixedInnerColumns(draft,options))?typedMobileHeaderStyle:'')+'</head>').replace('<script>','<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`);
 }

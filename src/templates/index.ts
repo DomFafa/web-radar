@@ -61,7 +61,12 @@ function segment(id: string): string {
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
   if(isTypedMaterials(draft))return renderTypedMaterialsSite(draft,options);
-  const html=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+  const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+  // Several standalone headers build their own language links and used catalog
+  // depth on product pages. Normalize those links at the common output boundary.
+  const depth=options.page==='home'?'':options.page==='detail'?'../../':'../';
+  const target=options.page==='detail'?productPath(options.productId||draft.primaryProductId):options.page==='home'?'index.html':`${options.page}/index.html`;
+  const html=rendered.replace(/<a\b[^>]*\bdata-wr-lang="([a-z]{2})"[^>]*>/g,(tag,lang:string)=>draft.languages.includes(lang as Language)?tag.replace(/\bhref="[^"]*"/,`href="${esc(`${depth}../${lang}/${target}`)}"`):tag);
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
   return draft.materials?html.replace('<script>', '<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`):html;

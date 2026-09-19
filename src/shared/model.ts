@@ -218,6 +218,8 @@ export interface Draft {
   templateConfirmed?: boolean;
   company: Company;
   products: Product[];
+  /** Explicitly confirmed display equivalents; the first ID is canonical. Records stay intact. */
+  productDisplayGroups?: string[][];
   primaryProductId: string;
   category: string;
   country: string;

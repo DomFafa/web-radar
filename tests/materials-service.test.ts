@@ -44,6 +44,22 @@ describe('durable confirmed materials receiver',()=>{
     for(const asset of await store.list<any>('assets'))expect(asset.sha256).toBe(fixture.materials.media.find(media=>asset.id===`materials-${fixture.submissionId}-${fixture.materials.media.indexOf(media)}`)?.sha256);
     const replay=await service.submit(fixture.principal,fixture);expect(replay.projectId).toBe(p?.id);expect(fetches).toBe(2);
   });
+
+  it('keeps confirmed display groups through a source update and drops a group when its member is removed',async()=>{
+    await service.submit(fixture.principal,fixture);const first=await finish();
+    let project=(await store.one<Project>('projects',first.projectId!))!;
+    expect(project.draft.productDisplayGroups).toBeUndefined();
+    project.draft.productDisplayGroups=[['p0','p1']];await store.update('projects',project).run();
+    for(const [revision,count]of [[2,2],[3,1]]){
+      fixture.submissionId=crypto.randomUUID();fixture.source.revision=revision;fixture.target={mode:'update',projectId:project.id,expectedVersion:project.version};
+      fixture.materials=(await materialsFixture(count)).materials;
+      fixture.confirmation.contentSha256=await sha256(canonical({source:fixture.source,materials:fixture.materials}));
+      await service.submit(fixture.principal,fixture);expect((await finish()).state).toBe('accepted');
+      project=(await store.one<Project>('projects',project.id))!;
+      expect(project.draft.productDisplayGroups).toEqual(count===2?[['p0','p1']]:undefined);
+      expect(project.draft.products).toHaveLength(count);
+    }
+  });
   it('resumes a partial failed copy with the same ID and reuses verified media',async()=>{
     failAsset=true;await service.submit(fixture.principal,fixture);const failed=await finish();expect(failed.state).toBe('failed');expect(failed.receivedMedia).toBe(1);expect(failed.retryable).toBe(true);expect((await store.list('projects'))).toHaveLength(0);
     failAsset=false;await service.submit(fixture.principal,fixture);expect((await finish()).state).toBe('accepted');expect(fetches).toBe(3);
