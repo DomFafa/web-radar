@@ -142,4 +142,15 @@ describe('typed materials preserve template layouts with confirmed content',()=>
       expect(renderSite({...draft,materials:undefined},options).includes('data-wr-typed-inner-grid')).toBe(false);
     }
   });
+  it('keeps prepared image dimensions and all slot identities after presentation relocation',()=>{
+    for(const id of Object.keys(templateMediaRequirements)){
+      const draft=fixture(id,2),seen=new Set<string>();
+      for(const page of ['home','catalog','detail','about','contact']){
+        const html=renderTypedMaterialsSite(draft,{projectId:'typed',lang:'en',page,productId:'real-0',assetUrl:id=>`/bound/${id}`,inquiryUrl:'/inquiry',imageVariants:(id,widths)=>widths.map(w=>({url:`/bound/${id}?width=${w}`,width:w,height:w/2}))});
+        const walk=(n:any)=>{const a=Object.fromEntries((n.attrs||[]).map((a:any)=>[a.name,a.value]));if(a['data-wr-material-image'])seen.add(a['data-wr-material-image']);if(n.tagName==='img'&&a.srcset){expect(Number(a.height),id+':'+page+' intrinsic ratio').toBe(Number(a.width)/2);expect(a.src).not.toContain('?width=');}for(const c of n.childNodes||[])walk(c);};walk(parse(html));
+      }
+      expect(getTypedMaterialsTemplate(id)!.imageSlots.filter(s=>s.id!=='product-gallery'&&!seen.has(s.id)).map(s=>s.id),id+' missing optimized slot').toEqual([]);
+    }
+  });
+
 });

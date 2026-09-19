@@ -53,3 +53,16 @@ describe('approved materials rendering',()=>{
     for(const id of ['6f48de11','67fddce','7b2b7e3','87636bb','54828a1'])expect(html).toContain(`data-id="${id}"`);
   });
 });
+
+it('advertises prepared accurate candidates while preserving original identity and separate mobile sources', async()=>{
+  const {materialImage}=await import('../src/templates/materials-render');
+  const d=await draft(),binding={...d.materials!.imageBindings[0],slotId:'hero-slide-0',assetId:'desktop',mobileAssetId:'mobile',role:'collection' as const};
+  const calls:string[]=[];
+  const html=materialImage(binding,{...options,preview:false,imageVariants:(id,widths)=>{calls.push(id);return [{url:`/media/${id}?width=640`,width:400,height:200},{url:`/media/${id}?width=1280`,width:400,height:200}].filter((_,i)=>i===0);}});
+  expect(html).toContain('src="/media/desktop"');
+  expect(html).toContain('srcset="/media/desktop?width=640 400w"');
+  expect(html).toContain('srcset="/media/mobile?width=640 400w"');
+  expect(html).toContain('sizes="100vw"');
+  expect(html).toContain('width="400" height="200"');
+  expect(calls).toEqual(['desktop','mobile']);
+});

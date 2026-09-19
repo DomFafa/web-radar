@@ -6,7 +6,7 @@ import {renderSite,type RenderOptions} from './index';
 import {referenceLayouts} from './themes/referenceLayouts';
 import {getMaterialsTemplate} from './materials';
 import {junoDisplayRevision} from './juno-display';
-import {materialImage,materialsThemeStyle} from './materials-render';
+import {materialImage,materialBackgroundUrl,materialsThemeStyle} from './materials-render';
 import {esc,safeUrl,productPath} from './themes/types';
 import {materialsRuntime} from '../shared/materials-runtime';
 import {labels} from './labels';
@@ -199,11 +199,11 @@ function bindImage(node:Element,b:Binding,options:RenderOptions,kind:MediaTarget
   if(kind==='image'){
     const replacement=parseFragment(materialImage(b,options)).childNodes[0] as Element;
     const image=replacement.tagName==='img'?replacement:elements(replacement).find(n=>n.tagName==='img')!;
-    const oldStyle=attr(node,'style');for(const a of node.attrs)if(!['src','srcset','alt','style','loading'].includes(a.name))set(image,a.name,a.value);
+    const oldStyle=attr(node,'style');for(const a of node.attrs)if(!['src','srcset','alt','style','loading'].includes(a.name)&&!(attr(image,'srcset')&&['width','height','sizes'].includes(a.name)))set(image,a.name,a.value);
     set(image,'style',oldStyle+';'+attr(image,'style'));
     const parent=node.parentNode!;replacement.parentNode=parent;parent.childNodes[parent.childNodes.indexOf(node)]=replacement;
   }else{
-    const url=safeUrl(options.assetUrl(b.assetId),options.preview),mobile=b.mobileAssetId?safeUrl(options.assetUrl(b.mobileAssetId),options.preview):url;
+    const url=materialBackgroundUrl(b,options),mobile=materialBackgroundUrl(b,options,true);
     const cssUrl=(s:string)=>`url(${JSON.stringify(s).replace(/</g,'\\3c ')})`;
     set(node,'style',attr(node,'style').replace(/background(?:-image)?\s*:[^;]*url\([^)]*\)[^;]*(?:;|$)/g,'')+`;background-image:${cssUrl(url)};background-size:${b.fit};background-position:${b.focalPoint.x*100}% ${b.focalPoint.y*100}%;--wr-mobile-bg:${cssUrl(mobile)};--wr-mobile-position:${(b.mobileFocalPoint||b.focalPoint).x*100}% ${(b.mobileFocalPoint||b.focalPoint).y*100}%;`);
     set(node,'aria-label',b.alt[options.lang]||b.alt.en||'');

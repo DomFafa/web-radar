@@ -257,6 +257,16 @@ describe('confirmed materials presentation', () => {
     expect(text(parse(renderSite(draft, options('detail'))))).toContain('Silicone');
   });
 
+  it('removes only the known empty Candy detail badge without pruning structural containers', async () => {
+    const draft = await fixture('senseng-candy', 2);
+    const badge = (n: Element) => n.tagName === 'div' && (attr(n, 'style') || '').includes('padding:4px 14px') && (attr(n, 'style') || '').includes('border-radius:9999px');
+    const nodes = elements(parse(renderSite(draft, options('detail'))));
+    expect(nodes.filter(badge).length).toBe(0);
+    expect(nodes.some(n => attr(n, 'class') === 'wr-progress-container')).toBe(true);
+    delete draft.materials;
+    expect(elements(parse(renderSite(draft, options('detail')))).some(badge)).toBe(true);
+  });
+
   it('keeps a product inquiry preselection when a detail route is an explicit display alias', async () => {
     const draft = grouped(await fixture('senseng-candy', 2));
     draft.products[0].name = 'Contact Sales Sticker';

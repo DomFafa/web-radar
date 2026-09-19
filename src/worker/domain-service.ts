@@ -41,6 +41,8 @@ import {
 import { createProviders } from './providers';
 import { validatePageDesignInput } from './providers/image';
 import { privateAssetPreview } from './asset-preview';
+import { isTypedMaterials } from '../templates/materials-typed';
+import { preparePublicVariant, preparedImageVariants, publicMediaPolicy, typedRendererVersion } from './public-media';
 import { renderSite, renderSiteFiles } from '../templates';
 import { prImage, prService } from './product-radar';
 import { DomainStore } from './domain-store';
@@ -1694,6 +1696,7 @@ export class DomainService {
       job.error = undefined;
       job.updatedAt = now();
       job.input.retryAt = 0;
+      job.input.mediaFailures = 0;
       release.status = 'pending';
       release.error = undefined;
       await this.wake();
@@ -1832,7 +1835,7 @@ export class DomainService {
         await this.store.remember(scope, rid, hash, { id: samePending.id }).run();
         return samePending;
       }
-      if (!project.offline && activeRelease?.status === 'succeeded' && activeRelease.seo?.policyVersion === SEO_POLICY_VERSION && activeRelease.seo?.origin === currentMetadata.origin && samePublishedDraft(draft, activeRelease.draft)) {
+      if (!project.offline && activeRelease?.status === 'succeeded' && (!isTypedMaterials(draft) || activeRelease.rendererVersion === typedRendererVersion) && activeRelease.seo?.policyVersion === SEO_POLICY_VERSION && activeRelease.seo?.origin === currentMetadata.origin && samePublishedDraft(draft, activeRelease.draft)) {
         const jobs = await this.store.list<Job>('jobs', "project_id=? AND kind='publish' AND status='succeeded'", [project.id], 'created_at DESC');
         const existing = jobs.find(job => job.input.releaseId === activeRelease.id);
         if (existing) {
@@ -1859,6 +1862,7 @@ export class DomainService {
       projectId: project.id,
       draftVersion,
       draft,
+      ...(isTypedMaterials(draft) ? { rendererVersion: typedRendererVersion } : {}),
       hostingTarget: structuredClone(target),
       seo: { policyVersion: SEO_POLICY_VERSION, origin: currentMetadata.origin ?? `https://${target.pagesProjectName}.pages.dev` },
       createdAt: now(),
@@ -1872,7 +1876,7 @@ export class DomainService {
       kind: 'publish',
       status: 'queued',
       requestId: rid,
-      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, principal },
+      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, principal, ...(isTypedMaterials(draft) ? { mediaPreparation: true } : {}) },
       inputVersion: project.version,
       createdAt: now(),
       updatedAt: now(),
@@ -2351,7 +2355,7 @@ export class DomainService {
           await this.execute(job);
           return;
         }
-        if (job.kind === 'publish' && job.input.publishResult) {
+        if (job.kind === 'publish' && (job.input.publishResult || (job.input.mediaPreparation && !job.input.publicationStarted))) {
           await this.execute(job);
           return;
         }
@@ -2460,7 +2464,7 @@ export class DomainService {
     if (!job) return undefined;
     await this.scheduler.schedule(Date.now() + (testMode(this.env) ? 100 : 5000));
     job.status = 'running';
-    job.attempts++;
+    if (!(job.kind === 'publish' && job.input.mediaPreparation && !job.input.publicationStarted)) job.attempts++;
     job.updatedAt = now();
     job.error = undefined;
     const attemptId = crypto.randomUUID();
@@ -2817,9 +2821,12 @@ export class DomainService {
         inquiryUrl: `/api/public/sites/${job.projectId}/inquiries`,
         publicBaseUrl: `${this.origin()}/public/sites/${job.projectId}`,
       };
-      const files = await this.renderFiles(release.draft, renderOptions);
+      if (job.input.mediaPreparation && !release.publicMedia?.ready) {
+        if (!(await this.preparePublicationMedia(job, release, renderOptions))) return;
+      }
+      const files = await this.renderFiles(release.draft, { ...renderOptions, imageVariants: preparedImageVariants(release.publicMedia, renderOptions.assetUrl) });
       const previousPublication = previous
-        ? { releaseId: previous.id, files: await this.renderFiles(previous.draft, renderOptions), metadata: { ...(await this.publicationMetadata(p, previous.draft)), origin: previous.seo?.origin ?? `https://${previous.hostingTarget?.pagesProjectName ?? p.hostingTarget!.pagesProjectName}.pages.dev` } }
+        ? { releaseId: previous.id, files: await this.renderFiles(previous.draft, { ...renderOptions, imageVariants: preparedImageVariants(previous.publicMedia, renderOptions.assetUrl) }), metadata: { ...(await this.publicationMetadata(p, previous.draft)), origin: previous.seo?.origin ?? `https://${previous.hostingTarget?.pagesProjectName ?? p.hostingTarget!.pagesProjectName}.pages.dev` } }
         : undefined;
       let published = input.publishResult;
       if (!published) {
@@ -2840,6 +2847,7 @@ export class DomainService {
             'publication_cancelled',
             '网站已下线，本次发布已取消。',
           );
+          if (job.input.mediaPreparation && !persisted?.input.publicationStarted) job.attempts++;
           job.input = { ...job.input, ...persisted?.input, publicationStarted: true };
           await this.store.update('jobs', job).run();
         });
@@ -3001,6 +3009,76 @@ export class DomainService {
       draft,
       assetUrl: id => `${this.origin()}/public/sites/${project.id}/assets/${encodeURIComponent(id)}`,
     };
+  }
+  /** Prepare immutable bytes before Pages can see any candidate HTML. One transformer slot per job. */
+  private async preparePublicationMedia(job: Job, release: Release, options: Parameters<typeof renderSiteFiles>[1]): Promise<boolean> {
+    if (!release.publicMedia) {
+      release.publicMedia = { policy: publicMediaPolicy, ready: false, assets: {} };
+      for (const id of publicAssetReferences(release.draft)) {
+        const asset = await this.projectAsset(job.projectId, id);
+        let identity = asset.sha256 ? `sha256:${asset.sha256}` : '';
+        if (!identity) {
+          const object = await this.env.MEDIA.head(asset.key);
+          requireCondition(object?.httpEtag, 404, 'public_media_missing', '发布原图不存在。');
+          identity = `r2-etag:${object.httpEtag}`;
+        }
+        release.publicMedia.assets[id] = { sourceKey: asset.key, sourceIdentity: identity, widths: [], variants: [] };
+      }
+      const requested = new Map<string, Set<number>>();
+      await this.renderFiles(release.draft, { ...options, imageVariants: (id, widths) => {
+        const values = requested.get(id) ?? new Set<number>();
+        widths.forEach(width => values.add(width)); requested.set(id, values);
+        return undefined;
+      } });
+      for (const [id, entry] of Object.entries(release.publicMedia.assets)) entry.widths = [...(requested.get(id) ?? [])].sort((a,b)=>a-b);
+      await this.checkpointPublicationMedia(job, release);
+    }
+    const started = Date.now(); let count = 0, inputBytes = 0;
+    for (const [id, entry] of Object.entries(release.publicMedia.assets)) {
+      for (const width of entry.widths) {
+        if (entry.variants.some(v => v.requestedWidth === width)) continue;
+        const native = entry.variants.find(v => v.width < v.requestedWidth && v.requestedWidth < width);
+        if (native) {
+          entry.variants.push({ ...native, requestedWidth: width });
+          await this.checkpointPublicationMedia(job, release);
+          continue;
+        }
+        const asset = await this.projectAsset(job.projectId, id);
+        if (count >= 4 || (count && (Date.now() - started >= 30_000 || inputBytes + asset.size > 40 * 1024 * 1024))) {
+          await this.checkpointPublicationMedia(job, release, true);
+          return false;
+        }
+        await this.assertPublicationPreparing(job);
+        const { original, ...variant } = await preparePublicVariant(this.env, asset, entry.sourceIdentity, width);
+        entry.original = original;
+        entry.variants.push(variant); count++; inputBytes += asset.size;
+        // R2 may complete before this D1 write; retry reuses verified object metadata at the same key.
+        await this.checkpointPublicationMedia(job, release);
+      }
+    }
+    release.publicMedia.ready = true;
+    await this.checkpointPublicationMedia(job, release);
+    return true;
+  }
+  private async assertPublicationPreparing(job: Job): Promise<Job> {
+    const persisted = await this.store.one<Job>('jobs', job.id);
+    requireCondition(persisted && !persisted.input.cancelledByOffline && ['queued','running'].includes(persisted.status), 409, 'publication_cancelled', '网站下线操作已取消本次发布。');
+    return persisted;
+  }
+  private async checkpointPublicationMedia(job: Job, release: Release, defer = false): Promise<void> {
+    await this.lock(async () => {
+      const persisted = await this.assertPublicationPreparing(job);
+      job.input = { ...job.input, ...persisted.input, mediaFailures: 0 };
+      job.updatedAt = now();
+      if (defer) {
+        job.status = 'queued';
+        job.input.retryAt = Date.now() + (testMode(this.env) ? 0 : 1000);
+      }
+      const statements = [this.store.update('releases', release), this.store.update('jobs', job)];
+      if (defer && job.input.attemptId) statements.push(this.env.DB.prepare('UPDATE provider_attempts SET outcome=?,completed_at=? WHERE id=?').bind('pending', now(), job.input.attemptId));
+      await this.store.batch(statements);
+    });
+    if (defer) await this.scheduler.schedule(Number(job.input.retryAt));
   }
   private async renderFiles(
     draft: Draft,
@@ -3214,6 +3292,15 @@ export class DomainService {
         job.status = 'queued';
         job.input.retryAt = Date.now() + (testMode(this.env) ? 0 : 15000);
       }
+      const mediaRetry = job.kind === 'publish' && !job.input.publicationStarted && !cancelledPublication &&
+        error instanceof DomainError && error.code === 'public_media_retry';
+      if (mediaRetry) {
+        job.input.mediaFailures = Number(current?.input.mediaFailures ?? 0) + 1;
+        if (Number(job.input.mediaFailures) < 6 && Date.now() - Date.parse(job.createdAt) < 2 * 3600000) {
+          job.status = 'queued';
+          job.input.retryAt = Date.now() + (testMode(this.env) ? 0 : 15_000);
+        }
+      }
       const statements: D1PreparedStatement[] = [this.store.update('jobs', job)];
       if (job.status === 'failed') statements.push(...(await this.store.settlement(job, false)));
       if (job.kind === 'email') {
@@ -3228,7 +3315,7 @@ export class DomainService {
       if (job.kind === 'publish') {
         const release = await this.store.one<Release>('releases', String(job.input.releaseId));
         if (release) {
-          release.status = pagesPending || job.status === 'unknown' ? 'pending' : 'failed';
+          release.status = pagesPending || job.status === 'unknown' || job.status === 'queued' ? 'pending' : 'failed';
           release.error = job.error;
           statements.push(this.store.update('releases', release));
         }

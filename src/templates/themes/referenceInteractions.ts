@@ -337,6 +337,7 @@ export function referenceInteractions() {
       const mainImg = (document.getElementById(targetId) || document.getElementById('detailMainImg') || document.getElementById('wr-detail-main-img')) as HTMLImageElement;
       if (mainImg && src) {
         mainImg.closest('picture')?.querySelectorAll('source').forEach((s) => s.remove());
+        mainImg.removeAttribute('srcset');mainImg.removeAttribute('sizes');
         mainImg.src = src;
         const container = thumb.closest('.senseng-detail-thumbs') || thumb.parentElement;
         container?.querySelectorAll('.wr-detail-thumb, .senseng-thumb-btn').forEach((t) => t.classList.remove('active'));

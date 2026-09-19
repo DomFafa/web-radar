@@ -96,8 +96,10 @@ function image(
     img = nodes(root).find((n) => n.tagName === 'img')!;
   set(img, 'data-wr-material-image', b.slotId);
   if (b.productId) set(img, 'data-wr-material-product', b.productId);
-  set(img, 'width', String(slot.width));
-  set(img, 'height', String(slot.height));
+  if (!attr(img, 'srcset')) {
+    set(img, 'width', String(slot.width));
+    set(img, 'height', String(slot.height));
+  }
   set(img, 'decoding', 'async');
   if (high) {
     set(img, 'loading', 'eager');
@@ -240,8 +242,10 @@ function fullCollections(
         'style',
         attr(n, 'style') + ';object-fit:contain!important;--wr-material-fit:contain;',
       );
-      set(n, 'width', String(spec.width));
-      set(n, 'height', String(spec.height));
+      if (!attr(n, 'srcset')) {
+        set(n, 'width', String(spec.width));
+        set(n, 'height', String(spec.height));
+      }
       const panel = ancestors(n).find((p) => attr(p, 'class').includes('wr-collection-banner'));
       if (panel) set(panel, 'data-wr-full-collection', '');
       continue;
@@ -510,6 +514,15 @@ export function polishTypedMaterials(
   productLists(root, draft, options, contract);
   factualPanels(root, draft, options, contract);
   navigation(root, draft, options);
+  // Candy leaves this pill behind when the unsupported demo badge text is omitted.
+  if (draft.template === 'senseng-candy' && options.page === 'detail') {
+    for (const heading of nodes(root).filter(n => n.tagName === 'h1')) {
+      const siblings = heading.parentNode?.childNodes.filter((n): n is Element => 'tagName' in n) || [];
+      const badge = siblings[siblings.indexOf(heading) - 1];
+      if (badge?.tagName === 'div' && !text(badge).trim() && !badge.childNodes.some(n => 'tagName' in n) &&
+          attr(badge, 'style').includes('display:inline-flex') && attr(badge, 'style').includes('padding:4px 14px') && attr(badge, 'style').includes('border-radius:9999px')) remove(badge);
+    }
+  }
   let detailMain = false;
   const product = draft.products.find(
     (p) => p.id === (options.productId || draft.primaryProductId),

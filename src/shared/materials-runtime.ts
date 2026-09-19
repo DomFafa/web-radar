@@ -15,9 +15,10 @@ export function materialsRuntime(){
       current=(index+buttons.length)%buttons.length;
       const btn=buttons[current];
       const image=btn.querySelector<HTMLImageElement>('img');
-      const src=btn.getAttribute('data-src')||btn.getAttribute('data-large')||image?.currentSrc||image?.src;
+      const src=btn.getAttribute('data-src')||btn.getAttribute('data-large')||image?.src;
       if(!src)return;
       main.closest('picture')?.querySelectorAll('source').forEach(source=>source.remove());
+      main.removeAttribute('srcset');main.removeAttribute('sizes');
       main.src=src;
       if(image?.alt)main.alt=image.alt;
       if(image?.style?.cssText)main.style.cssText=image.style.cssText;

@@ -7,6 +7,7 @@ export interface RenderOptions {
   page: string;
   productId?: string;
   assetUrl: (id: string) => string;
+  imageVariants?: (id: string, widths: number[], includeOriginal?: boolean) => {url: string; width: number; height: number}[] | undefined;
   inquiryUrl: string;
   preview?: boolean;
 }
