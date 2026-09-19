@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
-import { parseAboutHighlights, getAboutStoryParagraphs } from './aboutHelper';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutImages, getAboutHeadline } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderAiAgencyHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -254,7 +255,7 @@ export function renderAiAgencyHome(ctx: ThemeContext): string {
   return `${heroHtml}${metricsHtml}${productsHtml}${architectureHtml}${modelsHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderAiAgencyAbout(ctx: ThemeContext): string {
+function renderLegacyAiAgencyAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
@@ -438,6 +439,193 @@ export function renderAiAgencyAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${statsHtml}${missionHtml}${researchersHtml}${ctaHtml}`;
+}
+
+function renderModernAiAgencyAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang] ?? {
+    about: 'Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.',
+  };
+  const isZh = (ctx.lang as string) === 'zh';
+
+  const defaultHeadline = isZh
+    ? '自主神经认知智能体与工业级确定性推理架构'
+    : 'Autonomous Neural Intelligence & Synthetic Reasoning Architecture';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 汇聚前沿认知科学专家、深度学习架构师与分布式系统先驱，致力于将大语言模型从非确定性的文本对话工具进化为企业级自治神经执行系统。我们为全球高科技企业、金融机构及复杂制造业交付高吞吐私有化推理集群与多智能体工作流。`
+      : `Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.`,
+    isZh
+      ? '我们坚信企业级自主智能必须以物理真实与逻辑严密为锚点。通过编译器反馈强化学习（RLCF）与私有化物理沙箱，我们构建了杜绝模型幻觉的确定性工具调用闭环，赋能智能体在极高安全性标准下自主调度生产级异构系统。'
+      : `We build agentic reasoning loops where mathematical logic, code compilers, and relational databases act as self-correcting grounding layers, decomposing complex directives into schema-validated, parallel execution graphs.`,
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/ai/about-neural.jpg'));
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '1,200+', num: 1200, suffix: '+', label: isZh ? '生产环境活跃神经智能体' : 'Deployed Neural Agents', desc: isZh ? '在跨国金融、研发与供应链流水线自治运转' : 'Operating in enterprise finance & logistics pipelines' },
+    { value: '240M+', num: 240, suffix: 'M+', label: isZh ? '日均私有化 Token 推理吞吐' : 'Daily Token Inferences', desc: isZh ? '低延迟 FP8 量化加速集群高可用保障' : 'Low-latency FP8 quantized inference clusters' },
+    { value: '< 18ms', num: 18, prefix: '< ', suffix: 'ms', label: isZh ? '首 Token 极速流式延迟' : 'First-Token Latency', desc: isZh ? '基于 Triton 定制底层硬件显存优化内核' : 'Streaming token generation via custom hardware kernels' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '物理气隙隔离私有化数据安全' : 'Air-Gapped Sovereign Data', desc: isZh ? '零外部模型中转，全链路本地向量状态加密' : 'Zero external model calls with encrypted vector state' },
+  ]);
+
+  return `
+    <div class="ai-agency-about-modern" style="background:#050811;color:#f8fafc;font-family:'Inter',-apple-system,sans-serif;">
+      <!-- Hero Section -->
+      <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:90px 0 70px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+        <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:350px;background:radial-gradient(circle,rgba(6,182,212,0.2) 0%,rgba(99,102,241,0.15) 50%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2;text-align:center;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.35);padding:7px 20px;border-radius:9999px;margin-bottom:24px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
+            <span style="font-size:0.84rem;font-weight:800;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">
+              ${isZh ? `CORPOX 前沿人工智能实验室 · 始于 ${esc(company.establishedYear || '2023')}` : `CORPOX AI LABS · RESEARCH CHARTER · EST. ${esc(company.establishedYear || '2023')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.08;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:960px;margin:0 auto 24px;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:760px;color:#94a3b8;font-size:1.2rem;line-height:1.7;margin:0 auto 36px;">
+            ${esc(copy.about || (isZh ? '构筑前沿神经符号推理管线、企业级本地化离线大模型推理集群及多智能体协同自治工作流。' : 'Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;align-items:center;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 30px rgba(6,182,212,0.45);text-decoration:none;display:inline-block;">
+              ${isZh ? '部署私有化智能体集群 ↗' : 'Deploy Autonomous Clusters ↗'}
+            </a>
+            ${company.capabilities ? `
+              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid #334155;border-radius:8px;padding:14px 24px;font-size:0.88rem;color:#cbd5e1;font-family:monospace;">
+                <span>⚡</span> ${esc(company.capabilities.slice(0, 45))}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Performance Metrics -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+          ${stats.map(s => `
+            <div data-reveal="fade-up" class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:28px 24px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
+              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:#06b6d4;letter-spacing:-1px;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
+              </div>
+              <div style="font-weight:800;color:#f8fafc;margin-top:6px;font-size:1.05rem;">
+                ${esc(s.label)}
+              </div>
+              ${s.desc ? `
+                <div style="font-size:0.86rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
+                  ${esc(s.desc)}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Engineered Reasoning & Core Disciplines -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+          <div data-reveal="fade-up">
+            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#06b6d4;text-transform:uppercase;">
+              ${isZh ? '神经符号工程化推理' : 'ENGINEERED REASONING'}
+            </span>
+            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.2;color:#f8fafc;margin:12px 0 20px;font-weight:900;">
+              ${isZh ? '超越泛化对话生成：构建高置信度确定性自治系统' : 'Beyond Conversational AI: Deterministic Autonomous Execution'}
+            </h2>
+            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+              <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
+                <strong style="color:#06b6d4;display:block;font-size:0.95rem;margin-bottom:4px;font-family:monospace;">
+                  ⚡ ${isZh ? '动态工具安全绑定' : 'Real-Time Tool Binding'}
+                </strong>
+                <span style="color:#94a3b8;font-size:0.85rem;line-height:1.4;display:block;">
+                  ${isZh ? '确定性 JSON-RPC 强类型接口，从根源消除 API 幻觉。' : 'Deterministic JSON-RPC interfaces eliminate API hallucination.'}
+                </span>
+              </div>
+              <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
+                <strong style="color:#818cf8;display:block;font-size:0.95rem;margin-bottom:4px;font-family:monospace;">
+                  🔒 ${isZh ? '密码学状态鉴证审计' : 'Cryptographic Auditing'}
+                </strong>
+                <span style="color:#94a3b8;font-size:0.85rem;line-height:1.4;display:block;">
+                  ${isZh ? '全流程 Prompt 到输出执行状态哈希上链存储。' : 'Immutable prompt-to-execution state hashing for audit.'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div data-reveal="fade-up" style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.08);">
+            ${aboutImg ? `
+              <div style="border-radius:12px;overflow:hidden;border:1px solid #1e293b;margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#67e8f9;text-transform:uppercase;">
+              ${isZh ? '前沿工程三大支柱' : 'CORE ENGINEERING DISCIPLINES'}
+            </span>
+            <div style="display:flex;flex-direction:column;gap:18px;margin-top:16px;">
+              <div style="border-left:3px solid #06b6d4;padding-left:16px;">
+                <strong style="color:#67e8f9;font-size:0.95rem;">
+                  1. ${isZh ? '编译器反馈强化学习 (RLCF)' : 'Reinforcement Learning from Compiler Feedback'}
+                </strong>
+                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '智能体自动生成并验证单元测试代码，确保零逻辑断裂。' : 'Agents generate unit-tested code solutions with zero hallucination guarantee.'}
+                </p>
+              </div>
+              <div style="border-left:3px solid #818cf8;padding-left:16px;">
+                <strong style="color:#a5b4fc;font-size:0.95rem;">
+                  2. ${isZh ? '量化私有推理算子内核' : 'Quantized Local Inference Kernels'}
+                </strong>
+                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '定制 CUDA & Triton 低精度内核，提升单卡吞吐 3.2 倍。' : 'Custom CUDA & Triton kernels achieving 3x higher throughput per GPU cluster.'}
+                </p>
+              </div>
+              <div style="border-left:3px solid #c084fc;padding-left:16px;">
+                <strong style="color:#d8b4fe;font-size:0.95rem;">
+                  3. ${isZh ? '分层智能体蜂群协同架构' : 'Hierarchical Agent Swarm Coordination'}
+                </strong>
+                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '规划者、执行者与校验者多角色交叉验证复杂决策图。' : 'Planner, Executor, and Verifier agents cross-validating multi-step decisions.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Banner -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:#080d1a;border:1px solid #06b6d4;border-radius:16px;padding:48px 36px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 0 40px rgba(6,182,212,0.18);">
+          <div>
+            <span style="font-family:monospace;color:#06b6d4;font-weight:700;font-size:0.85rem;">[DEPLOY AUTONOMOUS CLUSTERS]</span>
+            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);color:#f8fafc;margin:8px 0;font-weight:900;">
+              ${isZh ? '开启私有化神经工作流专属规划' : 'Deploy Sovereign Neural Workflows'}
+            </h2>
+            <p style="color:#94a3b8;font-size:1rem;margin:0;max-width:560px;">
+              ${isZh ? '与我们的首席人工智能科学家直接沟通，量身打造私有化智能体集群。' : 'Collaborate directly with our research fellows to engineer custom agentic pipelines.'}
+            </p>
+          </div>
+          <a class="button" style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 25px rgba(6,182,212,0.4);text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '预约架构咨询研讨 ↗' : 'Schedule Architecture Session ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderAiAgencyAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyAiAgencyAbout(ctx);
+  }
+  return renderModernAiAgencyAbout(ctx);
 }
 
 export function renderAiAgencyContact(ctx: ThemeContext): string {

@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
-import { parseAboutHighlights, getAboutStoryParagraphs } from './aboutHelper';
+import { parseAboutHighlights, getAboutStoryParagraphs, getAboutImages, getAboutHeadline } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderConsultingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -221,7 +222,7 @@ export function renderConsultingHome(ctx: ThemeContext): string {
   return `${topBarHtml}${heroHtml}${statsHtml}${productsHtml}${frameworkHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderConsultingAbout(ctx: ThemeContext): string {
+function renderLegacyConsultingAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
@@ -407,6 +408,197 @@ export function renderConsultingAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${statsHtml}${heritageHtml}${leadershipHtml}${ctaHtml}`;
+}
+
+function renderModernConsultingAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang] ?? {
+    about: 'Corpox Consulting brings peerless strategic rigor, quantitative market diagnostics, and battle-tested execution frameworks to solve the most consequential challenges confronting global enterprises.',
+  };
+  const isZh = (ctx.lang as string) === 'zh';
+
+  const defaultHeadline = isZh
+    ? '董事会顶级管理战略与重大跨国资本运作顾问'
+    : 'Executive Strategic Counsel, Cross-Border M&A & Value Creation';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 创立于 1994 年，由前华尔街顶级投资银行核心合伙人与跨国工业集团董事长联合创办，旨在破除传统管理咨询浮于表面的幻象。我们深度服务于财富 500 强董事会、主权投资基金及行业领军企业，以无可比拟的财务法证与战略决断力解决关乎企业生死存亡的重大课题。`
+      : `Corpox Consulting brings peerless strategic rigor, quantitative market diagnostics, and battle-tested execution frameworks to solve the most consequential challenges confronting global enterprises.`,
+    isZh
+      ? '我们坚信真正的战略价值必须经受资产负债表与审计师的严苛检验。每一个战略委任均由兼具实操操盘经验的高级管理合伙人亲历亲为，将咨询顾问报酬与客户实际实现的 EBITDA 复合增长和跨国协同效应深度绑定，做企业最坚实的利益共同体。'
+      : `Every mandate is led directly by an equity managing partner with proven multi-billion-dollar P&L operational authority, grounding strategic vision in rigorous microeconomic diagnostics and aligned balance-sheet outcomes.`,
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/consulting/about-boardroom.jpg'));
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '$42.8B', num: 42.8, prefix: '$', suffix: 'B', label: isZh ? '已实现企业核心价值增长' : 'Enterprise Value Created', desc: isZh ? '直接服务于董事会，经审计确认的 EBITDA 净增量' : 'Direct board advisory delivering realized, auditable EBITDA expansion' },
+    { value: '180+', num: 180, suffix: '+', label: isZh ? '重大跨国并购与重组交易' : 'Cross-Border Transactions', desc: isZh ? '高难度跨法域反垄断审查与投后整合落地' : 'High-stakes M&A, divestitures, and post-merger integration' },
+    { value: '30+ Yrs', num: 30, suffix: '+ Yrs', label: isZh ? '董事会高级信赖咨询历程' : 'Boardroom Advisory Heritage', desc: isZh ? '穿越多轮全球金融周期的深厚声誉' : 'Continuous trusted counsel to Fortune 500 CEOs & sovereign funds' },
+    { value: '94%', num: 94, suffix: '%', label: isZh ? '战略协同执行达成率' : 'Execution Success Rate', desc: isZh ? '结构化阶段性里程碑治理，确保预期协同全部兑现' : 'Structured milestone governance ensuring full realization of target synergies' },
+  ]);
+
+  return `
+    <div class="consulting-about-modern" style="background:#071324;color:#f8fafc;font-family:'Inter',-apple-system,sans-serif;">
+      <!-- Hero Section -->
+      <section class="consulting-inner-hero" style="background:linear-gradient(135deg,#071324 0%,#0a192f 50%,#0f2b59 100%);color:#ffffff;padding:90px 0 70px;position:relative;overflow:hidden;border-bottom:2px solid #d4af37;">
+        <div style="position:absolute;top:-100px;right:-50px;width:550px;height:550px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.18) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.45);padding:7px 20px;border-radius:2px;margin-bottom:24px;">
+            <span style="font-size:0.8rem;font-weight:700;color:#fcd34d;letter-spacing:0.18em;text-transform:uppercase;">
+              ${isZh ? `CORPOX 董事会战略咨询理事会 · 始于 ${esc(company.establishedYear || '1994')}` : `CORPOX ADVISORY CHARTER · EST. ${esc(company.establishedYear || '1994')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-family:'Cinzel','Times New Roman',serif;font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.1;font-weight:600;letter-spacing:-0.02em;margin:0 0 24px;max-width:920px;color:#ffffff;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:740px;color:#cbd5e1;font-size:1.2rem;line-height:1.7;margin:0 0 36px;">
+            ${esc(copy.about || (isZh ? '深度服务于全球 500 强董事会、主权投资基金及领军企业主席，以无可比拟的战略严谨性与量化财务法证，驱动重大跨国并购、组织再造与复合价值创造。' : 'Corpox Consulting brings peerless strategic rigor, quantitative market diagnostics, and battle-tested execution frameworks to solve the most consequential challenges confronting global enterprises.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#d4af37;color:#071324;font-weight:800;border-radius:2px;padding:16px 36px;letter-spacing:0.06em;text-transform:uppercase;font-size:0.88rem;text-decoration:none;display:inline-block;box-shadow:0 0 24px rgba(212,175,55,0.35);">
+              ${isZh ? '预约合伙人闭门简报 ↗' : 'Request Boardroom Briefing ↗'}
+            </a>
+            ${company.capabilities ? `
+              <div style="border:1px solid rgba(212,175,55,0.35);background:rgba(255,255,255,0.04);padding:14px 24px;border-radius:2px;font-size:0.85rem;color:#fcd34d;font-family:'Cinzel',serif;letter-spacing:0.04em;">
+                ✦ ${esc(company.capabilities.slice(0, 45))}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Strategic Metrics -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+          ${stats.map(s => `
+            <div data-reveal="fade-up" class="wr-card-hover" style="background:#0a192f;border:1px solid rgba(212,175,55,0.25);border-top:3px solid #d4af37;border-radius:4px;padding:28px 24px;box-shadow:0 4px 18px rgba(0,0,0,0.2);">
+              <div style="font-family:'Cinzel',serif;font-size:clamp(2.4rem, 4vw, 3rem);font-weight:700;color:#fcd34d;letter-spacing:-1px;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
+              </div>
+              <div style="font-weight:700;color:#ffffff;margin-top:8px;font-size:1.05rem;">
+                ${esc(s.label)}
+              </div>
+              ${s.desc ? `
+                <div style="font-size:0.86rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
+                  ${esc(s.desc)}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Advisory Charter & Governance -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+          <div data-reveal="fade-up">
+            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.18em;color:#d4af37;text-transform:uppercase;">
+              ${isZh ? '合伙人咨询宪章' : 'THE ADVISORY CHARTER'}
+            </span>
+            <h2 style="font-family:'Cinzel',serif;font-size:clamp(1.9rem, 3.2vw, 2.5rem);line-height:1.2;color:#ffffff;margin:12px 0 20px;">
+              ${isZh ? '摒弃平庸咨询套路，以资产负债表法证驱动确定性战略抉择' : 'Rigorous Quantitative Diagnostics Coupled with Senior Counsel'}
+            </h2>
+            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+              <div style="border-left:3px solid #d4af37;padding-left:16px;">
+                <strong style="color:#fcd34d;display:block;font-size:1.05rem;font-family:'Cinzel',serif;">
+                  ${isZh ? '风险共担与利益深度绑定' : 'Skin in the Game'}
+                </strong>
+                <span style="color:#94a3b8;font-size:0.88rem;">
+                  ${isZh ? '咨询报酬与经审计的财务经营收益对齐' : 'Advisory fees indexed to audited balance sheet outcomes.'}
+                </span>
+              </div>
+              <div style="border-left:3px solid #d4af37;padding-left:16px;">
+                <strong style="color:#fcd34d;display:block;font-size:1.05rem;font-family:'Cinzel',serif;">
+                  ${isZh ? '拒绝层层初级委派' : 'Zero Junior Delegation'}
+                </strong>
+                <span style="color:#94a3b8;font-size:0.88rem;">
+                  ${isZh ? '资深股权管理合伙人亲临谈判一线' : 'Our equity partners sit at the negotiation table with you.'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div data-reveal="fade-up" style="background:#0a192f;color:#ffffff;border:1px solid rgba(212,175,55,0.3);border-top:3px solid #d4af37;border-radius:4px;padding:36px;box-shadow:0 12px 36px rgba(0,0,0,0.35);">
+            ${aboutImg ? `
+              <div style="border-radius:2px;overflow:hidden;border:1px solid rgba(212,175,55,0.3);margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <span style="font-family:'Cinzel',serif;font-size:11px;font-weight:800;letter-spacing:0.18em;color:#fcd34d;text-transform:uppercase;">
+              ${isZh ? '四大战略治理支柱' : 'FOUR CORE PILLARS OF GOVERNANCE'}
+            </span>
+            <div style="display:flex;flex-direction:column;gap:18px;margin-top:16px;">
+              <div>
+                <div style="font-family:'Cinzel',serif;font-weight:700;color:#d4af37;font-size:0.82rem;margin-bottom:2px;">PILLAR I</div>
+                <strong style="color:#ffffff;font-size:0.95rem;">
+                  ${isZh ? '资本配置纪律与跨周期回报' : 'Capital Allocation Integrity'}
+                </strong>
+                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '严苛的最低资本回报门槛，确保自由现金流只流向具有深厚护城河的高 ROIC 领域。' : 'Relentless hurdle-rate discipline ensuring cash is reinvested into high-ROIC moats.'}
+                </p>
+              </div>
+              <div>
+                <div style="font-family:'Cinzel',serif;font-weight:700;color:#d4af37;font-size:0.82rem;margin-bottom:2px;">PILLAR II</div>
+                <strong style="color:#ffffff;font-size:0.95rem;">
+                  ${isZh ? '跨境并购财务法证与风险排查' : 'Cross-Border M&A Forensics'}
+                </strong>
+                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '穿透式财务尽调，识别隐形涉税与负债风险，挤出估值水分并锁定确定性协同。' : 'Granular due diligence identifying hidden liabilities, regulatory risk, and organic churn.'}
+                </p>
+              </div>
+              <div>
+                <div style="font-family:'Cinzel',serif;font-weight:700;color:#d4af37;font-size:0.82rem;margin-bottom:2px;">PILLAR III</div>
+                <strong style="color:#ffffff;font-size:0.95rem;">
+                  ${isZh ? '大型组织重塑与数智敏捷中枢' : 'Enterprise Operational Restructuring'}
+                </strong>
+                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '扁平化繁琐科层官僚架构，围绕端到端核心业务闭环与自动化调度重塑业务单元。' : 'Flattening bureaucratic silos and rebuilding business units around direct accountability.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Banner -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:#0a192f;border:1px solid rgba(212,175,55,0.4);border-top:3px solid #d4af37;border-radius:4px;padding:48px 36px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+          <div>
+            <span style="font-family:'Cinzel',serif;color:#fcd34d;font-weight:700;font-size:0.82rem;letter-spacing:0.15em;text-transform:uppercase;">
+              ${isZh ? '董事会直接通达' : 'DIRECT BOARDROOM ACCESS'}
+            </span>
+            <h2 style="font-family:'Cinzel',serif;font-size:clamp(1.8rem, 3.2vw, 2.4rem);color:#ffffff;margin:8px 0;">
+              ${isZh ? '开启高级管理合伙人闭门战略咨询' : 'Engage the Senior Partner Council'}
+            </h2>
+            <p style="color:#cbd5e1;font-size:1rem;margin:0;max-width:560px;">
+              ${isZh ? '预约高级常务董事初步保密对话，评估资本架构、并购标的与组织重组机遇。' : 'Request a confidential executive briefing with our managing directors.'}
+            </p>
+          </div>
+          <a class="button" style="background:#d4af37;color:#071324;font-weight:800;border-radius:2px;padding:16px 36px;letter-spacing:0.06em;text-transform:uppercase;font-size:0.88rem;text-decoration:none;box-shadow:0 0 20px rgba(212,175,55,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '预约合伙人简报 ↗' : 'Request Boardroom Briefing ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderConsultingAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyConsultingAbout(ctx);
+  }
+  return renderModernConsultingAbout(ctx);
 }
 
 export function renderConsultingContact(ctx: ThemeContext): string {

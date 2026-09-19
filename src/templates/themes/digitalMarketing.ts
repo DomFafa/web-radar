@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
 import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderMarketingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -225,7 +226,7 @@ export function renderMarketingHome(ctx: ThemeContext): string {
   return `${heroHtml}${statsHtml}${productsHtml}${funnelHtml}${channelsHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderMarketingAbout(ctx: ThemeContext): string {
+function renderLegacyMarketingAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
@@ -421,6 +422,233 @@ export function renderMarketingAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${statsHtml}${manifestoHtml}${methodologyHtml}${leadershipHtml}${ctaHtml}`;
+}
+
+function renderModernMarketingAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang];
+  const isZh = (ctx.lang as string) === 'zh';
+
+  const defaultHeadline = isZh
+    ? '以数据科学与创意工程驱动全球品牌全域复合增长'
+    : 'Transforming Market Velocity Through Creative Science & Data Telemetry';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 致力于为全球新消费品牌、高成长出海企业及数字平台提供全链路量化增长解决方案。我们摒弃传统广告代理机构冗长繁杂的会议模式，以单位经济效益与客户生命周期价值（LTV）为核心准则，全面整合程序化广告投放、高转化叙事工程及全渠道自动化触达。`
+      : `${company.name} delivers full-funnel quantitative growth architecture, creative performance production, and cross-channel media scale for high-trajectory consumer and enterprise brands worldwide.`,
+    isZh
+      ? '我们的增长团队自研全触点服务端归因架构与动态创意生成管线，每周交付数十组高反差敏捷素材测试，实时捕获跨媒体平台的流量红利与高意向转化人群，帮助合作伙伴实现确定性的规模化营收跃升。'
+      : 'Our multidisciplinary studio integrates server-side conversion API telemetry, predictive audience cohort analysis, and agile creative testing to systematically scale customer acquisition while compressing payback windows.',
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/marketing/about-growth.jpg'));
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '+380%', num: 380, prefix: '+', suffix: '%', label: isZh ? '全域搜索与自然流量跃升' : 'Organic Traffic Lift', desc: isZh ? '实体 SEO 与主题权重矩阵架构驱动' : 'Entity SEO & topical authority architecture' },
+    { value: '4.2x', num: 4.2, suffix: 'x', label: isZh ? '全渠道混合 ROAS 投资回报倍率' : 'Blended ROAS Multiplier', desc: isZh ? '算法自适应动态出价与 CAPI 深度校准' : 'Algorithmic dynamic bidding & CAPI calibration' },
+    { value: '1,850+', num: 1850, suffix: '+', label: isZh ? '高转化创意素材敏捷实验' : 'Creative Experiments Run', desc: isZh ? '黄金 3 秒停留率与情感共振钩子迭代' : 'High-impact hook rate & conversion testing' },
+    { value: '98.6%', num: 98.6, suffix: '%', label: isZh ? '长期品牌增长战略续约率' : 'Client Retention Rate', desc: isZh ? '深度共创共赢的全周期战略伙伴关系' : 'Transparent attribution & growth alignment' },
+  ]);
+
+  const related = draft.products.slice(0, 3);
+
+  return `
+    <div class="marketing-about-modern" style="background:#0f071a;color:#f8fafc;font-family:'Plus Jakarta Sans',-apple-system,sans-serif;overflow:hidden;">
+      <!-- Hero Section -->
+      <section class="marketing-inner-hero" style="position:relative;background:radial-gradient(ellipse at 50% -20%, rgba(217,70,239,0.25) 0%, #0f071a 75%);padding:90px 0 65px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="position:absolute;top:10%;left:5%;width:350px;height:350px;background:radial-gradient(circle,rgba(236,72,153,0.18) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:10%;right:5%;width:400px;height:400px;background:radial-gradient(circle,rgba(168,85,247,0.15) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;position:relative;z-index:2;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,70,239,0.12);border:1px solid rgba(217,70,239,0.35);padding:7px 22px;border-radius:9999px;margin-bottom:24px;">
+            <span style="font-size:1rem;">🚀</span>
+            <span style="font-size:0.82rem;font-weight:800;color:#f5d0fe;letter-spacing:0.08em;text-transform:uppercase;">
+              ${isZh ? `全域量化增长与创意科学架构 · 创立于 ${esc(company.establishedYear || '2020')}` : `QUANTITATIVE GROWTH ARCHITECTS · EST. ${esc(company.establishedYear || '2020')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.1;font-weight:900;letter-spacing:-0.03em;margin:0 auto 24px;max-width:960px;color:#ffffff;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:760px;font-size:1.18rem;line-height:1.7;color:#e2e8f0;margin:0 auto 36px;">
+            ${esc(copy?.subtitle || (isZh ? '融合消费者认知图谱、高转化视觉叙事与跨媒体程序化投放，赋能行业领跑品牌实现确定性规模化扩张。' : 'We combine quantitative consumer telemetry, high-converting creative narrative engineering, and cross-channel media buying to scale industry-defining brands.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(90deg, #d946ef 0%, #ec4899 100%);color:#ffffff;font-weight:800;padding:16px 36px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 28px rgba(217,70,239,0.45);display:inline-block;">
+              ${isZh ? '预约免费全链路增长诊断 ↗' : 'Claim Free Growth Audit ↗'}
+            </a>
+            ${company.capabilities ? `
+              <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:14px 26px;border-radius:9999px;font-size:0.88rem;color:#fdf4ff;font-weight:600;">
+                ✨ ${esc(company.capabilities.slice(0, 45))}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Performance Metrics -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 36px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+          ${stats.map((s, idx) => `
+            <div data-reveal="fade-up" class="wr-card-hover" style="background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(217,70,239,0.2);border-top:4px solid ${idx % 2 === 0 ? '#d946ef' : '#ec4899'};border-radius:18px;padding:28px 24px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
+              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:${idx % 2 === 0 ? '#d946ef' : '#ec4899'};letter-spacing:-1px;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
+              </div>
+              <div style="font-weight:800;color:#ffffff;margin-top:8px;font-size:1.05rem;">
+                ${esc(s.label)}
+              </div>
+              ${s.desc ? `
+                <div style="font-size:0.85rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
+                  ${esc(s.desc)}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Growth Manifesto & Creative Engine -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+          <div data-reveal="fade-up">
+            <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d946ef;"></span>
+              <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#d946ef;text-transform:uppercase;">
+                ${isZh ? '增长主义科学宣言' : 'THE GROWTH MANIFESTO'}
+              </span>
+            </div>
+            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;line-height:1.2;color:#ffffff;margin:0 0 20px;">
+              ${isZh ? '打破传统营销工时冗余，以高频敏捷实验交付确定性增长' : 'Eliminating Marketing Bureaucracy With Agile Experimentation'}
+            </h2>
+            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            ${company.certifications ? `
+              <div style="margin-top:28px;padding:20px 24px;background:rgba(217,70,239,0.08);border-left:4px solid #d946ef;border-radius:0 12px 12px 0;">
+                <div style="font-size:0.8rem;font-weight:800;color:#d946ef;text-transform:uppercase;letter-spacing:0.06em;">
+                  ${isZh ? '官方媒体与技术伙伴认证' : 'Official Media Accreditations'}
+                </div>
+                <div style="color:#ffffff;margin-top:6px;font-size:0.95rem;font-weight:700;">
+                  ${esc(company.certifications)}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(30,15,48,0.95) 0%, rgba(59,7,100,0.85) 100%);border:1px solid rgba(217,70,239,0.3);border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(0,0,0,0.35);">
+            ${aboutImg ? `
+              <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)} Growth Engine" style="width:100%;height:230px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#f472b6;text-transform:uppercase;">
+              ${isZh ? '算法驱动创意实验室' : 'ALGORITHMIC CREATIVE ENGINE'}
+            </span>
+            <h3 style="font-size:1.45rem;font-weight:800;color:#ffffff;margin:8px 0 12px;">
+              ${isZh ? '全链路全自动投放与实时多触点归因' : 'Server-Side CAPI & Multi-Touch Attribution'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.94rem;line-height:1.65;margin:0 0 24px;">
+              ${isZh ? '突破公私域追踪限制，以服务器端回传（CAPI）与高置信度归因模型，为广告学习算法提供高质量正反馈，持续拉升客单价并平抑获客成本。' : 'Deploying 40+ dynamic ad variants weekly, monitoring sub-second hook drop-off and optimizing cohort lifetime payback.'}
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div style="background:rgba(255,255,255,0.05);padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+                <div style="color:#d946ef;font-weight:800;font-size:0.82rem;text-transform:uppercase;">SERVER CAPI</div>
+                <div style="color:#cbd5e1;font-size:0.8rem;margin-top:4px;">${isZh ? '100% 穿透式信号回传' : 'Direct Signal Match'}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.05);padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+                <div style="color:#38bdf8;font-weight:800;font-size:0.82rem;text-transform:uppercase;">LTV PREDICTION</div>
+                <div style="color:#cbd5e1;font-size:0.8rem;margin-top:4px;">${isZh ? '同期群价值模型预测' : 'Cohort Payback Engine'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4-Stage Full-Funnel Growth Framework -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:60px 24px;border-top:1px solid rgba(255,255,255,0.08);" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#ec4899;text-transform:uppercase;">
+            ${isZh ? '标准化增长飞轮' : '4-STAGE GROWTH FRAMEWORK'}
+          </span>
+          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#ffffff;margin:10px 0;">
+            ${isZh ? '科学严谨的四阶段全链路加速体系' : 'Systematic Customer Acquisition Engine'}
+          </h2>
+          <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '经数百个全球消费电子、DTC 出海及数字平台验证的可复制规模化方法论。' : 'A repeatable blueprint engineered to maximize consumer lifetime revenue.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(255,255,255,0.03);border:1px solid rgba(217,70,239,0.2);border-radius:16px;padding:30px;">
+            <div style="font-size:0.82rem;font-weight:900;color:#d946ef;letter-spacing:0.08em;margin-bottom:10px;">STAGE 01</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '市场空白挖掘与全触点审计' : 'Market Discovery & Audit'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '深挖细分受众画像与竞品投放矩阵，穿透式扫描现有转化漏斗断点，锁定高 ROI 突破口。' : 'Deep audience demographic whitespace analysis, funnel leak detection, and competitive spend intelligence.'}
+            </p>
+          </div>
+
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(255,255,255,0.03);border:1px solid rgba(236,72,153,0.2);border-radius:16px;padding:30px;transition-delay:0.08s;">
+            <div style="font-size:0.82rem;font-weight:900;color:#ec4899;letter-spacing:0.08em;margin-bottom:10px;">STAGE 02</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '高转化落地页与创意叙事工程' : 'Conversion Architecture'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '构建模块化高转化落地页，输出高反差心智钩子与情感共鸣文案，多变量提升进阶转化率。' : 'Bespoke landing page wireframing, high-converting offer structuring, and multivariant testing frameworks.'}
+            </p>
+          </div>
+
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(255,255,255,0.03);border:1px solid rgba(168,85,247,0.2);border-radius:16px;padding:30px;transition-delay:0.16s;">
+            <div style="font-size:0.82rem;font-weight:900;color:#a855f7;letter-spacing:0.08em;margin-bottom:10px;">STAGE 03</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '全媒体矩阵程序化矩阵放量' : 'Omni-Channel Algorithmic Scale'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '统合 Google、Meta、TikTok 及程序化 DSP 媒介，通过精准受众轮动与自动扩量算法平稳提速。' : 'Precision algorithmic media buying across Google Search, Meta, TikTok, YouTube, and programmatic networks.'}
+            </p>
+          </div>
+
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:30px;transition-delay:0.24s;">
+            <div style="font-size:0.82rem;font-weight:900;color:#8b5cf6;letter-spacing:0.08em;margin-bottom:10px;">STAGE 04</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '用户留存裂变与全生命周期价值' : 'Retention & Lifetime Value Lift'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '打通自动化邮件/短信私域生命周期流转，部署分层会员激励，降低流失率并放大复购效益。' : 'Automated lifecycle flows, cohort churn suppression, and VIP customer ascension pathways.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Banner -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(59,7,100,0.95) 0%, rgba(217,70,239,0.25) 100%);border:1px solid rgba(217,70,239,0.35);border-radius:24px;padding:54px 32px;text-align:center;box-shadow:0 0 45px rgba(217,70,239,0.25);">
+          <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.6rem);color:#ffffff;font-weight:900;margin:0 0 16px;">
+            ${isZh ? '准备好引爆您的品牌全域复合增长了吗？' : 'Ready to Accelerate Your Brand Growth?'}
+          </h2>
+          <p style="color:#f5d0fe;max-width:640px;margin:0 auto 30px;font-size:1.08rem;line-height:1.65;">
+            ${isZh ? '预约资深增长战略官，获取定制化渠道漏斗诊断、竞品投放反编译报告与定制扩量方案。' : 'Let us perform a comprehensive growth audit on your acquisition channels and identify high-leverage scale corridors.'}
+          </p>
+          <a class="button" style="background:linear-gradient(90deg, #d946ef 0%, #ec4899 100%);color:#ffffff;font-weight:800;border-radius:9999px;padding:17px 40px;display:inline-block;text-decoration:none;box-shadow:0 0 28px rgba(217,70,239,0.5);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '立即获取全案诊断与增长策略 ↗' : 'Claim Free Growth Audit ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderMarketingAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyMarketingAbout(ctx);
+  }
+  return renderModernMarketingAbout(ctx);
 }
 
 export function renderMarketingContact(ctx: ThemeContext): string {

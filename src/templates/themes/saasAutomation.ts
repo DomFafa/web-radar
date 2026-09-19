@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
 import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderSaasHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -204,7 +205,7 @@ export function renderSaasHome(ctx: ThemeContext): string {
   return `${heroHtml}${metricsHtml}${productsHtml}${storyHtml}${integrationHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderSaasAbout(ctx: ThemeContext): string {
+export function renderLegacySaasAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, translateProduct, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
@@ -396,6 +397,195 @@ export function renderSaasAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${metricsHtml}${originHtml}${pillarsHtml}${teamHtml}${ctaHtml}`;
+}
+
+function renderModernSaasAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
+  const isZh = (ctx.lang as string) === 'zh';
+  const copy = draft.copy[ctx.lang];
+
+  const defaultHeadline = isZh
+    ? '打造高并发、自治型企业级云工作流调度系统'
+    : 'Architecting Autonomous High-Concurrency Workflow Infrastructure';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 致力于为全球现代化科技企业构建坚不可摧的自动化数据管线与智能调度中枢。我们通过亚毫秒级的分布式事件网格，打破多云异构系统的协议孤岛，让实时业务流无缝衔接。`
+      : `${company.name} engineers mission-critical workflow orchestration and distributed cloud event pipelines. We empower modern digital enterprises to eliminate manual drag, synchronize disparate systems, and scale operations autonomously.`,
+    isZh
+      ? '系统基于全球分布式边缘节点架构，支持 PB 级异构事件摄入与自愈式微服务协调。无论是跨云业务回调、实时风控决策，还是海量 IoT 遥测数据流，均能在微秒级延迟内完成端到端一致性校验与安全落库。'
+      : 'Built on a geo-distributed edge runtime, our platform handles petabyte-scale event streaming with self-healing consumer clusters. We guarantee sub-second end-to-end telemetry verification, zero message loss, and enterprise-grade compliance.',
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/saas/about-mesh.jpg'));
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '99.99%', num: 99.99, suffix: '%', label: isZh ? '全球多活高可用 SLA' : 'Uptime SLA Guarantee', desc: isZh ? '多区域容灾热备与无损秒级切换' : 'Active-active multi-region failover' },
+    { value: '10x', num: 10, suffix: 'x', label: isZh ? '跨云流水线部署提速' : 'Deployment Velocity', desc: isZh ? '自动化集成交付与配置秒级同步' : 'Accelerated release & sync cycles' },
+    { value: '240M+', num: 240, suffix: 'M+', label: isZh ? '月均高并发事件调度' : 'Monthly Events Handled', desc: isZh ? '高吞吐低时延无损流式消费' : 'High-throughput Kafka stream mesh' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '零代码可视化触发编排' : 'Visual Trigger Pipeline', desc: isZh ? '直观微服务拓扑与动态分支逻辑' : 'Zero-code event routing & retry rules' },
+  ]);
+
+  return `
+    <div class="saas-about-modern" style="background:#070b14;color:#f8fafc;font-family:'Inter Tight',-apple-system,sans-serif;">
+      <!-- Hero Section -->
+      <section class="saas-inner-hero" style="background:radial-gradient(ellipse at 50% 0%, rgba(190,242,100,0.12) 0%, #070b14 70%);padding:80px 0 60px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(190,242,100,0.1);border:1px solid rgba(190,242,100,0.3);padding:6px 20px;border-radius:9999px;margin-bottom:24px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#bef264;box-shadow:0 0 10px #bef264;"></span>
+            <span style="font-size:0.82rem;font-weight:800;color:#bef264;letter-spacing:0.08em;text-transform:uppercase;">
+              ${isZh ? `云原生分布式自动化 OS · 创立于 ${esc(company.establishedYear || '2021')}` : `AUTONOMOUS WORKFLOW OS · EST. ${esc(company.establishedYear || '2021')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5vw, 4rem);line-height:1.12;font-weight:900;letter-spacing:-0.03em;margin:0 auto 20px;max-width:960px;color:#ffffff;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:760px;font-size:1.15rem;line-height:1.7;color:#94a3b8;margin:0 auto 32px;">
+            ${esc(copy?.subtitle || (isZh ? '消除跨系统协议数据孤岛，为跨国企业提供高吞吐、零延迟、自愈式的一体化微服务工作流编排基建。' : 'Eliminate cross-platform data fragmentation and scale global enterprise event streams with sub-millisecond resilience.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#bef264;color:#070b14;font-weight:800;padding:15px 34px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 24px rgba(190,242,100,0.3);display:inline-block;">
+              ${isZh ? '预约系统架构深度咨询 ↗' : 'Schedule Architecture Briefing ↗'}
+            </a>
+            ${company.capabilities ? `
+              <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);padding:14px 24px;border-radius:9999px;font-size:0.88rem;color:#cbd5e1;font-weight:600;">
+                ⚡ ${esc(company.capabilities.slice(0, 45))}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 Core Metrics Grid -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 30px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+          ${stats.map((s, idx) => `
+            <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(18,24,38,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:32px 24px;box-shadow:0 8px 30px rgba(0,0,0,0.25);backdrop-filter:blur(10px);transition-delay:${idx * 0.08}s;">
+              <div style="font-size:2.6rem;font-weight:900;color:#bef264;letter-spacing:-1px;margin-bottom:8px;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">
+                ${esc(s.value)}
+              </div>
+              <div style="font-size:1.05rem;font-weight:800;color:#ffffff;margin-bottom:6px;">${esc(s.label)}</div>
+              ${s.desc ? `<div style="font-size:0.86rem;color:#94a3b8;line-height:1.5;">${esc(s.desc)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Technical Story & Architecture Card (2-Col) -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 70px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:center;">
+          <div>
+            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#bef264;text-transform:uppercase;">
+              ${isZh ? '技术渊源与工程使命' : 'CORE MISSION & ARCHITECTURE'}
+            </span>
+            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:#ffffff;margin:12px 0 20px;line-height:1.2;">
+              ${isZh ? '用确定性代码，消除分布式系统的不确定性延时' : 'Architected to Replace Operational Drag with Elastic Velocity'}
+            </h2>
+            <div style="color:#94a3b8;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="margin-top:28px;padding:20px;background:rgba(190,242,100,0.06);border-left:4px solid #bef264;border-radius:0 12px 12px 0;">
+              <strong style="color:#bef264;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">
+                ${isZh ? '企业级安全与合规标准' : 'Statutory & Security Accreditations'}
+              </strong>
+              <span style="color:#e2e8f0;font-size:0.95rem;font-weight:600;margin-top:4px;display:block;">
+                ${esc(company.certifications || 'SOC2 Type II · ISO/IEC 27001 · GDPR · HIPAA Ready · AES-256 E2EE')}
+              </span>
+            </div>
+          </div>
+
+          <!-- Right Showcase Card -->
+          <div style="background:rgba(18,24,38,0.85);border:1px solid rgba(56,189,248,0.25);border-radius:24px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.1);" class="wr-card-hover">
+            ${aboutImg ? `
+              <div style="overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,0.1);margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)} architecture" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#38bdf8;text-transform:uppercase;">ENTERPRISE EVENT MESH</span>
+            <h3 style="font-size:1.4rem;font-weight:800;color:#ffffff;margin:8px 0 12px;">
+              ${isZh ? '超低延迟分布式事件总线' : 'Ultra-Low Latency Distributed Mesh'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0 0 20px;">
+              ${isZh ? '支持毫秒级弹性水平扩容、断点续传与消息幂等性校验，保障关键业务链路零阻塞。' : 'Sub-millisecond routing across multitenant clusters with automated backoff and self-healing consumer groups.'}
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+                <div style="color:#bef264;font-weight:800;font-size:0.8rem;text-transform:uppercase;">END-TO-END TLS 1.3</div>
+                <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">${isZh ? '传输与静态存储强加密' : 'Encrypted at rest & transit'}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+                <div style="color:#06b6d4;font-weight:800;font-size:0.8rem;text-transform:uppercase;">AUDIT TRAIL LOGS</div>
+                <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">${isZh ? '不可篡改审计追踪' : 'Immutable replayable history'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Four Engineering Pillars -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:60px 24px;border-top:1px solid rgba(255,255,255,0.08);" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#bef264;text-transform:uppercase;">
+            ${isZh ? '核心架构支柱' : 'ARCHITECTURAL PILLARS'}
+          </span>
+          <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:#ffffff;margin:10px 0;">
+            ${isZh ? '四大硬核工程体系，保障高频生产环境' : 'Four Foundational Engineering Commitments'}
+          </h2>
+          <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '专为应对海量并发冲击与复杂网络拓扑而设计，经受全球头部科技公司的实战检验。' : 'Designed from the ground up for high-throughput resilience and statutory enterprise compliance.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#101626;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:30px;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">🌐</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '分布式消息网格' : 'Distributed Message Mesh'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '全球多区域分布式边缘计算节点，即便面对流量峰值浪涌亦能保持零丢包与超低延时。' : 'Geo-distributed edge workers handling dynamic traffic surges without dropouts or message degradation.'}</p>
+          </div>
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#101626;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:30px;transition-delay:0.08s;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">⚡</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '亚毫秒级流式引擎' : 'Sub-Millisecond Engine'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '自研高吞吐流式管道，消除中间件序列化开销，实现微秒级的事件触发与多系统响应。' : 'High-concurrency microsecond routing pipeline designed for real-time transactional synchronization.'}</p>
+          </div>
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#101626;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:30px;transition-delay:0.16s;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">🔒</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '零信任主权安全' : 'Zero-Trust Security'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '支持本地私有化集群托管与私钥自持，静态与动态数据均通过银行级密码学算法全面加密。' : 'Granular role-based RBAC, tokenized API credentials, and end-to-end cryptographic isolation.'}</p>
+          </div>
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#101626;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:30px;transition-delay:0.24s;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">📈</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '弹性自愈与流量调度' : 'Elastic Auto-Healing'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '智能动态退避重试机制与死信队列自动排查，遇到第三方 API 宕机时自适应保活与缓冲。' : 'Autonomous backoff retry policies and circuit-breaker queues protecting downstream services.'}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Band -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(30,27,75,0.9) 0%, rgba(18,24,38,0.95) 100%);border:1px solid rgba(190,242,100,0.3);border-radius:24px;padding:50px 32px;text-align:center;box-shadow:0 0 40px rgba(190,242,100,0.1);">
+          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);color:#ffffff;font-weight:900;margin:0 0 14px;">
+            ${isZh ? '准备好为您的业务注入自动化加速度了吗？' : 'Ready to Scale Your Automated Data Flow?'}
+          </h2>
+          <p style="color:#cbd5e1;max-width:620px;margin:0 auto 28px;font-size:1.05rem;line-height:1.65;">
+            ${isZh ? '即刻预约我们的企业解决方案架构师，评估生产环境下的真实负载与吞吐性能。' : 'Connect with our solutions architects to evaluate our throughput benchmarks on your production workloads.'}
+          </p>
+          <a class="button" style="background:#bef264;color:#090d16;font-weight:900;border-radius:9999px;padding:16px 36px;display:inline-block;text-decoration:none;box-shadow:0 0 24px rgba(190,242,100,0.35);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '开启企业级技术会谈 ↗' : 'Schedule Technical Briefing ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderSaasAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacySaasAbout(ctx);
+  }
+  return renderModernSaasAbout(ctx);
 }
 
 export function renderSaasContact(ctx: ThemeContext): string {

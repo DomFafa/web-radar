@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
 import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderFintechHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -261,7 +262,7 @@ export function renderFintechHome(ctx: ThemeContext): string {
   return `${heroHtml}${securityBandHtml}${productsHtml}${deepDiveHtml}${bankingPartnersHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderFintechAbout(ctx: ThemeContext): string {
+function renderLegacyFintechAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
@@ -458,6 +459,195 @@ export function renderFintechAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${kpiHtml}${overviewHtml}${pillarsHtml}${leadershipHtml}${ctaHtml}`;
+}
+
+function renderModernFintechAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
+  const isZh = (ctx.lang as string) === 'zh';
+  const copy = draft.copy[ctx.lang];
+
+  const defaultHeadline = isZh
+    ? '构筑机构级数字资本基建与多币种跨境清算网络'
+    : 'Institutional Capital Infrastructure & Global Multi-Currency Clearing Rails';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 专注于为全球跨国集团、持牌金融机构及新经济平台提供机构级数字金库与自动化司库调度基建。我们通过密码学分布式总账与直通式清算路由，彻底解决跨境交易延迟高、汇率摩擦大、合规对账繁琐的传统痛点。`
+      : `${company.name} delivers institutional-grade capital infrastructure, autonomous corporate treasury management, and real-time multi-currency clearing rails for multinational enterprises and licensed financial institutions.`,
+    isZh
+      ? '平台直接穿透接入全球主流央行实时支付系统（包括 SWIFT、FedNow、SEPA 及 CHAPS），结合自研智能对冲引擎与自动化多币种资金扫额机制，支持秒级直通处理（STP）与企业级法定外汇合规审查。'
+      : 'Our core infrastructure interfaces directly with tier-1 central clearing rails, integrating algorithmic FX execution, automated liquidity sweeps, and continuous regulatory surveillance to ensure friction-free cross-border operations.',
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/fintech/about-vault.jpg'));
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '$18.4B+', num: 18.4, prefix: '$', suffix: 'B+', label: isZh ? '年化跨国资金清算总额' : 'Annual Settlement Volume', desc: isZh ? '跨 SWIFT / FedNow / SEPA 直通清算' : 'Zero-slippage algorithmic routing' },
+    { value: '140+', num: 140, suffix: '+', label: isZh ? '全球法定准入监管辖区' : 'Supported Jurisdictions', desc: isZh ? '全链路合规反洗钱及跨国监管审查' : 'Statutory AML, KYC & currency compliance' },
+    { value: '99.999%', num: 99.999, suffix: '%', label: isZh ? '金融级分布式总账高可用' : 'Platform Availability SLA', desc: isZh ? '双活多区域异地容灾集群架构' : 'Active-active redundant cloud pods' },
+    { value: '< 25ms', num: 25, prefix: '< ', suffix: 'ms', label: isZh ? '银行间直通清算延迟' : 'Clearing Rail Latency', desc: isZh ? '亚毫秒级直通处理与实时确认' : 'Sub-second straight-through execution' },
+  ]);
+
+  return `
+    <div class="fintech-about-modern" style="background:#070f1e;color:#ffffff;font-family:'Inter Tight',-apple-system,sans-serif;">
+      <!-- Hero Section -->
+      <section class="fintech-inner-hero" style="background:radial-gradient(ellipse at 50% 0%, rgba(2,132,199,0.18) 0%, #070f1e 75%);padding:80px 0 60px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(2,132,199,0.15);border:1px solid rgba(56,189,248,0.35);padding:6px 20px;border-radius:9999px;margin-bottom:24px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 10px #38bdf8;"></span>
+            <span style="font-size:0.82rem;font-weight:800;color:#e0f2fe;letter-spacing:0.08em;text-transform:uppercase;">
+              ${isZh ? `全球资本治理与合规清算架构 · 创立于 ${esc(company.establishedYear || '2018')}` : `CAPITAL GOVERNANCE & COMPLIANCE · EST. ${esc(company.establishedYear || '2018')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5vw, 4rem);line-height:1.12;font-weight:900;letter-spacing:-0.03em;margin:0 auto 20px;max-width:960px;color:#ffffff;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:760px;font-size:1.15rem;line-height:1.7;color:#94a3b8;margin:0 auto 32px;">
+            ${esc(copy?.subtitle || (isZh ? '赋能全球化跨国企业与持牌金融中介，实现流动性全域统合、自动化外汇头寸对冲与多币种即时清算。' : 'Empowering global corporations and financial institutions with unified liquidity, algorithmic foreign exchange hedging, and automated multi-currency settlements.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);color:#ffffff;font-weight:800;padding:15px 34px;border-radius:8px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 24px rgba(2,132,199,0.4);display:inline-block;">
+              ${isZh ? '预约机构合规闭门简报 ↗' : 'Request Private Institutional Briefing ↗'}
+            </a>
+            ${company.capabilities ? `
+              <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);padding:14px 24px;border-radius:8px;font-size:0.88rem;color:#e2e8f0;font-weight:600;">
+                🛡️ ${esc(company.capabilities.slice(0, 45))}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 Core Metrics Grid -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 30px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+          ${stats.map((s, idx) => `
+            <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(15,23,42,0.8);border:1px solid rgba(56,189,248,0.2);border-top:4px solid #0284c7;border-radius:14px;padding:30px 24px;box-shadow:0 8px 30px rgba(0,0,0,0.3);backdrop-filter:blur(10px);transition-delay:${idx * 0.08}s;">
+              <div style="font-size:2.5rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;margin-bottom:8px;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">
+                ${esc(s.value)}
+              </div>
+              <div style="font-size:1.05rem;font-weight:800;color:#ffffff;margin-bottom:6px;">${esc(s.label)}</div>
+              ${s.desc ? `<div style="font-size:0.86rem;color:#94a3b8;line-height:1.5;">${esc(s.desc)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Institutional Narrative & Security Mesh (2-Col) -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 70px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:center;">
+          <div>
+            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#38bdf8;text-transform:uppercase;">
+              ${isZh ? '机构治理与受信托责任' : 'FIDUCIARY GOVERNANCE & ARCHITECTURE'}
+            </span>
+            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:#ffffff;margin:12px 0 20px;line-height:1.2;">
+              ${isZh ? '以最高合规标准，守护全球跨国企业资本安全' : 'Guarding Enterprise Capital with Uncompromising Fiduciary Integrity'}
+            </h2>
+            <div style="color:#94a3b8;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="margin-top:28px;padding:20px;background:rgba(2,132,199,0.08);border-left:4px solid #38bdf8;border-radius:0 10px 10px 0;">
+              <strong style="color:#38bdf8;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">
+                ${isZh ? '权威金融资质与审计认证' : 'Statutory & Fiduciary Accreditations'}
+              </strong>
+              <span style="color:#e2e8f0;font-size:0.95rem;font-weight:600;margin-top:4px;display:block;">
+                ${esc(company.certifications || 'ISO/IEC 27001 · SOC 1 & SOC 2 Type II · PCI-DSS Level 1 · FinCEN MSB Registered · SWIFT Network')}
+              </span>
+            </div>
+          </div>
+
+          <!-- Right Showcase Card -->
+          <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(56,189,248,0.25);border-radius:20px;padding:36px;box-shadow:0 0 40px rgba(2,132,199,0.15);" class="wr-card-hover">
+            ${aboutImg ? `
+              <div style="overflow:hidden;border-radius:12px;border:1px solid rgba(255,255,255,0.1);margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)} custody" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#38bdf8;text-transform:uppercase;">MULTI-CURRENCY TREASURY VAULT</span>
+            <h3 style="font-size:1.4rem;font-weight:800;color:#ffffff;margin:8px 0 12px;">
+              ${isZh ? '全天候自动化跨国司库流动性中枢' : 'Autonomous Cross-Border Treasury Hub'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0 0 20px;">
+              ${isZh ? '集中调度全球多币种活期资金池，智能降低外汇汇率敞口波动，大幅缩短月结对账周期。' : 'Consolidate corporate liquidity, automate multi-currency sweeps, and eliminate exchange rate friction across cross-border subsidiaries.'}
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
+                <div style="color:#38bdf8;font-weight:800;font-size:0.8rem;text-transform:uppercase;">HSM ENCLAVE</div>
+                <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">${isZh ? '硬件级多重私钥隔离' : 'Hardware key isolation'}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
+                <div style="color:#f59e0b;font-weight:800;font-size:0.8rem;text-transform:uppercase;">STP CLEARING</div>
+                <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">${isZh ? '零人工干预直通对账' : 'Straight-through audit'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Four Governance Pillars -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:60px 24px;border-top:1px solid rgba(255,255,255,0.08);" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#38bdf8;text-transform:uppercase;">
+            ${isZh ? '核心金融治理支柱' : 'FOUR PILLARS OF GOVERNANCE'}
+          </span>
+          <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:#ffffff;margin:10px 0;">
+            ${isZh ? '四大资本治理维度，满足跨国财资严苛需求' : 'Institutional Safeguards & Statutory Rigor'}
+          </h2>
+          <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '服务于跨国 500 强 CFO、司库主管与金融投资机构，经受全球顶级审计机构独立鉴证。' : 'Engineered for multinational corporate treasurers, CFOs, and sovereign asset managers.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">🏛️</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '银行级加密防护' : 'Bank-Grade Security'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '采用 FIPS 140-2 Level 3 硬件加密模块（HSM），实现动态数据与静态总账全流程不可逆加密。' : 'FIPS 140-2 Level 3 certified hardware security modules securing cryptographic root keys.'}</p>
+          </div>
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;transition-delay:0.08s;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">⚡</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '算法驱动汇率对冲' : 'Algorithmic FX Hedging'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '毫秒级捕捉全球银行间外汇即期与远期点差，自动触发流动性套期保值，锁定企业预期利润率。' : 'Real-time interbank order routing capturing optimized bid-ask spreads across global currency corridors.'}</p>
+          </div>
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;transition-delay:0.16s;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">🛡️</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '全天候实时反洗钱审查' : 'Real-Time AML/KYC'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '集成国际主要制裁名单与交易行为分析图谱，在资金落账前完成穿透式合规过滤与风险预警。' : 'Sub-second sanction list screening and transaction graph telemetry preventing illicit fund movements.'}</p>
+          </div>
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;transition-delay:0.24s;">
+            <div style="font-size:2.2rem;margin-bottom:14px;">🌐</div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '全球清算网络直连' : 'Direct Clearing Rails'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '直连 SWIFT、FedNow、SEPA 等核心跨国结算基础设施，消除层层中介代理行繁琐手续费。' : 'Direct host-to-host connectivity with central bank automated clearing houses avoiding correspondent fees.'}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Band -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(9,19,34,0.95) 0%, rgba(2,132,199,0.2) 100%);border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:50px 32px;text-align:center;box-shadow:0 0 40px rgba(2,132,199,0.2);">
+          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);color:#ffffff;font-weight:900;margin:0 0 14px;">
+            ${isZh ? '准备好升级您的全球司库与资本清算体系了吗？' : 'Ready to Elevate Your Corporate Treasury Operations?'}
+          </h2>
+          <p style="color:#94a3b8;max-width:620px;margin:0 auto 28px;font-size:1.05rem;line-height:1.65;">
+            ${isZh ? '预约资深金融合规专家与司库顾问，获取定制化资金跨境路由方案与流动性测算报告。' : 'Request a private institutional briefing to evaluate clearing corridors, liquidity pools, and integration timelines.'}
+          </p>
+          <a class="button" style="background:#0284c7;color:#ffffff;font-weight:800;border-radius:8px;padding:16px 36px;display:inline-block;text-decoration:none;box-shadow:0 0 24px rgba(2,132,199,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '预约机构合规闭门简报 ↗' : 'Request Private Briefing ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderFintechAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyFintechAbout(ctx);
+  }
+  return renderModernFintechAbout(ctx);
 }
 
 export function renderFintechContact(ctx: ThemeContext): string {

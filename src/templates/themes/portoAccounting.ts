@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
 import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderAccountingHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -233,7 +234,7 @@ export function renderAccountingHome(ctx: ThemeContext): string {
   return `${topBarHtml}${heroHtml}${statsHtml}${productsHtml}${whyChooseHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderAccountingAbout(ctx: ThemeContext): string {
+function renderLegacyAccountingAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
@@ -429,6 +430,229 @@ export function renderAccountingAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${statsHtml}${heritageHtml}${practicePillarsHtml}${partnersHtml}${ctaHtml}`;
+}
+
+function renderModernAccountingAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang];
+  const isZh = (ctx.lang as string) === 'zh';
+
+  const defaultHeadline = isZh
+    ? '恪尽信义义务，构筑跨国财税合规与审慎资产治理架构'
+    : 'Accredited Accounting, Global Tax & Fiduciary Corporate Advisory';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 汇聚二十余年注册会计师与跨国税务律师专业积淀，长期服务于全球跨国企业、高净值家族办公室及跨国投资实体。我们以捍卫企业法定合规与资产安全为最高准则，提供贯穿企业全生命周期的审慎财税规划、法定审计鉴证与跨境并购尽调服务。`
+      : `With over two decades of accredited excellence, ${company.name} provides certified public accountancy, cross-border corporate structuring, and rigorous tax compliance for high-net-worth entities and multinational enterprises.`,
+    isZh
+      ? '不同于传统事后记账报税代理，我们的资深合伙人团队深入客户核心业务场景，依托全流程审慎风控模型与双边税收协定网络，在合法合规框架下深度优化税负结构、消除跨法域双重课税风险，保障企业行稳致远。'
+      : 'Our multidisciplinary partners maintain continuous quarterly audit oversight, transfer pricing governance, and double-taxation treaty alignment to insulate clients from statutory liabilities while preserving capital efficiency.',
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/accounting/about-office.jpg'));
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '25+', num: 25, suffix: '+', label: isZh ? '执业信赖年限' : 'Years of Fiduciary Trust', desc: isZh ? '四分之一世纪持续合规坚守' : 'Continuous corporate advisory excellence' },
+    { value: '99.8%', num: 99.8, suffix: '%', label: isZh ? '无保留法定审计通过率' : 'Clean Audit Defense Rate', desc: isZh ? '经受全球多边税务主管机关严苛审查' : 'Flawless statutory audit outcomes worldwide' },
+    { value: '$850M+', num: 850, prefix: '$', suffix: 'M+', label: isZh ? '年化咨询监督企业资本' : 'Advised Corporate Capital', desc: isZh ? '跨国财资优化与并购风险隔离' : 'Managed treasuries, M&A, and asset shielding' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '资深持牌合伙人直通服务' : 'Licensed CPA & Legal Staff', desc: isZh ? '国家会计师公会与执业律师亲理' : 'AICPA members and enrolled attorneys on duty' },
+  ]);
+
+  return `
+    <div class="porto-about-modern" style="background:#fcfbf9;color:#262626;font-family:'Inter',-apple-system,sans-serif;">
+      <!-- Hero Section -->
+      <section class="porto-inner-hero" style="background:linear-gradient(135deg,#1c1917 0%,#292524 60%,#44403c 100%);color:#ffffff;padding:85px 0 65px;border-bottom:4px solid #d90a2c;">
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,10,44,0.18);border:1px solid #d90a2c;padding:6px 20px;border-radius:4px;margin-bottom:24px;">
+            <span style="font-size:0.82rem;font-weight:800;color:#fdf1f3;letter-spacing:0.12em;text-transform:uppercase;">
+              ${isZh ? `注册执业会计师事务所 · 创立于 ${esc(company.establishedYear || '1998')}` : `ACCREDITED CPA PRACTICE · EST. ${esc(company.establishedYear || '1998')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.4rem, 5vw, 4.2rem);line-height:1.15;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;max-width:920px;color:#ffffff;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:760px;font-size:1.18rem;line-height:1.7;color:#d6d3d1;margin:0 0 32px;">
+            ${esc(copy?.subtitle || (isZh ? '为跨国领军企业、高净值家族办公室及新兴企业提供穿透式全球税务筹划、法定独立审计与审慎财务治理。' : 'Strategic wealth management, cross-border corporate structuring, and rigorous tax compliance for expanding enterprises and high-net-worth families.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#d90a2c;color:#ffffff;font-weight:700;padding:16px 36px;border-radius:4px;letter-spacing:0.04em;text-transform:uppercase;font-size:0.88rem;text-decoration:none;display:inline-block;box-shadow:0 4px 18px rgba(217,10,44,0.35);">
+              ${isZh ? '预约合伙人保密咨询 ↗' : 'Schedule Confidential Consultation ↗'}
+            </a>
+            ${company.certifications ? `
+              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);padding:14px 24px;border-radius:4px;font-size:0.88rem;color:#f5f5f4;">
+                <span>⚖️</span> ${esc(company.certifications.slice(0, 45))}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Governance Metrics -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+          ${stats.map(s => `
+            <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:1px solid #e7e5e4;border-top:3px solid #d90a2c;border-radius:6px;padding:28px 24px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+              <div style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(2.2rem, 3.8vw, 2.8rem);font-weight:700;color:#1c1917;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
+              </div>
+              <div style="font-weight:700;color:#292524;margin-top:8px;font-size:1.05rem;">
+                ${esc(s.label)}
+              </div>
+              ${s.desc ? `
+                <div style="font-size:0.86rem;color:#78716c;margin-top:6px;line-height:1.5;">
+                  ${esc(s.desc)}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Firm Heritage & Fiduciary Philosophy -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 70px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+          <div data-reveal="fade-up">
+            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#d90a2c;text-transform:uppercase;">
+              ${isZh ? '事务所愿景与信义义务' : 'FIRM HERITAGE & PHILOSOPHY'}
+            </span>
+            <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.9rem, 3.2vw, 2.5rem);font-weight:700;line-height:1.25;color:#1c1917;margin:12px 0 20px;">
+              ${isZh ? '立足恪尽信义义务，以审慎合规构筑企业基业长青' : 'Proactive Tax Strategy Built on Uncompromising Integrity'}
+            </h2>
+            <div style="color:#57534e;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            ${company.capabilities ? `
+              <div style="margin-top:28px;padding:20px 24px;background:#fef2f2;border-left:4px solid #d90a2c;border-radius:0 6px 6px 0;">
+                <div style="font-size:0.8rem;font-weight:800;color:#d90a2c;text-transform:uppercase;letter-spacing:0.06em;">
+                  ${isZh ? '核心业务专长覆盖' : 'Practice Specialization'}
+                </div>
+                <div style="color:#1c1917;margin-top:6px;font-size:0.95rem;font-weight:600;">
+                  ${esc(company.capabilities)}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-radius:8px;padding:36px;box-shadow:0 8px 24px rgba(0,0,0,0.05);">
+            ${aboutImg ? `
+              <div style="border-radius:6px;overflow:hidden;border:1px solid #e7e5e4;margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#d90a2c;text-transform:uppercase;">
+              ${isZh ? '最高执业准则承诺' : 'FIDUCIARY DUTY & TRANSPARENCY'}
+            </span>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;font-size:1.4rem;font-weight:700;color:#1c1917;margin:8px 0 12px;">
+              ${isZh ? '恪守行业最高法定伦理准则' : 'Independent Statutory Ethics'}
+            </h3>
+            <p style="color:#78716c;font-size:0.94rem;line-height:1.65;margin:0 0 20px;">
+              ${isZh ? '秉承完全中立与穿透式保密原则，杜绝利益冲突，运用国际税务公约保护企业合法权益。' : 'Our practice adheres to the highest statutory accounting ethics, ensuring your business preserves wealth legally and strategically.'}
+            </p>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:10px;font-size:0.92rem;color:#292524;">
+                <span style="color:#d90a2c;font-weight:700;">●</span>
+                <span>${isZh ? '国家会计师公会注册执业监管机构认证' : 'Licensed by the State Board of Public Accountancy'}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:0.92rem;color:#292524;">
+                <span style="color:#d90a2c;font-weight:700;">●</span>
+                <span>${isZh ? 'AICPA 美国注册会计师协会终身资质成员' : 'AICPA Accredited Practice & Peer-Reviewed'}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:0.92rem;color:#292524;">
+                <span style="color:#d90a2c;font-weight:700;">●</span>
+                <span>${isZh ? '跨国双边税收协定与反避税规划注册顾问' : 'Cross-Border Double Taxation Treaty Practitioners'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Four Core Practice Specialties -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:60px 24px;border-top:1px solid #e7e5e4;" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#d90a2c;text-transform:uppercase;">
+            ${isZh ? '四大核心业务支柱' : 'FOUR CORE PRACTICE SPECIALTIES'}
+          </span>
+          <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:700;color:#1c1917;margin:10px 0;">
+            ${isZh ? '全领域企业财税与法律合规顾问矩阵' : 'Comprehensive Corporate Governance Matrix'}
+          </h2>
+          <p style="color:#78716c;max-width:620px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '覆盖跨国企业从创立设立、多辖区运营、资本运作到财富传承的全链条需求。' : 'Specialized CPA and legal counsel covering all facets of enterprise financial governance.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-radius:6px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+            <div style="font-size:2rem;margin-bottom:14px;">📑</div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.25rem;font-weight:700;margin:0 0 10px;">
+              ${isZh ? '跨国企业税务筹划' : 'Corporate Tax Structuring'}
+            </h3>
+            <p style="color:#78716c;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '跨国架构税率优化、无形资产转让定价（TP）合规、增值税/GST 国际申报合规。' : 'Cross-border corporate entity tax optimization, transfer pricing, and VAT/GST compliance.'}
+            </p>
+          </div>
+
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-radius:6px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.02);transition-delay:0.08s;">
+            <div style="font-size:2rem;margin-bottom:14px;">🔍</div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.25rem;font-weight:700;margin:0 0 10px;">
+              ${isZh ? '法定独立审计与鉴证' : 'Statutory Financial Audits'}
+            </h3>
+            <p style="color:#78716c;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '符合 GAAP/IFRS 国际准则的独立财务报表审计、合规鉴证及内部控制体系审阅。' : 'Independent GAAP/IFRS statement verification, compliance certifications, and internal control reviews.'}
+            </p>
+          </div>
+
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-radius:6px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.02);transition-delay:0.16s;">
+            <div style="font-size:2rem;margin-bottom:14px;">💼</div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.25rem;font-weight:700;margin:0 0 10px;">
+              ${isZh ? '并购重组与财务尽调' : 'M&A & Due Diligence'}
+            </h3>
+            <p style="color:#78716c;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '标的企业财务法证调查、历史潜在涉税风险排查、交易架构估值模型搭建。' : 'Rigorous financial forensics, target valuation modeling, and pre-deal tax liability analysis.'}
+            </p>
+          </div>
+
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7e5e4;border-radius:6px;padding:30px;box-shadow:0 2px 10px rgba(0,0,0,0.02);transition-delay:0.24s;">
+            <div style="font-size:2rem;margin-bottom:14px;">🏛️</div>
+            <h3 style="font-family:'Playfair Display',Georgia,serif;color:#1c1917;font-size:1.25rem;font-weight:700;margin:0 0 10px;">
+              ${isZh ? '家族办公室与私人财富' : 'Private Wealth & Family Office'}
+            </h3>
+            <p style="color:#78716c;font-size:0.92rem;line-height:1.65;margin:0;">
+              ${isZh ? '家族信托架构设计、多代际跨国财富平稳传承规划与跨境离岸资产安全隔离。' : 'Family office structuring, generational wealth succession planning, and estate tax shielding.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Banner -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #1c1917 0%, #292524 100%);border-top:4px solid #d90a2c;border-radius:8px;padding:54px 32px;text-align:center;color:#ffffff;box-shadow:0 8px 30px rgba(0,0,0,0.12);">
+          <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.9rem, 3.4vw, 2.6rem);color:#ffffff;font-weight:700;margin:0 0 16px;">
+            ${isZh ? '预约高级合伙人专属保密税务审计评估' : 'Schedule a Complimentary Confidential Tax Review'}
+          </h2>
+          <p style="color:#d6d3d1;max-width:640px;margin:0 auto 30px;font-size:1.05rem;line-height:1.65;">
+            ${isZh ? '我们的资深合伙人将深入梳理您的企业申报与跨国资金架构，识别合规薄弱环节并提供量身定制的筹划建议。' : 'Our senior partners will review your corporate filings, identify risk exposures, and highlight optimization opportunities.'}
+          </p>
+          <a class="button" style="background:#d90a2c;color:#ffffff;font-weight:700;border-radius:4px;padding:16px 36px;display:inline-block;text-transform:uppercase;font-size:0.88rem;letter-spacing:0.04em;text-decoration:none;box-shadow:0 4px 18px rgba(217,10,44,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '立即开启保密咨询对话 ↗' : 'Book Initial Consultation ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderAccountingAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyAccountingAbout(ctx);
+  }
+  return renderModernAccountingAbout(ctx);
 }
 
 export function renderAccountingContact(ctx: ThemeContext): string {

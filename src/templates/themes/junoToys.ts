@@ -1,5 +1,6 @@
 import { esc, safeUrl, type ThemeContext } from './types';
 import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { isTypedMaterialsSource } from '../materials-typed';
 
 export function renderToysHome(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
@@ -220,7 +221,7 @@ export function renderToysHome(ctx: ThemeContext): string {
   return `${topBarHtml}${heroHtml}${safetyHtml}${productsHtml}${ageCategoriesHtml}${testimonialsHtml}${contactBandHtml}`;
 }
 
-export function renderToysAbout(ctx: ThemeContext): string {
+function renderLegacyToysAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs, asset } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
@@ -415,6 +416,207 @@ export function renderToysAbout(ctx: ThemeContext): string {
   `;
 
   return `${heroHtml}${statsHtml}${workshopHtml}${teamHtml}${ctaHtml}`;
+}
+
+function renderModernToysAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs, asset } = ctx;
+  const company = draft.company;
+  const copy = draft.copy[ctx.lang] ?? {
+    about: 'At Juno Toys, we believe childhood is sacred. Every toy we create undergoes rigorous multi-stage safety testing to spark curiosity, motor skills, and joyful family memories.',
+  };
+  const isZh = (ctx.lang as string) === 'zh';
+
+  const defaultHeadline = isZh
+    ? '用天然木材与纯真匠心，守护每一个孩子的童年奇迹'
+    : 'Handcrafted Joy & Natural Wonder for Curious Growing Minds';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 坚信每个孩子的心智成长都值得最温柔的守护。我们精选经 FSC 国际可持续林业认证的欧洲山毛榉与天然木料，摒弃脆弱的化学塑料与刺耳的电子噪音，以极简质朴的北欧设计语言，打造安全环保、启智益智的经典木质玩具。`
+      : `At Juno Toys, we believe childhood is sacred. Every toy we create undergoes rigorous multi-stage safety testing to spark curiosity, motor skills, and joyful family memories.`,
+    isZh
+      ? '每一件玩具均历经 36 道匠心手工打磨抛光，边缘温润如玉，杜绝毛刺与尖锐棱角；所有饰面均萃取自甜菜、姜黄等纯植物天然水性色素，不仅全面通过 ASTM F963 及欧盟 EN71 儿童玩具安全认证，更能经受代际传承的岁月洗礼。'
+      : `Every contour is hand-sanded to a velvet-smooth touch, ensuring there are no sharp edges or splinters. Our finishes use food-grade plant oils and organic water-based pigments, making them entirely safe for teething and gentle exploring.`,
+  ];
+  const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
+  const paras = company.aboutStory ? storyParas : defaultStory;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/juno/about-workshop.jpg'));
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '150K+', num: 150, suffix: 'K+', label: isZh ? '全球微笑家庭的挚爱陪伴' : 'Smiling Families', desc: isZh ? '产品远销全球 35 个国家与地区' : 'Filling nurseries across 35 countries with laughter' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '零塑料可持续环保纯木材' : 'Plastic-Free Natural Toys', desc: isZh ? 'FSC 认证欧洲天然山毛榉与植物彩漆' : 'Responsibly harvested beechwood and natural dyes' },
+    { value: '0', num: 0, label: isZh ? '有害化学物质与重金属残留' : 'Toxic Chemicals & BPA', desc: isZh ? '第三方实验室 ASTM & EN71 全项达标' : 'Zero BPA, phthalates, or lead; independently certified' },
+    { value: '14+', num: 14, suffix: '+', label: isZh ? '专注母婴益智玩具研发年限' : 'Years Crafting Wonder', desc: isZh ? '经久耐磨传承数代的传家之作' : 'Designing heirloom-quality wooden play sets' },
+  ]);
+
+  return `
+    <div class="juno-about-modern" style="background:#fffefb;color:#451a03;font-family:'Quicksand',-apple-system,sans-serif;">
+      <!-- Hero Section -->
+      <section class="juno-inner-hero" style="background:linear-gradient(135deg,#fef08a 0%,#fed7aa 50%,#fbcfe8 100%);color:#451a03;padding:85px 0 65px;position:relative;overflow:hidden;border-bottom:3px solid #fde047;">
+        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2;text-align:center;">
+          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #fde047;padding:7px 22px;border-radius:9999px;margin-bottom:24px;box-shadow:0 4px 14px rgba(245,158,11,0.15);">
+            <span style="font-size:1.1rem;">🧸</span>
+            <span style="font-size:0.84rem;font-weight:900;color:#92400e;letter-spacing:0.06em;text-transform:uppercase;">
+              ${isZh ? `天然纯木温润手作 · 始于 ${esc(company.establishedYear || '2012')}` : `THE JUNO WOODEN WORKSHOP · EST. ${esc(company.establishedYear || '2012')}`}
+            </span>
+          </div>
+          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.1;font-weight:900;letter-spacing:-0.03em;color:#78350f;max-width:920px;margin:0 auto 22px;">
+            ${esc(headline)}
+          </h1>
+          <p data-reveal="fade-up" style="max-width:720px;color:#92400e;font-size:1.2rem;line-height:1.7;margin:0 auto 36px;">
+            ${esc(copy.about || (isZh ? '在 Juno Toys，我们深信童年弥足珍贵。每件玩具均甄选天然无毒木材手工精研打磨，通过多国严苛儿童安全检测，启迪无限想象与纯真探索。' : 'At Juno Toys, we believe childhood is sacred. Every toy we create undergoes rigorous multi-stage safety testing to spark curiosity, motor skills, and joyful family memories.'))}
+          </p>
+          <div data-reveal="fade-up" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;align-items:center;">
+            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:16px 36px;box-shadow:0 8px 24px rgba(245,158,11,0.4);font-size:0.92rem;text-decoration:none;display:inline-block;">
+              ${isZh ? '探索全线益智启智系列 ↗' : 'Explore Full Collection ↗'}
+            </a>
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#ffffff;color:#78350f;border:2px solid #fed7aa;border-radius:9999px;padding:16px 32px;font-weight:900;font-size:0.92rem;text-decoration:none;display:inline-block;">
+              ${isZh ? '批发采购与样品检测 →' : 'Wholesale & Custom Samples →'}
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Wholesome Metrics -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+          ${stats.map(s => `
+            <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px 24px;text-align:center;box-shadow:0 6px 18px rgba(245,158,11,0.06);">
+              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:#f59e0b;letter-spacing:-1px;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
+              </div>
+              <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:6px;">
+                ${esc(s.label)}
+              </div>
+              ${s.desc ? `
+                <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">
+                  ${esc(s.desc)}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Juno Workshop Story & Guarantees -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+          <div data-reveal="fade-up">
+            <span style="font-size:0.82rem;font-weight:900;letter-spacing:0.12em;color:#d97706;text-transform:uppercase;">
+              ${isZh ? '源自木匠工坊的纯真守护' : 'FROM OUR WOODEN BENCH TO YOUR PLAYROOM'}
+            </span>
+            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.18;color:#78350f;font-weight:900;margin:12px 0 20px;">
+              ${isZh ? '守护孩子探索天性，做能传承三代的温暖好玩具' : 'Designed to Nurture Wonder, Not Screens'}
+            </h2>
+            <div style="color:#92400e;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+              <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:18px;padding:18px;">
+                <strong style="color:#78350f;display:block;font-size:1rem;margin-bottom:4px;">
+                  🪵 ${isZh ? 'FSC 认证欧洲榉木' : 'FSC Certified Beech'}
+                </strong>
+                <span style="color:#92400e;font-size:0.85rem;line-height:1.4;display:block;">
+                  ${isZh ? '源自受控林区，每采伐一棵树即补种三棵幼苗。' : 'Sustainably managed forests replanting 3 trees for every one harvested.'}
+                </span>
+              </div>
+              <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:18px;padding:18px;">
+                <strong style="color:#78350f;display:block;font-size:1rem;margin-bottom:4px;">
+                  🎨 ${isZh ? '天然植物彩漆' : 'Natural Plant Pigments'}
+                </strong>
+                <span style="color:#92400e;font-size:0.85rem;line-height:1.4;display:block;">
+                  ${isZh ? '萃取自甜菜、姜黄与螺旋藻，宝宝啃咬全然无忧。' : 'Derived from beetroot, turmeric, and spirulina plant extracts.'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div data-reveal="fade-up" style="background:#fffbeb;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
+            ${aboutImg ? `
+              <div style="border-radius:20px;overflow:hidden;border:2px solid #fef08a;margin-bottom:24px;">
+                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            ` : ''}
+            <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 20px;">
+              ${isZh ? '致父母与孩子们的四大严苛承诺' : 'Our Four Guarantees to Parents'}
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">1</div>
+                <div>
+                  <strong style="color:#78350f;font-size:0.95rem;">
+                    ${isZh ? '无条件国际儿童安全检测' : 'Unconditional Child Safety'}
+                  </strong>
+                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
+                    ${isZh ? '全批次历经跌落冲击、吞咽防窒息喉管及重金属迁移检测。' : 'Each batch is sent to third-party labs for choke-tube, impact, and chemical assays.'}
+                  </p>
+                </div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">2</div>
+                <div>
+                  <strong style="color:#78350f;font-size:0.95rem;">
+                    ${isZh ? '蒙氏开放式益智与空间想象' : 'Open-Ended Play & Discovery'}
+                  </strong>
+                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
+                    ${isZh ? '不设唯一固定玩法，全方位启发孩子的手眼协调与独立建构思维。' : 'No single "right" way to build—fostering spatial awareness and storytelling.'}
+                  </p>
+                </div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">3</div>
+                <div>
+                  <strong style="color:#78350f;font-size:0.95rem;">
+                    ${isZh ? '100% 环保塑料零中和包装' : '100% Plastic Neutral Packaging'}
+                  </strong>
+                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
+                    ${isZh ? '采用环保可回收牛皮纸礼盒配大豆油墨印刷，绿色友善地球。' : 'Recycled kraft gift boxes with soy inks that fold flat for family recycling.'}
+                  </p>
+                </div>
+              </div>
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">4</div>
+                <div>
+                  <strong style="color:#78350f;font-size:0.95rem;">
+                    ${isZh ? '代际相传的传家级坚固品质' : 'Generational Heirloom Durability'}
+                  </strong>
+                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
+                    ${isZh ? '高密度硬木材质历久弥新，多年后仍可作为珍贵回忆赠与下一代。' : 'Engineered so your little one can one day pass their toy on to their own children.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Banner -->
+      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #78350f 0%, #92400e 100%);color:#fffdf5;border-radius:28px;padding:52px 32px;text-align:center;box-shadow:0 10px 35px rgba(120,53,15,0.22);">
+          <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.6rem);color:#fffdf5;font-weight:900;margin:0 0 16px;">
+            ${isZh ? '为您的家庭或幼儿园注入纯真原木欢乐' : 'Bring Wholesome Play into Your Home'}
+          </h2>
+          <p style="color:#fed7aa;max-width:620px;margin:0 auto 30px;font-size:1.08rem;line-height:1.65;">
+            ${isZh ? '浏览荣获国际设计奖项的天然木制拼图、积木建构城堡与初生礼盒系列。' : 'Browse our award-winning wooden puzzles, building sets, and newborn milestone gifts.'}
+          </p>
+          <a class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:17px 40px;box-shadow:0 8px 24px rgba(245,158,11,0.5);display:inline-block;text-decoration:none;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
+            ${isZh ? '选购当季畅销纯木玩具 ↗' : 'Explore Full Collection ↗'}
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+export function renderToysAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyToysAbout(ctx);
+  }
+  return renderModernToysAbout(ctx);
 }
 
 export function renderToysContact(ctx: ThemeContext): string {
