@@ -462,8 +462,8 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
   const isZh = (ctx.lang as string) === 'zh';
 
   const defaultHeadline = isZh
-    ? '主权级合规治理与全球企业架构重塑'
-    : 'Institutional Rigor & Sovereign Corporate Governance';
+    ? '主权级产业治理与跨国工业企业集团战略重塑'
+    : 'Institutional Rigor & Sovereign Conglomerate Governance';
   const headline = getAboutHeadline(company, defaultHeadline);
 
   const defaultStory = [
@@ -477,7 +477,7 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
   const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
   const paras = company.aboutStory ? storyParas : defaultStory;
 
-  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/crafto/about-corporate.jpg'));
+  const { primary: aboutImg } = getAboutImages(ctx, path('templates/crafto/about-corporate.jpg'));
 
   const stats = parseAboutHighlights(company.aboutHighlights, [
     { value: '$45B+', num: 45, prefix: '$', suffix: 'B+', label: isZh ? '咨询指导企业市值规模' : 'Market Cap Advised', desc: isZh ? '直接服务于全球领军企业董事会' : 'Direct board advisory for multi-billion enterprises' },
@@ -486,133 +486,317 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
     { value: '25+', num: 25, suffix: '+', label: isZh ? '董事会信赖与战略治理年限' : 'Years Executive Trust', desc: isZh ? '历经多轮经济周期的严苛检验' : 'Unbroken record of fiduciary responsibility and resilience' },
   ]);
 
+  // Anti-Blank Box Vector SVG: Global Multi-Screen Conglomerate Command Deck
+  const fleetSvg = `
+    <svg viewBox="0 0 720 460" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:block;background:#050914;">
+      <defs>
+        <radialGradient id="craftoCommandGlow" cx="60%" cy="40%" r="70%">
+          <stop offset="0%" stop-color="#0e1e38" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#03060f" stop-opacity="1"/>
+        </radialGradient>
+        <linearGradient id="craftoLaser" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#0047ff" stop-opacity="0"/>
+          <stop offset="50%" stop-color="#38bdf8" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#0047ff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Chassis Background -->
+      <rect width="720" height="460" fill="url(#craftoCommandGlow)"/>
+      <rect x="14" y="14" width="692" height="432" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+      <rect x="20" y="20" width="680" height="420" fill="none" stroke="#0047ff" stroke-width="1" stroke-opacity="0.35"/>
+
+      <!-- Command Header -->
+      <g transform="translate(36, 46)">
+        <circle cx="6" cy="6" r="4" fill="#38bdf8"/>
+        <text x="18" y="10" fill="#38bdf8" font-size="11" font-family="'Courier New',monospace" font-weight="700" letter-spacing="2">GLOBAL INDUSTRIAL FLEET COMMAND // CONGLOMERATE CENTRAL DECK</text>
+        <text x="520" y="10" fill="#64748b" font-size="10" font-family="'Courier New',monospace">TELEMETRY: ACTIVE</text>
+        <line x1="0" y1="20" x2="648" y2="20" stroke="#1e293b" stroke-width="1"/>
+      </g>
+
+      <!-- World Node Mesh & Vector Flight Paths (Panel A) -->
+      <g transform="translate(36, 80)">
+        <!-- Node Grid Frame -->
+        <rect x="0" y="0" width="410" height="240" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
+        
+        <!-- Radar Grid Lines -->
+        <line x1="0" y1="60" x2="410" y2="60" stroke="#0f172a" stroke-width="1"/>
+        <line x1="0" y1="120" x2="410" y2="120" stroke="#0f172a" stroke-width="1"/>
+        <line x1="0" y1="180" x2="410" y2="180" stroke="#0f172a" stroke-width="1"/>
+        <line x1="100" y1="0" x2="100" y2="240" stroke="#0f172a" stroke-width="1"/>
+        <line x1="200" y1="0" x2="200" y2="240" stroke="#0f172a" stroke-width="1"/>
+        <line x1="300" y1="0" x2="300" y2="240" stroke="#0f172a" stroke-width="1"/>
+
+        <!-- Radar Sweep Circles -->
+        <circle cx="205" cy="120" r="85" fill="none" stroke="#0047ff" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="4,4"/>
+        <circle cx="205" cy="120" r="45" fill="none" stroke="#38bdf8" stroke-width="1" stroke-opacity="0.4"/>
+        <circle cx="205" cy="120" r="4" fill="#38bdf8"/>
+
+        <!-- Intercontinental Arcs -->
+        <path d="M 60 85 Q 140 30, 205 70 T 340 100" fill="none" stroke="#0047ff" stroke-width="2" stroke-dasharray="6,4"/>
+        <path d="M 75 160 Q 180 190, 290 145" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+        <!-- Hub Markers -->
+        <!-- New York Hub -->
+        <circle cx="60" cy="85" r="5" fill="#0047ff"/>
+        <text x="70" y="88" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace" font-weight="700">AMER // NYC</text>
+
+        <!-- Frankfurt Hub -->
+        <circle cx="205" cy="70" r="5" fill="#38bdf8"/>
+        <text x="215" y="73" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace" font-weight="700">EMEA // FRA</text>
+
+        <!-- Singapore Hub -->
+        <circle cx="340" cy="100" r="5" fill="#0047ff"/>
+        <text x="270" y="118" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace" font-weight="700">APAC // SGP</text>
+
+        <!-- Dubai Hub -->
+        <circle cx="250" cy="110" r="4" fill="#f59e0b"/>
+        <text x="258" y="113" fill="#fcd34d" font-size="8" font-family="'Courier New',monospace">DXB</text>
+
+        <!-- Bottom Panel Status -->
+        <rect x="0" y="210" width="410" height="30" fill="#0b1324" rx="0 0 4 4"/>
+        <text x="12" y="228" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">TRANS-OCEANIC PACKET LATENCY: 12.4ms // PACKET LOSS: 0.00%</text>
+      </g>
+
+      <!-- SBU Cluster Telemetry (Panel B) -->
+      <g transform="translate(460, 80)">
+        <!-- SBU 1 -->
+        <rect x="0" y="0" width="224" height="74" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
+        <rect x="0" y="0" width="4" height="74" fill="#0047ff" rx="2 0 0 2"/>
+        <text x="14" y="18" fill="#93c5fd" font-size="9" font-family="'Courier New',monospace" font-weight="700">SBU-01 // ADVANCED FABRICATION</text>
+        <text x="14" y="38" fill="#ffffff" font-size="16" font-family="'Inter',sans-serif" font-weight="900">99.98%</text>
+        <text x="80" y="38" fill="#10b981" font-size="10" font-family="'Courier New',monospace">OEE OPTIMAL</text>
+        <text x="14" y="58" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Zero-defect robotics cluster</text>
+
+        <!-- SBU 2 -->
+        <rect x="0" y="83" width="224" height="74" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
+        <rect x="0" y="83" width="4" height="74" fill="#38bdf8" rx="2 0 0 2"/>
+        <text x="14" y="101" fill="#93c5fd" font-size="9" font-family="'Courier New',monospace" font-weight="700">SBU-02 // AUTONOMOUS LOGISTICS</text>
+        <text x="14" y="121" fill="#ffffff" font-size="16" font-family="'Inter',sans-serif" font-weight="900">4.8M TEU</text>
+        <text x="96" y="121" fill="#38bdf8" font-size="10" font-family="'Courier New',monospace">GLOBAL TRANSIT</text>
+        <text x="14" y="141" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Adaptive routing & port AI</text>
+
+        <!-- SBU 3 -->
+        <rect x="0" y="166" width="224" height="74" fill="#080e1c" stroke="#1e293b" stroke-width="1" rx="4"/>
+        <rect x="0" y="166" width="4" height="74" fill="#10b981" rx="2 0 0 2"/>
+        <text x="14" y="184" fill="#93c5fd" font-size="9" font-family="'Courier New',monospace" font-weight="700">SBU-03 // CLEAN ENERGY GRID</text>
+        <text x="14" y="204" fill="#ffffff" font-size="16" font-family="'Inter',sans-serif" font-weight="900">18.4 GW</text>
+        <text x="88" y="204" fill="#10b981" font-size="10" font-family="'Courier New',monospace">NET-ZERO</text>
+        <text x="14" y="224" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Solar-hydrogen energy storage</text>
+      </g>
+
+      <!-- Telemetry Status Bar & Certification Strip -->
+      <g transform="translate(36, 335)">
+        <rect x="0" y="0" width="648" height="85" fill="#091020" stroke="#1e293b" stroke-width="1" rx="4"/>
+        
+        <g transform="translate(20, 24)">
+          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">SOVEREIGN ESG BENCHMARK</text>
+          <text x="0" y="22" fill="#38bdf8" font-size="16" font-family="'Courier New',monospace" font-weight="900">AAA RATING</text>
+          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">SBTi 2035 Net-Zero Pathway</text>
+        </g>
+
+        <line x1="220" y1="14" x2="220" y2="71" stroke="#1e293b" stroke-width="1"/>
+
+        <g transform="translate(245, 24)">
+          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">STATUTORY JURISDICTIONS</text>
+          <text x="0" y="22" fill="#ffffff" font-size="16" font-family="'Courier New',monospace" font-weight="900">45+ REGIONS</text>
+          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">EMEA · AMER · APAC Direct Desk</text>
+        </g>
+
+        <line x1="440" y1="14" x2="440" y2="71" stroke="#1e293b" stroke-width="1"/>
+
+        <g transform="translate(465, 24)">
+          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">GOVERNANCE PROTOCOL</text>
+          <text x="0" y="22" fill="#10b981" font-size="16" font-family="'Courier New',monospace" font-weight="900">ZERO CONFLICT</text>
+          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">ISO 37001 & Anti-Trust Cleared</text>
+        </g>
+      </g>
+    </svg>
+  `;
+
   return `
-    <div class="crafto-about-modern" style="background:#070b14;color:#f8fafc;font-family:'Inter',-apple-system,sans-serif;">
-      <!-- Hero Section -->
-      <section class="crafto-inner-hero" style="background:#0b1120;color:#ffffff;padding:90px 0 70px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
-        <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%,rgba(0,71,255,0.25) 0%,transparent 70%);pointer-events:none;"></div>
-        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
-          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(0,71,255,0.5);background:rgba(0,71,255,0.12);padding:7px 20px;margin-bottom:24px;">
-            <span style="display:inline-block;width:8px;height:8px;background:#0047ff;box-shadow:0 0 10px #0047ff;"></span>
-            <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;">
-              ${isZh ? `全球企业集团战略治理理事会 · 始于 ${esc(company.establishedYear || '1998')}` : `INSTITUTIONAL CHARTER · GLOBAL ADVISORY 2026`}
-            </span>
-          </div>
-          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.06;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 24px;max-width:920px;color:#ffffff;">
-            ${esc(headline)}
-          </h1>
-          <p data-reveal="fade-up" style="max-width:740px;color:#94a3b8;font-size:1.2rem;line-height:1.7;margin:0 0 36px;">
-            ${esc(copy.about || (isZh ? '赋能全球 500 强董事会与跨国实体，以主权级顶层治理、工业级数智重塑与跨法域资本运作实现战略防御与增长突围。' : 'Crafto Corporate delivers sovereign-level advisory, digital infrastructure modernization, and operational restructuring backed by decades of executive leadership.'))}
-          </p>
-          <div data-reveal="fade-up" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;display:inline-block;box-shadow:0 0 24px rgba(0,71,255,0.4);">
-              ${isZh ? '预约执行委员会闭门简报 ↗' : 'Request Executive Briefing ↗'}
-            </a>
-            ${company.capabilities ? `
-              <div style="border:1px solid rgba(255,255,255,0.15);padding:14px 24px;font-size:0.85rem;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.04em;">
-                🛡️ ${esc(company.capabilities.slice(0, 45))}
+    <div class="crafto-about-modern" style="background:#040711;color:#f8fafc;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;">
+      <!-- Sovereign Conglomerate Fleet Command Deck Hero -->
+      <section style="background:linear-gradient(135deg, #070d1a 0%, #0b1426 60%, #050a16 100%);color:#ffffff;padding:90px 0 76px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+        <!-- High-Voltage Laser Mesh Accents -->
+        <div style="position:absolute;top:0;right:0;width:55%;height:100%;background:radial-gradient(ellipse at 80% 20%, rgba(0,71,255,0.22) 0%, transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:0;left:0;width:35%;height:50%;background:radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);pointer-events:none;"></div>
+
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
+          <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;">
+            <!-- Left Column: Command Statement -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(0,71,255,0.6);background:rgba(0,71,255,0.12);padding:6px 18px;margin-bottom:22px;">
+                <span style="display:inline-block;width:8px;height:8px;background:#38bdf8;box-shadow:0 0 10px #38bdf8;"></span>
+                <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#93c5fd;font-family:'Courier New',monospace;">
+                  ${isZh ? `跨国工业企业集团 · 始创于 ${esc(company.establishedYear || '1998')}` : `SOVEREIGN ENTERPRISE FLEET · EST. ${esc(company.establishedYear || '1998')}`}
+                </span>
               </div>
-            ` : ''}
+
+              <h1 style="font-size:clamp(2.3rem, 4.4vw, 3.8rem);line-height:1.06;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 22px;color:#ffffff;">
+                ${esc(headline)}
+              </h1>
+
+              <div style="border-left:3px solid #0047ff;padding-left:18px;margin-bottom:28px;">
+                <p style="color:#94a3b8;font-size:1.15rem;line-height:1.7;margin:0;">
+                  ${esc(copy.about || (isZh ? '赋能全球 500 强董事会与跨国实体，以主权级顶层治理、工业级数智重塑与跨法域资本运作实现战略防御与增长突围。' : 'Crafto Corporate delivers sovereign-level advisory, digital infrastructure modernization, and operational restructuring backed by decades of executive leadership.'))}
+                </p>
+              </div>
+
+              <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;display:inline-block;box-shadow:0 0 24px rgba(0,71,255,0.45);transition:all 0.2s ease;">
+                  ${isZh ? '预约执行委员会闭门简报 ↗' : 'Request Executive Briefing ↗'}
+                </a>
+                ${company.capabilities ? `
+                  <div style="border:1px solid rgba(255,255,255,0.18);padding:14px 22px;font-size:0.84rem;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.04em;background:rgba(0,0,0,0.3);">
+                    🛡️ ${esc(company.capabilities.slice(0, 42))}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Right Column: Anti-Blank Box Multi-Screen HUD Viewport -->
+            <div data-reveal="fade-up" style="position:relative;">
+              <div style="background:#070d1a;border:1px solid #1e293b;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,0.55);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0b1426;border-bottom:1px solid #1e293b;font-size:0.8rem;color:#94a3b8;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 8px #10b981;"></span>
+                    <span style="font-family:'Courier New',monospace;font-weight:700;color:#f8fafc;">CONGLOMERATE COMMAND HUD</span>
+                  </div>
+                  <span style="font-family:'Courier New',monospace;color:#38bdf8;">GRID: SECURE ENCRYPTED</span>
+                </div>
+
+                <!-- Fallback Container: vector SVG underneath, image on top with onerror="this.style.display='none'" -->
+                <div style="position:relative;min-height:380px;overflow:hidden;background:#050914;">
+                  <div style="position:absolute;inset:0;z-index:1;">
+                    ${fleetSvg}
+                  </div>
+                  ${aboutImg ? `
+                    <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0.92;transition:opacity 0.3s ease;" onerror="this.style.display='none'">
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Floating Live Telemetry Badge -->
+              <div style="position:absolute;bottom:-18px;left:-16px;background:#0b1324;border:1px solid #0047ff;padding:10px 18px;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;z-index:3;">
+                <span style="font-size:1.5rem;">🌐</span>
+                <div>
+                  <div style="font-size:0.75rem;font-weight:800;color:#93c5fd;letter-spacing:0.08em;text-transform:uppercase;font-family:'Courier New',monospace;">Sovereign Coverage</div>
+                  <div style="font-size:0.88rem;font-weight:700;color:#ffffff;">45+ Global Jurisdictions</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Key Governance Metrics -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-          ${stats.map(s => `
-            <div data-reveal="fade-up" class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #0047ff;padding:28px 24px;">
-              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:#0047ff;letter-spacing:-1px;">
-                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
-                  ${esc(s.value)}
-                </span>
-              </div>
-              <div style="font-weight:800;color:#ffffff;margin-top:8px;font-size:1rem;text-transform:uppercase;letter-spacing:0.04em;">
-                ${esc(s.label)}
-              </div>
-              ${s.desc ? `
-                <div style="font-size:0.86rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
-                  ${esc(s.desc)}
+      <!-- Conglomerate Governance Telemetry Strip (集团全球治理度量矩阵) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 20px;">
+        <div data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #0047ff;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+            ${stats.map((s, idx) => `
+              <div style="padding:28px 24px;border-right:${idx < stats.length - 1 ? '1px solid #1e293b' : 'none'};position:relative;">
+                <div style="font-family:'Courier New',monospace;font-size:0.75rem;color:#38bdf8;font-weight:700;letter-spacing:0.1em;margin-bottom:6px;">
+                  METRIC // 0${idx + 1}
                 </div>
-              ` : ''}
-            </div>
-          `).join('')}
+                <div style="font-size:clamp(2.2rem, 3.6vw, 2.8rem);font-weight:900;color:#ffffff;line-height:1.1;letter-spacing:-0.03em;">
+                  <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                    ${esc(s.value)}
+                  </span>
+                </div>
+                <div style="font-weight:800;color:#93c5fd;margin-top:8px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.04em;">
+                  ${esc(s.label)}
+                </div>
+                ${s.desc ? `
+                  <div style="font-size:0.84rem;color:#64748b;margin-top:6px;line-height:1.5;">
+                    ${esc(s.desc)}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
         </div>
       </section>
 
       <!-- Crafto Doctrine & Operating Principles -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 60px;">
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:48px;align-items:flex-start;">
+          <!-- Left: Conglomerate Doctrine -->
           <div data-reveal="fade-up">
-            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.15em;color:#0047ff;text-transform:uppercase;">
-              ${isZh ? '集团战略纲领' : 'THE CRAFTO DOCTRINE'}
+            <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;color:#0047ff;text-transform:uppercase;font-family:'Courier New',monospace;">
+              ${isZh ? '集团核心战略纲领' : 'THE CRAFTO CONGLOMERATE DOCTRINE'}
             </span>
-            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.15;color:#ffffff;margin:12px 0 20px;text-transform:uppercase;font-weight:900;">
-              ${isZh ? '立足最高审计准则，以主权级韧性赋能跨国实体破局' : 'Institutional Modernization Built on Uncompromising Rigor'}
+            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.15;color:#ffffff;margin:12px 0 22px;text-transform:uppercase;font-weight:900;">
+              ${isZh ? '立足工业最高审计准则，以主权级韧性赋能跨国实体突围' : 'Institutional Modernization Built on Uncompromising Rigor'}
             </h2>
-            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+            <div style="color:#cbd5e1;font-size:1.04rem;line-height:1.8;display:flex;flex-direction:column;gap:18px;">
               ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
             </div>
-            <div style="display:flex;gap:20px;flex-wrap:wrap;">
-              <div style="border-left:3px solid #0047ff;padding-left:16px;">
-                <strong style="color:#ffffff;display:block;font-size:1.05rem;text-transform:uppercase;">
-                  ${isZh ? '绝对中立独立' : 'Independent'}
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;">
+              <div style="background:#080e1c;border:1px solid #1e293b;border-left:3px solid #0047ff;padding:18px 20px;">
+                <strong style="color:#ffffff;display:block;font-size:1rem;text-transform:uppercase;margin-bottom:4px;">
+                  ${isZh ? '零承销冲突独立中立' : 'Zero Conflict Fiduciary'}
                 </strong>
-                <span style="color:#94a3b8;font-size:0.88rem;">
-                  ${isZh ? '杜绝任何承销或贷款利益冲突' : 'Free from underwriting or lending conflicts.'}
+                <span style="color:#94a3b8;font-size:0.86rem;line-height:1.5;">
+                  ${isZh ? '严格杜绝任何银团承销或自营交易利益冲突，百分之百捍卫客户利益。' : 'Pure independent advisory without underwriting, lending, or brokerage ties.'}
                 </span>
               </div>
-              <div style="border-left:3px solid #0047ff;padding-left:16px;">
-                <strong style="color:#ffffff;display:block;font-size:1.05rem;text-transform:uppercase;">
-                  ${isZh ? '高级合伙人直通' : 'Direct Delivery'}
+              <div style="background:#080e1c;border:1px solid #1e293b;border-left:3px solid #38bdf8;padding:18px 20px;">
+                <strong style="color:#ffffff;display:block;font-size:1rem;text-transform:uppercase;margin-bottom:4px;">
+                  ${isZh ? '工业级抗脆弱压力测试' : 'Anti-Fragile Stress Testing'}
                 </strong>
-                <span style="color:#94a3b8;font-size:0.88rem;">
-                  ${isZh ? '由资深行业常务董事亲自督导' : 'Senior managing directors lead every assignment.'}
+                <span style="color:#94a3b8;font-size:0.86rem;line-height:1.5;">
+                  ${isZh ? '每一套战略架构均通过极端宏观波动、地缘断链与尾部流动性极端模拟。' : 'All architectures pre-tested against systemic tail risks and cross-border supply shocks.'}
                 </span>
               </div>
             </div>
           </div>
 
-          <div data-reveal="fade-up" style="background:#0b1120;border:1px solid #1e293b;padding:36px;box-shadow:0 12px 36px rgba(0,0,0,0.35);">
-            ${aboutImg ? `
-              <div style="border:1px solid #1e293b;overflow:hidden;margin-bottom:24px;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            ` : ''}
-            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#93c5fd;text-transform:uppercase;">
-              ${isZh ? '核心运营原则' : 'CORE OPERATING PRINCIPLES'}
-            </span>
-            <div style="display:flex;flex-direction:column;gap:20px;margin-top:16px;">
-              <div style="display:flex;gap:16px;">
-                <span style="font-family:monospace;font-weight:900;color:#0047ff;font-size:1.3rem;">01</span>
+          <!-- Right: Strategic Operating Principles Docket -->
+          <div data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.4);">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding-bottom:14px;margin-bottom:20px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;color:#38bdf8;">CHARTER: SOV-2026-HQ</span>
+              <span style="font-size:0.75rem;background:rgba(0,71,255,0.18);color:#93c5fd;padding:3px 8px;font-weight:700;text-transform:uppercase;">BOARD DIRECTIVE</span>
+            </div>
+
+            <h3 style="font-size:1.25rem;font-weight:800;color:#ffffff;text-transform:uppercase;margin:0 0 16px;">
+              ${isZh ? '三大董事会运营公约' : 'Three Board Directives'}
+            </h3>
+
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <span style="font-family:'Courier New',monospace;font-weight:900;color:#0047ff;font-size:1.2rem;line-height:1;">01</span>
                 <div>
-                  <strong style="color:#f8fafc;font-size:0.95rem;text-transform:uppercase;">
-                    ${isZh ? '主权级合规问责' : 'Sovereign Accountability'}
+                  <strong style="color:#f8fafc;font-size:0.92rem;text-transform:uppercase;">
+                    ${isZh ? '主权级合规与法律穿透' : 'Sovereign Compliance Assurance'}
                   </strong>
-                  <p style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin:4px 0 0;">
-                    ${isZh ? '每一项战略决策建议均经受极端宏观波动与地缘尾部风险压力测试。' : 'Every recommendation is stress-tested against geopolitical tail risks.'}
+                  <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                    ${isZh ? '跨欧美亚多法域实体与反洗钱/反避税法律穿透式审阅，筑牢监管护城河。' : 'Multi-jurisdictional legal penetration across OECD, US, and APAC regulatory regimes.'}
                   </p>
                 </div>
               </div>
-              <div style="display:flex;gap:16px;">
-                <span style="font-family:monospace;font-weight:900;color:#0047ff;font-size:1.3rem;">02</span>
+
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <span style="font-family:'Courier New',monospace;font-weight:900;color:#38bdf8;font-size:1.2rem;line-height:1;">02</span>
                 <div>
-                  <strong style="color:#f8fafc;font-size:0.95rem;text-transform:uppercase;">
-                    ${isZh ? '资本配置与纪律约束' : 'Capital Discipline'}
+                  <strong style="color:#f8fafc;font-size:0.92rem;text-transform:uppercase;">
+                    ${isZh ? '周期跨越资本配置纪律' : 'Cycle-Resilient Capital Discipline'}
                   </strong>
-                  <p style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin:4px 0 0;">
-                    ${isZh ? '构建穿越完整流动性周期的资本配置框架，确保长期投资回报率。' : 'Capital architectures engineered to sustain hurdle rates across liquidity cycles.'}
+                  <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                    ${isZh ? '构建穿越流动性周期的资本配置模型，保障跨国重大并购的长期价值增益。' : 'Engineered hurdle rates designed to preserve terminal equity value across debt cycles.'}
                   </p>
                 </div>
               </div>
-              <div style="display:flex;gap:16px;">
-                <span style="font-family:monospace;font-weight:900;color:#0047ff;font-size:1.3rem;">03</span>
+
+              <div style="display:flex;gap:14px;align-items:flex-start;">
+                <span style="font-family:'Courier New',monospace;font-weight:900;color:#10b981;font-size:1.2rem;line-height:1;">03</span>
                 <div>
-                  <strong style="color:#f8fafc;font-size:0.95rem;text-transform:uppercase;">
-                    ${isZh ? '持续性数智基建重构' : 'Continuous Modernization'}
+                  <strong style="color:#f8fafc;font-size:0.92rem;text-transform:uppercase;">
+                    ${isZh ? '自动化智能工业自治中枢' : 'Autonomous Platform Modernization'}
                   </strong>
-                  <p style="color:#94a3b8;font-size:0.88rem;line-height:1.5;margin:4px 0 0;">
-                    ${isZh ? '将陈旧传统的企业运营架构重塑为可审计、自动化、高协同的数智系统。' : 'Transitioning legacy operating structures into automated, auditable digital platforms.'}
+                  <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                    ${isZh ? '将陈旧的层级化审批升级为基于事件驱动的实时决策流，提升集团协同效率。' : 'Transitioning legacy conglomerates into automated, auditable digital platforms.'}
                   </p>
                 </div>
               </div>
@@ -621,23 +805,99 @@ function renderModernCraftoAbout(ctx: ThemeContext): string {
         </div>
       </section>
 
-      <!-- CTA Banner -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
-        <div data-reveal="fade-up" style="background:#0b1120;border:1px solid #0047ff;padding:48px 36px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 0 35px rgba(0,71,255,0.25);">
-          <div>
-            <span style="font-family:monospace;color:#93c5fd;font-weight:800;font-size:0.82rem;letter-spacing:0.12em;text-transform:uppercase;">
-              ${isZh ? '高管直接通道' : 'SCHEDULE DIRECT DIALOGUE'}
-            </span>
-            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);color:#ffffff;margin:8px 0;text-transform:uppercase;font-weight:900;">
-              ${isZh ? '开启执行咨询委员会保密对话' : 'Engage the Executive Taskforce'}
-            </h2>
-            <p style="color:#94a3b8;font-size:1rem;margin:0;max-width:560px;">
-              ${isZh ? '预约高级常务董事初步保密咨询，评估跨国重组、数智基建与资本优化方案。' : 'Arrange a preliminary confidential briefing with our sector managing directors.'}
+      <!-- Three Strategic Business Units (SBU 产业集群三维支柱) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 70px;border-top:1px solid #1e293b;" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.15em;color:#0047ff;text-transform:uppercase;font-family:'Courier New',monospace;">
+            ${isZh ? '三大战略业务集群' : 'THREE STRATEGIC BUSINESS UNITS (SBU)'}
+          </span>
+          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#ffffff;text-transform:uppercase;margin:10px 0;">
+            ${isZh ? '跨国工业实体核心产业支柱与数智基建矩阵' : 'Conglomerate Industrial Engines & Infrastructure Matrix'}
+          </h2>
+          <p style="color:#94a3b8;max-width:680px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '融合高精尖智能制造、洲际自适应物流及零碳绿色电网，构筑跨国企业集群的底层护城河。' : 'Advanced manufacturing, automated maritime supply chains, and green decarbonization infrastructure.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:28px;">
+          <!-- SBU I -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #0047ff;padding:32px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#93c5fd;">SBU-01 // FABRICATION</span>
+              <span style="font-size:1.6rem;">⚙️</span>
+            </div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;text-transform:uppercase;margin:0 0 12px;">
+              ${isZh ? '先进智能制造与高精工业集群' : 'Advanced Intelligent Manufacturing'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.65;margin:0 0 18px;">
+              ${isZh ? '万级洁净室环境与高精度机器人装配产线，覆盖航空航天与第三代半导体工业核心部件，实现 99.98% 零缺陷工艺交付。' : 'High-precision automated robotic assembly lines engineered for aerospace, semiconductors, and mission-critical hardware.'}
             </p>
+            <div style="font-size:0.82rem;font-weight:700;color:#38bdf8;font-family:'Courier New',monospace;">
+              → 99.98% OEE QUALITY BENCHMARK
+            </div>
           </div>
-          <a class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;box-shadow:0 0 20px rgba(0,71,255,0.5);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-            ${isZh ? '预约执行简报 ↗' : 'Request Executive Briefing ↗'}
-          </a>
+
+          <!-- SBU II -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #38bdf8;padding:32px;transition-delay:0.08s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#38bdf8;">SBU-02 // LOGISTICS</span>
+              <span style="font-size:1.6rem;">🚢</span>
+            </div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;text-transform:uppercase;margin:0 0 12px;">
+              ${isZh ? '洲际自适应物流与深海航运司库' : 'Autonomous Intercontinental Logistics'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.65;margin:0 0 18px;">
+              ${isZh ? '覆盖全球 45+ 枢纽港口的动态运力对冲调度算法、端到端冷链高精追踪与自动化集装箱离岸关税清关系统。' : 'Dynamic freight hedging, automated deep-sea port terminals, and AI-governed multi-modal routing across 45+ world corridors.'}
+            </p>
+            <div style="font-size:0.82rem;font-weight:700;color:#38bdf8;font-family:'Courier New',monospace;">
+              → 4.8M TEU ANNUALIZED TRANSIT CAPACITY
+            </div>
+          </div>
+
+          <!-- SBU III -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#080e1c;border:1px solid #1e293b;border-top:3px solid #10b981;padding:32px;transition-delay:0.16s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#34d399;">SBU-03 // CLEAN GRID</span>
+              <span style="font-size:1.6rem;">⚡</span>
+            </div>
+            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;text-transform:uppercase;margin:0 0 12px;">
+              ${isZh ? '绿色零碳电网与储能基础设施' : 'Sustainable Decarbonization & Clean Grid'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.9rem;line-height:1.65;margin:0 0 18px;">
+              ${isZh ? '吉瓦级光伏氢能一体化储能电站、碳足迹全生命周期可信溯源，以及完全符合科学碳目标倡议（SBTi）的 2035 净零碳路径。' : 'Gigawatt-scale solar-hydrogen hybrid storage, audited lifecycle carbon tracking, and strict compliance with SBTi 2035 milestones.'}
+            </p>
+            <div style="font-size:0.82rem;font-weight:700;color:#34d399;font-family:'Courier New',monospace;">
+              → 18.4 GW GRID-TIED ASSET ASSETS
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Executive Committee Briefing Chamber (最高执行委员会闭门简报席 CTA) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:20px 24px 85px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #080e1c 0%, #0b1426 60%, #060b17 100%);border:1px solid #0047ff;padding:48px 40px;color:#ffffff;box-shadow:0 0 35px rgba(0,71,255,0.25);">
+          <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:40px;align-items:center;">
+            <div>
+              <span style="font-family:'Courier New',monospace;color:#38bdf8;font-weight:800;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;">
+                ${isZh ? '董事会直达通道 // 高管简报室' : 'EXECUTIVE TASKFORCE BRIEFING CHAMBER'}
+              </span>
+              <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);color:#ffffff;margin:8px 0 14px;text-transform:uppercase;font-weight:900;">
+                ${isZh ? '开启执行咨询委员会保密战略对话' : 'Engage the Executive Taskforce'}
+              </h2>
+              <p style="color:#94a3b8;font-size:1.02rem;line-height:1.7;margin:0;">
+                ${isZh ? '预约高级常务董事初步保密咨询，评估跨国重组、数智基建与资本优化方案。所有对话受最高商业特权与双边保密协议保护。' : 'Arrange a confidential strategy briefing with our managing directors to assess transnational restructuring, infrastructure modernization, and capital optimization.'}
+              </p>
+            </div>
+
+            <div style="text-align:center;background:rgba(0,0,0,0.35);border:1px solid #1e293b;padding:28px;">
+              <div style="font-size:0.82rem;color:#94a3b8;margin-bottom:18px;font-family:'Courier New',monospace;">
+                ${isZh ? '48小时内签署标准 NDA 并指派对口常务董事' : 'DIRECT EXECUTIVE TASKFORCE DISPATCH // 48-HR SLA'}
+              </div>
+              <a class="button" style="background:#0047ff;color:#ffffff;font-weight:800;border-radius:0;padding:16px 36px;text-transform:uppercase;letter-spacing:0.06em;font-size:0.88rem;text-decoration:none;box-shadow:0 0 24px rgba(0,71,255,0.5);display:inline-block;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${isZh ? '预约执行简报 ↗' : 'Request Executive Briefing ↗'}
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </div>

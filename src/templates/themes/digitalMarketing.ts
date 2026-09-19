@@ -425,127 +425,137 @@ function renderLegacyMarketingAbout(ctx: ThemeContext): string {
 }
 
 function renderModernMarketingAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs, asset, translateProduct } = ctx;
+  const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang];
   const isZh = (ctx.lang as string) === 'zh';
 
   const defaultHeadline = isZh
-    ? '以数据科学与创意工程驱动全球品牌全域复合增长'
-    : 'Transforming Market Velocity Through Creative Science & Data Telemetry';
+    ? '以量化增长科学与高转化创意工程，驱动品类领跑品牌飞跃'
+    : 'We Engineer Unfair Performance Advantage for Category Definers';
   const headline = getAboutHeadline(company, defaultHeadline);
 
   const defaultStory = [
     isZh
-      ? `${company.name} 致力于为全球新消费品牌、高成长出海企业及数字平台提供全链路量化增长解决方案。我们摒弃传统广告代理机构冗长繁杂的会议模式，以单位经济效益与客户生命周期价值（LTV）为核心准则，全面整合程序化广告投放、高转化叙事工程及全渠道自动化触达。`
-      : `${company.name} delivers full-funnel quantitative growth architecture, creative performance production, and cross-channel media scale for high-trajectory consumer and enterprise brands worldwide.`,
+      ? `${company.name} 专注于为全球高成长 DTC 品牌、新消费标杆与跨境电商领军企业提供量化增长工程与创意科学服务。我们摒弃传统广告代理冗长浮夸的提案惯性，以真实的投资回报率（ROAS）、获客成本（CAC）压缩与客户生命周期价值（LTV）为唯一衡量指标。`
+      : `${company.name} is a quantitative performance agency engineering full-funnel media scale and high-converting creative narratives for category-defining brands worldwide. We operate on mathematical unit economics, compressed payback windows, and compounded customer lifetime value.`,
     isZh
-      ? '我们的增长团队自研全触点服务端归因架构与动态创意生成管线，每周交付数十组高反差敏捷素材测试，实时捕获跨媒体平台的流量红利与高意向转化人群，帮助合作伙伴实现确定性的规模化营收跃升。'
-      : 'Our multidisciplinary studio integrates server-side conversion API telemetry, predictive audience cohort analysis, and agile creative testing to systematically scale customer acquisition while compressing payback windows.',
+      ? '通过自研服务端转化 API（CAPI）深度打通与高敏捷素材迭代矩阵，增长团队每周执行数十组黄金 3 秒停留率与情感钩子测试，精准捕获多渠道高价值潜客，将不确定性的流量投放转化为确定性的规模化盈利通道。'
+      : 'Our multidisciplinary studio merges server-side conversion API telemetry, algorithmic bidding calibration, and rapid creative hook testing to convert fragmented ad inventory into predictable, high-margin revenue flywheels.',
   ];
   const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
   const paras = company.aboutStory ? storyParas : defaultStory;
 
-  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/marketing/about-growth.jpg'));
+  const { primary: aboutImg } = getAboutImages(ctx);
 
   const stats = parseAboutHighlights(company.aboutHighlights, [
-    { value: '+380%', num: 380, prefix: '+', suffix: '%', label: isZh ? '全域搜索与自然流量跃升' : 'Organic Traffic Lift', desc: isZh ? '实体 SEO 与主题权重矩阵架构驱动' : 'Entity SEO & topical authority architecture' },
-    { value: '4.2x', num: 4.2, suffix: 'x', label: isZh ? '全渠道混合 ROAS 投资回报倍率' : 'Blended ROAS Multiplier', desc: isZh ? '算法自适应动态出价与 CAPI 深度校准' : 'Algorithmic dynamic bidding & CAPI calibration' },
-    { value: '1,850+', num: 1850, suffix: '+', label: isZh ? '高转化创意素材敏捷实验' : 'Creative Experiments Run', desc: isZh ? '黄金 3 秒停留率与情感共振钩子迭代' : 'High-impact hook rate & conversion testing' },
-    { value: '98.6%', num: 98.6, suffix: '%', label: isZh ? '长期品牌增长战略续约率' : 'Client Retention Rate', desc: isZh ? '深度共创共赢的全周期战略伙伴关系' : 'Transparent attribution & growth alignment' },
+    { value: '+340%', num: 340, prefix: '+', suffix: '%', label: isZh ? '全渠道转化率平均跃升' : 'Conversion Rate Lift', desc: isZh ? '服务端 CAPI 归因与漏斗深度校准' : 'Server-side CAPI telemetry & funnel optimization' },
+    { value: '4.2X', num: 4.2, suffix: 'X', label: isZh ? '混合广告投资回报倍率' : 'Blended ROAS Multiplier', desc: isZh ? '算法自适应跨渠道动态竞价' : 'Algorithmic cross-network budget reallocation' },
+    { value: '1,850+', num: 1850, suffix: '+', label: isZh ? '年度高反差素材敏捷实验' : 'Creative Hook A/B Sprints', desc: isZh ? '黄金 3 秒停留率与情绪买点迭代' : 'First-3-second retention & purchase trigger assays' },
+    { value: '98.6%', num: 98.6, suffix: '%', label: isZh ? '长期品牌增长战略续约率' : 'Annual Client Retention', desc: isZh ? '基于实际增量利润的共创共赢模式' : 'Pure incremental profit alignment' },
   ]);
 
-  const related = draft.products.slice(0, 3);
-
   return `
-    <div class="marketing-about-modern" style="background:#0f071a;color:#f8fafc;font-family:'Plus Jakarta Sans',-apple-system,sans-serif;overflow:hidden;">
-      <!-- Hero Section -->
-      <section class="marketing-inner-hero" style="position:relative;background:radial-gradient(ellipse at 50% -20%, rgba(217,70,239,0.25) 0%, #0f071a 75%);padding:90px 0 65px;border-bottom:1px solid rgba(255,255,255,0.08);">
-        <div style="position:absolute;top:10%;left:5%;width:350px;height:350px;background:radial-gradient(circle,rgba(236,72,153,0.18) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
-        <div style="position:absolute;bottom:10%;right:5%;width:400px;height:400px;background:radial-gradient(circle,rgba(168,85,247,0.15) 0%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
-        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;position:relative;z-index:2;">
-          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,70,239,0.12);border:1px solid rgba(217,70,239,0.35);padding:7px 22px;border-radius:9999px;margin-bottom:24px;">
-            <span style="font-size:1rem;">🚀</span>
-            <span style="font-size:0.82rem;font-weight:800;color:#f5d0fe;letter-spacing:0.08em;text-transform:uppercase;">
-              ${isZh ? `全域量化增长与创意科学架构 · 创立于 ${esc(company.establishedYear || '2020')}` : `QUANTITATIVE GROWTH ARCHITECTS · EST. ${esc(company.establishedYear || '2020')}`}
-            </span>
-          </div>
-          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.1;font-weight:900;letter-spacing:-0.03em;margin:0 auto 24px;max-width:960px;color:#ffffff;">
-            ${esc(headline)}
-          </h1>
-          <p data-reveal="fade-up" style="max-width:760px;font-size:1.18rem;line-height:1.7;color:#e2e8f0;margin:0 auto 36px;">
-            ${esc(copy?.subtitle || (isZh ? '融合消费者认知图谱、高转化视觉叙事与跨媒体程序化投放，赋能行业领跑品牌实现确定性规模化扩张。' : 'We combine quantitative consumer telemetry, high-converting creative narrative engineering, and cross-channel media buying to scale industry-defining brands.'))}
-          </p>
-          <div data-reveal="fade-up" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(90deg, #d946ef 0%, #ec4899 100%);color:#ffffff;font-weight:800;padding:16px 36px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 28px rgba(217,70,239,0.45);display:inline-block;">
-              ${isZh ? '预约免费全链路增长诊断 ↗' : 'Claim Free Growth Audit ↗'}
-            </a>
-            ${company.capabilities ? `
-              <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:14px 26px;border-radius:9999px;font-size:0.88rem;color:#fdf4ff;font-weight:600;">
-                ✨ ${esc(company.capabilities.slice(0, 45))}
+    <div class="marketing-about-modern" style="background:#0f172a;color:#f8fafc;font-family:'Plus Jakarta Sans',-apple-system,sans-serif;padding-bottom:80px;">
+      <!-- 1. EDITORIAL MAGAZINE ASYMMETRIC HERO -->
+      <section class="marketing-inner-hero" style="background:radial-gradient(ellipse at 50% -10%, rgba(217,70,239,0.18) 0%, #0f172a 75%);padding:80px 0 65px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;">
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;">
+          <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+            <!-- Left: Bold Editorial Statement -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(217,70,239,0.12);border:1px solid rgba(217,70,239,0.35);padding:6px 20px;border-radius:9999px;margin-bottom:22px;">
+                <span style="font-size:1rem;">⚡</span>
+                <span style="font-size:0.82rem;font-weight:800;color:#f5d0fe;letter-spacing:0.08em;text-transform:uppercase;">
+                  ${isZh ? `全域量化增长与创意科学实验室 · 始于 ${esc(company.establishedYear || '2020')}` : `QUANTITATIVE PERFORMANCE STUDIO · EST. ${esc(company.establishedYear || '2020')}`}
+                </span>
               </div>
-            ` : ''}
+              <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.6rem);line-height:1.12;font-weight:900;letter-spacing:-0.03em;color:#ffffff;margin:0 0 20px;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#cbd5e1;font-size:1.1rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+                ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(90deg, #d946ef 0%, #ec4899 100%);color:#ffffff;font-weight:900;padding:16px 36px;border-radius:9999px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 24px rgba(217,70,239,0.45);display:inline-block;">
+                  ${isZh ? '预约免费全渠道增长诊断 ↗' : 'Claim Free Growth Audit ↗'}
+                </a>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} class="button" style="background:rgba(255,255,255,0.06);color:#ffffff;border:1px solid rgba(255,255,255,0.2);padding:16px 30px;border-radius:9999px;font-weight:800;font-size:0.95rem;text-decoration:none;display:inline-block;">
+                  ${isZh ? '查看精选增长案例画廊 →' : 'Explore Case Studies →'}
+                </a>
+              </div>
+            </div>
+
+            <!-- Right: Conversion Funnel & LTV Visualizer SVG (Anti-blank) -->
+            <div data-reveal="fade-up">
+              <div class="wr-card-hover" style="border:1px solid rgba(217,70,239,0.3);border-radius:24px;overflow:hidden;position:relative;background:#18181b;box-shadow:0 0 45px rgba(217,70,239,0.12);min-height:360px;">
+                <!-- Vector Conversion Funnel SVG -->
+                <svg viewBox="0 0 460 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;min-height:360px;object-fit:cover;display:block;">
+                  <rect width="460" height="320" fill="#18181b"/>
+                  <!-- Top Bar -->
+                  <rect x="0" y="0" width="460" height="34" fill="#27272a"/>
+                  <circle cx="20" cy="17" r="4" fill="#ef4444"/>
+                  <circle cx="34" cy="17" r="4" fill="#f59e0b"/>
+                  <circle cx="48" cy="17" r="4" fill="#10b981"/>
+                  <text x="68" y="21" fill="#a1a1aa" font-family="monospace" font-size="11">growth-engine // omni_funnel_attribution.log</text>
+                  <!-- Level 1: Impressions -->
+                  <rect x="25" y="55" width="410" height="34" rx="6" fill="#27272a" stroke="#3f3f46"/>
+                  <rect x="25" y="55" width="410" height="34" rx="6" fill="#3b82f6" opacity="0.2"/>
+                  <text x="40" y="77" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="11">01. IMPRESSION REACH // 4.8M EXPANSION</text>
+                  <text x="420" y="77" fill="#38bdf8" font-family="monospace" font-size="11" text-anchor="end">100%</text>
+                  <!-- Level 2: Clicks -->
+                  <rect x="50" y="100" width="360" height="34" rx="6" fill="#27272a" stroke="#3f3f46"/>
+                  <rect x="50" y="100" width="290" height="34" rx="6" fill="#ec4899" opacity="0.25"/>
+                  <text x="65" y="122" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="11">02. QUALIFIED HOOK // 384K CTR</text>
+                  <text x="395" y="122" fill="#f472b6" font-family="monospace" font-size="11" text-anchor="end">8.2% (Top 1%)</text>
+                  <!-- Level 3: Purchases -->
+                  <rect x="75" y="145" width="310" height="34" rx="6" fill="#27272a" stroke="#3f3f46"/>
+                  <rect x="75" y="145" width="230" height="34" rx="6" fill="#d946ef" opacity="0.3"/>
+                  <text x="90" y="167" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="11">03. CAPI PURCHASE // 32.4K ORDERS</text>
+                  <text x="370" y="167" fill="#e879f9" font-family="monospace" font-size="11" text-anchor="end">ROAS 4.2X</text>
+                  <!-- Level 4: Retention -->
+                  <rect x="100" y="190" width="260" height="34" rx="6" fill="#27272a" stroke="#d946ef" stroke-width="1.5"/>
+                  <rect x="100" y="190" width="260" height="34" rx="6" fill="#10b981" opacity="0.25"/>
+                  <text x="115" y="212" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="11">04. LTV REPEAT // 18.2K VIP</text>
+                  <text x="345" y="212" fill="#34d399" font-family="monospace" font-size="11" text-anchor="end">+184% LTV</text>
+                  <!-- Bottom Status Ribbon -->
+                  <rect x="25" y="245" width="410" height="42" rx="8" fill="#27272a" stroke="rgba(217,70,239,0.3)"/>
+                  <text x="40" y="271" fill="#f43f5e" font-family="monospace" font-size="12" font-weight="bold">BLENDED ROAS: 4.2X</text>
+                  <text x="210" y="271" fill="#a1a1aa" font-family="monospace" font-size="11">CAC PAYBACK: 18 DAYS</text>
+                  <text x="420" y="271" fill="#10b981" font-family="monospace" font-size="11" text-anchor="end">CAPI SYNC ✓</text>
+                </svg>
+
+                ${aboutImg ? `
+                  <img src="${esc(aboutImg)}" alt="${esc(company.name)}" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                ` : ''}
+
+                <!-- Corner Live Tracking Pill -->
+                <div style="position:absolute;top:44px;right:16px;background:rgba(24,24,27,0.85);border:1px solid rgba(217,70,239,0.4);border-radius:9999px;padding:4px 12px;display:flex;align-items:center;gap:6px;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#d946ef;box-shadow:0 0 6px #d946ef;"></span>
+                  <span style="font-size:0.75rem;font-family:monospace;color:#f5d0fe;">CAPI LIVE</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Key Performance Metrics -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 36px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
+      <!-- 2. HIGH-CONTRAST METRIC IMPACT WALL -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:44px 24px 28px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
           ${stats.map((s, idx) => `
-            <div data-reveal="fade-up" class="wr-card-hover" style="background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(217,70,239,0.2);border-top:4px solid ${idx % 2 === 0 ? '#d946ef' : '#ec4899'};border-radius:18px;padding:28px 24px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.25);">
-              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:${idx % 2 === 0 ? '#d946ef' : '#ec4899'};letter-spacing:-1px;">
+            <div class="wr-card-hover" style="background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(217,70,239,0.2);border-top:4px solid ${idx % 2 === 0 ? '#d946ef' : '#ec4899'};border-radius:18px;padding:30px 24px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+              <div style="font-size:clamp(2.4rem, 3.8vw, 3rem);font-weight:900;color:${idx % 2 === 0 ? '#d946ef' : '#ec4899'};letter-spacing:-1px;margin-bottom:8px;font-family:monospace;">
                 <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
                   ${esc(s.value)}
                 </span>
               </div>
-              <div style="font-weight:800;color:#ffffff;margin-top:8px;font-size:1.05rem;">
-                ${esc(s.label)}
-              </div>
-              ${s.desc ? `
-                <div style="font-size:0.85rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
-                  ${esc(s.desc)}
-                </div>
-              ` : ''}
+              <div style="font-size:1.05rem;font-weight:800;color:#ffffff;margin-bottom:6px;">${esc(s.label)}</div>
+              ${s.desc ? `<div style="font-size:0.86rem;color:#94a3b8;line-height:1.5;">${esc(s.desc)}</div>` : ''}
             </div>
           `).join('')}
         </div>
       </section>
 
-      <!-- Growth Manifesto & Creative Engine -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-          <div data-reveal="fade-up">
-            <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
-              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d946ef;"></span>
-              <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#d946ef;text-transform:uppercase;">
-                ${isZh ? '增长主义科学宣言' : 'THE GROWTH MANIFESTO'}
-              </span>
-            </div>
-            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;line-height:1.2;color:#ffffff;margin:0 0 20px;">
-              ${isZh ? '打破传统营销工时冗余，以高频敏捷实验交付确定性增长' : 'Eliminating Marketing Bureaucracy With Agile Experimentation'}
-            </h2>
-            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
-            </div>
-            ${company.certifications ? `
-              <div style="margin-top:28px;padding:20px 24px;background:rgba(217,70,239,0.08);border-left:4px solid #d946ef;border-radius:0 12px 12px 0;">
-                <div style="font-size:0.8rem;font-weight:800;color:#d946ef;text-transform:uppercase;letter-spacing:0.06em;">
-                  ${isZh ? '官方媒体与技术伙伴认证' : 'Official Media Accreditations'}
-                </div>
-                <div style="color:#ffffff;margin-top:6px;font-size:0.95rem;font-weight:700;">
-                  ${esc(company.certifications)}
-                </div>
-              </div>
-            ` : ''}
-          </div>
-
-          <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(30,15,48,0.95) 0%, rgba(59,7,100,0.85) 100%);border:1px solid rgba(217,70,239,0.3);border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(0,0,0,0.35);">
-            ${aboutImg ? `
-              <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);margin-bottom:24px;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)} Growth Engine" style="width:100%;height:230px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            ` : ''}
             <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#f472b6;text-transform:uppercase;">
               ${isZh ? '算法驱动创意实验室' : 'ALGORITHMIC CREATIVE ENGINE'}
             </span>

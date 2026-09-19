@@ -419,7 +419,7 @@ function renderLegacyToysAbout(ctx: ThemeContext): string {
 }
 
 function renderModernToysAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs, asset } = ctx;
+  const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
   const copy = draft.copy[ctx.lang] ?? {
     about: 'At Juno Toys, we believe childhood is sacred. Every toy we create undergoes rigorous multi-stage safety testing to spark curiosity, motor skills, and joyful family memories.',
@@ -427,8 +427,8 @@ function renderModernToysAbout(ctx: ThemeContext): string {
   const isZh = (ctx.lang as string) === 'zh';
 
   const defaultHeadline = isZh
-    ? '用天然木材与纯真匠心，守护每一个孩子的童年奇迹'
-    : 'Handcrafted Joy & Natural Wonder for Curious Growing Minds';
+    ? '用天然纯木与质朴匠心，守护每一个孩子的童年奇迹'
+    : 'Handcrafted Wooden Wonder & Wholesome Play for Curious Growing Minds';
   const headline = getAboutHeadline(company, defaultHeadline);
 
   const defaultStory = [
@@ -442,7 +442,7 @@ function renderModernToysAbout(ctx: ThemeContext): string {
   const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
   const paras = company.aboutStory ? storyParas : defaultStory;
 
-  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/juno/about-workshop.jpg'));
+  const { primary: aboutImg } = getAboutImages(ctx);
 
   const stats = parseAboutHighlights(company.aboutHighlights, [
     { value: '150K+', num: 150, suffix: 'K+', label: isZh ? '全球微笑家庭的挚爱陪伴' : 'Smiling Families', desc: isZh ? '产品远销全球 35 个国家与地区' : 'Filling nurseries across 35 countries with laughter' },
@@ -452,141 +452,91 @@ function renderModernToysAbout(ctx: ThemeContext): string {
   ]);
 
   return `
-    <div class="juno-about-modern" style="background:#fffefb;color:#451a03;font-family:'Quicksand',-apple-system,sans-serif;">
-      <!-- Hero Section -->
-      <section class="juno-inner-hero" style="background:linear-gradient(135deg,#fef08a 0%,#fed7aa 50%,#fbcfe8 100%);color:#451a03;padding:85px 0 65px;position:relative;overflow:hidden;border-bottom:3px solid #fde047;">
-        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2;text-align:center;">
-          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:8px;background:#ffffff;border:2px solid #fde047;padding:7px 22px;border-radius:9999px;margin-bottom:24px;box-shadow:0 4px 14px rgba(245,158,11,0.15);">
-            <span style="font-size:1.1rem;">🧸</span>
-            <span style="font-size:0.84rem;font-weight:900;color:#92400e;letter-spacing:0.06em;text-transform:uppercase;">
-              ${isZh ? `天然纯木温润手作 · 始于 ${esc(company.establishedYear || '2012')}` : `THE JUNO WOODEN WORKSHOP · EST. ${esc(company.establishedYear || '2012')}`}
-            </span>
-          </div>
-          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.1;font-weight:900;letter-spacing:-0.03em;color:#78350f;max-width:920px;margin:0 auto 22px;">
-            ${esc(headline)}
-          </h1>
-          <p data-reveal="fade-up" style="max-width:720px;color:#92400e;font-size:1.2rem;line-height:1.7;margin:0 auto 36px;">
-            ${esc(copy.about || (isZh ? '在 Juno Toys，我们深信童年弥足珍贵。每件玩具均甄选天然无毒木材手工精研打磨，通过多国严苛儿童安全检测，启迪无限想象与纯真探索。' : 'At Juno Toys, we believe childhood is sacred. Every toy we create undergoes rigorous multi-stage safety testing to spark curiosity, motor skills, and joyful family memories.'))}
-          </p>
-          <div data-reveal="fade-up" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;align-items:center;">
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:16px 36px;box-shadow:0 8px 24px rgba(245,158,11,0.4);font-size:0.92rem;text-decoration:none;display:inline-block;">
-              ${isZh ? '探索全线益智启智系列 ↗' : 'Explore Full Collection ↗'}
-            </a>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#ffffff;color:#78350f;border:2px solid #fed7aa;border-radius:9999px;padding:16px 32px;font-weight:900;font-size:0.92rem;text-decoration:none;display:inline-block;">
-              ${isZh ? '批发采购与样品检测 →' : 'Wholesale & Custom Samples →'}
-            </a>
-          </div>
-        </div>
-      </section>
+    <div class="juno-about-modern" style="background:#fffefb;color:#451a03;font-family:'Quicksand',-apple-system,sans-serif;padding-bottom:70px;">
+      <!-- 1. ASYMMETRIC TOYMAKER HERO -->
+      <section class="juno-inner-hero" style="background:linear-gradient(135deg,#fef9c3 0%,#fef08a 40%,#fed7aa 80%,#fbcfe8 100%);color:#451a03;padding:80px 0 65px;position:relative;overflow:hidden;border-bottom:3px solid #fde047;">
+        <!-- Cloud and bubble decorations -->
+        <div style="position:absolute;top:-40px;left:-60px;width:240px;height:120px;background:#ffffff;border-radius:100px;opacity:0.6;filter:blur(8px);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-30px;right:5%;width:280px;height:140px;background:#ffffff;border-radius:120px;opacity:0.5;filter:blur(10px);pointer-events:none;"></div>
 
-      <!-- Key Wholesome Metrics -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-          ${stats.map(s => `
-            <div data-reveal="fade-up" class="wr-card-hover" style="background:#ffffff;border:3px solid #fef08a;border-radius:24px;padding:28px 24px;text-align:center;box-shadow:0 6px 18px rgba(245,158,11,0.06);">
-              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:#f59e0b;letter-spacing:-1px;">
-                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
-                  ${esc(s.value)}
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
+          <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:44px;align-items:center;">
+            <!-- Left: Story headline & philosophy -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;background:#ffffff;border:2px solid #fde047;padding:7px 22px;border-radius:9999px;margin-bottom:20px;box-shadow:0 4px 14px rgba(245,158,11,0.15);">
+                <span style="font-size:1.15rem;">🧸</span>
+                <span style="font-size:0.84rem;font-weight:900;color:#92400e;letter-spacing:0.06em;text-transform:uppercase;">
+                  ${isZh ? `天然原木手工工坊 · 始于 ${esc(company.establishedYear || '2012')}` : `JUNO WOODEN TOY ATELIER · EST. ${esc(company.establishedYear || '2012')}`}
                 </span>
               </div>
-              <div style="font-weight:900;color:#78350f;font-size:1.05rem;margin-top:6px;">
-                ${esc(s.label)}
+              <h1 style="font-size:clamp(2.3rem, 4.4vw, 3.8rem);line-height:1.14;font-weight:900;letter-spacing:-0.03em;color:#78350f;margin:0 0 18px;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#92400e;font-size:1.12rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+                ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
               </div>
-              ${s.desc ? `
-                <div style="font-size:0.86rem;color:#92400e;margin-top:6px;line-height:1.5;">
-                  ${esc(s.desc)}
-                </div>
-              ` : ''}
+              <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:16px 36px;box-shadow:0 8px 24px rgba(245,158,11,0.4);font-size:0.95rem;text-decoration:none;display:inline-block;">
+                  ${isZh ? '探索益智纯木全系 ↗' : 'Explore Natural Collection ↗'}
+                </a>
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#ffffff;color:#78350f;border:2px solid #fed7aa;border-radius:9999px;padding:16px 30px;font-weight:900;font-size:0.95rem;text-decoration:none;display:inline-block;">
+                  ${isZh ? '亲子样品与批发定制 →' : 'Wholesale & Custom Orders →'}
+                </a>
+              </div>
             </div>
-          `).join('')}
-        </div>
-      </section>
 
-      <!-- Juno Workshop Story & Guarantees -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
-          <div data-reveal="fade-up">
-            <span style="font-size:0.82rem;font-weight:900;letter-spacing:0.12em;color:#d97706;text-transform:uppercase;">
-              ${isZh ? '源自木匠工坊的纯真守护' : 'FROM OUR WOODEN BENCH TO YOUR PLAYROOM'}
-            </span>
-            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.18;color:#78350f;font-weight:900;margin:12px 0 20px;">
-              ${isZh ? '守护孩子探索天性，做能传承三代的温暖好玩具' : 'Designed to Nurture Wonder, Not Screens'}
-            </h2>
-            <div style="color:#92400e;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
-              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-              <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:18px;padding:18px;">
-                <strong style="color:#78350f;display:block;font-size:1rem;margin-bottom:4px;">
-                  🪵 ${isZh ? 'FSC 认证欧洲榉木' : 'FSC Certified Beech'}
-                </strong>
-                <span style="color:#92400e;font-size:0.85rem;line-height:1.4;display:block;">
-                  ${isZh ? '源自受控林区，每采伐一棵树即补种三棵幼苗。' : 'Sustainably managed forests replanting 3 trees for every one harvested.'}
-                </span>
-              </div>
-              <div style="background:#fffbeb;border:2px solid #fef08a;border-radius:18px;padding:18px;">
-                <strong style="color:#78350f;display:block;font-size:1rem;margin-bottom:4px;">
-                  🎨 ${isZh ? '天然植物彩漆' : 'Natural Plant Pigments'}
-                </strong>
-                <span style="color:#92400e;font-size:0.85rem;line-height:1.4;display:block;">
-                  ${isZh ? '萃取自甜菜、姜黄与螺旋藻，宝宝啃咬全然无忧。' : 'Derived from beetroot, turmeric, and spirulina plant extracts.'}
-                </span>
-              </div>
-            </div>
-          </div>
+            <!-- Right: Playful Toymaker Collage & SVG Visualizer (Anti-blank) -->
+            <div data-reveal="fade-up" style="position:relative;">
+              <div class="wr-card-hover" style="border:4px solid #fef08a;border-radius:36px;background:#ffffff;box-shadow:0 18px 40px rgba(245,158,11,0.16);overflow:hidden;position:relative;min-height:360px;">
+                <!-- Vector Toy Workshop SVG (Fallback & Ambient) -->
+                <svg viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;min-height:360px;object-fit:cover;display:block;background:#fefbf4;">
+                  <rect width="400" height="320" fill="#fefdf7"/>
+                  <circle cx="340" cy="55" r="34" fill="#fef08a" opacity="0.65"/>
+                  <path d="M30 65 Q55 45 80 60 Q105 45 130 60 Q145 80 125 90 L40 90 Q20 80 30 65 Z" fill="#eff6ff" opacity="0.8"/>
+                  <!-- Rainbow Arches -->
+                  <path d="M120 240 A 80 80 0 0 1 280 240" stroke="#f43f5e" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+                  <path d="M134 240 A 66 66 0 0 1 266 240" stroke="#fb923c" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+                  <path d="M148 240 A 52 52 0 0 1 252 240" stroke="#facc15" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+                  <path d="M162 240 A 38 38 0 0 1 238 240" stroke="#34d399" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+                  <path d="M176 240 A 24 24 0 0 1 224 240" stroke="#60a5fa" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.85"/>
+                  <!-- Rocking Horse -->
+                  <g transform="translate(135, 95) scale(0.72)">
+                    <path d="M10 135 Q75 175 150 135" stroke="#b45309" stroke-width="8" stroke-linecap="round" fill="none"/>
+                    <path d="M38 145 L58 92 L106 92 L126 145" stroke="#b45309" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <path d="M52 92 L76 32 L96 42 L100 92 Z" fill="#d97706" opacity="0.95"/>
+                    <circle cx="78" cy="46" r="3.5" fill="#ffffff"/>
+                    <path d="M100 82 Q130 92 120 112" stroke="#d97706" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <rect x="70" y="86" width="24" height="12" rx="4" fill="#ef4444"/>
+                  </g>
+                  <!-- Hand-turned Wood Trees -->
+                  <g transform="translate(38, 160) scale(0.68)">
+                    <polygon points="40,20 20,60 60,60" fill="#059669"/>
+                    <polygon points="40,45 15,90 65,90" fill="#10b981"/>
+                    <polygon points="40,70 10,120 70,120" fill="#34d399"/>
+                    <rect x="34" y="120" width="12" height="25" fill="#78350f" rx="3"/>
+                  </g>
+                  <!-- Toy Blocks -->
+                  <rect x="295" y="200" width="36" height="36" rx="8" fill="#38bdf8"/>
+                  <text x="313" y="224" font-family="sans-serif" font-weight="900" font-size="16" fill="#ffffff" text-anchor="middle">A</text>
+                  <rect x="320" y="160" width="36" height="36" rx="8" fill="#f472b6"/>
+                  <text x="338" y="184" font-family="sans-serif" font-weight="900" font-size="16" fill="#ffffff" text-anchor="middle">B</text>
+                  <line x1="20" y1="240" x2="380" y2="240" stroke="#e2d9c8" stroke-width="4" stroke-linecap="round"/>
+                </svg>
 
-          <div data-reveal="fade-up" style="background:#fffbeb;border:3px solid #fef08a;border-radius:28px;padding:36px;box-shadow:0 8px 24px rgba(245,158,11,0.06);">
-            ${aboutImg ? `
-              <div style="border-radius:20px;overflow:hidden;border:2px solid #fef08a;margin-bottom:24px;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            ` : ''}
-            <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 20px;">
-              ${isZh ? '致父母与孩子们的四大严苛承诺' : 'Our Four Guarantees to Parents'}
-            </h3>
-            <div style="display:flex;flex-direction:column;gap:18px;">
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">1</div>
-                <div>
-                  <strong style="color:#78350f;font-size:0.95rem;">
-                    ${isZh ? '无条件国际儿童安全检测' : 'Unconditional Child Safety'}
-                  </strong>
-                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
-                    ${isZh ? '全批次历经跌落冲击、吞咽防窒息喉管及重金属迁移检测。' : 'Each batch is sent to third-party labs for choke-tube, impact, and chemical assays.'}
-                  </p>
-                </div>
-              </div>
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">2</div>
-                <div>
-                  <strong style="color:#78350f;font-size:0.95rem;">
-                    ${isZh ? '蒙氏开放式益智与空间想象' : 'Open-Ended Play & Discovery'}
-                  </strong>
-                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
-                    ${isZh ? '不设唯一固定玩法，全方位启发孩子的手眼协调与独立建构思维。' : 'No single "right" way to build—fostering spatial awareness and storytelling.'}
-                  </p>
-                </div>
-              </div>
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">3</div>
-                <div>
-                  <strong style="color:#78350f;font-size:0.95rem;">
-                    ${isZh ? '100% 环保塑料零中和包装' : '100% Plastic Neutral Packaging'}
-                  </strong>
-                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
-                    ${isZh ? '采用环保可回收牛皮纸礼盒配大豆油墨印刷，绿色友善地球。' : 'Recycled kraft gift boxes with soy inks that fold flat for family recycling.'}
-                  </p>
-                </div>
-              </div>
-              <div style="display:flex;gap:14px;align-items:flex-start;">
-                <div style="width:32px;height:32px;background:#fde047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#78350f;flex-shrink:0;">4</div>
-                <div>
-                  <strong style="color:#78350f;font-size:0.95rem;">
-                    ${isZh ? '代际相传的传家级坚固品质' : 'Generational Heirloom Durability'}
-                  </strong>
-                  <p style="color:#92400e;font-size:0.85rem;line-height:1.5;margin:2px 0 0;">
-                    ${isZh ? '高密度硬木材质历久弥新，多年后仍可作为珍贵回忆赠与下一代。' : 'Engineered so your little one can one day pass their toy on to their own children.'}
-                  </p>
+                ${aboutImg ? `
+                  <img src="${esc(aboutImg)}" alt="${esc(company.name)}" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                ` : ''}
+
+                <!-- Floating Safety Stamp -->
+                <div style="position:absolute;bottom:18px;left:18px;right:18px;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border:2px solid #fef08a;border-radius:18px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.3rem;">🛡️</span>
+                    <div>
+                      <div style="font-weight:900;color:#78350f;font-size:0.88rem;">${isZh ? 'EN71 & ASTM F963 双重国际儿童安全认证' : 'EN71 & ASTM F963 Lab Certified'}</div>
+                      <div style="font-size:0.75rem;color:#b45309;">${isZh ? '100% 食品接触级天然木蜡油及植物彩漆' : '100% Food-Grade Non-Toxic Plant Finishes'}</div>
+                    </div>
+                  </div>
+                  <span style="font-weight:900;color:#059669;font-size:0.8rem;background:#dcfce7;padding:4px 10px;border-radius:9999px;">PASS ✓</span>
                 </div>
               </div>
             </div>
@@ -594,18 +544,163 @@ function renderModernToysAbout(ctx: ThemeContext): string {
         </div>
       </section>
 
-      <!-- CTA Banner -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
-        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #78350f 0%, #92400e 100%);color:#fffdf5;border-radius:28px;padding:52px 32px;text-align:center;box-shadow:0 10px 35px rgba(120,53,15,0.22);">
-          <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.6rem);color:#fffdf5;font-weight:900;margin:0 0 16px;">
-            ${isZh ? '为您的家庭或幼儿园注入纯真原木欢乐' : 'Bring Wholesome Play into Your Home'}
+      <!-- 2. FOUR ORGANIC PEBBLE METRIC CARDS -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:48px 24px 32px;" data-reveal="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;">
+          ${stats.map((s, idx) => {
+            const rotations = ['-1.5deg', '1.2deg', '-1deg', '1.6deg'];
+            const rot = rotations[idx % rotations.length];
+            return `
+              <div class="wr-card-hover" style="background:#ffffff;border:3px solid #fef08a;border-radius:28px;padding:30px 24px;text-align:center;box-shadow:0 8px 20px rgba(245,158,11,0.07);transform:rotate(${rot});">
+                <div style="font-size:clamp(2.5rem, 3.8vw, 3.2rem);font-weight:900;color:#f59e0b;letter-spacing:-1px;line-height:1;margin-bottom:8px;">
+                  <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                    ${esc(s.value)}
+                  </span>
+                </div>
+                <div style="font-weight:900;color:#78350f;font-size:1.06rem;margin-bottom:6px;">
+                  ${esc(s.label)}
+                </div>
+                ${s.desc ? `
+                  <div style="font-size:0.85rem;color:#92400e;line-height:1.5;">
+                    ${esc(s.desc)}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+
+      <!-- 3. MONTESSORI 3-STAGE DEVELOPMENTAL PLAY LADDER -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 60px;" data-reveal="fade-up">
+        <div style="text-align:center;max-width:760px;margin:0 auto 44px;">
+          <span style="font-size:0.82rem;font-weight:900;letter-spacing:0.12em;color:#d97706;text-transform:uppercase;">
+            ${isZh ? '蒙特梭利成长阶梯' : 'MONTESSORI DEVELOPMENTAL LADDER'}
+          </span>
+          <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;color:#78350f;margin:8px 0 12px;">
+            ${isZh ? '顺应孩子天性：三阶段适龄感官建构' : 'Growing with Your Child // 3 Age-Appropriate Stages'}
           </h2>
-          <p style="color:#fed7aa;max-width:620px;margin:0 auto 30px;font-size:1.08rem;line-height:1.65;">
-            ${isZh ? '浏览荣获国际设计奖项的天然木制拼图、积木建构城堡与初生礼盒系列。' : 'Browse our award-winning wooden puzzles, building sets, and newborn milestone gifts.'}
+          <p style="color:#92400e;font-size:1.05rem;line-height:1.6;margin:0;">
+            ${isZh ? '每个年龄段的心智发展均对应专属的重量感、触觉纹理与探索方式。' : 'Each phase of neurological development requires tailored tactile resistance, spatial balance, and storytelling.'}
           </p>
-          <a class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:17px 40px;box-shadow:0 8px 24px rgba(245,158,11,0.5);display:inline-block;text-decoration:none;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
-            ${isZh ? '选购当季畅销纯木玩具 ↗' : 'Explore Full Collection ↗'}
-          </a>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;">
+          <!-- Stage 1 -->
+          <div class="wr-card-hover" style="background:#fffbeb;border:3px solid #fde047;border-radius:28px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <span style="font-size:1.8rem;">👶</span>
+                <span style="background:#fde047;color:#78350f;font-weight:900;font-size:0.82rem;padding:4px 12px;border-radius:9999px;">0 – 12 MONTHS</span>
+              </div>
+              <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 8px;">
+                ${isZh ? '触觉初探与抓握协调' : 'Sensory Grasp & Haptic Warmth'}
+              </h3>
+              <p style="color:#92400e;font-size:0.92rem;line-height:1.6;margin:0 0 16px;">
+                ${isZh ? '以温润木质手摇铃、平滑榉木圆环为主，柔和触感抚慰长牙期不安，激发手指灵敏感知。' : 'Gentle rounded teething rings, smooth rattles, and weighted organic rattles designed for sensory grounding.'}
+              </p>
+            </div>
+            <div style="background:#ffffff;border:2px dashed #fde047;border-radius:18px;padding:14px;font-size:0.82rem;color:#78350f;font-weight:800;">
+              ✨ ${isZh ? '核心亮点：360° 无毛刺打磨 · 天然蜂蜡抛光' : 'Focus: 360° Splinter-free · Natural Beeswax Polish'}
+            </div>
+          </div>
+
+          <!-- Stage 2 -->
+          <div class="wr-card-hover" style="background:#fff8ed;border:3px solid #fed7aa;border-radius:28px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <span style="font-size:1.8rem;">🧩</span>
+                <span style="background:#fed7aa;color:#9a3412;font-weight:900;font-size:0.82rem;padding:4px 12px;border-radius:9999px;">1 – 3 YEARS</span>
+              </div>
+              <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 8px;">
+                ${isZh ? '空间想象与精细运动' : 'Spatial Reasoning & Dexterity'}
+              </h3>
+              <p style="color:#92400e;font-size:0.92rem;line-height:1.6;margin:0 0 16px;">
+                ${isZh ? '叠叠乐、多维几何配对盒与彩虹平衡拱门，锻炼手眼手脑协调与早期色彩形状辨析。' : 'Nesting stacking bowls, geometric pegboards, and color gradient arches to build hand-eye coordination.'}
+              </p>
+            </div>
+            <div style="background:#ffffff;border:2px dashed #fed7aa;border-radius:18px;padding:14px;font-size:0.82rem;color:#9a3412;font-weight:800;">
+              🎨 ${isZh ? '核心亮点：植物染料萃取 · 物理防吞咽防窒息' : 'Focus: Organic Food Pigments · Choke-Tube Assay Pass'}
+            </div>
+          </div>
+
+          <!-- Stage 3 -->
+          <div class="wr-card-hover" style="background:#fdf2f8;border:3px solid #fbcfe8;border-radius:28px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <span style="font-size:1.8rem;">🏰</span>
+                <span style="background:#fbcfe8;color:#9d174d;font-weight:900;font-size:0.82rem;padding:4px 12px;border-radius:9999px;">3+ YEARS</span>
+              </div>
+              <h3 style="font-size:1.35rem;font-weight:900;color:#78350f;margin:0 0 8px;">
+                ${isZh ? '开放式建构与奇思妙想' : 'Open-Ended World Building'}
+              </h3>
+              <p style="color:#92400e;font-size:0.92rem;line-height:1.6;margin:0 0 16px;">
+                ${isZh ? '不设限制的城堡积木、重力滚球轨道与微观小城镇，激发自主创造力与叙事表达欲。' : 'Non-prescriptive building blocks, marble runs, and modular townscapes that turn living rooms into kingdoms.'}
+              </p>
+            </div>
+            <div style="background:#ffffff;border:2px dashed #fbcfe8;border-radius:18px;padding:14px;font-size:0.82rem;color:#9d174d;font-weight:800;">
+              🪵 ${isZh ? '核心亮点：传家级高密山毛榉 · 经受数代抚摸' : 'Focus: Heirloom Density Hardwood · Passed to Siblings'}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. ARTISAN WOODCRAFT PILLARS (4 GUARS) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:20px 24px 70px;" data-reveal="fade-up">
+        <div style="background:#ffffff;border:3px solid #fef08a;border-radius:32px;padding:42px 36px;box-shadow:0 10px 30px rgba(245,158,11,0.06);">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px;">
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="width:48px;height:48px;border-radius:18px;background:#fef08a;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">🌲</div>
+              <div>
+                <strong style="color:#78350f;font-size:1.05rem;display:block;margin-bottom:4px;">${isZh ? '可持续林业砍一补三' : 'FSC Harvest Policy'}</strong>
+                <p style="color:#92400e;font-size:0.88rem;line-height:1.5;margin:0;">${isZh ? '严选欧洲受控林区山毛榉，每采伐一株即刻科学补种三棵幼树。' : 'Harvested only from certified European reserves replanting 3 saplings per tree.'}</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="width:48px;height:48px;border-radius:18px;background:#fed7aa;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">🌱</div>
+              <div>
+                <strong style="color:#78350f;font-size:1.05rem;display:block;margin-bottom:4px;">${isZh ? '纯植物有机水性彩漆' : 'Vegetable Dyes'}</strong>
+                <p style="color:#92400e;font-size:0.88rem;line-height:1.5;margin:0;">${isZh ? '萃取姜黄、甜菜、紫甘蓝纯植物汁液调色，宝宝啃咬无化学忧虑。' : 'Derived from turmeric, beetroot, and spirulina extracts, safe for oral exploration.'}</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="width:48px;height:48px;border-radius:18px;background:#fbcfe8;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">📦</div>
+              <div>
+                <strong style="color:#78350f;font-size:1.05rem;display:block;margin-bottom:4px;">${isZh ? '零塑料全可降解礼盒' : 'Zero-Plastic Gift Box'}</strong>
+                <p style="color:#92400e;font-size:0.88rem;line-height:1.5;margin:0;">${isZh ? '100% 环保牛皮纸礼盒配大豆油墨印刷，绿色环保，支持家庭堆肥。' : 'Recycled kraft gift packaging with soy ink that folds flat for home composting.'}</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:flex-start;">
+              <div style="width:48px;height:48px;border-radius:18px;background:#bbf7d0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">🎖️</div>
+              <div>
+                <strong style="color:#78350f;font-size:1.05rem;display:block;margin-bottom:4px;">${isZh ? '传家级耐磨抗摔品质' : 'Generational Quality'}</strong>
+                <p style="color:#92400e;font-size:0.88rem;line-height:1.5;margin:0;">${isZh ? '高密材质经得起千百次跌落碰撞，陪伴几代孩子度过纯真童年。' : 'High-density timber built to withstand years of active play and be passed down.'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. HONEY-CHESTNUT PLAYROOM CTA BANNER -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;" data-reveal="fade-up">
+        <div style="background:linear-gradient(135deg, #78350f 0%, #92400e 60%, #b45309 100%);color:#fffdf5;border-radius:32px;padding:54px 36px;text-align:center;box-shadow:0 14px 40px rgba(120,53,15,0.22);position:relative;overflow:hidden;">
+          <div style="position:relative;z-index:2;">
+            <span style="display:inline-block;font-size:1.8rem;margin-bottom:12px;">🌟</span>
+            <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.7rem);color:#fffdf5;font-weight:900;margin:0 0 16px;">
+              ${isZh ? '为您的家庭或幼儿园注入纯真原木欢乐' : 'Bring Wholesome Play into Your Home'}
+            </h2>
+            <p style="color:#fed7aa;max-width:640px;margin:0 auto 30px;font-size:1.1rem;line-height:1.65;">
+              ${isZh ? '浏览荣获国际设计奖项的天然木制拼图、积木建构城堡与初生礼盒系列。' : 'Browse our award-winning wooden puzzles, building sets, and newborn milestone gifts.'}
+            </p>
+            <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+              <a class="button" style="background:#f59e0b;color:#ffffff;font-weight:900;border-radius:9999px;padding:17px 40px;box-shadow:0 8px 24px rgba(245,158,11,0.5);display:inline-block;text-decoration:none;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
+                ${isZh ? '选购当季畅销纯木玩具 ↗' : 'Explore Full Collection ↗'}
+              </a>
+              <a class="button" style="background:rgba(255,255,255,0.15);color:#ffffff;border:2px solid rgba(255,255,255,0.3);font-weight:900;border-radius:9999px;padding:17px 34px;display:inline-block;text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${isZh ? '联系工坊定制咨询 ↗' : 'Contact Workshop Team ↗'}
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </div>

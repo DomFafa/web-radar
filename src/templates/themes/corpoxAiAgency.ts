@@ -465,7 +465,7 @@ function renderModernAiAgencyAbout(ctx: ThemeContext): string {
   const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
   const paras = company.aboutStory ? storyParas : defaultStory;
 
-  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/ai/about-neural.jpg'));
+  const { primary: aboutImg } = getAboutImages(ctx, path('templates/ai/about-neural.jpg'));
 
   const stats = parseAboutHighlights(company.aboutHighlights, [
     { value: '1,200+', num: 1200, suffix: '+', label: isZh ? '生产环境活跃神经智能体' : 'Deployed Neural Agents', desc: isZh ? '在跨国金融、研发与供应链流水线自治运转' : 'Operating in enterprise finance & logistics pipelines' },
@@ -474,125 +474,339 @@ function renderModernAiAgencyAbout(ctx: ThemeContext): string {
     { value: '100%', num: 100, suffix: '%', label: isZh ? '物理气隙隔离私有化数据安全' : 'Air-Gapped Sovereign Data', desc: isZh ? '零外部模型中转，全链路本地向量状态加密' : 'Zero external model calls with encrypted vector state' },
   ]);
 
-  return `
-    <div class="ai-agency-about-modern" style="background:#050811;color:#f8fafc;font-family:'Inter',-apple-system,sans-serif;">
-      <!-- Hero Section -->
-      <section class="ai-inner-hero" style="background:radial-gradient(ellipse at 50% 10%,#1e1b4b 0%,#050811 75%);color:#ffffff;padding:90px 0 70px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
-        <div style="position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:350px;background:radial-gradient(circle,rgba(6,182,212,0.2) 0%,rgba(99,102,241,0.15) 50%,transparent 70%);filter:blur(60px);pointer-events:none;"></div>
-        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2;text-align:center;">
-          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.35);padding:7px 20px;border-radius:9999px;margin-bottom:24px;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
-            <span style="font-size:0.84rem;font-weight:800;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;">
-              ${isZh ? `CORPOX 前沿人工智能实验室 · 始于 ${esc(company.establishedYear || '2023')}` : `CORPOX AI LABS · RESEARCH CHARTER · EST. ${esc(company.establishedYear || '2023')}`}
-            </span>
-          </div>
-          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5.2vw, 4.4rem);line-height:1.08;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg,#38bdf8 0%,#818cf8 50%,#c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;max-width:960px;margin:0 auto 24px;">
-            ${esc(headline)}
-          </h1>
-          <p data-reveal="fade-up" style="max-width:760px;color:#94a3b8;font-size:1.2rem;line-height:1.7;margin:0 auto 36px;">
-            ${esc(copy.about || (isZh ? '构筑前沿神经符号推理管线、企业级本地化离线大模型推理集群及多智能体协同自治工作流。' : 'Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.'))}
-          </p>
-          <div data-reveal="fade-up" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;align-items:center;">
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 30px rgba(6,182,212,0.45);text-decoration:none;display:inline-block;">
-              ${isZh ? '部署私有化智能体集群 ↗' : 'Deploy Autonomous Clusters ↗'}
-            </a>
-            ${company.capabilities ? `
-              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid #334155;border-radius:8px;padding:14px 24px;font-size:0.88rem;color:#cbd5e1;font-family:monospace;">
-                <span>⚡</span> ${esc(company.capabilities.slice(0, 45))}
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      </section>
+  // Anti-Blank Box Vector SVG: Multi-Modal Neural Graph & Synthetic Reasoning Topology Viewport
+  const neuralSvg = `
+    <svg viewBox="0 0 720 460" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:block;background:#030712;">
+      <defs>
+        <radialGradient id="neuralGlow" cx="40%" cy="50%" r="65%">
+          <stop offset="0%" stop-color="#0e172a" stop-opacity="0.95"/>
+          <stop offset="50%" stop-color="#090d1a" stop-opacity="0.98"/>
+          <stop offset="100%" stop-color="#02040a" stop-opacity="1"/>
+        </radialGradient>
+        <linearGradient id="synapseCyanIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#06b6d4"/>
+          <stop offset="50%" stop-color="#6366f1"/>
+          <stop offset="100%" stop-color="#c084fc"/>
+        </linearGradient>
+        <filter id="neonBloom" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
 
-      <!-- Key Performance Metrics -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:48px 24px 32px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
-          ${stats.map(s => `
-            <div data-reveal="fade-up" class="wr-card-hover" style="background:#0b1120;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:14px;padding:28px 24px;box-shadow:0 0 25px rgba(6,182,212,0.06);">
-              <div style="font-size:clamp(2.4rem, 4vw, 3rem);font-weight:900;color:#06b6d4;letter-spacing:-1px;">
-                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
-                  ${esc(s.value)}
+      <!-- Matrix Canvas -->
+      <rect width="720" height="460" fill="url(#neuralGlow)"/>
+      <rect x="14" y="14" width="692" height="432" fill="none" stroke="#1e293b" stroke-width="1.5" rx="6"/>
+      <rect x="20" y="20" width="680" height="420" fill="none" stroke="#06b6d4" stroke-width="1" stroke-opacity="0.25" rx="4"/>
+
+      <!-- Cyber Header -->
+      <g transform="translate(36, 46)">
+        <circle cx="6" cy="6" r="4" fill="#06b6d4" filter="url(#neonBloom)"/>
+        <text x="18" y="10" fill="#06b6d4" font-size="11" font-family="'Courier New',monospace" font-weight="700" letter-spacing="2">NEURAL TOPOLOGY // MULTI-AGENT SYNTHETIC REASONING GRAPH</text>
+        <text x="540" y="10" fill="#a855f7" font-size="10" font-family="'Courier New',monospace">FP8 QUANTIZED</text>
+        <line x1="0" y1="20" x2="648" y2="20" stroke="#1e293b" stroke-width="1"/>
+      </g>
+
+      <!-- Neural Network Graph (Left Panel) -->
+      <g transform="translate(36, 82)">
+        <!-- Neural Frame -->
+        <rect x="0" y="0" width="380" height="236" fill="#070c18" stroke="#1e293b" stroke-width="1" rx="6"/>
+        
+        <!-- Subtle Synaptic Grid -->
+        <line x1="0" y1="59" x2="380" y2="59" stroke="#0d1527" stroke-width="1"/>
+        <line x1="0" y1="118" x2="380" y2="118" stroke="#0d1527" stroke-width="1"/>
+        <line x1="0" y1="177" x2="380" y2="177" stroke="#0d1527" stroke-width="1"/>
+
+        <!-- Synaptic Arcs (Connections) -->
+        <!-- Layer 1 (x=50) to Layer 2 (x=140) -->
+        <line x1="50" y1="45" x2="140" y2="35" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.6"/>
+        <line x1="50" y1="45" x2="140" y2="90" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.4"/>
+        <line x1="50" y1="118" x2="140" y2="35" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.3"/>
+        <line x1="50" y1="118" x2="140" y2="90" stroke="url(#synapseCyanIndigo)" stroke-width="2" stroke-opacity="0.8"/>
+        <line x1="50" y1="118" x2="140" y2="145" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.4"/>
+        <line x1="50" y1="190" x2="140" y2="145" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.6"/>
+        <line x1="50" y1="190" x2="140" y2="200" stroke="url(#synapseCyanIndigo)" stroke-width="1.5" stroke-opacity="0.7"/>
+
+        <!-- Layer 2 (x=140) to Layer 3 (x=240) -->
+        <line x1="140" y1="35" x2="240" y2="60" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.5"/>
+        <line x1="140" y1="90" x2="240" y2="60" stroke="url(#synapseCyanIndigo)" stroke-width="2" stroke-opacity="0.9"/>
+        <line x1="140" y1="90" x2="240" y2="120" stroke="url(#synapseCyanIndigo)" stroke-width="1.5" stroke-opacity="0.7"/>
+        <line x1="140" y1="145" x2="240" y2="120" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.5"/>
+        <line x1="140" y1="145" x2="240" y2="180" stroke="url(#synapseCyanIndigo)" stroke-width="1.8" stroke-opacity="0.8"/>
+        <line x1="140" y1="200" x2="240" y2="180" stroke="url(#synapseCyanIndigo)" stroke-width="1.2" stroke-opacity="0.6"/>
+
+        <!-- Layer 3 (x=240) to Output Nodes (x=330) -->
+        <line x1="240" y1="60" x2="330" y2="90" stroke="url(#synapseCyanIndigo)" stroke-width="2" stroke-opacity="0.95"/>
+        <line x1="240" y1="120" x2="330" y2="90" stroke="url(#synapseCyanIndigo)" stroke-width="1.5" stroke-opacity="0.8"/>
+        <line x1="240" y1="120" x2="330" y2="150" stroke="url(#synapseCyanIndigo)" stroke-width="1.8" stroke-opacity="0.85"/>
+        <line x1="240" y1="180" x2="330" y2="150" stroke="url(#synapseCyanIndigo)" stroke-width="2" stroke-opacity="0.9"/>
+
+        <!-- Layer 1 Nodes (Input: Multimodal Tokens) -->
+        <circle cx="50" cy="45" r="7" fill="#06b6d4" filter="url(#neonBloom)"/>
+        <circle cx="50" cy="118" r="9" fill="#06b6d4" filter="url(#neonBloom)"/>
+        <circle cx="50" cy="190" r="7" fill="#06b6d4"/>
+
+        <!-- Layer 2 Nodes (Latent Hidden Reasoning) -->
+        <circle cx="140" cy="35" r="6" fill="#38bdf8"/>
+        <circle cx="140" cy="90" r="8" fill="#6366f1" filter="url(#neonBloom)"/>
+        <circle cx="140" cy="145" r="6" fill="#6366f1"/>
+        <circle cx="140" cy="200" r="7" fill="#818cf8"/>
+
+        <!-- Layer 3 Nodes (Cross-Attention Self-Grounding) -->
+        <circle cx="240" cy="60" r="8" fill="#818cf8" filter="url(#neonBloom)"/>
+        <circle cx="240" cy="120" r="9" fill="#c084fc" filter="url(#neonBloom)"/>
+        <circle cx="240" cy="180" r="7" fill="#a855f7"/>
+
+        <!-- Layer 4 Nodes (Action Execution Sink) -->
+        <circle cx="330" cy="90" r="10" fill="#10b981" filter="url(#neonBloom)"/>
+        <circle cx="330" cy="150" r="10" fill="#06b6d4" filter="url(#neonBloom)"/>
+
+        <!-- Labels -->
+        <text x="50" y="222" fill="#64748b" font-size="8" font-family="'Courier New',monospace" text-anchor="middle">SENSORY</text>
+        <text x="140" y="222" fill="#64748b" font-size="8" font-family="'Courier New',monospace" text-anchor="middle">LATENT</text>
+        <text x="240" y="222" fill="#64748b" font-size="8" font-family="'Courier New',monospace" text-anchor="middle">ATTENTION</text>
+        <text x="330" y="222" fill="#10b981" font-size="8" font-family="'Courier New',monospace" text-anchor="middle">DISPATCH</text>
+      </g>
+
+      <!-- Token Velocity Waveform & Live Telemetry (Right Panel) -->
+      <g transform="translate(432, 82)">
+        <!-- Box Frame -->
+        <rect x="0" y="0" width="252" height="236" fill="#070c18" stroke="#1e293b" stroke-width="1" rx="6"/>
+        
+        <!-- Live Velocity Title -->
+        <text x="16" y="24" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace" font-weight="700">TOKEN GENERATION VELOCITY</text>
+        <text x="16" y="48" fill="#06b6d4" font-size="20" font-family="'Courier New',monospace" font-weight="900">4,850 T/S</text>
+        <text x="135" y="48" fill="#10b981" font-size="10" font-family="'Courier New',monospace">BURST OPTIMAL</text>
+
+        <!-- Dynamic Sine Waveform Box -->
+        <rect x="16" y="62" width="220" height="74" fill="#040711" stroke="#1e293b" stroke-width="1" rx="4"/>
+        <path d="M 20 100 Q 40 70, 60 100 T 100 100 T 140 100 T 180 100 T 220 100" fill="none" stroke="#6366f1" stroke-width="1.5"/>
+        <path d="M 20 100 Q 35 78, 55 98 T 90 102 T 130 96 T 170 104 T 215 100" fill="none" stroke="#06b6d4" stroke-width="2" filter="url(#neonBloom)"/>
+
+        <!-- System Status Badges -->
+        <g transform="translate(16, 150)">
+          <rect x="0" y="0" width="220" height="22" fill="#0d1628" rx="3"/>
+          <text x="8" y="15" fill="#e2e8f0" font-size="9" font-family="'Courier New',monospace">SANDBOX: WASM ISOLATE (SECURE)</text>
+        </g>
+
+        <g transform="translate(16, 178)">
+          <rect x="0" y="0" width="220" height="22" fill="#0d1628" rx="3"/>
+          <text x="8" y="15" fill="#67e8f9" font-size="9" font-family="'Courier New',monospace">HALLUCINATION: 0.00% (RLCF GROUNDED)</text>
+        </g>
+
+        <g transform="translate(16, 206)">
+          <rect x="0" y="0" width="220" height="22" fill="#0d1628" rx="3"/>
+          <text x="8" y="15" fill="#a855f7" font-size="9" font-family="'Courier New',monospace">CLUSTER: 8x H100 80GB · 3.2TB/s</text>
+        </g>
+      </g>
+
+      <!-- Bottom Benchmark Band -->
+      <g transform="translate(36, 335)">
+        <rect x="0" y="0" width="648" height="85" fill="#070c18" stroke="#1e293b" stroke-width="1" rx="6"/>
+        
+        <g transform="translate(20, 24)">
+          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">REASONING ACCURACY BENCHMARK</text>
+          <text x="0" y="22" fill="#06b6d4" font-size="16" font-family="'Courier New',monospace" font-weight="900">99.8% VERIFIED</text>
+          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">HumanEval + GSM8K Sandbox Pass@1</text>
+        </g>
+
+        <line x1="220" y1="14" x2="220" y2="71" stroke="#1e293b" stroke-width="1"/>
+
+        <g transform="translate(245, 24)">
+          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">STREAMING LATENCY</text>
+          <text x="0" y="22" fill="#ffffff" font-size="16" font-family="'Courier New',monospace" font-weight="900">&lt; 18ms TTFT</text>
+          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Sub-20ms first-token streaming</text>
+        </g>
+
+        <line x1="440" y1="14" x2="440" y2="71" stroke="#1e293b" stroke-width="1"/>
+
+        <g transform="translate(465, 24)">
+          <text x="0" y="0" fill="#94a3b8" font-size="9" font-family="'Courier New',monospace">SOVEREIGN ISOLATION</text>
+          <text x="0" y="22" fill="#10b981" font-size="16" font-family="'Courier New',monospace" font-weight="900">100% AIR-GAPPED</text>
+          <text x="0" y="38" fill="#64748b" font-size="9" font-family="'Courier New',monospace">Zero external third-party model leaks</text>
+        </g>
+      </g>
+    </svg>
+  `;
+
+  return `
+    <div class="ai-agency-about-modern" style="background:#030712;color:#f8fafc;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;">
+      <!-- Asymmetrical Neural Nexus Command Deck Hero -->
+      <section style="background:radial-gradient(ellipse at 50% 0%, #17153a 0%, #060914 65%, #030712 100%);color:#ffffff;padding:90px 0 76px;position:relative;overflow:hidden;border-bottom:1px solid #1e293b;">
+        <!-- Neon Circuit & Gradient Ambient Mesh -->
+        <div style="position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:780px;height:380px;background:radial-gradient(circle, rgba(6,182,212,0.18) 0%, rgba(99,102,241,0.12) 50%, transparent 70%);filter:blur(65px);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:0;right:0;width:350px;height:350px;background:radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);pointer-events:none;"></div>
+
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;position:relative;z-index:2;">
+          <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;">
+            <!-- Left: Hero Cybernetic Statement -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.35);padding:6px 18px;border-radius:9999px;margin-bottom:22px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4;"></span>
+                <span style="font-size:0.8rem;font-weight:800;color:#67e8f9;letter-spacing:0.1em;text-transform:uppercase;font-family:'Courier New',monospace;">
+                  ${isZh ? `前沿人工智能实验室 · 创立于 ${esc(company.establishedYear || '2023')}` : `SYNTHETIC REASONING LAB · EST. ${esc(company.establishedYear || '2023')}`}
                 </span>
               </div>
-              <div style="font-weight:800;color:#f8fafc;margin-top:6px;font-size:1.05rem;">
-                ${esc(s.label)}
+
+              <h1 style="font-size:clamp(2.3rem, 4.4vw, 3.8rem);line-height:1.08;font-weight:900;letter-spacing:-0.035em;background:linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0 0 22px;">
+                ${esc(headline)}
+              </h1>
+
+              <div style="border-left:3px solid #06b6d4;padding-left:18px;margin-bottom:28px;">
+                <p style="color:#94a3b8;font-size:1.15rem;line-height:1.7;margin:0;">
+                  ${esc(copy.about || (isZh ? '构筑前沿神经符号推理管线、企业级本地化离线大模型推理集群及多智能体协同自治工作流。' : 'Corpox AI Agency architects state-of-the-art synthetic reasoning pipelines, secure local inference clusters, and multi-agent coordination frameworks for visionary enterprises.'))}
+                </p>
               </div>
-              ${s.desc ? `
-                <div style="font-size:0.86rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
-                  ${esc(s.desc)}
-                </div>
-              ` : ''}
+
+              <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(90deg, #06b6d4 0%, #6366f1 100%);color:#030712;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 30px rgba(6,182,212,0.4);text-decoration:none;display:inline-block;transition:all 0.2s ease;">
+                  ${isZh ? '部署私有化智能体集群 ↗' : 'Deploy Autonomous Clusters ↗'}
+                </a>
+                ${company.capabilities ? `
+                  <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid #334155;border-radius:8px;padding:14px 22px;font-size:0.84rem;color:#cbd5e1;font-family:'Courier New',monospace;">
+                    <span>⚡</span> ${esc(company.capabilities.slice(0, 42))}
+                  </div>
+                ` : ''}
+              </div>
             </div>
-          `).join('')}
+
+            <!-- Right: Anti-Blank Box Multi-Modal Neural Graph HUD -->
+            <div data-reveal="fade-up" style="position:relative;">
+              <div style="background:#070c18;border:1px solid #1e293b;border-radius:12px;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,0.6);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0b1222;border-bottom:1px solid #1e293b;border-radius:8px 8px 0 0;font-size:0.8rem;color:#94a3b8;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#06b6d4;display:inline-block;box-shadow:0 0 8px #06b6d4;"></span>
+                    <span style="font-family:'Courier New',monospace;font-weight:700;color:#f8fafc;">NEURAL ENGINE MONITOR</span>
+                  </div>
+                  <span style="font-family:'Courier New',monospace;color:#67e8f9;">TENSORRT-LLM // LIVE</span>
+                </div>
+
+                <!-- Fallback Container: vector SVG underneath, image on top with onerror="this.style.display='none'" -->
+                <div style="position:relative;min-height:380px;border-radius:0 0 8px 8px;overflow:hidden;background:#030712;">
+                  <div style="position:absolute;inset:0;z-index:1;">
+                    ${neuralSvg}
+                  </div>
+                  ${aboutImg ? `
+                    <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0.92;transition:opacity 0.3s ease;" onerror="this.style.display='none'">
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Floating Live Inference Badge -->
+              <div style="position:absolute;bottom:-18px;left:-16px;background:#0b1324;border:1px solid #06b6d4;padding:10px 18px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:flex;align-items:center;gap:12px;z-index:3;">
+                <span style="font-size:1.5rem;">⚡</span>
+                <div>
+                  <div style="font-size:0.75rem;font-weight:800;color:#67e8f9;letter-spacing:0.08em;text-transform:uppercase;font-family:'Courier New',monospace;">Latency Benchmark</div>
+                  <div style="font-size:0.88rem;font-weight:700;color:#ffffff;">Sub-18ms Time-to-First-Token</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- Engineered Reasoning & Core Disciplines -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 70px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;">
+      <!-- Real-time Neural Engine Telemetry Bar (实时神经算力度量) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 20px;">
+        <div data-reveal="fade-up" style="background:#070c18;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:12px;box-shadow:0 0 25px rgba(6,182,212,0.06);overflow:hidden;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+            ${stats.map((s, idx) => `
+              <div style="padding:28px 24px;border-right:${idx < stats.length - 1 ? '1px solid #1e293b' : 'none'};position:relative;">
+                <div style="font-family:'Courier New',monospace;font-size:0.75rem;color:#06b6d4;font-weight:700;letter-spacing:0.1em;margin-bottom:6px;">
+                  TELEMETRY // POD-0${idx + 1}
+                </div>
+                <div style="font-size:clamp(2.2rem, 3.6vw, 2.8rem);font-weight:900;color:#f8fafc;line-height:1.1;letter-spacing:-0.03em;">
+                  <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                    ${esc(s.value)}
+                  </span>
+                </div>
+                <div style="font-weight:800;color:#67e8f9;margin-top:8px;font-size:0.95rem;">
+                  ${esc(s.label)}
+                </div>
+                ${s.desc ? `
+                  <div style="font-size:0.84rem;color:#94a3b8;margin-top:6px;line-height:1.5;">
+                    ${esc(s.desc)}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+
+      <!-- Engineered Reasoning & Neural Architecture Narrative -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 60px;">
+        <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:48px;align-items:flex-start;">
+          <!-- Left: Narrative & Theoretical Foundation -->
           <div data-reveal="fade-up">
-            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#06b6d4;text-transform:uppercase;">
-              ${isZh ? '神经符号工程化推理' : 'ENGINEERED REASONING'}
+            <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:#06b6d4;text-transform:uppercase;font-family:'Courier New',monospace;">
+              ${isZh ? '认知计算与确定性工程推理' : 'ENGINEERED REASONING & GROUNDING'}
             </span>
-            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.2;color:#f8fafc;margin:12px 0 20px;font-weight:900;">
+            <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);line-height:1.2;color:#f8fafc;margin:12px 0 22px;font-weight:900;">
               ${isZh ? '超越泛化对话生成：构建高置信度确定性自治系统' : 'Beyond Conversational AI: Deterministic Autonomous Execution'}
             </h2>
-            <div style="color:#cbd5e1;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+            <div style="color:#cbd5e1;font-size:1.04rem;line-height:1.8;display:flex;flex-direction:column;gap:18px;">
               ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-              <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
-                <strong style="color:#06b6d4;display:block;font-size:0.95rem;margin-bottom:4px;font-family:monospace;">
-                  ⚡ ${isZh ? '动态工具安全绑定' : 'Real-Time Tool Binding'}
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;">
+              <div style="background:#070c18;border:1px solid #1e293b;border-left:3px solid #06b6d4;border-radius:8px;padding:18px 20px;">
+                <strong style="color:#06b6d4;display:block;font-size:0.95rem;margin-bottom:4px;font-family:'Courier New',monospace;">
+                  ⚡ ${isZh ? '强类型契约沙箱绑定' : 'Schema-Locked Tooling'}
                 </strong>
-                <span style="color:#94a3b8;font-size:0.85rem;line-height:1.4;display:block;">
-                  ${isZh ? '确定性 JSON-RPC 强类型接口，从根源消除 API 幻觉。' : 'Deterministic JSON-RPC interfaces eliminate API hallucination.'}
+                <span style="color:#94a3b8;font-size:0.86rem;line-height:1.5;">
+                  ${isZh ? '基于 JSON-RPC 强类型契约与编译器，从底层根除 API 工具调用幻觉。' : 'Deterministic schema-validated interfaces eliminate tool call hallucination.'}
                 </span>
               </div>
-              <div style="background:#0b1120;border:1px solid #1e293b;border-radius:12px;padding:18px;">
-                <strong style="color:#818cf8;display:block;font-size:0.95rem;margin-bottom:4px;font-family:monospace;">
-                  🔒 ${isZh ? '密码学状态鉴证审计' : 'Cryptographic Auditing'}
+              <div style="background:#070c18;border:1px solid #1e293b;border-left:3px solid #6366f1;border-radius:8px;padding:18px 20px;">
+                <strong style="color:#818cf8;display:block;font-size:0.95rem;margin-bottom:4px;font-family:'Courier New',monospace;">
+                  🔒 ${isZh ? '密码学状态执行可审计' : 'Cryptographic Trace Audit'}
                 </strong>
-                <span style="color:#94a3b8;font-size:0.85rem;line-height:1.4;display:block;">
-                  ${isZh ? '全流程 Prompt 到输出执行状态哈希上链存储。' : 'Immutable prompt-to-execution state hashing for audit.'}
+                <span style="color:#94a3b8;font-size:0.86rem;line-height:1.5;">
+                  ${isZh ? '全链路 Prompt、思考链与工具调用状态哈希防篡改留存，满足企业内控合规。' : 'Immutable hash checkpoints tracing every agentic decision step.'}
                 </span>
               </div>
             </div>
           </div>
 
-          <div data-reveal="fade-up" style="background:#090d16;border:1px solid #1e293b;border-radius:16px;padding:36px;box-shadow:0 0 40px rgba(6,182,212,0.08);">
-            ${aboutImg ? `
-              <div style="border-radius:12px;overflow:hidden;border:1px solid #1e293b;margin-bottom:24px;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            ` : ''}
-            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#67e8f9;text-transform:uppercase;">
-              ${isZh ? '前沿工程三大支柱' : 'CORE ENGINEERING DISCIPLINES'}
-            </span>
-            <div style="display:flex;flex-direction:column;gap:18px;margin-top:16px;">
+          <!-- Right: Research Lab Charter & Engineering Disciplines -->
+          <div data-reveal="fade-up" style="background:#070c18;border:1px solid #1e293b;border-radius:12px;padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.4);">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding-bottom:14px;margin-bottom:20px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.8rem;font-weight:700;color:#06b6d4;">CHARTER: NEURAL-2026</span>
+              <span style="font-size:0.75rem;background:rgba(6,182,212,0.18);color:#67e8f9;padding:3px 8px;border-radius:4px;font-weight:700;">AIR-GAPPED SOVEREIGN</span>
+            </div>
+
+            <h3 style="font-size:1.25rem;font-weight:800;color:#f8fafc;margin:0 0 16px;">
+              ${isZh ? '前沿工程三大支柱' : 'Core Engineering Disciplines'}
+            </h3>
+
+            <div style="display:flex;flex-direction:column;gap:18px;">
               <div style="border-left:3px solid #06b6d4;padding-left:16px;">
-                <strong style="color:#67e8f9;font-size:0.95rem;">
-                  1. ${isZh ? '编译器反馈强化学习 (RLCF)' : 'Reinforcement Learning from Compiler Feedback'}
+                <strong style="color:#67e8f9;font-size:0.92rem;">
+                  1. ${isZh ? '编译器反馈强化学习 (RLCF)' : 'Compiler-Guided RLCF Optimization'}
                 </strong>
-                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
-                  ${isZh ? '智能体自动生成并验证单元测试代码，确保零逻辑断裂。' : 'Agents generate unit-tested code solutions with zero hallucination guarantee.'}
+                <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '智能体在 WASM 沙箱中自发运行并验证单元测试代码，确保输出具备可执行真实性。' : 'Agents execute and verify compiled unit tests in WASM sandboxes to eliminate hallucination.'}
                 </p>
               </div>
+
               <div style="border-left:3px solid #818cf8;padding-left:16px;">
-                <strong style="color:#a5b4fc;font-size:0.95rem;">
-                  2. ${isZh ? '量化私有推理算子内核' : 'Quantized Local Inference Kernels'}
+                <strong style="color:#a5b4fc;font-size:0.92rem;">
+                  2. ${isZh ? '自研 Triton & CUDA 低精度加速算子' : 'Custom Triton & CUDA Kernels'}
                 </strong>
-                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
-                  ${isZh ? '定制 CUDA & Triton 低精度内核，提升单卡吞吐 3.2 倍。' : 'Custom CUDA & Triton kernels achieving 3x higher throughput per GPU cluster.'}
+                <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '深度定制硬件显存访问调度，实现单卡吞吐量较开源框架提升 3.2 倍。' : 'Proprietary memory layout kernels unlocking 3.2x higher throughput per GPU instance.'}
                 </p>
               </div>
+
               <div style="border-left:3px solid #c084fc;padding-left:16px;">
-                <strong style="color:#d8b4fe;font-size:0.95rem;">
-                  3. ${isZh ? '分层智能体蜂群协同架构' : 'Hierarchical Agent Swarm Coordination'}
+                <strong style="color:#d8b4fe;font-size:0.92rem;">
+                  3. ${isZh ? '多智能体拜占庭容错博弈协同' : 'Byzantine-Tolerant Swarm Protocols'}
                 </strong>
-                <p style="color:#94a3b8;font-size:0.86rem;line-height:1.5;margin:4px 0 0;">
-                  ${isZh ? '规划者、执行者与校验者多角色交叉验证复杂决策图。' : 'Planner, Executor, and Verifier agents cross-validating multi-step decisions.'}
+                <p style="color:#94a3b8;font-size:0.84rem;line-height:1.5;margin:4px 0 0;">
+                  ${isZh ? '规划者、执行者与安全校验者多角色交叉校验，杜绝单点偏见与逻辑死锁。' : 'Planner, Actor, and Critic sub-agents cross-validating execution steps in parallel.'}
                 </p>
               </div>
             </div>
@@ -600,21 +814,104 @@ function renderModernAiAgencyAbout(ctx: ThemeContext): string {
         </div>
       </section>
 
-      <!-- CTA Banner -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
-        <div data-reveal="fade-up" style="background:#080d1a;border:1px solid #06b6d4;border-radius:16px;padding:48px 36px;color:#ffffff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 0 40px rgba(6,182,212,0.18);">
-          <div>
-            <span style="font-family:monospace;color:#06b6d4;font-weight:700;font-size:0.85rem;">[DEPLOY AUTONOMOUS CLUSTERS]</span>
-            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);color:#f8fafc;margin:8px 0;font-weight:900;">
-              ${isZh ? '开启私有化神经工作流专属规划' : 'Deploy Sovereign Neural Workflows'}
-            </h2>
-            <p style="color:#94a3b8;font-size:1rem;margin:0;max-width:560px;">
-              ${isZh ? '与我们的首席人工智能科学家直接沟通，量身打造私有化智能体集群。' : 'Collaborate directly with our research fellows to engineer custom agentic pipelines.'}
+      <!-- 4-Stage Autonomous Synthesis Pipeline (4 阶算法自治炼制流水线) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:50px 24px 70px;border-top:1px solid #1e293b;" data-reveal="fade-up">
+        <div style="text-align:center;margin-bottom:48px;">
+          <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:#06b6d4;text-transform:uppercase;font-family:'Courier New',monospace;">
+            ${isZh ? '企业级自主炼制管道' : '4-STAGE SYNTHETIC REASONING PIPELINE'}
+          </span>
+          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#f8fafc;margin:10px 0;">
+            ${isZh ? '端到端私有化自治神经工程管线' : 'End-to-End Enterprise Agentic Pipeline'}
+          </h2>
+          <p style="color:#94a3b8;max-width:680px;margin:0 auto;font-size:1rem;">
+            ${isZh ? '从高质量领域数据蒸馏、沙箱编译器自省，到多智能体编排与物理气隙低延迟推理。' : 'From domain data distillation to compiler verification and air-gapped private cluster deployment.'}
+          </p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          <!-- Stage 1 -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#070c18;border:1px solid #1e293b;border-top:3px solid #06b6d4;border-radius:10px;padding:28px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#67e8f9;">STAGE 01 // DATA</span>
+              <span style="font-size:1.5rem;">🧬</span>
+            </div>
+            <h3 style="color:#f8fafc;font-size:1.18rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '领域数据蒸馏与语义清洗' : 'Data Distillation & Curation'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.88rem;line-height:1.6;margin:0;">
+              ${isZh ? '自研高熵数据抽取算法，自动化过滤低质噪音，提炼契合企业业务规则的合成指令集。' : 'Automated synthetic data curation extracting high-entropy domain instructions with heuristic filtering.'}
             </p>
           </div>
-          <a class="button" style="background:linear-gradient(90deg,#06b6d4 0%,#6366f1 100%);color:#050811;font-weight:800;border-radius:8px;padding:16px 36px;box-shadow:0 0 25px rgba(6,182,212,0.4);text-decoration:none;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-            ${isZh ? '预约架构咨询研讨 ↗' : 'Schedule Architecture Session ↗'}
-          </a>
+
+          <!-- Stage 2 -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#070c18;border:1px solid #1e293b;border-top:3px solid #6366f1;border-radius:10px;padding:28px;transition-delay:0.08s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#818cf8;">STAGE 02 // RLCF</span>
+              <span style="font-size:1.5rem;">⚙️</span>
+            </div>
+            <h3 style="color:#f8fafc;font-size:1.18rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '编译器反馈强化学习' : 'Compiler-Guided Verification'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.88rem;line-height:1.6;margin:0;">
+              ${isZh ? '通过沙箱编译器对代码、SQL 及 API 执行结果打分，将幻觉率严格压低至 0.00%。' : 'WASM sandbox execution loops providing deterministic reward signals to eliminate logical hallucinations.'}
+            </p>
+          </div>
+
+          <!-- Stage 3 -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#070c18;border:1px solid #1e293b;border-top:3px solid #8b5cf6;border-radius:10px;padding:28px;transition-delay:0.16s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#a78bfa;">STAGE 03 // SWARM</span>
+              <span style="font-size:1.5rem;">🐝</span>
+            </div>
+            <h3 style="color:#f8fafc;font-size:1.18rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '多智能体蜂群拓扑编排' : 'Multi-Agent Swarm Topology'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.88rem;line-height:1.6;margin:0;">
+              ${isZh ? '规划、反思、执行与审计角色解耦，以图遍历算法调度复杂异构系统的企业级生产流。' : 'Graph-based agent orchestration with distributed consensus, parallel tool execution, and self-healing.'}
+            </p>
+          </div>
+
+          <!-- Stage 4 -->
+          <div class="wr-card-hover" data-reveal="fade-up" style="background:#070c18;border:1px solid #1e293b;border-top:3px solid #c084fc;border-radius:10px;padding:28px;transition-delay:0.24s;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <span style="font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;color:#c084fc;">STAGE 04 // DEPLOY</span>
+              <span style="font-size:1.5rem;">🚀</span>
+            </div>
+            <h3 style="color:#f8fafc;font-size:1.18rem;font-weight:800;margin:0 0 10px;">
+              ${isZh ? '端侧量化与私有离线部署' : 'Quantized Sovereign Clusters'}
+            </h3>
+            <p style="color:#94a3b8;font-size:0.88rem;line-height:1.6;margin:0;">
+              ${isZh ? '定制 TensorRT-LLM 算子库与 FP8/INT4 量化加速，保障 100% 离线数据物理隔离安全。' : 'Low-latency quantized on-premise clusters with air-gapped security and full sovereignty over corporate IP.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Architecture Chamber CTA (神经架构工坊专属入驻席) -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:20px 24px 85px;">
+        <div data-reveal="fade-up" style="background:linear-gradient(135deg, #070c18 0%, #0d1628 60%, #070914 100%);border:1px solid #06b6d4;border-radius:12px;padding:48px 40px;color:#ffffff;box-shadow:0 0 35px rgba(6,182,212,0.18);">
+          <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:40px;align-items:center;">
+            <div>
+              <span style="font-family:'Courier New',monospace;color:#06b6d4;font-weight:700;font-size:0.82rem;letter-spacing:0.12em;text-transform:uppercase;">
+                [DEPLOY AUTONOMOUS CLUSTERS // LAB DIRECT ACCESS]
+              </span>
+              <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);color:#f8fafc;margin:8px 0 14px;font-weight:900;">
+                ${isZh ? '开启私有化神经工作流专属规划研讨' : 'Deploy Sovereign Neural Workflows'}
+              </h2>
+              <p style="color:#94a3b8;font-size:1.02rem;line-height:1.7;margin:0;">
+                ${isZh ? '与我们的首席人工智能科学家直接沟通，量身打造符合企业行业标准的确定性推理智能体集群。支持完全离线部署与定制算子优化。' : 'Collaborate directly with our research fellows to architect tailored autonomous clusters, custom Triton kernels, and schema-validated agentic pipelines.'}
+              </p>
+            </div>
+
+            <div style="text-align:center;background:rgba(0,0,0,0.4);border:1px solid #1e293b;border-radius:8px;padding:28px;">
+              <div style="font-size:0.82rem;color:#94a3b8;margin-bottom:18px;font-family:'Courier New',monospace;">
+                ${isZh ? '首期 1 对 1 架构咨询研讨免费开放预约' : 'COMPLIMENTARY ARCHITECTURE SESSION // 48-HR RESPONSE'}
+              </div>
+              <a class="button" style="background:linear-gradient(90deg, #06b6d4 0%, #6366f1 100%);color:#030712;font-weight:800;border-radius:6px;padding:16px 36px;box-shadow:0 0 25px rgba(6,182,212,0.4);text-decoration:none;display:inline-block;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${isZh ? '预约架构咨询研讨 ↗' : 'Schedule Architecture Session ↗'}
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </div>

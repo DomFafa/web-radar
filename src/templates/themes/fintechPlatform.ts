@@ -462,7 +462,7 @@ function renderLegacyFintechAbout(ctx: ThemeContext): string {
 }
 
 function renderModernFintechAbout(ctx: ThemeContext): string {
-  const { draft, ui, path, navAttrs, asset } = ctx;
+  const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
   const isZh = (ctx.lang as string) === 'zh';
   const copy = draft.copy[ctx.lang];
@@ -483,7 +483,8 @@ function renderModernFintechAbout(ctx: ThemeContext): string {
   const storyParas = getAboutStoryParagraphs(company, defaultStory[0]);
   const paras = company.aboutStory ? storyParas : defaultStory;
 
-  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('templates/fintech/about-vault.jpg'));
+  const { primary: aboutImg } = getAboutImages(ctx);
+
   const stats = parseAboutHighlights(company.aboutHighlights, [
     { value: '$18.4B+', num: 18.4, prefix: '$', suffix: 'B+', label: isZh ? '年化跨国资金清算总额' : 'Annual Settlement Volume', desc: isZh ? '跨 SWIFT / FedNow / SEPA 直通清算' : 'Zero-slippage algorithmic routing' },
     { value: '140+', num: 140, suffix: '+', label: isZh ? '全球法定准入监管辖区' : 'Supported Jurisdictions', desc: isZh ? '全链路合规反洗钱及跨国监管审查' : 'Statutory AML, KYC & currency compliance' },
@@ -492,42 +493,127 @@ function renderModernFintechAbout(ctx: ThemeContext): string {
   ]);
 
   return `
-    <div class="fintech-about-modern" style="background:#070f1e;color:#ffffff;font-family:'Inter Tight',-apple-system,sans-serif;">
-      <!-- Hero Section -->
-      <section class="fintech-inner-hero" style="background:radial-gradient(ellipse at 50% 0%, rgba(2,132,199,0.18) 0%, #070f1e 75%);padding:80px 0 60px;border-bottom:1px solid rgba(255,255,255,0.08);">
-        <div class="wrap" style="max-width:1200px;margin:0 auto;padding:0 24px;text-align:center;">
-          <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:10px;background:rgba(2,132,199,0.15);border:1px solid rgba(56,189,248,0.35);padding:6px 20px;border-radius:9999px;margin-bottom:24px;">
-            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 10px #38bdf8;"></span>
-            <span style="font-size:0.82rem;font-weight:800;color:#e0f2fe;letter-spacing:0.08em;text-transform:uppercase;">
-              ${isZh ? `全球资本治理与合规清算架构 · 创立于 ${esc(company.establishedYear || '2018')}` : `CAPITAL GOVERNANCE & COMPLIANCE · EST. ${esc(company.establishedYear || '2018')}`}
-            </span>
-          </div>
-          <h1 data-reveal="fade-up" style="font-size:clamp(2.4rem, 5vw, 4rem);line-height:1.12;font-weight:900;letter-spacing:-0.03em;margin:0 auto 20px;max-width:960px;color:#ffffff;">
-            ${esc(headline)}
-          </h1>
-          <p data-reveal="fade-up" style="max-width:760px;font-size:1.15rem;line-height:1.7;color:#94a3b8;margin:0 auto 32px;">
-            ${esc(copy?.subtitle || (isZh ? '赋能全球化跨国企业与持牌金融中介，实现流动性全域统合、自动化外汇头寸对冲与多币种即时清算。' : 'Empowering global corporations and financial institutions with unified liquidity, algorithmic foreign exchange hedging, and automated multi-currency settlements.'))}
-          </p>
-          <div data-reveal="fade-up" style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);color:#ffffff;font-weight:800;padding:15px 34px;border-radius:8px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 24px rgba(2,132,199,0.4);display:inline-block;">
-              ${isZh ? '预约机构合规闭门简报 ↗' : 'Request Private Institutional Briefing ↗'}
-            </a>
-            ${company.capabilities ? `
-              <div style="display:inline-flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);padding:14px 24px;border-radius:8px;font-size:0.88rem;color:#e2e8f0;font-weight:600;">
-                🛡️ ${esc(company.capabilities.slice(0, 45))}
+    <div class="fintech-about-modern" style="background:#070f1e;color:#ffffff;font-family:'Inter Tight',-apple-system,sans-serif;padding-bottom:80px;">
+      <!-- TOP CLEARING CORRIDOR TICKER -->
+      <div style="background:#0b1528;border-bottom:1px solid rgba(56,189,248,0.2);padding:10px 24px;font-family:monospace;font-size:0.8rem;color:#94a3b8;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+          <span><strong style="color:#38bdf8;">USD/EUR:</strong> 1.0842 <span style="color:#10b981;">STP CLEARED ⚡</span></span>
+          <span><strong style="color:#38bdf8;">USD/SGD:</strong> 1.3415 <span style="color:#10b981;">FEDNOW ACTIVE ⚡</span></span>
+          <span><strong style="color:#38bdf8;">EUR/GBP:</strong> 0.8540 <span style="color:#10b981;">SEPA INSTANT ⚡</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;color:#e2e8f0;">
+          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;"></span>
+          <span>SWIFT CONNECTIVITY: LIVE // ISO 20022</span>
+        </div>
+      </div>
+
+      <!-- 1. INSTITUTIONAL TREASURY DUAL-CHAMBER HERO -->
+      <section class="fintech-inner-hero" style="background:radial-gradient(ellipse at 50% 0%, rgba(2,132,199,0.18) 0%, #070f1e 75%);padding:80px 0 60px;border-bottom:1px solid rgba(255,255,255,0.08);position:relative;">
+        <div class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;">
+          <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+            <!-- Left: Sovereign Fiduciary Manifesto -->
+            <div data-reveal="fade-up">
+              <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(2,132,199,0.15);border:1px solid rgba(56,189,248,0.35);padding:6px 20px;border-radius:9999px;margin-bottom:22px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 10px #38bdf8;"></span>
+                <span style="font-size:0.82rem;font-weight:800;color:#e0f2fe;letter-spacing:0.08em;text-transform:uppercase;">
+                  ${isZh ? `全球资本治理与机构级清算 · 创立于 ${esc(company.establishedYear || '2018')}` : `CAPITAL GOVERNANCE & CLEARING RAILS · EST. ${esc(company.establishedYear || '2018')}`}
+                </span>
               </div>
-            ` : ''}
+              <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.6rem);line-height:1.14;font-weight:900;letter-spacing:-0.03em;color:#ffffff;margin:0 0 20px;">
+                ${esc(headline)}
+              </h1>
+              <div style="color:#94a3b8;font-size:1.1rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+                ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);color:#ffffff;font-weight:800;padding:16px 36px;border-radius:8px;font-size:0.95rem;text-decoration:none;box-shadow:0 0 24px rgba(2,132,199,0.4);display:inline-block;">
+                  ${isZh ? '预约机构合规闭门简报 ↗' : 'Request Private Institutional Briefing ↗'}
+                </a>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);padding:14px 22px;border-radius:8px;font-size:0.85rem;color:#cbd5e1;display:flex;align-items:center;gap:8px;">
+                  🛡️ <span>FINCEN REG: #31000214891</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Cryptographic Vault & Telemetry SVG (Anti-blank) -->
+            <div data-reveal="fade-up">
+              <div class="wr-card-hover" style="border:1px solid rgba(56,189,248,0.3);border-radius:24px;overflow:hidden;position:relative;background:#08101f;box-shadow:0 0 45px rgba(2,132,199,0.15);min-height:360px;">
+                <!-- Vector Cryptographic Vault SVG -->
+                <svg viewBox="0 0 460 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;min-height:360px;object-fit:cover;display:block;">
+                  <defs>
+                    <radialGradient id="vaultGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.3"/>
+                      <stop offset="100%" stop-color="#070f1e" stop-opacity="0"/>
+                    </radialGradient>
+                  </defs>
+                  <rect width="460" height="320" fill="#08101f"/>
+                  <circle cx="230" cy="150" r="130" fill="url(#vaultGlow)"/>
+                  <rect x="0" y="0" width="460" height="36" fill="#0f1b33" stroke="rgba(56,189,248,0.2)"/>
+                  <rect x="18" y="11" width="85" height="14" rx="3" fill="rgba(56,189,248,0.15)"/>
+                  <text x="60" y="22" fill="#38bdf8" font-family="monospace" font-size="9" text-anchor="middle">HSM ENCLAVE</text>
+                  <text x="385" y="23" fill="#64748b" font-family="monospace" font-size="10">SECURITY LEVEL 3</text>
+                  <!-- Central Vault Ring -->
+                  <circle cx="230" cy="150" r="85" stroke="#1e293b" stroke-width="8"/>
+                  <circle cx="230" cy="150" r="75" stroke="#38bdf8" stroke-width="2" stroke-dasharray="8 4"/>
+                  <circle cx="230" cy="150" r="50" fill="#0c172b" stroke="#0284c7" stroke-width="3"/>
+                  <path d="M220 135 L240 135 L245 152 L230 168 L215 152 Z" fill="#38bdf8" opacity="0.9"/>
+                  <circle cx="230" cy="142" r="4" fill="#08101f"/>
+                  <!-- Bolts -->
+                  <rect x="226" y="55" width="8" height="18" rx="2" fill="#38bdf8"/>
+                  <rect x="226" y="227" width="8" height="18" rx="2" fill="#38bdf8"/>
+                  <rect x="135" y="146" width="18" height="8" rx="2" fill="#38bdf8"/>
+                  <rect x="307" y="146" width="18" height="8" rx="2" fill="#38bdf8"/>
+                  <!-- Telemetry cards -->
+                  <g transform="translate(25, 75)">
+                    <rect width="115" height="44" rx="8" fill="rgba(15,27,51,0.9)" stroke="rgba(56,189,248,0.3)"/>
+                    <text x="12" y="18" fill="#64748b" font-family="monospace" font-size="8">CLEARING RAIL</text>
+                    <text x="12" y="34" fill="#38bdf8" font-family="monospace" font-weight="bold" font-size="11">FEDNOW STP</text>
+                  </g>
+                  <g transform="translate(25, 175)">
+                    <rect width="115" height="44" rx="8" fill="rgba(15,27,51,0.9)" stroke="rgba(56,189,248,0.3)"/>
+                    <text x="12" y="18" fill="#64748b" font-family="monospace" font-size="8">SWIFT ROUTE</text>
+                    <text x="12" y="34" fill="#10b981" font-family="monospace" font-weight="bold" font-size="11">ISO 20022 ✓</text>
+                  </g>
+                  <g transform="translate(320, 75)">
+                    <rect width="115" height="44" rx="8" fill="rgba(15,27,51,0.9)" stroke="rgba(245,158,11,0.3)"/>
+                    <text x="12" y="18" fill="#64748b" font-family="monospace" font-size="8">MULTI-SIG CONSENSUS</text>
+                    <text x="12" y="34" fill="#f59e0b" font-family="monospace" font-weight="bold" font-size="11">5 OF 7 QUORUM</text>
+                  </g>
+                  <g transform="translate(320, 175)">
+                    <rect width="115" height="44" rx="8" fill="rgba(15,27,51,0.9)" stroke="rgba(56,189,248,0.3)"/>
+                    <text x="12" y="18" fill="#64748b" font-family="monospace" font-size="8">AML INTEGRITY</text>
+                    <text x="12" y="34" fill="#38bdf8" font-family="monospace" font-weight="bold" font-size="11">0.00% SANCTION</text>
+                  </g>
+                  <!-- Bottom Ribbon -->
+                  <rect x="25" y="265" width="410" height="34" rx="8" fill="rgba(2,132,199,0.12)" stroke="rgba(56,189,248,0.25)"/>
+                  <circle cx="45" cy="282" r="4" fill="#38bdf8"/>
+                  <text x="58" y="286" fill="#e0f2fe" font-family="monospace" font-size="10">TREASURY ASSETS VERIFIED // FIPS 140-2 LEVEL 3 LOCK ENGAGED</text>
+                </svg>
+
+                ${aboutImg ? `
+                  <img src="${esc(aboutImg)}" alt="${esc(company.name)}" onerror="this.style.display='none'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                ` : ''}
+
+                <!-- Corner Live Fiduciary Pill -->
+                <div style="position:absolute;top:44px;right:16px;background:rgba(7,15,30,0.85);border:1px solid rgba(56,189,248,0.4);border-radius:6px;padding:4px 12px;display:flex;align-items:center;gap:6px;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:#38bdf8;box-shadow:0 0 6px #38bdf8;"></span>
+                  <span style="font-size:0.75rem;font-family:monospace;color:#e0f2fe;">VAULT ACTIVE</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- 4 Core Metrics Grid -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:50px 24px 30px;" data-reveal="fade-up">
+      <!-- 2. CAPITAL METRICS INDEX -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:44px 24px 28px;" data-reveal="fade-up">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
           ${stats.map((s, idx) => `
-            <div class="wr-card-hover" data-reveal="fade-up" style="background:rgba(15,23,42,0.8);border:1px solid rgba(56,189,248,0.2);border-top:4px solid #0284c7;border-radius:14px;padding:30px 24px;box-shadow:0 8px 30px rgba(0,0,0,0.3);backdrop-filter:blur(10px);transition-delay:${idx * 0.08}s;">
-              <div style="font-size:2.5rem;font-weight:900;color:#38bdf8;letter-spacing:-1px;margin-bottom:8px;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">
-                ${esc(s.value)}
+            <div class="wr-card-hover" style="background:rgba(15,23,42,0.85);border:1px solid rgba(56,189,248,0.2);border-top:4px solid #0284c7;border-radius:14px;padding:30px 24px;box-shadow:0 8px 30px rgba(0,0,0,0.3);backdrop-filter:blur(10px);">
+              <div style="font-size:clamp(2.4rem, 3.8vw, 3rem);font-weight:900;color:#38bdf8;letter-spacing:-1px;margin-bottom:8px;font-family:monospace;">
+                <span data-counter="${s.num}" ${s.prefix ? `data-prefix="${esc(s.prefix)}"` : ''} ${s.suffix ? `data-suffix="${esc(s.suffix)}"` : ''}>
+                  ${esc(s.value)}
+                </span>
               </div>
               <div style="font-size:1.05rem;font-weight:800;color:#ffffff;margin-bottom:6px;">${esc(s.label)}</div>
               ${s.desc ? `<div style="font-size:0.86rem;color:#94a3b8;line-height:1.5;">${esc(s.desc)}</div>` : ''}
@@ -536,107 +622,84 @@ function renderModernFintechAbout(ctx: ThemeContext): string {
         </div>
       </section>
 
-      <!-- Institutional Narrative & Security Mesh (2-Col) -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 70px;" data-reveal="fade-up">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:center;">
-          <div>
-            <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#38bdf8;text-transform:uppercase;">
-              ${isZh ? '机构治理与受信托责任' : 'FIDUCIARY GOVERNANCE & ARCHITECTURE'}
-            </span>
-            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:#ffffff;margin:12px 0 20px;line-height:1.2;">
-              ${isZh ? '以最高合规标准，守护全球跨国企业资本安全' : 'Guarding Enterprise Capital with Uncompromising Fiduciary Integrity'}
-            </h2>
-            <div style="color:#94a3b8;font-size:1.05rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;">
-              ${paras.map(p => `<p style="margin:0;">${esc(p)}</p>`).join('')}
-            </div>
-            <div style="margin-top:28px;padding:20px;background:rgba(2,132,199,0.08);border-left:4px solid #38bdf8;border-radius:0 10px 10px 0;">
-              <strong style="color:#38bdf8;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.06em;display:block;">
-                ${isZh ? '权威金融资质与审计认证' : 'Statutory & Fiduciary Accreditations'}
-              </strong>
-              <span style="color:#e2e8f0;font-size:0.95rem;font-weight:600;margin-top:4px;display:block;">
-                ${esc(company.certifications || 'ISO/IEC 27001 · SOC 1 & SOC 2 Type II · PCI-DSS Level 1 · FinCEN MSB Registered · SWIFT Network')}
-              </span>
-            </div>
-          </div>
-
-          <!-- Right Showcase Card -->
-          <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(56,189,248,0.25);border-radius:20px;padding:36px;box-shadow:0 0 40px rgba(2,132,199,0.15);" class="wr-card-hover">
-            ${aboutImg ? `
-              <div style="overflow:hidden;border-radius:12px;border:1px solid rgba(255,255,255,0.1);margin-bottom:24px;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)} custody" style="width:100%;height:220px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            ` : ''}
-            <span style="font-size:11px;font-weight:800;letter-spacing:0.18em;color:#38bdf8;text-transform:uppercase;">MULTI-CURRENCY TREASURY VAULT</span>
-            <h3 style="font-size:1.4rem;font-weight:800;color:#ffffff;margin:8px 0 12px;">
-              ${isZh ? '全天候自动化跨国司库流动性中枢' : 'Autonomous Cross-Border Treasury Hub'}
-            </h3>
-            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.6;margin:0 0 20px;">
-              ${isZh ? '集中调度全球多币种活期资金池，智能降低外汇汇率敞口波动，大幅缩短月结对账周期。' : 'Consolidate corporate liquidity, automate multi-currency sweeps, and eliminate exchange rate friction across cross-border subsidiaries.'}
-            </p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
-                <div style="color:#38bdf8;font-weight:800;font-size:0.8rem;text-transform:uppercase;">HSM ENCLAVE</div>
-                <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">${isZh ? '硬件级多重私钥隔离' : 'Hardware key isolation'}</div>
-              </div>
-              <div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
-                <div style="color:#f59e0b;font-weight:800;font-size:0.8rem;text-transform:uppercase;">STP CLEARING</div>
-                <div style="color:#94a3b8;font-size:0.78rem;margin-top:4px;">${isZh ? '零人工干预直通对账' : 'Straight-through audit'}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Four Governance Pillars -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:60px 24px;border-top:1px solid rgba(255,255,255,0.08);" data-reveal="fade-up">
-        <div style="text-align:center;margin-bottom:48px;">
+      <!-- 3. TRI-FOLD SOVEREIGN INFRASTRUCTURE -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:40px 24px 60px;" data-reveal="fade-up">
+        <div style="text-align:center;max-width:760px;margin:0 auto 48px;">
           <span style="font-size:0.82rem;font-weight:800;letter-spacing:0.12em;color:#38bdf8;text-transform:uppercase;">
-            ${isZh ? '核心金融治理支柱' : 'FOUR PILLARS OF GOVERNANCE'}
+            ${isZh ? '受托治理与资本安全' : 'SOVEREIGN FIDUCIARY ARCHITECTURE'}
           </span>
-          <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:#ffffff;margin:10px 0;">
-            ${isZh ? '四大资本治理维度，满足跨国财资严苛需求' : 'Institutional Safeguards & Statutory Rigor'}
+          <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;color:#ffffff;margin:8px 0 12px;">
+            ${isZh ? '三大跨国资本支柱：消除汇率敞口与清算摩擦' : 'Three Pillars of Cross-Border Capital Governance'}
           </h2>
-          <p style="color:#94a3b8;max-width:620px;margin:0 auto;font-size:1rem;">
-            ${isZh ? '服务于跨国 500 强 CFO、司库主管与金融投资机构，经受全球顶级审计机构独立鉴证。' : 'Engineered for multinational corporate treasurers, CFOs, and sovereign asset managers.'}
+          <p style="color:#94a3b8;font-size:1.05rem;line-height:1.6;margin:0;">
+            ${isZh ? '专为应对跨国资金池归集、流动性自动平衡与严苛穿透式审计而设计。' : 'Engineered for global treasurers and sovereign institutions to achieve absolute liquidity predictability.'}
           </p>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;">
-            <div style="font-size:2.2rem;margin-bottom:14px;">🏛️</div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '银行级加密防护' : 'Bank-Grade Security'}</h3>
-            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '采用 FIPS 140-2 Level 3 硬件加密模块（HSM），实现动态数据与静态总账全流程不可逆加密。' : 'FIPS 140-2 Level 3 certified hardware security modules securing cryptographic root keys.'}</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;">
+          <!-- Pillar 1 -->
+          <div class="wr-card-hover" style="background:#0b1528;border:1px solid rgba(56,189,248,0.25);border-radius:18px;padding:34px;">
+            <div style="font-size:2rem;margin-bottom:14px;">🏛️</div>
+            <h3 style="font-size:1.35rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? '硬件级金库与私钥隔离' : 'HSM Enclave Custody'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0 0 18px;">${isZh ? '部署 FIPS 140-2 Level 3 认证硬件加密机，支持 MPC 门限多签与冷热多维隔离，彻底杜绝单点被盗风险。' : 'FIPS 140-2 Level 3 certified hardware security modules with MPC threshold multi-sig for sovereign root key isolation.'}</p>
+            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;font-size:0.8rem;color:#38bdf8;font-weight:700;">// FIPS 140-2 LEVEL 3 ASSURED</div>
           </div>
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;transition-delay:0.08s;">
-            <div style="font-size:2.2rem;margin-bottom:14px;">⚡</div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '算法驱动汇率对冲' : 'Algorithmic FX Hedging'}</h3>
-            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '毫秒级捕捉全球银行间外汇即期与远期点差，自动触发流动性套期保值，锁定企业预期利润率。' : 'Real-time interbank order routing capturing optimized bid-ask spreads across global currency corridors.'}</p>
+
+          <!-- Pillar 2 -->
+          <div class="wr-card-hover" style="background:#0b1528;border:1px solid rgba(56,189,248,0.25);border-radius:18px;padding:34px;">
+            <div style="font-size:2rem;margin-bottom:14px;">⚡</div>
+            <h3 style="font-size:1.35rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? '算法驱动自动外汇对冲' : 'Algorithmic FX Execution'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0 0 18px;">${isZh ? '穿透连接全球一级外汇做市商，毫秒级比价与自动触发跨币种套期保值，将企业资金兑换滑点压缩至极限。' : 'Sub-second interbank order routing capturing optimized bid-ask spreads across global corridors with automated sweeps.'}</p>
+            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;font-size:0.8rem;color:#38bdf8;font-weight:700;">// SUB-SECOND STRAIGHT-THROUGH</div>
           </div>
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;transition-delay:0.16s;">
-            <div style="font-size:2.2rem;margin-bottom:14px;">🛡️</div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '全天候实时反洗钱审查' : 'Real-Time AML/KYC'}</h3>
-            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '集成国际主要制裁名单与交易行为分析图谱，在资金落账前完成穿透式合规过滤与风险预警。' : 'Sub-second sanction list screening and transaction graph telemetry preventing illicit fund movements.'}</p>
-          </div>
-          <div class="wr-card-hover" data-reveal="fade-up" style="background:#0c1527;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:30px;transition-delay:0.24s;">
-            <div style="font-size:2.2rem;margin-bottom:14px;">🌐</div>
-            <h3 style="color:#ffffff;font-size:1.25rem;font-weight:800;margin:0 0 10px;">${isZh ? '全球清算网络直连' : 'Direct Clearing Rails'}</h3>
-            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0;">${isZh ? '直连 SWIFT、FedNow、SEPA 等核心跨国结算基础设施，消除层层中介代理行繁琐手续费。' : 'Direct host-to-host connectivity with central bank automated clearing houses avoiding correspondent fees.'}</p>
+
+          <!-- Pillar 3 -->
+          <div class="wr-card-hover" style="background:#0b1528;border:1px solid rgba(56,189,248,0.25);border-radius:18px;padding:34px;">
+            <div style="font-size:2rem;margin-bottom:14px;">⚖️</div>
+            <h3 style="font-size:1.35rem;font-weight:800;color:#ffffff;margin:0 0 10px;">${isZh ? '穿透式全球反洗钱监控' : 'Continuous AML Graph'}</h3>
+            <p style="color:#94a3b8;font-size:0.92rem;line-height:1.65;margin:0 0 18px;">${isZh ? '秒级核验 OFAC、联合国及欧盟制裁黑名单，通过资金拓扑图谱动态拦截可疑链条，确保 100% 监管合规。' : 'Continuous sanctions screening across international statutory registries with transaction graph verification.'}</p>
+            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;font-size:0.8rem;color:#38bdf8;font-weight:700;">// 140+ JURISDICTIONS COMPLIANT</div>
           </div>
         </div>
       </section>
 
-      <!-- CTA Band -->
-      <section class="wrap" style="max-width:1200px;margin:0 auto;padding:40px 24px 90px;">
-        <div data-reveal="fade-up" style="background:linear-gradient(135deg, rgba(9,19,34,0.95) 0%, rgba(2,132,199,0.2) 100%);border:1px solid rgba(56,189,248,0.3);border-radius:20px;padding:50px 32px;text-align:center;box-shadow:0 0 40px rgba(2,132,199,0.2);">
-          <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);color:#ffffff;font-weight:900;margin:0 0 14px;">
-            ${isZh ? '准备好升级您的全球司库与资本清算体系了吗？' : 'Ready to Elevate Your Corporate Treasury Operations?'}
+      <!-- 4. STATUTORY ACCREDITATION MATRIX -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px 60px;" data-reveal="fade-up">
+        <div style="background:rgba(15,23,42,0.9);border:1px solid rgba(56,189,248,0.25);border-radius:18px;padding:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;">
+          <div>
+            <span style="color:#38bdf8;font-size:0.8rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;">STATUTORY & FIDUCIARY ACCREDITATIONS</span>
+            <div style="color:#ffffff;font-size:1.05rem;font-weight:800;margin-top:4px;">
+              ${esc(company.certifications || 'SOC 1 & SOC 2 Type II · ISO/IEC 27001 · PCI-DSS Level 1 · FinCEN MSB · SWIFT Network Member')}
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;font-family:monospace;font-size:0.82rem;color:#cbd5e1;">
+            <span style="border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:6px;background:rgba(56,189,248,0.06);">SOC 2 TYPE II</span>
+            <span style="border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:6px;background:rgba(56,189,248,0.06);">PCI-DSS L1</span>
+            <span style="border:1px solid rgba(56,189,248,0.3);padding:8px 16px;border-radius:6px;background:rgba(56,189,248,0.06);">ISO 27001</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. PRIVATE FIDUCIARY BRIEFING CTA -->
+      <section class="wrap" style="max-width:1240px;margin:0 auto;padding:0 24px;" data-reveal="fade-up">
+        <div style="background:linear-gradient(135deg, #0a1628 0%, #070f1e 100%);border:1px solid rgba(56,189,248,0.35);border-radius:24px;padding:50px 36px;text-align:center;box-shadow:0 0 50px rgba(2,132,199,0.18);">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(2,132,199,0.18);border:1px solid rgba(56,189,248,0.4);padding:6px 16px;border-radius:9999px;color:#e0f2fe;font-size:0.82rem;font-weight:800;margin-bottom:16px;">
+            🔒 INSTITUTIONAL PRIVACY ASSURED
+          </div>
+          <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.7rem);color:#ffffff;font-weight:900;margin:0 0 14px;">
+            ${isZh ? '开启企业跨国财资清算架构评估' : 'Schedule Private Institutional Briefing'}
           </h2>
-          <p style="color:#94a3b8;max-width:620px;margin:0 auto 28px;font-size:1.05rem;line-height:1.65;">
-            ${isZh ? '预约资深金融合规专家与司库顾问，获取定制化资金跨境路由方案与流动性测算报告。' : 'Request a private institutional briefing to evaluate clearing corridors, liquidity pools, and integration timelines.'}
+          <p style="color:#94a3b8;max-width:620px;margin:0 auto 30px;font-size:1.1rem;line-height:1.65;">
+            ${isZh ? '预约资深金融合规专家与司库架构师，获取定制化资金跨境清算路由方案与流动性测算报告。' : 'Request a confidential consultation to review multi-currency liquidity corridors and integration timelines.'}
           </p>
-          <a class="button" style="background:#0284c7;color:#ffffff;font-weight:800;border-radius:8px;padding:16px 36px;display:inline-block;text-decoration:none;box-shadow:0 0 24px rgba(2,132,199,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
-            ${isZh ? '预约机构合规闭门简报 ↗' : 'Request Private Briefing ↗'}
-          </a>
+          <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+            <a class="button" style="background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%);color:#ffffff;font-weight:800;border-radius:8px;padding:17px 38px;display:inline-block;text-decoration:none;box-shadow:0 0 24px rgba(2,132,199,0.4);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+              ${isZh ? '预约机构合规闭门简报 ↗' : 'Request Private Briefing ↗'}
+            </a>
+            <a class="button" style="background:rgba(255,255,255,0.06);color:#ffffff;border:1px solid rgba(255,255,255,0.2);font-weight:800;border-radius:8px;padding:17px 32px;display:inline-block;text-decoration:none;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>
+              ${isZh ? '查阅机构产品与服务矩阵 →' : 'Explore Institutional Services →'}
+            </a>
+          </div>
         </div>
       </section>
     </div>
