@@ -10,22 +10,31 @@ import type{Project}from'../src/shared/model';
 
 describe('durable confirmed materials receiver',()=>{
   let env:AppEnv, service:MaterialsService, store:DomainStore, fixture:Awaited<ReturnType<typeof materialsFixture>>;
-  let failAsset=false,revoked=false,fetches=0;
+  let failAsset=false,revoked=false,fetches=0,respond:((assetId:string)=>Promise<Response>)|undefined;
+  const schedule=vi.fn(async(_time:number)=>{});
   const objects=new Map<string,{bytes:Uint8Array;options:any}>();
   beforeEach(async()=>{
-    fixture=await materialsFixture(2);failAsset=false;revoked=false;fetches=0;objects.clear();
+    fixture=await materialsFixture(2);failAsset=false;revoked=false;fetches=0;respond=undefined;objects.clear();schedule.mockClear();
     const db=testDb();await db.exec(readFileSync('migrations/0002_business.sql','utf8'));
     const bucket={async put(key:string,value:any,options:any){const bytes=typeof value==='string'?new TextEncoder().encode(value):new Uint8Array(value);objects.set(key,{bytes,options});},async get(key:string){const o=objects.get(key);return o?{size:o.bytes.length,httpMetadata:o.options?.httpMetadata,customMetadata:o.options?.customMetadata,arrayBuffer:async()=>o.bytes.buffer.slice(o.bytes.byteOffset,o.bytes.byteOffset+o.bytes.length),text:async()=>new TextDecoder().decode(o.bytes)}:null;},async head(key:string){return this.get(key);},async delete(key:string|string[]){for(const k of typeof key==='string'?[key]:key)objects.delete(k);}};
     env={DB:db,MEDIA:bucket,PRODUCT_RADAR_BASE_URL:'https://product.example.com',PRODUCT_RADAR_INTEGRATION_SECRET:'s'.repeat(40)}as unknown as AppEnv;
-    store=new DomainStore(db);service=new MaterialsService(env,store,{lock:async fn=>fn(),schedule:async()=>{}});
+    store=new DomainStore(db);service=createService();
     vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
       if(String(input).endsWith('/context'))return revoked?Response.json({}, {status:403}):Response.json({protocolVersion:1,principal:fixture.principal});
       const body=JSON.parse(String(init?.body));fetches++;
+      if(respond)return respond(body.assetId);
       if(failAsset&&body.assetId==='source-1')return Response.json({}, {status:503});
       return new Response(materialsPng,{headers:{'content-type':'image/png','content-length':String(materialsPng.length)}});
     }));
   });
-  afterEach(()=>vi.unstubAllGlobals());
+  afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks();});
+  const createService=()=>{
+    let serial:Promise<unknown>=Promise.resolve();
+    return new MaterialsService(env,store,{lock:fn=>{const next=serial.then(fn,fn);serial=next.catch(()=>{});return next;},schedule});
+  };
+  const imageResponse=()=>new Response(materialsPng,{headers:{'content-type':'image/png','content-length':String(materialsPng.length)}});
+  const deferred=()=>{let resolve!:(response:Response)=>void;const promise=new Promise<Response>(r=>{resolve=r;});return{promise,resolve};};
+  const progress=()=>service.status(fixture.principal,fixture.submissionId);
   const finish=async()=>{for(let i=0;i<5;i++){await service.tick();const receipt=await service.status(fixture.principal,fixture.submissionId);if(receipt.state!=='receiving')return receipt;}throw Error('did not finish');};
   it('accepts only after all copied assets and snapshot are durable, without generation or publication',async()=>{
     const first=await service.submit(fixture.principal,fixture);expect(first.state).toBe('receiving');expect((await store.list<Project>('projects'))).toHaveLength(0);
@@ -38,6 +47,98 @@ describe('durable confirmed materials receiver',()=>{
   it('resumes a partial failed copy with the same ID and reuses verified media',async()=>{
     failAsset=true;await service.submit(fixture.principal,fixture);const failed=await finish();expect(failed.state).toBe('failed');expect(failed.receivedMedia).toBe(1);expect(failed.retryable).toBe(true);expect((await store.list('projects'))).toHaveLength(0);
     failAsset=false;await service.submit(fixture.principal,fixture);expect((await finish()).state).toBe('accepted');expect(fetches).toBe(3);
+  });
+  it('copies multiple batches in one tick with at most four transfers and durable out-of-order progress',async()=>{
+    fixture=await materialsFixture(8);
+    const pending=new Map<string,ReturnType<typeof deferred>>();let active=0,peak=0;
+    respond=async id=>{const gate=deferred();pending.set(id,gate);peak=Math.max(peak,++active);try{return await gate.promise;}finally{active--;}};
+    await service.submit(fixture.principal,fixture);const tick=service.tick();expect(service.tick()).toBe(tick);
+    await vi.waitFor(()=>expect(pending.size).toBe(4));expect((await store.list('projects'))).toHaveLength(0);
+    for(const [index,id]of ['source-2','source-0','source-3'].entries()){
+      pending.get(id)!.resolve(imageResponse());
+      await vi.waitFor(async()=>expect((await progress()).receivedMedia).toBe(index+1));
+    }
+    expect(pending.size).toBe(4);expect((await progress()).state).toBe('receiving');
+    pending.get('source-1')!.resolve(imageResponse());
+    await vi.waitFor(()=>expect(pending.size).toBe(8));
+    expect((await progress()).receivedMedia).toBe(4);expect((await store.list('projects'))).toHaveLength(0);
+    for(const id of ['source-7','source-5','source-4','source-6'])pending.get(id)!.resolve(imageResponse());
+    await tick;
+    expect(await progress()).toMatchObject({state:'accepted',receivedMedia:8});expect(peak).toBe(4);expect(fetches).toBe(8);
+    expect(await store.list('assets')).toHaveLength(8);expect(schedule).toHaveBeenCalledTimes(2);
+  });
+  it('settles retryable failures after concurrent successes and resumes them after receiver restart',async()=>{
+    fixture=await materialsFixture(8);
+    const pending=new Map<string,ReturnType<typeof deferred>>();
+    respond=async id=>{if(id==='source-0')return Response.json({}, {status:503});const gate=deferred();pending.set(id,gate);return gate.promise;};
+    await service.submit(fixture.principal,fixture);const tick=service.tick();
+    await vi.waitFor(()=>expect(pending.size).toBe(3));
+    for(const id of ['source-3','source-1'])pending.get(id)!.resolve(imageResponse());
+    await vi.waitFor(async()=>expect(await progress()).toMatchObject({state:'receiving',receivedMedia:2}));
+    pending.get('source-2')!.resolve(imageResponse());await tick;
+    expect(await progress()).toMatchObject({state:'failed',retryable:true,receivedMedia:3});expect(fetches).toBe(4);
+    expect(await store.list('projects')).toHaveLength(0);expect(objects.size).toBe(4);
+    service=createService();respond=undefined;await service.submit(fixture.principal,fixture);await service.tick();
+    expect(await progress()).toMatchObject({state:'accepted',receivedMedia:8});expect(fetches).toBe(9);
+  });
+  it('waits for in-flight writes before permanent cleanup and does not hide a conflict behind a transient error',async()=>{
+    fixture=await materialsFixture(8);
+    const pending=new Map<string,ReturnType<typeof deferred>>();
+    respond=async id=>{if(id==='source-0')return Response.json({}, {status:503});const gate=deferred();pending.set(id,gate);return gate.promise;};
+    const put=env.MEDIA.put.bind(env.MEDIA),write=deferred();let writing=false;
+    vi.spyOn(env.MEDIA,'put').mockImplementation(async(...args:Parameters<typeof env.MEDIA.put>)=>{if(args[0].endsWith('-3')){writing=true;await write.promise;}return put(...args);});
+    await service.submit(fixture.principal,fixture);const tick=service.tick();
+    await vi.waitFor(()=>expect(pending.size).toBe(3));
+    pending.get('source-1')!.resolve(Response.json({}, {status:409}));
+    pending.get('source-2')!.resolve(imageResponse());pending.get('source-3')!.resolve(imageResponse());
+    await vi.waitFor(async()=>{expect(writing).toBe(true);expect(await progress()).toMatchObject({state:'receiving',receivedMedia:1});});
+    expect(objects.size).toBe(2);expect(fetches).toBe(4);expect(await store.list('projects')).toHaveLength(0);
+    write.resolve(imageResponse());await tick;
+    expect(await progress()).toMatchObject({state:'failed',retryable:false,receivedMedia:2});
+    expect(objects.size).toBe(0);expect(await store.list('projects')).toHaveLength(0);expect(await store.list('assets')).toHaveLength(0);
+  });
+  it('bounds work per tick and resumes a large submission without refetching completed media',async()=>{
+    for(let i=2;i<115;i++)fixture.materials.media.push({...fixture.materials.media[0],id:`m${i}`,sourceAssetId:`source-${i}`});
+    fixture.confirmation.contentSha256=await sha256(canonical({source:fixture.source,materials:fixture.materials}));
+    await service.submit(fixture.principal,fixture);await service.tick();
+    const first=await progress();expect(first.state).toBe('receiving');expect(first.receivedMedia).toBeGreaterThan(4);expect(first.receivedMedia).toBeLessThan(115);
+    expect(await store.list('projects')).toHaveLength(0);
+    service=createService();expect((await finish()).state).toBe('accepted');expect(fetches).toBe(115);
+  });
+  it('stops starting new batches when the tick time budget is spent',async()=>{
+    fixture=await materialsFixture(8);const started=Date.now();let now=started;
+    vi.spyOn(Date,'now').mockImplementation(()=>now);
+    respond=async()=>{now=started+60_000;return imageResponse();};
+    await service.submit(fixture.principal,fixture);await service.tick();
+    expect(await progress()).toMatchObject({state:'receiving',receivedMedia:4});expect(fetches).toBe(4);
+    respond=undefined;await service.tick();expect((await progress()).state).toBe('accepted');
+  });
+  it('limits buffered bytes when several individually valid large images are pending',async()=>{
+    const bytes=new Uint8Array(12*1024*1024);bytes.set(materialsPng);
+    const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join('');
+    for(const media of fixture.materials.media){media.bytes=bytes.length;media.sha256=hash;}
+    fixture.confirmation.contentSha256=await sha256(canonical({source:fixture.source,materials:fixture.materials}));
+    const first=deferred();
+    respond=async id=>id==='source-0'?first.promise:new Response(bytes,{headers:{'content-type':'image/png','content-length':String(bytes.length)}});
+    await service.submit(fixture.principal,fixture);const tick=service.tick();
+    await vi.waitFor(()=>expect(fetches).toBe(1));
+    expect((await progress()).receivedMedia).toBe(0);
+    first.resolve(new Response(bytes,{headers:{'content-type':'image/png','content-length':String(bytes.length)}}));await tick;
+    expect(await progress()).toMatchObject({state:'accepted',receivedMedia:2});expect(fetches).toBe(2);
+  });
+  it('reuses a copied R2 object after its progress checkpoint is lost on receiver restart',async()=>{
+    await service.submit(fixture.principal,fixture);
+    const row=await env.DB.prepare('SELECT scope,result FROM idempotency WHERE request_id=?').bind(fixture.submissionId).first<{scope:string;result:string}>();
+    const operation=JSON.parse(row!.result),assetId=`materials-${fixture.submissionId}-0`;
+    await env.MEDIA.put(`projects/${operation.projectId}/assets/${assetId}`,materialsPng,{httpMetadata:{contentType:'image/png'},customMetadata:{sha256:fixture.materials.media[0].sha256}});
+    service=createService();await service.tick();
+    expect(await progress()).toMatchObject({state:'accepted',receivedMedia:2});expect(fetches).toBe(1);expect(await store.list('assets')).toHaveLength(2);
+  });
+  it('rechecks revoked access after concurrent transfers and before accepting the project',async()=>{
+    respond=async()=>{revoked=true;return imageResponse();};
+    await service.submit(fixture.principal,fixture);await service.tick();
+    expect(await progress()).toMatchObject({state:'failed',retryable:false,receivedMedia:2});
+    expect(await store.list('projects')).toHaveLength(0);expect(await store.list('assets')).toHaveLength(0);expect(objects.size).toBe(0);
   });
   it('retains an accepted project and media when the final database response is uncertain',async()=>{
     const batch=store.batch.bind(store);vi.spyOn(store,'batch').mockImplementationOnce(async statements=>{await batch(statements);throw new ApiError(409,'response_lost','Database response lost after commit');});

@@ -15,6 +15,7 @@ interface Operation {
   assets:Record<string,Asset>;createdAt:string;expiresAt:number;cleaned?:boolean;
 }
 interface Hooks {lock<T>(fn:()=>Promise<T>):Promise<T>;schedule(time:number):Promise<void>}
+const receiveConcurrency=4,receiveTickLimit=32,receiveTickMs=10_000,receiveBatchBytes=20*1024*1024;
 const time=()=>new Date().toISOString();
 const scopeFor=async(p:Principal)=>'materials:'+await sha256(canonical([p.userId,p.workspaceId]));
 export function draftFromMaterials(submission:MaterialsSubmission,assets:Record<string,Asset>):Draft{
@@ -102,23 +103,39 @@ export class MaterialsService {
     const selected=operations.find(r=>!r.operation.cleaned&&r.operation.receipt.state==='receiving');
     if(!selected){const expiry=operations.filter(r=>!r.operation.cleaned).map(r=>r.operation.expiresAt);if(expiry.length)await this.hooks.schedule(Math.min(...expiry));return;}
     const {scope,operation}=selected;
+    const deadline=Date.now()+receiveTickMs;
     try{
       const principal=await currentMaterialsPrincipal(this.env,operation.principal);
       const source=await this.env.MEDIA.get(operation.snapshotKey);
       if(!source)throw new ApiError(409,'materials_snapshot_missing','已确认资料快照不存在。');
       const input=materialsSubmissionSchema.parse(JSON.parse(await source.text()));
-      const media=input.materials.media.find(m=>!operation.assets[m.id]);
-      if(media){
-        const index=input.materials.media.indexOf(media),assetId=`materials-${input.submissionId}-${index}`,key=`projects/${operation.projectId}/assets/${assetId}`;
-        const saved=await this.env.MEDIA.head(key);
-        if(!saved||saved.customMetadata?.sha256!==media.sha256||saved.size!==media.bytes){
-          const response=await prRequest(this.env,'/api/web-radar/service/material-assets',{userId:principal.userId,workspaceId:principal.workspaceId,materialsId:input.source.materialsId,revision:input.source.revision,assetId:media.sourceAssetId,expectedVersion:media.sourceVersion,expectedSha256:media.sha256});
-          const bytes=await checkedMaterialsMedia(response,media);
-          await this.env.MEDIA.put(key,bytes,{httpMetadata:{contentType:media.mimeType},customMetadata:{sha256:media.sha256}});
+      const pending=input.materials.media.map((media,index)=>({media,index})).filter(({media})=>!operation.assets[media.id]);
+      let offset=0;
+      while(offset<pending.length&&offset<receiveTickLimit&&(offset===0||Date.now()<deadline)){
+        const batch:typeof pending=[];let bytes=0;
+        // Limit both buffered image bytes and work per tick; large images receive alone.
+        while(offset<pending.length&&offset<receiveTickLimit&&batch.length<receiveConcurrency){
+          const next=pending[offset];if(batch.length&&bytes+next.media.bytes>receiveBatchBytes)break;
+          batch.push(next);bytes+=next.media.bytes;offset++;
         }
-        operation.assets[media.id]={id:assetId,projectId:operation.projectId,key,contentType:media.mimeType,size:media.bytes,sha256:media.sha256,filename:`${media.id}.${media.mimeType.split('/')[1]}`,origin:'import',createdAt:operation.createdAt};
-        operation.receipt.receivedMedia=Object.keys(operation.assets).length;
-        await this.hooks.lock(()=>this.update(scope,operation).run());
+        const results=await Promise.allSettled(batch.map(async({media,index})=>{
+          const assetId=`materials-${input.submissionId}-${index}`,key=`projects/${operation.projectId}/assets/${assetId}`;
+          const saved=await this.env.MEDIA.head(key);
+          if(!saved||saved.customMetadata?.sha256!==media.sha256||saved.size!==media.bytes){
+            const response=await prRequest(this.env,'/api/web-radar/service/material-assets',{userId:principal.userId,workspaceId:principal.workspaceId,materialsId:input.source.materialsId,revision:input.source.revision,assetId:media.sourceAssetId,expectedVersion:media.sourceVersion,expectedSha256:media.sha256});
+            const bytes=await checkedMaterialsMedia(response,media);
+            await this.env.MEDIA.put(key,bytes,{httpMetadata:{contentType:media.mimeType},customMetadata:{sha256:media.sha256}});
+          }
+          await this.hooks.lock(async()=>{
+            operation.assets[media.id]={id:assetId,projectId:operation.projectId,key,contentType:media.mimeType,size:media.bytes,sha256:media.sha256,filename:`${media.id}.${media.mimeType.split('/')[1]}`,origin:'import',createdAt:operation.createdAt};
+            operation.receipt.receivedMedia=Object.keys(operation.assets).length;
+            await this.update(scope,operation).run();
+          });
+        }));
+        // Finish every copy/checkpoint before failure or cleanup. A permanent error
+        // must not become retryable just because another request failed first.
+        const errors=results.filter((result):result is PromiseRejectedResult=>result.status==='rejected').map(result=>result.reason);
+        if(errors.length)throw errors.find(error=>error instanceof Error&&'status'in error&&'code'in error&&Number(error.status)<500&&Number(error.status)!==429)??errors[0];
       }
       if(operation.receipt.receivedMedia===operation.receipt.totalMedia){
         const current=await currentMaterialsPrincipal(this.env,principal);
