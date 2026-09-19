@@ -1,4 +1,5 @@
 import type { Product } from '../../shared/model';
+import { isTypedMaterialsSource } from '../materials-typed';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { CANDY_DEFAULT_PRODUCTS, getCandyProducts } from './sensengCandy';
 import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline, getAboutImages } from './aboutHelper';
@@ -552,7 +553,7 @@ export function renderWonderDetail(ctx: ThemeContext): string {
   `;
 }
 
-export function renderWonderAbout(ctx: ThemeContext): string {
+function renderLegacyWonderAbout(ctx: ThemeContext): string {
   const isZh = (ctx.lang as string) === 'zh';
   const company = ctx.draft.company;
   const { path, navAttrs } = ctx;
@@ -727,6 +728,211 @@ export function renderWonderAbout(ctx: ThemeContext): string {
       </section>
     </main>
   `;
+}
+
+
+function renderModernWonderAbout(ctx: ThemeContext): string {
+  const isZh = (ctx.lang as string) === 'zh';
+  const company = ctx.draft.company;
+  const { path, navAttrs } = ctx;
+
+  const { primary: aboutImg, secondary: secondaryImg } = getAboutImages(ctx, path('assets/about-reference.jpg'), path('assets/hero-wonder.jpg'));
+  const headline = getAboutHeadline(company, isZh ? '让触觉成为治愈生活的一束温暖微光' : 'Crafting Tactile Solace for Modern Hearts');
+  const storyParas = getAboutStoryParagraphs(
+    company,
+    isZh
+      ? [
+          `${company.name || 'Senseng'} 玩具工坊融合了北欧极简美学理念与高精尖工贸制造工艺。我们致力于重新定义日常触觉玩具体验，不仅让孩子们享受无毒纯净的探索快乐，也让成年人在忙碌节奏中拥有一座随身携带的心灵绿洲。`,
+          '在斯堪的纳维亚自然哲学的启发下，我们精选 FSC 认证环保原木与食品级亲肤聚合物，拒绝任何多余化学添加剂与刺激气味。每一款玩偶在出厂前，都经历过数十道纯手工圆角修模、温和植物色浆浸润与掌心阻尼测试。',
+          '依托现代化的洁净车间与严格的欧美出海玩具质量认证体系，我们的产品畅销全球 60 多个国家与地区，深受蒙特梭利启智机构、设计买手店及全球礼品商超的信赖。'
+        ]
+      : [
+          `${company.name || 'Senseng'} Workshop brings together Scandinavian aesthetic minimalism and rigorous export toy manufacturing. We create tactile companions that nurture fine motor skills in young explorers while offering gentle grounding mindfulness to busy adults.`,
+          'Guided by Nordic natural philosophies, we combine sustainably harvested FSC beechwood and food-contact safe polymers, completely eliminating harmful volatile plasticizers and chemical odors.',
+          'Backed by modern cleanroom packaging facilities and certified under European EN71 and US ASTM standards, our collections are trusted by progressive Montessori learning spaces, boutique lifestyle retailers, and premium gift chains worldwide.'
+        ]
+  );
+
+  const stats = parseAboutHighlights(company.aboutHighlights, [
+    { value: '10,000+ m²', num: 10000, suffix: ' m²', label: isZh ? '北欧标准洁净工坊' : 'Cleanroom Facility', desc: isZh ? 'GMP 洁净车间制造规范' : 'GMP standard clean workshop' },
+    { value: '1,200,000+', num: 1200000, suffix: '+', label: isZh ? '月均出海玩具产能' : 'Monthly Toy Capacity', desc: isZh ? '精密注塑与手工精磨' : 'Automated & hand-finished' },
+    { value: '60+', num: 60, suffix: '+', label: isZh ? '全球出口合作国家' : 'Export Destinations', desc: isZh ? '直通欧美亚主流渠道' : 'Tier-1 global retail networks' },
+    { value: '100%', num: 100, suffix: '%', label: isZh ? '全检出库合格率' : 'Pass Inspection Rate', desc: isZh ? 'EN71 / ASTM 全项合规' : 'Full-batch chemical & physical QA' },
+  ]);
+
+  return `
+    <main class="wr-inner wr-senseng-wonder-inner" data-wr-page="about" style="padding-top:100px;background:#fbf8f3;">
+      <section class="wrap" style="padding:40px 0 70px;">
+        <!-- Editorial Hero Split -->
+        <div class="about-split" data-reveal="fade-up" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;margin-bottom:60px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:#e9f5f3;border:1px solid #cce8e3;padding:6px 16px;border-radius:9999px;margin-bottom:18px;">
+              <span style="font-size:14px;">🌿</span>
+              <span style="font-size:12px;font-weight:800;color:#2a9d8f;letter-spacing:0.12em;text-transform:uppercase;">
+                ${isZh ? `工坊起源 // 自然原力与启智美学 · ${esc(company.name || 'SENSENG')}` : `OUR PHILOSOPHY // NORDIC SENSORY CRAFT · ${esc((company.name || 'SENSENG').toUpperCase())}`}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+              </span>
+            </div>
+            <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.4rem);color:#264653;font-weight:900;margin:0 0 20px;line-height:1.15;letter-spacing:-0.02em;">
+              ${esc(headline)}
+            </h1>
+            <div style="color:#5c6b73;font-size:1.12rem;line-height:1.75;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+              ${storyParas.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} class="button" style="background:#2a9d8f;color:#ffffff;font-weight:800;padding:15px 32px;border-radius:14px;font-size:0.95rem;text-decoration:none;box-shadow:0 8px 24px rgba(42,157,143,0.25);">
+                ${isZh ? '发起外贸批发询盘 ↗' : 'Initiate Wholesale Inquiry ↗'}
+              </a>
+              ${company.capabilities ? `
+                <div style="padding:8px 18px;background:#e9f5f3;border:1px solid #cce8e3;border-radius:14px;color:#264653;font-size:0.88rem;font-weight:800;">
+                  🌿 ${esc(company.capabilities.slice(0, 45))}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          <div class="wr-card-hover" style="position:relative;border-radius:28px;overflow:hidden;border:2px solid #e7dcce;box-shadow:0 16px 40px rgba(38,70,83,0.1);">
+            <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.5s ease;">
+            <div style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,0.96);backdrop-filter:blur(8px);border:1px solid #e7dcce;border-radius:12px;padding:8px 18px;font-size:0.82rem;font-weight:800;color:#264653;box-shadow:0 4px 14px rgba(0,0,0,0.06);display:flex;align-items:center;gap:8px;">
+              <span>🌱</span>
+              <span>${esc(company.type === 'factory' ? (isZh ? '北欧极简质造工坊 · 直供原厂' : 'Verified Nordic Craft Facility') : (isZh ? '认证国际外贸合作伙伴' : 'Certified Global Partner'))}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FEATURED MEDIA + COPY SHOWCASE (Apple / Anker Style Nordic Craft Studio) -->
+        <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:32px;padding:40px;box-shadow:0 12px 36px rgba(38,70,83,0.06);margin-bottom:60px;">
+          <div style="text-align:center;max-width:800px;margin:0 auto 36px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#e9f5f3;color:#2a9d8f;font-weight:900;font-size:0.82rem;padding:6px 16px;border-radius:9999px;margin-bottom:12px;letter-spacing:0.08em;text-transform:uppercase;">
+              <span>🌲</span>
+              <span>${isZh ? 'FROM FOREST TO PLAYROOM // 北欧自然原力与工模匠心' : 'FROM FOREST TO PLAYROOM // SUSTAINABLE MATERIALS & CRAFT'}</span>
+            </div>
+            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#264653;margin:0 0 12px;line-height:1.2;">
+              ${isZh ? '天然工模 · FSC原木车削、植物萃取色素与蒙氏微触觉调校' : 'Crafted with Reverence // FSC Beechwood, Botanical Dyes & Calm Ergonomics'}
+            </h2>
+            <p style="color:#5c6b73;font-size:1.02rem;line-height:1.7;margin:0;">
+              ${isZh
+                ? `在 ${esc(company.name || 'Senseng')} 玩具工坊，我们拒绝塑料的冰冷与刺鼻异味。每一件触觉教具与陪伴玩偶，都汲取北欧森林的朴素温润，经过严苛的圆角倒角、天然植物染料浸润与掌心阻尼测试，赋予孩子与成人无与伦比的心灵安抚。`
+                : `At ${esc(company.name || 'Senseng')}, we craft tactile companions from responsibly managed European beechwood and plant-derived oils, providing gentle grounding touch without synthetic odors.`}
+            </p>
+          </div>
+
+          <!-- Video / Photo + Technical Specs Bento Split -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;align-items:stretch;">
+            <!-- Media Window with Simulated 4K Nordic Craft Documentary -->
+            <div class="wr-card-hover" style="position:relative;border-radius:24px;overflow:hidden;background:#f4f1ea;border:1px solid #e7dcce;display:flex;flex-direction:column;justify-content:flex-end;min-height:360px;">
+              <img src="${esc(secondaryImg || aboutImg)}" alt="${esc(company.name)} craftsmanship" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+              <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(38,70,83,0.85) 0%, rgba(38,70,83,0.2) 50%, rgba(0,0,0,0.1) 100%);"></div>
+
+              <!-- Video / Craft Telemetry Pill -->
+              <div style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.94);backdrop-filter:blur(8px);border-radius:9999px;padding:6px 14px;font-size:0.75rem;font-weight:900;color:#264653;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2a9d8f;animation:wr-pulse 1.8s infinite;"></span>
+                <span>${isZh ? '▶ 4K 工坊实录 · 原木精细车削纪实' : '▶ 4K NORDIC CRAFT DOCUMENTARY'}</span>
+              </div>
+
+              <div style="position:relative;padding:24px;color:#ffffff;z-index:2;">
+                <div style="font-size:0.82rem;font-weight:800;color:#e9d8a6;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">
+                  ${isZh ? '100% FSC 认证欧洲山毛榉与纯植物油封层' : 'FSC-CERTIFIED BEECHWOOD & ORGANIC WAX FINISH'}
+                </div>
+                <div style="font-size:1.15rem;font-weight:900;line-height:1.3;margin-bottom:14px;">
+                  ${isZh ? '无毒甜菜姜黄植物色浆 + 0.5mm 手工倒角无毛刺工艺' : 'Botanical Beetroot Dyes & Hand-Beveled 0.5mm Silk-Smooth Radii'}
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:800;">
+                    🌿 FSC-100% Certified
+                  </span>
+                  <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:800;">
+                    🛡️ Zero Burrs
+                  </span>
+                  <span style="background:rgba(255,255,255,0.2);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:800;">
+                    🧸 Montessori Safe
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nordic Craft Pillars & Specifications Column -->
+            <div style="display:flex;flex-direction:column;gap:16px;justify-content:center;">
+              <div style="background:#fbf8f3;border:1px solid #e7dcce;border-radius:18px;padding:20px 24px;" class="wr-card-hover">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <span style="font-size:1.4rem;">🌲</span>
+                  <strong style="font-size:1.05rem;font-weight:900;color:#264653;">${isZh ? 'FSC 认证欧洲天然山毛榉' : 'FSC-Certified European Hardwoods'}</strong>
+                </div>
+                <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
+                  ${isZh ? '严选北欧可持续林场天然山毛榉与枫木，质地坚实细腻，密度均一，经过控湿烘干杜绝变形与开裂。' : 'Slow-growth European beechwood provides uniform grain density, structural resilience, and natural warmth under touch.'}
+                </p>
+              </div>
+
+              <div style="background:#fbf8f3;border:1px solid #e7dcce;border-radius:18px;padding:20px 24px;" class="wr-card-hover">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <span style="font-size:1.4rem;">🥕</span>
+                  <strong style="font-size:1.05rem;font-weight:900;color:#264653;">${isZh ? '甜菜与姜黄植物萃取色素' : 'Natural Plant & Mineral Pigments'}</strong>
+                </div>
+                <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
+                  ${isZh ? '摒弃传统石化人工色素，选用甜菜根、姜黄与天然矿物提取染液，即使婴童放入口中也无需担忧有害物质。' : 'Formulated with organic culinary extracts. Certified saliva-fast and neutral under prolonged skin contact.'}
+                </p>
+              </div>
+
+              <div style="background:#fbf8f3;border:1px solid #e7dcce;border-radius:18px;padding:20px 24px;" class="wr-card-hover">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <span style="font-size:1.4rem;">📐</span>
+                  <strong style="font-size:1.05rem;font-weight:900;color:#264653;">${isZh ? '蒙氏掌心力学阻尼科学' : 'Calibrated Tactile Damping Ergonomics'}</strong>
+                </div>
+                <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">
+                  ${isZh ? '根据手部解剖工学精心调校玩具重量分配与边缘弧度，带来恰到好处的掌心充实感与情绪释压体验。' : 'Engineered center of gravity and tactile resistance calibrated to soothe palm muscle tension.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Core Brand Pillars -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-bottom:60px;">
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">🌿</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '天然无毒环保' : 'Pure & Non-Toxic'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '全线产品通过国际权威毒理与重金属迁移检验，零异味零负担。' : 'Certified against international toxicology limits with zero odor and zero plasticizer bleed.'}</p>
+          </div>
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">📐</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '人体工学阻尼' : 'Tactile Ergonomics'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '科学调校软硬度与回弹时间，给掌心恰到好处的充实感。' : 'Precisely calibrated resistance curves to comfortably cradle palm anatomy without fatigue.'}</p>
+          </div>
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">📦</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '可持续包装' : 'Eco Packaging'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '采用环保纸板与大豆油墨印刷，向减少环境塑料足迹迈进。' : 'FSC paperboard boxes printed with soy inks, minimizing our collective environmental footprint.'}</p>
+          </div>
+          <div class="wr-wonder-card wr-card-hover" data-reveal="fade-up" style="background:#ffffff;border:1px solid #e7dcce;border-radius:24px;padding:32px;text-align:center;">
+            <div style="font-size:2.4rem;margin-bottom:12px;">⏳</div>
+            <h3 style="font-size:1.18rem;font-weight:900;color:#264653;margin:0 0 8px;">${isZh ? '世代传承耐用' : 'Built to Last'}</h3>
+            <p style="font-size:0.9rem;color:#5c6b73;line-height:1.6;margin:0;">${isZh ? '精选耐冲击材料与扎实工模结构，经久耐用，常伴左右。' : 'Precision tooling and shatterproof polymers engineered for enduring family heirloom quality.'}</p>
+          </div>
+        </div>
+
+        <!-- Nordic Export Prowess & Dynamic Counters -->
+        <div style="background:#264653;color:#ffffff;border-radius:28px;padding:48px 40px;text-align:center;" class="wr-card-hover" data-reveal="fade-up">
+          <h2 style="font-size:2.2rem;font-weight:900;color:#ffffff;margin:0 0 12px;">${isZh ? '外贸制造与全球出口实力' : 'Global Export Performance & Capacity'}</h2>
+          <p style="color:#e9d8a6;opacity:0.9;font-size:1.02rem;max-width:620px;margin:0 auto 36px;">
+            ${isZh ? '以严苛的北欧环保标准为底线，为您提供从概念设计到海运出关的全流程保障。' : 'Combining Scandinavian environmental diligence with high-throughput manufacturing.'}
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;">
+            ${stats.map((s) => `
+              <div>
+                <div style="font-size:2.6rem;font-weight:900;color:#e9d8a6;" data-counter="${s.num}" data-suffix="${esc(s.suffix || '')}" data-prefix="${esc(s.prefix || '')}">${esc(s.value)}</div>
+                <div style="font-size:0.9rem;opacity:0.85;margin-top:4px;">${esc(s.label)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+export function renderWonderAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyWonderAbout(ctx);
+  }
+  return renderModernWonderAbout(ctx);
 }
 
 export function renderWonderContact(ctx: ThemeContext): string {

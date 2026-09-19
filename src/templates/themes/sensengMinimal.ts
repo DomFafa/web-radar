@@ -1,4 +1,5 @@
 import type { Product } from '../../shared/model';
+import { isTypedMaterialsSource } from '../materials-typed';
 import { esc, safeUrl, type ThemeContext } from './types';
 import { CANDY_DEFAULT_PRODUCTS, getCandyProducts } from './sensengCandy';
 import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
@@ -456,7 +457,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
   `;
 }
 
-export function renderMinimalAbout(ctx: ThemeContext): string {
+function renderLegacyMinimalAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const isZh = (ctx.lang as string) === 'zh';
   const company = draft.company;
@@ -629,6 +630,237 @@ export function renderMinimalAbout(ctx: ThemeContext): string {
       </section>
     </main>
   `;
+}
+
+
+function renderModernMinimalAbout(ctx: ThemeContext): string {
+  const { draft, ui, path, navAttrs } = ctx;
+  const isZh = (ctx.lang as string) === 'zh';
+  const company = draft.company;
+
+  const defaultHeadline = isZh
+    ? '极简美学与现代材料工坊哲学'
+    : 'The Pursuit of Quiet Sensory Form';
+  const headline = getAboutHeadline(company, defaultHeadline);
+
+  const defaultStory = [
+    isZh
+      ? `${company.name} 致力于将日常感官解压公仔转化为极具雕塑感的美学器物。我们剔除多余的装饰，保留纯粹的线条与治愈的手感，服务于全球注重生活品质的当代空间。`
+      : `${company.name} explores the balance between sculptural minimalism and tactile stress alleviation. We strip away ornamental clutter to focus on pure silhouette, velvety surface touch, and therapeutic weight.`,
+    isZh
+      ? '在我们的设计工坊中，每一道微弧度与分模线都经过以微米计的反复推敲。我们精选食品级与医疗级聚合物，融合无光泽哑光表面处理，呈现宛若鹅卵石般温润的触觉共鸣。'
+      : 'In our minimalist atelier, every subtle curve and parting line is machined within 0.05mm tolerance. Matte-finished medical grade polymers harmonize with modern interiors, offering contemplative tactile respite.',
+    isZh
+      ? '我们常年与欧美顶级设计买手店、艺术空间及极简生活品牌保持深度供应链合作，遵循 EN71 与 ASTM 严苛实验室标准，实现工业精度与当代艺术温度的完美统一。'
+      : 'Collaborating closely with leading design concept stores, contemporary art spaces, and minimalist brands worldwide, our creations uphold full EN71 and ASTM safety compliance, uniting industrial precision with artful soul.'
+  ];
+  const storyParagraphs = getAboutStoryParagraphs(company, defaultStory);
+
+  const defaultHighlights = [
+    { value: '0.05', suffix: 'mm', label: isZh ? '精密开模接缝公差' : 'Tooling Precision' },
+    { value: '100', suffix: '%', label: isZh ? '食品级环保安全合规' : 'Food-Grade Safety' },
+    { value: '18', suffix: '+', label: isZh ? '出口全球设计买手店' : 'Boutique Destinations' },
+    { value: '99.8', suffix: '%', label: isZh ? '无气孔微发泡良率' : 'Zero-Pore Yield' },
+  ];
+  const highlights = parseAboutHighlights(company.aboutHighlights, defaultHighlights);
+
+  const defaultMinimalImg = path('assets/hero-minimal.jpg');
+  const defaultMinimalSecImg = path('assets/about-reference.jpg');
+  const { primary: primaryImage, secondary: secondaryImage } = getAboutImages(ctx, defaultMinimalImg, defaultMinimalSecImg);
+
+  return `
+    <main class="wr-inner wr-senseng-minimal-inner" data-wr-page="about" style="padding-top:100px;background:#ffffff;color:#111827;min-height:100vh;">
+      <section class="wrap" style="padding:40px 0 70px;">
+        <!-- Editorial Hero Split -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:50px;align-items:center;margin-bottom:70px;" data-reveal="fade-up">
+          <div>
+            <span style="font-size:0.78rem;letter-spacing:0.2em;text-transform:uppercase;color:#c59b27;font-weight:800;display:block;margin-bottom:14px;">
+              // 01 ATELIER ESSENCE // ${esc(company.name.toUpperCase())}${company.establishedYear ? ` · EST. ${esc(company.establishedYear)}` : ''}
+            </span>
+            <h1 style="font-size:clamp(2.4rem, 4.2vw, 3.5rem);font-weight:900;color:#111827;letter-spacing:-0.03em;line-height:1.15;margin:0 0 24px;">
+              ${esc(headline)}
+            </h1>
+            <div style="color:#4b5563;font-size:1.1rem;line-height:1.8;display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
+              ${storyParagraphs.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+            </div>
+            <div style="border-left:3px solid #c59b27;padding-left:18px;margin-bottom:28px;">
+              <div style="font-weight:800;color:#111827;font-size:0.95rem;letter-spacing:-0.01em;">${isZh ? '“剔除繁杂，仅留纯粹触感。”' : '“Eliminating ornamental clutter to arrive at quiet sensory presence.”'}</div>
+              <div style="color:#9ca3af;font-size:0.8rem;margin-top:4px;">${esc(company.name)} · ATELIER CURATOR</div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+              <a class="button" style="background:#111827;color:#ffffff;font-weight:800;padding:15px 34px;font-size:0.92rem;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;border-radius:2px;box-shadow:0 8px 24px rgba(17,24,39,0.18);" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+                ${isZh ? '开启买手合作洽谈 ↗' : 'Inquire & Sample ↗'}
+              </a>
+              ${company.capabilities ? `
+                <span style="font-size:0.85rem;color:#111827;border:1px solid #e5e7eb;padding:8px 16px;letter-spacing:0.04em;">
+                  // ${esc(company.capabilities.slice(0, 42))}
+                </span>
+              ` : ''}
+            </div>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-card-hover" style="position:relative;">
+            <div style="border:1px solid #111827;padding:14px;background:#ffffff;box-shadow:0 16px 40px rgba(0,0,0,0.08);">
+              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
+            </div>
+            <div style="position:absolute;top:28px;right:28px;background:#111827;color:#ffffff;padding:6px 16px;font-size:0.75rem;letter-spacing:0.15em;font-weight:800;text-transform:uppercase;">
+              ATELIER ARCHIVE
+            </div>
+          </div>
+        </div>
+
+        <!-- FEATURED MEDIA + COPY SHOWCASE (Apple / Anker Style Gallery Atelier Macro) -->
+        <div data-reveal="fade-up" style="border:1px solid #e5e7eb;background:#ffffff;padding:48px 40px;box-shadow:0 12px 36px rgba(0,0,0,0.03);margin-bottom:70px;">
+          <div style="text-align:center;max-width:800px;margin:0 auto 40px;">
+            <div style="display:inline-block;font-size:0.75rem;letter-spacing:0.18em;color:#c59b27;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+              02 // THE ATELIER DIALOGUE // 减法之美：0.05MM 微触觉雕塑工坊
+            </div>
+            <h2 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#111827;letter-spacing:-0.03em;margin:0 0 14px;line-height:1.2;">
+              ${isZh ? '减法之美 · 0.05mm 微接缝工差、医疗级铂金硅胶与鹅卵石哑光肤感' : 'Disciplined Reduction // 0.05mm Tooling Tolerance & Velvet-Matte Silicone'}
+            </h2>
+            <p style="color:#6b7280;font-size:1.02rem;line-height:1.75;margin:0;">
+              ${isZh
+                ? `在 ${esc(company.name)} 极简器物工作室，我们深信一件触觉陪伴物绝非浮夸的装饰，而是安放于当代生活空间的微型雕塑。我们以微米级的精度研磨钢模接缝，萃取纯净中性的医疗级硅胶，让指尖抚过宛若被海水洗礼亿万年的温润鹅卵石。`
+                : `At ${esc(company.name)} atelier, we believe a tactile object is an understated sculpture that belongs in refined contemporary interiors. Every parting seam is machined within 0.05mm tolerance.`}
+            </p>
+          </div>
+
+          <!-- Video / Photo + Technical Specs Bento Split -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:36px;align-items:stretch;">
+            <!-- Gallery Cinematography Frame -->
+            <div class="wr-card-hover" style="position:relative;border:1px solid #e5e7eb;background:#f9fafb;display:flex;flex-direction:column;justify-content:flex-end;min-height:380px;padding:8px;">
+              <div style="position:relative;width:100%;height:100%;min-height:360px;overflow:hidden;">
+                <img src="${esc(secondaryImage || primaryImage)}" alt="${esc(company.name)} macro craftsmanship" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+                <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(17,24,39,0.85) 0%, rgba(17,24,39,0.2) 50%, rgba(0,0,0,0.1) 100%);"></div>
+
+                <!-- Video / Macro Telemetry Pill -->
+                <div style="position:absolute;top:18px;left:18px;background:rgba(255,255,255,0.96);backdrop-filter:blur(8px);padding:6px 14px;font-size:0.75rem;font-weight:800;color:#111827;letter-spacing:0.08em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#c59b27;animation:wr-pulse 1.8s infinite;"></span>
+                  <span>${isZh ? '▶ 4K 微距电影感实拍 · 0.05mm 分模线' : '▶ 4K MACRO CINEMATOGRAPHY'}</span>
+                </div>
+
+                <div style="position:absolute;bottom:20px;left:20px;right:20px;color:#ffffff;z-index:2;">
+                  <div style="font-size:0.78rem;font-weight:800;color:#c59b27;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">
+                    // ARCHITECTURAL PURITY // OPTICAL-GRADE STEEL MOLDING
+                  </div>
+                  <div style="font-size:1.15rem;font-weight:900;line-height:1.3;margin-bottom:12px;">
+                    ${isZh ? '医疗级铂金硫化硅胶 + 鹅卵石哑光微阻尼表面' : 'Platinum-Cured Silicone Matrix & Pebble-Smooth Matte Finish'}
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:4px 10px;font-size:0.75rem;font-weight:700;letter-spacing:0.04em;">
+                      0.05mm Tolerance
+                    </span>
+                    <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:4px 10px;font-size:0.75rem;font-weight:700;letter-spacing:0.04em;">
+                      Platinum Cured
+                    </span>
+                    <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:4px 10px;font-size:0.75rem;font-weight:700;letter-spacing:0.04em;">
+                      EN71 & ASTM
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bauhaus Architectural Specs Column -->
+            <div style="display:flex;flex-direction:column;gap:18px;justify-content:center;">
+              <div style="border:1px solid #e5e7eb;padding:24px;background:#ffffff;" class="wr-card-hover">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <span style="color:#c59b27;font-weight:800;font-size:0.85rem;letter-spacing:0.1em;">01 //</span>
+                  <strong style="font-size:1.05rem;font-weight:900;color:#111827;letter-spacing:-0.01em;">${isZh ? '形式服从触觉感知' : 'Form Follows Tactile Emotion'}</strong>
+                </div>
+                <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
+                  ${isZh ? '剔除所有多余繁复造型，回归极简纯粹线条，无论置于设计案头还是现代起居空间，皆自然沉静。' : 'Eliminating ornamental clutter to focus on pure silhouette, velvety surface touch, and therapeutic weight.'}
+                </p>
+              </div>
+
+              <div style="border:1px solid #e5e7eb;padding:24px;background:#ffffff;" class="wr-card-hover">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <span style="color:#c59b27;font-weight:800;font-size:0.85rem;letter-spacing:0.1em;">02 //</span>
+                  <strong style="font-size:1.05rem;font-weight:900;color:#111827;letter-spacing:-0.01em;">${isZh ? '无溶剂高温铂金硫化工艺' : 'Solvent-Free Platinum Curing'}</strong>
+                </div>
+                <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
+                  ${isZh ? '严苛的高温二次硫化脱挥发物，彻底阻绝任何微量挥发物与气味析出，纯净温和，亲肤安全。' : 'High-temperature secondary curing evacuates all volatile compounds for odorless, biocompatible haptic warmth.'}
+                </p>
+              </div>
+
+              <div style="border:1px solid #e5e7eb;padding:24px;background:#ffffff;" class="wr-card-hover">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <span style="color:#c59b27;font-weight:800;font-size:0.85rem;letter-spacing:0.1em;">03 //</span>
+                  <strong style="font-size:1.05rem;font-weight:900;color:#111827;letter-spacing:-0.01em;">${isZh ? '光学级数控镜面模具加工' : 'Optical-Grade Steel Tooling Precision'}</strong>
+                </div>
+                <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
+                  ${isZh ? '0.05mm 微合模接缝公差，消弭任何微观割手瑕疵，赋予掌心如鹅卵石般的温润接缝触感。' : 'Machined within 0.05mm parting lines to deliver unblemished contour transitions under palm exploration.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Counter Metrics Grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-bottom:70px;" data-reveal="fade-up">
+          ${highlights.map((h) => `
+            <div class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:32px;text-align:center;background:#ffffff;">
+              <div style="font-size:2.6rem;font-weight:900;color:#111827;letter-spacing:-0.03em;line-height:1;margin-bottom:8px;">
+                <span data-counter="${esc(h.value)}" ${h.prefix ? `data-prefix="${esc(h.prefix)}"` : ''} ${h.suffix ? `data-suffix="${esc(h.suffix)}"` : ''}>
+                  ${esc(h.prefix || '')}${esc(h.value)}${esc(h.suffix || '')}
+                </span>
+              </div>
+              <div style="font-size:0.88rem;color:#6b7280;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;">
+                ${esc(h.label)}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- 3 Bauhaus Principles Cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;margin-bottom:70px;">
+          <div data-reveal="fade-up" class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;background:#ffffff;">
+            <div style="font-size:0.8rem;letter-spacing:0.12em;color:#c59b27;font-weight:800;margin-bottom:12px;">01 // REDUCTION</div>
+            <h3 style="font-size:1.2rem;font-weight:900;color:#111827;margin:0 0 10px;">${isZh ? '极致减法与留白' : 'Disciplined Reduction'}</h3>
+            <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
+              ${isZh ? '让每一个玩具都具备雕塑般的气质，安静陈列于现代办公桌与设计空间。' : 'Eliminating ornamental clutter to focus on pure silhouette and tactile presence.'}
+            </p>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;background:#ffffff;">
+            <div style="font-size:0.8rem;letter-spacing:0.12em;color:#c59b27;font-weight:800;margin-bottom:12px;">02 // TOLERANCE</div>
+            <h3 style="font-size:1.2rem;font-weight:900;color:#111827;margin:0 0 10px;">${isZh ? '0.05mm 开模精密公差' : '0.05mm Precision'}</h3>
+            <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
+              ${isZh ? '微米级钢模精雕与无缝合模技术，提供宛如鹅卵石般的温润接缝触感。' : 'High-precision tooling yielding invisible parting lines and seamless ergonomics.'}
+            </p>
+          </div>
+
+          <div data-reveal="fade-up" class="wr-minimal-card wr-card-hover" style="border:1px solid #e5e7eb;padding:36px;background:#ffffff;">
+            <div style="font-size:0.8rem;letter-spacing:0.12em;color:#c59b27;font-weight:800;margin-bottom:12px;">03 // INTEGRITY</div>
+            <h3 style="font-size:1.2rem;font-weight:900;color:#111827;margin:0 0 10px;">${isZh ? '严苛食品级安全准则' : 'Uncompromising Safety'}</h3>
+            <p style="font-size:0.9rem;color:#6b7280;line-height:1.7;margin:0;">
+              ${isZh ? '通过欧盟 EN71 与美标 ASTM F963 权威检测，确保触觉治愈与安全无虞。' : 'Strictly adhering to European EN71 and US ASTM safety testing frameworks.'}
+            </p>
+          </div>
+        </div>
+
+        <!-- Minimalist Concierge CTA -->
+        <div data-reveal="fade-up" style="background:#111827;color:#ffffff;padding:50px 32px;text-align:center;border-radius:2px;box-shadow:0 16px 40px rgba(17,24,39,0.2);">
+          <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;letter-spacing:-0.02em;margin:0 0 12px;color:#ffffff;">
+            ${isZh ? '独立设计买手与大宗定制洽谈' : 'Acquisitions & Boutique Partnership'}
+          </h2>
+          <p style="color:#9ca3af;font-size:1rem;max-width:580px;margin:0 auto 24px;line-height:1.6;">
+            ${isZh ? '我们为全球高品质生活方式买手店、艺术空间与独立品牌提供快速打样与专属柔性直供。' : 'Connect with our curatorial liaison for bespoke wholesale terms and expedited samples.'}
+          </p>
+          <a class="button" style="background:#c59b27;color:#111827;font-weight:900;padding:15px 34px;font-size:0.92rem;letter-spacing:0.06em;text-transform:uppercase;display:inline-block;text-decoration:none;border-radius:2px;" href="${path('contact/index.html')}" ${navAttrs('contact')}>
+            ${isZh ? '开启合作洽谈 ↗' : 'Inquire & Sample ↗'}
+          </a>
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+export function renderMinimalAbout(ctx: ThemeContext): string {
+  if (Boolean(ctx.draft.materials) || isTypedMaterialsSource(ctx.draft)) {
+    return renderLegacyMinimalAbout(ctx);
+  }
+  return renderModernMinimalAbout(ctx);
 }
 
 export function renderMinimalContact(ctx: ThemeContext): string {
