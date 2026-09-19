@@ -47,6 +47,7 @@ import { preparePublicVariant, preparedImageVariants, publicMediaPolicy, typedRe
 import { renderSite, renderSiteFiles } from '../templates';
 import { prImage, prService } from './product-radar';
 import { DomainStore } from './domain-store';
+import { publicationErrorDetails } from './publication-diagnostics';
 import {
   designPageIds,
   designKey,
@@ -88,6 +89,12 @@ import {
 
 export interface DomainScheduler {
   schedule(time: number): Promise<void>;
+}
+/** The checkpoint is committed; a failed alarm write must not fail the publication. */
+class PublicationRescheduleError extends Error {
+  constructor(cause: unknown) {
+    super('Publication alarm scheduling interrupted', { cause });
+  }
 }
 const now = () => new Date().toISOString();
 const json = (value: unknown, status = 200) =>
@@ -2404,6 +2411,14 @@ export class DomainService {
       }
       await this.execute(job);
     } catch (error) {
+      if (error instanceof PublicationRescheduleError) {
+        console.warn('Publication scheduling interrupted', {
+          stage: 'reschedule', jobId: job.id, releaseId: job.input.releaseId,
+          ...publicationErrorDetails(error.cause, this.env),
+        });
+        // Let the alarm handler reject so Cloudflare retries in an active instance.
+        throw error.cause;
+      }
       if (job.kind === 'publish' && job.input.mediaPreparation && !job.input.publicationStarted) {
         const detail = error && typeof error === 'object' ? error as { code?: unknown; status?: unknown } : {};
         const errorClass = error instanceof Error ? error.constructor.name : 'UnknownError';
@@ -2412,6 +2427,7 @@ export class DomainService {
           errorClass: /^[A-Za-z][A-Za-z0-9_]{0,79}$/.test(errorClass) ? errorClass : 'Error',
           ...(typeof detail.code === 'string' && /^[A-Za-z0-9_.-]{1,100}$/.test(detail.code) ? { code: detail.code } : {}),
           ...(typeof detail.status === 'number' && Number.isInteger(detail.status) && detail.status >= 100 && detail.status <= 599 ? { status: detail.status } : {}),
+          ...publicationErrorDetails(error, this.env),
         });
       }
       await this.fail(job, error);
@@ -3113,7 +3129,13 @@ export class DomainService {
       if (defer && job.input.attemptId) statements.push(this.env.DB.prepare('UPDATE provider_attempts SET outcome=?,completed_at=? WHERE id=?').bind('pending', now(), job.input.attemptId));
       await this.store.batch(statements);
     });
-    if (defer) await this.scheduler.schedule(Number(job.input.retryAt));
+    if (defer) {
+      try {
+        await this.scheduler.schedule(Number(job.input.retryAt));
+      } catch (error) {
+        throw new PublicationRescheduleError(error);
+      }
+    }
   }
   private async renderFiles(
     draft: Draft,

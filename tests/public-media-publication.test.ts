@@ -255,6 +255,28 @@ describe('resumable prepublication responsive media', () => {
     expect(current.offline).toBe(false);
     expect(publish).toHaveBeenCalledTimes(1);
   });
+  it('keeps a committed checkpoint queued when the old Durable Object cannot schedule the next alarm', async () => {
+    const job = await start();
+    const error = new Error('Connection closed: this Durable Object instance is no longer active. Reconnect or retry the request.');
+    schedule.mockResolvedValueOnce(undefined).mockRejectedValueOnce(error);
+    await expect(service.tick()).rejects.toBe(error);
+    const saved = (await service.store.one<Job>('jobs', job.id))!;
+    expect(saved.status).toBe('queued');
+    expect(saved.error).toBeUndefined();
+    expect(saved.attempts).toBe(0);
+    const release = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
+    expect(release.status).not.toBe('failed');
+    expect(transform).toHaveBeenCalledTimes(4);
+    expect(new Set(Object.values(release.publicMedia!.assets).flatMap(a => a.variants.map(v => v.key))).size).toBe(4);
+    expect(publish).not.toHaveBeenCalled();
+    // Alarm retry runs in a fresh instance and resumes the existing persisted task.
+    service = new DomainService(env, { schedule }, { ...fixtureProviders(env), publish });
+    expect((await finish(job)).status).toBe('succeeded');
+    expect(publish).toHaveBeenCalledTimes(1);
+    const completed = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
+    expect(transform).toHaveBeenCalledTimes(new Set(Object.values(completed.publicMedia!.assets).flatMap(a => a.variants.map(v => v.key))).size);
+  });
+
   it('reuses the R2 output if a checkpoint failed after the immutable write', async () => {
     const job = await start();
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -272,7 +294,10 @@ describe('resumable prepublication responsive media', () => {
         errorClass: 'Error',
       }),
     );
-    expect(JSON.stringify(log.mock.calls)).not.toContain('checkpoint unavailable');
+    expect(log).toHaveBeenCalledWith(
+      'Publication preparation failed',
+      expect.objectContaining({ errorMessage: expect.stringContaining('checkpoint unavailable'), errorStack: expect.any(String) }),
+    );
     expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('failed');
     expect(publish).not.toHaveBeenCalled();
     const firstUrl = transform.mock.calls[0][0];
@@ -296,19 +321,17 @@ describe('resumable prepublication responsive media', () => {
     });
     vi.mocked(fetch).mockRejectedValueOnce(error);
     await service.tick();
-    expect(log.mock.calls).toEqual([
-      [
+    expect(log).toHaveBeenCalledWith(
         'Publication preparation failed',
-        {
+        expect.objectContaining({
           stage: 'prepublication',
           jobId: job.id,
           releaseId: job.input.releaseId,
           errorClass: 'ApiError',
           code: 'pr_context_failed',
           status: 503,
-        },
-      ],
-    ]);
+        }),
+    );
     expect(JSON.stringify(log.mock.calls)).not.toContain('secret');
     expect((await service.store.one<Job>('jobs', job.id))?.status).toBe('failed');
     expect(publish).not.toHaveBeenCalled();
@@ -317,6 +340,7 @@ describe('resumable prepublication responsive media', () => {
   it('omits unsafe diagnostic metadata instead of serializing it', async () => {
     const job = await start();
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    env.SITE_BUILDER_KEY = 'secret-message';
     vi.spyOn(publicMedia, 'preparePublicVariant').mockRejectedValue(
       Object.assign(new Error('secret-message'), {
         name: 'secret-name',
@@ -325,17 +349,19 @@ describe('resumable prepublication responsive media', () => {
       }),
     );
     await service.tick();
-    expect(log.mock.calls).toEqual([
-      [
+    expect(log).toHaveBeenCalledWith(
         'Publication preparation failed',
-        {
+        expect.objectContaining({
           stage: 'prepublication',
           jobId: job.id,
           releaseId: job.input.releaseId,
           errorClass: 'Error',
-        },
-      ],
-    ]);
+        }),
+    );
+    const detail = log.mock.calls[0][1];
+    expect(detail).not.toHaveProperty('code');
+    expect(detail).not.toHaveProperty('status');
+    expect(JSON.stringify(log.mock.calls)).not.toContain('secret');
   });
 
   it.each([
