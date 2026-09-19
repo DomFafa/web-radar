@@ -202,10 +202,11 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
                     raise HTTPException(413, 'Preview input exceeds limit')
                 body.extend(chunk)
             try:
-                result = await asyncio.to_thread(make_preview, bytes(body), width=width)
+                dimensions = {}
+                result = await asyncio.to_thread(make_preview, bytes(body), width=width, source_dimensions=dimensions)
             except (ValueError, OSError, Image.DecompressionBombError):
                 raise HTTPException(422, 'Invalid preview image') from None
-            return Response(result, media_type='image/webp', headers={'Cache-Control': 'no-store'})
+            return Response(result, media_type='image/webp', headers={'Cache-Control': 'no-store', 'X-Source-Width': str(dimensions['width']), 'X-Source-Height': str(dimensions['height'])})
         finally:
             preview_slots.release()
 

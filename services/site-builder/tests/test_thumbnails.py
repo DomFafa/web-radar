@@ -39,6 +39,8 @@ def test_fixed_responsive_widths_preserve_default_and_reject_arbitrary_sizes(tmp
         for width in (320, 640, 1280, 1600):
             response = client.post(f'/v1/media/preview?width={width}', content=raw.getvalue(), headers=auth)
             assert response.status_code == 200
+            assert response.headers['x-source-width'] == '2560'
+            assert response.headers['x-source-height'] == '930'
             with Image.open(io.BytesIO(response.content)) as image:
                 assert image.width == width
                 assert abs(image.height - width * 930 / 2560) <= 1
@@ -56,5 +58,8 @@ def test_responsive_preview_does_not_upscale_and_applies_exif():
     exif = Image.Exif()
     exif[274] = 6
     Image.new('RGB', (120, 80)).save(raw, format='JPEG', exif=exif)
-    with Image.open(io.BytesIO(make_preview(raw.getvalue(), width=320))) as image:
+    dimensions = {}
+    result = make_preview(raw.getvalue(), width=320, source_dimensions=dimensions)
+    assert dimensions == {'width': 80, 'height': 120}
+    with Image.open(io.BytesIO(result)) as image:
         assert image.size == (80, 120)
