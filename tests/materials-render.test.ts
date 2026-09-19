@@ -66,3 +66,18 @@ it('advertises prepared accurate candidates while preserving original identity a
   expect(html).toContain('width="400" height="200"');
   expect(calls).toEqual(['desktop','mobile']);
 });
+
+it('collects only the emitted mobile background variant and keeps the desktop original',async()=>{
+  const {materialBackgroundUrl}=await import('../src/templates/materials-render');
+  const d=await draft(),binding={...d.materials!.imageBindings[0],assetId:'desktop',mobileAssetId:'mobile',role:'collection' as const};
+  const calls:{id:string;widths:number[];includeOriginal?:boolean}[]=[];
+  const responsive={...options,imageVariants:(id:string,widths:number[],includeOriginal?:boolean)=>{calls.push({id,widths,includeOriginal});return widths.map(width=>({url:`/media/${id}?width=${width}`,width,height:width/2}));}};
+  expect(materialBackgroundUrl(binding,responsive)).toBe('/media/desktop');
+  expect(calls).toEqual([]);
+  expect(materialBackgroundUrl(binding,responsive,true)).toBe('/media/mobile?width=640');
+  expect(calls).toEqual([{id:'mobile',widths:[640],includeOriginal:undefined}]);
+  calls.length=0;
+  expect(materialBackgroundUrl({...binding,mobileAssetId:undefined},responsive,true)).toBe('/media/desktop?width=640');
+  expect(calls).toEqual([{id:'desktop',widths:[640],includeOriginal:undefined}]);
+  expect(materialBackgroundUrl(binding,options,true)).toBe('/media/mobile');
+});

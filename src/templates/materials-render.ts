@@ -12,8 +12,9 @@ const position=(p:Binding['focalPoint'])=>`${p.x*100}% ${p.y*100}%`;
 const cssUrl=(url:string)=>`url(${JSON.stringify(url).replace(/</g,'\\3c ')})`;
 function imageStyle(binding:Binding){return`object-fit:${binding.fit};object-position:${position(binding.focalPoint)};--wr-material-fit:${binding.fit};--wr-material-position:${position(binding.focalPoint)};--wr-mobile-position:${position(binding.mobileFocalPoint||binding.focalPoint)};`;}
 export function materialBackgroundUrl(binding:Binding,options:RenderOptions,mobile=false):string{
-  const id=mobile&&binding.mobileAssetId?binding.mobileAssetId:binding.assetId;
-  const variants=options.imageVariants?.(id,mobile?[640]:(binding.role==='collection'||/hero|banner/.test(binding.slotId))?[640,1280,1600]:[640,1280],!mobile);
+  if(!mobile)return safeUrl(options.assetUrl(binding.assetId),options.preview);
+  const id=binding.mobileAssetId||binding.assetId;
+  const variants=options.imageVariants?.(id,[640]);
   return safeUrl(variants?.at(-1)?.url||options.assetUrl(id),options.preview);
 }
 export function materialImage(binding:Binding,options:RenderOptions,assetId=binding.assetId,alt?:string):string{
