@@ -107,6 +107,16 @@ try {
       assert.equal(await dialog.evaluate(d => d.open), false);
       assert.equal(await main.evaluate(i => document.activeElement === i), true);
       if (!mobile) { await main.hover(); await scope.locator('#wr-product-image-detail').waitFor({ state: 'visible' }); }
+      // Native close events are queued: reopen before the old event arrives.
+      await main.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const previousOverflow = await main.evaluate(() => document.body.style.overflow);
+      await main.evaluate(image => { image.click(); document.querySelector('dialog').close(); image.click(); });
+      await main.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      assert.equal(await dialog.evaluate(d => d.open), true);
+      assert.equal(await scope.locator('.wr-image-stage img').evaluate(i => i.src), await main.evaluate(i => i.src));
+      await dialog.evaluate(d => d.close());
+      await main.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      assert.equal(await main.evaluate(() => document.body.style.overflow), previousOverflow);
       results.push({ mode, mobile, passed: true }); await context.close();
     }
   }

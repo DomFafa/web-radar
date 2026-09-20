@@ -106,7 +106,7 @@ export function productImageViewerRuntime(originalUrl?: string) {
   window.addEventListener('resize', hideLens);
   window.addEventListener('blur', hideLens);
   let opener: HTMLImageElement | undefined;
-  let previousOverflow = '';
+  let previousOverflow: string | undefined;
   let scaled = false;
   const resetScale = () => {
     scaled = false; stage.removeAttribute('data-zoomed'); fullImage.style.width = '';
@@ -160,7 +160,7 @@ export function productImageViewerRuntime(originalUrl?: string) {
       });
       buttons.push(button); thumbnails.appendChild(button);
     });
-    previousOverflow = document.body.style.overflow;
+    previousOverflow ??= document.body.style.overflow;
     dialog.showModal();
     document.body.style.overflow = 'hidden';
     dismiss.focus();
@@ -171,7 +171,10 @@ export function productImageViewerRuntime(originalUrl?: string) {
   });
   // Native dialog handles Escape and keeps keyboard focus inside the viewer.
   dialog.addEventListener('close', () => {
+    // A native close event can arrive after the next gallery has already opened.
+    if (dialog.open || previousOverflow === undefined) return;
     document.body.style.overflow = previousOverflow;
+    previousOverflow = undefined;
     fullImage.removeAttribute('src');
     opener?.focus({ preventScroll: true });
   });

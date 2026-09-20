@@ -18,7 +18,7 @@ it('opens the currently selected original, supports keyboard, and restores focus
       style: { overflow: '' }, focus: vi.fn(),
       setAttribute: (key: string, value: string) => attrs.set(key, value),
       getAttribute: (key: string) => attrs.get(key),
-      removeAttribute: (key: string) => attrs.delete(key),
+      removeAttribute(key: string) { attrs.delete(key); if (key === 'src') this.src = ''; },
       addEventListener: (key: string, handler: (event?: any) => void) => events.set(key, handler),
       appendChild(child: any) { this.children.push(child); },
       replaceChildren() { this.children = []; },
@@ -80,6 +80,16 @@ it('opens the currently selected original, supports keyboard, and restores focus
     close.events.get('click')();
     expect(dialog.open).toBe(false);
   }
+  main.events.get('click')!();
+  dialog.open = false; // Native close changes `open` before dispatching its queued event.
+  main.events.get('click')!();
+  dialog.events.get('close')(); // The previous session's delayed close event.
+  expect(dialog.open).toBe(true);
+  expect(image.src).toBe('/original-front.png');
+  expect(body.style.overflow).toBe('hidden');
+  dialog.open = false;
+  dialog.events.get('close')();
+  expect(body.style.overflow).toBe('auto');
   productImageViewerRuntime();
   expect(body.children).toHaveLength(3);
 });
