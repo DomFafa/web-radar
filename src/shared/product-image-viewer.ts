@@ -22,21 +22,27 @@ export function productImageViewerRuntime(originalUrl?: string) {
   style.textContent = `
     [data-wr-image-zoom]{cursor:zoom-in}
     [data-wr-image-zoom]:focus-visible{outline:3px solid currentColor;outline-offset:4px}
-    #wr-product-image-viewer{box-sizing:border-box;position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;padding:64px 20px 20px;background:rgba(8,12,18,.94);color:#fff;box-shadow:none;overflow:hidden}
-    #wr-product-image-viewer[open]{display:flex;align-items:center;justify-content:center}
-    #wr-product-image-viewer::backdrop{background:transparent}
+    #wr-product-image-viewer{box-sizing:border-box;position:fixed;inset:0;width:calc(100% - 48px);height:calc(100% - 48px);max-width:1440px;max-height:1000px;margin:auto;border:0;border-radius:12px;padding:64px 28px 28px;background:#fff;color:#17212b;box-shadow:0 20px 80px #0005;overflow:hidden;font:16px/1.5 system-ui,sans-serif}
+    #wr-product-image-viewer[open]{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:32px}
+    #wr-product-image-viewer::backdrop{background:rgba(8,12,18,.7)}
     #wr-product-image-viewer img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;border:0;border-radius:0;box-shadow:none;filter:none;transform:none}
-    #wr-product-image-viewer button{position:absolute;top:12px;right:16px;display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;margin:0;border:1px solid #ffffff66;border-radius:50%;background:#202630;color:#fff;font:32px/1 system-ui;cursor:pointer}
-    #wr-product-image-viewer button:focus-visible{outline:2px solid #fff;outline-offset:3px}
-    #wr-product-image-viewer .wr-image-stage{display:flex;align-items:center;justify-content:center;width:100%;height:100%;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
+    #wr-product-image-viewer button{position:absolute;top:12px;right:16px;display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;margin:0;border:1px solid #dce1e6;border-radius:50%;background:#fff;color:#17212b;font:32px/1 system-ui;cursor:pointer;box-shadow:none;transform:none}
+    #wr-product-image-viewer button:focus-visible{outline:3px solid #236d91;outline-offset:3px}
+    #wr-product-image-viewer .wr-image-stage{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;width:100%;height:100%;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
     #wr-product-image-viewer .wr-image-stage[data-zoomed]{display:block}
     #wr-product-image-viewer .wr-image-stage[data-zoomed] img{max-width:none;max-height:none;margin:0}
     #wr-product-image-viewer .wr-image-scale{right:72px;font-size:24px}
+    #wr-product-image-viewer .wr-image-sidebar{min-width:0;min-height:0;overflow:auto;padding:4px}
+    #wr-product-image-viewer .wr-image-title{margin:0 0 24px;font:600 22px/1.4 system-ui,sans-serif;color:#17212b;text-transform:none;letter-spacing:normal;overflow-wrap:anywhere}
+    #wr-product-image-viewer .wr-image-thumbnails{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    #wr-product-image-viewer .wr-image-thumbnail{position:static;width:100%;height:auto;aspect-ratio:1;padding:4px;border:1px solid #cbd2d8;border-radius:6px;overflow:hidden}
+    #wr-product-image-viewer .wr-image-thumbnail[aria-pressed=true]{border:2px solid #236d91;background:#eef7fb}
+    #wr-product-image-viewer .wr-image-thumbnail img{width:100%;height:100%}
     #wr-product-image-lens{position:fixed;z-index:2147483646;pointer-events:none;box-sizing:border-box;border:1px solid #385b80;background:rgba(93,143,190,.18);box-shadow:inset 0 0 0 1px #ffffff80}
     #wr-product-image-detail{position:fixed;z-index:2147483645;pointer-events:none;overflow:hidden;box-sizing:border-box;background:#fff;border:1px solid #d9dee5;border-radius:8px;box-shadow:0 8px 28px #13253a22}
     #wr-product-image-detail img{position:absolute!important;display:block!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;object-fit:fill!important;transform:none!important;filter:none!important}
     #wr-product-image-lens[hidden],#wr-product-image-detail[hidden]{display:none!important}
-    @media(max-width:600px){#wr-product-image-viewer{padding:64px 8px 16px}}
+    @media(max-width:700px){#wr-product-image-viewer{width:100%;height:100%;max-height:none;border-radius:0;padding:64px 12px 20px}#wr-product-image-viewer[open]{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:16px}#wr-product-image-viewer .wr-image-sidebar{max-height:30vh}#wr-product-image-viewer .wr-image-title{font-size:18px;margin-bottom:12px}#wr-product-image-viewer .wr-image-thumbnails{grid-template-columns:repeat(auto-fill,64px);gap:8px}}
   `;
   document.head.appendChild(style);
   const dialog = document.createElement('dialog');
@@ -44,6 +50,7 @@ export function productImageViewerRuntime(originalUrl?: string) {
   dialog.setAttribute('aria-label', enlarge);
   const dismiss = document.createElement('button');
   dismiss.type = 'button';
+  dismiss.className = 'wr-image-close';
   dismiss.textContent = '×';
   dismiss.setAttribute('aria-label', close);
   const fullImage = document.createElement('img');
@@ -56,6 +63,10 @@ export function productImageViewerRuntime(originalUrl?: string) {
   dialog.appendChild(dismiss);
   dialog.appendChild(stage);
   dialog.appendChild(scaleButton);
+  const sidebar = document.createElement('aside'), title = document.createElement('h2'), thumbnails = document.createElement('div');
+  sidebar.className = 'wr-image-sidebar'; title.className = 'wr-image-title'; thumbnails.className = 'wr-image-thumbnails';
+  title.id = 'wr-product-image-title'; dialog.setAttribute('aria-labelledby', title.id);
+  sidebar.appendChild(title); sidebar.appendChild(thumbnails); dialog.appendChild(sidebar);
   document.body.appendChild(dialog);
   const lens = document.createElement('div'), pane = document.createElement('div'), detail = document.createElement('img');
   lens.id = 'wr-product-image-lens'; pane.id = 'wr-product-image-detail';
@@ -67,7 +78,7 @@ export function productImageViewerRuntime(originalUrl?: string) {
   const hideLens = () => { lens.hidden = pane.hidden = true; activeImage = undefined; };
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
   const showLens = (image: HTMLImageElement, x?: number, y?: number) => {
-    if (!desktop() || !image.getAttribute('src') || !image.naturalWidth || !image.naturalHeight) return;
+    if (dialog.open || !desktop() || !image.getAttribute('src') || !image.naturalWidth || !image.naturalHeight) return;
     const rect = image.getBoundingClientRect(), css = getComputedStyle(image);
     if (!rect.width || !rect.height) return;
     const fit = css.objectFit === 'cover' ? Math.max(rect.width / image.naturalWidth, rect.height / image.naturalHeight)
@@ -109,6 +120,24 @@ export function productImageViewerRuntime(originalUrl?: string) {
   };
   scaleButton.addEventListener('click', toggleScale);
   fullImage.addEventListener('dblclick', toggleScale);
+  const gallery = (image: HTMLImageElement) => {
+    const entries = [{ src: image.src, alt: image.alt }];
+    const add = (thumbnail: HTMLImageElement, control?: Element) => {
+      if (!thumbnail.getAttribute('src')) return; // Private-preview media may still be loading.
+      const src = thumbnail.src.startsWith('blob:') ? thumbnail.src
+        : control?.getAttribute('data-src') || control?.getAttribute('data-large') || thumbnail.src;
+      const resolved = new URL(src, document.baseURI).href;
+      if (!entries.some(entry => entry.src === resolved)) entries.push({ src: resolved, alt: thumbnail.alt || image.alt });
+    };
+    // Only product-gallery controls; recommendation/card images are not gallery images.
+    document.querySelectorAll<HTMLElement>('.senseng-detail-thumbs [data-wr-material-thumb], .senseng-detail-thumbs .senseng-thumb-btn, .senseng-detail-thumbs .wr-detail-thumb').forEach(control => {
+      if (control.getAttribute('data-target') && control.getAttribute('data-target') !== image.id) return;
+      const thumbnail = control.querySelector<HTMLImageElement>('img');
+      if (thumbnail) add(thumbnail, control);
+    });
+    image.closest('.gallery, .product-gallery')?.querySelectorAll<HTMLImageElement>('.thumbnails img, .gallery-thumbs img').forEach(thumbnail => add(thumbnail, thumbnail.closest('button, a') || undefined));
+    return entries;
+  };
   const show = (image: HTMLImageElement) => {
     // src is the original (or authorized preview blob), not a small srcset candidate.
     if (!image.getAttribute('src') || dialog.open) return;
@@ -116,6 +145,21 @@ export function productImageViewerRuntime(originalUrl?: string) {
     opener = image;
     fullImage.src = image.src;
     fullImage.alt = image.alt;
+    title.textContent = document.querySelector('main h1, h1')?.textContent?.trim() || image.alt || enlarge;
+    thumbnails.replaceChildren();
+    const buttons: HTMLButtonElement[] = [];
+    gallery(image).forEach((entry, index) => {
+      const button = document.createElement('button'), thumbnail = document.createElement('img');
+      button.type = 'button'; button.className = 'wr-image-thumbnail';
+      button.setAttribute('aria-label', `${entry.alt || enlarge} ${index + 1}`);
+      button.setAttribute('aria-pressed', String(index === 0));
+      thumbnail.src = entry.src; thumbnail.alt = ''; button.appendChild(thumbnail);
+      button.addEventListener('click', () => {
+        resetScale(); fullImage.src = entry.src; fullImage.alt = entry.alt;
+        buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      });
+      buttons.push(button); thumbnails.appendChild(button);
+    });
     previousOverflow = document.body.style.overflow;
     dialog.showModal();
     document.body.style.overflow = 'hidden';
@@ -135,17 +179,17 @@ export function productImageViewerRuntime(originalUrl?: string) {
     image.setAttribute('data-wr-image-zoom', '');
     image.setAttribute('role', 'button');
     image.setAttribute('aria-label', enlarge);
-    image.setAttribute('aria-haspopup', desktop() ? 'false' : 'dialog');
+    image.setAttribute('aria-haspopup', 'dialog');
     image.title = enlarge;
     image.tabIndex = 0;
     image.addEventListener('pointermove', event => { if (event.pointerType !== 'touch') showLens(image, event.clientX, event.clientY); });
     image.addEventListener('pointerleave', hideLens);
-    image.addEventListener('click', event => desktop() ? showLens(image, event.clientX, event.clientY) : show(image));
+    image.addEventListener('click', () => show(image));
     image.addEventListener('keydown', event => {
       if (event.key === 'Escape') { hideLens(); return; }
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        if (desktop()) showLens(image); else show(image);
+        show(image);
       } else if (activeImage === image && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
         event.preventDefault();
         showLens(image, pointer.x + (event.key === 'ArrowLeft' ? -24 : event.key === 'ArrowRight' ? 24 : 0), pointer.y + (event.key === 'ArrowUp' ? -24 : event.key === 'ArrowDown' ? 24 : 0));
