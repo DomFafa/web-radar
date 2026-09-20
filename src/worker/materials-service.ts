@@ -10,6 +10,7 @@ import { checkedMaterialsMedia } from './materials-media';
 import { prRequest } from './product-radar';
 import { canManage, defaultDraft, expectedVersion, validateDraft } from './domain';
 import { DomainStore } from './domain-store';
+import { WebsiteQuota } from './website-quota';
 
 interface Operation {
   receipt:MaterialsReceipt;principal:Principal;projectId:string;snapshotKey:string;
@@ -53,7 +54,7 @@ export function draftFromMaterials(submission:MaterialsSubmission,assets:Record<
 /** Called only behind the Coordinator. Network copying runs outside its short mutation lock. */
 export class MaterialsService {
   private active?:Promise<void>;
-  constructor(readonly env:AppEnv,readonly store:DomainStore,readonly hooks:Hooks){}
+  constructor(readonly env:AppEnv,readonly store:DomainStore,readonly hooks:Hooks,readonly websiteQuota=new WebsiteQuota(env,store,time=>hooks.schedule(time))){}
   private async read(scope:string,id:string):Promise<{fingerprint:string;operation:Operation}|undefined>{
     const row=await this.env.DB.prepare('SELECT fingerprint,result FROM idempotency WHERE scope=? AND request_id=?').bind(scope,id).first<{fingerprint:string;result:string}>();
     return row?{fingerprint:row.fingerprint,operation:JSON.parse(row.result)}:undefined;
@@ -84,8 +85,10 @@ export class MaterialsService {
       if(operation.receipt.state==='accepted'){
         const p=await this.store.one<Project>('projects',operation.projectId);
         if(!p||!canManage(p,principal))throw new ApiError(404,'project_not_found','已接收的项目已删除或无权访问。');
+        const claim=await this.websiteQuota.find(scope,input.submissionId);if(claim)await this.websiteQuota.commit(claim);
       }
       if(operation.receipt.state==='failed'&&operation.receipt.retryable&&!operation.cleaned){
+        const claim=await this.websiteQuota.find(scope,input.submissionId);if(claim)await this.websiteQuota.reserve(claim);
         await this.target(principal,input);operation.receipt.state='receiving';delete operation.receipt.error;delete operation.receipt.retryable;operation.principal=principal;
         await this.update(scope,operation).run();await this.hooks.schedule(Date.now()+1000);
       }
@@ -93,11 +96,17 @@ export class MaterialsService {
     }
     const issues=validateMaterialsPositions(input.materials);
     if(issues.length)throw new ApiError(issues.some(i=>i.code==='contract_revision_conflict')?409:422,issues[0].code,issues[0].message);
-    const target=await this.target(principal,input),projectId=target?.id||crypto.randomUUID();
+    const target=await this.target(principal,input);
+    const claim=target?undefined:await this.websiteQuota.intent(principal,scope,input.submissionId,fingerprint);
+    if(claim)await this.websiteQuota.reserve(claim);
+    const projectId=target?.id||claim!.projectId;
     const snapshotKey=`materials/${scope.slice(10)}/${input.submissionId}/confirmed.json`;
     const operation:Operation={principal,projectId,snapshotKey,createdAt:time(),expiresAt:Date.now()+7*24*3600*1000,assets:{},receipt:{schemaVersion:'wr-materials-receipt-v1',submissionId:input.submissionId,state:'receiving',contentSha256:digest,receivedMedia:0,totalMedia:input.materials.media.length,autoPublish:false}};
     await this.env.MEDIA.put(snapshotKey,JSON.stringify(input),{httpMetadata:{contentType:'application/json'}});
-    try{await this.store.remember(scope,input.submissionId,fingerprint,operation).run();}catch(error){await this.env.MEDIA.delete(snapshotKey);throw error;}
+    try{await this.store.remember(scope,input.submissionId,fingerprint,operation).run();}catch(error){
+      const durable=await this.read(scope,input.submissionId);
+      if(!durable){await this.env.MEDIA.delete(snapshotKey);if(claim)await this.websiteQuota.release(claim).catch(()=>{});throw error;}
+    }
     await this.hooks.schedule(Date.now()+1000);return operation.receipt;
   }
   async status(principal:Principal,id:string):Promise<MaterialsReceipt>{
@@ -106,6 +115,7 @@ export class MaterialsService {
     if(row.operation.receipt.state==='accepted'){
       const p=await this.store.one<Project>('projects',row.operation.projectId);
       if(!p||!canManage(p,principal))throw new ApiError(404,'project_not_found','已接收的项目已删除或无权访问。');
+      const claim=await this.websiteQuota.find(await scopeFor(principal),id);if(claim)await this.websiteQuota.commit(claim);
     }
     return row.operation.receipt;
   }
@@ -119,6 +129,7 @@ export class MaterialsService {
       if(operation.expiresAt<Date.now()){
         await this.cleanup(operation);operation.cleaned=true;operation.receipt={...operation.receipt,state:'failed',retryable:false,error:{code:'submission_expired',message:'未完成的资料接收已过期，请重新确认并提交。'}};
         await this.update(scope,operation).run();
+        await this.hooks.lock(async()=>{const claim=await this.websiteQuota.find(scope,operation.receipt.submissionId);if(claim)await this.websiteQuota.release(claim);}).catch(()=>{});
       }
     }
     const selected=operations.find(r=>!r.operation.cleaned&&r.operation.receipt.state==='receiving');
@@ -166,7 +177,9 @@ export class MaterialsService {
           const draft=draftFromMaterials(input,operation.assets,target?.draft,previousAssets);
           const project:Project={...(target||{id:operation.projectId,ownerId:current.userId,workspaceId:current.workspaceId,name:input.target.mode==='create'?input.target.name:'',version:0,createdAt:operation.createdAt,offline:false}),draft,version:(target?.version||0)+1,updatedAt:time(),materials:{submissionId:input.submissionId,source:input.source,contentSha256:operation.receipt.contentSha256,snapshotKey:operation.snapshotKey,acceptedAt:time()}};
           operation.receipt={...operation.receipt,state:'accepted',projectId:project.id,projectVersion:project.version,nextAction:'open-web-radar',entry:'prepared-materials'};
-          await this.store.batch([target?this.store.update('projects',project):this.store.insert('projects',project),...Object.values(operation.assets).map(a=>this.store.insert('assets',a)),this.update(scope,operation)]);
+          const claim=target?undefined:await this.websiteQuota.find(scope,input.submissionId);
+          await this.store.batch([target?this.store.update('projects',project):this.store.insert('projects',project),...Object.values(operation.assets).map(a=>this.store.insert('assets',a)),this.update(scope,operation),...(claim?[this.websiteQuota.statement(claim,'commit')]:[])]);
+          if(claim)await this.websiteQuota.commit(claim);
         });
       }
     }catch(error){
@@ -177,7 +190,7 @@ export class MaterialsService {
       const known=error instanceof Error&&'status'in error&&'code'in error;
       const status=known?Number(error.status):503,code=known?String(error.code):'materials_receive_failed';
       operation.receipt={...operation.receipt,state:'failed',retryable:status>=500||status===429,error:{code,message:known?error.message:'资料接收暂时失败，可以重试。'}};
-      if(!operation.receipt.retryable){await this.cleanup(operation);operation.cleaned=true;}
+      if(!operation.receipt.retryable){await this.cleanup(operation);operation.cleaned=true;await this.hooks.lock(async()=>{const claim=await this.websiteQuota.find(scope,operation.receipt.submissionId);if(claim)await this.websiteQuota.release(claim);}).catch(()=>{});}
       await this.hooks.lock(()=>this.update(scope,operation).run());
     }
     await this.hooks.schedule(Date.now()+1000);

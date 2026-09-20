@@ -49,6 +49,7 @@ import { preparePublicVariant, preparedImageVariants, publicMediaPolicy, typedRe
 import { renderSite, renderSiteFiles } from '../templates';
 import { prImage, prService } from './product-radar';
 import { DomainStore } from './domain-store';
+import { WebsiteQuota } from './website-quota';
 import { publicationErrorDetails } from './publication-diagnostics';
 import {
   designPageIds,
@@ -129,6 +130,7 @@ export class DomainService {
   readonly store: DomainStore;
   private readonly clones: CloneTasks;
   private readonly materials: MaterialsService;
+  private readonly websiteQuota: WebsiteQuota;
   private serial: Promise<unknown> = Promise.resolve();
   private readonly activeLanes = new Map<string, Promise<void>>();
   constructor(
@@ -137,7 +139,8 @@ export class DomainService {
     readonly providers: ProviderSet = createProviders(env),
   ) {
     this.store = new DomainStore(env.DB);
-    this.materials=new MaterialsService(env,this.store,{lock:operation=>this.lock(operation),schedule:time=>this.scheduler.schedule(time)});
+    this.websiteQuota = new WebsiteQuota(env, this.store, time => this.scheduler.schedule(time));
+    this.materials=new MaterialsService(env,this.store,{lock:operation=>this.lock(operation),schedule:time=>this.scheduler.schedule(time)},this.websiteQuota);
     this.clones = new CloneTasks(env, this.store, {
       lock: operation => this.lock(operation), wake: () => this.wake(),
       validate: project => this.validateAssets(project.id, project.draft),
@@ -945,7 +948,12 @@ export class DomainService {
         handoff,rawBuildBranch,rawTargetUrl,
       }),
       existing = await this.store.idempotent<{ id: string }>(scope, rid, hash);
-    if (existing) return this.project(existing.id, principal);
+    if (existing) {
+      const project = await this.project(existing.id, principal);
+      const claim = await this.websiteQuota.find(scope, rid);
+      if (claim) await this.websiteQuota.commit(claim);
+      return project;
+    }
     // Snapshot fields are supplied by PR only. Standalone creation re-fetches any selected IDs.
     let accepted = products;
     if (products.length && !handoff) {
@@ -976,8 +984,10 @@ export class DomainService {
         status: 'idle',
       };
     }
-    const p: Project = {
-      id: crypto.randomUUID(),
+    const claim = await this.websiteQuota.intent(principal, scope, rid, hash);
+    await this.websiteQuota.reserve(claim);
+    let p: Project = {
+      id: claim.projectId,
       ownerId: principal.userId,
       workspaceId: principal.workspaceId,
       name: name.trim(),
@@ -1010,11 +1020,19 @@ export class DomainService {
         this.store.insert('projects', p),
         ...assets.map((a) => this.store.insert('assets', a)),
         this.store.remember(scope, rid, hash, { id: p.id }),
+        this.websiteQuota.statement(claim, 'commit'),
       ]);
     } catch (e) {
-      await Promise.allSettled(assets.map((a) => this.env.MEDIA.delete(a.key)));
-      throw e;
+      // A rejected D1 response does not prove the atomic transaction was rolled back.
+      const durable = await this.store.idempotent<{ id: string }>(scope, rid, hash);
+      if (durable) p = await this.project(durable.id, principal);
+      else {
+        await Promise.allSettled(assets.map((a) => this.env.MEDIA.delete(a.key)));
+        await this.websiteQuota.release(claim).catch(() => {}); // Durable compensation retries in the alarm.
+        throw e;
+      }
     }
+    await this.websiteQuota.commit(claim);
     return p;
   }
   private async importProducts(
@@ -2432,11 +2450,11 @@ export class DomainService {
   }
   async tick(): Promise<void> {
     // Independent upstream calls can overlap; claims and quota changes still share the short lock.
-    const lanes = ['clone', 'publish', 'email', 'other', 'materials'] as const;
+    const lanes = ['clone', 'publish', 'email', 'other', 'materials', 'website-quota'] as const;
     await Promise.all(lanes.map(lane => {
       const active = this.activeLanes.get(lane);
       if (active) return active;
-      const task = (lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
+      const task = (lane === 'website-quota' ? this.websiteQuota.reconcile(operation => this.lock(operation)) : lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
         .finally(() => { this.activeLanes.delete(lane); });
       this.activeLanes.set(lane, task);
       return task;
