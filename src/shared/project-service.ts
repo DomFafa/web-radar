@@ -11,11 +11,16 @@ export interface ProjectPublication {
   error?: string;
   retryable: boolean;
   updatedAt?: string;
+  /** Prepared image variants, not overall deployment completion. */
+  mediaProgress?: { completed: number; total: number };
 }
 export interface ProjectServiceStatus {
   schemaVersion: 'wr-project-service-v1';
   projectId: string;
   projectVersion: number;
+  /** Content comparison against the active published snapshot; independent of record version. */
+  hasUnpublishedChanges: boolean;
+  publishedVersion?: number;
   name: string;
   template: string;
   languages: Language[];

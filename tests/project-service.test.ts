@@ -12,7 +12,7 @@ import { typedMaterialsFixture } from './fixtures/materials-typed';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import type { AppEnv } from '../src/worker/env';
-import type { Asset, Job, Principal, Project } from '../src/shared/model';
+import type { Asset, Job, Principal, Project, PublicMediaManifest, Release } from '../src/shared/model';
 
 // Exercise the actual service boundary, durable receiver, renderer and publication queue.
 describe('Product Radar private project service', () => {
@@ -140,6 +140,15 @@ describe('Product Radar private project service', () => {
     const asset = await call(project.id, 'assets/' + id); expect(asset.status).toBe(200); expect(asset.headers.get('Cache-Control')).toBe('no-store'); expect(new Uint8Array(await asset.arrayBuffer())).toEqual(materialsPng);
     expect(await store.list('jobs')).toHaveLength(0); expect(await store.list('releases')).toHaveLength(0); expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
+  it('avoids a redundant context round trip while measuring private preview phases', async () => {
+    const p = await accepted(); vi.mocked(fetch).mockClear();
+    const response = await call(p.id, 'preview'); expect(response.status).toBe(200);
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(2);
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-auth;dur=[\d.]+/);
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-coordinator;dur=[\d.]+/);
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-render;dur=[\d.]+/);
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-html;dur=[\d.]+/);
+  });
   it('returns a fixed trusted runtime independent of customer content or page scripts', async () => {
     const p = await accepted();
     const first: any = await (await call(p.id, 'preview')).json();
@@ -222,6 +231,135 @@ describe('Product Radar private project service', () => {
     expect(JSON.stringify(done)).not.toMatch(/"draft"|"principal"|"hostingTarget"/); expect(providers.publish).toHaveBeenCalledTimes(1);
     expect((await call(p.id, 'publish', body)).status).toBe(200); expect(await store.list('jobs')).toHaveLength(1);
     expect((await call(p.id, 'publish', { ...body, expectedVersion: 999 })).status).toBe(409);
+  });
+  it('distinguishes content changes from publication record versions using the active release', async () => {
+    const p = await accepted(), body = { requestId: crypto.randomUUID(), expectedVersion: p.version };
+    const draft: any = await (await call(p.id, 'status')).json();
+    expect(draft.hasUnpublishedChanges).toBe(true); expect(draft.publishedVersion).toBeUndefined();
+    await call(p.id, 'publish', body); await domain.tick();
+    for (const [action, request] of [['status', {}], ['publication-status', {}], ['publish', body]] as const) {
+      const state: any = await (await call(p.id, action, request)).json();
+      expect(state).toMatchObject({ projectVersion: 2, publishedVersion: 1, hasUnpublishedChanges: false });
+    }
+    const current = (await store.one<Project>('projects', p.id))!;
+    const active = (await store.one<Release>('releases', current.publishedReleaseId!))!;
+    const previousJob = (await store.list<Job>('jobs'))[0];
+    const failed = { ...active, id: crypto.randomUUID(), status: 'failed' as const, draft: structuredClone(active.draft) };
+    failed.draft.company.description = 'A newer failed publication';
+    await store.insert('releases', failed).run();
+    await store.insert('jobs', { ...previousJob, id: crypto.randomUUID(), status: 'failed', input: { ...previousJob.input, releaseId: failed.id }, createdAt: '2099-01-01T00:00:00Z' }).run();
+    expect(await (await call(p.id, 'status')).json()).toMatchObject({ publishedVersion: 1, hasUnpublishedChanges: false, publication: { status: 'failed' } });
+    current.draft.company.description = 'A real draft edit'; current.version++;
+    await store.update('projects', current).run();
+    expect(await (await call(p.id, 'status')).json()).toMatchObject({ projectVersion: 3, publishedVersion: 1, hasUnpublishedChanges: true });
+  });
+  const publishedProject = async () => {
+    const p = await accepted();
+    await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version }); await domain.tick();
+    const current = (await store.one<Project>('projects', p.id))!;
+    return { current, active: (await store.one<Release>('releases', current.publishedReleaseId!))! };
+  };
+  it('refreshes only the confirmed publication, preserving unconfirmed edits and prepared media', async () => {
+    const { current, active } = await publishedProject();
+    active.publicMedia = { policy: 'webp82-v1', ready: true, assets: {} }; await store.update('releases', active).run();
+    current.draft.company.description = 'UNCONFIRMED EDIT MUST STAY PRIVATE'; current.version++;
+    await store.update('projects', current).run(); const savedDraft = structuredClone(current.draft);
+    const body = { requestId: crypto.randomUUID(), expectedVersion: current.version, expectedPublishedReleaseId: active.id };
+    const response = await call(current.id, 'refresh-publication', body); expect(response.status).toBe(200);
+    const queued: any = await response.json();
+    const release = (await store.one<Release>('releases', queued.publication.releaseId))!;
+    expect(release.draft).toEqual(active.draft); expect(release.draftVersion).toBe(active.draftVersion); expect(release.publicMedia).toEqual(active.publicMedia);
+    expect((await store.one<Project>('projects', current.id))!.draft).toEqual(savedDraft);
+    await domain.tick();
+    const final = (await store.one<Project>('projects', current.id))!;
+    expect(final.draft).toEqual(savedDraft); expect(final.publishedReleaseId).toBe(release.id);
+    expect(await (await call(current.id, 'status')).json()).toMatchObject({ publishedVersion: 1, hasUnpublishedChanges: true, publication: { status: 'succeeded' } });
+    const replay: any = await (await call(current.id, 'refresh-publication', body)).json();
+    expect(replay.publication.jobId).toBe(queued.publication.jobId); expect(await store.list('jobs')).toHaveLength(2);
+  });
+  it.each(['before-dispatch', 'before-activation'] as const)('stops a publication refresh conflict %s', async when => {
+    const { current, active } = await publishedProject(), savedDraft = structuredClone(current.draft);
+    const queued: any = await (await call(current.id, 'refresh-publication', { requestId: crypto.randomUUID(), expectedVersion: current.version, expectedPublishedReleaseId: active.id })).json();
+    expect(queued.publication?.jobId).toBeTruthy();
+    const newer = { ...active, id: crypto.randomUUID() }; await store.insert('releases', newer).run();
+    const replace = async () => { const p = (await store.one<Project>('projects', current.id))!; p.publishedReleaseId = newer.id; await store.update('projects', p).run(); };
+    vi.mocked(providers.publish).mockClear();
+    if (when === 'before-dispatch') await replace();
+    else vi.mocked(providers.publish).mockImplementationOnce(async () => { await replace(); return { deploymentId: 'accepted-refresh', url: active.url!, testMode: true }; });
+    await domain.tick();
+    expect((await store.one<Job>('jobs', queued.publication.jobId))!.status).toBe('failed');
+    expect((await store.one<Project>('projects', current.id))!).toMatchObject({ publishedReleaseId: newer.id, draft: savedDraft });
+    expect(providers.publish).toHaveBeenCalledTimes(when === 'before-dispatch' ? 0 : 1);
+  });
+  it('preserves an inline legacy clone snapshot and its unconfirmed current draft exactly', async () => {
+    const { current: p, active } = await publishedProject();
+    active.draft.buildBranch = 'clone';
+    active.draft.materials = undefined;
+    active.draft.cloneConfig = { generatedHtml: '<!doctype html><html><head><title>Confirmed clone</title></head><body><main>Confirmed clone</main></body></html>' };
+    p.draft = structuredClone(active.draft); p.draft.company.description = 'Private clone edit'; p.materials = undefined;
+    await store.update('releases', active).run(); await store.update('projects', p).run();
+    const result = await call(p.id, 'refresh-publication', { requestId: crypto.randomUUID(), expectedVersion: p.version, expectedPublishedReleaseId: active.id });
+    expect(result.status, await result.clone().text()).toBe(200);
+    const queued: any = await result.json();
+    expect((await store.one<Release>('releases', queued.publication.releaseId))!.draft).toEqual(active.draft);
+    await domain.tick();
+    expect((await store.one<Job>('jobs', queued.publication.jobId))!.status).toBe('succeeded');
+    expect((await store.one<Project>('projects', p.id))!.draft).toEqual(p.draft);
+  });
+  it('keeps publication refresh version, release, owner and workspace boundaries', async () => {
+    const { current: p, active } = await publishedProject();
+    const body = { requestId: crypto.randomUUID(), expectedVersion: p.version, expectedPublishedReleaseId: active.id };
+    expect((await call(p.id, 'refresh-publication', { ...body, expectedVersion: p.version + 1 })).status).toBe(409);
+    expect((await call(p.id, 'refresh-publication', { ...body, expectedPublishedReleaseId: crypto.randomUUID() })).status).toBe(409);
+    current.workspaceId = 'foreign'; expect((await call(p.id, 'refresh-publication', body)).status).toBe(404);
+    current = { ...fixture.principal, email: 'not-owner@example.com' }; expect((await call(p.id, 'refresh-publication', body)).status).toBe(403);
+    current = { ...fixture.principal, userId: 'unrelated-member', workspaceRole: 'member' }; expect((await call(p.id, 'refresh-publication', body)).status).toBe(404);
+    expect(await store.list('jobs')).toHaveLength(1);
+    current = structuredClone(fixture.principal);
+    p.materials = undefined; await store.update('projects', p).run(); // Existing non-materials sites use the maintenance entry only.
+    expect((await call(p.id, 'refresh-publication', body)).status).toBe(200);
+  });
+  it.each([
+    { name: 'not yet prepared', completed: [[], []], expected: 0 },
+    { name: 'partially prepared', completed: [[320], []], expected: 1 },
+    { name: 'all prepared', completed: [[320, 640], [320]], expected: 3 },
+    { name: 'duplicate and unrelated variants', completed: [[320, 320, 1280], [320, 999]], expected: 2 },
+  ])('reports real media progress for $name on every publication response', async ({ completed, expected }) => {
+    const p = await accepted(), body = { requestId: crypto.randomUUID(), expectedVersion: p.version };
+    const initial: any = await (await call(p.id, 'publish', body)).json();
+    const release = (await store.one<Release>('releases', initial.publication.releaseId))!;
+    release.publicMedia = { policy: 'test-progress', ready: false, assets: Object.fromEntries([[320, 640, 320], [320]].map((widths, i) => [
+      'asset-' + i, { sourceKey: 'PRIVATE_SOURCE_KEY', sourceIdentity: 'PRIVATE_IDENTITY', widths,
+        variants: completed[i].map(requestedWidth => ({ requestedWidth, width: 100, height: 100, bytes: 123, sha256: 'PRIVATE_HASH', key: 'PRIVATE_VARIANT_KEY' })) },
+    ])) };
+    await store.update('releases', release).run();
+    const head = vi.spyOn(env.MEDIA, 'head'), get = vi.spyOn(env.MEDIA, 'get');
+    for (const [action, request] of [['status', {}], ['publication-status', { jobId: initial.publication.jobId }], ['publish', body]] as const) {
+      const response = await call(p.id, action, request); expect(response.status).toBe(200);
+      const state: any = await response.json();
+      expect(state.publication.mediaProgress).toEqual({ completed: expected, total: 3 });
+      expect(state.publication.status).toBe('queued');
+      expect(JSON.stringify(state)).not.toMatch(/PRIVATE_|sourceKey|sourceIdentity|variants|sha256/);
+    }
+    expect(head).not.toHaveBeenCalled(); expect(get).not.toHaveBeenCalled(); expect(providers.publish).not.toHaveBeenCalled();
+    expect(await store.list('jobs')).toHaveLength(1); expect(await store.list('releases')).toHaveLength(1);
+    const other = { ...p, id: crypto.randomUUID() }; await store.insert('projects', other).run();
+    expect((await call(other.id, 'publication-status', { jobId: initial.publication.jobId })).status).toBe(404);
+    current.workspaceId = 'another-workspace';
+    expect((await call(p.id, 'status')).status).toBe(404);
+  });
+  it('omits media progress for drafts, legacy releases and manifests without requested widths', async () => {
+    const p = await accepted(), body = { requestId: crypto.randomUUID(), expectedVersion: p.version };
+    expect((await (await call(p.id, 'status')).json() as any).publication).not.toHaveProperty('mediaProgress');
+    const initial: any = await (await call(p.id, 'publish', body)).json();
+    const release = (await store.one<Release>('releases', initial.publication.releaseId))!;
+    for (const publicMedia of [undefined, { policy: 'test-progress', ready: false, assets: {} }, {
+      policy: 'test-progress', ready: true, assets: { unused: { sourceKey: 'private', sourceIdentity: 'private', widths: [], variants: [] } },
+    }] as (PublicMediaManifest | undefined)[]) {
+      release.publicMedia = publicMedia; await store.update('releases', release).run();
+      const state: any = await (await call(p.id, 'publication-status', { jobId: initial.publication.jobId })).json();
+      expect(state.publication).not.toHaveProperty('mediaProgress');
+    }
   });
   it('does not dispatch when a company administrator is demoted after queueing', async () => {
     const p = await accepted(); current = { ...current, userId: 'company-admin' };

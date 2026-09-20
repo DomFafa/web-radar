@@ -113,6 +113,7 @@ interface JobInput extends Record<string, unknown> {
   instructions?: string;
   releaseId?: string;
   restoreReleaseId?: string;
+  refreshReleaseId?: string;
   recipient?: string;
   inquiryId?: string;
   offlineEpoch?: string;
@@ -746,9 +747,15 @@ export class DomainService {
   }
   private async productRadarProject(request: Request, identity: Principal, path: string[]): Promise<Response> {
     const principal = await currentMaterialsPrincipal(this.env, identity);
-    const project = await this.project(path[0], principal);
-    requireCondition(project.materials && project.draft.materials, 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
+    // This handler has just refreshed the principal at the durable boundary.
+    const project = await this.store.one<Project>('projects', path[0]);
+    requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
     const action = path[1], url = new URL(request.url);
+    if (action === 'refresh-publication' && request.method === 'POST') {
+      const job = await this.publish(project, principal, await this.body(request), false, true);
+      return json(await this.projectServiceStatus(project, job.id));
+    }
+    requireCondition(project.materials && project.draft.materials, 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
     if (action === 'assets' && path[2] && request.method === 'GET')
       return this.assetResponse(request, await this.projectAsset(project.id, path[2]));
     if (action === 'preview' && request.method === 'GET') {
@@ -760,12 +767,16 @@ export class DomainService {
       requireCondition(plannedPages(draft).includes(page), 400, 'invalid_page', '页面不存在。');
       requireCondition(draft.products.some(p => p.id === productId), 400, 'invalid_product', '没有配置这个产品。');
       const proxyBasePath = url.searchParams.get('proxyBasePath') || `/api/web-radar/projects/${project.id}`;
+      const renderStarted = performance.now();
       const html = await this.renderPage(draft, { projectId: project.id, page, lang, productId,
         assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
+      const htmlStarted = performance.now();
       const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
         projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntime,
         html: projectPreviewHtml(html, proxyBasePath, this.origin(), { page, lang, productId, expectedVersion: project.version }) };
-      return json(response);
+      const result = json(response);
+      result.headers.set('Server-Timing', `wr-render;dur=${(htmlStarted - renderStarted).toFixed(1)}, wr-html;dur=${(performance.now() - htmlStarted).toFixed(1)}`);
+      return result;
     }
     if (action === 'publish' && request.method === 'POST') {
       const job = await this.publish(project, principal, await this.body(request), false);
@@ -780,8 +791,19 @@ export class DomainService {
       : (await this.store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC'))[0];
     if (jobId) requireCondition(job?.projectId === project.id && job.kind === 'publish', 404, 'job_not_found', '发布任务不存在。');
     const release = job?.input.releaseId ? await this.store.one<Release>('releases', String(job.input.releaseId)) : undefined;
+    const activeRelease = project.publishedReleaseId === release?.id ? release
+      : project.publishedReleaseId ? await this.store.one<Release>('releases', project.publishedReleaseId) : undefined;
+    const published = activeRelease?.status === 'succeeded' ? activeRelease : undefined;
+    let completed = 0, total = 0;
+    for (const asset of Object.values(release?.publicMedia?.assets ?? {})) {
+      const widths = new Set(asset.widths), prepared = new Set(asset.variants.map(variant => variant.requestedWidth));
+      total += widths.size;
+      for (const width of widths) if (prepared.has(width)) completed++;
+    }
     const base = `/api/integrations/product-radar/projects/${project.id}`;
     return { schemaVersion: 'wr-project-service-v1', projectId: project.id, projectVersion: project.version,
+      hasUnpublishedChanges: !published || !samePublishedDraft(project.draft, published.draft),
+      ...(published ? { publishedVersion: published.draftVersion } : {}),
       name: project.name, template: project.draft.template, languages: project.draft.languages,
       pages: plannedPages(project.draft), products: project.draft.products.map(({id, name}) => ({id, name})),
       primaryProductId: project.draft.primaryProductId,
@@ -791,6 +813,7 @@ export class DomainService {
           : job.input.mediaPreparation && !job.input.publicationStarted ? 'preparing_media'
           : job.input.publicationStarted ? 'deploying' : 'queued',
         jobId: job.id, releaseId: release?.id, inputVersion: job.inputVersion,
+        ...(total ? { mediaProgress: { completed, total } } : {}),
         ...(job.status === 'succeeded' && release?.status === 'succeeded' && !project.offline ? {url: release.url} : {}),
         ...(job.error ? {error: job.error} : {}), retryable: job.status === 'failed', updatedAt: job.updatedAt,
       } : { status: 'idle', phase: 'idle', retryable: false },
@@ -1848,14 +1871,23 @@ export class DomainService {
     principal: Principal,
     body: Record<string, unknown>,
     restore: boolean,
+    refresh = false,
   ): Promise<Job> {
     const rid = requestId(body.requestId),
       scope = `publish:${project.id}:${principal.userId}`,
-      hash = await fingerprint({ body, restore }),
+      hash = await fingerprint({ body, restore, ...(refresh ? { refresh: true } : {}) }),
       prior = await this.store.idempotent<{ id: string }>(scope, rid, hash);
     if (prior) return (await this.store.one<Job>('jobs', prior.id))!;
-    let draft: Draft, draftVersion: number, restored: Release | undefined;
-    if (restore) {
+    let draft: Draft, draftVersion: number, restored: Release | undefined, refreshed: Release | undefined;
+    if (refresh) {
+      expectedVersion(project, body.expectedVersion);
+      requireCondition(!project.offline && project.publishedReleaseId && project.publishedReleaseId === body.expectedPublishedReleaseId, 409, 'published_release_changed', '已发布版本已变化，请重新核对后刷新。');
+      refreshed = await this.store.one<Release>('releases', project.publishedReleaseId);
+      requireCondition(refreshed?.status === 'succeeded' && refreshed.projectId === project.id, 409, 'published_release_unavailable', '没有可刷新的成功发布快照。');
+      draft = structuredClone(refreshed.draft);
+      draftVersion = refreshed.draftVersion;
+      assertPublishable(draft);
+    } else if (restore) {
       restored = project.previousReleaseId
         ? await this.store.one<Release>('releases', project.previousReleaseId)
         : undefined;
@@ -1877,8 +1909,8 @@ export class DomainService {
       requireCondition(testMode(this.env) || draft.cloneConfig?.generation?.mode !== 'fixture', 400, 'clone_fixture_only', '演示页面不能发布到生产环境，请使用真实设计生成。');
       const output = await loadCloneOutput(this.env, project.id, draft);
       if (output.cloneConfig?.generatedFiles) validateSiteFiles(output.cloneConfig.generatedFiles, output);
-      draft.cloneConfig = await storeCloneOutput(this.env, project.id, draft.cloneConfig!);
-      if (!restore) project.draft.cloneConfig = draft.cloneConfig;
+      if (!refresh) draft.cloneConfig = await storeCloneOutput(this.env, project.id, draft.cloneConfig!);
+      if (!restore && !refresh) project.draft.cloneConfig = draft.cloneConfig;
     }
     const assets = new Map((await this.store.list<Asset>('assets', 'project_id=?', [project.id])).map(asset => [asset.id, asset]));
     await this.validateAssets(project.id, draft, assets);
@@ -1895,12 +1927,12 @@ export class DomainService {
       "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",
       [project.id],
     );
-    const activeRelease = project.publishedReleaseId
+    const activeRelease = refreshed ?? (project.publishedReleaseId
       ? await this.store.one<Release>('releases', project.publishedReleaseId)
-      : undefined;
-    if (activeRelease?.draft.cloneConfig && hasCloneOutput(activeRelease.draft.cloneConfig)) activeRelease.draft.cloneConfig = await storeCloneOutput(this.env, project.id, activeRelease.draft.cloneConfig);
+      : undefined);
+    if (!refresh && activeRelease?.draft.cloneConfig && hasCloneOutput(activeRelease.draft.cloneConfig)) activeRelease.draft.cloneConfig = await storeCloneOutput(this.env, project.id, activeRelease.draft.cloneConfig);
     const currentMetadata = await this.publicationMetadata(project, draft);
-    if (!restore) {
+    if (!restore && !refresh) {
       const samePending = pending.find(job => !job.input.cancelledByOffline && job.input.draft && samePublishedDraft(draft, job.input.draft as Draft));
       if (samePending) {
         await this.store.remember(scope, rid, hash, { id: samePending.id }).run();
@@ -1933,7 +1965,8 @@ export class DomainService {
       projectId: project.id,
       draftVersion,
       draft,
-      ...(isTypedMaterials(draft) ? { rendererVersion: typedRendererVersion } : {}),
+      ...(isTypedMaterials(draft) || refresh ? { rendererVersion: typedRendererVersion } : {}),
+      ...(refreshed?.publicMedia?.ready && refreshed.publicMedia.policy === publicMediaPolicy ? { publicMedia: structuredClone(refreshed.publicMedia) } : {}),
       hostingTarget: structuredClone(target),
       seo: { policyVersion: SEO_POLICY_VERSION, origin: currentMetadata.origin ?? `https://${target.pagesProjectName}.pages.dev` },
       createdAt: now(),
@@ -1947,7 +1980,7 @@ export class DomainService {
       kind: 'publish',
       status: 'queued',
       requestId: rid,
-      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, principal, ...(isTypedMaterials(draft) ? { mediaPreparation: true } : {}) },
+      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, ...(refreshed ? { refreshReleaseId: refreshed.id } : {}), principal, ...(isTypedMaterials(draft) ? { mediaPreparation: true } : {}) },
       inputVersion: project.version,
       createdAt: now(),
       updatedAt: now(),
@@ -2899,6 +2932,7 @@ export class DomainService {
       const previous = p.publishedReleaseId
         ? await this.store.one<Release>('releases', p.publishedReleaseId)
         : undefined;
+      requireCondition(!input.refreshReleaseId || (!p.offline && p.publishedReleaseId === input.refreshReleaseId), 409, 'publication_cancelled', '已发布版本已变化，已停止此次刷新。');
       requireCondition(
         !p.publishedReleaseId || previous?.status === 'succeeded',
         409,
@@ -2931,6 +2965,10 @@ export class DomainService {
         );
         await this.verifyJobAccess(job);
         await this.lock(async () => {
+          if (input.refreshReleaseId) {
+            const current = await this.store.one<Project>('projects', job.projectId);
+            requireCondition(current && !current.offline && current.publishedReleaseId === input.refreshReleaseId, 409, 'publication_cancelled', '已发布版本已变化，已停止此次刷新。');
+          }
           const persisted = await this.store.one<Job>('jobs', job.id);
           requireCondition(
             !persisted?.input.cancelledByOffline,
@@ -2968,6 +3006,7 @@ export class DomainService {
       await this.lock(async () => {
         const current = (await this.store.one<Project>('projects', job.projectId))!,
           persisted = (await this.store.one<Job>('jobs', job.id))!;
+        requireCondition(!input.refreshReleaseId || (!current.offline && current.publishedReleaseId === input.refreshReleaseId), 409, 'publication_cancelled', '已发布版本已变化，已停止此次刷新。');
         requireCondition(
           !persisted.input.cancelledByOffline,
           409,
