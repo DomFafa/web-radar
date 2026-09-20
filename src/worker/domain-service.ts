@@ -1099,8 +1099,8 @@ export class DomainService {
       'import',
     );
   }
-  private async projectAsset(projectId: string, id: string): Promise<Asset> {
-    const asset = await this.store.one<Asset>('assets', id);
+  private async projectAsset(projectId: string, id: string, assets?: ReadonlyMap<string, Asset>): Promise<Asset> {
+    const asset = assets ? assets.get(id) : await this.store.one<Asset>('assets', id);
     requireCondition(
       asset?.projectId === projectId,
       404,
@@ -1117,7 +1117,7 @@ export class DomainService {
       '素材文件尚未完整保存，请重新上传。',
     );
   }
-  private async validateAssets(projectId: string, draft: Draft): Promise<void> {
+  private async validateAssets(projectId: string, draft: Draft, assets?: ReadonlyMap<string, Asset>): Promise<void> {
     const materialsProfile = validateMaterialsDraft(draft);
     const ownedAssets = new Map<string, Asset>();
     const bannerMedia = bannerAssets(draft);
@@ -1126,7 +1126,7 @@ export class DomainService {
       banners:draft.banners?.map(b=>({...b,videoAssetId:undefined})),
     }));
     for (const id of assetReferences(draft)) {
-      const asset = await this.projectAsset(projectId, id);
+      const asset = await this.projectAsset(projectId, id, assets);
       if(draft.materials?.imageBindings.some(b=>b.assetId===id||b.mobileAssetId===id))requireCondition(['image/png','image/jpeg','image/webp'].includes(asset.contentType),400,'materials_asset_type','资料位置仅支持 PNG、JPEG 或 WebP 图片。');
       const video = id === draft.heroAssetId || bannerMedia.videos.includes(id) || !!draft.cloneConfig?.referenceCapture?.assets.some(a=>a.assetId===id&&a.contentType.startsWith('video/'));
       const image = supportedImages.has(asset.contentType) ||
@@ -1880,9 +1880,16 @@ export class DomainService {
       draft.cloneConfig = await storeCloneOutput(this.env, project.id, draft.cloneConfig!);
       if (!restore) project.draft.cloneConfig = draft.cloneConfig;
     }
-    await this.validateAssets(project.id, draft);
-    for (const id of publicAssetReferences(draft))
-      await this.assertObject(await this.projectAsset(project.id, id));
+    const assets = new Map((await this.store.list<Asset>('assets', 'project_id=?', [project.id])).map(asset => [asset.id, asset]));
+    await this.validateAssets(project.id, draft, assets);
+    const publicAssets = publicAssetReferences(draft);
+    // Keep complete ownership/type/object checks without serial storage round trips per image.
+    for (let offset = 0; offset < publicAssets.length; offset += 4) {
+      const checked = await Promise.allSettled(publicAssets.slice(offset, offset + 4).map(async id =>
+        this.assertObject(await this.projectAsset(project.id, id, assets))));
+      const failure = checked.find(result => result.status === 'rejected');
+      if (failure?.status === 'rejected') throw failure.reason;
+    }
     const pending = await this.store.list<Job>(
       'jobs',
       "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",

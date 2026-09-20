@@ -12,7 +12,7 @@ import { typedMaterialsFixture } from './fixtures/materials-typed';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import type { AppEnv } from '../src/worker/env';
-import type { Job, Principal, Project } from '../src/shared/model';
+import type { Asset, Job, Principal, Project } from '../src/shared/model';
 
 // Exercise the actual service boundary, durable receiver, renderer and publication queue.
 describe('Product Radar private project service', () => {
@@ -39,7 +39,7 @@ describe('Product Radar private project service', () => {
     env.COORDINATOR = { getByName: () => ({ fetch: (request: Request) => domain.fetch(request) }) } as unknown as AppEnv['COORDINATOR'];
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => String(input).endsWith('/context') ? revoked ? Response.json({}, { status: 403 }) : Response.json({ protocolVersion: 1, principal: current }) : new Response(materialsPng, { headers: { 'content-type': 'image/png' } })));
   });
-  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
   const post = (path: string, body: object = {}, key = secret) => app.request('http://127.0.0.1:8788' + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Web-Radar-Secret': key }, body: JSON.stringify({ principal: { userId: current.userId, workspaceId: current.workspaceId }, ...body }) }, env);
   const call = (id: string, action: string, body = {}) => post(`/projects/${id}/${action}`, body);
   const accepted = async () => {
@@ -49,6 +49,79 @@ describe('Product Radar private project service', () => {
     expect(receipt).toMatchObject({ state: 'accepted', autoPublish: false, nextAction: 'open-web-radar' });
     return (await store.one<Project>('projects', receipt.projectId))!;
   };
+  const largeProject = async () => {
+    const p = await accepted(), input = await typedMaterialsFixture('senseng-candy', 18);
+    const materials = input.materials;
+    for (let i = 0; materials.media.length < 110; i++) {
+      const product = materials.products[i % materials.products.length], id = `extra-gallery-${i}`;
+      const bytes = Buffer.concat([materialsPng, Buffer.from(id)]);
+      materials.media.push({ ...materials.media[0], id, bytes: bytes.length, sha256: Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex') });
+      materials.imageBindings.push({ ...materials.imageBindings.find(b => b.slotId === 'product-gallery' && b.productId === product.id)!, mediaId: id, itemIndex: product.galleryMediaIds.length });
+      product.galleryMediaIds.push(id);
+    }
+    const assets: Record<string, Asset> = {};
+    for (const media of materials.media) {
+      const asset: Asset = { id: 'large-' + media.id, projectId: p.id, key: 'large/' + media.id, sha256: media.sha256,
+        contentType: media.mimeType, size: media.bytes, filename: media.id, origin: 'import', createdAt: new Date().toISOString() };
+      assets[media.id] = asset;
+      await store.insert('assets', asset).run();
+      objects.set(asset.key, { bytes: Uint8Array.from(Buffer.concat([materialsPng, Buffer.from(media.id)])), options: { httpMetadata: { contentType: media.mimeType } } });
+    }
+    p.draft = draftFromMaterials(input, assets);
+    await store.update('projects', p).run();
+    return { p, assets: Object.values(assets) };
+  };
+  it('queues 110 materials within the caller budget despite storage latency and deduplicates replay', async () => {
+    const { p, assets } = await largeProject(); expect(assets).toHaveLength(110);
+    vi.useFakeTimers();
+    const pause = () => new Promise(resolve => setTimeout(resolve, 250));
+    const prepare = env.DB.prepare.bind(env.DB); let assetReads = 0;
+    const delayed = (statement: D1PreparedStatement): D1PreparedStatement => new Proxy(statement, {
+      get(target, key) {
+        if (key === 'bind') return (...args: unknown[]) => delayed(target.bind(...args));
+        if (key === 'first' || key === 'all') return async (...args: unknown[]) => {
+          assetReads++; await pause(); return Reflect.apply(target[key], target, args);
+        };
+        return Reflect.get(target, key);
+      },
+    });
+    vi.spyOn(env.DB, 'prepare').mockImplementation(sql => /SELECT data FROM assets\b/.test(sql) ? delayed(prepare(sql)) : prepare(sql));
+    const head = env.MEDIA.head.bind(env.MEDIA); let active = 0, peak = 0;
+    const heads = vi.spyOn(env.MEDIA, 'head').mockImplementation(async key => {
+      active++; peak = Math.max(peak, active);
+      try { await pause(); return await head(key); } finally { active--; }
+    });
+    const body = { requestId: crypto.randomUUID(), expectedVersion: p.version }, started = Date.now();
+    const pending = call(p.id, 'publish', body);
+    // Authentication uses native Web Crypto before the first simulated storage request.
+    await vi.waitUntil(() => vi.getTimerCount() > 0);
+    await vi.runAllTimersAsync(); const response = await pending;
+    expect(response.status).toBe(200);
+    const first: any = await response.json(); expect(first.publication.status).toBe('queued');
+    const elapsedMs = Date.now() - started;
+    expect(elapsedMs, `enqueue took ${elapsedMs} ms with ${assetReads} asset reads`).toBeLessThan(10_000);
+    expect(assetReads).toBe(1); expect(heads).toHaveBeenCalledTimes(110);
+    expect(peak).toBeGreaterThan(1); expect(peak).toBeLessThanOrEqual(4);
+    const replay: any = await (await call(p.id, 'publish', body)).json();
+    expect(replay.publication.jobId).toBe(first.publication.jobId);
+    expect(await store.list('jobs')).toHaveLength(1); expect(await store.list('releases')).toHaveLength(1);
+    expect(assetReads).toBe(1); expect(heads).toHaveBeenCalledTimes(110); expect(providers.publish).not.toHaveBeenCalled();
+  });
+  it.each(['missing-record', 'foreign-project', 'wrong-type', 'missing-object'] as const)('rejects %s among 110 materials before creating a publication', async failure => {
+    const { p, assets } = await largeProject(), asset = assets.at(-1)!;
+    if (failure === 'missing-record') await store.delete('assets', asset.id).run();
+    if (failure === 'foreign-project') {
+      const foreign = { ...p, id: crypto.randomUUID() }; await store.insert('projects', foreign).run();
+      await store.delete('assets', asset.id).run(); await store.insert('assets', { ...asset, projectId: foreign.id }).run();
+    }
+    if (failure === 'wrong-type') await store.update('assets', { ...asset, contentType: 'video/mp4' }).run();
+    if (failure === 'missing-object') objects.delete(asset.key);
+    const response = await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version });
+    expect(response.status).toBe(failure === 'wrong-type' ? 400 : failure === 'missing-object' ? 409 : 404);
+    expect(await response.json()).toMatchObject({ code: failure === 'wrong-type' ? 'materials_asset_type' : failure === 'missing-object' ? 'asset_unavailable' : 'asset_not_found' });
+    expect(await store.list('jobs')).toHaveLength(0); expect(await store.list('releases')).toHaveLength(0);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
   it('renders confirmed pages with authenticated media and navigation without generation or publication', async () => {
     const project = await accepted();
     const state = await call(project.id, 'status'); expect(state.status).toBe(200);
