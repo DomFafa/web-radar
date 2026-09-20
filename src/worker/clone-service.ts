@@ -13,6 +13,7 @@ import { ApiError } from './http';
 import { normalizeCloneImages } from '../shared/clone';
 import { materializeSiteFiles, siteFilePath, validateSiteFiles } from './static-site';
 import { publicAssetReferences } from './domain';
+import { withProductImageViewer } from '../shared/product-image-viewer';
 
 export async function scrapeTargetUrl(targetUrl: string): Promise<CloneScrapedData> {
   let urlObj: URL;
@@ -336,5 +337,8 @@ export function renderCloneFiles(draft: Draft, options: { projectId: string; ass
   return Object.fromEntries(draft.languages.flatMap(lang => [
     [siteFilePath(lang, 'home'), html], ...['catalog', 'about', 'contact'].map(p => [siteFilePath(lang, p), html]),
     ...draft.products.map(p => [siteFilePath(lang, 'detail', p.id), html]),
-  ]).concat([['index.html', html]]).map(([path, content])=>[path, withBanner(content, draft, options.assetUrl, bannerPageFromPath(path) ?? false)]));
+  ]).concat([['index.html', html]]).map(([path, content])=> {
+    const product = draft.products.find(product => draft.languages.some(lang => siteFilePath(lang, 'detail', product.id) === path));
+    return [path, withBanner(product ? withProductImageViewer(content, product.imageAssetId ? options.assetUrl(product.imageAssetId) : undefined) : content, draft, options.assetUrl, bannerPageFromPath(path) ?? false)];
+  }));
 }

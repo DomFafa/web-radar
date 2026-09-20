@@ -34,8 +34,9 @@ it('opens the currently selected original, supports keyboard, and restores focus
     documentElement: { lang: 'en' }, head: node(), body,
     createElement: () => { const n = node(); created.push(n); return n; },
   });
+  vi.stubGlobal('window', { matchMedia: () => ({ matches: false }), addEventListener: vi.fn() });
   productImageViewerRuntime();
-  const dialog = body.children[0], [close, image] = dialog.children;
+  const dialog = body.children[0], [close, stage] = dialog.children, image = stage.children[0];
   main.events.get('click')!();
   expect(dialog.open).toBe(false); // Preview assets have not arrived yet.
   main.src = 'blob:authorized-side-view';
@@ -65,7 +66,41 @@ it('opens the currently selected original, supports keyboard, and restores focus
     expect(dialog.open).toBe(false);
   }
   productImageViewerRuntime();
-  expect(body.children).toHaveLength(1);
+  expect(body.children).toHaveLength(3);
+});
+
+it('uses a bounded lens and adjacent original-image pane for desktop hover without opening a modal', () => {
+  const node = () => ({
+    id: '', src: '', alt: '', naturalWidth: 1600, naturalHeight: 1000, hidden: true, open: false,
+    style: {} as Record<string, string>, attrs: new Map<string, string>(), events: new Map<string, (e: any) => void>(), children: [] as any[],
+    setAttribute(key: string, value: string) { this.attrs.set(key, value); },
+    getAttribute(key: string) { return this.attrs.get(key); },
+    removeAttribute(key: string) { this.attrs.delete(key); },
+    appendChild(child: any) { this.children.push(child); },
+    addEventListener(key: string, fn: (e: any) => void) { this.events.set(key, fn); },
+    getBoundingClientRect: () => ({ left: 80, top: 100, right: 560, bottom: 460, width: 480, height: 360 }),
+    focus: vi.fn(), showModal: vi.fn(), close: vi.fn(),
+  });
+  const main = node(), body = node(), created: ReturnType<typeof node>[] = [], windowEvents = new Map<string, () => void>();
+  main.src = 'blob:private-original'; main.alt = 'Original product'; main.setAttribute('src', main.src);
+  vi.stubGlobal('document', { querySelectorAll: () => [main], getElementById: (id: string) => created.find(n => n.id === id), documentElement: { lang: 'en' }, head: node(), body,
+    createElement: () => { const n = node(); created.push(n); return n; } });
+  vi.stubGlobal('window', { innerWidth: 1440, innerHeight: 900, matchMedia: () => ({ matches: true }), addEventListener: (key: string, fn: () => void) => windowEvents.set(key, fn) });
+  vi.stubGlobal('getComputedStyle', () => ({ objectFit: 'contain', objectPosition: '50% 50%' }));
+  productImageViewerRuntime();
+  main.events.get('pointermove')?.({ clientX: 320, clientY: 280, pointerType: 'mouse' });
+  const lens = created.find(n => n.id === 'wr-product-image-lens'), pane = created.find(n => n.id === 'wr-product-image-detail');
+  expect(lens).toBeDefined(); expect(pane).toBeDefined();
+  expect(lens!.hidden).toBe(false); expect(pane!.hidden).toBe(false);
+  expect(parseFloat(pane!.style.left)).toBeGreaterThanOrEqual(560);
+  expect(pane!.children[0].src).toBe('blob:private-original');
+  expect(created.find(n => n.id === 'wr-product-image-viewer')!.showModal).not.toHaveBeenCalled();
+  main.events.get('pointermove')?.({ clientX: 999, clientY: 999, pointerType: 'mouse' });
+  expect(parseFloat(lens!.style.left) + parseFloat(lens!.style.width)).toBeLessThanOrEqual(560);
+  expect(parseFloat(lens!.style.top) + parseFloat(lens!.style.height)).toBeLessThanOrEqual(430); // contain leaves 30 px of letterbox space
+  main.src = 'blob:new-selection'; main.events.get('pointermove')?.({ clientX: 400, clientY: 280, pointerType: 'mouse' });
+  expect(pane!.children[0].src).toBe('blob:new-selection');
+  windowEvents.get('scroll')?.(); expect(lens!.hidden).toBe(true); expect(pane!.hidden).toBe(true);
 });
 
 type Node = DefaultTreeAdapterMap['node'];
