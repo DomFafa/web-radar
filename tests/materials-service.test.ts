@@ -71,6 +71,19 @@ describe('durable confirmed materials receiver',()=>{
     quotaCommitUnavailable=false;service=createService();expect(await progress()).toMatchObject({state:'accepted'});
     expect([...websiteClaims.values()][0].status).toBe('charged');expect(websiteCalls).not.toContain('release');
   });
+  it('accepts ordinary accounts and keeps submissions and update targets isolated',async()=>{
+    fixture.principal={...fixture.principal,email:'member@example.com',workspaceRole:'member'};
+    await service.submit(fixture.principal,fixture);const receipt=await finish();
+    expect(receipt.state).toBe('accepted');
+    const project=(await store.one<Project>('projects',receipt.projectId!))!;
+    expect(project.ownerId).toBe(fixture.principal.userId);expect(project.workspaceId).toBe(fixture.principal.workspaceId);
+    for(const foreign of [{...fixture.principal,userId:'another-member'},{...fixture.principal,userId:'outside-admin',workspaceId:'another-workspace',workspaceRole:'admin' as const}]){
+      await expect(service.status(foreign,fixture.submissionId)).rejects.toMatchObject({status:404});
+      await expect(service.submit(foreign,{...fixture,principal:foreign,submissionId:crypto.randomUUID(),target:{mode:'update',projectId:project.id,expectedVersion:project.version}})).rejects.toMatchObject({status:404});
+    }
+    await expect(service.submit({...fixture.principal,userId:'forged'},fixture)).rejects.toMatchObject({status:403,code:'principal_mismatch'});
+    expect(await store.list('projects')).toHaveLength(1);expect(await store.list('jobs')).toHaveLength(0);
+  });
   it('keeps confirmed display groups through a source update and drops a group when its member is removed',async()=>{
     await service.submit(fixture.principal,fixture);const first=await finish();
     let project=(await store.one<Project>('projects',first.projectId!))!;
@@ -200,7 +213,7 @@ describe('durable confirmed materials receiver',()=>{
     fixture.target={mode:'create',name:'Changed'};await expect(service.submit(fixture.principal,fixture)).rejects.toMatchObject({status:409,code:'submission_payload_conflict'});
   });
   it('rechecks account access during background receiving and keeps ordinary projects untouched',async()=>{
-    await expect(service.submit({...fixture.principal,email:'other@example.com'},fixture)).rejects.toMatchObject({status:403});
+    fixture.principal={...fixture.principal,email:'member@example.com',workspaceRole:'member'};
     await service.submit(fixture.principal,fixture);revoked=true;const receipt=await service.tick().then(()=>service.status(fixture.principal,fixture.submissionId));expect(receipt.state).toBe('failed');expect((await store.list('projects'))).toHaveLength(0);
   });
   it('preserves a newer project edit if an update finishes after expectedVersion changes',async()=>{

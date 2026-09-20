@@ -12,6 +12,7 @@ await mkdir(root, { recursive: true });
 await build({ entryPoints: ['tests/fixtures/materials.ts'], outfile: root + '/fixture.mjs', bundle: true, platform: 'node', format: 'esm' });
 const { materialsFixture, materialsPng } = await import(pathToFileURL(resolve(root + '/fixture.mjs')));
 const fixture = await materialsFixture(2);
+fixture.principal.email='member@example.com';fixture.principal.workspaceRole='member';
 const state = root + '/state-' + Date.now();
 execFileSync(process.execPath, ['node_modules/wrangler/bin/wrangler.js', 'd1', 'migrations', 'apply', 'web-radar', '--local', '--env', 'test', '--persist-to', state], { stdio: 'pipe' });
 const origin = 'http://127.0.0.1:8799', secret = 'isolated-project-service-secret-'.repeat(2);
@@ -58,8 +59,8 @@ try {
   assert.equal((await post(project + '/status', {}, 'invalid')).status, 401);
   assert.equal((await fetch(origin + prefix + project + '/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401);
   current = { ...current, workspaceId: 'other-company' }; assert.equal((await post(project + '/status')).status, 404);
-  current = { ...fixture.principal, email: 'other@example.com' };
-  for (const path of ['/status', '/preview', '/assets/' + asset, '/publication-status', '/publish']) assert.equal((await post(project + path, path === '/publish' ? { requestId: 'denied', expectedVersion: 1 } : {})).status, 403);
+  current = { ...fixture.principal, userId: 'another-member', email: 'other@example.com' };
+  for (const path of ['/status', '/preview', '/assets/' + asset, '/publication-status', '/publish']) assert.equal((await post(project + path, path === '/publish' ? { requestId: 'denied', expectedVersion: 1 } : {})).status, 404);
   current = structuredClone(fixture.principal);
   browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL || 'chrome' });
   const page = await browser.newPage(); const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -97,6 +98,6 @@ try {
   }
   assert.equal(done.publication.status, 'succeeded', JSON.stringify(done));
   assert.equal((await (await post(project + '/publish', body)).json()).publication.jobId, queued.publication.jobId);
-  const result = { passed: true, runtime: 'local workerd with isolated D1/R2 and fixture publishing', projectId: receipt.projectId, projectVersion: receipt.projectVersion, previewPages: Object.keys(rendered), widths: [390, 1440], jsErrors: errors, anonymousDenied: true, wrongWorkspaceDenied: true, nonOwnerAccountDenied: true, previewPublicationStatus: 'idle', explicitFixturePublication: done.publication.status, checkedAt: new Date().toISOString() };
+  const result = { passed: true, runtime: 'local workerd with isolated D1/R2 and fixture publishing', projectId: receipt.projectId, projectVersion: receipt.projectVersion, previewPages: Object.keys(rendered), widths: [390, 1440], jsErrors: errors, anonymousDenied: true, wrongWorkspaceDenied: true, ordinaryAccountAccepted: true, nonOwnerAccountDenied: true, previewPublicationStatus: 'idle', explicitFixturePublication: done.publication.status, checkedAt: new Date().toISOString() };
   await writeFile(root + '/result.json', JSON.stringify(result, null, 2)); console.log(JSON.stringify(result));
 } finally { await browser?.close(); await worker?.dispose(); }

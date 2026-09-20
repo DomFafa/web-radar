@@ -2,7 +2,7 @@
 
 This service extends confirmed-materials receipt without changing `wr-materials-v1`, `wr-materials-receipt-v1`, `autoPublish:false`, the old handoff, or the standalone Web Radar UI. No migration or additional provider is required. It renders the accepted draft using the existing renderer; receiving materials, reading status, previewing and loading assets do not generate AI content or publish a customer site.
 
-Only the current PR account `vc.ddom@gmail.com` can use these endpoints. WR refreshes `userId`/`workspaceId` through PR `/api/web-radar/service/context`; supplied role/email fields have no authority. Platform administrators may manage all projects; company administrators require the current workspace and members additionally require ownership. Project assets, publication status and background publication obey the same rules. Receipt IDs retain their existing submitting-user/workspace scope.
+All active PR accounts with website access can use these endpoints without a separate Web Radar login. WR refreshes `userId`/`workspaceId` through PR `/api/web-radar/service/context`; supplied role/email fields have no authority. Platform administrators may manage all projects; company administrators require the current workspace and members additionally require ownership. Project assets, publication status and background publication obey the same rules. Receipt IDs retain their existing submitting-user/workspace scope.
 
 ## Request boundary
 

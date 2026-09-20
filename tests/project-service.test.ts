@@ -23,7 +23,7 @@ describe('Product Radar private project service', () => {
   const secret = 's'.repeat(40);
   const objects = new Map<string, { bytes: Uint8Array; options: any }>();
   beforeEach(async () => {
-    fixture = await materialsFixture(2); current = structuredClone(fixture.principal); revoked = false; objects.clear();
+    fixture = await materialsFixture(2); fixture.principal.email='member@example.com'; current = structuredClone(fixture.principal); revoked = false; objects.clear();
     const db = testDb();
     for (const file of readdirSync('migrations').filter(f => f.endsWith('.sql') && !f.startsWith('0001')).sort()) await db.exec(readFileSync('migrations/' + file, 'utf8'));
     const bucket = {
@@ -123,6 +123,7 @@ describe('Product Radar private project service', () => {
     expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
   it('renders confirmed pages with authenticated media and navigation without generation or publication', async () => {
+    fixture.principal.workspaceRole='member';current.workspaceRole='member';
     const project = await accepted();
     const state = await call(project.id, 'status'); expect(state.status).toBe(200);
     expect(await state.json()).toMatchObject({ schemaVersion: 'wr-project-service-v1', projectVersion: 1, languages: ['en'], products: [{ id: 'p0' }, { id: 'p1' }], publication: { status: 'idle' } });
@@ -166,7 +167,7 @@ describe('Product Radar private project service', () => {
     expect((await call(p.id, 'preview', { expectedVersion: 2 })).status).toBe(409);
     expect((await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: 2 })).status).toBe(409);
   });
-  it('refreshes roles for every surface, enforces the owner whitelist and current workspace', async () => {
+  it('refreshes roles for every surface and enforces ownership and current workspace', async () => {
     const p = await accepted(), asset = p.draft.products[0].imageAssetId!;
     const actions: [string, object][] = [['status', {}], ['preview', {}], ['assets/' + asset, {}], ['publication-status', {}], ['publish', { requestId: crypto.randomUUID(), expectedVersion: p.version }]];
     const check = async (status: number) => { for (const [action, body] of actions) expect((await call(p.id, action, body)).status, action).toBe(status); };
@@ -175,7 +176,7 @@ describe('Product Radar private project service', () => {
     current.systemRole = 'super_admin'; expect((await call(p.id, 'status')).status).toBe(200);
     current.systemRole = 'user'; current.workspaceId = p.workspaceId; current.userId = 'company-admin'; current.workspaceRole = 'admin'; expect((await call(p.id, 'status')).status).toBe(200);
     current.workspaceRole = 'member'; await check(404);
-    current.userId = p.ownerId; current.email = 'other@example.com'; await check(403);
+    current.userId = p.ownerId; current.email = 'changed@example.com'; await check(200);
     current.email = fixture.principal.email; revoked = true; await check(403);
     expect(providers.publish).not.toHaveBeenCalled();
     expect((await post(`/projects/${p.id}/status`, {}, 'wrong')).status).toBe(401);
@@ -312,7 +313,7 @@ describe('Product Radar private project service', () => {
     expect((await call(p.id, 'refresh-publication', { ...body, expectedVersion: p.version + 1 })).status).toBe(409);
     expect((await call(p.id, 'refresh-publication', { ...body, expectedPublishedReleaseId: crypto.randomUUID() })).status).toBe(409);
     current.workspaceId = 'foreign'; expect((await call(p.id, 'refresh-publication', body)).status).toBe(404);
-    current = { ...fixture.principal, email: 'not-owner@example.com' }; expect((await call(p.id, 'refresh-publication', body)).status).toBe(403);
+    current = structuredClone(fixture.principal); revoked=true; expect((await call(p.id, 'refresh-publication', body)).status).toBe(403);revoked=false;
     current = { ...fixture.principal, userId: 'unrelated-member', workspaceRole: 'member' }; expect((await call(p.id, 'refresh-publication', body)).status).toBe(404);
     expect(await store.list('jobs')).toHaveLength(1);
     current = structuredClone(fixture.principal);
@@ -382,9 +383,9 @@ describe('Product Radar private project service', () => {
   it('blocks a queued publish after role revocation and allows a fresh request after a known failure', async () => {
     const p = await accepted();
     await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version });
-    current = { ...current, userId: p.ownerId, email: 'disabled@example.com' }; await domain.tick();
+    revoked = true; await domain.tick();
     expect(providers.publish).not.toHaveBeenCalled(); expect((await store.list<Job>('jobs'))[0].status).toBe('failed');
-    current = structuredClone(fixture.principal);
+    revoked = false; current = structuredClone(fixture.principal);
     vi.mocked(providers.publish).mockRejectedValueOnce(new ProviderError('unavailable', 'Temporary provider failure', false));
     await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version }); await domain.tick();
     const failed: any = await (await call(p.id, 'publication-status')).json(); expect(failed.publication).toMatchObject({ status: 'failed', retryable: true });

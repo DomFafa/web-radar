@@ -5,7 +5,7 @@ import { materialsSubmissionSchema } from '../shared/materials';
 import { validateMaterialsPositions } from '../templates/materials';
 import type { AppEnv } from './env';
 import { ApiError, canonical, sha256 } from './http';
-import { assertMaterialsAccount, currentMaterialsPrincipal } from './materials-auth';
+import { currentMaterialsPrincipal } from './materials-auth';
 import { checkedMaterialsMedia } from './materials-media';
 import { prRequest } from './product-radar';
 import { canManage, defaultDraft, expectedVersion, validateDraft } from './domain';
@@ -70,7 +70,6 @@ export class MaterialsService {
     return project;
   }
   async submit(principal:Principal,raw:unknown):Promise<MaterialsReceipt>{
-    assertMaterialsAccount(principal);
     const parsed=materialsSubmissionSchema.safeParse(raw);
     if(!parsed.success)throw new ApiError(400,'invalid_materials','已确认资料格式有误。');
     const input=parsed.data;
@@ -110,7 +109,7 @@ export class MaterialsService {
     await this.hooks.schedule(Date.now()+1000);return operation.receipt;
   }
   async status(principal:Principal,id:string):Promise<MaterialsReceipt>{
-    assertMaterialsAccount(principal);const row=await this.read(await scopeFor(principal),id);
+    const row=await this.read(await scopeFor(principal),id);
     if(!row)throw new ApiError(404,'materials_submission_not_found','没有该资料提交记录。');
     if(row.operation.receipt.state==='accepted'){
       const p=await this.store.one<Project>('projects',row.operation.projectId);
