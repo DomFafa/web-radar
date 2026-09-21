@@ -1,7 +1,7 @@
 import type { Product } from '../../shared/model';
 import { isTypedMaterialsSource } from '../materials-typed';
 import { esc, safeUrl, type ThemeContext } from './types';
-import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { getAboutHeadline, getAboutStoryParagraphs, parseAboutHighlights } from './aboutHelper';
 
 export interface ThemedFurnitureItem {
   id: string;
@@ -142,6 +142,12 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
   },
 ];
 
+function sanitizeCopy(text: string | undefined, fallbackEn: string, fallbackZh: string, isZh: boolean): string {
+  if (!text || !text.trim()) return isZh ? fallbackZh : fallbackEn;
+  if (!isZh && /[\u4e00-\u9fa5]/.test(text)) return fallbackEn;
+  return text;
+}
+
 export function getFurnitureProducts(ctx: ThemeContext): ThemedFurnitureItem[] {
   const { draft, translateProduct } = ctx;
   if (isTypedMaterialsSource(draft)) {
@@ -196,83 +202,76 @@ export function renderFurnitureStorageTemplate(ctx: ThemeContext, isVideo: boole
   const heroProduct = products[0]!;
   const defaultMeta = FURNITURE_DEFAULT_PRODUCTS[0]!;
 
-  // 100% LIGHT PALETTES FOR BOTH VARIANTS:
-  // Banner: Bauhaus Clean Slate & Warm Cognac Walnut
-  // Video: Studio Slate Pale & Industrial Flame Orange
+  const brandName = sanitizeCopy(
+    company.name,
+    isVideo ? 'Spatial Kinetic Lab' : 'Bauhaus Woodcraft Atelier',
+    isVideo ? '空间动力学工程中心' : '包豪斯实木大匠工坊',
+    isZh,
+  );
+
+  const brandTagline = isVideo
+    ? (isZh ? '城市微居所气压折叠与隐形家具系统' : 'Pneumatic Space Transformation & Modular Living')
+    : (isZh ? '北美特级FAS黑胡桃木纯手工榫卯家具' : 'Solid FAS Hardwood & Architectural Mortise Joinery');
+
   const theme = isVideo
     ? {
         bg: '#f8fafc',
         cardBg: '#ffffff',
-        cardBorder: 'rgba(234, 88, 12, 0.15)',
+        cardBorder: 'rgba(234, 88, 12, 0.16)',
         primary: '#ea580c',
         primaryHover: '#c2410c',
         text: '#0f172a',
         textMuted: '#475569',
         textSub: '#64748b',
-        glassBg: 'rgba(255, 255, 255, 0.88)',
-        glassBorder: 'rgba(255, 255, 255, 0.95)',
+        glassBg: 'rgba(255, 255, 255, 0.9)',
         pillBg: '#ffedd5',
         pillText: '#c2410c',
         btnGradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
         accentGlow: 'rgba(234, 88, 12, 0.18)',
-        tagBadge: 'Smart Space Optimization Lab',
       }
     : {
-        bg: '#ffffff',
-        cardBg: '#f8f8f9',
-        cardBorder: 'rgba(24, 24, 27, 0.08)',
-        primary: '#a16207',
-        primaryHover: '#854d0e',
-        text: '#18181b',
-        textMuted: '#52525b',
-        textSub: '#71717a',
-        glassBg: 'rgba(255, 255, 255, 0.88)',
-        glassBorder: 'rgba(255, 255, 255, 0.95)',
-        pillBg: '#fef3c7',
-        pillText: '#92400e',
-        btnGradient: 'linear-gradient(135deg, #a16207 0%, #854d0e 100%)',
-        accentGlow: 'rgba(161, 98, 7, 0.16)',
-        tagBadge: 'Bauhaus Architectural Woodworking',
+        bg: '#faf8f5',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(185, 28, 28, 0.12)',
+        primary: '#b91c1c',
+        primaryHover: '#991b1b',
+        text: '#1c1917',
+        textMuted: '#57534e',
+        textSub: '#78716c',
+        glassBg: 'rgba(250, 248, 245, 0.92)',
+        pillBg: '#fee2e2',
+        pillText: '#991b1b',
+        btnGradient: 'linear-gradient(135deg, #b91c1c 0%, #991b1b 100%)',
+        accentGlow: 'rgba(185, 28, 28, 0.16)',
       };
 
   const selectedProduct = (ctx.options.productId ? draft.products.find((p) => p.id === ctx.options.productId) : null) || draft.products[0] || heroProduct;
 
-  // Header with Apple Liquid Glass
   const headerHtml = `
-    <header class="furniture-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+    <header class="furniture-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.02);">
       <div class="wrap" style="height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
         <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
-          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(company.name)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
+          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
           <div style="display:flex;flex-direction:column;">
-            <span style="font-size:1.25rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};font-family:serif;">
-              ${esc(company.name || (isVideo ? 'Spatial Kinetic Lab' : 'Bauhaus Woodcraft Atelier'))}
+            <span style="font-size:1.2rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};font-family:${isVideo ? 'system-ui, sans-serif' : 'Georgia, serif'};">
+              ${esc(brandName)}
             </span>
-            <span style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:${theme.primary};font-weight:700;">
-              ${isVideo ? 'Space Optimization & Pneumatics' : 'Solid FAS Hardwood & Mortise Joinery'}
+            <span style="font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:${theme.primary};font-weight:700;">
+              ${esc(brandTagline)}
             </span>
           </div>
         </a>
 
         <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:28px;">
-          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.home)}
-          </a>
-          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.catalog)}
-          </a>
-          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.about)}
-          </a>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.contact)}
-          </a>
+          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.home)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.catalog)}</a>
+          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.about)}</a>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.contact)}</a>
         </nav>
 
         <div style="display:flex;align-items:center;gap:16px;">
-          <div class="languages" style="display:flex;gap:8px;font-size:0.8rem;font-weight:700;">
-            ${ctx.languageLinks}
-          </div>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 20px;border-radius:9999px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:700;box-shadow:0 4px 14px ${theme.accentGlow};">
+          <div class="languages" style="display:flex;gap:6px;">${ctx.languageLinks}</div>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 20px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
             ${isZh ? '项目询价 / 方案' : 'Request B2B Quote'} ↗
           </a>
         </div>
@@ -280,593 +279,857 @@ export function renderFurnitureStorageTemplate(ctx: ThemeContext, isVideo: boole
     </header>
   `;
 
-  // Footer
-  const footerHtml = `
-    <footer style="background:#ffffff;border-top:1px solid ${theme.cardBorder};color:${theme.text};padding:60px 0 30px;margin-top:auto;">
-      <div class="wrap" style="padding:0 24px;">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;margin-bottom:40px;">
-          <div>
-            <div style="font-size:1.3rem;font-weight:900;margin-bottom:10px;color:${theme.text};font-family:serif;">
-              ${esc(company.name || (isVideo ? 'Spatial Kinetic Lab' : 'Bauhaus Woodcraft Atelier'))}
-            </div>
-            <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.7;max-width:340px;margin:0 0 16px;">
-              ${esc(company.description || (isVideo ? 'Engineering space-transforming pneumatic furniture and dynamic micro-apartment storage systems for urban developments worldwide.' : 'Bauhaus-inspired architectural solid wood furniture crafted with generational mortise-tenon joinery and CARB P2/E0 sustainability compliance.'))}
-            </p>
-            <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:700;">
-              ✓ ${isZh ? 'FSC 100% 纯实木可持续林木 · CARB P2 / E0 认证' : 'FSC 100% Solid Hardwood · CARB P2 & E0 Certified'}
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${esc(ui.menu)}</div>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
-              <a href="${path('index.html')}" ${navAttrs('home')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.home)}</a>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.catalog)}</a>
-              <a href="${path('about/index.html')}" ${navAttrs('about')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.about)}</a>
-              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.contact)}</a>
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${isZh ? '制造类目' : 'Categories'}</div>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;color:${theme.textMuted};">
-              <span>${isZh ? '包豪斯黑胡桃休闲椅' : 'Bauhaus Lounge Armchairs'}</span>
-              <span>${isZh ? '德国气压折叠壁床' : 'Pneumatic Wall-Beds'}</span>
-              <span>${isZh ? '模块化悬浮收纳柜' : 'Floating Media Credenzas'}</span>
-              <span>${isZh ? '齿轮联动伸缩餐桌' : 'Extendable Dining Tables'}</span>
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${esc(ui.contact)}</div>
-            <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.7;">
-              <div><strong>Atelier Email:</strong> <a href="mailto:${esc(company.email)}" style="color:${theme.primary};text-decoration:none;">${esc(company.email)}</a></div>
-              ${company.phone ? `<div><strong>Phone:</strong> ${esc(company.phone)}</div>` : ''}
-              ${company.address ? `<div style="margin-top:8px;">${esc(company.address)}</div>` : ''}
-            </div>
-          </div>
-        </div>
-
-        <div style="padding-top:24px;border-top:1px solid #eef2f6;display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;color:${theme.textSub};">
-          <div>© ${new Date().getFullYear()} ${esc(company.name)}. ${esc(ui.rights)}.</div>
-          <div>${isZh ? '国际建筑与室内家具工程标准 · ISO9001 / BIFMA 5.1 强度认证' : 'ANSI/BIFMA X5.1 Certified · ISO9001 Manufacturing Standards'}</div>
-        </div>
-      </div>
-    </footer>
-  `;
-
   let mainHtml = '';
 
   if (page === 'home') {
-    const videoAsset = ctx.asset(draft.heroAssetId);
-    const posterAsset = ctx.asset(draft.posterAssetId) || '/templates/senseng/hero-bg.jpg';
-    const heroImg = (heroProduct as any).img || ctx.productMainImage(heroProduct as unknown as Product) || defaultMeta.img;
-
     if (isVideo) {
-      // -------------------------------------------------------------
-      // TEMPLATE 8: furniture-spatial-video (Space Transforming Video Loop)
-      // -------------------------------------------------------------
+      // ----------------------------------------------------------------------
+      // SPATIAL VIDEO: Kinetic Floorplan Yield & Mechanical Engineering Hero
+      // ----------------------------------------------------------------------
       mainHtml = `
-        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};">
-          <!-- 1. Space Transformation Video Showcase with Liquid Glass Card -->
-          <section style="position:relative;min-height:90vh;display:flex;align-items:center;overflow:hidden;padding:80px 0;">
-            <video id="hero-video" autoplay muted loop playsinline poster="${esc(posterAsset)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.75;filter:brightness(0.95) saturate(1.1);z-index:1;" aria-hidden="true">
-              ${videoAsset ? `<source src="${esc(videoAsset)}">` : `<source src="https://assets.mixkit.co/videos/preview/mixkit-modern-minimalist-living-room-with-wooden-furniture-42616-large.mp4" type="video/mp4">`}
-            </video>
-            <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(248,250,252,0.94) 0%, rgba(248,250,252,0.72) 50%, rgba(248,250,252,0.4) 100%);z-index:2;"></div>
-
-            <div class="wrap" style="position:relative;z-index:3;width:100%;padding:0 24px;">
-              <div style="max-width:680px;background:${theme.glassBg};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid ${theme.glassBorder};border-radius:24px;padding:48px;box-shadow:0 20px 50px -10px rgba(234,88,12,0.12);">
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:9999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${theme.primary};animation:wrPulse 2s infinite;"></span>
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
+          <section style="position:relative;overflow:hidden;padding:80px 0 100px;border-bottom:1px solid ${theme.cardBorder};">
+            <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 20%, rgba(234, 88, 12, 0.08) 0%, transparent 60%);pointer-events:none;"></div>
+            <div class="wrap" style="position:relative;padding:0 24px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:#ea580c;animation:pulse 2s infinite;"></span>
                   ${isZh ? '高密度城市微公寓空间折叠系统' : 'Kinetic Space Transformation Lab'}
                 </div>
-
-                <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                  ${esc(draft.copy[ctx.lang]?.headline || (isZh ? '空间折叠 · 气压助推隐形壁床与模块化家具工程' : 'Spatial Yield: Kinetic Transforming Wall-Beds & Modular Storage'))}
+                <h1 style="font-size:clamp(2.2rem, 4.5vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 18px;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.headline, 'Spatial Yield: Kinetic Transforming Wall-Beds & Modular Storage', '空间折叠 · 气压助推隐形壁床与模块化家具工程', isZh))}
                 </h1>
-
-                <p style="font-size:1.05rem;line-height:1.65;color:${theme.textMuted};margin:0 0 28px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || (isZh ? '通过德国精密气压平衡活塞与隐藏式折叠联动五金，在有限面积中释放 +45% 可用活动空间。专为全球微公寓开发商、长租公寓与高端精品酒店提供批量工程定制。' : 'Unlocking +45% usable floor area through German pneumatic gas pistons and dynamic kinetic linkages. Engineered for micro-apartment developers and multi-unit projects.'))}
+                <p style="font-size:1.1rem;line-height:1.65;color:${theme.textMuted};margin:0 0 28px;max-width:620px;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.subtitle, 'Unlocking +45% usable floor area through German pneumatic gas pistons and dynamic kinetic linkages. Engineered for micro-apartment developers and multi-unit projects.', '通过德国精密气压平衡活塞与隐藏式折叠联动五金，在有限面积中释放 +45% 可用活动空间。专为全球微公寓开发商、长租公寓与高端精品酒店提供批量工程定制。', isZh))}
                 </p>
 
-                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:32px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:12px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
                     ${isZh ? '探索折叠变形家具 ↗' : 'View Transforming Systems ↗'}
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:12px;background:#ffffff;color:${theme.primary};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:800;">
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:10px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
                     ${isZh ? '获取工程配套报价' : 'Request Developer Pricing'}
                   </a>
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid #e2e8f0;">
+                <!-- Telemetry Stats -->
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid ${theme.cardBorder};">
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">+45%</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">+45%</div>
                     <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '空间净使用面积提升' : 'Floor Space Efficiency'}</div>
                   </div>
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">50,000</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">50,000</div>
                     <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '德国气压活塞开合测试' : 'Pneumatic Cycles Tested'}</div>
                   </div>
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">3 Sec</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">&lt; 3 Sec</div>
                     <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '书桌变大床瞬时切换' : 'Desk-to-Bed Transition'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kinetic Video / CAD Simulation Box -->
+              <div style="position:relative;">
+                <div style="position:relative;border-radius:24px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 20px 48px rgba(0,0,0,0.06);">
+                  <div style="position:relative;padding-top:68%;background:#0f172a;overflow:hidden;">
+                    <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.85;">
+                      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                    </video>
+                    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%);"></div>
+                    <div style="position:absolute;bottom:20px;left:20px;right:20px;color:#ffffff;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <span style="font-size:0.75rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#ea580c;background:rgba(234,88,12,0.2);padding:3px 8px;border-radius:4px;">
+                          Kinetic CAD Simulation
+                        </span>
+                        <span style="font-size:0.75rem;font-family:monospace;color:rgba(255,255,255,0.8);">CYCLE: 48,291 / 50,000</span>
+                      </div>
+                      <div style="font-size:1.05rem;font-weight:800;line-height:1.3;">Desk-to-Bed Level-Sync Mechanism</div>
+                      <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:2px;">Desktop stays strictly horizontal during deployment. Zero need to clear items.</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- 2. Spatial Optimization Technology Grid -->
-          <section class="wrap" style="padding:70px 24px;">
-            <div style="text-align:center;max-width:700px;margin:0 auto 50px;">
-              <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:${theme.primary};text-transform:uppercase;">ENGINEERING MATRIX</span>
-              <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:8px 0 14px;">
-                ${isZh ? '微公寓空间折叠的三大工程力学突破' : 'Three Structural Innovations in Spatial Engineering'}
-              </h2>
-              <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
-                ${isZh ? '告别笨重繁琐的手动搬动，以毫米级阻尼配重和自锁结构，实现丝滑单手开合与坚若磐石的承重表现。' : 'Eliminating mechanical friction through counterbalanced German gas struts and failsafe locks.'}
-              </p>
-            </div>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;">
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);" class="wr-card-hover">
-                <div style="width:48px;height:48px;border-radius:12px;background:${theme.pillBg};color:${theme.primary};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;margin-bottom:20px;">01</div>
-                <h3 style="font-size:1.2rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '德国 Suspa 1200N 双气压活塞' : 'German Suspa® 1200N Gas Struts'}</h3>
-                <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;">
-                  ${isZh ? '精密充氮双向缓冲阻尼活塞，完全平衡床架自重，即使单手轻轻一推亦能优雅升降，带防坠落紧急自锁保护。' : 'Nitrogen-charged dual pistons counterbalancing heavy bed frames for effortless single-finger lifting with anti-drop lock.'}
+          <!-- Kinetic Engineering Features -->
+          <section style="padding:80px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;max-width:680px;margin:0 auto 50px;">
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
+                  PNEUMATIC & STRUCTURAL PRECISION
+                </div>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 12px;">
+                  ${isZh ? '微公寓空间折叠的三大工程力学突破' : 'Three Structural Innovations in Spatial Engineering'}
+                </h2>
+                <p style="font-size:0.98rem;color:${theme.textMuted};line-height:1.6;">
+                  ${isZh ? '告别笨重繁琐的手动搬动，以毫米级阻尼配重和自锁结构，实现丝滑单手开合与坚若磐石的承重表现。' : 'Eliminating mechanical friction through counterbalanced German gas struts and failsafe locks.'}
                 </p>
-                <div style="font-size:0.8rem;font-weight:700;color:${theme.primary};">${isZh ? '通过 50,000 次耐久疲劳老化测试' : '50,000 Fatigue Cycles Certified'}</div>
               </div>
 
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);" class="wr-card-hover">
-                <div style="width:48px;height:48px;border-radius:12px;background:${theme.pillBg};color:${theme.primary};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;margin-bottom:20px;">02</div>
-                <h3 style="font-size:1.2rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '水平均衡保持机构（无需清理桌面）' : 'Level-Sync Desk Mechanism'}</h3>
-                <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;">
-                  ${isZh ? '四连杆四边形机械结构使桌面在翻下过程中始终保持绝对水平，桌面水杯、笔记本电脑无需收拾即可直接下沉为床底。' : 'Four-bar linkage keeps the working desk perfectly horizontal during deployment, leaving items undisturbed.'}
-                </p>
-                <div style="font-size:0.8rem;font-weight:700;color:${theme.primary};">${isZh ? '桌面承重达 45kg · 下沉后离地 18cm' : '45kg Dynamic Working Surface Load'}</div>
-              </div>
+              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:28px;">
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:30px;" class="wr-card-hover">
+                  <div style="width:48px;height:48px;border-radius:12px;background:#ffedd5;display:flex;align-items:center;justify-content:center;color:#ea580c;font-size:1.4rem;font-weight:900;margin-bottom:18px;">01</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '德国 Suspa 1200N 双气压活塞' : 'German Suspa® 1200N Gas Struts'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.65;color:${theme.textMuted};margin:0 0 14px;">
+                    ${isZh ? '精密充氮双向缓冲阻尼活塞，完全平衡床架自重，即使单手轻轻一推亦能优雅升降，带防坠落紧急自锁保护。' : 'Nitrogen-charged dual pistons counterbalancing heavy bed frames for effortless single-finger lifting with anti-drop lock.'}
+                  </p>
+                  <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">${isZh ? '通过 50,000 次耐久疲劳老化测试' : '50,000 Fatigue Cycles Certified'}</div>
+                </div>
 
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);" class="wr-card-hover">
-                <div style="width:48px;height:48px;border-radius:12px;background:${theme.pillBg};color:${theme.primary};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;margin-bottom:20px;">03</div>
-                <h3 style="font-size:1.2rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '冷弯高强航空钢管骨架' : 'Cold-Drawn Structural Steel Frame'}</h3>
-                <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;">
-                  ${isZh ? '全焊接高强度冷拔矩形钢管底盘，辅以桦木多层排骨条，整体静载承受高达 400kg，翻身零杂音零晃动。' : 'Cold-drawn tubular chassis with birch slat suspension supporting 400kg static weight with zero squeaking.'}
-                </p>
-                <div style="font-size:0.8rem;font-weight:700;color:${theme.primary};">${isZh ? '符合欧盟 EN 1129 壁床安全强制标准' : 'Meets EN 1129 European Safety Standard'}</div>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:30px;" class="wr-card-hover">
+                  <div style="width:48px;height:48px;border-radius:12px;background:#ffedd5;display:flex;align-items:center;justify-content:center;color:#ea580c;font-size:1.4rem;font-weight:900;margin-bottom:18px;">02</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '水平均衡保持机构（无需清理桌面）' : 'Level-Sync Desk Mechanism'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.65;color:${theme.textMuted};margin:0 0 14px;">
+                    ${isZh ? '四连杆四边形机械结构使桌面在翻下过程中始终保持绝对水平，桌面水杯、笔记本电脑无需收拾即可直接下沉为床底。' : 'Four-bar linkage keeps the working desk perfectly horizontal during deployment, leaving items undisturbed.'}
+                  </p>
+                  <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">${isZh ? '桌面承重达 45kg · 下沉后离地 18cm' : '45kg Dynamic Working Surface Load'}</div>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:30px;" class="wr-card-hover">
+                  <div style="width:48px;height:48px;border-radius:12px;background:#ffedd5;display:flex;align-items:center;justify-content:center;color:#ea580c;font-size:1.4rem;font-weight:900;margin-bottom:18px;">03</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '冷弯高强航空钢管骨架' : 'Cold-Drawn Structural Steel Frame'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.65;color:${theme.textMuted};margin:0 0 14px;">
+                    ${isZh ? '全焊接高强度冷拔矩形钢管底盘，辅以桦木多层排骨条，整体静载承受高达 400kg，翻身零杂音零晃动。' : 'Cold-drawn tubular chassis with birch slat suspension supporting 400kg static weight with zero squeaking.'}
+                  </p>
+                  <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">${isZh ? '符合欧盟 EN 1129 壁床安全强制标准' : 'Meets EN 1129 European Safety Standard'}</div>
+                </div>
               </div>
             </div>
           </section>
 
-          <!-- 3. Smart Furniture Showcase Grid -->
-          <section class="wrap" style="padding:20px 24px 80px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;">
-              <div>
-                <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.1em;color:${theme.primary};text-transform:uppercase;">SPATIAL FLEET</span>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;">
-                  ${isZh ? '模块化变形与空间收纳矩阵' : 'Transforming Furniture Fleet'}
-                </h2>
+          <!-- Featured Kinetic Furniture Grid -->
+          <section style="padding:80px 0;">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+                <div>
+                  <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${theme.primary};margin-bottom:6px;">
+                    ENGINEERED TRANSFORMATION FLEET
+                  </div>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.2rem);font-weight:900;color:${theme.text};margin:0;">
+                    ${isZh ? '模块化变形与空间收纳矩阵' : 'Transforming Furniture Fleet'}
+                  </h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-weight:800;font-size:0.92rem;color:${theme.primary};">
+                  ${isZh ? '浏览全系 8 款系统 ↗' : 'View Full Catalog ↗'}
+                </a>
               </div>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.primary};text-decoration:none;font-weight:800;font-size:0.95rem;">
-                ${isZh ? '浏览全系 8 款系统 ↗' : 'View Full Catalog ↗'}
-              </a>
-            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:26px;">
-              ${products.slice(0, 4).map((item) => {
-                const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : defaultMeta;
-                const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || defaultMeta.img;
-                return `
-                  <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(234,88,12,0.06);" class="wr-card-hover">
-                    <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#f1f5f9;">
-                      <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
-                      <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                        ${esc(meta.badge)}
-                      </span>
-                    </div>
-                    <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
-                      <h3 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;">
-                        ${esc(item.name)}
-                      </h3>
-                      <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
-                        ${esc(item.desc || '')}
-                      </p>
-                      <div style="padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;">
-                        <strong>${isZh ? '材质/五金' : 'Hardware'}:</strong> ${esc(meta.timberHardwareSpec)}
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
+                ${products.slice(0, 4).map((item, idx) => {
+                  const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : FURNITURE_DEFAULT_PRODUCTS[idx % FURNITURE_DEFAULT_PRODUCTS.length]!;
+                  const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
+                  return `
+                    <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
+                      <div style="position:relative;width:100%;padding-top:72%;overflow:hidden;background:#f1f5f9;">
+                        <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                        <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:rgba(255,255,255,0.95);color:${theme.text};border:1px solid ${theme.cardBorder};">
+                          ${esc(meta.badge)}
+                        </span>
                       </div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
-                        <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
-                          ${esc(ui.details)} ↗
-                        </a>
+                      <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
+                        <div style="font-size:0.74rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;">
+                          ${esc(meta.categoryNameEn)}
+                        </div>
+                        <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;">
+                          ${esc(item.name)}
+                        </h3>
+                        <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
+                          ${esc(item.desc || '')}
+                        </p>
+                        <div style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;">
+                          <strong>${isZh ? '材质/五金' : 'Hardware'}:</strong> ${esc(meta.timberHardwareSpec)}
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                          <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
+                          <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                            ${esc(ui.details)} ↗
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                `;
-              }).join('')}
+                    </article>
+                  `;
+                }).join('')}
+              </div>
             </div>
           </section>
         </main>
       `;
     } else {
-      // -------------------------------------------------------------
-      // TEMPLATE 7: furniture-minimal-banner (Bauhaus Solid Wood Craft Banner)
-      // -------------------------------------------------------------
+      // ----------------------------------------------------------------------
+      // MINIMAL BANNER: Bauhaus Architectural Woodcraft Atelier Hero
+      // ----------------------------------------------------------------------
       mainHtml = `
-        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};">
-          <!-- 1. Bauhaus Solid Timber Hero Showcase with Clean Architectural Layout -->
-          <section class="wrap" style="padding:60px 24px 80px;">
-            <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
+          <section style="position:relative;overflow:hidden;padding:90px 0 110px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.2fr 0.8fr;gap:56px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:9999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;">
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;font-family:serif;">
                   ✦ ${isZh ? '包豪斯建筑学构型 · 纯实木榫卯大匠工坊' : 'Bauhaus Architectural Woodworking Atelier'}
                 </div>
-
-                <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.4rem);font-weight:900;line-height:1.12;color:${theme.text};margin:0 0 18px;letter-spacing:-0.03em;">
-                  ${esc(draft.copy[ctx.lang]?.headline || (isZh ? '结构诚实 · 北美 FAS 黑胡桃纯实木手工榫卯家具' : 'Structural Honesty: FAS Solid Walnut & Architectural Mortise Joinery'))}
+                <h1 style="font-size:clamp(2.4rem, 5vw, 3.8rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 18px;font-family:Georgia, serif;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.headline, 'Structural Honesty: FAS Solid Walnut & Architectural Mortise Joinery', '结构诚实 · 北美 FAS 黑胡桃纯实木手工榫卯家具', isZh))}
                 </h1>
-
-                <p style="font-size:1.05rem;line-height:1.7;color:${theme.textMuted};margin:0 0 32px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || (isZh ? '坚守包豪斯“形式追随功能”的纯粹理念，全系列精选北美特级 FAS 黑胡桃木与白橡木，传统燕尾榫与双重抱头榫紧密咬合，零螺丝外露，呈现温润厚重的建筑级家具原真之美。' : 'Adhering to strict Bauhaus functional minimalism. Crafted from 100% solid North American FAS black walnut and white oak with interlocking dovetail mortise-tenon joinery.'))}
+                <p style="font-size:1.12rem;line-height:1.75;color:${theme.textMuted};margin:0 0 32px;max-width:640px;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.subtitle, 'Adhering to strict Bauhaus functional minimalism. Crafted from 100% solid North American FAS black walnut and white oak with interlocking dovetail mortise-tenon joinery.', '坚守包豪斯“形式追随功能”的纯粹理念，全系列精选北美特级 FAS 黑胡桃木与白橡木，传统燕尾榫与双重抱头榫紧密咬合，零螺丝外露，呈现温润厚重的建筑级家具原真之美。', isZh))}
                 </p>
 
-                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:40px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};letter-spacing:0.02em;">
                     ${isZh ? '品鉴纯实木家具矩阵' : 'Explore Solid Woodworks'} ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 28px;border-radius:8px;background:#ffffff;color:${theme.primary};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:800;">
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 28px;border-radius:6px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
                     ${isZh ? '获取木料样品与大宗报价' : 'Request Timber Swatches'}
                   </a>
                 </div>
 
-                <div style="display:flex;gap:32px;padding-top:24px;border-top:1px solid #e4e4e7;">
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;padding-top:28px;border-top:1px solid ${theme.cardBorder};">
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">FAS Grade</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">100% FAS</div>
                     <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '全美特级天然纯实木' : 'North American Timber'}</div>
                   </div>
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">0 Screws</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">0 Screws</div>
                     <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '主承重传统穿插榫卯' : 'Zero Exposed Screws'}</div>
                   </div>
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">CARB E0</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">Osmo® Wax</div>
                     <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '纯天然欧诗木植物木蜡油' : 'Zero-VOC Plant Wax Finish'}</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Hero Image Box -->
-              <div style="position:relative;" class="wr-card-hover">
-                <div style="position:relative;border-radius:24px;overflow:hidden;box-shadow:0 25px 60px -15px rgba(161,98,7,0.18);border:1px solid ${theme.cardBorder};background:#f4f4f5;">
-                  <img src="${esc(heroImg)}" alt="${esc(heroProduct.name)}" style="width:100%;height:520px;object-fit:cover;display:block;">
-                </div>
-                <div style="position:absolute;bottom:24px;left:24px;right:24px;background:${theme.glassBg};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid ${theme.glassBorder};border-radius:14px;padding:18px 22px;box-shadow:0 12px 30px rgba(0,0,0,0.06);">
-                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">${esc(defaultMeta.badge)}</div>
-                      <div style="font-size:1.05rem;font-weight:900;color:${theme.text};margin-top:2px;">${esc(heroProduct.name)}</div>
+              <!-- Editorial Hardwood Craft Card -->
+              <div style="position:relative;">
+                <div style="border-radius:12px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 24px 60px rgba(28,25,23,0.08);padding:14px;">
+                  <div style="border-radius:8px;overflow:hidden;position:relative;padding-top:105%;">
+                    <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+                    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(28,25,23,0.7) 0%, transparent 50%);"></div>
+                    <div style="position:absolute;bottom:20px;left:20px;right:20px;color:#ffffff;">
+                      <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#fca5a5;margin-bottom:4px;">
+                        FLAGSHIP MASTERWORK
+                      </div>
+                      <div style="font-size:1.15rem;font-weight:900;font-family:serif;line-height:1.3;">
+                        ${esc(heroProduct.name)}
+                      </div>
+                      <div style="font-size:0.8rem;color:rgba(255,255,255,0.8);margin-top:4px;">
+                        ${esc(heroProduct.timberHardwareSpec)}
+                      </div>
                     </div>
-                    <a href="${path(`products/${heroProduct.id}/index.html`)}" ${navAttrs('detail', heroProduct.id)} style="text-decoration:none;padding:7px 16px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.8rem;font-weight:700;">
-                      ${isZh ? '查看榫卯' : 'Inspect'} ↗
-                    </a>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- 2. Traditional Mortise & Tenon Craftsmanship Timeline -->
-          <section class="wrap" style="padding:60px 24px 70px;">
-            <div style="text-align:center;max-width:680px;margin:0 auto 48px;">
-              <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:${theme.primary};text-transform:uppercase;">THE WOODCRAFT DISCIPLINE</span>
-              <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:8px 0 12px;">
-                ${isZh ? '包豪斯实木工坊的三大制造法则' : 'Three Pillars of Architectural Woodworking'}
-              </h2>
-              <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
-                ${isZh ? '真正的实木家具不需要浮华的装饰，木材与生俱来的年轮与精密咬合的榫头本身就是极致的艺术。' : 'Celebrating structural honesty, natural grain flow, and centuries-old interlocking joinery.'}
-              </p>
-            </div>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:24px;">
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:12px;">PILLAR 01 / JOINERY</div>
-                <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '传统双重抱头榫与燕尾穿插' : 'Interlocking Mortise & Tenon'}</h3>
-                <p style="font-size:0.86rem;line-height:1.65;color:${theme.textMuted};margin:0;">
-                  ${isZh ? '公母榫精准留出0.1mm手工公差，通过木纤维在胶水微胀下的物理自锁，经百年干燥与重压仍不松不散。' : 'Interlocking tongue-and-groove joints engineered to 0.1mm tolerances, defying joint loosening over decades.'}
+          <!-- Bauhaus Woodworking Pillars -->
+          <section style="padding:80px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;max-width:680px;margin:0 auto 50px;">
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;font-family:serif;">
+                  HONEST MATERIALITY & TIMELESS JOINERY
+                </div>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 12px;font-family:Georgia, serif;">
+                  ${isZh ? '包豪斯实木工坊的三大制造法则' : 'Three Pillars of Architectural Woodworking'}
+                </h2>
+                <p style="font-size:0.98rem;color:${theme.textMuted};line-height:1.7;">
+                  ${isZh ? '真正的实木家具不需要浮华的装饰，木材与生俱来的年轮与精密咬合的榫头本身就是极致的艺术。' : 'Celebrating structural honesty, natural grain flow, and centuries-old interlocking joinery.'}
                 </p>
               </div>
 
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:12px;">PILLAR 02 / TIMBER</div>
-                <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '北美原产 FAS 特级黑胡桃大板' : '100% Solid FAS North American Timber'}</h3>
-                <p style="font-size:0.86rem;line-height:1.65;color:${theme.textMuted};margin:0;">
-                  ${isZh ? '仅选用大口径老龄原木直拼，杜绝碎木指接与贴皮伪装，山形木纹完整舒展，触感温润饱满。' : 'Sourced from sustainably managed Appalachian forests, dried to 8-10% moisture content for zero cracking.'}
-                </p>
-              </div>
+              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:32px;">
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:32px;" class="wr-card-hover">
+                  <div style="font-size:1.8rem;color:${theme.primary};font-family:serif;font-weight:900;margin-bottom:14px;">I.</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '传统双重抱头榫与燕尾穿插' : 'Interlocking Mortise & Tenon'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.7;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '公母榫精准留出0.1mm手工公差，通过木纤维在胶水微胀下的物理自锁，经百年干燥与重压仍不松不散。' : 'Interlocking tongue-and-groove joints engineered to 0.1mm tolerances, defying joint loosening over decades.'}
+                  </p>
+                </div>
 
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:12px;">PILLAR 03 / FINISH</div>
-                <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;">${isZh ? '德国欧诗木天然环保植物木蜡油' : 'German Osmo® Natural Wax-Oil'}</h3>
-                <p style="font-size:0.86rem;line-height:1.65;color:${theme.textMuted};margin:0;">
-                  ${isZh ? '深层渗透木质导管孔隙，保留实木自由呼吸的毛孔，不形成塑料漆膜，具备极佳的防水耐热与抗划伤性能。' : 'Open-pore natural plant wax finish allowing timber to breathe, free from artificial plastic resin lacquers.'}
-                </p>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:32px;" class="wr-card-hover">
+                  <div style="font-size:1.8rem;color:${theme.primary};font-family:serif;font-weight:900;margin-bottom:14px;">II.</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '北美原产 FAS 特级黑胡桃大板' : '100% Solid FAS North American Timber'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.7;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '仅选用大口径老龄原木直拼，杜绝碎木指接与贴皮伪装，山形木纹完整舒展，触感温润饱满。' : 'Sourced from sustainably managed Appalachian forests, dried to 8-10% moisture content for zero cracking.'}
+                  </p>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:32px;" class="wr-card-hover">
+                  <div style="font-size:1.8rem;color:${theme.primary};font-family:serif;font-weight:900;margin-bottom:14px;">III.</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '德国欧诗木天然环保植物木蜡油' : 'German Osmo® Natural Wax-Oil'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.7;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '深层渗透木质导管孔隙，保留实木自由呼吸的毛孔，不形成塑料漆膜，具备极佳的防水耐热与抗划伤性能。' : 'Open-pore natural plant wax finish allowing timber to breathe, free from artificial plastic resin lacquers.'}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
-          <!-- 3. Furniture Collection Grid -->
-          <section class="wrap" style="padding:20px 24px 80px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;">
-              <div>
-                <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.1em;color:${theme.primary};text-transform:uppercase;">THE PORTFOLIO</span>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;">
-                  ${isZh ? '包豪斯建筑学纯实木系列' : 'Bauhaus Architectural Woodworks'}
-                </h2>
+          <!-- Featured Hardwood Pieces -->
+          <section style="padding:80px 0;">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+                <div>
+                  <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:6px;font-family:serif;">
+                    THE SOLID WOOD COLLECTION
+                  </div>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.2rem);font-weight:900;color:${theme.text};margin:0;font-family:Georgia, serif;">
+                    ${isZh ? '包豪斯纯实木经典家具' : 'Solid Hardwood Furniture Gallery'}
+                  </h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-weight:800;font-size:0.92rem;color:${theme.primary};font-family:serif;">
+                  ${isZh ? '浏览全系 8 款实木作品 ↗' : 'View Full Catalog (8 Pieces) ↗'}
+                </a>
               </div>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.primary};text-decoration:none;font-weight:800;font-size:0.95rem;">
-                ${isZh ? '浏览全部 8 款家具 ↗' : 'View Full Catalog ↗'}
-              </a>
-            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:26px;">
-              ${products.slice(0, 4).map((item) => {
-                const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : defaultMeta;
-                const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || defaultMeta.img;
-                return `
-                  <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(161,98,7,0.06);" class="wr-card-hover">
-                    <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#f4f4f5;">
-                      <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
-                      <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                        ${esc(meta.badge)}
-                      </span>
-                    </div>
-                    <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
-                      <h3 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;">
-                        ${esc(item.name)}
-                      </h3>
-                      <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
-                        ${esc(item.desc || '')}
-                      </p>
-                      <div style="padding:10px 12px;background:#f8f8f9;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;">
-                        <strong>${isZh ? '材质规格' : 'Material'}:</strong> ${esc(meta.timberHardwareSpec)}
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
+                ${products.slice(0, 4).map((item, idx) => {
+                  const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : FURNITURE_DEFAULT_PRODUCTS[idx % FURNITURE_DEFAULT_PRODUCTS.length]!;
+                  const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
+                  return `
+                    <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(28,25,23,0.04);" class="wr-card-hover">
+                      <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#f5f5f4;">
+                        <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                        <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:4px;font-size:0.72rem;font-weight:800;background:rgba(255,255,255,0.95);color:${theme.text};border:1px solid ${theme.cardBorder};font-family:serif;">
+                          ${esc(meta.badge)}
+                        </span>
                       </div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
-                        <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
-                          ${esc(ui.details)} ↗
-                        </a>
+                      <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
+                        <h3 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
+                          ${esc(item.name)}
+                        </h3>
+                        <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;flex:1;">
+                          ${esc(item.desc || '')}
+                        </p>
+                        <div style="padding:10px 12px;background:#faf8f5;border-radius:6px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;border:1px solid ${theme.cardBorder};">
+                          <strong>${isZh ? '材质规格' : 'Material'}:</strong> ${esc(meta.timberHardwareSpec)}
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                          <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
+                          <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                            ${esc(ui.details)} ↗
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                `;
-              }).join('')}
+                    </article>
+                  `;
+                }).join('')}
+              </div>
             </div>
           </section>
         </main>
       `;
     }
   } else if (page === 'catalog') {
-    // -------------------------------------------------------------
-    // CATALOG PAGE: Clean High-Contrast Light Grid
-    // -------------------------------------------------------------
-    mainHtml = `
-      <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:40px;">
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;">
-              ${esc(company.name || (isVideo ? 'Spatial Kinetic Lab' : 'Bauhaus Woodcraft Atelier'))}
+    if (isVideo) {
+      // -------------------------------------------------------------
+      // SPATIAL VIDEO: Kinetic Modular Matrix Catalog Layout
+      // -------------------------------------------------------------
+      mainHtml = `
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:40px;border-bottom:1px solid ${theme.cardBorder};padding-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;">
+                  MODULAR TRANSFORMATION SYSTEMS
+                </span>
+                <span style="font-size:0.85rem;color:${theme.textSub};font-family:monospace;">8 PRODUCTION MODELS</span>
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">
+                ${esc(ui.catalog)}
+              </h1>
+              <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:720px;">
+                ${isZh ? '浏览智能折叠壁床、液压升降茶几、模块化悬浮收纳柜与齿轮伸缩餐桌，专为现代城市微公寓与多单元地产开发提供高坪效整装配套。' : 'Explore our space-saving transforming wall-beds, kinetic lift tables, and modular storage units engineered for multi-unit apartment projects.'}
+              </p>
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;">
-              ${esc(ui.catalog)}
-            </h1>
-            <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:680px;">
-              ${isZh ? (isVideo ? '浏览智能折叠壁床、液压升降茶几、模块化悬浮收纳柜与齿轮伸缩餐桌，专为现代城市公寓与多单元开发项目提供高坪效整装方案。' : '探索北美FAS黑胡桃木休闲椅、传统大榫卯餐桌、悬臂钢管马鞍皮椅与斜边餐边柜，支持大宗工程配套与定制开模。') : (isVideo ? 'Explore our space-saving transforming wall-beds, kinetic lift tables, and modular storage units.' : 'Browse our solid hardwood Bauhaus furniture collection built with generational mortise-tenon joinery.')}
-            </p>
-          </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
-            ${products.map((item, idx) => {
-              const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : FURNITURE_DEFAULT_PRODUCTS[idx % FURNITURE_DEFAULT_PRODUCTS.length]!;
-              const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
-              return `
-                <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.04);" class="wr-card-hover">
-                  <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:${isVideo ? '#f1f5f9' : '#f4f4f5'};">
-                    <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
-                    <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                      ${esc(meta.badge)}
-                    </span>
-                  </div>
-                  <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
-                    <div style="font-size:0.74rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;">
-                      ${esc(meta.categoryNameEn)}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
+              ${products.map((item, idx) => {
+                const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : FURNITURE_DEFAULT_PRODUCTS[idx % FURNITURE_DEFAULT_PRODUCTS.length]!;
+                const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
+                return `
+                  <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
+                    <div style="position:relative;width:100%;padding-top:74%;overflow:hidden;background:#f1f5f9;">
+                      <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                      <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};">
+                        ${esc(meta.badge)}
+                      </span>
                     </div>
-                    <h2 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;">
-                      ${esc(item.name)}
-                    </h2>
-                    <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
-                      ${esc(item.desc || '')}
-                    </p>
-                    <div style="background:${isVideo ? '#f8fafc' : '#f8f8f9'};padding:10px 12px;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:16px;">
-                      <div><strong>${isZh ? '核心用料' : 'Material'}:</strong> ${esc(meta.timberHardwareSpec)}</div>
-                      <div style="margin-top:4px;"><strong>${isZh ? '规格承重' : 'Specs & Load'}:</strong> ${esc(meta.dimensionsLoadSpec)}</div>
+                    <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
+                      <div style="font-size:0.74rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;">
+                        ${esc(meta.categoryNameEn)}
+                      </div>
+                      <h2 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;">
+                        ${esc(item.name)}
+                      </h2>
+                      <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
+                        ${esc(item.desc || '')}
+                      </p>
+                      <div style="background:#f8fafc;padding:12px;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:16px;border:1px solid ${theme.cardBorder};">
+                        <div><strong>${isZh ? '核心用料' : 'Hardware'}:</strong> ${esc(meta.timberHardwareSpec)}</div>
+                        <div style="margin-top:4px;"><strong>${isZh ? '规格承重' : 'Specs & Load'}:</strong> ${esc(meta.dimensionsLoadSpec)}</div>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
+                        <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:9px 20px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                          ${esc(ui.details)} ↗
+                        </a>
+                      </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                      <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
-                      <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
-                        ${esc(ui.details)} ↗
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              `;
-            }).join('')}
+                  </article>
+                `;
+              }).join('')}
+            </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // -------------------------------------------------------------
+      // MINIMAL BANNER: Bauhaus Hardwood Editorial Lookbook Layout
+      // -------------------------------------------------------------
+      mainHtml = `
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:40px;border-bottom:1px solid ${theme.cardBorder};padding-bottom:28px;">
+              <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;font-family:serif;">
+                FAS TIMBER & MASTER JOINERY CATALOG
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;font-family:Georgia, serif;">
+                ${esc(ui.catalog)}
+              </h1>
+              <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:700px;line-height:1.7;">
+                ${isZh ? '探索北美FAS黑胡桃木休闲椅、传统大榫卯餐桌、悬臂钢管马鞍皮椅与斜边餐边柜，支持大宗工程配套与定制开模。' : 'Browse our solid hardwood Bauhaus furniture collection built with generational mortise-tenon joinery and sustainable Appalachian timber.'}
+              </p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:32px;">
+              ${products.map((item, idx) => {
+                const meta = (item as ThemedFurnitureItem).timberHardwareSpec ? (item as ThemedFurnitureItem) : FURNITURE_DEFAULT_PRODUCTS[idx % FURNITURE_DEFAULT_PRODUCTS.length]!;
+                const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
+                return `
+                  <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(28,25,23,0.04);" class="wr-card-hover">
+                    <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#f5f5f4;">
+                      <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                      <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:4px;font-size:0.72rem;font-weight:800;background:rgba(255,255,255,0.95);color:${theme.text};border:1px solid ${theme.cardBorder};font-family:serif;">
+                        ${esc(meta.badge)}
+                      </span>
+                    </div>
+                    <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
+                      <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;font-family:serif;">
+                        ${esc(meta.categoryNameEn)}
+                      </div>
+                      <h2 style="font-size:1.15rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
+                        ${esc(item.name)}
+                      </h2>
+                      <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;flex:1;">
+                        ${esc(item.desc || '')}
+                      </p>
+                      <div style="background:#faf8f5;padding:12px;border-radius:6px;font-size:0.76rem;color:${theme.textSub};margin-bottom:16px;border:1px solid ${theme.cardBorder};">
+                        <div><strong>${isZh ? '天然用料' : 'Timber Spec'}:</strong> ${esc(meta.timberHardwareSpec)}</div>
+                        <div style="margin-top:4px;"><strong>${isZh ? '规格承重' : 'Dimensions'}:</strong> ${esc(meta.dimensionsLoadSpec)}</div>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
+                        <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:9px 20px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                          ${esc(ui.details)} ↗
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'detail') {
-    // -------------------------------------------------------------
-    // DETAIL PAGE: Rich Product Specs with id="wr-detail-main-img"
-    // -------------------------------------------------------------
     const meta = (selectedProduct as unknown as ThemedFurnitureItem).timberHardwareSpec ? (selectedProduct as unknown as ThemedFurnitureItem) : defaultMeta;
     const imgSrc = ctx.productMainImage(selectedProduct as Product) || (selectedProduct as any).img || defaultMeta.img;
 
-    mainHtml = `
-      <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 100px;">
-        <div class="wrap" style="padding:0 24px;">
-          <nav aria-label="Breadcrumb" style="font-size:0.85rem;color:${theme.textSub};margin-bottom:30px;">
-            <a href="${path('index.html')}" ${navAttrs('home')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.home)}</a>
-            <span style="margin:0 8px;">/</span>
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.catalog)}</a>
-            <span style="margin:0 8px;">/</span>
-            <span style="color:${theme.text};font-weight:700;">${esc(selectedProduct.name)}</span>
-          </nav>
+    if (isVideo) {
+      // -------------------------------------------------------------
+      // SPATIAL VIDEO: Kinematic Trajectory & Engineering Spec Detail
+      // -------------------------------------------------------------
+      mainHtml = `
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <nav aria-label="Breadcrumb" style="font-size:0.85rem;color:${theme.textSub};margin-bottom:30px;">
+              <a href="${path('index.html')}" ${navAttrs('home')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.home)}</a>
+              <span style="margin:0 8px;">/</span>
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.catalog)}</a>
+              <span style="margin:0 8px;">/</span>
+              <span style="color:${theme.text};font-weight:700;">${esc(selectedProduct.name)}</span>
+            </nav>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;margin-bottom:70px;">
-            <div>
-              <div style="border-radius:20px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 12px 36px rgba(0,0,0,0.06);position:relative;">
-                <img id="wr-detail-main-img" src="${esc(imgSrc)}" alt="${esc(selectedProduct.name)}" style="width:100%;height:auto;max-height:560px;object-fit:cover;display:block;">
-              </div>
-            </div>
-
-            <div>
-              <div style="display:inline-block;padding:5px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                ${esc(meta.badge || (isVideo ? 'Spatial Kinetic Lab' : 'Bauhaus Heritage'))}
-              </div>
-
-              <h1 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 16px;">
-                ${esc(selectedProduct.name)}
-              </h1>
-
-              <p style="font-size:1.02rem;line-height:1.7;color:${theme.textMuted};margin:0 0 24px;">
-                ${esc((selectedProduct as any).desc || selectedProduct.description || defaultMeta.desc)}
-              </p>
-
-              <!-- Technical Specifications Grid -->
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-                <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:${theme.primary};letter-spacing:0.06em;margin-bottom:12px;">
-                  ${isZh ? '实木材质工艺与力学工程参数' : 'Structural Materials & Engineering Specs'}
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
-                  <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '选用木料 / 五金' : 'Timber / Hardware'}</span>
-                    <strong style="color:${theme.text};">${esc(meta.timberHardwareSpec)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '规格尺寸与承重' : 'Dimensions & Dynamic Load'}</span>
-                    <strong style="color:${theme.text};">${esc(meta.dimensionsLoadSpec)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '榫卯咬合/折叠机构' : 'Joinery / Mechanism'}</span>
-                    <strong style="color:${theme.text};">${esc(meta.joineryMechanismDetail)}</strong>
-                  </div>
-                  <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '项目起订量 / 交付' : 'MOQ & Lead Time'}</span>
-                    <strong style="color:${theme.primary};">${esc(meta.moq)}</strong>
-                  </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-bottom:70px;">
+              <div>
+                <div style="border-radius:20px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 12px 36px rgba(0,0,0,0.06);position:relative;">
+                  <img id="wr-detail-main-img" src="${esc(imgSrc)}" alt="${esc(selectedProduct.name)}" style="width:100%;height:auto;max-height:540px;object-fit:cover;display:block;">
                 </div>
               </div>
 
-              <div style="display:flex;gap:16px;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(selectedProduct.id))}" ${navAttrs('contact', selectedProduct.id)} style="text-decoration:none;padding:15px 32px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};flex:1;text-align:center;">
-                  ${isZh ? '发起工程采购询价 / 索样' : 'Inquire for Project Quotation'} ↗
-                </a>
-                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 24px;border-radius:10px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:700;">
-                  ← ${esc(ui.back)}
-                </a>
+              <div>
+                <div style="display:inline-block;padding:5px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                  ${esc(meta.badge || 'Kinetic Mechanism Certified')}
+                </div>
+
+                <h1 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 16px;">
+                  ${esc(selectedProduct.name)}
+                </h1>
+
+                <p style="font-size:1.02rem;line-height:1.7;color:${theme.textMuted};margin:0 0 24px;">
+                  ${esc(sanitizeCopy((selectedProduct as any).desc || selectedProduct.description, meta.desc, meta.desc, isZh))}
+                </p>
+
+                <!-- Technical Specifications Grid -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+                  <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:${theme.primary};letter-spacing:0.06em;margin-bottom:12px;">
+                    ${isZh ? '五金机构与力学工程参数' : 'Kinematic Hardware & Engineering Specs'}
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.86rem;">
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '用料五金' : 'Materials & Hardware'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.timberHardwareSpec)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '规格尺寸与承重' : 'Dimensions & Static Load'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.dimensionsLoadSpec)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '联动机构' : 'Linkage Mechanism'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.joineryMechanismDetail)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '生产起订量' : 'Production MOQ'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.moq)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:16px;">
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    ${isZh ? '索取该款工程报价与CAD' : 'Request CAD & Unit Pricing'} ↗
+                  </a>
+                </div>
               </div>
             </div>
           </div>
+        </main>
+      `;
+    } else {
+      // -------------------------------------------------------------
+      // MINIMAL BANNER: Bauhaus Mortise Anatomy Detail
+      // -------------------------------------------------------------
+      mainHtml = `
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <nav aria-label="Breadcrumb" style="font-size:0.85rem;color:${theme.textSub};margin-bottom:30px;font-family:serif;">
+              <a href="${path('index.html')}" ${navAttrs('home')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.home)}</a>
+              <span style="margin:0 8px;">/</span>
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.catalog)}</a>
+              <span style="margin:0 8px;">/</span>
+              <span style="color:${theme.text};font-weight:700;">${esc(selectedProduct.name)}</span>
+            </nav>
 
-          <!-- Related Products -->
-          <section style="padding-top:40px;border-top:1px solid #e2e8f0;">
-            <h2 style="font-size:1.6rem;font-weight:900;color:${theme.text};margin:0 0 24px;">${esc(ui.related)}</h2>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:24px;">
-              ${products.filter((p) => p.id !== selectedProduct.id).slice(0, 3).map((item) => `
-                <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,0.03);" class="wr-card-hover">
-                  <div style="position:relative;width:100%;padding-top:70%;overflow:hidden;border-radius:10px;margin-bottom:12px;background:#f8fafc;">
-                    <img src="${esc((item as any).img || ctx.productMainImage(item as unknown as Product))}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start;margin-bottom:70px;">
+              <div>
+                <div style="border-radius:12px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 12px 36px rgba(28,25,23,0.06);position:relative;">
+                  <img id="wr-detail-main-img" src="${esc(imgSrc)}" alt="${esc(selectedProduct.name)}" style="width:100%;height:auto;max-height:540px;object-fit:cover;display:block;">
+                </div>
+              </div>
+
+              <div>
+                <div style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;font-family:serif;">
+                  ${esc(meta.badge || 'Bauhaus Woodcraft Masterpiece')}
+                </div>
+
+                <h1 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 16px;font-family:Georgia, serif;">
+                  ${esc(selectedProduct.name)}
+                </h1>
+
+                <p style="font-size:1.02rem;line-height:1.75;color:${theme.textMuted};margin:0 0 24px;">
+                  ${esc(sanitizeCopy((selectedProduct as any).desc || selectedProduct.description, meta.desc, meta.desc, isZh))}
+                </p>
+
+                <!-- Woodcraft Specifications -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:8px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(28,25,23,0.03);">
+                  <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:${theme.primary};letter-spacing:0.08em;margin-bottom:12px;font-family:serif;">
+                    ${isZh ? '天然实木用料与榫卯工艺参数' : 'Solid Timber Grade & Joinery Parameters'}
                   </div>
-                  <h3 style="font-size:0.96rem;font-weight:800;color:${theme.text};margin:0 0 6px;">${esc(item.name)}</h3>
-                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:${theme.primary};text-decoration:none;font-size:0.82rem;font-weight:700;">
-                    ${esc(ui.details)} ↗
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:0.86rem;">
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '木料等级' : 'Timber Grade'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.timberHardwareSpec)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '规格尺寸' : 'Dimensions'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.dimensionsLoadSpec)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '榫卯工艺' : 'Joinery Method'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.joineryMechanismDetail)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '大宗起订量' : 'Production MOQ'}</span>
+                      <strong style="color:${theme.text};">${esc(meta.moq)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:16px;">
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    ${isZh ? '索取实木样板与集装箱报价' : 'Request Timber Swatches & Quotation'} ↗
                   </a>
-                </article>
-              `).join('')}
+                </div>
+              </div>
             </div>
-          </section>
-        </div>
-      </main>
-    `;
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'about') {
     // -------------------------------------------------------------
-    // ABOUT PAGE: High-Contrast Factory & Joinery Legacy
+    // ABOUT PAGE: COMPLETELY DIFFERENT LAYOUTS BETWEEN BANNER & VIDEO
+    // ZERO SQUISHY CAT FALLBACK!
     // -------------------------------------------------------------
-    const headline = getAboutHeadline(company, company.name);
+    const headline = sanitizeCopy(
+      getAboutHeadline(company, company.name),
+      isVideo ? 'Kinetic Space Engineering & Pneumatic Durability Laboratory' : 'Bauhaus Woodworking Academy & Generational Joinery Atelier',
+      isVideo ? '空间动力学工程中心与气压耐久性测试实验室' : '包豪斯纯实木榫卯大匠工坊与木工学院',
+      isZh,
+    );
+
+    const customAboutImg = company.aboutImageAssetId ? ctx.asset(company.aboutImageAssetId) : '';
     const storyParas = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about);
-    const aboutImg = ctx.asset(company.aboutImageAssetId) || (products[1] ? (products[1] as any).img : defaultMeta.img);
     const stats = parseAboutHighlights(company.aboutHighlights, [
-      { value: '50+ Yrs', num: 50, suffix: '+ Yrs', label: isZh ? '木工制造传承' : 'Woodworking Legacy', desc: isZh ? '数十年传统榫卯与数控五轴积淀' : 'Generations of master cabinetmakers' },
-      { value: '100% FAS', num: 100, suffix: '%', label: isZh ? '特级北美全实木' : 'FAS Certified Hardwood', desc: isZh ? '直采可持续森林优质大径原木' : 'Sustainably harvested virgin logs' },
-      { value: '400 kg', num: 400, suffix: ' kg', label: isZh ? '极限静态承重标准' : 'Static Load Testing', desc: isZh ? '远超欧美商业家具严苛测试要求' : 'ANSI/BIFMA load compliance' },
-      { value: '60+ Countries', num: 60, suffix: '+ Countries', label: isZh ? '全球集装箱货运直发' : 'Export Destinations', desc: isZh ? '服务跨国地产与高端连锁品牌' : 'Delivered to global developers' },
+      { value: '30+ Yrs', num: 30, suffix: '+ Yrs', label: isZh ? '工匠制造底蕴' : 'Craft Heritage', desc: isZh ? '数十年传统大木作与精密五金研发' : 'Decades of woodworking engineering' },
+      { value: '45,000 m²', num: 45000, suffix: ' m²', label: isZh ? '智造基地面积' : 'Manufacturing Campus', desc: isZh ? '现代化五轴数控加工与干燥窑群' : 'High-precision 5-axis CNC facilities' },
+      { value: '99.9%', num: 99.9, suffix: '%', label: isZh ? '出厂首检合格率' : 'First-Pass QA Yield', desc: isZh ? '严苛微米级结构公差与承重全检' : 'Strict mechanical tolerance verification' },
+      { value: '35+ Mkts', num: 35, suffix: '+ Mkts', label: isZh ? '全球出口国家' : 'Global Export Markets', desc: isZh ? '直供全球高端地产与设计零售' : 'Supplying international retail partners' },
     ]);
 
-    mainHtml = `
-      <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:50px;">
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;">
-              ${isZh ? '工坊底蕴与空间工程学哲学' : 'ATELIER HERITAGE & SPATIAL ENGINEERING'}
-            </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;">
-              ${esc(headline)}
-            </h1>
-            <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:720px;">
-              ${esc(company.slogan || (isVideo ? '以极致工程力学解放城市居所的每一寸地面空间。' : '用坚不可摧的榫卯结构和真挚木纹，让家具成为可传承百年的空间建筑。'))}
-            </p>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:48px;align-items:center;margin-bottom:60px;">
-            <div>
-              <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                ${storyParas.length > 0 ? storyParas.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                  <p style="margin:0 0 18px;">
-                    ${isZh ? '我们拥有占地 45,000 平方米的现代智能化实木与五金加工生产基地，配备德国豪迈全自动封边与数控五轴加工中心，以及严格的恒温恒湿木材真空烘干窑。' : 'Operating a 45,000 m² state-of-the-art timber and hardware manufacturing campus equipped with German Homag 5-axis CNC routers and precision vacuum drying kilns.'}
-                  </p>
-                  <p style="margin:0 0 18px;">
-                    ${isZh ? '从木料含水率严格控制在 8-10%，到五金活塞的数万次循环疲劳测试，我们深度融合传统手作木工与现代精密机械，为全球建筑师和开发商提供卓越的家具工程解决方案。' : 'From strict 8-10% moisture equilibrium control to 50,000-cycle pneumatic endurance verification, our commitment to engineering perfection ensures generational durability.'}
-                  </p>
-                `}
+    if (isVideo) {
+      // -----------------------------------------------------------------
+      // SPATIAL VIDEO ABOUT: 4-Testing-Stations Lab Layout
+      // -----------------------------------------------------------------
+      mainHtml = `
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <!-- Header Banner -->
+            <div style="margin-bottom:48px;">
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;">
+                SPATIAL DYNAMICS & ROBOTIC LIFE TESTING
               </div>
-              <div style="margin-top:28px;">
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-                  ${isZh ? '预约验厂考察 / 工程洽谈' : 'Schedule Factory Audit'} ↗
+              <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;">
+                ${esc(headline)}
+              </h1>
+              <p style="font-size:1.1rem;color:${theme.textMuted};margin:0;max-width:760px;line-height:1.7;">
+                ${isZh ? '致力于通过严苛的机械疲劳验证与航天级气压平衡系统，解决全球超高密度城市居所的坪效瓶颈。' : 'Dedicated to overcoming spatial constraints in modern dense urban environments through aerospace-grade nitrogen damping pistons and rigorous robotic fatigue testing.'}
+              </p>
+            </div>
+
+            <!-- Lab Overview Split -->
+            <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};margin:0 0 24px;">
+                  ${storyParas.length > 0 ? storyParas.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
+                    <p style="margin:0 0 18px;">${isZh ? '我们的动力学研发中心占地 35,000 平方米，设有专职机构力学工程师团队与多套伺服电机驱动的全自动疲劳测试机架。' : 'Operating an accredited 35,000 m² spatial engineering testing campus equipped with automated servo-driven cyclic test benches and precision robotic endurance rigs.'}</p>
+                    <p style="margin:0 0 18px;">${isZh ? '每一套进入量产的折叠系统均须在满载 400kg 状态下通过 40,000 次不间断开合，确保交付给全球品牌开发商的每一套家具具备 20 年以上的无故障运行品质。' : 'Every transformable model undergoes continuous 40,000-cycle deployment tests under a full 400kg load, ensuring over 20 years of maintenance-free commercial duty.'}</p>
+                  `}
+                </div>
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
+                  ${isZh ? '预约实验室视频验厂' : 'Book Lab Video Audit'} ↗
                 </a>
               </div>
-            </div>
 
-            <div>
-              <div style="border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.06);border:1px solid ${theme.cardBorder};background:#ffffff;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:380px;object-fit:cover;display:block;">
+              <div>
+                ${customAboutImg ? `
+                  <div style="border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.06);border:1px solid ${theme.cardBorder};">
+                    <img src="${esc(customAboutImg)}" alt="${esc(brandName)}" style="width:100%;height:360px;object-fit:cover;display:block;">
+                  </div>
+                ` : `
+                  <div style="border-radius:20px;background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);padding:36px;color:#ffffff;box-shadow:0 16px 40px rgba(0,0,0,0.12);border:1px solid rgba(234,88,12,0.3);">
+                    <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#ea580c;margin-bottom:8px;">
+                      TEST RIG TELEMETRY HUD
+                    </div>
+                    <div style="font-size:1.4rem;font-weight:900;margin-bottom:16px;">
+                      Robotic Piston Fatigue Rig
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;color:rgba(255,255,255,0.8);">
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                        <span>Target Cyclic Benchmark</span>
+                        <strong style="color:#ffffff;">50,000 Cycles</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                        <span>Static Structural Deflection</span>
+                        <strong style="color:#ffffff;">&lt; 1.2 mm @ 400 kg</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                        <span>Pneumatic Gas Nitrogen Purity</span>
+                        <strong style="color:#ffffff;">99.998% N2</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;">
+                        <span>Mandatory Safety Standard</span>
+                        <strong style="color:#ea580c;">EN 1129-1:2020 PASS</strong>
+                      </div>
+                    </div>
+                  </div>
+                `}
               </div>
             </div>
-          </div>
 
-          <!-- Statistics Grid -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
-            ${stats.map((s) => `
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:26px;box-shadow:0 6px 20px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(s.value)}</div>
-                <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(s.label)}</div>
-                <div style="font-size:0.8rem;color:${theme.textSub};">${esc(s.desc || '')}</div>
+            <!-- 4 Dynamic Testing Stations -->
+            <div style="margin-bottom:50px;">
+              <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};margin:0 0 24px;">
+                ${isZh ? '四大机构力学检测工位' : 'Four Accredited Mechanical Testing Stations'}
+              </h2>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:20px;">
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">STATION 01</div>
+                  <div style="font-size:1.05rem;font-weight:800;color:${theme.text};margin-bottom:6px;">${isZh ? '气压活塞往复疲劳台' : 'Piston Endurance Station'}</div>
+                  <div style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;">${isZh ? '持续模拟 50,000 次开合，压力降小于 2%' : 'Continuous cyclic deployment with <2% damping loss.'}</div>
+                </div>
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">STATION 02</div>
+                  <div style="font-size:1.05rem;font-weight:800;color:${theme.text};margin-bottom:6px;">${isZh ? '400kg 静态重载偏转台' : '400kg Static Deflection Rig'}</div>
+                  <div style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;">${isZh ? '高灵敏度激光位移计测量骨架变形' : 'Laser displacement tracking across bed chassis.'}</div>
+                </div>
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">STATION 03</div>
+                  <div style="font-size:1.05rem;font-weight:800;color:${theme.text};margin-bottom:6px;">${isZh ? '微公寓空间坪效测算室' : 'Spatial Yield Ergonomics Lab'}</div>
+                  <div style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;">${isZh ? '三维光学动捕验证人机工效与动线' : '3D motion tracking of furniture conversion ergonomics.'}</div>
+                </div>
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">STATION 04</div>
+                  <div style="font-size:1.05rem;font-weight:800;color:${theme.text};margin-bottom:6px;">${isZh ? '极限温度与防腐雾化室' : 'Thermal & Salt-Fog Chamber'}</div>
+                  <div style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;">${isZh ? '-20°C 至 +60°C 环境下机构润滑可靠性' : 'Testing mechanism fluidity from -20°C to +60°C.'}</div>
+                </div>
               </div>
-            `).join('')}
+            </div>
+
+            <!-- Metrics -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
+              ${stats.map((s) => `
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:26px;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};margin-bottom:4px;">${esc(s.value)}</div>
+                  <div style="font-size:0.92rem;font-weight:800;color:${theme.text};">${esc(s.label)}</div>
+                  ${s.desc ? `<div style="font-size:0.8rem;color:${theme.textSub};margin-top:4px;">${esc(s.desc)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // -----------------------------------------------------------------
+      // MINIMAL BANNER ABOUT: 3 Woodcraft Foundations Atelier Layout
+      // -----------------------------------------------------------------
+      mainHtml = `
+        <main class="furniture-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <!-- Header Banner -->
+            <div style="margin-bottom:48px;">
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;font-family:serif;">
+                ✦ GENERATIONAL MORTISE & TENON WOODWORKING
+              </div>
+              <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;font-family:Georgia, serif;">
+                ${esc(headline)}
+              </h1>
+              <p style="font-size:1.1rem;color:${theme.textMuted};margin:0;max-width:760px;line-height:1.75;">
+                ${isZh ? '用坚不可摧的榫卯结构和真挚木纹，让家具成为可传承百年的空间建筑。' : 'Honoring architectural integrity with heirloom mortise-and-tenon craftsmanship and authentic Appalachian solid hardwood.'}
+              </p>
+            </div>
+
+            <!-- Atelier Story Split -->
+            <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:44px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};margin:0 0 24px;">
+                  ${storyParas.length > 0 ? storyParas.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
+                    <p style="margin:0 0 18px;">${isZh ? '我们的木工工坊位于拥有数十年手作木作传统的制造集群，占地 48,000 平方米，拥有全套德国豪迈五轴数控加工中心与恒温真空干燥窑。' : 'Rooted in decades of artisanal cabinetmaking heritage, our 48,000 m² campus pairs German Homag 5-axis CNC machining centers with precision vacuum moisture-balancing kilns.'}</p>
+                    <p style="margin:0 0 18px;">${isZh ? '我们严格遵循北美硬木协会（NHLA）FAS 特级分选标准，仅选用树龄 60 年以上的老龄原木。每一处转角榫卯均由经验超过 20 年的木匠手工校核，公差控制在 0.1 毫米以内。' : 'We adhere strictly to NHLA FAS grading standards, selecting only 60+ year virgin timber. Every dovetail and tenon is hand-tuned by master joiners to under 0.1mm tolerance.'}</p>
+                  `}
+                </div>
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
+                  ${isZh ? '预约实地验厂或索取木样' : 'Schedule Atelier Visit & Timber Swatches'} ↗
+                </a>
+              </div>
+
+              <div>
+                ${customAboutImg ? `
+                  <div style="border-radius:12px;overflow:hidden;box-shadow:0 12px 36px rgba(28,25,23,0.08);border:1px solid ${theme.cardBorder};">
+                    <img src="${esc(customAboutImg)}" alt="${esc(brandName)}" style="width:100%;height:360px;object-fit:cover;display:block;">
+                  </div>
+                ` : `
+                  <div style="border-radius:12px;background:#ffffff;padding:36px;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(28,25,23,0.06);">
+                    <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;font-family:serif;">
+                      TIMBER PROVENANCE CHARTER
+                    </div>
+                    <div style="font-size:1.35rem;font-weight:900;color:${theme.text};font-family:serif;margin-bottom:14px;">
+                      Appalachian Hardwood Integrity
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.86rem;color:${theme.textMuted};">
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:6px;">
+                        <span>Timber Grading</span>
+                        <strong style="color:${theme.text};font-family:serif;">100% Solid FAS Grade</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:6px;">
+                        <span>Equilibrium Moisture</span>
+                        <strong style="color:${theme.text};font-family:serif;">8% – 10% Controlled</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:6px;">
+                        <span>Surface Treatment</span>
+                        <strong style="color:${theme.text};font-family:serif;">German Osmo® Plant Wax</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;">
+                        <span>Joinery Standard</span>
+                        <strong style="color:${theme.primary};font-family:serif;">Interlocking Mortise & Tenon</strong>
+                      </div>
+                    </div>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- 3 Architectural Woodcraft Foundations -->
+            <div style="margin-bottom:50px;">
+              <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};margin:0 0 24px;font-family:Georgia, serif;">
+                ${isZh ? '三大纯实木工艺基石' : 'Three Woodcraft Foundations'}
+              </h2>
+              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:24px;">
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:26px;">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;margin-bottom:8px;">01</div>
+                  <div style="font-size:1.1rem;font-weight:800;color:${theme.text};font-family:serif;margin-bottom:6px;">${isZh ? '真空除湿木材烘干窑' : 'Vacuum Dehumidification Kilns'}</div>
+                  <div style="font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">${isZh ? '含水率精准锁定在 8-10%，彻底杜绝因跨国气候温湿度差异导致的开裂变形。' : 'Moisture content locked at 8-10%, preventing warping across overseas climates.'}</div>
+                </div>
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:26px;">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;margin-bottom:8px;">02</div>
+                  <div style="font-size:1.1rem;font-weight:800;color:${theme.text};font-family:serif;margin-bottom:6px;">${isZh ? '0.1mm 极窄公差榫眼' : '0.1mm Joinery Tolerance'}</div>
+                  <div style="font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">${isZh ? '公母榫紧密咬合，依靠木纤维天然弹力与榫头结构自锁，受力百年不变形。' : 'Interlocking joint fibers self-lock mechanically, holding firm across generations.'}</div>
+                </div>
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:26px;">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;margin-bottom:8px;">03</div>
+                  <div style="font-size:1.1rem;font-weight:800;color:${theme.text};font-family:serif;margin-bottom:6px;">${isZh ? '天然零甲醛植物木蜡油' : 'Natural Plant Wax-Oil'}</div>
+                  <div style="font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">${isZh ? '保留木质导管自由呼吸的开放毛孔，触感温润真实，符合欧美食品级接触安全规范。' : 'Preserving open breathable pores with zero VOCs and natural organic oils.'}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metrics -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
+              ${stats.map((s) => `
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:26px;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};font-family:serif;margin-bottom:4px;">${esc(s.value)}</div>
+                  <div style="font-size:0.92rem;font-weight:800;color:${theme.text};">${esc(s.label)}</div>
+                  ${s.desc ? `<div style="font-size:0.8rem;color:${theme.textSub};margin-top:4px;">${esc(s.desc)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'contact') {
     // -------------------------------------------------------------
     // CONTACT PAGE: Direct Factory Engineering Quote Form
@@ -892,10 +1155,10 @@ export function renderFurnitureStorageTemplate(ctx: ThemeContext, isVideo: boole
             <!-- Contact Card Details -->
             <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;box-shadow:0 8px 28px rgba(0,0,0,0.04);height:fit-content;">
               <h3 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;">
-                ${esc(company.name || (isVideo ? 'Spatial Kinetic Lab HQ' : 'Bauhaus Woodcraft Atelier'))}
+                ${esc(brandName)}
               </h3>
               <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.6;margin:0 0 24px;">
-                ${esc(company.description || (isZh ? '专注高品质实木家具制造与微公寓变形家具外贸，支持OEM/ODM/OBM全球集装箱货运履约。' : 'Direct manufacturing facility supplying residential developers and architectural projects globally.'))}
+                ${esc(sanitizeCopy(company.description, isVideo ? 'Direct manufacturing facility supplying residential developers and architectural projects globally.' : 'Direct woodcraft atelier supplying custom millwork and hardwood collections worldwide.', isVideo ? '专注高品质实木家具制造与微公寓变形家具外贸，支持OEM/ODM/OBM全球集装箱货运履约。' : '专注纯实木榫卯家具与建筑定制工程，支持全球集装箱大宗出口。', isZh))}
               </p>
 
               <div style="display:flex;flex-direction:column;gap:18px;font-size:0.9rem;">
@@ -911,64 +1174,74 @@ export function renderFurnitureStorageTemplate(ctx: ThemeContext, isVideo: boole
                   </div>
                 ` : ''}
 
-                ${waDigits ? `
+                ${company.whatsapp ? `
                   <div>
-                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">WhatsApp Rapid Response</span>
-                    <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="color:#16a34a;text-decoration:none;font-weight:700;">+${esc(waDigits)} (Chat Now ↗)</a>
+                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">WhatsApp Direct Desk</span>
+                    <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener noreferrer" style="color:#16a34a;text-decoration:none;font-weight:700;">+${waDigits} (Click to Chat)</a>
                   </div>
                 ` : ''}
 
                 ${company.address ? `
                   <div>
-                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Manufacturing Facility</span>
-                    <div style="color:${theme.textMuted};">${esc(company.address)}</div>
+                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Manufacturing Campus</span>
+                    <span style="color:${theme.text};">${esc(company.address)}</span>
                   </div>
                 ` : ''}
               </div>
             </div>
 
-            <!-- Inquiry Form -->
+            <!-- RFQ Form with Apple Liquid Glass styling -->
             <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;box-shadow:0 8px 28px rgba(0,0,0,0.04);">
-              <form id="inquiry" action="${esc(safeUrl(ctx.options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.name)} *</label>
-                  <input name="name" required maxlength="120" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
+              <form action="${esc(ctx.options.inquiryUrl)}" method="post" class="furniture-inquiry-form" style="display:flex;flex-direction:column;gap:20px;">
+                <input type="hidden" name="projectId" value="${esc(ctx.options.projectId || '')}">
+                <input type="hidden" name="template" value="${isVideo ? 'furniture-spatial-video' : 'furniture-minimal-banner'}">
+                <input type="hidden" name="productId" value="${esc(ctx.options.productId || '')}">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${isZh ? '您的姓名 / 职务' : 'Full Name & Title'} *
+                    </label>
+                    <input type="text" name="name" required placeholder="${isZh ? '例如：John Doe (采购总监)' : 'e.g. John Doe, Purchasing Director'}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${isZh ? '商务电子邮箱' : 'Corporate Email Address'} *
+                    </label>
+                    <input type="email" name="email" required placeholder="john@company.com" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                  </div>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.email)} *</label>
-                  <input name="email" type="email" required maxlength="254" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${isZh ? '公司名称 / 地产项目' : 'Company Name / Project Title'}
+                    </label>
+                    <input type="text" name="company" placeholder="${isZh ? '例如：Apex Residential Group' : 'e.g. Apex Residential Group'}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${esc(ui.product)} (${esc(ui.optional)})
+                    </label>
+                    <select name="productId" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                      <option value="">${isZh ? '— 选择咨询的产品（可选） —' : '— Select Product of Interest (Optional) —'}</option>
+                      ${products.map((p) => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                    </select>
+                  </div>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.company)} (${esc(ui.optional)})</label>
-                  <input name="company" maxlength="200" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                    ${isZh ? '详细采购清单或规格要求' : 'Specifications & Required Finishes'} *
+                  </label>
+                  <textarea name="message" required rows="5" placeholder="${isZh ? '请描述您所需的家具款式、实木用料偏好（如黑胡桃、白橡木）、表面处理要求、图纸交付日期或预计进场安装节点...' : 'Describe requested models, timber preferences (walnut, oak), hardware requirements, target delivery port, and whether CAD files are available...'}" style="width:100%;box-sizing:border-box;padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;resize:vertical;"></textarea>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.product)} (${esc(ui.optional)})</label>
-                  <select name="productId" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
-                    <option value="">${isZh ? '— 选择意向家具 / 系统型号 —' : '— Select Furniture System —'}</option>
-                    ${products.map((p) => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
-                  </select>
-                </div>
-
-                <div style="grid-column:span 2;display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.message)} *</label>
-                  <textarea name="message" required maxlength="5000" rows="5" placeholder="${isZh ? '请描述您的工程套数要求、木材种类偏好（黑胡桃/白橡等）、图纸规格或目标交付期...' : 'Describe your project units, timber species preferences, CAD specifications or target delivery milestone...'}" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;resize:vertical;"></textarea>
-                </div>
-
-                <div style="display:none;" aria-hidden="true">
-                  <input name="website" tabindex="-1" autocomplete="off">
-                </div>
-
-                <div style="grid-column:span 2;display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-                  <button type="submit" ${ctx.options.preview ? 'disabled' : ''} style="padding:14px 34px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;border:none;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px ${theme.accentGlow};">
-                    ${esc(ui.send)} ↗
+                <div>
+                  <button type="submit" style="width:100%;padding:15px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:1rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};transition:transform 0.15s ease;">
+                    ${isZh ? '提交大宗工程询盘需求' : 'Submit Commercial RFQ & Request CAD'} ↗
                   </button>
-                  <span style="font-size:0.78rem;color:${theme.textSub};">${isZh ? '工程技术团队直连 · 24小时内提供报价' : 'Direct Engineering Response · 24h'}</span>
                 </div>
-                <p class="form-status" role="status" aria-live="polite" style="grid-column:span 2;font-size:0.86rem;margin:0;"></p>
               </form>
             </div>
           </div>
@@ -977,5 +1250,55 @@ export function renderFurnitureStorageTemplate(ctx: ThemeContext, isVideo: boole
     `;
   }
 
-  return `${headerHtml}${mainHtml}${footerHtml}`;
+  const footerHtml = `
+    <footer class="furniture-footer" style="background:#ffffff;border-top:1px solid ${theme.cardBorder};padding:60px 0 40px;color:${theme.textSub};font-size:0.88rem;">
+      <div class="wrap" style="padding:0 24px;">
+        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+          <div>
+            <div style="font-size:1.2rem;font-weight:900;color:${theme.text};margin-bottom:8px;font-family:${isVideo ? 'system-ui, sans-serif' : 'Georgia, serif'};">
+              ${esc(brandName)}
+            </div>
+            <p style="font-size:0.86rem;color:${theme.textMuted};max-width:380px;line-height:1.6;margin:0 0 16px;">
+              ${esc(sanitizeCopy(company.description, isVideo ? 'Direct manufacturing facility specializing in kinetic space-saving furniture and modular storage solutions.' : 'Artisanal solid hardwood woodworking atelier dedicated to timeless mortise-and-tenon craftsmanship.', isVideo ? '专注于城市高坪效气压隐形折叠壁床与模块化收纳家具工程研发与制造。' : '坚守包豪斯极简纯粹主义，以传世大榫卯工艺打造温润厚重的纯实木建筑级家具。', isZh))}
+            </p>
+            <div style="font-size:0.8rem;color:${theme.textSub};">
+              <strong>${isZh ? '国际标准认证' : 'Standards'}:</strong> ${isVideo ? 'ANSI/BIFMA X5.1 · EN 1129 · ISO9001' : 'FSC 100% Solid Timber · CARB P2 · ISO9001'}
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${isZh ? '快捷导航' : 'Navigation'}</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
+              <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.home)}</a>
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.catalog)}</a>
+              <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.about)}</a>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.contact)}</a>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${isZh ? '工程接洽' : 'B2B Liaison'}</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;">
+              <div>${esc(company.email)}</div>
+              ${company.phone ? `<div>${esc(company.phone)}</div>` : ''}
+              ${company.address ? `<div>${esc(company.address)}</div>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid ${theme.cardBorder};padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;">
+          <div>© ${new Date().getUTCFullYear()} ${esc(brandName)}. All rights reserved.</div>
+          <div>${isZh ? '国际建筑与室内家具工程标准 · ISO9001 / BIFMA 5.1 强度认证' : 'ANSI/BIFMA X5.1 Certified · ISO9001 Manufacturing Standards'}</div>
+        </div>
+      </div>
+    </footer>
+  `;
+
+  return `
+    <div class="furniture-site-wrapper" style="min-height:100vh;display:flex;flex-direction:column;background:${theme.bg};">
+      ${headerHtml}
+      ${mainHtml}
+      ${footerHtml}
+    </div>
+  `;
 }

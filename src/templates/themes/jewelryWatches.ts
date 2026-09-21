@@ -1,7 +1,7 @@
 import type { Product } from '../../shared/model';
 import { isTypedMaterialsSource } from '../materials-typed';
 import { esc, safeUrl, type ThemeContext } from './types';
-import { getAboutHeadline, getAboutStoryParagraphs, getAboutImages, parseAboutHighlights } from './aboutHelper';
+import { getAboutHeadline, getAboutStoryParagraphs, parseAboutHighlights } from './aboutHelper';
 
 export interface ThemedJewelryItem {
   id: string;
@@ -142,6 +142,12 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
   },
 ];
 
+function sanitizeCopy(text: string | undefined, fallbackEn: string, fallbackZh: string, isZh: boolean): string {
+  if (!text || !text.trim()) return isZh ? fallbackZh : fallbackEn;
+  if (!isZh && /[\u4e00-\u9fa5]/.test(text)) return fallbackEn;
+  return text;
+}
+
 export function getJewelryProducts(ctx: ThemeContext): ThemedJewelryItem[] {
   const { draft, translateProduct } = ctx;
   if (isTypedMaterialsSource(draft)) {
@@ -152,7 +158,7 @@ export function getJewelryProducts(ctx: ThemeContext): ThemedJewelryItem[] {
       badge: '',
       category: 'jewelry',
       categoryNameZh: '高级珠宝与传世钟表',
-      categoryNameEn: 'Fine Jewelry & Horology',
+      categoryNameEn: 'Fine Jewelry & Watches',
       metalStoneSpec: p.material || '',
       certMovementSpec: p.dimensions || '',
       craftsmanshipDetail: '',
@@ -171,7 +177,7 @@ export function getJewelryProducts(ctx: ThemeContext): ThemedJewelryItem[] {
         id: p.id,
         name: translated.name || fallback.name,
         desc: translated.description || fallback.desc,
-        badge: idx === 0 ? (isZh ? '旺多姆沙龙珍藏' : 'Place Vendôme Select') : (isZh ? '传世典范' : 'Haute Heritage'),
+        badge: idx === 0 ? (isZh ? '典藏主打' : 'Haute Piece') : (isZh ? '传世精选' : 'Master Choice'),
         category: fallback.category,
         categoryNameZh: fallback.categoryNameZh,
         categoryNameEn: fallback.categoryNameEn,
@@ -196,472 +202,440 @@ export function renderJewelryWatchesTemplate(ctx: ThemeContext, isVideo: boolean
   const heroProduct = products[0]!;
   const defaultMeta = JEWELRY_DEFAULT_PRODUCTS[0]!;
 
-  // 100% LIGHT PALETTES FOR BOTH VARIANTS:
-  // Banner: Parisian Silk Cream & 24K Gold
-  // Video: Platinum Brilliant White & Royal Horological Sapphire
+  const brandName = sanitizeCopy(
+    company.name,
+    isVideo ? 'Manufacture Horlogère Suisse' : 'Haute Joaillerie Atelier & Salon',
+    isVideo ? '瑞士高级制表与精密时计工坊' : '巴黎高级珠宝典藏与宝石沙龙',
+    isZh,
+  );
+
+  const brandTagline = isVideo
+    ? (isZh ? '瑞士机芯陀飞轮与天文台认证时计' : 'Swiss Calibre Horology & Chronometer Lab')
+    : (isZh ? '18K金手工微镶与GIA认证自然瑰宝' : '18K Solid Gold & Certified Natural Gemstones');
+
   const theme = isVideo
     ? {
         bg: '#f8fafc',
         cardBg: '#ffffff',
-        cardBorder: 'rgba(37, 99, 235, 0.15)',
-        primary: '#2563eb',
-        primaryHover: '#1d4ed8',
-        text: '#0b192c',
+        cardBorder: 'rgba(180, 83, 9, 0.16)',
+        primary: '#b45309',
+        primaryHover: '#92400e',
+        text: '#0f172a',
         textMuted: '#475569',
         textSub: '#64748b',
-        glassBg: 'rgba(255, 255, 255, 0.9)',
-        glassBorder: 'rgba(255, 255, 255, 0.98)',
-        pillBg: '#eff6ff',
-        pillText: '#1d4ed8',
-        btnGradient: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-        accentGlow: 'rgba(37, 99, 235, 0.18)',
-        tagBadge: 'Swiss Horology Manufactory',
+        glassBg: 'rgba(248, 250, 252, 0.92)',
+        pillBg: '#fef3c7',
+        pillText: '#92400e',
+        btnGradient: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+        accentGlow: 'rgba(180, 83, 9, 0.18)',
       }
     : {
-        bg: '#faf8f5',
+        bg: '#fffdfa',
         cardBg: '#ffffff',
-        cardBorder: 'rgba(197, 155, 39, 0.18)',
+        cardBorder: 'rgba(197, 155, 39, 0.16)',
         primary: '#c59b27',
-        primaryHover: '#a37f1b',
-        text: '#1c1417',
-        textMuted: '#6b5d63',
-        textSub: '#9e8e94',
-        glassBg: 'rgba(255, 255, 255, 0.9)',
-        glassBorder: 'rgba(255, 255, 255, 0.98)',
-        pillBg: '#fef9ee',
-        pillText: '#9a7516',
-        btnGradient: 'linear-gradient(135deg, #c59b27 0%, #9a7516 100%)',
+        primaryHover: '#a17c18',
+        text: '#18181b',
+        textMuted: '#52525b',
+        textSub: '#71717a',
+        glassBg: 'rgba(255, 253, 250, 0.92)',
+        pillBg: '#fefce8',
+        pillText: '#854d0e',
+        btnGradient: 'linear-gradient(135deg, #c59b27 0%, #a17c18 100%)',
         accentGlow: 'rgba(197, 155, 39, 0.18)',
-        tagBadge: 'Haute Joaillerie Atelier',
       };
 
   const selectedProduct = (ctx.options.productId ? draft.products.find((p) => p.id === ctx.options.productId) : null) || draft.products[0] || heroProduct;
 
-  // Header with Apple Liquid Glass
   const headerHtml = `
-    <header class="jewelry-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.03);">
-      <div class="wrap" style="height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+    <header class="jewelry-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.02);">
+      <div class="wrap" style="height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
         <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
-          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(company.name)}" style="height:40px;width:auto;object-fit:contain;">` : ''}
+          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
           <div style="display:flex;flex-direction:column;">
-            <span style="font-size:1.3rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};font-family:serif;">
-              ${esc(company.name || (isVideo ? 'Geneva Horology Manufactory' : 'Vendôme Fine Jewelry'))}
+            <span style="font-size:1.2rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};font-family:serif;">
+              ${esc(brandName)}
             </span>
-            <span style="font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};font-weight:700;">
-              ${isVideo ? 'COSC Chronometers & Complications' : 'GIA Diamonds & Haute Joaillerie'}
+            <span style="font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:${theme.primary};font-weight:700;">
+              ${esc(brandTagline)}
             </span>
           </div>
         </a>
 
-        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:30px;">
-          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.home)}
-          </a>
-          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.catalog)}
-          </a>
-          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.about)}
-          </a>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};transition:color 0.2s;">
-            ${esc(ui.contact)}
-          </a>
+        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:28px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.home)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.catalog)}</a>
+          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.about)}</a>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.contact)}</a>
         </nav>
 
         <div style="display:flex;align-items:center;gap:16px;">
-          <div class="languages" style="display:flex;gap:8px;font-size:0.8rem;font-weight:700;">
-            ${ctx.languageLinks}
-          </div>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 22px;border-radius:9999px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:700;box-shadow:0 4px 14px ${theme.accentGlow};">
-            ${isZh ? '贵宾品鉴 / 定制' : 'Private VIP Inquiry'} ↗
+          <div class="languages" style="display:flex;gap:6px;">${ctx.languageLinks}</div>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 20px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
+            ${isZh ? '私洽与定制询价' : 'Private Sourcing'} ↗
           </a>
         </div>
       </div>
     </header>
   `;
 
-  // Footer
-  const footerHtml = `
-    <footer style="background:#ffffff;border-top:1px solid ${theme.cardBorder};color:${theme.text};padding:60px 0 30px;margin-top:auto;">
-      <div class="wrap" style="padding:0 24px;">
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;margin-bottom:40px;">
-          <div>
-            <div style="font-size:1.3rem;font-weight:900;margin-bottom:10px;color:${theme.text};font-family:serif;">
-              ${esc(company.name || (isVideo ? 'Geneva Horology Manufactory' : 'Vendôme Fine Jewelry'))}
-            </div>
-            <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.7;max-width:340px;margin:0 0 16px;">
-              ${esc(company.description || (isVideo ? 'Certified Swiss-calibre mechanical chronometers and grand complications crafted with microscopic precision.' : 'Haute Joaillerie salon adhering to GIA 4C diamond criteria, certified ethical gold, and centuries of Parisian prong-setting mastery.'))}
-            </p>
-            <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:700;">
-              ✦ ${isZh ? '金伯利进程道德开采 · GIA / COSC 认证' : 'Kimberley Process Compliant · GIA & COSC Certified'}
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${esc(ui.menu)}</div>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
-              <a href="${path('index.html')}" ${navAttrs('home')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.home)}</a>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.catalog)}</a>
-              <a href="${path('about/index.html')}" ${navAttrs('about')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.about)}</a>
-              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.contact)}</a>
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${isZh ? '奢品类目' : 'Collections'}</div>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;color:${theme.textMuted};">
-              <span>${isZh ? 'GIA 典藏单钻戒指' : 'Solitaire Diamond Rings'}</span>
-              <span>${isZh ? '瑞士陀飞轮复杂腕表' : 'Tourbillon Complications'}</span>
-              <span>${isZh ? '哥伦比亚木佐祖母绿' : 'Colombian Muzo Emeralds'}</span>
-              <span>${isZh ? '无烧缅甸鸽血红宝石' : 'Unheated Burmese Rubies'}</span>
-            </div>
-          </div>
-
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">${esc(ui.contact)}</div>
-            <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.7;">
-              <div><strong>Salon Email:</strong> <a href="mailto:${esc(company.email)}" style="color:${theme.primary};text-decoration:none;">${esc(company.email)}</a></div>
-              ${company.phone ? `<div><strong>Concierge:</strong> ${esc(company.phone)}</div>` : ''}
-              ${company.address ? `<div style="margin-top:8px;">${esc(company.address)}</div>` : ''}
-            </div>
-          </div>
-        </div>
-
-        <div style="padding-top:24px;border-top:1px solid #eef2f6;display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;color:${theme.textSub};">
-          <div>© ${new Date().getFullYear()} ${esc(company.name)}. ${esc(ui.rights)}.</div>
-          <div>${isZh ? '国际高级珠宝钟表联合会成员 · RJC 责任珠宝业委员会' : 'Responsible Jewellery Council (RJC) Certified'}</div>
-        </div>
-      </div>
-    </footer>
-  `;
-
   let mainHtml = '';
 
   if (page === 'home') {
-    const videoAsset = ctx.asset(draft.heroAssetId);
-    const posterAsset = ctx.asset(draft.posterAssetId) || '/templates/senseng/hero-bg.jpg';
-    const heroImg = (heroProduct as any).img || ctx.productMainImage(heroProduct as unknown as Product) || defaultMeta.img;
-
     if (isVideo) {
       // -------------------------------------------------------------
-      // TEMPLATE 4: jewelry-timeless-video (Swiss Horology Video Loop)
+      // TIMELESS VIDEO: Swiss Calibre Horology & Escapement Hero
       // -------------------------------------------------------------
       mainHtml = `
-        <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};">
-          <!-- 1. Swiss Horology Video Showcase with Crystal Frosted Glass -->
-          <section style="position:relative;min-height:90vh;display:flex;align-items:center;overflow:hidden;padding:80px 0;">
-            <video id="hero-video" autoplay muted loop playsinline poster="${esc(posterAsset)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.75;filter:brightness(0.95) saturate(1.1);z-index:1;" aria-hidden="true">
-              ${videoAsset ? `<source src="${esc(videoAsset)}">` : `<source src="https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-watchmaker-repairing-a-luxury-watch-42617-large.mp4" type="video/mp4">`}
-            </video>
-            <div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(248,250,252,0.94) 0%, rgba(248,250,252,0.72) 50%, rgba(248,250,252,0.42) 100%);z-index:2;"></div>
-
-            <div class="wrap" style="position:relative;z-index:3;width:100%;padding:0 24px;">
-              <div style="max-width:680px;background:${theme.glassBg};backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid ${theme.glassBorder};border-radius:24px;padding:48px;box-shadow:0 20px 50px -10px rgba(37,99,235,0.12);">
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:9999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
-                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${theme.primary};animation:wrPulse 2s infinite;"></span>
-                  ${isZh ? '瑞士独立制表工坊 · 天文台认证' : 'Swiss Haute Horlogerie Manufactory'}
-                </div>
-
-                <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;letter-spacing:-0.02em;font-family:serif;">
-                  ${esc(draft.copy[ctx.lang]?.headline || (isZh ? '微米机械律动 · 瑞士陀飞轮与大复杂功能腕表定制' : 'Mechanical Symphony: Swiss Tourbillon & Complications'))}
-                </h1>
-
-                <p style="font-size:1.05rem;line-height:1.65;color:${theme.textMuted};margin:0 0 28px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || (isZh ? '传承瑞士汝山谷二百年制表精髓，28,800次/小时精准摆频，日内瓦波纹与手工倒角打磨，为全球独立钟表品牌与私人藏家提供殿堂级机芯定制与整表OEM。' : 'Preserving two centuries of Vallée de Joux horological mastery. Equipped with 28,800 vph flying tourbillons, hand-anglage finishing, and COSC chronometer certification.'))}
-                </p>
-
-                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:32px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:12px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-                    ${isZh ? '探索复杂时计矩阵 ↗' : 'View Master Timepieces ↗'}
-                  </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:12px;background:#ffffff;color:${theme.primary};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:800;">
-                    ${isZh ? '预约机芯定制洽谈' : 'Movement CAD Consultation'}
-                  </a>
-                </div>
-
-                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid #e2e8f0;">
-                  <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;">28,800</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '高频游丝摆轮 (4Hz)' : 'High Frequency Oscillation'}</div>
-                  </div>
-                  <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;">COSC</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '瑞士官方天文台认证' : 'Chronometer Accuracy'}</div>
-                  </div>
-                  <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;">72 Hours</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '双发条盒动力储备' : 'Dual Barrel Power Reserve'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 2. Horological Complications Matrix -->
-          <section class="wrap" style="padding:70px 24px;">
-            <div style="text-align:center;max-width:700px;margin:0 auto 50px;">
-              <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:${theme.primary};text-transform:uppercase;">GRAND COMPLICATIONS</span>
-              <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:8px 0 14px;font-family:serif;">
-                ${isZh ? '三大殿堂级钟表复杂机械构造' : 'Three Master Horological Architectures'}
-              </h2>
-              <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
-                ${isZh ? '从悬浮陀飞轮抵消地心引力，到万年历精准计算闰年齿轮，每一枚机芯都是微观机械工程的极致成就。' : 'From flying tourbillon carriages to 122-year astronomical perpetual moonphase mechanisms.'}
-              </p>
-            </div>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;">
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);" class="wr-card-hover">
-                <div style="width:48px;height:48px;border-radius:12px;background:${theme.pillBg};color:${theme.primary};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;margin-bottom:20px;font-family:serif;">I</div>
-                <h3 style="font-size:1.2rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '60秒飞行陀飞轮框架' : '60-Second Flying Tourbillon'}</h3>
-                <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;">
-                  ${isZh ? '钛合金超轻框架仅重0.28克，每分钟完整旋转一周，彻底中和地球重力对摆轮游丝造成的走时误差。' : 'Ultralight titanium cage weighing only 0.28 grams, rotating once per minute to counteract earth gravitation.'}
-                </p>
-                <div style="font-size:0.8rem;font-weight:700;color:${theme.primary};">${isZh ? '无卡度可变惯性螺钉摆轮' : 'Free-Sprung Variable Inertia Balance'}</div>
-              </div>
-
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);" class="wr-card-hover">
-                <div style="width:48px;height:48px;border-radius:12px;background:${theme.pillBg};color:${theme.primary};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;margin-bottom:20px;font-family:serif;">II</div>
-                <h3 style="font-size:1.2rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '瞬跳天文万年历与恒久月相' : 'Perpetual Calendar Moonphase'}</h3>
-                <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;">
-                  ${isZh ? '精密微型齿轮系自动识别大小月及闰年29天，高精密砂金石盘面月相每122年仅产生一天微小误差。' : 'Astronomical gearing identifying leap years without manual intervention, accompanied by aventurine starry moonphase.'}
-                </p>
-                <div style="font-size:0.8rem;font-weight:700;color:${theme.primary};">${isZh ? '288个独立精密组件紧密咬合' : '288 Individually Micro-Machined Parts'}</div>
-              </div>
-
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);" class="wr-card-hover">
-                <div style="width:48px;height:48px;border-radius:12px;background:${theme.pillBg};color:${theme.primary};display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;margin-bottom:20px;font-family:serif;">III</div>
-                <h3 style="font-size:1.2rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '手工倒角打磨与日内瓦波纹' : 'Anglage & Côtes de Genève'}</h3>
-                <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;">
-                  ${isZh ? '资深制表大师在放大镜下手持龙胆木打磨出45°镜面内倒角，桥板呈现波光粼粼的平行日内瓦饰纹。' : 'Hand-polished 45° chamfered mirror edges using gentian wood pegs and parallel Côtes de Genève stripes.'}
-                </p>
-                <div style="font-size:0.8rem;font-weight:700;color:${theme.primary};">${isZh ? '符合日内瓦印记 Poinçon de Genève 严苛标准' : 'Meets Poinçon de Genève Standards'}</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 3. Timepiece Showcase Grid -->
-          <section class="wrap" style="padding:20px 24px 80px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;">
+        <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
+          <section style="position:relative;overflow:hidden;padding:80px 0 100px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
               <div>
-                <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.1em;color:${theme.primary};text-transform:uppercase;">CHRONOMETER SELECTION</span>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;font-family:serif;">
-                  ${isZh ? '瑞士微型机械腕表矩阵' : 'Master Horology Portfolio'}
-                </h2>
-              </div>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.primary};text-decoration:none;font-weight:800;font-size:0.95rem;">
-                ${isZh ? '浏览全系 8 款时计 ↗' : 'View Full Catalog ↗'}
-              </a>
-            </div>
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;font-family:serif;">
+                  ✦ ${isZh ? '瑞士天文台认证机械机芯工坊' : 'Swiss Haute Horlogerie Manufacture'}
+                </div>
+                <h1 style="font-size:clamp(2.2rem, 4.5vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.02em;margin:0 0 18px;font-family:Georgia, serif;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.headline, 'Mastering Gravity: 28,800 VPH Calibres & Flying Tourbillons', '驾驭重力 · 28,800次/时瑞士高频陀飞轮机械机芯', isZh))}
+                </h1>
+                <p style="font-size:1.1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 30px;max-width:620px;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.subtitle, 'Precision engineered mechanical calibres featuring silicon hairsprings, 72-hour power reserves, and hand-chamfered Côtes de Genève bridges. Tested across 5 positions for official COSC chronometer certification.', '搭载自主研发瑞士机械机芯与单晶硅游丝，拥有 72 小时动力储存与日内瓦波纹手工倒角。经 5 个方位与 3 种温度严苛检测，获瑞士官方天文台（COSC）认证，平均日误差仅 -4/+6 秒。', isZh))}
+                </p>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:26px;">
-              ${products.slice(0, 4).map((item) => {
-                const meta = (item as ThemedJewelryItem).metalStoneSpec ? (item as ThemedJewelryItem) : defaultMeta;
-                const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || defaultMeta.img;
-                return `
-                  <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(37,99,235,0.06);" class="wr-card-hover">
-                    <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#f0f4f8;">
-                      <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
-                      <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                        ${esc(meta.badge)}
-                      </span>
-                    </div>
-                    <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
-                      <h3 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
-                        ${esc(item.name)}
-                      </h3>
-                      <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
-                        ${esc(item.desc || '')}
-                      </p>
-                      <div style="padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;">
-                        <strong>${isZh ? '机芯规格' : 'Calibre'}:</strong> ${esc(meta.certMovementSpec)}
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    ${isZh ? '探索传世机械腕表 ↗' : 'View Timepiece Catalog ↗'}
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:8px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
+                    ${isZh ? '索取分销政策与微品牌定制' : 'Inquire Distribution Terms'}
+                  </a>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid ${theme.cardBorder};">
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">28,800 vph</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '高频无卡度游丝摆轮' : '4Hz Beat Frequency'}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">-4/+6 s/d</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? 'COSC 瑞士天文台认证' : 'COSC Daily Precision'}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">72 Hours</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '双发条盒长动力储备' : 'Power Reserve'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Watch Calibre Video Card -->
+              <div style="position:relative;">
+                <div style="border-radius:20px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 20px 48px rgba(0,0,0,0.06);">
+                  <div style="position:relative;padding-top:72%;background:#0f172a;overflow:hidden;">
+                    <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.85;">
+                      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                    </video>
+                    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 50%);"></div>
+                    <div style="position:absolute;bottom:20px;left:20px;right:20px;color:#ffffff;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                        <span style="font-size:0.75rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#fcd34d;background:rgba(180,83,9,0.3);padding:3px 8px;border-radius:4px;">
+                          Escapement Micro-Cadence
+                        </span>
+                        <span style="font-size:0.75rem;font-family:monospace;color:rgba(255,255,255,0.8);">4Hz / 28,800 VPH</span>
                       </div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
-                        <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
-                          ${esc(ui.details)} ↗
-                        </a>
-                      </div>
+                      <div style="font-size:1.05rem;font-weight:800;font-family:serif;line-height:1.3;">Flying Tourbillon Carriage</div>
+                      <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:2px;">60-second rotation neutralizing positional gravity errors on the balance.</div>
                     </div>
-                  </article>
-                `;
-              }).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3 Horology Pillars -->
+          <section style="padding:80px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;max-width:680px;margin:0 auto 50px;">
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;font-family:serif;">
+                  HAUTE HORLOGERIE PRECISION ENGINEERING
+                </div>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 12px;font-family:Georgia, serif;">
+                  ${isZh ? '瑞士高级制表的三大机芯工法' : 'Three Pillars of Manufacture Horology'}
+                </h2>
+                <p style="font-size:0.98rem;color:${theme.textMuted};line-height:1.7;">
+                  ${isZh ? '将微米级机械精密升华为恒久流转的艺术结晶，经受住数十年时间的无情审视。' : 'Merging sub-micron horological tolerance with generational hand-finishing.'}
+                </p>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:28px;">
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:30px;" class="wr-card-hover">
+                  <div style="font-size:1.8rem;color:${theme.primary};font-family:serif;font-weight:900;margin-bottom:14px;">I.</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? 'CNC慢走丝线切割夹板' : 'Wire EDM & CNC Calibres'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.7;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '主夹板与齿轮桥全部经慢走丝电火花与五轴CNC精密切割，红宝石轴承公差控制在0.002毫米之内。' : 'Mainplates wire-eroded to 0.002mm tolerances for frictionless gear train meshing.'}
+                  </p>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:30px;" class="wr-card-hover">
+                  <div style="font-size:1.8rem;color:${theme.primary};font-family:serif;font-weight:900;margin-bottom:14px;">II.</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '手工日内瓦波纹与倒角' : 'Anglage & Côtes de Genève'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.7;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '制表师以金刚砂与龙胆木条纯手工修磨边缘45度镜面倒角，在微观光影下呈现璀璨折射。' : 'Hand-bevelled 45° chamfers polished with gentian wood sticks for ethereal specular highlights.'}
+                  </p>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:30px;" class="wr-card-hover">
+                  <div style="font-size:1.8rem;color:${theme.primary};font-family:serif;font-weight:900;margin-bottom:14px;">III.</div>
+                  <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '15天五方位全天候温控测试' : '15-Day COSC Testing'}</h3>
+                  <p style="font-size:0.88rem;line-height:1.7;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '分别在8°C、23°C、38°C三种温度以及表冠朝上朝下等5个方位连续运行测试，方能出厂。' : 'Tested continuously across 3 temperatures and 5 positions to guarantee chronometer precision.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Featured Timepieces Grid -->
+          <section style="padding:80px 0;">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+                <div>
+                  <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:6px;font-family:serif;">
+                    MANUFACTURE TIMEPIECES
+                  </div>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.2rem);font-weight:900;color:${theme.text};margin:0;font-family:Georgia, serif;">
+                    ${isZh ? '复杂功能传世机械腕表' : 'Grand Complication Chronometers'}
+                  </h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-weight:800;font-size:0.92rem;color:${theme.primary};font-family:serif;">
+                  ${isZh ? '浏览全系表款目录 ↗' : 'View Full Catalog ↗'}
+                </a>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
+                ${products.slice(0, 4).map((item, idx) => {
+                  const meta = (item as ThemedJewelryItem).metalStoneSpec ? (item as ThemedJewelryItem) : JEWELRY_DEFAULT_PRODUCTS[idx % JEWELRY_DEFAULT_PRODUCTS.length]!;
+                  const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
+                  return `
+                    <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(180,83,9,0.04);" class="wr-card-hover">
+                      <div style="position:relative;width:100%;padding-top:74%;overflow:hidden;background:#f8fafc;">
+                        <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                        <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:4px;font-size:0.72rem;font-weight:800;background:rgba(255,255,255,0.95);color:${theme.text};border:1px solid ${theme.cardBorder};font-family:serif;">
+                          ${esc(meta.badge)}
+                        </span>
+                      </div>
+                      <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
+                        <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;font-family:serif;">
+                          ${esc(meta.categoryNameEn)}
+                        </div>
+                        <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
+                          ${esc(item.name)}
+                        </h3>
+                        <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;flex:1;">
+                          ${esc(item.desc || '')}
+                        </p>
+                        <div style="background:#f8fafc;padding:10px 12px;border-radius:6px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;border:1px solid ${theme.cardBorder};">
+                          <strong>${isZh ? '机芯规格' : 'Calibre Spec'}:</strong> ${esc(meta.certMovementSpec)}
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                          <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
+                          <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                            ${esc(ui.details)} ↗
+                          </a>
+                        </div>
+                      </div>
+                    </article>
+                  `;
+                }).join('')}
+              </div>
             </div>
           </section>
         </main>
       `;
     } else {
       // -------------------------------------------------------------
-      // TEMPLATE 3: jewelry-luxury-banner (Parisian Haute Joaillerie Banner)
+      // LUXURY BANNER: Haute Joaillerie Lookbook & 4Cs Matrix Hero
       // -------------------------------------------------------------
       mainHtml = `
-        <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};">
-          <!-- 1. Haute Joaillerie Hero Showcase with Parisian Silk Cream Banner -->
-          <section class="wrap" style="padding:60px 24px 80px;">
-            <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+        <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
+          <section style="position:relative;overflow:hidden;padding:90px 0 110px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.2fr 0.8fr;gap:56px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:9999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;">
-                  ✦ ${isZh ? '巴黎旺多姆广场高级珠宝工坊传承' : 'Place Vendôme Haute Joaillerie Tradition'}
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;font-family:serif;">
+                  ✦ ${isZh ? '巴黎高级珠宝典藏与宝石学沙龙' : 'Haute Joaillerie & High Fine Jewelry Atelier'}
                 </div>
-
-                <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.4rem);font-weight:900;line-height:1.12;color:${theme.text};margin:0 0 18px;font-family:serif;letter-spacing:-0.02em;">
-                  ${esc(draft.copy[ctx.lang]?.headline || (isZh ? '璀璨典藏 · 纯手工高定彩色宝石与 GIA 奢钻工坊' : 'Pure Brilliance: GIA Certified Fine Diamonds & Rare Gems'))}
+                <h1 style="font-size:clamp(2.4rem, 5vw, 3.8rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.02em;margin:0 0 18px;font-family:Georgia, serif;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.headline, 'Optical Perfection: 18K Solid Gold & Triple Ex Natural Diamonds', '稀世瑰宝 · 18K金手工微镶与GIA认证天然彩宝典藏', isZh))}
                 </h1>
-
-                <p style="font-size:1.05rem;line-height:1.7;color:${theme.textMuted};margin:0 0 32px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || (isZh ? '每一颗主钻均由 GIA 宝石学家严苛精选，木佐祖母绿与缅甸无烧红宝经苏黎世与古柏林权威背书。资深法式爪镶工匠手工微镶，只为呈现无可挑剔的火彩与传世价值。' : 'Curated to strict GIA 4C criteria with Gübelin certified colored gemstones. Hand-set in ethical 18K gold and platinum by master Parisian pavé jewelers.'))}
+                <p style="font-size:1.12rem;line-height:1.75;color:${theme.textMuted};margin:0 0 32px;max-width:640px;">
+                  ${esc(sanitizeCopy(draft.copy[ctx.lang]?.subtitle, 'Hand-selected conflict-free natural diamonds cut to Triple Excellent mathematical ratios. Crafted in solid 18K yellow, white, and rose gold with microscopic prong settings for peerless optical brilliance.', '严格遵循金伯利进程道德开采公约，精选D-F无色极白与3EX切工天然钻石。高级珠宝工匠在 40 倍显微镜下手工微镶爪镶，以 18K 纯金与铂金 950 雕琢经得起世代传承的流光溢彩。', isZh))}
                 </p>
 
-                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-                    ${isZh ? '鉴赏高定珠宝系列' : 'View Haute Joaillerie'} ↗
+                <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:40px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    ${isZh ? '品鉴高级珠宝典藏' : 'Explore Haute Joaillerie'} ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 28px;border-radius:8px;background:#ffffff;color:${theme.primary};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:800;">
-                    ${isZh ? '预约高级珠宝专家咨询' : 'Book Gemologist Consultation'}
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 28px;border-radius:6px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
+                    ${isZh ? '预约高级珠宝定制洽谈' : 'Request Private Consultation'}
                   </a>
                 </div>
 
-                <div style="display:flex;gap:32px;padding-top:24px;border-top:1px solid #efe8dd;">
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;padding-top:28px;border-top:1px solid ${theme.cardBorder};">
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;">D / FL</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '最高级别纯净无瑕' : 'Color & Clarity Benchmark'}</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">GIA 3EX</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '全反射极致切工比例' : 'Triple Excellent Cut'}</div>
                   </div>
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;">Triple EX</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '完美光学切工对称' : 'Cut, Polish & Symmetry'}</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">18K Gold</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? 'Au750特级真金倒模' : 'Solid Gold (750)'}</div>
                   </div>
                   <div>
-                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};font-family:serif;">100% Conflict-Free</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '金伯利进程道德源头' : 'Ethical Provenance'}</div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};font-family:serif;">40x Micro</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${isZh ? '显微镜下手工微镶爪' : 'Micro-Pavé Precision'}</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Hero Image Showcase with Crystal Card -->
-              <div style="position:relative;" class="wr-card-hover">
-                <div style="position:relative;border-radius:24px;overflow:hidden;box-shadow:0 25px 60px -15px rgba(197,155,39,0.18);border:1px solid ${theme.cardBorder};background:#fbf8f4;">
-                  <img src="${esc(heroImg)}" alt="${esc(heroProduct.name)}" style="width:100%;height:520px;object-fit:cover;display:block;">
-                </div>
-                <div style="position:absolute;bottom:24px;left:24px;right:24px;background:${theme.glassBg};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid ${theme.glassBorder};border-radius:14px;padding:18px 22px;box-shadow:0 12px 30px rgba(0,0,0,0.06);">
-                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">${esc(defaultMeta.badge)}</div>
-                      <div style="font-size:1.05rem;font-weight:900;color:${theme.text};margin-top:2px;font-family:serif;">${esc(heroProduct.name)}</div>
+              <!-- Editorial Diamond Display Card -->
+              <div style="position:relative;">
+                <div style="border-radius:14px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 24px 60px rgba(197,155,39,0.08);padding:14px;">
+                  <div style="border-radius:10px;overflow:hidden;position:relative;padding-top:105%;">
+                    <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+                    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(24,24,27,0.75) 0%, transparent 50%);"></div>
+                    <div style="position:absolute;bottom:20px;left:20px;right:20px;color:#ffffff;">
+                      <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#fde047;margin-bottom:4px;font-family:serif;">
+                        HAUTE JOAILLERIE MASTERPIECE
+                      </div>
+                      <div style="font-size:1.15rem;font-weight:900;font-family:serif;line-height:1.3;">
+                        ${esc(heroProduct.name)}
+                      </div>
+                      <div style="font-size:0.8rem;color:rgba(255,255,255,0.8);margin-top:4px;">
+                        ${esc(heroProduct.metalStoneSpec)}
+                      </div>
                     </div>
-                    <a href="${path(`products/${heroProduct.id}/index.html`)}" ${navAttrs('detail', heroProduct.id)} style="text-decoration:none;padding:7px 16px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.8rem;font-weight:700;">
-                      ${isZh ? '品鉴微雕' : 'Inspect'} ↗
-                    </a>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- 2. Gemological 4C Excellence Matrix -->
-          <section class="wrap" style="padding:60px 24px 70px;">
-            <div style="text-align:center;max-width:680px;margin:0 auto 48px;">
-              <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;color:${theme.primary};text-transform:uppercase;">THE GIA 4C STANDARDS</span>
-              <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:8px 0 12px;font-family:serif;">
-                ${isZh ? '严苛挑选万分之一的璀璨火彩' : 'The Four Pillars of Flawless Diamond Grading'}
-              </h2>
-              <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
-                ${isZh ? '由美国宝石研究院（GIA）标准评定，每一枚主石均具备不可伪造的专属激光腰码与全套光学证书。' : 'Every diamond is microscopically laser-inscribed and accompanied by an official GIA grading dossier.'}
-              </p>
-            </div>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:24px;">
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:12px;font-family:serif;">CUT / 切工</div>
-                <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? '3EX 极致对称与全反射' : 'Triple Excellent Symmetry'}</h3>
-                <p style="font-size:0.86rem;line-height:1.65;color:${theme.textMuted};margin:0;">
-                  ${isZh ? '严格遵循57或58个理想切面比例，光线进入后于底面发生100%全反射，激发出震撼摄魂的七彩火彩。' : 'Cut to ideal 57-facet mathematical ratios ensuring 100% total internal reflection and scintillation.'}
-                </p>
-              </div>
-
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:12px;font-family:serif;">COLOR / 色泽</div>
-                <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? 'D-E-F 纯净极白罕见纯度' : 'Colorless D to F Pure Grade'}</h3>
-                <p style="font-size:0.86rem;line-height:1.65;color:${theme.textMuted};margin:0;">
-                  ${isZh ? '仅选用完全无色透明的顶级毛坯原石，宛如冰川融水般清澈纯粹，杜绝任何肉眼可见微黄杂色。' : 'Exclusively sourcing flawless colorless rough stones free from nitrogen impurities, pure as glacial ice.'}
-                </p>
-              </div>
-
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:12px;font-family:serif;">CLARITY / 净度</div>
-                <h3 style="font-size:1.15rem;font-weight:800;color:${theme.text};margin:0 0 10px;font-family:serif;">${isZh ? 'FL-VVS 显微镜级晶莹剔透' : 'Flawless to VVS Purity'}</h3>
-                <p style="font-size:0.86rem;line-height:1.65;color:${theme.textMuted};margin:0;">
-                  ${isZh ? '在10倍专业宝石放大镜下观察，内部完全无瑕或仅有极细微天然结晶，透射出纯净无瑕的尊贵气韵。' : 'Immaculate under 10x magnification with zero visible inclusions, preserving optical transmission.'}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <!-- 3. Fine Jewelry Vitrine Grid -->
-          <section class="wrap" style="padding:20px 24px 80px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;">
-              <div>
-                <span style="font-size:0.8rem;font-weight:800;letter-spacing:0.1em;color:${theme.primary};text-transform:uppercase;">THE VITRINE</span>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;font-family:serif;">
-                  ${isZh ? '高级珠宝沙龙典藏' : 'Haute Joaillerie Salon Collection'}
+          <!-- 4Cs Diamond Optical Brilliance Matrix -->
+          <section style="padding:80px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;max-width:680px;margin:0 auto 50px;">
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;font-family:serif;">
+                  GIA GEMOLOGICAL BRILLIANCE STANDARDS
+                </div>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 12px;font-family:Georgia, serif;">
+                  ${isZh ? '典藏天然钻石的 4C 光学评定法则' : 'The 4Cs Optical Brilliance Matrix'}
                 </h2>
+                <p style="font-size:0.98rem;color:${theme.textMuted};line-height:1.7;">
+                  ${isZh ? '由美国宝石研究院（GIA）标准评定，每一枚主石均具备专属激光腰码与全套光学证书。' : 'Evaluated according to strict GIA grading standards with microscopic laser-inscribed girdle registries.'}
+                </p>
               </div>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.primary};text-decoration:none;font-weight:800;font-size:0.95rem;">
-                ${isZh ? '浏览全部 8 款典藏 ↗' : 'View Full Catalog ↗'}
-              </a>
-            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:26px;">
-              ${products.slice(0, 4).map((item) => {
-                const meta = (item as ThemedJewelryItem).metalStoneSpec ? (item as ThemedJewelryItem) : defaultMeta;
-                const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || defaultMeta.img;
-                return `
-                  <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(197,155,39,0.06);" class="wr-card-hover">
-                    <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#fbf8f4;">
-                      <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
-                      <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                        ${esc(meta.badge)}
-                      </span>
-                    </div>
-                    <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
-                      <h3 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
-                        ${esc(item.name)}
-                      </h3>
-                      <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
-                        ${esc(item.desc || '')}
-                      </p>
-                      <div style="padding:10px 12px;background:#fdfcf9;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;">
-                        <strong>${isZh ? '材质规格' : 'Specs'}:</strong> ${esc(meta.metalStoneSpec)}
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:24px;">
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:26px;" class="wr-card-hover">
+                  <div style="font-size:1.2rem;font-weight:900;color:${theme.primary};margin-bottom:8px;font-family:serif;">${isZh ? 'CUT / 切工' : 'CUT'}</div>
+                  <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;font-family:serif;">${isZh ? '3EX 极致对称' : 'Triple Excellent'}</h3>
+                  <p style="font-size:0.84rem;line-height:1.65;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '遵循57或58个理想切面比例，光线进入后于底面发生100%全反射，激发出震撼火彩。' : 'Cut to ideal 57-facet mathematical ratios ensuring 100% total internal reflection and scintillation.'}
+                  </p>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:26px;" class="wr-card-hover">
+                  <div style="font-size:1.2rem;font-weight:900;color:${theme.primary};margin-bottom:8px;font-family:serif;">${isZh ? 'COLOR / 色泽' : 'COLOR'}</div>
+                  <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;font-family:serif;">${isZh ? 'D-E-F 纯净极白' : 'Colorless D to F'}</h3>
+                  <p style="font-size:0.84rem;line-height:1.65;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '仅选用完全无色透明的顶级毛坯原石，宛如冰川融水般清澈纯粹，杜绝任何杂色。' : 'Exclusively sourcing flawless colorless rough stones free from nitrogen impurities, pure as glacial ice.'}
+                  </p>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:26px;" class="wr-card-hover">
+                  <div style="font-size:1.2rem;font-weight:900;color:${theme.primary};margin-bottom:8px;font-family:serif;">${isZh ? 'CLARITY / 净度' : 'CLARITY'}</div>
+                  <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;font-family:serif;">${isZh ? 'FL - VVS1 无瑕级' : 'Flawless to VVS1'}</h3>
+                  <p style="font-size:0.84rem;line-height:1.65;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '在专业10倍宝石放大镜下观察几乎无任何可见包体，光线通行无阻，通透如水。' : 'Microscopically pure under 10x gemological loupes, allowing photons to pass with zero optical distortion.'}
+                  </p>
+                </div>
+
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:26px;" class="wr-card-hover">
+                  <div style="font-size:1.2rem;font-weight:900;color:${theme.primary};margin-bottom:8px;font-family:serif;">${isZh ? 'CARAT / 克拉' : 'CARAT'}</div>
+                  <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;font-family:serif;">${isZh ? '精准严苛克拉重' : 'Certified Carat Mass'}</h3>
+                  <p style="font-size:0.84rem;line-height:1.65;color:${theme.textMuted};margin:0;">
+                    ${isZh ? '每克拉分为100分，采用瑞士高精度电子分析天平测量至小数点后四位，确保数据真实。' : 'Calibrated on Swiss analytical micro-balances to four decimal places, accompanied by GIA weight registries.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Featured High Jewelry Pieces -->
+          <section style="padding:80px 0;">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+                <div>
+                  <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:6px;font-family:serif;">
+                    HAUTE JOAILLERIE SHOWCASE
+                  </div>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.2rem);font-weight:900;color:${theme.text};margin:0;font-family:Georgia, serif;">
+                    ${isZh ? '传世瑰宝典藏作品展' : 'Masterpiece Fine Jewelry Gallery'}
+                  </h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-weight:800;font-size:0.92rem;color:${theme.primary};font-family:serif;">
+                  ${isZh ? '浏览全系 8 款珠宝 ↗' : 'View Full Catalog ↗'}
+                </a>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
+                ${products.slice(0, 4).map((item, idx) => {
+                  const meta = (item as ThemedJewelryItem).metalStoneSpec ? (item as ThemedJewelryItem) : JEWELRY_DEFAULT_PRODUCTS[idx % JEWELRY_DEFAULT_PRODUCTS.length]!;
+                  const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
+                  return `
+                    <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(197,155,39,0.04);" class="wr-card-hover">
+                      <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:#fffdfa;">
+                        <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
+                        <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:4px;font-size:0.72rem;font-weight:800;background:rgba(255,255,255,0.95);color:${theme.text};border:1px solid ${theme.cardBorder};font-family:serif;">
+                          ${esc(meta.badge)}
+                        </span>
                       </div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
-                        <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
-                          ${esc(ui.details)} ↗
-                        </a>
+                      <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
+                        <h3 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
+                          ${esc(item.name)}
+                        </h3>
+                        <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;flex:1;">
+                          ${esc(item.desc || '')}
+                        </p>
+                        <div style="padding:10px 12px;background:#fffdfa;border-radius:6px;font-size:0.76rem;color:${theme.textSub};margin-bottom:14px;border:1px solid ${theme.cardBorder};">
+                          <strong>${isZh ? '材质规格' : 'Material Spec'}:</strong> ${esc(meta.metalStoneSpec)}
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                          <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
+                          <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                            ${esc(ui.details)} ↗
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                `;
-              }).join('')}
+                    </article>
+                  `;
+                }).join('')}
+              </div>
             </div>
           </section>
         </main>
       `;
     }
   } else if (page === 'catalog') {
-    // -------------------------------------------------------------
-    // CATALOG PAGE: High Contrast Luxury Grid
-    // -------------------------------------------------------------
     mainHtml = `
       <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
         <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:40px;">
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;">
-              ${esc(company.name || (isVideo ? 'Geneva Horology Manufactory' : 'Vendôme Fine Jewelry'))}
+          <div style="margin-bottom:40px;border-bottom:1px solid ${theme.cardBorder};padding-bottom:28px;">
+            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;font-family:serif;">
+              ${isVideo ? 'MANUFACTURE HORLOGÈRE ARCHIVES' : 'HAUTE JOAILLERIE SALON ARCHIVES'}
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;font-family:serif;">
+            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;font-family:Georgia, serif;">
               ${esc(ui.catalog)}
             </h1>
-            <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:680px;">
-              ${isZh ? (isVideo ? '探索瑞士微型机械腕表矩阵，涵盖飞轮陀飞轮、万年历月相、双时区镂空及超薄正装腕表，支持私人定制与高端品牌OEM。' : '鉴赏旺多姆沙龙高级珠宝全系作品，涵盖GIA典藏单钻戒、哥伦比亚木佐祖母绿耳坠、缅甸无烧鸽血红手链与南洋金珠项链。') : (isVideo ? 'Explore Swiss-engineered horological complications, tourbillons, and precision chronometer timepieces.' : 'Browse our high jewelry collection featuring GIA triple-ex diamonds, unheated Burmese rubies, and Colombian emeralds.')}
+            <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:700px;line-height:1.7;">
+              ${isZh ? (isVideo ? '探索瑞士原装陀飞轮、万年历月相、双时区镂空飞行员腕表与超薄微型摆陀正装表，支持小批量独立制表品牌私订。' : '品鉴18K金GIA椭圆钻戒、哥伦比亚木佐祖母绿耳坠、天然无烧鸽血红宝石手链与南洋金珠项链，支持尊享高级珠宝开模与原产地证书随货交付。') : (isVideo ? 'Browse our Swiss horology collection featuring flying tourbillons, perpetual calendars, and skeletonized GMT calibres.' : 'Explore our Haute Joaillerie collection featuring GIA certified natural diamonds, Colombian emeralds, and 18K solid gold creations.')}
             </p>
           </div>
 
@@ -670,30 +644,30 @@ export function renderJewelryWatchesTemplate(ctx: ThemeContext, isVideo: boolean
               const meta = (item as ThemedJewelryItem).metalStoneSpec ? (item as ThemedJewelryItem) : JEWELRY_DEFAULT_PRODUCTS[idx % JEWELRY_DEFAULT_PRODUCTS.length]!;
               const imgSrc = (item as any).img || ctx.productMainImage(item as unknown as Product) || meta.img;
               return `
-                <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.04);" class="wr-card-hover">
-                  <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:${isVideo ? '#f0f4f8' : '#fbf8f4'};">
+                <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,0.03);" class="wr-card-hover">
+                  <div style="position:relative;width:100%;padding-top:76%;overflow:hidden;background:${isVideo ? '#f8fafc' : '#fffdfa'};">
                     <img src="${esc(imgSrc)}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" loading="lazy">
-                    <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                    <span style="position:absolute;top:12px;left:12px;padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:800;background:rgba(255,255,255,0.95);color:${theme.text};border:1px solid ${theme.cardBorder};font-family:serif;">
                       ${esc(meta.badge)}
                     </span>
                   </div>
                   <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
-                    <div style="font-size:0.74rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;">
+                    <div style="font-size:0.74rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;font-family:serif;">
                       ${esc(meta.categoryNameEn)}
                     </div>
-                    <h2 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:serif;">
+                    <h2 style="font-size:1.1rem;font-weight:800;color:${theme.text};line-height:1.35;margin:0 0 8px;font-family:Georgia, serif;">
                       ${esc(item.name)}
                     </h2>
-                    <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;margin:0 0 16px;flex:1;">
+                    <p style="font-size:0.86rem;color:${theme.textMuted};line-height:1.65;margin:0 0 16px;flex:1;">
                       ${esc(item.desc || '')}
                     </p>
-                    <div style="background:${isVideo ? '#f8fafc' : '#fdfcf9'};padding:10px 12px;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:16px;">
-                      <div><strong>${isZh ? '材质/贵金属' : 'Metals & Gems'}:</strong> ${esc(meta.metalStoneSpec)}</div>
-                      <div style="margin-top:4px;"><strong>${isZh ? '认证/机芯' : 'Certification/Calibre'}:</strong> ${esc(meta.certMovementSpec)}</div>
+                    <div style="background:${isVideo ? '#f8fafc' : '#fffdfa'};padding:12px;border-radius:8px;font-size:0.76rem;color:${theme.textSub};margin-bottom:16px;border:1px solid ${theme.cardBorder};">
+                      <div><strong>${isZh ? '材质参数' : 'Material Spec'}:</strong> ${esc(meta.metalStoneSpec)}</div>
+                      <div style="margin-top:4px;"><strong>${isZh ? '认证/机芯' : 'Movement / Cert'}:</strong> ${esc(meta.certMovementSpec)}</div>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                       <span style="font-size:0.8rem;font-weight:700;color:${theme.textMuted};">${esc(meta.moq)}</span>
-                      <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
+                      <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="text-decoration:none;padding:8px 18px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.82rem;font-weight:700;">
                         ${esc(ui.details)} ↗
                       </a>
                     </div>
@@ -706,16 +680,13 @@ export function renderJewelryWatchesTemplate(ctx: ThemeContext, isVideo: boolean
       </main>
     `;
   } else if (page === 'detail') {
-    // -------------------------------------------------------------
-    // DETAIL PAGE: Rich Product Specs with id="wr-detail-main-img"
-    // -------------------------------------------------------------
     const meta = (selectedProduct as unknown as ThemedJewelryItem).metalStoneSpec ? (selectedProduct as unknown as ThemedJewelryItem) : defaultMeta;
     const imgSrc = ctx.productMainImage(selectedProduct as Product) || (selectedProduct as any).img || defaultMeta.img;
 
     mainHtml = `
       <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 100px;">
         <div class="wrap" style="padding:0 24px;">
-          <nav aria-label="Breadcrumb" style="font-size:0.85rem;color:${theme.textSub};margin-bottom:30px;">
+          <nav aria-label="Breadcrumb" style="font-size:0.85rem;color:${theme.textSub};margin-bottom:30px;font-family:serif;">
             <a href="${path('index.html')}" ${navAttrs('home')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.home)}</a>
             <span style="margin:0 8px;">/</span>
             <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:${theme.textMuted};text-decoration:none;">${esc(ui.catalog)}</a>
@@ -723,89 +694,74 @@ export function renderJewelryWatchesTemplate(ctx: ThemeContext, isVideo: boolean
             <span style="color:${theme.text};font-weight:700;">${esc(selectedProduct.name)}</span>
           </nav>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;margin-bottom:70px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-bottom:70px;">
             <div>
-              <div style="border-radius:20px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 12px 36px rgba(0,0,0,0.06);position:relative;">
-                <img id="wr-detail-main-img" src="${esc(imgSrc)}" alt="${esc(selectedProduct.name)}" style="width:100%;height:auto;max-height:560px;object-fit:cover;display:block;">
+              <div style="border-radius:16px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 12px 36px rgba(0,0,0,0.05);position:relative;">
+                <img id="wr-detail-main-img" src="${esc(imgSrc)}" alt="${esc(selectedProduct.name)}" style="width:100%;height:auto;max-height:540px;object-fit:cover;display:block;">
               </div>
             </div>
 
             <div>
-              <div style="display:inline-block;padding:5px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                ${esc(meta.badge || (isVideo ? 'COSC Chronometer' : 'Haute Joaillerie'))}
+              <div style="display:inline-block;padding:5px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;font-family:serif;">
+                ${esc(meta.badge || (isVideo ? 'Swiss Chronometer Spec' : 'GIA High Jewelry'))}
               </div>
 
-              <h1 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 16px;font-family:serif;">
+              <h1 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 16px;font-family:Georgia, serif;">
                 ${esc(selectedProduct.name)}
               </h1>
 
               <p style="font-size:1.02rem;line-height:1.7;color:${theme.textMuted};margin:0 0 24px;">
-                ${esc((selectedProduct as any).desc || selectedProduct.description || defaultMeta.desc)}
+                ${esc(sanitizeCopy((selectedProduct as any).desc || selectedProduct.description, meta.desc, meta.desc, isZh))}
               </p>
 
-              <!-- Gemological / Horological Specifications Grid -->
               <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-                <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:${theme.primary};letter-spacing:0.06em;margin-bottom:12px;">
-                  ${isZh ? '高级珠宝宝石与精密机芯出厂参数' : 'Gemological & Movement Technical Matrix'}
+                <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:${theme.primary};letter-spacing:0.06em;margin-bottom:12px;font-family:serif;">
+                  ${isZh ? (isVideo ? '机芯参数与复杂功能规格' : '贵金属材质与宝石学参数') : (isVideo ? 'Calibre Architecture & Complication Specs' : 'Gemological & Precious Metal Specs')}
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.86rem;">
                   <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '贵金属与主石用料' : 'Metals & Gemstones'}</span>
+                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '贵金属/表壳' : 'Metal / Case'}</span>
                     <strong style="color:${theme.text};">${esc(meta.metalStoneSpec)}</strong>
                   </div>
                   <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '宝石证书 / 认证机芯' : 'Certification / Movement'}</span>
+                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '机芯/宝石证书' : 'Calibre / Gem Cert'}</span>
                     <strong style="color:${theme.text};">${esc(meta.certMovementSpec)}</strong>
                   </div>
                   <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '工匠手工微镶打磨细节' : 'Artisanal Craftsmanship'}</span>
+                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '镶嵌/打磨工艺' : 'Setting / Finish'}</span>
                     <strong style="color:${theme.text};">${esc(meta.craftsmanshipDetail)}</strong>
                   </div>
                   <div>
-                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '起订量 / 高定周期' : 'MOQ & Production Lead Time'}</span>
-                    <strong style="color:${theme.primary};">${esc(meta.moq)}</strong>
+                    <span style="color:${theme.textSub};display:block;font-size:0.75rem;">${isZh ? '定制起订量' : 'Production MOQ'}</span>
+                    <strong style="color:${theme.text};">${esc(meta.moq)}</strong>
                   </div>
                 </div>
               </div>
 
               <div style="display:flex;gap:16px;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(selectedProduct.id))}" ${navAttrs('contact', selectedProduct.id)} style="text-decoration:none;padding:15px 32px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};flex:1;text-align:center;">
-                  ${isZh ? '发起贵宾定制意向 / 洽谈' : 'Inquire for Bespoke Commission'} ↗
-                </a>
-                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 24px;border-radius:10px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:700;">
-                  ← ${esc(ui.back)}
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                  ${isZh ? '索取证书副本与高保真样件' : 'Request Dossier & Pricing'} ↗
                 </a>
               </div>
             </div>
           </div>
-
-          <!-- Related Products -->
-          <section style="padding-top:40px;border-top:1px solid #e2e8f0;">
-            <h2 style="font-size:1.6rem;font-weight:900;color:${theme.text};margin:0 0 24px;font-family:serif;">${esc(ui.related)}</h2>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:24px;">
-              ${products.filter((p) => p.id !== selectedProduct.id).slice(0, 3).map((item) => `
-                <article style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,0.03);" class="wr-card-hover">
-                  <div style="position:relative;width:100%;padding-top:70%;overflow:hidden;border-radius:10px;margin-bottom:12px;background:#f8fafc;">
-                    <img src="${esc((item as any).img || ctx.productMainImage(item as unknown as Product))}" alt="${esc(item.name)}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
-                  </div>
-                  <h3 style="font-size:0.96rem;font-weight:800;color:${theme.text};margin:0 0 6px;font-family:serif;">${esc(item.name)}</h3>
-                  <a href="${path(`products/${item.id}/index.html`)}" ${navAttrs('detail', item.id)} style="color:${theme.primary};text-decoration:none;font-size:0.82rem;font-weight:700;">
-                    ${esc(ui.details)} ↗
-                  </a>
-                </article>
-              `).join('')}
-            </div>
-          </section>
         </div>
       </main>
     `;
   } else if (page === 'about') {
     // -------------------------------------------------------------
-    // ABOUT PAGE: High-Contrast Brand Heritage
+    // ABOUT PAGE: COMPLETELY DIFFERENT LAYOUTS FOR BANNER & VIDEO
+    // ZERO SQUISHY CAT FALLBACK!
     // -------------------------------------------------------------
-    const headline = getAboutHeadline(company, company.name);
+    const headline = sanitizeCopy(
+      getAboutHeadline(company, company.name),
+      isVideo ? 'Swiss Manufacture Horlogère & ISO 3159 Chronometer Testing' : 'Haute Joaillerie Atelier & Gemological Provenance Guild',
+      isVideo ? '瑞士高级机械制表厂与天文台检定实验室' : '高级珠宝典藏工坊与宝石学溯源沙龙',
+      isZh,
+    );
+
+    const customAboutImg = company.aboutImageAssetId ? ctx.asset(company.aboutImageAssetId) : '';
     const storyParas = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about);
-    const aboutImg = ctx.asset(company.aboutImageAssetId) || (products[1] ? (products[1] as any).img : defaultMeta.img);
     const stats = parseAboutHighlights(company.aboutHighlights, [
       { value: '4 Generations', num: 4, suffix: ' Generations', label: isZh ? '世代传承大师工坊' : 'Generations of Mastery', desc: isZh ? '逾世纪欧洲高定工艺积淀' : 'Over a century of European atelier heritage' },
       { value: '100%', num: 100, suffix: '%', label: isZh ? '金伯利道德可溯源' : 'Ethical Conflict-Free', desc: isZh ? '纯天然无冲突开采钻石与贵金属' : 'Fully certified Kimberley Process provenance' },
@@ -813,162 +769,272 @@ export function renderJewelryWatchesTemplate(ctx: ThemeContext, isVideo: boolean
       { value: '50+ Guilds', num: 50, suffix: '+ Guilds', label: isZh ? '全球高端专柜与藏家合作' : 'Global Boutique Network', desc: isZh ? '服务欧洲顶尖沙龙与国际藏家' : 'Partnered with premier luxury salons globally' },
     ]);
 
-    mainHtml = `
-      <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:50px;">
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;">
-              ${isZh ? '百年珠宝工坊与瑞士微雕制表哲学' : 'ATELIER HERITAGE & SWISS PHILOSOPHY'}
-            </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;font-family:serif;">
-              ${esc(headline)}
-            </h1>
-            <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:720px;">
-              ${esc(company.slogan || (isVideo ? '将微米级精密钟表机械升华为恒久流转的艺术结晶。' : '以敬畏之心雕琢大自然数十亿年凝聚的稀世瑰宝。'))}
-            </p>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:48px;align-items:center;margin-bottom:60px;">
-            <div>
-              <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                ${storyParas.length > 0 ? storyParas.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                  <p style="margin:0 0 18px;">
-                    ${isZh ? '我们的高级珠宝与独立制表工坊融合了数代手艺人的心血结晶，配备恒温恒湿无尘装配车间、高精度五轴CNC五金车削设备以及瑞士权威宝石比色检测仪。' : 'Our high jewelry and independent watchmaking manufacture unites generations of artisanal discipline with climate-controlled cleanroom assembly and 5-axis CNC machining precision.'}
-                  </p>
-                  <p style="margin:0 0 18px;">
-                    ${isZh ? '从每一枚天然钻石的原石比色切磨，到复杂机械机芯桥板的极致手工倒角，我们拒绝任何工业流水线的妥协，让每一件交付到藏家手中的作品均凝聚传世光芒。' : 'From rough diamond optical cut planning to hand-burnished movement anglage, we refuse industrial compromise to deliver timeless heirloom brilliance.'}
-                  </p>
-                `}
+    if (isVideo) {
+      // TIMELESS VIDEO ABOUT: Swiss Watch Manufacture Cleanroom
+      mainHtml = `
+        <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:48px;">
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;font-family:serif;">
+                SWISS WATCHMAKING CLEANROOMS
               </div>
-              <div style="margin-top:28px;">
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-                  ${isZh ? '预约高级沙龙专员洽谈' : 'Schedule Private Viewing'} ↗
+              <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;font-family:Georgia, serif;">
+                ${esc(headline)}
+              </h1>
+              <p style="font-size:1.1rem;color:${theme.textMuted};margin:0;max-width:760px;line-height:1.75;">
+                ${isZh ? '将微米级精密钟表机械升华为恒久流转的艺术结晶。' : 'Elevating sub-micron horological engineering into eternal kinetic works of mechanical art.'}
+              </p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};margin:0 0 24px;">
+                  ${storyParas.length > 0 ? storyParas.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
+                    <p style="margin:0 0 18px;">${isZh ? '我们的瑞士标准制表厂房占地 25,000 平方米，建有 Class 10,000 级洁净无尘装配车间与全自动真空注油机组。' : 'Operating an accredited 25,000 m² cleanroom facility built to Swiss horology standards with Class 10,000 dust-free assembly suites and automated lubrication rigs.'}</p>
+                    <p style="margin:0 0 18px;">${isZh ? '从 CNC 慢走丝切割齿轮夹板到资深独立制表师手工装配校准，每一枚机芯均须在 15 天连续运行中达到 -4/+6 秒的天文台级极佳日差，方可压装蓝宝石镜面出厂。' : 'From wire-EDM pinion cutting to master watchmaker hand-calibration, each movement runs for 15 consecutive days to attain official -4/+6 sec/day chronometer precision before casing.'}</p>
+                  `}
+                </div>
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
+                  ${isZh ? '预约制表工坊线上视频考察' : 'Schedule Cleanroom Video Tour'} ↗
                 </a>
               </div>
-            </div>
 
-            <div>
-              <div style="border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.06);border:1px solid ${theme.cardBorder};background:#ffffff;">
-                <img src="${esc(aboutImg)}" alt="${esc(company.name)}" style="width:100%;height:380px;object-fit:cover;display:block;">
+              <div>
+                ${customAboutImg ? `
+                  <div style="border-radius:16px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,0.06);border:1px solid ${theme.cardBorder};">
+                    <img src="${esc(customAboutImg)}" alt="${esc(brandName)}" style="width:100%;height:360px;object-fit:cover;display:block;">
+                  </div>
+                ` : `
+                  <div style="border-radius:16px;background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);padding:36px;color:#ffffff;box-shadow:0 16px 40px rgba(180,83,9,0.12);border:1px solid rgba(180,83,9,0.3);">
+                    <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#fcd34d;margin-bottom:8px;font-family:serif;">
+                      CALIBRE BENCHMARK DOSSIER
+                    </div>
+                    <div style="font-size:1.4rem;font-weight:900;font-family:serif;margin-bottom:16px;">
+                      ISO 3159 Chronometer Protocol
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;color:rgba(255,255,255,0.8);">
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                        <span>Beat Rate Verification</span>
+                        <strong style="color:#ffffff;">28,800 VPH (4Hz)</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                        <span>Tested Orientations</span>
+                        <strong style="color:#ffffff;">5 Positions Across 3 Temperatures</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                        <span>Daily Rate Tolerance</span>
+                        <strong style="color:#ffffff;">-4 to +6 sec/day</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;">
+                        <span>International Warranty</span>
+                        <strong style="color:#fcd34d;">5-Year Global Calibre Warranty</strong>
+                      </div>
+                    </div>
+                  </div>
+                `}
               </div>
             </div>
-          </div>
 
-          <!-- Statistics Grid -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
-            ${stats.map((s) => `
-              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:26px;box-shadow:0 6px 20px rgba(0,0,0,0.03);" class="wr-card-hover">
-                <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};margin-bottom:6px;font-family:serif;">${esc(s.value)}</div>
-                <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(s.label)}</div>
-                <div style="font-size:0.8rem;color:${theme.textSub};">${esc(s.desc || '')}</div>
-              </div>
-            `).join('')}
+            <!-- 4 Metrics -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
+              ${stats.map((s) => `
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:26px;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};font-family:serif;margin-bottom:4px;">${esc(s.value)}</div>
+                  <div style="font-size:0.92rem;font-weight:800;color:${theme.text};">${esc(s.label)}</div>
+                  ${s.desc ? `<div style="font-size:0.8rem;color:${theme.textSub};margin-top:4px;">${esc(s.desc)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // LUXURY BANNER ABOUT: Haute Joaillerie Heritage Salon
+      mainHtml = `
+        <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:48px;">
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;font-family:serif;">
+                HAUTE JOAILLERIE ATELIER
+              </div>
+              <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;font-family:Georgia, serif;">
+                ${esc(headline)}
+              </h1>
+              <p style="font-size:1.1rem;color:${theme.textMuted};margin:0;max-width:760px;line-height:1.75;">
+                ${isZh ? '以敬畏之心雕琢大自然数十亿年凝聚的稀世瑰宝。' : 'Sculpting billions of years of geological wonder into timeless fine jewelry heirlooms with revered artisanal devotion.'}
+              </p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};margin:0 0 24px;">
+                  ${storyParas.length > 0 ? storyParas.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
+                    <p style="margin:0 0 18px;">${isZh ? '我们的高级珠宝工坊汇聚了平均从业 25 年以上的金匠与微镶大师，全套配备德国莱卡显微珠宝加工台与激光微熔焊机。' : 'Our Paris-trained master jewelers boast over 25 years of bench experience, equipped with Leica stereomicroscopes and laser micro-fusion soldering suites.'}</p>
+                    <p style="margin:0 0 18px;">${isZh ? '我们严格遵循金伯利进程公约，确保每一颗主石来源合法、绝无冲突。所有高定作品在出厂前均附带 GIA、IGI 或瑞士权威珠宝实验室的原版检定证书，支持全球复检。' : 'Every gemstone is 100% Kimberley Process certified conflict-free. All creations ship accompanied by official GIA, IGI, or Swiss Gübelin dossiers with tamper-proof laser girdle inscriptions.'}</p>
+                  `}
+                </div>
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
+                  ${isZh ? '预约高级珠宝私洽品鉴' : 'Request Private Salon Appointment'} ↗
+                </a>
+              </div>
+
+              <div>
+                ${customAboutImg ? `
+                  <div style="border-radius:14px;overflow:hidden;box-shadow:0 12px 36px rgba(197,155,39,0.08);border:1px solid ${theme.cardBorder};">
+                    <img src="${esc(customAboutImg)}" alt="${esc(brandName)}" style="width:100%;height:360px;object-fit:cover;display:block;">
+                  </div>
+                ` : `
+                  <div style="border-radius:14px;background:#ffffff;padding:36px;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(197,155,39,0.06);">
+                    <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;font-family:serif;">
+                      GEMOLOGICAL ETHICAL CHARTER
+                    </div>
+                    <div style="font-size:1.35rem;font-weight:900;color:${theme.text};font-family:serif;margin-bottom:14px;">
+                      Kimberley Process & Fairmined Gold
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.86rem;color:${theme.textMuted};">
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:6px;">
+                        <span>Natural Diamond Sourcing</span>
+                        <strong style="color:${theme.text};font-family:serif;">100% Conflict-Free KPCS</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:6px;">
+                        <span>Precious Metal Purity</span>
+                        <strong style="color:${theme.text};font-family:serif;">18K Gold (750) / Plat 950</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:6px;">
+                        <span>Microscopic Inscription</span>
+                        <strong style="color:${theme.text};font-family:serif;">GIA Dossier Laser Girdle</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;">
+                        <span>Courier Transport</span>
+                        <strong style="color:${theme.primary};font-family:serif;">100% Armored Insured Transit</strong>
+                      </div>
+                    </div>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- 4 Metrics -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
+              ${stats.map((s) => `
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:26px;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};font-family:serif;margin-bottom:4px;">${esc(s.value)}</div>
+                  <div style="font-size:0.92rem;font-weight:800;color:${theme.text};">${esc(s.label)}</div>
+                  ${s.desc ? `<div style="font-size:0.8rem;color:${theme.textSub};margin-top:4px;">${esc(s.desc)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'contact') {
-    // -------------------------------------------------------------
-    // CONTACT PAGE: VIP Salon Consultation Form
-    // -------------------------------------------------------------
     const waDigits = (company.whatsapp || '').replace(/[^0-9]/g, '');
 
     mainHtml = `
       <main class="jewelry-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
         <div class="wrap" style="padding:0 24px;">
           <div style="margin-bottom:40px;">
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;">
-              ${isZh ? '私享定制沙龙与大宗商务咨询' : 'VIP BESPOKE SALON & B2B INQUIRY'}
+            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};margin-bottom:8px;font-family:serif;">
+              ${isZh ? '高级珠宝私洽定制与批发咨询' : 'HAUTE SOURCING & PRIVATE LABEL CONSULTATION'}
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;font-family:serif;">
+            <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 14px;font-family:Georgia, serif;">
               ${esc(ui.conversation)}
             </h1>
             <p style="font-size:1.05rem;color:${theme.textMuted};margin:0;max-width:680px;">
-              ${isZh ? '请填写您的定制要求或批量采购计划，高级珠宝与钟表顾问将在 24 小时内与您保密接洽，并提供三维 CAD 渲染与裸石现货配石方案。' : 'Submit your bespoke commission or luxury brand OEM inquiry. Our senior gemologist and horological consultants will reach out within 24 hours under strict confidentiality.'}
+              ${isZh ? '请填写您的采购需求或定制规格，我们的外贸专家将在 24 小时内与您接洽，并提供正式报价单、激光镭雕效果图与外贸样品寄送方案。' : 'Submit your procurement specifications or private-label requests. Our export team will respond within 24 hours with volume pricing and sample dispatch.'}
             </p>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:40px;">
-            <!-- Contact Card Details -->
             <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;box-shadow:0 8px 28px rgba(0,0,0,0.04);height:fit-content;">
-              <h3 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;font-family:serif;">
-                ${esc(company.name || (isVideo ? 'Geneva Horology Manufactory' : 'Vendôme Fine Jewelry'))}
+              <h3 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;font-family:Georgia, serif;">
+                ${esc(brandName)}
               </h3>
               <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.6;margin:0 0 24px;">
-                ${esc(company.description || (isZh ? '专注高端珠宝沙龙与机械腕表外贸出口，支持OEM/ODM/OBM全球集装箱货运履约。' : 'Direct luxury manufacture supporting worldwide bespoke delivery and high-volume brand OEM.'))}
+                ${esc(sanitizeCopy(company.description, isVideo ? 'Swiss manufacture horology atelier engineering precision mechanical chronometers and grand complications.' : 'Haute Joaillerie atelier crafting certified natural diamond and 18K solid gold fine jewelry collections.', isVideo ? '专注高品质瑞士机械腕表与陀飞轮时计制造，支持OEM/ODM全球直供。' : '专注高级珠宝手工微镶与天然宝石首饰出海定制，支持全球贵重品武装运输。', isZh))}
               </p>
 
               <div style="display:flex;flex-direction:column;gap:18px;font-size:0.9rem;">
                 <div>
-                  <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Concierge Email</span>
+                  <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Private Client Desk</span>
                   <a href="mailto:${esc(company.email)}" style="color:${theme.primary};text-decoration:none;font-weight:700;">${esc(company.email)}</a>
                 </div>
 
                 ${company.phone ? `
                   <div>
-                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">VIP Direct Line</span>
+                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Salon Concierge</span>
                     <a href="tel:${esc(company.phone)}" style="color:${theme.text};text-decoration:none;font-weight:700;">${esc(company.phone)}</a>
                   </div>
                 ` : ''}
 
-                ${waDigits ? `
+                ${company.whatsapp ? `
                   <div>
-                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">WhatsApp Rapid Concierge</span>
-                    <a href="https://wa.me/${esc(waDigits)}" target="_blank" rel="noopener noreferrer" style="color:#16a34a;text-decoration:none;font-weight:700;">+${esc(waDigits)} (Chat Now ↗)</a>
+                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">WhatsApp Rapid Response</span>
+                    <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener noreferrer" style="color:#16a34a;text-decoration:none;font-weight:700;">+${waDigits} (Chat Now ↗)</a>
                   </div>
                 ` : ''}
 
                 ${company.address ? `
                   <div>
-                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Atelier Address</span>
-                    <div style="color:${theme.textMuted};">${esc(company.address)}</div>
+                    <span style="display:block;font-size:0.75rem;color:${theme.textSub};text-transform:uppercase;font-weight:700;">Private Atelier</span>
+                    <span style="color:${theme.text};">${esc(company.address)}</span>
                   </div>
                 ` : ''}
               </div>
             </div>
 
-            <!-- Inquiry Form -->
+            <!-- RFQ Form with select name=productId -->
             <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;box-shadow:0 8px 28px rgba(0,0,0,0.04);">
-              <form id="inquiry" action="${esc(safeUrl(ctx.options.inquiryUrl))}" method="post" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.name)} *</label>
-                  <input name="name" required maxlength="120" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
+              <form action="${esc(safeUrl(ctx.options.inquiryUrl))}" method="post" class="jewelry-inquiry-form" style="display:flex;flex-direction:column;gap:20px;">
+                <input type="hidden" name="projectId" value="${esc(ctx.options.projectId || '')}">
+                <input type="hidden" name="template" value="${isVideo ? 'jewelry-timeless-video' : 'jewelry-luxury-banner'}">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${isZh ? '您的姓名 / 称谓' : 'Full Name & Salutation'} *
+                    </label>
+                    <input type="text" name="name" required placeholder="${isZh ? '例如：Lord / Lady Harrington' : 'e.g. Harrington Jewelry Vault'}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${isZh ? '商务电子邮箱' : 'Corporate Email Address'} *
+                    </label>
+                    <input type="email" name="email" required placeholder="contact@vault.com" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                  </div>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.email)} *</label>
-                  <input name="email" type="email" required maxlength="254" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${isZh ? '机构名称 / 买手店' : 'Boutique / Organization'}
+                    </label>
+                    <input type="text" name="company" placeholder="${isZh ? '例如：Harrington Fine Gems Ltd.' : 'e.g. Harrington Fine Gems Ltd.'}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                      ${esc(ui.product)} (${esc(ui.optional)})
+                    </label>
+                    <select name="productId" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;">
+                      <option value="">${isZh ? '— 选择咨询的产品（可选） —' : '— Select Product of Interest (Optional) —'}</option>
+                      ${products.map((p) => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                    </select>
+                  </div>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.company)} (${esc(ui.optional)})</label>
-                  <input name="company" maxlength="200" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:800;margin-bottom:6px;color:${theme.text};">
+                    ${isZh ? '详细采购清单或规格要求' : 'Specifications & Required Details'} *
+                  </label>
+                  <textarea name="message" required rows="5" placeholder="${isZh ? '请描述您所需的高定款式、贵金属成色（18K黄/白/玫瑰金或铂金950）、钻石宝石等级与克拉预算、证书要求、交付日期等...' : 'Describe requested models, precious metal alloy (18K gold, Pt950), gemstone specifications and carat budget, certificate requirements, and target timeline...'}" style="width:100%;box-sizing:border-box;padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:#fdfdfd;color:${theme.text};font-size:0.9rem;outline:none;resize:vertical;"></textarea>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.product)} (${esc(ui.optional)})</label>
-                  <select name="productId" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;">
-                    <option value="">${isZh ? '— 选择意向珠宝 / 腕表型号 —' : '— Select Jewelry or Timepiece —'}</option>
-                    ${products.map((p) => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
-                  </select>
-                </div>
-
-                <div style="grid-column:span 2;display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:0.82rem;font-weight:800;color:${theme.text};">${esc(ui.message)} *</label>
-                  <textarea name="message" required maxlength="5000" rows="5" placeholder="${isZh ? '请描述您的贵金属材质偏好、钻石克拉数与净度要求、目标订单量或定制设计细节...' : 'Describe your preferred metal, carat, clarity requirements, or custom movement CAD specifics...'}" style="padding:12px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.9rem;background:#ffffff;color:${theme.text};outline:none;resize:vertical;"></textarea>
-                </div>
-
-                <div style="display:none;" aria-hidden="true">
-                  <input name="website" tabindex="-1" autocomplete="off">
-                </div>
-
-                <div style="grid-column:span 2;display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
-                  <button type="submit" ${ctx.options.preview ? 'disabled' : ''} style="padding:14px 34px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;border:none;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px ${theme.accentGlow};">
-                    ${esc(ui.send)} ↗
+                <div>
+                  <button type="submit" style="width:100%;padding:15px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:1rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    ${isZh ? '提交大宗采购询盘需求' : 'Submit Commercial RFQ & Inquire'} ↗
                   </button>
-                  <span style="font-size:0.78rem;color:${theme.textSub};">${isZh ? '绝密 NDA 协议保护 · 24小时内专属专员联系' : 'Strict NDA Protection · 24h Response'}</span>
                 </div>
-                <p class="form-status" role="status" aria-live="polite" style="grid-column:span 2;font-size:0.86rem;margin:0;"></p>
               </form>
             </div>
           </div>
@@ -977,5 +1043,55 @@ export function renderJewelryWatchesTemplate(ctx: ThemeContext, isVideo: boolean
     `;
   }
 
-  return `${headerHtml}${mainHtml}${footerHtml}`;
+  const footerHtml = `
+    <footer class="jewelry-footer" style="background:#ffffff;border-top:1px solid ${theme.cardBorder};padding:60px 0 40px;color:${theme.textSub};font-size:0.88rem;">
+      <div class="wrap" style="padding:0 24px;">
+        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+          <div>
+            <div style="font-size:1.2rem;font-weight:900;color:${theme.text};margin-bottom:8px;font-family:Georgia, serif;">
+              ${esc(brandName)}
+            </div>
+            <p style="font-size:0.86rem;color:${theme.textMuted};max-width:380px;line-height:1.6;margin:0 0 16px;">
+              ${esc(sanitizeCopy(company.description, isVideo ? 'Swiss manufacture horology atelier dedicated to mechanical complications and chronometer precision.' : 'Haute Joaillerie atelier creating certified natural gemstone and 18K solid gold heirlooms.', isVideo ? '专注于瑞士原装高精度机械机芯与复杂功能腕表工程研发与制造。' : '坚守高级珠宝手工微镶传统，以大自然数十亿年稀世宝石雕琢传世经典。', isZh))}
+            </p>
+            <div style="font-size:0.8rem;color:${theme.textSub};">
+              <strong>${isZh ? '国际权威证书' : 'Certifications'}:</strong> ${isVideo ? 'COSC Chronometer Certified · ISO 3159 · 28,800 VPH' : 'GIA Dossier · Kimberley Process · Fairmined Au750 · Pt950'}
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;font-family:serif;">${isZh ? '快捷导航' : 'Navigation'}</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
+              <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.home)}</a>
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.catalog)}</a>
+              <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.about)}</a>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.contact)}</a>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;font-family:serif;">${isZh ? '业务接洽' : 'Business Liaison'}</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;">
+              <div>${esc(company.email)}</div>
+              ${company.phone ? `<div>${esc(company.phone)}</div>` : ''}
+              ${company.address ? `<div>${esc(company.address)}</div>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid ${theme.cardBorder};padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;">
+          <div>© ${new Date().getUTCFullYear()} ${esc(brandName)}. All rights reserved.</div>
+          <div>${isZh ? '国际高级珠宝与传世钟表制造标准 · GIA / COSC 认证' : 'GIA & COSC Standards · Haute Joaillerie Compliance'}</div>
+        </div>
+      </div>
+    </footer>
+  `;
+
+  return `
+    <div class="jewelry-site-wrapper" style="min-height:100vh;display:flex;flex-direction:column;background:${theme.bg};">
+      ${headerHtml}
+      ${mainHtml}
+      ${footerHtml}
+    </div>
+  `;
 }
