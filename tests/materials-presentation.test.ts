@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parse, type DefaultTreeAdapterMap } from 'parse5';
 import { renderSite } from '../src/templates';
-import { getTypedMaterialsTemplate } from '../src/templates/materials-typed';
+import { getMaterialsTemplate } from '../src/templates/materials';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { defaultDraft, editDraft, validateDraft } from '../src/worker/domain';
 import { typedMaterialsFixture } from './fixtures/materials-typed';
@@ -86,7 +86,7 @@ describe('confirmed materials presentation', () => {
       expect(
         elements(hero!).some((n) => attr(n, 'data-wr-material-image') === 'product-main'),
       ).toBe(false);
-      const expected = getTypedMaterialsTemplate(template)!.imageSlots.filter((s) =>
+      const expected = getMaterialsTemplate(template,draft.materials!.contractRevision)!.imageSlots.filter((s) =>
         s.id.startsWith('hero-slide-'),
       );
       for (const slot of expected) {

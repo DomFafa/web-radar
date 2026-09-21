@@ -6,7 +6,7 @@ import { limitedBytes } from './providers/http';
 import { ProviderError } from './provider-contract';
 
 export const publicMediaPolicy = 'webp82-v1';
-export const typedRendererVersion = 'typed-responsive-2026-09-20.1';
+export const typedRendererVersion = 'typed-responsive-2026-09-20.4';
 const widths = new Set([320, 640, 1280, 1600]);
 const maxInput = 20 * 1024 * 1024,
   maxOutput = 2 * 1024 * 1024;

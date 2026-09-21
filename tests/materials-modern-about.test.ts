@@ -12,10 +12,10 @@ import currentManifest from '../docs/materials-requirements/typed-2026-09-20.jso
 
 const templates=Object.keys(templateMediaRequirements);
 describe('versioned modern About materials',()=>{
- it.each(templates)('%s keeps the old contract immutable and offers a distinct modern revision',id=>{
+ it.each(templates)('%s keeps both published contract revisions immutable',id=>{
   const old=getMaterialsTemplate(id,`2026-09-19.${id}-materials.1`)!;
   expect(createHash('sha256').update(JSON.stringify(old)).digest('hex')).toBe(manifest.templates[id as keyof typeof manifest.templates].sha256);
-  const current=getMaterialsTemplate(id)!;
+  const current=getMaterialsTemplate(id,`2026-09-20.${id}-materials.2`)!;
   expect(createHash('sha256').update(JSON.stringify(current)).digest('hex')).toBe(currentManifest.templates[id as keyof typeof currentManifest.templates].sha256);
   expect(current.contractRevision).toBe(`2026-09-20.${id}-materials.2`);
   for(const slotId of ['about-headline','about-story','about-highlights'])expect(current.textSlots.some(s=>s.id===slotId&&s.page==='about'),slotId).toBe(true);

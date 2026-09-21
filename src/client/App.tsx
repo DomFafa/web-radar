@@ -1,10 +1,11 @@
+import { PendingWebsiteCreation } from './website-creation';
 import type { ProjectSummary, ProjectList } from '../shared/model';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Principal, Project, ServiceStatus, TemplateId } from '../shared/model';
 import {
   api,
   post,
-  requestId,
+  ApiError,
   setSession,
   clearSession,
   errorMessage,
@@ -380,7 +381,7 @@ export default function App() {
               </div>
             </header>
             {view === 'projects' ? (
-              <Projects onOpen={setSelected} />
+              <Projects key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onOpen={setSelected} />
             ) : view === 'admin' ? (
               <ErrorBoundary
                 scope="section"
@@ -571,13 +572,14 @@ function Login({
   );
 }
 
-function Projects({ onOpen }: { onOpen: (id: string) => void }) {
+function Projects({ onOpen, principal }: { onOpen: (id: string) => void; principal: Principal }) {
+  const [creation] = useState(() => new PendingWebsiteCreation(principal.userId, principal.workspaceId));
   const [projects, setProjects] = useState<ProjectSummary[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const [createOpen, setCreateOpen] = useState(false),
-    [createMode, setCreateMode] = useState<'template' | 'clone'>('template'),
-    [name, setName] = useState(''),
+    [createMode, setCreateMode] = useState<'template' | 'clone'>(creation.pending?.buildBranch || 'template'),
+    [name, setName] = useState(creation.pending?.name || ''),
     [creating, setCreating] = useState(false),
     [filter, setFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'offline'>(
@@ -587,8 +589,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
   const [deleteTarget, setDeleteTarget] = useState<ProjectSummary | null>(null);
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [createUrl,setCreateUrl]=useState('');
-  const createRequest = useRef(requestId());
+  const [createUrl,setCreateUrl]=useState(creation.pending?.targetUrl || '');
   const [page, setPage] = useState(1), [total, setTotal] = useState(0);
   const [counts, setCounts] = useState({all:0,draft:0,published:0,offline:0});
   const [search, setSearch] = useState('');
@@ -611,15 +612,15 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
     setCreating(true);
     setError('');
     try {
-      const result = await post<{ project: Project }>('/api/projects', {
+      const result = await post<{ project: Project }>('/api/projects', creation.body({
         name: name.trim() || (createMode==='clone' && createUrl ? new URL(createUrl).hostname : '未命名网站'),
         targetUrl:createMode==='clone'?createUrl.trim():undefined,
         buildBranch: createMode,
-        requestId: createRequest.current,
-      });
-      createRequest.current = requestId();
+      }));
+      creation.complete();
       onOpen(result.project.id);
     } catch (error) {
+      if (error instanceof ApiError && (error.status === 400 || (error.code === 'website_quota_rejected' && [403, 429].includes(error.status)))) creation.complete();
       setError(errorMessage(error));
     } finally {
       setCreating(false);
@@ -700,7 +701,7 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
           <Button
             kind="primary"
             onClick={() => {
-              setName('');
+              setName(creation.pending?.name || '');
               setCreateOpen(true);
             }}
           >
@@ -976,25 +977,27 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
             </p>
 
             <div className="create-mode-options" role="radiogroup" aria-label="建站方式">
-              {([['template','模板建站','选择现成风格，填入公司和产品资料。'],['clone','网址 / 设计稿建站','输入网址自动分析重建，或上传设计稿。']] as const).map(([id,title,description])=><label key={id} className={createMode===id?'selected':''}><input type="radio" name="create-mode" checked={createMode===id} onChange={()=>setCreateMode(id)}/><strong>{title}</strong><small>{description}</small></label>)}
+              {([['template','模板建站','选择现成风格，填入公司和产品资料。'],['clone','网址 / 设计稿建站','输入网址自动分析重建，或上传设计稿。']] as const).map(([id,title,description])=><label key={id} className={createMode===id?'selected':''}><input type="radio" name="create-mode" checked={createMode===id} disabled={!!creation.pending} onChange={()=>setCreateMode(id)}/><strong>{title}</strong><small>{description}</small></label>)}
             </div>
-            {createMode==='clone'&&<Field label="参考网址" hint="输入网址即可开始；有设计图也可以创建后上传。"><input aria-label="参考网址" type="url" value={createUrl} onChange={e=>setCreateUrl(e.target.value)} placeholder="https://example.com" maxLength={2000}/></Field>}
+            {createMode==='clone'&&<Field label="参考网址" hint="输入网址即可开始；有设计图也可以创建后上传。"><input aria-label="参考网址" type="url" disabled={!!creation.pending} value={createUrl} onChange={e=>setCreateUrl(e.target.value)} placeholder="https://example.com" maxLength={2000}/></Field>}
             <Field label="项目名称（选填）" hint="仅用于工作台管理，留空自动命名。">
               <input
                 autoFocus
+                disabled={!!creation.pending}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={120}
                 placeholder={createMode === 'clone' ? '例如：Senseng 像素级克隆官网' : '例如：春季户外系列官网'}
               />
             </Field>
+            {creation.pending && <p className="muted">上次创建结果尚未确认，重试会继续创建同一个网站。</p>}
             {error && <Notice tone="error">{error}</Notice>}
             <div className="modal-actions">
               <Button type="button" onClick={() => setCreateOpen(false)}>
                 取消
               </Button>
               <Button kind="primary" busy={creating} type="submit">
-                创建并开始
+                {creation.pending ? '重试创建' : '创建并开始'}
                 <Icon name="arrow" />
               </Button>
             </div>

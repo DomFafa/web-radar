@@ -105,7 +105,7 @@ export function getMaterialsTemplate(id:string,contractRevision?:string):Materia
     if(contractRevision===junoLegacyRevision)return structuredClone(prepareJuno().contract);
     if(contractRevision===junoDisplayRevision)return junoDisplayContract(prepareJuno().contract);
   }
-  const current=getModernMaterialsTemplate(id);
+  const current=getModernMaterialsTemplate(id,contractRevision);
   if(current&&(!contractRevision||current.contractRevision===contractRevision))return current;
   const previous=getTypedMaterialsTemplate(id);
   return previous?.contractRevision===contractRevision?previous:undefined;

@@ -12,6 +12,9 @@ describe('durable confirmed materials receiver',()=>{
   let env:AppEnv, service:MaterialsService, store:DomainStore, fixture:Awaited<ReturnType<typeof materialsFixture>>;
   let failAsset=false,revoked=false,fetches=0,respond:((assetId:string)=>Promise<Response>)|undefined;
   const schedule=vi.fn(async(_time:number)=>{});
+  let quotaExhausted=false,quotaCommitUnavailable=false;
+  const websiteCalls:string[]=[];
+  const websiteClaims=new Map<string,{projectId:string;reservationId:string;status:string}>();
   const objects=new Map<string,{bytes:Uint8Array;options:any}>();
   beforeEach(async()=>{
     fixture=await materialsFixture(2);failAsset=false;revoked=false;fetches=0;respond=undefined;objects.clear();schedule.mockClear();
@@ -19,7 +22,18 @@ describe('durable confirmed materials receiver',()=>{
     const bucket={async put(key:string,value:any,options:any){const bytes=typeof value==='string'?new TextEncoder().encode(value):new Uint8Array(value);objects.set(key,{bytes,options});},async get(key:string){const o=objects.get(key);return o?{size:o.bytes.length,httpMetadata:o.options?.httpMetadata,customMetadata:o.options?.customMetadata,arrayBuffer:async()=>o.bytes.buffer.slice(o.bytes.byteOffset,o.bytes.byteOffset+o.bytes.length),text:async()=>new TextDecoder().decode(o.bytes)}:null;},async head(key:string){return this.get(key);},async delete(key:string|string[]){for(const k of typeof key==='string'?[key]:key)objects.delete(k);}};
     env={DB:db,MEDIA:bucket,PRODUCT_RADAR_BASE_URL:'https://product.example.com',PRODUCT_RADAR_INTEGRATION_SECRET:'s'.repeat(40)}as unknown as AppEnv;
     store=new DomainStore(db);service=createService();
+    websiteClaims.clear();websiteCalls.length=0;quotaExhausted=false;quotaCommitUnavailable=false;
     vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
+      if(String(input).includes('/website-quota/')){
+        const body=JSON.parse(String(init?.body)),action=String(input).split('/').pop()!;websiteCalls.push(action);let row=websiteClaims.get(body.projectId);
+        if(action==='reserve'&&quotaExhausted)return Response.json({message:'本月建站额度不足。'},{status:429});
+        if(action==='commit'&&quotaCommitUnavailable)return Response.json({message:'暂时不可用。'},{status:503});
+        if(action==='status'&&!row)return Response.json({message:'Missing'},{status:404});
+        if(action==='reserve'&&(!row||row.status==='released')){row={projectId:body.projectId,reservationId:crypto.randomUUID(),status:'reserved'};websiteClaims.set(body.projectId,row);}
+        if(action==='commit')row!.status='charged';
+        if(action==='release'&&row?.status!=='charged')row!.status='released';
+        return Response.json(row);
+      }
       if(String(input).endsWith('/context'))return revoked?Response.json({}, {status:403}):Response.json({protocolVersion:1,principal:fixture.principal});
       const body=JSON.parse(String(init?.body));fetches++;
       if(respond)return respond(body.assetId);
@@ -39,12 +53,37 @@ describe('durable confirmed materials receiver',()=>{
   it('accepts only after all copied assets and snapshot are durable, without generation or publication',async()=>{
     const first=await service.submit(fixture.principal,fixture);expect(first.state).toBe('receiving');expect((await store.list<Project>('projects'))).toHaveLength(0);
     const receipt=await finish();expect(receipt.state).toBe('accepted');expect(receipt.receivedMedia).toBe(2);expect(receipt.autoPublish).toBe(false);
+    expect(websiteCalls.filter(c=>c==='reserve')).toHaveLength(1);expect(websiteCalls.filter(c=>c==='commit')).toHaveLength(1);
     const p=await store.one<Project>('projects',receipt.projectId!);expect(p?.draft.products).toHaveLength(2);expect(p?.materials?.contentSha256).toBe(fixture.confirmation.contentSha256);expect(p?.publishedReleaseId).toBeUndefined();
     expect(p?.draft.materials?.imageBindings[0].assetId).toBeTruthy();expect((await store.list('jobs'))).toHaveLength(0);
     for(const asset of await store.list<any>('assets'))expect(asset.sha256).toBe(fixture.materials.media.find(media=>asset.id===`materials-${fixture.submissionId}-${fixture.materials.media.indexOf(media)}`)?.sha256);
     const replay=await service.submit(fixture.principal,fixture);expect(replay.projectId).toBe(p?.id);expect(fetches).toBe(2);
   });
 
+  it('rejects exhausted creation before saving a materials snapshot or copying any media',async()=>{
+    quotaExhausted=true;await expect(service.submit(fixture.principal,fixture)).rejects.toMatchObject({status:429,message:'本月网站创建额度已用完，请联系管理员调整账号或工作区额度。'});
+    expect(objects.size).toBe(0);expect(fetches).toBe(0);expect(await store.list('projects')).toHaveLength(0);
+  });
+  it('keeps accepted media and resumes quota commit after an unavailable response',async()=>{
+    await service.submit(fixture.principal,fixture);quotaCommitUnavailable=true;await service.tick();
+    await expect(progress()).rejects.toMatchObject({status:503});expect(await store.list('projects')).toHaveLength(1);
+    for(const asset of await store.list<any>('assets'))expect(objects.has(asset.key)).toBe(true);
+    quotaCommitUnavailable=false;service=createService();expect(await progress()).toMatchObject({state:'accepted'});
+    expect([...websiteClaims.values()][0].status).toBe('charged');expect(websiteCalls).not.toContain('release');
+  });
+  it('accepts ordinary accounts and keeps submissions and update targets isolated',async()=>{
+    fixture.principal={...fixture.principal,email:'member@example.com',workspaceRole:'member'};
+    await service.submit(fixture.principal,fixture);const receipt=await finish();
+    expect(receipt.state).toBe('accepted');
+    const project=(await store.one<Project>('projects',receipt.projectId!))!;
+    expect(project.ownerId).toBe(fixture.principal.userId);expect(project.workspaceId).toBe(fixture.principal.workspaceId);
+    for(const foreign of [{...fixture.principal,userId:'another-member'},{...fixture.principal,userId:'outside-admin',workspaceId:'another-workspace',workspaceRole:'admin' as const}]){
+      await expect(service.status(foreign,fixture.submissionId)).rejects.toMatchObject({status:404});
+      await expect(service.submit(foreign,{...fixture,principal:foreign,submissionId:crypto.randomUUID(),target:{mode:'update',projectId:project.id,expectedVersion:project.version}})).rejects.toMatchObject({status:404});
+    }
+    await expect(service.submit({...fixture.principal,userId:'forged'},fixture)).rejects.toMatchObject({status:403,code:'principal_mismatch'});
+    expect(await store.list('projects')).toHaveLength(1);expect(await store.list('jobs')).toHaveLength(0);
+  });
   it('keeps confirmed display groups through a source update and drops a group when its member is removed',async()=>{
     await service.submit(fixture.principal,fixture);const first=await finish();
     let project=(await store.one<Project>('projects',first.projectId!))!;
@@ -57,6 +96,7 @@ describe('durable confirmed materials receiver',()=>{
       await service.submit(fixture.principal,fixture);expect((await finish()).state).toBe('accepted');
       project=(await store.one<Project>('projects',project.id))!;
       expect(project.draft.productDisplayGroups).toEqual(count===2?[['p0','p1']]:undefined);
+      expect(websiteCalls.filter(c=>c==='reserve')).toHaveLength(1);expect(websiteCalls.filter(c=>c==='commit')).toHaveLength(1);
       expect(project.draft.products).toHaveLength(count);
     }
   });
@@ -81,7 +121,7 @@ describe('durable confirmed materials receiver',()=>{
     for(const id of ['source-7','source-5','source-4','source-6'])pending.get(id)!.resolve(imageResponse());
     await tick;
     expect(await progress()).toMatchObject({state:'accepted',receivedMedia:8});expect(peak).toBe(4);expect(fetches).toBe(8);
-    expect(await store.list('assets')).toHaveLength(8);expect(schedule).toHaveBeenCalledTimes(2);
+    expect(await store.list('assets')).toHaveLength(8);expect(schedule).toHaveBeenCalledTimes(4); // Receiver plus quota reserve/commit recovery alarms.
   });
   it('settles retryable failures after concurrent successes and resumes them after receiver restart',async()=>{
     fixture=await materialsFixture(8);
@@ -144,7 +184,7 @@ describe('durable confirmed materials receiver',()=>{
   });
   it('reuses a copied R2 object after its progress checkpoint is lost on receiver restart',async()=>{
     await service.submit(fixture.principal,fixture);
-    const row=await env.DB.prepare('SELECT scope,result FROM idempotency WHERE request_id=?').bind(fixture.submissionId).first<{scope:string;result:string}>();
+    const row=await env.DB.prepare("SELECT scope,result FROM idempotency WHERE scope LIKE 'materials:%' AND request_id=?").bind(fixture.submissionId).first<{scope:string;result:string}>();
     const operation=JSON.parse(row!.result),assetId=`materials-${fixture.submissionId}-0`;
     await env.MEDIA.put(`projects/${operation.projectId}/assets/${assetId}`,materialsPng,{httpMetadata:{contentType:'image/png'},customMetadata:{sha256:fixture.materials.media[0].sha256}});
     service=createService();await service.tick();
@@ -173,7 +213,7 @@ describe('durable confirmed materials receiver',()=>{
     fixture.target={mode:'create',name:'Changed'};await expect(service.submit(fixture.principal,fixture)).rejects.toMatchObject({status:409,code:'submission_payload_conflict'});
   });
   it('rechecks account access during background receiving and keeps ordinary projects untouched',async()=>{
-    await expect(service.submit({...fixture.principal,email:'other@example.com'},fixture)).rejects.toMatchObject({status:403});
+    fixture.principal={...fixture.principal,email:'member@example.com',workspaceRole:'member'};
     await service.submit(fixture.principal,fixture);revoked=true;const receipt=await service.tick().then(()=>service.status(fixture.principal,fixture.submissionId));expect(receipt.state).toBe('failed');expect((await store.list('projects'))).toHaveLength(0);
   });
   it('preserves a newer project edit if an update finishes after expectedVersion changes',async()=>{

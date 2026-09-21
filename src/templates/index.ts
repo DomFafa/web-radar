@@ -32,7 +32,7 @@ import { renderFurnitureStorageTemplate } from './themes/furnitureStorage';
 import { renderKitchenwareTablewareTemplate } from './themes/kitchenwareTableware';
 import { materialProductImage,materialsSensengBody,materialsSeo,materialsThemeStyle } from './materials-render';
 import { materialsRuntime } from '../shared/materials-runtime';
-import { productImageViewerRuntime } from '../shared/product-image-viewer';
+import { withProductImageViewer } from '../shared/product-image-viewer';
 import { isTypedMaterials, isTypedMaterialsSource,isModernAboutSource, renderTypedMaterialsSite } from './materials-typed';
 import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline } from './themes/aboutHelper';
 export { labels };
@@ -75,7 +75,7 @@ const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
   const html = renderSiteContent(draft, options);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
-  return html.replace('</body>', `<script id="wr-product-image-viewer-script">(()=>{const __name=(value)=>value;(${productImageViewerRuntime.toString()})();})();</script></body>`);
+  return withProductImageViewer(html);
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;

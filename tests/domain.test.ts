@@ -80,6 +80,8 @@ describe('domain authorization and approval invariants', () => {
   it('allows creator, current workspace admin and platform admin but denies unrelated members', () => {
     const p = project();
     expect(canManage(p, owner)).toBe(true);
+    expect(canManage(p, { ...owner, workspaceId: 'other-workspace' })).toBe(false);
+    expect(canManage(p, { ...owner, workspaceId: 'other-workspace', workspaceRole: 'admin' })).toBe(false);
     expect(canManage(p, { ...owner, userId: 'member' })).toBe(false);
     expect(canManage(p, { ...owner, userId: 'admin', workspaceRole: 'admin' })).toBe(true);
     expect(
