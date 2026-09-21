@@ -1780,9 +1780,75 @@ body[data-template="corpox-consulting"] {
   transform: scale(1.05);
 }
 
+.wr-card-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .wr-card-hover:hover {
-  transform: translateY(-8px) scale(1.015);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ------------------------------------------------------------- */
+/* B2B LIGHT-THEMED FLAGSHIP TEMPLATES                           */
+/* ------------------------------------------------------------- */
+body[data-template="luggage-leather-banner"] {
+  background: #fdfcf9;
+  color: #1f1610;
+}
+body[data-template="luggage-voyage-video"] {
+  background: #f5f8fc;
+  color: #0f172a;
+}
+body[data-template="jewelry-luxury-banner"] {
+  background: #faf8f5;
+  color: #1c1417;
+}
+body[data-template="jewelry-timeless-video"] {
+  background: #f8fafc;
+  color: #0b192c;
+}
+body[data-template="homedecor-aesthetic-banner"] {
+  background: #fbf9f5;
+  color: #292524;
+}
+body[data-template="homedecor-living-video"] {
+  background: #f9fafb;
+  color: #111827;
+}
+body[data-template="furniture-minimal-banner"] {
+  background: #ffffff;
+  color: #18181b;
+}
+body[data-template="furniture-spatial-video"] {
+  background: #f8fafc;
+  color: #0f172a;
+}
+body[data-template="kitchen-culinary-banner"] {
+  background: #f8fafc;
+  color: #0f172a;
+}
+body[data-template="kitchen-gourmet-video"] {
+  background: #fffbeb;
+  color: #271b12;
+}
+
+@keyframes wrPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.92);
+  }
+}
+@keyframes wrFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

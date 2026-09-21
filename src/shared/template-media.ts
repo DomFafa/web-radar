@@ -250,6 +250,146 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'luggage-leather-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 940（16:5.9 托斯卡纳手工植鞣皮具明亮画册展台）',
+    bannerNote: '天然植鞣皮质感与暖米白展台已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'luggage-voyage-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 阳光航站楼登机动态全景视频，适配 2K/4K）',
+    bannerNote: '阳光航站楼机组出行全景视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'jewelry-luxury-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 950（16:6 旺多姆高珠明亮采光展盒）',
+    bannerNote: '珍珠米白丝绸展台与香槟金光晕已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'jewelry-timeless-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 瑞士日内瓦制表工坊自然光陀飞轮视频，适配 2K/4K）',
+    bannerNote: '瑞士日内瓦无尘明亮制表工坊与自产陀飞轮高帧率微距视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'homedecor-aesthetic-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 980（16:6.1 晨光日式侘寂素烧陶艺生活展台）',
+    bannerNote: '燕麦柔奶白陶艺生活场景与1280度高温窑变肌理已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'homedecor-living-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 百叶窗阳光流动治愈生活短片，适配 2K/4K）',
+    bannerNote: '百叶窗阳光流动与现代艺术居所生活短片已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'furniture-minimal-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 920（16:5.7 美术馆级包豪斯实木展台）',
+    bannerNote: '纯白几何网格底色与大正传统榫卯拆解图已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'furniture-spatial-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 现代紧凑型空间折叠家具演示视频，适配 2K/4K）',
+    bannerNote: '小户型多功能变形家具平滑折叠演示视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'kitchen-culinary-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 洁净不锈钢主厨料理台展台）',
+    bannerNote: '67层折叠锻打水波纹与15度水冷微开刃金相图已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'kitchen-gourmet-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 阳光法式私厨慢炖料理短片，适配 2K/4K）',
+    bannerNote: '慢动作法式烹饪与汤汁微滚视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',

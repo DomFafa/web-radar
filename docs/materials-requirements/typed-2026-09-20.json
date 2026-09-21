@@ -150,6 +150,66 @@
       "sha256": "4a6534a9ab744063ed9b4ec56fb749b3c61ac9b42dd0aa63f3a4e71d57e8aa5a",
       "imageSlots": 4,
       "textSlots": 214
+    },
+    "luggage-leather-banner": {
+      "contractRevision": "2026-09-20.luggage-leather-banner-materials.2",
+      "sha256": "491ddebd3d280c39e7124871266429e53ba602934e47874704160782c47ae803",
+      "imageSlots": 4,
+      "textSlots": 229
+    },
+    "luggage-voyage-video": {
+      "contractRevision": "2026-09-20.luggage-voyage-video-materials.2",
+      "sha256": "bb386435ada14039b123a9889cd8fd5c77385c8fe788dd26ffc13e033b0590a4",
+      "imageSlots": 4,
+      "textSlots": 231
+    },
+    "jewelry-luxury-banner": {
+      "contractRevision": "2026-09-20.jewelry-luxury-banner-materials.2",
+      "sha256": "47a8881c0265063df8b15ed171afd2267dc7950e3e489a72d6356a07b0d35ec7",
+      "imageSlots": 4,
+      "textSlots": 228
+    },
+    "jewelry-timeless-video": {
+      "contractRevision": "2026-09-20.jewelry-timeless-video-materials.2",
+      "sha256": "75b633164293a30063e35d5e7655441ff583d935ac7f1ec1983a215a976f7988",
+      "imageSlots": 4,
+      "textSlots": 230
+    },
+    "homedecor-aesthetic-banner": {
+      "contractRevision": "2026-09-20.homedecor-aesthetic-banner-materials.2",
+      "sha256": "5ceb479b4f011dfaab1cca225eaa720db50a9ffee60a0de48f1b74408155d69c",
+      "imageSlots": 4,
+      "textSlots": 229
+    },
+    "homedecor-living-video": {
+      "contractRevision": "2026-09-20.homedecor-living-video-materials.2",
+      "sha256": "ef103db5b50ed1b399a17cb75edfd17c84be20e5f7d14bea0da78311d4454460",
+      "imageSlots": 4,
+      "textSlots": 231
+    },
+    "furniture-minimal-banner": {
+      "contractRevision": "2026-09-20.furniture-minimal-banner-materials.2",
+      "sha256": "05996aeb4748c4a274720e68763b0da4b5bfdfd53114dcb10863ad493c5315ca",
+      "imageSlots": 4,
+      "textSlots": 228
+    },
+    "furniture-spatial-video": {
+      "contractRevision": "2026-09-20.furniture-spatial-video-materials.2",
+      "sha256": "3e35cc0fcff32fb3d64e1ca7d6f067026f2a551e5b6409c8c951e75867869899",
+      "imageSlots": 4,
+      "textSlots": 230
+    },
+    "kitchen-culinary-banner": {
+      "contractRevision": "2026-09-20.kitchen-culinary-banner-materials.2",
+      "sha256": "88ebe28524f0916386dbcc89e8a2ce34a032b0f2897ebf2c5d70b1eaa03c81fe",
+      "imageSlots": 4,
+      "textSlots": 228
+    },
+    "kitchen-gourmet-video": {
+      "contractRevision": "2026-09-20.kitchen-gourmet-video-materials.2",
+      "sha256": "4a374a6bd01b4edc8f5c5876bfe6ae4187bb5a01d0f0ee2a4e12e3e5bc586f36",
+      "imageSlots": 4,
+      "textSlots": 230
     }
   }
 }

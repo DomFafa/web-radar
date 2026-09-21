@@ -18,6 +18,16 @@ import guideApparelBanner from './documents/apparel-fabric-banner.json';
 import guideApparelVideo from './documents/apparel-runway-video.json';
 import guideFootwearBanner from './documents/footwear-craft-banner.json';
 import guideFootwearVideo from './documents/footwear-kinetic-video.json';
+import guideLuggageBanner from './documents/luggage-leather-banner.json';
+import guideLuggageVideo from './documents/luggage-voyage-video.json';
+import guideJewelryBanner from './documents/jewelry-luxury-banner.json';
+import guideJewelryVideo from './documents/jewelry-timeless-video.json';
+import guideHomeDecorBanner from './documents/homedecor-aesthetic-banner.json';
+import guideHomeDecorVideo from './documents/homedecor-living-video.json';
+import guideFurnitureBanner from './documents/furniture-minimal-banner.json';
+import guideFurnitureVideo from './documents/furniture-spatial-video.json';
+import guideKitchenBanner from './documents/kitchen-culinary-banner.json';
+import guideKitchenVideo from './documents/kitchen-gourmet-video.json';
 
 const documents = [
   guide0,
@@ -39,6 +49,16 @@ const documents = [
   guideApparelVideo,
   guideFootwearBanner,
   guideFootwearVideo,
+  guideLuggageBanner,
+  guideLuggageVideo,
+  guideJewelryBanner,
+  guideJewelryVideo,
+  guideHomeDecorBanner,
+  guideHomeDecorVideo,
+  guideFurnitureBanner,
+  guideFurnitureVideo,
+  guideKitchenBanner,
+  guideKitchenVideo,
 ].map((value) => guideSchema.parse(value));
 export const templateGuides: readonly TemplateGuide[] = guideIds.map((id) => {
   const matches = documents.filter((guide) => guide.templateId === id);
