@@ -1,3 +1,4 @@
+import {availableMaterialsTemplateReleases} from '../../templates/materials-releases';
 import { Hono } from 'hono';
 import type { HonoEnv } from '../env';
 import { authenticate } from '../auth';
@@ -72,10 +73,16 @@ export function createTemplateGuidesApp() {
   );
   app.get('/schema', (c) => c.json(guideJsonSchema));
   app.get('/output-schema', (c) => c.json(outputJsonSchema));
-  app.get('/materials/catalog',(c)=>c.json({schemaVersion:'wr-template-materials-v1',templates:templateGuides.map(g=>{
-    const profile=getMaterialsTemplate(g.templateId);
-    return {templateId:g.templateId,name:g.name,guideRevision:profile?.guideRevision??g.revision,contractRevision:profile?.contractRevision??null,thumbnailUrl:`/templates/previews/${g.templateId}.jpg`,pages:[...materialsPages],materialsReady:!!profile?.materialsReady,requirementsPath:`/api/internal/template-guides/materials/${g.templateId}`,previewPath:`/api/internal/template-guides/materials/${g.templateId}/preview`};
-  })}));
+  app.get('/materials/catalog',async(c)=>{
+    const entries=[...templateGuides.map(g=>({templateId:g.templateId,name:g.name})),...availableMaterialsTemplateReleases().map(r=>({templateId:r.contract.templateId,name:r.name}))];
+    const templates=await Promise.all(entries.filter((entry,index,all)=>all.findIndex(other=>other.templateId===entry.templateId)===index).map(async(entry)=>{
+      const profile=getMaterialsTemplate(entry.templateId);
+      const revision=profile?.contractRevision;
+      const query=revision?`?contractRevision=${encodeURIComponent(revision)}`:'';
+      return {...entry,guideRevision:profile?.guideRevision,contractRevision:revision??null,contractSha256:profile?await sha256(JSON.stringify(profile)):null,rendererRevision:profile?.rendererRevision,requiredCapabilities:profile?.requiredCapabilities??[],thumbnailUrl:`/templates/previews/${entry.templateId}.jpg`,pages:profile?.pages??[...materialsPages],materialsReady:!!profile?.materialsReady,requirementsPath:`/api/internal/template-guides/materials/${entry.templateId}${query}`,previewPath:`/api/internal/template-guides/materials/${entry.templateId}/preview${query}`};
+    }));
+    return c.json({schemaVersion:'wr-template-materials-v1',templates});
+  });
   app.get('/materials/:id/preview',(c)=>{
     const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
@@ -85,9 +92,11 @@ export function createTemplateGuidesApp() {
     const html=renderSite(draft,{projectId:'materials-demo',lang:lang as typeof draft.languages[number],page,productId:draft.primaryProductId,assetUrl:id=>id,inquiryUrl:'',preview:true});
     return c.json({templateId:profile.templateId,contractRevision:profile.contractRevision,page,html,assetBaseUrl:c.env.APP_ORIGIN||new URL(c.req.url).origin,demo:true});
   });
-  app.get('/materials/:id',(c)=>{
+  app.get('/materials/:id',async(c)=>{
     const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
+    c.header('X-Template-Materials-Revision',profile.contractRevision);
+    c.header('X-Template-Materials-SHA256',await sha256(JSON.stringify(profile)));
     return c.json(profile);
   });
   app.get('/:id', async (c) => {

@@ -14,6 +14,7 @@ export function validateTypedMaterials(m:PositionInput,profile:MaterialsTemplate
   }
   const identities=new Map<string,string>(),roles=new Map<string,string>(),banners=new Map<string,string>();
   const targets=new Set<string>();
+  const compositions=new Map<string,{slotId:string;distinct:boolean}>();
   for(const binding of m.imageBindings){
     const slot=profile.imageSlots.find(s=>s.id===binding.slotId);
     if(!slot)continue;
@@ -22,7 +23,8 @@ export function validateTypedMaterials(m:PositionInput,profile:MaterialsTemplate
     targets.add(target);
     if(binding.role!==slot.role)add('image_role_mismatch',binding.slotId);
     const illustration=slot.role==='facility'||slot.role==='logistics';
-    const expected=illustration?[]:slot.role==='collection'?ids:[binding.productId||''];
+    const scope=slot.productScope??(illustration?'none':slot.role==='collection'?'all-products':'single-product');
+    const expected=scope==='none'?[]:scope==='all-products'?ids:[binding.productId||''];
     const depicted=binding.depictedProductIds;
     if(slot.role&&(!depicted||depicted.length!==expected.length||new Set(depicted).size!==depicted.length||expected.some(id=>!depicted.includes(id))||
       ((illustration||slot.role==='collection')?!!binding.productId:!ids.includes(binding.productId||''))))add('image_identity_mismatch',binding.slotId);
@@ -32,7 +34,11 @@ export function validateTypedMaterials(m:PositionInput,profile:MaterialsTemplate
       if(!selected.includes(binding.productId||''))add('unexpected_display_product',binding.slotId);
     }
     if(slot.repeat==='per-product'&&slot.maxProducts!==undefined&&!ids.slice(0,slot.maxProducts).includes(binding.productId||''))add('unexpected_display_product',binding.slotId);
-    if(slot.repeat!=='per-product-gallery'&&binding.itemIndex!==undefined)add('invalid_target',binding.slotId);
+    if(slot.materialSource&&slot.repeat==='fixed'){
+      if(binding.itemIndex===undefined||!Number.isInteger(binding.itemIndex)||binding.itemIndex<0||binding.itemIndex>=slot.max)add('invalid_target',binding.slotId);
+    }else if(slot.repeat!=='per-product-gallery'&&binding.itemIndex!==undefined)add('invalid_target',binding.slotId);
+    if(slot.productScope==='single-product'&&!binding.productId)add('missing_product',binding.slotId);
+    if(slot.productScope&&slot.productScope!=='single-product'&&binding.productId)add('invalid_target',binding.slotId);
     if(slot.role==='packaging'){
       const product=m.products.find(p=>p.id===binding.productId),evidence=binding.evidenceMediaIds||[];
       if(!evidence.length||new Set(evidence).size!==evidence.length||evidence.some(id=>!product?.galleryMediaIds.includes(id)||!m.media.some(a=>a.id===id)))add('packaging_evidence_missing',binding.slotId);
@@ -41,6 +47,9 @@ export function validateTypedMaterials(m:PositionInput,profile:MaterialsTemplate
     for(const id of [binding.mediaId,binding.mobileMediaId].filter((id):id is string=>!!id)){
       const digest=m.media.find(media=>media.id===id)?.sha256;
       for(const key of [`id:${id}`,...(digest?[`sha:${digest}`]:[])]){
+        const prior=compositions.get(key);
+        if(prior&&prior.slotId!==slot.id&&(prior.distinct||slot.reusePolicy==='distinct-slot'))add(slot.role==='collection'?'banner_composition_reused':'slot_composition_reused',binding.slotId);
+        compositions.set(key,{slotId:slot.id,distinct:slot.reusePolicy==='distinct-slot'});
         if(identities.has(key)&&identities.get(key)!==identity)add('image_role_identity_reused',binding.slotId);
         identities.set(key,identity);
         // Original main/gallery retention may reuse a classified image for the same product.

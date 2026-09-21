@@ -1,3 +1,4 @@
+import { renderReleasedMaterials } from './materials-releases';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
@@ -73,6 +74,8 @@ function segment(id: string): string {
 }
 const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  const released = renderReleasedMaterials(draft, options);
+  if (released !== undefined) return released;
   const html = renderSiteContent(draft, options);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return withProductImageViewer(html);

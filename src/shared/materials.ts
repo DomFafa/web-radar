@@ -111,9 +111,10 @@ interface Slot {
 }
 export interface MaterialsTemplateContract {
   schemaVersion:'wr-template-materials-v1';templateId:string;guideRevision:string;contractRevision:string;materialsReady:boolean;pages:Array<typeof materialsPages[number]>;
+  rendererRevision?:string;requiredCapabilities?:string[];
   imagePolicy?:'typed-regions-v1';selectionGroups?:{scene:number;featured:number};
-  imageSlots:Array<Slot & {repeat:'once'|'per-product'|'per-product-gallery'|'fixed'|'per-selection';selectionGroup?:'scene'|'featured';role?:typeof materialsImageRoles[number];sourcePolicy?:'product-reference'|'illustration';maxProducts?:number;width:number;height:number;composition:string;mobileComposition:string;fit:'cover'|'contain';allowedMimeTypes:string[]}>;
-  textSlots:Array<Slot & {repeat:'once'|'per-product'|'fixed';maxCodePoints:number;maxLines:number;factualPolicy:string;exampleText?:string}>;
+  imageSlots:Array<Slot & {materialSource?:'product-primary'|'product-gallery'|'slot-image';productScope?:'all-products'|'single-product'|'none';reusePolicy?:'same-product'|'distinct-slot';repeat:'once'|'per-product'|'per-product-gallery'|'fixed'|'per-selection';selectionGroup?:'scene'|'featured';role?:typeof materialsImageRoles[number];sourcePolicy?:'product-reference'|'illustration';maxProducts?:number;width:number;height:number;composition:string;mobileComposition:string;fit:'cover'|'contain';allowedMimeTypes:string[]}>;
+  textSlots:Array<Slot & {format?:'plain-text'|'value-label-description-lines';factSources?:Array<'brand'|'product'>;repeat:'once'|'per-product'|'fixed';maxCodePoints:number;maxLines:number;factualPolicy:string;exampleText?:string}>;
   optionalSections:Array<{id:string;reason:string}>;visualParameters:string[];contentPolicy:'b2b-confirmed-facts-only';
 }
 /** Applied fields are editable; receipt/source provenance belongs on Project, not this draft. */

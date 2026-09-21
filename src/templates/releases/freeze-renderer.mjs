@@ -1,0 +1,21 @@
+/** Run with an explicitly reviewed source checkout. Never overwrite a published release. */
+import { build } from 'esbuild';
+import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
+import { existsSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const source = resolve(process.argv[2] || '');
+if (!process.argv[2]) throw Error('Pass a reviewed source checkout');
+const commit = process.argv[3] || execFileSync('git', ['rev-parse', 'HEAD'], { cwd: source, encoding: 'utf8' }).trim();
+if (!/^[a-f0-9]{40}$/.test(commit)) throw Error('A full reviewed source commit is required');
+const result = await build({ stdin: { contents: "export { renderSite } from './src/templates/index'; export { getMaterialsTemplate } from './src/templates/materials';", resolveDir: source, sourcefile: 'confirmed-materials-entry.ts' }, bundle: true, format: 'esm', platform: 'browser', target: 'es2022', keepNames: true, minify: false, write: false, metafile: true, legalComments: 'inline' });
+const inputs = Object.keys(result.metafile.inputs);
+if (inputs.some(path => /(?:^|\/)src\/(?:worker|client)\//.test(path))) throw Error('Renderer snapshot contains application code');
+const body = '// Generated immutable confirmed-materials renderer; edit the release registry, not this file.\n' + result.outputFiles[0].text;
+const dir = dirname(fileURLToPath(import.meta.url));
+if (existsSync(resolve(dir, 'baseline-20260922.mjs'))) throw Error('Release already exists; create a new release name instead of replacing it');
+writeFileSync(resolve(dir, 'baseline-20260922.mjs'), body);
+writeFileSync(resolve(dir, 'baseline-20260922.json'), JSON.stringify({ sourceCommit: commit, sha256: createHash('sha256').update(body).digest('hex'), bytes: Buffer.byteLength(body), gzipBytes: gzipSync(body).length, inputs: inputs.map(path => path.includes('/node_modules/') ? 'node_modules/' + path.split('/node_modules/').at(-1) : path.replace(source + '/', '').replace(/^.*?(?=src\/)/, '')) }, null, 2) + '\n');
+console.log(JSON.stringify({ sourceCommit: commit, bytes: Buffer.byteLength(body), gzipBytes: gzipSync(body).length, inputCount: inputs.length }));

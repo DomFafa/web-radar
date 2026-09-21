@@ -24,7 +24,7 @@ export const isModernAboutSource=(draft:Draft)=>modernAboutDrafts.has(draft);
 export const isTypedMaterialsSource=(draft:Draft)=>rawDrafts.has(draft);
 export const modernMaterialsRevision=(id:string)=>`2026-09-20.${id}-materials.2`;
 const aiAgencyHeroRevision='2026-09-21.corpox-ai-agency-materials.3';
-export const isTypedMaterials=(draft:Draft)=>draft.materials?.contractRevision===`2026-09-19.${draft.template}-materials.1`||draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||(draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision);
+export const isTypedMaterials=(draft:Draft)=>draft.materials?.contractRevision===`2026-09-19.${draft.template}-materials.1`||draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||(draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision)||!!(draft.materials&&getMaterialsTemplate(draft.template,draft.materials.contractRevision)?.requiredCapabilities?.length);
 const attr=(node:Element,name:string)=>node.attrs.find(a=>a.name===name)?.value||'';
 const set=(node:Element,name:string,value:string)=>{const a=node.attrs.find(a=>a.name===name);if(a)a.value=value;else node.attrs.push({name,value});};
 const clean=(s:string)=>s.trim().replace(/\s+/g,' ');

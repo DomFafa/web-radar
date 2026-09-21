@@ -3,7 +3,8 @@ import { referenceInteractions } from '../templates/themes/referenceInteractions
 import { materialsRuntime } from '../shared/materials-runtime';
 import { productImageViewerRuntime } from '../shared/product-image-viewer';
 import { bannerRuntime } from '../shared/banner-runtime';
-import type { DesignPage, Language } from '../shared/model';
+import { releasedMaterialsPreviewRuntime } from '../templates/materials-releases';
+import type { DesignPage, Draft, Language } from '../shared/model';
 
 /** Keep renderer data-wr hooks for the parent's sandbox bridge; only remap destinations. */
 export function projectPreviewHtml(html: string, base: string, origin: string, selection: { page: DesignPage; lang: Language; productId?: string; expectedVersion: number }): string {
@@ -42,3 +43,7 @@ export const projectPreviewRuntime = `(()=>{
     for(const card of document.querySelectorAll('[data-product-card]')) card.hidden=!(card.dataset.productName||card.textContent).toLowerCase().includes(search.value.toLowerCase());
   });
 })();`;
+
+export function projectPreviewRuntimeForDraft(draft: Draft): string {
+  return releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;
+}

@@ -17,7 +17,7 @@ describe('materials guide account boundary',()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
     expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(Object.keys(templateMediaRequirements).sort());
-    expect(entries.every((t:any)=>t.contractRevision===(t.templateId==='corpox-ai-agency'?'2026-09-21.corpox-ai-agency-materials.3':`2026-09-20.${t.templateId}-materials.2`)&&t.guideRevision==='2026-09-20.1')).toBe(true);
+    expect(entries.every((t:any)=>t.contractRevision===`2026-09-22.${t.templateId}-materials.4`&&t.guideRevision==='2026-09-20.1')).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
     const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
   });
@@ -28,7 +28,7 @@ describe('materials guide account boundary',()=>{
   });
   it('serves the corrected Corpox hero while keeping frozen two-hero previews available',async()=>{
     const current=await get('materials/corpox-ai-agency'),profile=await current.json()as any;
-    expect(profile.contractRevision).toBe('2026-09-21.corpox-ai-agency-materials.3');
+    expect(profile.contractRevision).toBe('2026-09-22.corpox-ai-agency-materials.4');
     expect(profile.imageSlots.filter((slot:any)=>slot.id.startsWith('hero-slide-'))).toHaveLength(1);
     const revision='2026-09-20.corpox-ai-agency-materials.2';
     const old=await(await get(`materials/corpox-ai-agency?contractRevision=${revision}`)).json()as any;
@@ -84,4 +84,21 @@ describe('materials guide account boundary',()=>{
     expect((await post('/materials-submissions',input)).status).toBe(202);
     expect((await post(status,{principal:input.principal})).status).toBe(202);expect(forwarded).toBe(2);
   });
+});
+
+it('catalog requirements and preview URLs lock exactly the advertised immutable revision and hash', async () => {
+  const input = await materialsFixture();
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ protocolVersion: 1, principal: input.principal })));
+  try {
+    const env = { PRODUCT_RADAR_BASE_URL: 'https://product.example.com', PRODUCT_RADAR_INTEGRATION_SECRET: 's'.repeat(40) } as AppEnv;
+    const app = createTemplateGuidesApp();
+    const headers = { 'X-Web-Radar-Secret': 's'.repeat(40), 'X-Product-Radar-User-Id': input.principal.userId, 'X-Product-Radar-Workspace-Id': input.principal.workspaceId };
+    const list = await (await app.request('https://web-radar.net/materials/catalog', { headers }, env)).json() as any;
+    for (const entry of list.templates) {
+      expect(new URL(entry.requirementsPath, 'https://web-radar.net').searchParams.get('contractRevision')).toBe(entry.contractRevision);
+      expect(new URL(entry.previewPath, 'https://web-radar.net').searchParams.get('contractRevision')).toBe(entry.contractRevision);
+      expect(entry.requiredCapabilities).toContain('image.product-primary.v1');
+      expect(entry.contractSha256).toMatch(/^[a-f0-9]{64}$/);
+    }
+  } finally { vi.unstubAllGlobals(); }
 });

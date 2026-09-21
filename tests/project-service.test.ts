@@ -11,6 +11,7 @@ import { listProjectSummaries } from '../src/worker/project-queries';
 import { typedMaterialsFixture } from './fixtures/materials-typed';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { templateMediaRequirements } from '../src/shared/template-media';
+import { frozenMaterialsPreviewRuntime } from '../src/templates/releases/baseline-preview-20260922';
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Job, Principal, Project, PublicMediaManifest, Release } from '../src/shared/model';
 
@@ -156,6 +157,7 @@ describe('Product Radar private project service', () => {
     p.draft.company.name = 'CUSTOMER_CODE_MUST_NOT_ENTER_RUNTIME';
     await store.update('projects', p).run();
     const second: any = await (await call(p.id, 'preview', { page: 'detail' })).json();
+    expect(first.runtime).toBe(frozenMaterialsPreviewRuntime);
     expect(first.runtime).toBe(second.runtime); expect(second.runtime).not.toContain(p.draft.company.name);
     expect(first.runtime).toContain('const __name='); expect(first.runtime).toContain('data-wr-banner');
     expect(first.runtime).not.toContain('<script'); expect(first.runtime).not.toContain(secret);

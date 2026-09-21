@@ -1,7 +1,7 @@
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
 import type { ProjectServiceStatus, ProjectServicePreview } from '../shared/project-service';
-import { projectPreviewHtml, projectPreviewRuntime } from './project-preview';
+import { projectPreviewHtml, projectPreviewRuntimeForDraft } from './project-preview';
 import { currentMaterialsPrincipal } from './materials-auth';
 import { materialsImageAssetIds, validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
@@ -775,7 +775,7 @@ export class DomainService {
         assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
       const htmlStarted = performance.now();
       const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
-        projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntime,
+        projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntimeForDraft(draft),
         html: projectPreviewHtml(html, proxyBasePath, this.origin(), { page, lang, productId, expectedVersion: project.version }) };
       const result = json(response);
       result.headers.set('Server-Timing', `wr-render;dur=${(htmlStarted - renderStarted).toFixed(1)}, wr-html;dur=${(performance.now() - htmlStarted).toFixed(1)}`);

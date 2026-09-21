@@ -1,3 +1,4 @@
+import {availableMaterialsTemplateReleases} from '../templates/materials-releases';
 import type { Asset, Draft, Principal, Project } from '../shared/model';
 import { retainedProductDisplayGroups } from '../shared/product-display';
 import type { MaterialsReceipt, MaterialsSubmission } from '../shared/materials';
@@ -34,14 +35,16 @@ function productVisualFingerprint(draft:Draft,productId:string,hashes:Map<string
 }
 export function draftFromMaterials(submission:MaterialsSubmission,assets:Record<string,Asset>,previous?:Draft,previousAssets:Asset[]=[]):Draft{
   const m=submission.materials,b=m.brand,c=m.contact,d=defaultDraft();
+  const release=availableMaterialsTemplateReleases().find(item=>item.contract.templateId===m.template.id&&item.contract.contractRevision===m.template.contractRevision);
+  const renderedSlot=(kind:'image'|'text',slotId:string)=>(kind==='image'?release?.imageSlotMap[slotId]:release?.textSlotMap[slotId])??slotId;
   const asset=(id:string|undefined)=>id?assets[id]?.id:undefined;
   d.buildBranch='template';d.templateConfirmed=true;d.template=m.template.id as Draft['template'];d.languages=[...m.locales];d.country=m.country;d.primaryProductId=m.primaryProductId;d.brandColor=m.visual.palette.primary;
   d.company={name:b.name,description:b.description,type:b.businessType||'trader',email:c.email,contactName:c.name,phone:c.phone||'',whatsapp:c.whatsapp||'',address:b.address||'',slogan:b.slogan||'',establishedYear:b.establishedYear||'',certifications:b.certifications||'',capabilities:b.capabilities||'',linkedin:b.linkedin||'',facebook:b.facebook||'',instagram:b.instagram||'',x:b.x||'',logoAssetId:asset(b.logoMediaId),faviconAssetId:asset(b.faviconMediaId)};
   for(const field of ['targetMarkets','customerTypes','cooperationProcess']as const)if(b[field]!==undefined)d.company[field]=b[field];
-  for(const [slot,field]of [['about-headline','aboutHeadline'],['about-story','aboutStory'],['about-highlights','aboutHighlights']]as const)d.company[field]=m.textBindings.find(b=>b.slotId===slot&&b.locale==='en')?.text||'';
-  for(const [slot,field]of [['about-primary-image','aboutImageAssetId'],['about-secondary-image','aboutSecondaryImageAssetId']]as const)d.company[field]=asset(m.imageBindings.find(b=>b.slotId===slot)?.mediaId);
+  for(const [slot,field]of [['about-headline','aboutHeadline'],['about-story','aboutStory'],['about-highlights','aboutHighlights']]as const)d.company[field]=m.textBindings.find(b=>renderedSlot('text',b.slotId)===slot&&b.locale==='en')?.text||'';
+  for(const [slot,field]of [['about-primary-image','aboutImageAssetId'],['about-secondary-image','aboutSecondaryImageAssetId']]as const)d.company[field]=asset(m.imageBindings.find(b=>renderedSlot('image',b.slotId)===slot)?.mediaId);
   d.products=m.products.map(p=>({id:p.id,name:p.name,description:p.description,material:p.material,dimensions:p.dimensions,imageAssetId:asset(p.primaryMediaId),gallery:p.galleryMediaIds.map((id,i)=>({assetId:asset(id)!,sourceImageId:id,kind:i===0?'original':'detail',caption:m.imageBindings.find(b=>b.productId===p.id&&b.mediaId===id)?.alt.en||p.name})),tagline:p.tagline,sellingPoints:p.sellingPoints,applications:p.applications,translations:p.translations}));
-  for(const lang of m.locales){const copy=(id:string)=>m.textBindings.find(b=>b.slotId===id&&b.locale===lang)?.text||'';d.copy[lang]={headline:copy('hero-headline'),subtitle:copy('hero-subtitle'),cta:copy('primary-cta'),about:copy('company-about')};}
+  for(const lang of m.locales){const copy=(id:string)=>m.textBindings.find(b=>renderedSlot('text',b.slotId)===id&&b.locale===lang)?.text||'';d.copy[lang]={headline:copy('hero-headline'),subtitle:copy('hero-subtitle'),cta:copy('primary-cta'),about:copy('company-about')};}
   d.materials={templateId:m.template.id,contractRevision:m.template.contractRevision,visual:structuredClone(m.visual),...(m.displaySelection?{displaySelection:structuredClone(m.displaySelection)}:{}),imageBindings:m.imageBindings.map(({mediaId,mobileMediaId,evidenceMediaIds,...binding})=>({...binding,assetId:asset(mediaId)!,mobileAssetId:asset(mobileMediaId),...(evidenceMediaIds?{evidenceAssetIds:evidenceMediaIds.map(id=>asset(id)!)}:{})})),textBindings:structuredClone(m.textBindings),omittedSectionIds:[...m.omittedSectionIds]};
   const groups=retainedProductDisplayGroups(previous,d.products);
   if(groups&&previous){

@@ -20,7 +20,7 @@ describe('versioned homepage hero inventory', () => {
   it.each(Object.keys(templateMediaRequirements))('%s requires one real homepage hero', id => {
     const contract = getMaterialsTemplate(id)!;
     expect(contract.imageSlots.filter(slot => slot.id.startsWith('hero-slide-')).map(slot => slot.id)).toEqual(['hero-slide-0']);
-    expect(contract.contractRevision).toBe(id === 'corpox-ai-agency' ? '2026-09-21.corpox-ai-agency-materials.3' : `2026-09-20.${id}-materials.2`);
+    expect(contract.contractRevision).toBe(`2026-09-22.${id}-materials.4`);
   });
 
   it.each(['2026-09-19.corpox-ai-agency-materials.1', '2026-09-20.corpox-ai-agency-materials.2', undefined])(
@@ -36,7 +36,7 @@ describe('versioned homepage hero inventory', () => {
   );
 
   it('keeps the frozen two-hero contract readable after loading the corrected current contract', () => {
-    const current = getMaterialsTemplate('corpox-ai-agency')!;
+    const current = getMaterialsTemplate('corpox-ai-agency','2026-09-21.corpox-ai-agency-materials.3')!;
     const old = getMaterialsTemplate('corpox-ai-agency', '2026-09-20.corpox-ai-agency-materials.2')!;
     expect(createHash('sha256').update(JSON.stringify(old)).digest('hex')).toBe(previous.templates['corpox-ai-agency'].sha256);
     expect(old.imageSlots.filter(slot => slot.id.startsWith('hero-slide-'))).toHaveLength(2);

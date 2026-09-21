@@ -4,7 +4,7 @@ import { newBanner } from '../src/shared/banner-config';
 import type { Asset } from '../src/shared/model';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import { renderSite } from '../src/templates';
-import { renderTypedMaterialsSite } from '../src/templates/materials-typed';
+import { renderReleasedMaterials } from '../src/templates/materials-releases';
 import { editDraft } from '../src/worker/domain';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { typedMaterialsFixture } from './fixtures/materials-typed';
@@ -163,7 +163,7 @@ it.each(
 
 it('keeps unconfigured output and page/detail scope unchanged for typed materials', async () => {
   const draft = await fixture('senseng-candy');
-  expect(renderSite(draft, options)).toBe(renderTypedMaterialsSite(draft, options));
+  expect(renderSite(draft, options)).toBe(renderReleasedMaterials(draft, options));
   const empty = editDraft(draft, { ...draft, banners: [newBanner('new-home', ['home'])] });
   expect(renderSite(empty, options)).toBe(renderSite(draft, options));
   const saved = editDraft(draft, {

@@ -1,11 +1,10 @@
+import {releasedMaterialsContract} from './materials-releases';
 import {validAboutHighlights} from '../shared/materials';
 import { parseFragment, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import type { ConfirmedMaterials, MaterialsTemplateContract } from '../shared/materials';
 import { materialsPages } from '../shared/materials';
 import { referenceLayouts } from './themes/referenceLayouts';
-import { sensengMaterialInventory } from './materials-senseng';
-import { junoDisplayContract, junoDisplayRevision, junoLegacyRevision, validateJunoDisplay } from './juno-display';
-import { getModernMaterialsTemplate,getTypedMaterialsTemplate } from './materials-typed';
+import { junoDisplayRevision, validateJunoDisplay } from './juno-display';
 import { validateTypedMaterials } from './materials-typed-validation';
 
 type Node=DefaultTreeAdapterMap['node'];
@@ -97,18 +96,7 @@ function prepareJuno(){
   const result={html:serialize(root),contract};prepared.set('juno-toys',result);return result;
 }
 export function getMaterialsTemplate(id:string,contractRevision?:string):MaterialsTemplateContract|undefined {
-  if(contractRevision&&(id==='senseng-clean'||id==='senseng-video')){
-    const profile=sensengMaterialInventory(id).profile;
-    if(contractRevision===profile.contractRevision)return structuredClone(profile);
-  }
-  if(id==='juno-toys'){
-    if(contractRevision===junoLegacyRevision)return structuredClone(prepareJuno().contract);
-    if(contractRevision===junoDisplayRevision)return junoDisplayContract(prepareJuno().contract);
-  }
-  const current=getModernMaterialsTemplate(id,contractRevision);
-  if(current&&(!contractRevision||current.contractRevision===contractRevision))return current;
-  const previous=getTypedMaterialsTemplate(id);
-  return previous?.contractRevision===contractRevision?previous:undefined;
+  return releasedMaterialsContract(id,contractRevision);
 }
 export function prepareMaterialsReference(id:string):string {
   if(id!=='juno-toys')throw new Error('Unsupported materials template');
@@ -118,11 +106,14 @@ export interface MaterialsIssue {path:string;code:string;message:string}
 /** Position validation is separate from structural wire parsing and has no network side effects. */
 export type PositionInput=Pick<ConfirmedMaterials,'template'|'omittedSectionIds'|'imageBindings'|'textBindings'|'locales'|'displaySelection'> & {products:Array<Pick<ConfirmedMaterials['products'][number],'id'|'primaryMediaId'|'galleryMediaIds'>>;media:Array<Pick<ConfirmedMaterials['media'][number],'id'|'mimeType'> & {sha256?:string}>};
 export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
+  return validateMaterialsContractPositions(m,getMaterialsTemplate(m.template.id,m.template.contractRevision));
+}
+export function validateMaterialsContractPositions(m:PositionInput,p:MaterialsTemplateContract|undefined):MaterialsIssue[]{
   const issues:MaterialsIssue[]=[];
   const add=(path:string,code:string,message:string)=>issues.push({path,code,message});
-  const p=getMaterialsTemplate(m.template.id,m.template.contractRevision);
   if(!p){add('materials.template','unsupported_template','Template is not materials-ready');return issues;}
-  if(p.guideRevision!==m.template.guideRevision||p.contractRevision!==m.template.contractRevision){add('materials.template','contract_revision_conflict','Read the current template requirements');return issues;}
+  const materialSource=(slot:MaterialsTemplateContract['imageSlots'][number])=>slot.materialSource??(slot.id==='product-main'?'product-primary':slot.id==='product-gallery'?'product-gallery':'slot-image');
+  if(p.templateId!==m.template.id||p.guideRevision!==m.template.guideRevision||p.contractRevision!==m.template.contractRevision){add('materials.template','contract_revision_conflict','Read the current template requirements');return issues;}
   if(p.contractRevision===junoDisplayRevision)issues.push(...validateJunoDisplay(m,p));
   if(p.imagePolicy==='typed-regions-v1')issues.push(...validateTypedMaterials(m,p));
   for(const s of p.optionalSections)if(!m.omittedSectionIds.includes(s.id))add('materials.omittedSectionIds','unsupported_section',`Omit ${s.id} for this revision`);
@@ -135,33 +126,35 @@ export function validateMaterialsPositions(m:PositionInput):MaterialsIssue[]{
       if(b.productId&&!m.products.some(p=>p.id===b.productId))add(`materials.${kind}Bindings`,'unknown_product',b.slotId);
       if((slot.repeat.startsWith('per-product')||slot.repeat==='per-selection')&&!b.productId)add(`materials.${kind}Bindings`,'missing_product',b.slotId);
       if('text'in b&&['about-headline','about-story'].includes(b.slotId)&&!b.text.trim())add('materials.textBindings','empty_about_copy',b.slotId);
-      if('text'in b&&b.slotId==='about-highlights'&&!validAboutHighlights(b.text))add('materials.textBindings','invalid_about_highlights',b.slotId);
+      if('text'in b&&'maxCodePoints'in slot&&((slot.format==='value-label-description-lines')||(!slot.format&&b.slotId==='about-highlights'))&&!validAboutHighlights(b.text))add('materials.textBindings','invalid_about_highlights',b.slotId);
       if('text' in b&&'maxCodePoints' in slot&&[...b.text].length>slot.maxCodePoints)add('materials.textBindings','copy_too_long',b.slotId);
+      if('text'in b&&'format'in slot&&slot.format&&'maxLines'in slot&&b.text.split(/\r?\n/).length>slot.maxLines)add('materials.textBindings','copy_too_many_lines',b.slotId);
       if(kind==='image'&&'mediaId' in b&&'allowedMimeTypes' in slot){
         for(const locale of m.locales)if(!b.alt[locale]?.trim())add('materials.imageBindings','missing_alt',`${b.slotId}:${locale}`);
         for(const mediaId of [b.mediaId,b.mobileMediaId].filter(Boolean))if(!slot.allowedMimeTypes.includes(m.media.find(a=>a.id===mediaId)?.mimeType||''))add('materials.imageBindings','invalid_media_type',b.slotId);
         const product=m.products.find(p=>p.id===b.productId);
-        if(slot.id==='product-main'&&(b.itemIndex!==undefined||b.mediaId!==product?.primaryMediaId))add('materials.imageBindings','primary_media_mismatch',b.slotId);
-        if(slot.id==='product-gallery'&&(!b.itemIndex||b.mediaId!==product?.galleryMediaIds[b.itemIndex]))add('materials.imageBindings','gallery_media_mismatch',b.slotId);
+        if(materialSource(slot)==='product-primary'&&(b.itemIndex!==undefined||b.mediaId!==product?.primaryMediaId))add('materials.imageBindings','primary_media_mismatch',b.slotId);
+        if(materialSource(slot)==='product-gallery'&&(!b.itemIndex||b.mediaId!==product?.galleryMediaIds[b.itemIndex]))add('materials.imageBindings','gallery_media_mismatch',b.slotId);
       }
     }
     for(const slot of slots){
-      const targets=slot.repeat==='per-product'?m.products.slice(0,'maxProducts'in slot?slot.maxProducts:undefined).map(p=>p.id):slot.repeat==='per-selection'?(m.displaySelection?.['selectionGroup'in slot&&slot.selectionGroup==='scene'?'sceneProductIds':'featuredProductIds']||[]):[undefined];
+      const targets=(slot.repeat==='per-product'||slot.repeat==='per-product-gallery'&&'materialSource'in slot&&!!slot.materialSource)?m.products.slice(0,'maxProducts'in slot?slot.maxProducts:undefined).map(p=>p.id):slot.repeat==='per-selection'?(m.displaySelection?.['selectionGroup'in slot&&slot.selectionGroup==='scene'?'sceneProductIds':'featuredProductIds']||[]):[undefined];
       for(const productId of targets){
         const locales=kind==='text'?m.locales:[undefined];
         for(const locale of locales){
-          const bound=bindings.filter(b=>b.slotId===slot.id&&(slot.repeat==='once'||b.productId===productId)&&(!locale||('locale' in b&&b.locale===locale)));
-          if(slot.repeat==='per-product-gallery')continue;
+          const bound=bindings.filter(b=>b.slotId===slot.id&&(slot.repeat==='once'||slot.repeat==='fixed'||b.productId===productId)&&(!locale||('locale' in b&&b.locale===locale)));
+          if(slot.repeat==='per-product-gallery'&&(!('materialSource'in slot)||!slot.materialSource))continue;
           if(bound.length<slot.min||bound.length>slot.max)add(`materials.${kind}Bindings`,'slot_quantity',`${slot.id}:${productId||''}:${locale||''}`);
           if(slot.required&&bound.some(b=>'text' in b&&!b.text.trim()))add('materials.textBindings','empty_copy',slot.id);
         }
       }
     }
   }
-  const galleryTargets=m.imageBindings.filter(b=>b.slotId==='product-gallery').map(b=>`${b.productId}:${b.itemIndex}`);
+  const gallerySlots=p.imageSlots.filter(slot=>materialSource(slot)==='product-gallery');
+  const galleryTargets=m.imageBindings.filter(b=>gallerySlots.some(slot=>slot.id===b.slotId)).map(b=>`${b.slotId}:${b.productId}:${b.itemIndex}`);
   if(new Set(galleryTargets).size!==galleryTargets.length)add('materials.imageBindings','duplicate_target','Gallery bindings must be unique');
-  for(const product of m.products)product.galleryMediaIds.slice(1).forEach((mediaId,i)=>{
-    if(!m.imageBindings.some(b=>b.slotId==='product-gallery'&&b.productId===product.id&&b.itemIndex===i+1&&b.mediaId===mediaId))add('materials.imageBindings','gallery_binding_missing',`${product.id}:${i+1}`);
+  for(const slot of gallerySlots)for(const product of m.products)product.galleryMediaIds.slice(1).forEach((mediaId,i)=>{
+    if(!m.imageBindings.some(b=>b.slotId===slot.id&&b.productId===product.id&&b.itemIndex===i+1&&b.mediaId===mediaId))add('materials.imageBindings','gallery_binding_missing',`${product.id}:${i+1}`);
   });
   return issues;
 }
