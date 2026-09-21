@@ -17,7 +17,7 @@ describe('materials guide account boundary',()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
     expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(Object.keys(templateMediaRequirements).sort());
-    expect(entries.every((t:any)=>t.contractRevision===`2026-09-20.${t.templateId}-materials.2`&&t.guideRevision==='2026-09-20.1')).toBe(true);
+    expect(entries.every((t:any)=>t.contractRevision===(t.templateId==='corpox-ai-agency'?'2026-09-21.corpox-ai-agency-materials.3':`2026-09-20.${t.templateId}-materials.2`)&&t.guideRevision==='2026-09-20.1')).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
     const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
   });
@@ -25,6 +25,19 @@ describe('materials guide account boundary',()=>{
     principal.userId='someone';expect((await get('materials/catalog')).status).toBe(403);
     expect((await get('materials/catalog',{'X-Product-Radar-User-Id':''})).status).toBe(400);
     expect((await get('materials/catalog',{'X-Web-Radar-Secret':'wrong'})).status).toBe(401);
+  });
+  it('serves the corrected Corpox hero while keeping frozen two-hero previews available',async()=>{
+    const current=await get('materials/corpox-ai-agency'),profile=await current.json()as any;
+    expect(profile.contractRevision).toBe('2026-09-21.corpox-ai-agency-materials.3');
+    expect(profile.imageSlots.filter((slot:any)=>slot.id.startsWith('hero-slide-'))).toHaveLength(1);
+    const revision='2026-09-20.corpox-ai-agency-materials.2';
+    const old=await(await get(`materials/corpox-ai-agency?contractRevision=${revision}`)).json()as any;
+    expect(old.imageSlots.filter((slot:any)=>slot.id.startsWith('hero-slide-'))).toHaveLength(2);
+    for(const [suffix,count]of [["",1],[`?contractRevision=${revision}`,2]]as const){
+      const preview=await(await get('materials/corpox-ai-agency/preview'+suffix)).json()as any;
+      expect(preview.demo).toBe(true);
+      expect((preview.html.match(/data-wr-collection-slide="/g)||[])).toHaveLength(count);
+    }
   });
   it('does not grant the integration secret access to legacy template guides',async()=>{
     expect((await get('juno-toys')).status).toBe(401);
