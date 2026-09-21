@@ -6,6 +6,7 @@ import { withFavicon } from '../shared/favicon';
 import { sanitizeGeneratedHtml } from './site-safety';
 import { plannedPages } from '../shared/site-brief';
 import { publicAssetReferences, requireCondition } from './domain';
+import { withProductImageViewer } from '../shared/product-image-viewer';
 
 const escape = (s: string) =>
   s
@@ -106,6 +107,8 @@ export function materializeSiteFiles(
         /<head(?:\s[^>]*)?>/i,
         (head) => `${head}<meta http-equiv="Content-Security-Policy" content="${escape(policy)}">`,
       );
+    const product = draft.products.find(product => draft.languages.some(lang => siteFilePath(lang, 'detail', product.id) === key));
+    if (product) result[key] = withProductImageViewer(result[key], product.imageAssetId ? options.assetUrl(product.imageAssetId) : undefined);
   }
   result['index.html'] =
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/"><title>${escape(draft.company.name)}</title></head><body><a href="en/">${escape(draft.company.name)}</a></body></html>`;

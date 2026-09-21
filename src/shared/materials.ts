@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Principal } from './model';
 
 export const materialsLocales = ['en', 'de', 'fr', 'es', 'pt', 'it'] as const;
 export const materialsPages = ['home', 'catalog', 'detail', 'about', 'contact'] as const;
@@ -132,9 +131,6 @@ export const appliedMaterialsSchema=z.strictObject({
 });
 export interface MaterialsProvenance {
   submissionId:string;source:MaterialsSubmission['source'];contentSha256:string;snapshotKey:string;acceptedAt:string;
-}
-export function isMaterialsAccount(principal: Pick<Principal,'email'>):boolean {
-  return principal.email.trim().toLowerCase()==='vc.ddom@gmail.com';
 }
 
 export function validAboutHighlights(text:string):boolean{

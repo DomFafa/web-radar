@@ -41,6 +41,14 @@ it('uses durable original media URLs for publication and private ones for previe
   expect(preview['en/index.html']).toContain('/api/projects/p/assets/photo');
   expect(preview['en/index.html']).toContain('href="/public/sites/p/en/products/"');
 });
+it('adds the shared viewer to generated product details without replacing existing interactions', () => {
+  const result = materializeSiteFiles(files, draft, { assetUrl: id => `/original/${id}`, inquiryUrl: '/inquiries' });
+  expect(result['en/products/one/index.html']).toContain('id="wr-product-image-viewer-script"');
+  expect(result['en/products/one/index.html']).toContain('"/original/photo"');
+  expect(result['en/products/one/index.html']).toContain('wr-product-image-lens');
+  expect(result['en/index.html']).not.toContain('wr-product-image-viewer-script');
+  expect(result['en/products/one/index.html']).toContain('data-wr-page="catalog"');
+});
 it('rejects artifacts exceeding the Pages byte limit before marking a build ready', () => {
   const tooLarge = {
     ...files,

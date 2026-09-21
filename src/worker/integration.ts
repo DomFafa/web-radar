@@ -12,6 +12,7 @@ import {
 } from './product-radar';
 import { mintSession } from './auth';
 import { importProductSnapshotSchema } from '../shared/product-snapshot';
+import { registerProjectIntegration } from './project-integration';
 import { registerMaterialsIntegration } from './materials-integration';
 const handoffSchema = z
   .object({
@@ -89,6 +90,7 @@ export function createIntegrationApp() {
   const app = new Hono<HonoEnv>();
   app.onError(errorResponse);
   registerMaterialsIntegration(app);
+  registerProjectIntegration(app);
   app.post('/handoffs', async (c) => {
     const config = integrationConfig(c.env);
     const supplied = c.req.header('X-Web-Radar-Secret') ?? '';

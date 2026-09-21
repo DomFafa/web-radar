@@ -95,7 +95,15 @@ function region(node:Element,ancestors:Element[]):string{
   const path=chain.slice(0,chain.indexOf(scope)+1).map(n=>`${n.tagName}:${n.parentNode?.childNodes.filter(c=>'tagName'in c&&c.tagName===n.tagName).indexOf(n)||0}`).join('/');
   return `${attr(scope,'class')||scope.tagName}-${hash(path)}`;
 }
-function geometry(id:string):[number,number]{const m=templateMediaRequirements[id as TemplateId]!.bannerSize.match(/(\d+)\s*×\s*(\d+)/)!;return[Number(m[1]),Number(m[2])];}
+const legacyBannerSizes: Partial<Record<TemplateId,string>> = {
+  'fintech-platform':'2560 × 1070',
+  'digital-marketing':'2560 × 960',
+  'porto-accounting':'2560 × 770',
+  'crafto-corporate':'2560 × 960',
+  'juno-toys':'2560 × 1040',
+  'corpox-consulting':'2560 × 910',
+};
+function geometry(id:string):[number,number]{const bannerSize=templateMediaRequirements[id as TemplateId]?.bannerSize || legacyBannerSizes[id as TemplateId] || '2560 × 1000';const m=bannerSize.match(/(\d+)\s*×\s*(\d+)/)!;return[Number(m[1]),Number(m[2])];}
 /** DOM keys describe persistent layout slots, never the selected product's transient source URL. */
 function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:string,spec:ImageSlot,ancestors:Element[],kind:MediaTarget['kind'])=>void){
   const layout=referenceLayouts[id as keyof typeof referenceLayouts];
@@ -180,7 +188,7 @@ function collectCopy(root:Node,page:Page,result:Inventory,contract:MaterialsTemp
   },modern);
 }
 function inventory(id:string):Inventory|undefined{
-  if(!templateMediaRequirements[id as TemplateId])return;
+  if(!templateMediaRequirements[id as TemplateId]&&!legacyBannerSizes[id as TemplateId])return;
   const cached=inventories.get(id);if(cached)return cached;
   if(id==='juno-toys'){const result=junoInventory();inventories.set(id,result);return result;}
   const contract:MaterialsTemplateContract={schemaVersion:'wr-template-materials-v1',templateId:id,guideRevision:'2026-09-19.1',contractRevision:`2026-09-19.${id}-materials.1`,materialsReady:true,imagePolicy:'typed-regions-v1',pages:[...materialsPages],imageSlots:[],textSlots:coreText(),optionalSections:[{id:'unverified-endorsements',reason:'Template certificates, reports, client logos, reviews and staff identities are not customer facts and are omitted.'}],visualParameters:['palette.primary','palette.secondary','palette.background','palette.surface','palette.text','palette.mutedText','backgroundStyle','imageTreatment','compositionSummary'],contentPolicy:'b2b-confirmed-facts-only'};

@@ -1,6 +1,5 @@
 import type { Principal, ProjectList, ProjectSummary } from '../shared/model';
 import { requireCondition } from './domain';
-import { isMaterialsAccount } from '../shared/materials';
 
 export async function listProjectSummaries(
   db: D1Database,
@@ -31,17 +30,17 @@ export async function listProjectSummaries(
     principal.systemRole === 'super_admin'
       ? '1=1'
       : principal.workspaceRole === 'admin'
-        ? '(owner_id=? OR workspace_id=?)'
-        : 'owner_id=?';
+        ? 'workspace_id=?'
+        : '(owner_id=? AND workspace_id=?)';
   const args =
     principal.systemRole === 'super_admin'
       ? []
       : principal.workspaceRole === 'admin'
-        ? [principal.userId, principal.workspaceId]
-        : [principal.userId];
+        ? [principal.workspaceId]
+        : [principal.userId, principal.workspaceId];
   const state =
     "CASE WHEN json_extract(data,'$.publishedReleaseId') IS NULL THEN 'draft' WHEN json_extract(data,'$.offline')=1 THEN 'offline' ELSE 'published' END";
-  const where = `${access}${isMaterialsAccount(principal)?'':" AND json_type(data,'$.materials') IS NULL"}${search ? " AND (instr(lower(json_extract(data,'$.name')),lower(?))>0 OR instr(lower(json_extract(data,'$.draft.company.name')),lower(?))>0)" : ''}`;
+  const where = `${access}${search ? " AND (instr(lower(json_extract(data,'$.name')),lower(?))>0 OR instr(lower(json_extract(data,'$.draft.company.name')),lower(?))>0)" : ''}`;
   const values = [...args, ...(search ? [search, search] : [])];
   const grouped = await db
     .prepare(

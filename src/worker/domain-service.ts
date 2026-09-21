@@ -1,5 +1,7 @@
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
+import type { ProjectServiceStatus, ProjectServicePreview } from '../shared/project-service';
+import { projectPreviewHtml, projectPreviewRuntime } from './project-preview';
 import { currentMaterialsPrincipal } from './materials-auth';
 import { materialsImageAssetIds, validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
@@ -47,6 +49,7 @@ import { preparePublicVariant, preparedImageVariants, publicMediaPolicy, typedRe
 import { renderSite, renderSiteFiles } from '../templates';
 import { prImage, prService } from './product-radar';
 import { DomainStore } from './domain-store';
+import { WebsiteQuota } from './website-quota';
 import { publicationErrorDetails } from './publication-diagnostics';
 import {
   designPageIds,
@@ -111,6 +114,7 @@ interface JobInput extends Record<string, unknown> {
   instructions?: string;
   releaseId?: string;
   restoreReleaseId?: string;
+  refreshReleaseId?: string;
   recipient?: string;
   inquiryId?: string;
   offlineEpoch?: string;
@@ -126,6 +130,7 @@ export class DomainService {
   readonly store: DomainStore;
   private readonly clones: CloneTasks;
   private readonly materials: MaterialsService;
+  private readonly websiteQuota: WebsiteQuota;
   private serial: Promise<unknown> = Promise.resolve();
   private readonly activeLanes = new Map<string, Promise<void>>();
   constructor(
@@ -134,7 +139,8 @@ export class DomainService {
     readonly providers: ProviderSet = createProviders(env),
   ) {
     this.store = new DomainStore(env.DB);
-    this.materials=new MaterialsService(env,this.store,{lock:operation=>this.lock(operation),schedule:time=>this.scheduler.schedule(time)});
+    this.websiteQuota = new WebsiteQuota(env, this.store, time => this.scheduler.schedule(time));
+    this.materials=new MaterialsService(env,this.store,{lock:operation=>this.lock(operation),schedule:time=>this.scheduler.schedule(time)},this.websiteQuota);
     this.clones = new CloneTasks(env, this.store, {
       lock: operation => this.lock(operation), wake: () => this.wake(),
       validate: project => this.validateAssets(project.id, project.draft),
@@ -182,13 +188,13 @@ export class DomainService {
   }
   private async project(id: string, principal: Principal): Promise<Project> {
     const p = await this.store.one<Project>('projects', id);
+    const current = p?.materials ? await currentMaterialsPrincipal(this.env, principal) : principal;
     requireCondition(
-      p && canManage(p, principal),
+      p && canManage(p, current),
       404,
       'project_not_found',
       '项目不存在或没有访问权限。',
     );
-    if(p.materials)await currentMaterialsPrincipal(this.env,principal);
     return p;
   }
   private async body(request: Request): Promise<Record<string, unknown>> {
@@ -249,6 +255,8 @@ export class DomainService {
     )
       return this.submitInquiry(request, path[3]);
     const principal = this.principal(request);
+    if (path[0] === 'internal' && path[1] === 'product-radar-projects')
+      return this.productRadarProject(request, principal, path.slice(2));
     if(path[0]==='internal'&&path[1]==='materials-submissions'&&method==='POST'){
       const receipt=path[2]&&path[3]==='status'?await this.materials.status(principal,path[2]):await this.materials.submit(principal,await this.body(request));
       return json(receipt,receipt.state==='receiving'?202:200);
@@ -740,6 +748,82 @@ export class DomainService {
       return json({ inquiry: await this.retryInquiry(project, path[4]) });
     throw new DomainError(404, 'not_found', '接口不存在。');
   }
+  private async productRadarProject(request: Request, identity: Principal, path: string[]): Promise<Response> {
+    const principal = await currentMaterialsPrincipal(this.env, identity);
+    // This handler has just refreshed the principal at the durable boundary.
+    const project = await this.store.one<Project>('projects', path[0]);
+    requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
+    const action = path[1], url = new URL(request.url);
+    if (action === 'refresh-publication' && request.method === 'POST') {
+      const job = await this.publish(project, principal, await this.body(request), false, true);
+      return json(await this.projectServiceStatus(project, job.id));
+    }
+    requireCondition(project.materials && project.draft.materials, 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
+    if (action === 'assets' && path[2] && request.method === 'GET')
+      return this.assetResponse(request, await this.projectAsset(project.id, path[2]));
+    if (action === 'preview' && request.method === 'GET') {
+      if (url.searchParams.has('expectedVersion')) expectedVersion(project, Number(url.searchParams.get('expectedVersion')));
+      const draft = project.draft, lang = (url.searchParams.get('lang') || draft.languages[0]) as Language;
+      const page = (url.searchParams.get('page') || 'home') as DesignPage;
+      const productId = url.searchParams.get('productId') || draft.primaryProductId;
+      requireCondition(draft.languages.includes(lang), 400, 'invalid_language', '没有配置这种网站语言。');
+      requireCondition(plannedPages(draft).includes(page), 400, 'invalid_page', '页面不存在。');
+      requireCondition(draft.products.some(p => p.id === productId), 400, 'invalid_product', '没有配置这个产品。');
+      const proxyBasePath = url.searchParams.get('proxyBasePath') || `/api/web-radar/projects/${project.id}`;
+      const renderStarted = performance.now();
+      const html = await this.renderPage(draft, { projectId: project.id, page, lang, productId,
+        assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
+      const htmlStarted = performance.now();
+      const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
+        projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntime,
+        html: projectPreviewHtml(html, proxyBasePath, this.origin(), { page, lang, productId, expectedVersion: project.version }) };
+      const result = json(response);
+      result.headers.set('Server-Timing', `wr-render;dur=${(htmlStarted - renderStarted).toFixed(1)}, wr-html;dur=${(performance.now() - htmlStarted).toFixed(1)}`);
+      return result;
+    }
+    if (action === 'publish' && request.method === 'POST') {
+      const job = await this.publish(project, principal, await this.body(request), false);
+      return json(await this.projectServiceStatus(project, job.id));
+    }
+    if (['status', 'publication-status'].includes(action) && request.method === 'GET')
+      return json(await this.projectServiceStatus(project, url.searchParams.get('jobId') || undefined));
+    throw new DomainError(404, 'not_found', '接口不存在。');
+  }
+  private async projectServiceStatus(project: Project, jobId?: string): Promise<ProjectServiceStatus> {
+    const job = jobId ? await this.store.one<Job>('jobs', jobId)
+      : (await this.store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC'))[0];
+    if (jobId) requireCondition(job?.projectId === project.id && job.kind === 'publish', 404, 'job_not_found', '发布任务不存在。');
+    const release = job?.input.releaseId ? await this.store.one<Release>('releases', String(job.input.releaseId)) : undefined;
+    const activeRelease = project.publishedReleaseId === release?.id ? release
+      : project.publishedReleaseId ? await this.store.one<Release>('releases', project.publishedReleaseId) : undefined;
+    const published = activeRelease?.status === 'succeeded' ? activeRelease : undefined;
+    let completed = 0, total = 0;
+    for (const asset of Object.values(release?.publicMedia?.assets ?? {})) {
+      const widths = new Set(asset.widths), prepared = new Set(asset.variants.map(variant => variant.requestedWidth));
+      total += widths.size;
+      for (const width of widths) if (prepared.has(width)) completed++;
+    }
+    const base = `/api/integrations/product-radar/projects/${project.id}`;
+    return { schemaVersion: 'wr-project-service-v1', projectId: project.id, projectVersion: project.version,
+      hasUnpublishedChanges: !published || !samePublishedDraft(project.draft, published.draft),
+      ...(published ? { publishedVersion: published.draftVersion } : {}),
+      name: project.name, template: project.draft.template, languages: project.draft.languages,
+      pages: plannedPages(project.draft), products: project.draft.products.map(({id, name}) => ({id, name})),
+      primaryProductId: project.draft.primaryProductId,
+      publication: job ? { status: job.status,
+        phase: job.status === 'succeeded' ? 'complete' : ['failed', 'paused', 'cancelled'].includes(job.status) ? 'failed'
+          : job.input.publishResult || job.status === 'unknown' ? 'recovering'
+          : job.input.mediaPreparation && !job.input.publicationStarted ? 'preparing_media'
+          : job.input.publicationStarted ? 'deploying' : 'queued',
+        jobId: job.id, releaseId: release?.id, inputVersion: job.inputVersion,
+        ...(total ? { mediaProgress: { completed, total } } : {}),
+        ...(job.status === 'succeeded' && release?.status === 'succeeded' && !project.offline ? {url: release.url} : {}),
+        ...(job.error ? {error: job.error} : {}), retryable: job.status === 'failed', updatedAt: job.updatedAt,
+      } : { status: 'idle', phase: 'idle', retryable: false },
+      ...(!project.offline && project.publishedReleaseId && project.siteUrl ? {publishedUrl: project.siteUrl} : {}),
+      previewEndpoint: base + '/preview', publishEndpoint: base + '/publish', statusEndpoint: base + '/publication-status',
+    };
+  }
   private publicHistoryJob(job: Job): Job {
     if (job.kind === 'clone') return this.clones.publicJob(job);
     const { draft, products, principal, publishResult, ...input } = job.input;
@@ -770,9 +854,7 @@ export class DomainService {
     }) };
   }
   private async deleteProject(id: string, principal: Principal): Promise<void> {
-    const p = await this.store.one<Project>('projects', id);
-    requireCondition(p && canManage(p, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
-    if(p.materials)await currentMaterialsPrincipal(this.env,principal);
+    const p = await this.project(id, principal);
     const domains = await this.env.DB.prepare('SELECT count(*) AS n FROM project_domains WHERE project_id=?').bind(id).first<{n:number}>();
     requireCondition(!domains?.n, 409, 'domains_bound', '请先解除该网站的自定义域名，再删除网站。');
     await this.store.batch([
@@ -866,7 +948,12 @@ export class DomainService {
         handoff,rawBuildBranch,rawTargetUrl,
       }),
       existing = await this.store.idempotent<{ id: string }>(scope, rid, hash);
-    if (existing) return this.project(existing.id, principal);
+    if (existing) {
+      const project = await this.project(existing.id, principal);
+      const claim = await this.websiteQuota.find(scope, rid);
+      if (claim) await this.websiteQuota.commit(claim);
+      return project;
+    }
     // Snapshot fields are supplied by PR only. Standalone creation re-fetches any selected IDs.
     let accepted = products;
     if (products.length && !handoff) {
@@ -897,8 +984,10 @@ export class DomainService {
         status: 'idle',
       };
     }
-    const p: Project = {
-      id: crypto.randomUUID(),
+    const claim = await this.websiteQuota.intent(principal, scope, rid, hash);
+    await this.websiteQuota.reserve(claim);
+    let p: Project = {
+      id: claim.projectId,
       ownerId: principal.userId,
       workspaceId: principal.workspaceId,
       name: name.trim(),
@@ -931,11 +1020,19 @@ export class DomainService {
         this.store.insert('projects', p),
         ...assets.map((a) => this.store.insert('assets', a)),
         this.store.remember(scope, rid, hash, { id: p.id }),
+        this.websiteQuota.statement(claim, 'commit'),
       ]);
     } catch (e) {
-      await Promise.allSettled(assets.map((a) => this.env.MEDIA.delete(a.key)));
-      throw e;
+      // A rejected D1 response does not prove the atomic transaction was rolled back.
+      const durable = await this.store.idempotent<{ id: string }>(scope, rid, hash);
+      if (durable) p = await this.project(durable.id, principal);
+      else {
+        await Promise.allSettled(assets.map((a) => this.env.MEDIA.delete(a.key)));
+        await this.websiteQuota.release(claim).catch(() => {}); // Durable compensation retries in the alarm.
+        throw e;
+      }
     }
+    await this.websiteQuota.commit(claim);
     return p;
   }
   private async importProducts(
@@ -1043,8 +1140,8 @@ export class DomainService {
       'import',
     );
   }
-  private async projectAsset(projectId: string, id: string): Promise<Asset> {
-    const asset = await this.store.one<Asset>('assets', id);
+  private async projectAsset(projectId: string, id: string, assets?: ReadonlyMap<string, Asset>): Promise<Asset> {
+    const asset = assets ? assets.get(id) : await this.store.one<Asset>('assets', id);
     requireCondition(
       asset?.projectId === projectId,
       404,
@@ -1061,7 +1158,7 @@ export class DomainService {
       '素材文件尚未完整保存，请重新上传。',
     );
   }
-  private async validateAssets(projectId: string, draft: Draft): Promise<void> {
+  private async validateAssets(projectId: string, draft: Draft, assets?: ReadonlyMap<string, Asset>): Promise<void> {
     const materialsProfile = validateMaterialsDraft(draft);
     const ownedAssets = new Map<string, Asset>();
     const bannerMedia = bannerAssets(draft);
@@ -1070,7 +1167,7 @@ export class DomainService {
       banners:draft.banners?.map(b=>({...b,videoAssetId:undefined})),
     }));
     for (const id of assetReferences(draft)) {
-      const asset = await this.projectAsset(projectId, id);
+      const asset = await this.projectAsset(projectId, id, assets);
       if(draft.materials?.imageBindings.some(b=>b.assetId===id||b.mobileAssetId===id))requireCondition(['image/png','image/jpeg','image/webp'].includes(asset.contentType),400,'materials_asset_type','资料位置仅支持 PNG、JPEG 或 WebP 图片。');
       const video = id === draft.heroAssetId || bannerMedia.videos.includes(id) || !!draft.cloneConfig?.referenceCapture?.assets.some(a=>a.assetId===id&&a.contentType.startsWith('video/'));
       const image = supportedImages.has(asset.contentType) ||
@@ -1792,14 +1889,23 @@ export class DomainService {
     principal: Principal,
     body: Record<string, unknown>,
     restore: boolean,
+    refresh = false,
   ): Promise<Job> {
     const rid = requestId(body.requestId),
       scope = `publish:${project.id}:${principal.userId}`,
-      hash = await fingerprint({ body, restore }),
+      hash = await fingerprint({ body, restore, ...(refresh ? { refresh: true } : {}) }),
       prior = await this.store.idempotent<{ id: string }>(scope, rid, hash);
     if (prior) return (await this.store.one<Job>('jobs', prior.id))!;
-    let draft: Draft, draftVersion: number, restored: Release | undefined;
-    if (restore) {
+    let draft: Draft, draftVersion: number, restored: Release | undefined, refreshed: Release | undefined;
+    if (refresh) {
+      expectedVersion(project, body.expectedVersion);
+      requireCondition(!project.offline && project.publishedReleaseId && project.publishedReleaseId === body.expectedPublishedReleaseId, 409, 'published_release_changed', '已发布版本已变化，请重新核对后刷新。');
+      refreshed = await this.store.one<Release>('releases', project.publishedReleaseId);
+      requireCondition(refreshed?.status === 'succeeded' && refreshed.projectId === project.id, 409, 'published_release_unavailable', '没有可刷新的成功发布快照。');
+      draft = structuredClone(refreshed.draft);
+      draftVersion = refreshed.draftVersion;
+      assertPublishable(draft);
+    } else if (restore) {
       restored = project.previousReleaseId
         ? await this.store.one<Release>('releases', project.previousReleaseId)
         : undefined;
@@ -1821,23 +1927,30 @@ export class DomainService {
       requireCondition(testMode(this.env) || draft.cloneConfig?.generation?.mode !== 'fixture', 400, 'clone_fixture_only', '演示页面不能发布到生产环境，请使用真实设计生成。');
       const output = await loadCloneOutput(this.env, project.id, draft);
       if (output.cloneConfig?.generatedFiles) validateSiteFiles(output.cloneConfig.generatedFiles, output);
-      draft.cloneConfig = await storeCloneOutput(this.env, project.id, draft.cloneConfig!);
-      if (!restore) project.draft.cloneConfig = draft.cloneConfig;
+      if (!refresh) draft.cloneConfig = await storeCloneOutput(this.env, project.id, draft.cloneConfig!);
+      if (!restore && !refresh) project.draft.cloneConfig = draft.cloneConfig;
     }
-    await this.validateAssets(project.id, draft);
-    for (const id of publicAssetReferences(draft))
-      await this.assertObject(await this.projectAsset(project.id, id));
+    const assets = new Map((await this.store.list<Asset>('assets', 'project_id=?', [project.id])).map(asset => [asset.id, asset]));
+    await this.validateAssets(project.id, draft, assets);
+    const publicAssets = publicAssetReferences(draft);
+    // Keep complete ownership/type/object checks without serial storage round trips per image.
+    for (let offset = 0; offset < publicAssets.length; offset += 4) {
+      const checked = await Promise.allSettled(publicAssets.slice(offset, offset + 4).map(async id =>
+        this.assertObject(await this.projectAsset(project.id, id, assets))));
+      const failure = checked.find(result => result.status === 'rejected');
+      if (failure?.status === 'rejected') throw failure.reason;
+    }
     const pending = await this.store.list<Job>(
       'jobs',
       "project_id=? AND kind='publish' AND status IN ('queued','running','unknown')",
       [project.id],
     );
-    const activeRelease = project.publishedReleaseId
+    const activeRelease = refreshed ?? (project.publishedReleaseId
       ? await this.store.one<Release>('releases', project.publishedReleaseId)
-      : undefined;
-    if (activeRelease?.draft.cloneConfig && hasCloneOutput(activeRelease.draft.cloneConfig)) activeRelease.draft.cloneConfig = await storeCloneOutput(this.env, project.id, activeRelease.draft.cloneConfig);
+      : undefined);
+    if (!refresh && activeRelease?.draft.cloneConfig && hasCloneOutput(activeRelease.draft.cloneConfig)) activeRelease.draft.cloneConfig = await storeCloneOutput(this.env, project.id, activeRelease.draft.cloneConfig);
     const currentMetadata = await this.publicationMetadata(project, draft);
-    if (!restore) {
+    if (!restore && !refresh) {
       const samePending = pending.find(job => !job.input.cancelledByOffline && job.input.draft && samePublishedDraft(draft, job.input.draft as Draft));
       if (samePending) {
         await this.store.remember(scope, rid, hash, { id: samePending.id }).run();
@@ -1870,7 +1983,8 @@ export class DomainService {
       projectId: project.id,
       draftVersion,
       draft,
-      ...(isTypedMaterials(draft) ? { rendererVersion: typedRendererVersion } : {}),
+      ...(isTypedMaterials(draft) || refresh ? { rendererVersion: typedRendererVersion } : {}),
+      ...(refreshed?.publicMedia?.ready && refreshed.publicMedia.policy === publicMediaPolicy ? { publicMedia: structuredClone(refreshed.publicMedia) } : {}),
       hostingTarget: structuredClone(target),
       seo: { policyVersion: SEO_POLICY_VERSION, origin: currentMetadata.origin ?? `https://${target.pagesProjectName}.pages.dev` },
       createdAt: now(),
@@ -1884,7 +1998,7 @@ export class DomainService {
       kind: 'publish',
       status: 'queued',
       requestId: rid,
-      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, principal, ...(isTypedMaterials(draft) ? { mediaPreparation: true } : {}) },
+      input: { draft, releaseId: release.id, restoreReleaseId: restored?.id, ...(refreshed ? { refreshReleaseId: refreshed.id } : {}), principal, ...(isTypedMaterials(draft) ? { mediaPreparation: true } : {}) },
       inputVersion: project.version,
       createdAt: now(),
       updatedAt: now(),
@@ -2336,11 +2450,11 @@ export class DomainService {
   }
   async tick(): Promise<void> {
     // Independent upstream calls can overlap; claims and quota changes still share the short lock.
-    const lanes = ['clone', 'publish', 'email', 'other', 'materials'] as const;
+    const lanes = ['clone', 'publish', 'email', 'other', 'materials', 'website-quota'] as const;
     await Promise.all(lanes.map(lane => {
       const active = this.activeLanes.get(lane);
       if (active) return active;
-      const task = (lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
+      const task = (lane === 'website-quota' ? this.websiteQuota.reconcile(operation => this.lock(operation)) : lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
         .finally(() => { this.activeLanes.delete(lane); });
       this.activeLanes.set(lane, task);
       return task;
@@ -2836,6 +2950,7 @@ export class DomainService {
       const previous = p.publishedReleaseId
         ? await this.store.one<Release>('releases', p.publishedReleaseId)
         : undefined;
+      requireCondition(!input.refreshReleaseId || (!p.offline && p.publishedReleaseId === input.refreshReleaseId), 409, 'publication_cancelled', '已发布版本已变化，已停止此次刷新。');
       requireCondition(
         !p.publishedReleaseId || previous?.status === 'succeeded',
         409,
@@ -2866,7 +2981,12 @@ export class DomainService {
           'hosting_binding_missing',
           '发布版本缺少一致的持久化托管绑定，请先核对项目归属。',
         );
+        await this.verifyJobAccess(job);
         await this.lock(async () => {
+          if (input.refreshReleaseId) {
+            const current = await this.store.one<Project>('projects', job.projectId);
+            requireCondition(current && !current.offline && current.publishedReleaseId === input.refreshReleaseId, 409, 'publication_cancelled', '已发布版本已变化，已停止此次刷新。');
+          }
           const persisted = await this.store.one<Job>('jobs', job.id);
           requireCondition(
             !persisted?.input.cancelledByOffline,
@@ -2904,6 +3024,7 @@ export class DomainService {
       await this.lock(async () => {
         const current = (await this.store.one<Project>('projects', job.projectId))!,
           persisted = (await this.store.one<Job>('jobs', job.id))!;
+        requireCondition(!input.refreshReleaseId || (!current.offline && current.publishedReleaseId === input.refreshReleaseId), 409, 'publication_cancelled', '已发布版本已变化，已停止此次刷新。');
         requireCondition(
           !persisted.input.cancelledByOffline,
           409,
