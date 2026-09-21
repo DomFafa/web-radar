@@ -20,8 +20,8 @@ export interface TemplateDefinition {
 export const TEMPLATES: TemplateDefinition[] = [
   {
     id: 'senseng-clean',
-    name: 'Senseng 经典工贸',
-    englishName: 'Senseng Clean Trade',
+    name: '经典工贸',
+    englishName: 'Clean Trade',
     tagline: '参考 webimg 原案；高雅明亮排版，强化货架视觉与批发询盘',
     category: 'consumer',
     industries: ['跨境工贸', '消费玩具', '日用百货', '家居收纳', '快消品'],
@@ -32,8 +32,8 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: 'senseng-video',
-    name: 'Senseng 全屏视频版',
-    englishName: 'Senseng Immersive Video',
+    name: '全屏视频版',
+    englishName: 'Immersive Video',
     tagline: '模版 1 动感升级：首屏 100vh 全屏视频背景铺满，带呼吸感大标题与平滑下滚',
     category: 'consumer',
     industries: ['品牌出海', '精品独立站', '潮流消费品', '生态家居', '外贸工厂'],
@@ -45,8 +45,8 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: 'senseng-candy',
-    name: 'Senseng 缤纷糖果乐园',
-    englishName: 'Senseng Candy Pop & Play',
+    name: '缤纷糖果乐园',
+    englishName: 'Candy Pop & Play',
     tagline: '专为儿童萌趣玩具与触感解压公仔定制；马卡龙粉彩体系、立体圆角泡泡与感官触觉矩阵',
     category: 'consumer',
     industries: ['儿童玩具', '萌宠解压', '感官潮玩', '亲子母婴', '外贸出口'],
@@ -57,8 +57,8 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: 'senseng-wonder',
-    name: 'Senseng 北欧温润工坊',
-    englishName: 'Senseng Nordic Wonder Studio',
+    name: '北欧温润工坊',
+    englishName: 'Nordic Wonder Studio',
     tagline: '专为品质玩具独立站与全龄桌面疗愈设计；温暖奶油大地色、北欧便当盒画廊与波浪有机曲线',
     category: 'consumer',
     industries: ['益智玩具', '治愈解压', '精品独立站', '生活美学潮玩', '品牌代工'],
@@ -69,8 +69,8 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: 'senseng-arcade',
-    name: 'Senseng 霓虹赛博潮玩',
-    englishName: 'Senseng Cyber Arcade & Pop',
+    name: '霓虹赛博潮玩',
+    englishName: 'Cyber Arcade & Pop',
     tagline: '机能潮玩机甲 HUD 与电光霓虹；物理触感动态进度条、实时跑数与赛博盲盒展台',
     category: 'consumer',
     industries: ['潮流盲盒', '机能玩具', '极客解压', '电竞桌面潮玩', '外贸直采'],
@@ -81,8 +81,8 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: 'senseng-nature',
-    name: 'Senseng 森林原野工坊',
-    englishName: 'Senseng Botanical & Forest',
+    name: '森林原野工坊',
+    englishName: 'Botanical & Forest',
     tagline: '零塑环保自然主义；晨露鼠尾草绿、生态减碳动态进度条、波浪曲线与植物画册瀑布流',
     category: 'consumer',
     industries: ['母婴玩具', '环保可降解', '自然生活美学', '绿色供应链', '亲子早教'],
@@ -93,8 +93,8 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
   {
     id: 'senseng-minimal',
-    name: 'Senseng 瑞士极简生活馆',
-    englishName: 'Senseng Swiss Minimal Gallery',
+    name: '瑞士极简生活馆',
+    englishName: 'Swiss Minimal Gallery',
     tagline: '瑞士现代主义大留白与艺术品展台；精密阻尼刻度条、典藏编号序列与奢品解构详情',
     category: 'creative',
     industries: ['艺术潮玩', '设计师买手店', '奢品感官生活', '现代家居', '高端礼品'],

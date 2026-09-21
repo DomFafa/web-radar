@@ -889,8 +889,8 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                           natural: '现代典雅',
                           technology: '先锋科技',
                           explorer: '硬核工业',
-                          'senseng-clean': 'Senseng 经典工贸',
-                          'senseng-video': 'Senseng 全屏视频',
+                          'senseng-clean': '经典工贸',
+                          'senseng-video': '全屏视频',
                           'saas-automation': 'SaaS 智能自动化',
                           'fintech-platform': '金融资产管理平台',
                           'digital-marketing': '数字营销增长机构',
@@ -899,11 +899,11 @@ function Projects({ onOpen }: { onOpen: (id: string) => void }) {
                           'juno-toys': 'Juno 儿童童趣玩具',
                           'corpox-ai-agency': 'Corpox AI 智能工坊',
                           'corpox-consulting': 'Corpox 顶级战略咨询',
-                          'senseng-candy': 'Senseng 缤纷糖果乐园',
-                          'senseng-wonder': 'Senseng 北欧温润工坊',
-                          'senseng-arcade': 'Senseng 霓虹赛博潮玩',
-                          'senseng-nature': 'Senseng 森林原野工坊',
-                          'senseng-minimal': 'Senseng 瑞士极简生活馆',
+                          'senseng-candy': '缤纷糖果乐园',
+                          'senseng-wonder': '北欧温润工坊',
+                          'senseng-arcade': '霓虹赛博潮玩',
+                          'senseng-nature': '森林原野工坊',
+                          'senseng-minimal': '瑞士极简生活馆',
                         } as Record<TemplateId, string>)[project.template] || '专业模版'
                       }
                     </span>
