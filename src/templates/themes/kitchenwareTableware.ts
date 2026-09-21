@@ -173,13 +173,13 @@ export function renderKitchenPage(ctx: ThemeContext, isVideo: boolean): string {
   const heroTitle = isZh ? '烈焰淬炼 · 米其林级厨具与顶级骨瓷餐具旗舰' : 'Master Culinary Knives & Haute Tableware Guild';
   const heroSubtitle = isZh ? '从67层VG-10核心大马士革手工锻打主厨刀、法式重型渐变珐琅铸铁圆煲到45%天然骨粉手工描金骨瓷餐具，为全球星级酒店与高端烹饪品牌打造极致锋利、蓄热微压与餐桌仪典。' : 'From 67-layer VG-10 core Damascus chef knives and enameled cast iron cocottes to 45% bone china dinnerware, providing world-class sharpness, thermal retention, and table dining poetry.';
 
-  const isDetail = page === 'detail';
-  const selectedProduct = isDetail
-    ? products.find((p) => p.id === options.productId) || products[0]
-    : products[0];
-
   const defaultMeta = DEFAULT_PRODUCTS[0];
-  const pMeta = (selectedProduct as ThemedItem).spec1
+  const isDetail = page === 'detail';
+  const selectedProduct = (isDetail
+    ? products.find((p) => p.id === options.productId) || products[0]
+    : products[0]) || defaultMeta;
+
+  const pMeta = (selectedProduct as ThemedItem)?.spec1
     ? (selectedProduct as ThemedItem)
     : defaultMeta;
 

@@ -194,13 +194,13 @@ export function renderFootwearPage(ctx: ThemeContext, isVideo: boolean): string 
     ? '从先锋全掌碳板超临界跑鞋、Vibram全地形越野靴到百年固特异手工正装皮鞋，为全球品牌打造集力学生物工效学、尖端发泡技术与高定奢华质感于一体的世界级鞋履制造供应链。'
     : 'From elite carbon-plate supercritical marathon runners and Vibram alpine trail boots to 360° Goodyear welted footwear, powering global brands with biomechanical innovation and craftsmanship.';
 
-  const isDetail = page === 'detail';
-  const selectedProduct = isDetail
-    ? products.find((p) => p.id === options.productId) || products[0]
-    : products[0];
-
   const defaultMeta = FOOTWEAR_DEFAULT_PRODUCTS[0];
-  const pMeta = (selectedProduct as ThemedFootwearItem).midsoleTech
+  const isDetail = page === 'detail';
+  const selectedProduct = (isDetail
+    ? products.find((p) => p.id === options.productId) || products[0]
+    : products[0]) || defaultMeta;
+
+  const pMeta = (selectedProduct as ThemedFootwearItem)?.midsoleTech
     ? (selectedProduct as ThemedFootwearItem)
     : defaultMeta;
 

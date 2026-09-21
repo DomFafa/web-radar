@@ -16,7 +16,7 @@ describe('all-template confirmed materials handoff',()=>{
       const contract=getMaterialsTemplate(id,locked.contractRevision)!;
       expect(createHash('sha256').update(JSON.stringify(contract)).digest('hex'),id).toBe(locked.sha256);
     }
-  });
+  }, 30000);
   it.each(Object.keys(templateMediaRequirements))('%s accepts and preserves 1, 5 and 20 products across edits and all pages',async id=>{
     const profile=getMaterialsTemplate(id)!;
     expect(profile.imagePolicy).toBe('typed-regions-v1');

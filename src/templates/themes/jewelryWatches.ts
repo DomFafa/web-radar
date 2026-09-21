@@ -173,13 +173,13 @@ export function renderJewelryPage(ctx: ThemeContext, isVideo: boolean): string {
   const heroTitle = isZh ? '微距璀璨 · 瑞士制表与高定珠宝全链工坊' : 'Timeless Brilliance & Haute Horlogerie Craft Guild';
   const heroSubtitle = isZh ? '从八心八箭莫桑钻石高定珠宝、18K黄金手工雕金饰品到瑞士天文台精密镂空飞行陀飞轮机械腕表，为全球奢侈品牌提供无与伦比的光影切面、顶级宝石镶嵌与高精机械研发。' : 'From Hearts & Arrows solitaire fine jewelry and 18K hand-engraved gold pieces to chronometer-certified skeleton flying tourbillon watches, empowering world luxury brands with pinnacle craftsmanship.';
 
-  const isDetail = page === 'detail';
-  const selectedProduct = isDetail
-    ? products.find((p) => p.id === options.productId) || products[0]
-    : products[0];
-
   const defaultMeta = DEFAULT_PRODUCTS[0];
-  const pMeta = (selectedProduct as ThemedItem).spec1
+  const isDetail = page === 'detail';
+  const selectedProduct = (isDetail
+    ? products.find((p) => p.id === options.productId) || products[0]
+    : products[0]) || defaultMeta;
+
+  const pMeta = (selectedProduct as ThemedItem)?.spec1
     ? (selectedProduct as ThemedItem)
     : defaultMeta;
 

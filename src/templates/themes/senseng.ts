@@ -108,7 +108,8 @@ export function renderSensengPage(ctx: ThemeContext, isVideoFullscreen = false, 
   // Selected product for detail page
   const currentProduct =
     (options.productId ? allProducts.find((p) => p.id === options.productId) : null) ||
-    allProducts[0];
+    allProducts[0] ||
+    SENSENG_DEFAULT_PRODUCTS[0];
 
   // Header
   const headerHtml = `

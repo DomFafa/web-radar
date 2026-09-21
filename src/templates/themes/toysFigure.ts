@@ -563,8 +563,9 @@ export function renderToysDetail(ctx: ThemeContext): string {
   const { path, navAttrs } = ctx;
   const isZh = (ctx.lang as string) === 'zh';
   const products = getToysProducts(ctx);
-  const prodId = ctx.options.productId || products[0].id;
-  const p = products.find((item) => item.id === prodId) || products[0];
+  const defaultProd = products[0] || TOYS_DEFAULT_PRODUCTS[0];
+  const prodId = ctx.options.productId || defaultProd.id;
+  const p = products.find((item) => item.id === prodId) || defaultProd;
 
   return `
     <main class="wrap" style="padding:120px 20px 80px;" data-reveal="fade-up">

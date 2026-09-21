@@ -1599,6 +1599,22 @@ it('renders product detail pages and accepts the frontend detail preview query',
   const preview = await request(`/api/projects/${p.id}/preview?page=detail&productId=p1`);
   expect(preview.status).toBe(200);
   expect(preview.data.html).toContain('class="detail wrap"');
+
+  // Preview with empty productId parameter (reproducing frontend query with &productId=)
+  const previewEmptyParam = await request(`/api/projects/${p.id}/preview?page=detail&productId=`);
+  expect(previewEmptyParam.status).toBe(200);
+  expect(previewEmptyParam.data.html).toContain('class="detail wrap"');
+
+  // Preview with page=detail and omitted productId parameter
+  const previewNoParam = await request(`/api/projects/${p.id}/preview?page=detail`);
+  expect(previewNoParam.status).toBe(200);
+
+  // Preview non-home pages (catalog, about, contact)
+  for (const page of ['catalog', 'about', 'contact']) {
+    const res = await request(`/api/projects/${p.id}/preview?page=${page}`);
+    expect(res.status).toBe(200);
+  }
+
   p = await publishNow(p);
   const page = await service.fetch(
     new Request(`http://localhost/public/sites/${p.id}/en/products/p1/index.html`),

@@ -173,13 +173,13 @@ export function renderFurniturePage(ctx: ThemeContext, isVideo: boolean): string
   const heroTitle = isZh ? '空间构筑 · 现代极简家具与模块收纳系统' : 'Spatial Architecture & Modular Furniture Guild';
   const heroSubtitle = isZh ? '从北美FAS级黑胡桃实木悬浮餐桌、模块化铝框置物书架到人体工学云朵休闲躺椅，为全球现代大宅与商业空间提供集结构力学、无痕收纳与现代建筑美学于一体的全案家具制造。' : 'From FAS American black walnut dining tables and modular aluminum shelving systems to cloud bouclé lounge chairs, engineering architectural furniture with precision joinery and structural beauty.';
 
-  const isDetail = page === 'detail';
-  const selectedProduct = isDetail
-    ? products.find((p) => p.id === options.productId) || products[0]
-    : products[0];
-
   const defaultMeta = DEFAULT_PRODUCTS[0];
-  const pMeta = (selectedProduct as ThemedItem).spec1
+  const isDetail = page === 'detail';
+  const selectedProduct = (isDetail
+    ? products.find((p) => p.id === options.productId) || products[0]
+    : products[0]) || defaultMeta;
+
+  const pMeta = (selectedProduct as ThemedItem)?.spec1
     ? (selectedProduct as ThemedItem)
     : defaultMeta;
 

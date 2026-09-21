@@ -173,13 +173,13 @@ export function renderLuggagePage(ctx: ThemeContext, isVideo: boolean): string {
   const heroTitle = isZh ? '匠心皮具 · 航空级全铝箱包全链制造旗舰' : 'Master Leathercraft & Aerospace Aluminum Luggage Guild';
   const heroSubtitle = isZh ? '从意大利托斯卡纳头层植鞣皮旅行袋、商务双肩包到航空级铝镁合金双轨防爆登机箱，为全球尊贵品牌提供顶尖五金电镀、马鞍手工双针双线与超静音万向轮的全链定制体系。' : 'From Tuscan vegetable-tanned full-grain leather weekender duffels to aerospace-grade aluminum carry-ons, delivering world-class craftsmanship and hardware engineering for global travel brands.';
 
-  const isDetail = page === 'detail';
-  const selectedProduct = isDetail
-    ? products.find((p) => p.id === options.productId) || products[0]
-    : products[0];
-
   const defaultMeta = DEFAULT_PRODUCTS[0];
-  const pMeta = (selectedProduct as ThemedItem).spec1
+  const isDetail = page === 'detail';
+  const selectedProduct = (isDetail
+    ? products.find((p) => p.id === options.productId) || products[0]
+    : products[0]) || defaultMeta;
+
+  const pMeta = (selectedProduct as ThemedItem)?.spec1
     ? (selectedProduct as ThemedItem)
     : defaultMeta;
 

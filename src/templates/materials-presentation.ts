@@ -451,9 +451,10 @@ function navigation(root: Node, draft: Draft, options: RenderOptions) {
     if (n.tagName === 'a') {
       if (has(n, 'data-wr-lang')) {
         const lang = attr(n, 'data-wr-lang');
+        const activeProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
         const target =
           options.page === 'detail'
-            ? productPath(options.productId || draft.primaryProductId)
+            ? (activeProductId ? productPath(activeProductId) : 'catalog/index.html')
             : options.page === 'home'
               ? 'index.html'
               : `${options.page}/index.html`;

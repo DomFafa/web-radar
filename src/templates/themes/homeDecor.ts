@@ -173,13 +173,13 @@ export function renderHomeDecorPage(ctx: ThemeContext, isVideo: boolean): string
   const heroTitle = isZh ? '静谧时光 · 侘寂美学与艺术起居器物工坊' : 'Poetic Serenity & Tactile Home Aesthetics Guild';
   const heroSubtitle = isZh ? '从罗马天然洞石原石香氛烛台、手工粗陶侘寂花器到渐变手工吹制玻璃艺术摆件，为全球生活美学生活馆打造充满触感温度、诗意光影与大地肌理的现代软装陈设体系。' : 'From natural Roman travertine fragrance vessels and hand-thrown ceramic sculptures to gradient hand-blown art glass, crafting serene living spaces with earthy textures and sculptural grace.';
 
-  const isDetail = page === 'detail';
-  const selectedProduct = isDetail
-    ? products.find((p) => p.id === options.productId) || products[0]
-    : products[0];
-
   const defaultMeta = DEFAULT_PRODUCTS[0];
-  const pMeta = (selectedProduct as ThemedItem).spec1
+  const isDetail = page === 'detail';
+  const selectedProduct = (isDetail
+    ? products.find((p) => p.id === options.productId) || products[0]
+    : products[0]) || defaultMeta;
+
+  const pMeta = (selectedProduct as ThemedItem)?.spec1
     ? (selectedProduct as ThemedItem)
     : defaultMeta;
 
