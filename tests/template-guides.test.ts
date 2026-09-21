@@ -41,8 +41,8 @@ describe('versioned internal template documents', () => {
     expect(templateGuides.map((g) => g.templateId)).toEqual([...guideIds]);
     expect([...guideIds].sort()).toEqual(TEMPLATES.map((template) => template.id).sort());
     expect([...guideIds].sort()).toEqual(Object.keys(templateMediaRequirements).sort());
-    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(15);
-    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(15);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(9);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(9);
   });
   it('requires a matching confirmed-materials contract for every registered template', () => {
     for (const template of TEMPLATES) {
@@ -125,7 +125,7 @@ describe('read-only guide API', () => {
     expect(list.headers.get('cache-control')).toBe('no-store');
     expect(list.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const catalog = (await list.json()) as any;
-    expect(catalog.total).toBe(15);
+    expect(catalog.total).toBe(9);
     for (const item of catalog.templates) {
       const res = await get('/' + item.templateId);
       expect(res.status).toBe(200);

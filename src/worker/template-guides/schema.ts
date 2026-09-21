@@ -9,13 +9,7 @@ export const guideIds = [
   'senseng-nature',
   'senseng-minimal',
   'saas-automation',
-  'fintech-platform',
-  'digital-marketing',
-  'porto-accounting',
-  'crafto-corporate',
-  'juno-toys',
   'corpox-ai-agency',
-  'corpox-consulting',
 ] as const;
 const nonempty = z.string().min(1);
 const dimensions = z.strictObject({
