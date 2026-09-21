@@ -90,6 +90,66 @@
       "sha256": "e41783f40a1d1aea247548583d410ad71cf4b8c3f4b9bc48e4e56a5b7020fabd",
       "imageSlots": 9,
       "textSlots": 467
+    },
+    "universal-trade-banner": {
+      "contractRevision": "2026-09-20.universal-trade-banner-materials.2",
+      "sha256": "dcd10a8f32f7b56836b15371299dc96a130acb0b8278569352438bd0967d40e6",
+      "imageSlots": 4,
+      "textSlots": 223
+    },
+    "universal-showcase-video": {
+      "contractRevision": "2026-09-20.universal-showcase-video-materials.2",
+      "sha256": "1cb1ba4a516cf58b0e4c961b09af8048ebcec88f86e1d5f207660a6438065cc0",
+      "imageSlots": 4,
+      "textSlots": 226
+    },
+    "toys-figure-banner": {
+      "contractRevision": "2026-09-20.toys-figure-banner-materials.2",
+      "sha256": "102d4d030fd1e339a5989bee1bb2351dc510fd9a893acb5100001178c554cd82",
+      "imageSlots": 4,
+      "textSlots": 212
+    },
+    "toys-interactive-video": {
+      "contractRevision": "2026-09-20.toys-interactive-video-materials.2",
+      "sha256": "7455675f83137eb3405cc6431a798e588b5feea2b4a611560cc5db7a2e63c0c4",
+      "imageSlots": 4,
+      "textSlots": 214
+    },
+    "plush-cushion-banner": {
+      "contractRevision": "2026-09-20.plush-cushion-banner-materials.2",
+      "sha256": "4cb4d1cc1448d34d8c74ccdf5c63406807e7874959e6c65835b4252394589a07",
+      "imageSlots": 4,
+      "textSlots": 225
+    },
+    "plush-living-video": {
+      "contractRevision": "2026-09-20.plush-living-video-materials.2",
+      "sha256": "b671b08e93fc9795e18e45c1ebaf8124f0c232c481ce8aae0e6f640cbee51200",
+      "imageSlots": 4,
+      "textSlots": 227
+    },
+    "apparel-fabric-banner": {
+      "contractRevision": "2026-09-20.apparel-fabric-banner-materials.2",
+      "sha256": "72765b44b6fef97850c2ccc84369ab4f761125caa48cee64eac720adad786e71",
+      "imageSlots": 4,
+      "textSlots": 225
+    },
+    "apparel-runway-video": {
+      "contractRevision": "2026-09-20.apparel-runway-video-materials.2",
+      "sha256": "6ac62b58a2af0e66feff326fc46789e7281241d1353141fc309fd48d1675bdf5",
+      "imageSlots": 4,
+      "textSlots": 225
+    },
+    "footwear-craft-banner": {
+      "contractRevision": "2026-09-20.footwear-craft-banner-materials.2",
+      "sha256": "e7deff61d4d6b6f219080d29f0e1ef6be343acc8e05b78ee6872c295e828475b",
+      "imageSlots": 4,
+      "textSlots": 215
+    },
+    "footwear-kinetic-video": {
+      "contractRevision": "2026-09-20.footwear-kinetic-video-materials.2",
+      "sha256": "4a6534a9ab744063ed9b4ec56fb749b3c61ac9b42dd0aa63f3a4e71d57e8aa5a",
+      "imageSlots": 4,
+      "textSlots": 214
     }
   }
 }

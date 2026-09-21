@@ -8,6 +8,16 @@ import guide11 from './documents/senseng-wonder.json';
 import guide12 from './documents/senseng-arcade.json';
 import guide13 from './documents/senseng-nature.json';
 import guide14 from './documents/senseng-minimal.json';
+import guideUniversalBanner from './documents/universal-trade-banner.json';
+import guideUniversalVideo from './documents/universal-showcase-video.json';
+import guideToysBanner from './documents/toys-figure-banner.json';
+import guideToysVideo from './documents/toys-interactive-video.json';
+import guidePlushBanner from './documents/plush-cushion-banner.json';
+import guidePlushVideo from './documents/plush-living-video.json';
+import guideApparelBanner from './documents/apparel-fabric-banner.json';
+import guideApparelVideo from './documents/apparel-runway-video.json';
+import guideFootwearBanner from './documents/footwear-craft-banner.json';
+import guideFootwearVideo from './documents/footwear-kinetic-video.json';
 
 const documents = [
   guide0,
@@ -19,6 +29,16 @@ const documents = [
   guide12,
   guide13,
   guide14,
+  guideUniversalBanner,
+  guideUniversalVideo,
+  guideToysBanner,
+  guideToysVideo,
+  guidePlushBanner,
+  guidePlushVideo,
+  guideApparelBanner,
+  guideApparelVideo,
+  guideFootwearBanner,
+  guideFootwearVideo,
 ].map((value) => guideSchema.parse(value));
 export const templateGuides: readonly TemplateGuide[] = guideIds.map((id) => {
   const matches = documents.filter((guide) => guide.templateId === id);

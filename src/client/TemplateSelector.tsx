@@ -128,6 +128,131 @@ export const TEMPLATES: TemplateDefinition[] = [
     badge: '浅粉珊瑚 · AI 创意',
     previewImg: '/templates/previews/corpox-ai-agency.jpg',
   },
+  {
+    id: 'universal-trade-banner',
+    name: '全品类精选展台',
+    englishName: 'Universal Trade Banner',
+    tagline: '通用商品旗舰展台；多层次悬浮微晶白底、Apple 液态玻璃胶囊导航与动态品类筛选魔盒',
+    category: 'enterprise',
+    industries: ['通用商品', '外贸出口', '日用消费品', '综合商贸', '多品类供应链'],
+    features: ['全品类旗舰展台', 'Apple 液态玻璃', '动态品类筛选魔盒', '全套多语言富内页'],
+    accentColor: '#1e3a8a',
+    badge: '通用商品 · 旗舰展台',
+    previewImg: '/templates/previews/senseng-clean.jpg',
+  },
+  {
+    id: 'universal-showcase-video',
+    name: '全景商贸视界',
+    englishName: 'Universal Showcase Video',
+    tagline: '100vh 动态出海商贸与智能制造视界视频；流体毛玻璃音画控制器与实时跑数商贸指标',
+    category: 'enterprise',
+    industries: ['跨境商贸', '通用制造', '综合工贸', '大宗采购', '出海品牌'],
+    features: ['100vh 沉浸视频背景', '流体毛玻璃控制器', '商贸出海动态跑数', '多语言内页矩阵'],
+    accentColor: '#0284c7',
+    badge: '通用商品 · 沉浸视频',
+    hasVideo: true,
+    previewImg: '/templates/previews/senseng-video.jpg',
+  },
+  {
+    id: 'toys-figure-banner',
+    name: '潮玩手办殿堂',
+    englishName: 'Toys & Figure Banner',
+    tagline: '赛博机能与潮玩艺术展馆；霓虹微光亚克力展台、3D 景深悬浮盲盒展签与材质解构',
+    category: 'creative',
+    industries: ['玩具与公仔', '潮流手办', '机甲模型', 'IP 授权衍生', '盲盒收藏'],
+    features: ['赛博亚克力展台', '盲盒编号展签', '模具精度解构', '全套手办定制内页'],
+    accentColor: '#8b5cf6',
+    badge: '玩具公仔 · 潮玩展台',
+    previewImg: '/templates/previews/senseng-arcade.jpg',
+  },
+  {
+    id: 'toys-interactive-video',
+    name: '机动潮玩动感视界',
+    englishName: 'Toys Interactive Video',
+    tagline: '可动机甲与互动公仔动态演示全屏视频；悬浮磨砂玻璃 HUD 仪表与光效粒子动效',
+    category: 'consumer',
+    industries: ['玩具与公仔', '机动潮玩', '可动机甲', '益智模型', '遥控与声光玩具'],
+    features: ['100vh 可动机甲视频', '磨砂玻璃 HUD 仪表', '动态参数进度条', '全套机甲规格内页'],
+    accentColor: '#f59e0b',
+    badge: '玩具公仔 · 动感视界',
+    hasVideo: true,
+    previewImg: '/templates/previews/senseng-video.jpg',
+  },
+  {
+    id: 'plush-cushion-banner',
+    name: '云朵云绒治愈馆',
+    englishName: 'Plush & Cushion Banner',
+    tagline: '奶油风超柔治愈美学；云朵轻柔波浪分割、亲肤触感微交互与婴儿级环保材质印章',
+    category: 'consumer',
+    industries: ['毛绒与靠垫', '毛绒玩偶', '慢回弹靠垫', '治愈抱枕', '家居软饰'],
+    features: ['奶油风云朵美学', '亲肤触感微交互', '母婴级环保认证', '全套治愈系内页'],
+    accentColor: '#e07a5f',
+    badge: '毛绒靠垫 · 云绒治愈',
+    previewImg: '/templates/previews/senseng-candy.jpg',
+  },
+  {
+    id: 'plush-living-video',
+    name: '慢调软包时光',
+    englishName: 'Plush Living Video',
+    tagline: '慢镜头生活场景短片；晨光微风拂动织绒与慢回弹靠垫解压受压恢复动效，清透晨雾液态毛玻璃',
+    category: 'consumer',
+    industries: ['毛绒与靠垫', '慢调生活', '精品软装', '治愈解压公仔', '舒适靠枕'],
+    features: ['100vh 慢镜头织绒视频', '慢回弹受压恢复评测', '晨雾液态毛玻璃', '温馨家居全套内页'],
+    accentColor: '#797d62',
+    badge: '毛绒靠垫 · 慢调视界',
+    hasVideo: true,
+    previewImg: '/templates/previews/senseng-nature.jpg',
+  },
+  {
+    id: 'apparel-fabric-banner',
+    name: '奢品织造工坊',
+    englishName: 'Apparel & Fabric Banner',
+    tagline: '国际时装杂志 Editorial 画册留白排版；高定面料经纬微距光影与典雅英文字体',
+    category: 'creative',
+    industries: ['服装与纺织品', '高端成衣', '时装定制', '经纬织物', '设计师买手女装'],
+    features: ['时装画册留白排版', '经纬面料微距光影', '液态玻璃质感挂牌', 'CLO 3D 快速出样内页'],
+    accentColor: '#27272a',
+    badge: '服装纺织 · 奢品工坊',
+    previewImg: '/templates/previews/senseng-minimal.jpg',
+  },
+  {
+    id: 'apparel-runway-video',
+    name: '动态时装风尚视界',
+    englishName: 'Apparel Runway Video',
+    tagline: 'Runway 走秀模特与高定面料飘逸动态视频；悬浮极简透明玻璃导航栏与光影折射',
+    category: 'creative',
+    industries: ['服装与纺织品', 'T台秀场风尚', '先锋时装品牌', '功能性运动服装', '外贸针织成衣'],
+    features: ['100vh Runway 走秀视频', '悬浮透明玻璃导航', '面料垂坠动态质感', '时装季刊全套内页'],
+    accentColor: '#b45309',
+    badge: '服装纺织 · 秀场风尚',
+    hasVideo: true,
+    previewImg: '/templates/previews/senseng-video.jpg',
+  },
+  {
+    id: 'footwear-craft-banner',
+    name: '先锋工匠鞋履台',
+    englishName: 'Footwear Craft Banner',
+    tagline: '工程级鞋底气垫透视；手工缝线与工匠皮革展台、材质分层解构悬浮标牌',
+    category: 'consumer',
+    industries: ['鞋靴制造', '户外徒步靴', '碳板竞速跑鞋', '固特异正装皮鞋', '潮牌运动鞋'],
+    features: ['鞋底气垫工程透视', '分层解构悬浮标牌', '力学生物工效学', '全套鞋履定制内页'],
+    accentColor: '#d97706',
+    badge: '鞋靴制造 · 先锋工匠',
+    previewImg: '/templates/previews/senseng-arcade.jpg',
+  },
+  {
+    id: 'footwear-kinetic-video',
+    name: '破风运动鞋履动效',
+    englishName: 'Footwear Kinetic Video',
+    tagline: '户外越野冲刺、抓地爆发与动力回弹全屏动态短片；流光破风线条与物理抗扭刻度',
+    category: 'tech',
+    industries: ['鞋靴制造', '专业越野跑鞋', '轻量化马拉松竞速', '机能运动装备', '智能穿戴鞋履'],
+    features: ['100vh 越野爆发冲刺视频', '物理抗扭动态刻度', '超临界发泡参数分析', '生物力学全套内页'],
+    accentColor: '#10b981',
+    badge: '鞋靴制造 · 破风动效',
+    hasVideo: true,
+    previewImg: '/templates/previews/senseng-video.jpg',
+  },
 ];
 
 const PRESET_COLORS = [
@@ -143,11 +268,11 @@ const PRESET_COLORS = [
 ];
 
 const CATEGORIES = [
-  { id: 'all', label: '全部模版 (15)' },
-  { id: 'consumer', label: '潮玩玩具与工贸 (6)' },
-  { id: 'tech', label: '科技与 SaaS (2)' },
-  { id: 'enterprise', label: '金融与企服 (3)' },
-  { id: 'creative', label: '艺术与创意生活 (4)' },
+  { id: 'all', label: `全部模版 (${TEMPLATES.length})` },
+  { id: 'consumer', label: `品类与消费出海 (${TEMPLATES.filter((t) => t.category === 'consumer').length})` },
+  { id: 'tech', label: `科技与 SaaS (${TEMPLATES.filter((t) => t.category === 'tech').length})` },
+  { id: 'enterprise', label: `商贸与通用商品 (${TEMPLATES.filter((t) => t.category === 'enterprise').length})` },
+  { id: 'creative', label: `艺术与时尚创意 (${TEMPLATES.filter((t) => t.category === 'creative').length})` },
 ] as const;
 
 export default function TemplateSelector({
@@ -182,8 +307,8 @@ export default function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 15
-            套精心设计的高保真行业模版（含赛博机能潮玩、森林原野、瑞士极简画廊、童趣糖果乐园、北欧温润、动态视频等）。选中后将自动灌注你的公司与产品数据。
+            共提供 19
+            套精心设计的高保真行业旗舰模版（涵盖通用商品、玩具与公仔、毛绒与靠垫、服装与纺织品、鞋靴及科技出海等多品类，包含宽幅展台与沉浸视频型）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>
 

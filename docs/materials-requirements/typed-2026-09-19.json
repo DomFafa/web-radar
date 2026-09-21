@@ -91,6 +91,66 @@
       "sha256": "53faa21f45266e356cb5b71573ac3a072e59413802f2422a37a0bbddac95c71d",
       "images": 4,
       "texts": 236
+    },
+    "universal-trade-banner": {
+      "contractRevision": "2026-09-19.universal-trade-banner-materials.1",
+      "sha256": "fbe102b23a8035fb4a9458c7123d9b456feb3c447a2d9bbaa4af5e3e75e8aef4",
+      "images": 3,
+      "texts": 229
+    },
+    "universal-showcase-video": {
+      "contractRevision": "2026-09-19.universal-showcase-video-materials.1",
+      "sha256": "d4c1230411e6c8ee189718d5383433931ce8be4a6bfcce6633e679dc1cc8657d",
+      "images": 3,
+      "texts": 232
+    },
+    "toys-figure-banner": {
+      "contractRevision": "2026-09-19.toys-figure-banner-materials.1",
+      "sha256": "ecd01bca601f37330d679974f642fc353bb1c4ecf4d23855b49a1b16d8b0532c",
+      "images": 3,
+      "texts": 220
+    },
+    "toys-interactive-video": {
+      "contractRevision": "2026-09-19.toys-interactive-video-materials.1",
+      "sha256": "303095fa42e46258ed4c35304bb79332b016f9ea9e93f0c8b285275a61c7f174",
+      "images": 3,
+      "texts": 222
+    },
+    "plush-cushion-banner": {
+      "contractRevision": "2026-09-19.plush-cushion-banner-materials.1",
+      "sha256": "ddb272b016d8ee99727c5b139b5e5646c8c6375cf4d9ce74919bb80f4aa6c9ec",
+      "images": 3,
+      "texts": 230
+    },
+    "plush-living-video": {
+      "contractRevision": "2026-09-19.plush-living-video-materials.1",
+      "sha256": "dfd07b5f10c97adc0ac7b756222912e6dbe57405340c572fef68eff779504af6",
+      "images": 3,
+      "texts": 232
+    },
+    "apparel-fabric-banner": {
+      "contractRevision": "2026-09-19.apparel-fabric-banner-materials.1",
+      "sha256": "8fd62662db009b5452a79a348eb78c927234109f669a4e67019fb32d9ae008ce",
+      "images": 3,
+      "texts": 230
+    },
+    "apparel-runway-video": {
+      "contractRevision": "2026-09-19.apparel-runway-video-materials.1",
+      "sha256": "3e6eff9d6f0096689f27f2f7170ff88cf50b1201850539c0f6d507ce625f7254",
+      "images": 3,
+      "texts": 230
+    },
+    "footwear-craft-banner": {
+      "contractRevision": "2026-09-19.footwear-craft-banner-materials.1",
+      "sha256": "fdc1ecb80b1dd1786d9507ccf608f4f6b6bb26d5787432723083c4b78d06019d",
+      "images": 3,
+      "texts": 223
+    },
+    "footwear-kinetic-video": {
+      "contractRevision": "2026-09-19.footwear-kinetic-video-materials.1",
+      "sha256": "4572b6ea638249de2fd8b0b717fdfc6cde2ab0f7fdb11ea5d0bc4802c05ba31b",
+      "images": 3,
+      "texts": 222
     }
   }
 }
