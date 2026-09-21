@@ -68,22 +68,23 @@ function safeUrl(value: string, blob = false): string {
   return '';
 }
 function segment(id: string): string {
-  if (id === '.' || id === '..' || !id) throw Error('Invalid product identifier');
+  if (id === '.' || id === '..' || !id) return 'item';
   return encodeURIComponent(id).replace(/\./g, '%2E');
 }
-const productPath = (id: string) => `products/${segment(id)}/index.html`;
+const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
   const html = renderSiteContent(draft, options);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return html.replace('</body>', `<script id="wr-product-image-viewer-script">(()=>{const __name=(value)=>value;(${productImageViewerRuntime.toString()})();})();</script></body>`);
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
-  if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:options.productId??draft.primaryProductId});
-  const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+  const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
+  const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
   // Several standalone headers build their own language links and used catalog
   // depth on product pages. Normalize those links at the common output boundary.
   const depth=options.page==='home'?'':options.page==='detail'?'../../':'../';
-  const target=options.page==='detail'?productPath(options.productId||draft.primaryProductId):options.page==='home'?'index.html':`${options.page}/index.html`;
+  const target=options.page==='detail'?(effectiveProductId?productPath(effectiveProductId):'catalog/index.html'):options.page==='home'?'index.html':`${options.page}/index.html`;
   const html=rendered.replace(/<a\b[^>]*\bdata-wr-lang="([a-z]{2})"[^>]*>/g,(tag,lang:string)=>draft.languages.includes(lang as Language)?tag.replace(/\bhref="[^"]*"/,`href="${esc(`${depth}../${lang}/${target}`)}"`):tag);
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
@@ -309,8 +310,9 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     .join('');
   const languageLinks = draft.languages
     .map((l) => {
+      const effectiveId = options.productId || draft.primaryProductId || draft.products[0]?.id;
       const target =
-        page === 'detail' && options.productId ? productPath(options.productId) : navPath(page);
+        page === 'detail' && effectiveId ? productPath(effectiveId) : navPath(page);
       return `<a href="${depth}../${l}/${target}" lang="${l}" data-wr-lang="${l}" aria-current="${l === lang}">${l.toUpperCase()}</a>`;
     })
     .join('');

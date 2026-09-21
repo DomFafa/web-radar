@@ -112,6 +112,11 @@ export function SitePreview({
     };
   }, [onClose]);
   useEffect(() => {
+    if (!productId && (project.draft.primaryProductId || project.draft.products[0]?.id)) {
+      setProductId(project.draft.primaryProductId || project.draft.products[0]?.id || '');
+    }
+  }, [project.draft.primaryProductId, project.draft.products, productId]);
+  useEffect(() => {
     let active = true;
     const renderChannel = requestId();
     channel.current = renderChannel;
@@ -120,10 +125,11 @@ export function SitePreview({
     setError('');
     setHtml('');
     (async () => {
+      const effectiveProductId = productId || project.draft.primaryProductId || project.draft.products[0]?.id || '';
       const query = new URLSearchParams({
         lang,
         page,
-        ...(page === 'detail' ? { productId } : {}),
+        ...(page === 'detail' && effectiveProductId ? { productId: effectiveProductId } : {}),
       });
       const path = `/api/projects/${encodeURIComponent(project.id)}/preview?${query}`;
       const result = draftPreview
