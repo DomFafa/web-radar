@@ -695,7 +695,7 @@ export class DomainService {
           projectId: project.id,
           lang,
           page,
-          productId: url.searchParams.get('productId') ?? undefined,
+          productId: url.searchParams.get('productId') || draft.primaryProductId || draft.products[0]?.id || undefined,
           assetUrl: (id: string) => `/api/projects/${project.id}/assets/${id}`,
           inquiryUrl: `/api/public/sites/${project.id}/inquiries`,
           preview: true,
@@ -3157,7 +3157,7 @@ export class DomainService {
   ): Promise<string> {
     if (draft.buildBranch === 'clone' && hasCloneOutput(draft.cloneConfig)) {
       const files = renderCloneFiles(await loadCloneOutput(this.env, options.projectId, draft), { ...options, basePath });
-      const key = siteFilePath(options.lang, options.page, options.productId ?? draft.primaryProductId);
+      const key = siteFilePath(options.lang, options.page, options.productId || draft.primaryProductId || draft.products[0]?.id);
       requireCondition(files[key], 404, 'page_not_found', '页面不存在。');
       return files[key];
     }
@@ -3170,7 +3170,7 @@ export class DomainService {
     const path = siteFilePath(
       options.lang ?? 'en',
       options.page ?? 'home',
-      options.productId ?? draft.primaryProductId,
+      options.productId || draft.primaryProductId || draft.products[0]?.id,
     );
     requireCondition(files[path], 404, 'page_not_found', '页面不存在。');
     return files[path];

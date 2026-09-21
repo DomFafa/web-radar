@@ -110,6 +110,286 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'universal-trade-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 900（16:5 全品类现代旗舰展台，适配大屏通栏）',
+    bannerNote: '现代化全品类旗舰商贸展台与 Apple 液态玻璃光影已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'universal-showcase-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 全景沉浸视界动态视频，适配 2K/4K 大屏）',
+    bannerNote: '100vh 动态出海商贸与智能制造视界视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'toys-figure-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（8:3 赛博机能与潮玩亚克力展台背景）',
+    bannerNote: '潮玩艺术展馆、霓虹微光与亚克力悬浮展台已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'toys-interactive-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 动态机动潮玩与可动机甲视频，适配 2K/4K）',
+    bannerNote: '可动机甲与互动公仔动态演示全屏视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'plush-cushion-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 900（16:5 奶油风云朵云绒治愈展台）',
+    bannerNote: '奶油风超柔治愈美学、云朵波浪与亲肤触感展台已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'plush-living-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 慢调软包时光沉浸视频，适配 2K/4K）',
+    bannerNote: '慢镜头生活场景短片与晨光微风慢回弹动效已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'apparel-fabric-banner': {
+    productCount: 8,
+    productSize: '1200 × 1600（3:4 高定画册比例）',
+    bannerSize: '2560 × 960（8:3 国际时装杂志 Editorial 画册留白展台）',
+    bannerNote: '高定面料经纬微距光影与典雅英文字体排版已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1600,
+      },
+    ],
+  },
+  'apparel-runway-video': {
+    productCount: 8,
+    productSize: '1200 × 1600（3:4 高定画册比例）',
+    bannerSize: '2560 × 1440（16:9 Runway 走秀模特与高定面料飘逸视频，适配 2K/4K）',
+    bannerNote: '动态时装风尚走秀模特与高定飘逸面料全屏视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1600,
+      },
+    ],
+  },
+  'footwear-craft-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 920（16:5.7 先锋工匠鞋履气垫透视展台）',
+    bannerNote: '工程级鞋底气垫透视与手工缝线工匠皮革展台已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'footwear-kinetic-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 破风越野冲刺与回弹动能视频，适配 2K/4K）',
+    bannerNote: '户外越野冲刺、抓地爆发与动力回弹全屏动态短片已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'luggage-leather-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 940（16:5.9 托斯卡纳手工植鞣皮具明亮画册展台）',
+    bannerNote: '天然植鞣皮质感与暖米白展台已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'luggage-voyage-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 阳光航站楼登机动态全景视频，适配 2K/4K）',
+    bannerNote: '阳光航站楼机组出行全景视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'jewelry-luxury-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 950（16:6 旺多姆高珠明亮采光展盒）',
+    bannerNote: '珍珠米白丝绸展台与香槟金光晕已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'jewelry-timeless-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 瑞士日内瓦制表工坊自然光陀飞轮视频，适配 2K/4K）',
+    bannerNote: '瑞士日内瓦无尘明亮制表工坊与自产陀飞轮高帧率微距视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'homedecor-aesthetic-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 980（16:6.1 晨光日式侘寂素烧陶艺生活展台）',
+    bannerNote: '燕麦柔奶白陶艺生活场景与1280度高温窑变肌理已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'homedecor-living-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 百叶窗阳光流动治愈生活短片，适配 2K/4K）',
+    bannerNote: '百叶窗阳光流动与现代艺术居所生活短片已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'furniture-minimal-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 920（16:5.7 美术馆级包豪斯实木展台）',
+    bannerNote: '纯白几何网格底色与大正传统榫卯拆解图已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'furniture-spatial-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 现代紧凑型空间折叠家具演示视频，适配 2K/4K）',
+    bannerNote: '小户型多功能变形家具平滑折叠演示视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'kitchen-culinary-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 洁净不锈钢主厨料理台展台）',
+    bannerNote: '67层折叠锻打水波纹与15度水冷微开刃金相图已内置。',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'kitchen-gourmet-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 阳光法式私厨慢炖料理短片，适配 2K/4K）',
+    bannerNote: '慢动作法式烹饪与汤汁微滚视频已内置。',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
@@ -164,151 +444,6 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
-  'fintech-platform': {
-    productCount: 8,
-    productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '2560 × 1070（12:5 金融资产管理宽屏通栏）',
-    bannerNote: '保留默认背景时无需上传。',
-    videos: 0,
-    slots: [
-      {
-        count: 1,
-        width: 1724,
-        height: 1639,
-      },
-      {
-        count: 1,
-        width: 1290,
-        height: 1248,
-      },
-      {
-        count: 1,
-        width: 2564,
-        height: 1207,
-      },
-      {
-        count: 1,
-        width: 641,
-        height: 816,
-      },
-      {
-        count: 1,
-        width: 629,
-        height: 404,
-      },
-      {
-        count: 1,
-        width: 1254,
-        height: 520,
-      },
-      {
-        count: 2,
-        width: 597,
-        height: 520,
-      },
-    ],
-  },
-  'digital-marketing': {
-    productCount: 12,
-    productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '2560 × 960（8:3 数字创意增长通栏）',
-    bannerNote: '保留默认背景时无需上传。',
-    videos: 0,
-    slots: [
-      {
-        count: 1,
-        width: 1366,
-        height: 962,
-      },
-      {
-        count: 1,
-        width: 1252,
-        height: 1252,
-      },
-      {
-        count: 1,
-        width: 960,
-        height: 1344,
-      },
-      {
-        count: 9,
-        width: 625,
-        height: 626,
-      },
-    ],
-  },
-  'porto-accounting': {
-    productCount: 3,
-    productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '2560 × 770（3.3:1 经典财税精练通栏）',
-    bannerNote: '保留默认背景时无需上传。',
-    videos: 0,
-    slots: [
-      {
-        count: 1,
-        width: 641,
-        height: 641,
-      },
-      {
-        count: 2,
-        width: 511,
-        height: 600,
-      },
-    ],
-  },
-  'crafto-corporate': {
-    productCount: 6,
-    productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '2560 × 960（8:3 现代集团全景轮播）',
-    bannerNote: '保留默认背景时无需上传。',
-    videos: 0,
-    slots: [
-      {
-        count: 2,
-        width: 595,
-        height: 595,
-      },
-      {
-        count: 1,
-        width: 675,
-        height: 560,
-      },
-      {
-        count: 3,
-        width: 600,
-        height: 430,
-      },
-    ],
-  },
-  'juno-toys': {
-    productCount: 12,
-    productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '2560 × 1040（2.5:1 童趣玩具明快轮播画幅）',
-    bannerNote: '保留默认背景时无需上传。',
-    videos: 0,
-    slots: [
-      {
-        count: 4,
-        width: 650,
-        height: 572,
-      },
-      {
-        count: 6,
-        width: 630,
-        height: 630,
-      },
-      {
-        count: 1,
-        width: 520,
-        height: 599,
-      },
-      {
-        count: 1,
-        width: 630,
-        height: 482,
-      },
-    ],
-  },
   'corpox-ai-agency': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
@@ -335,35 +470,6 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
         count: 2,
         width: 1068,
         height: 1215,
-      },
-    ],
-  },
-  'corpox-consulting': {
-    productCount: 12,
-    productSize: '1200 × 1200（1:1），主体四周留白',
-    bannerSize: '2560 × 910（14:5 高端战略咨询通栏）',
-    bannerNote: '保留默认背景时无需上传。',
-    videos: 1,
-    slots: [
-      {
-        count: 1,
-        width: 531,
-        height: 685,
-      },
-      {
-        count: 6,
-        width: 1010,
-        height: 756,
-      },
-      {
-        count: 3,
-        width: 918,
-        height: 928,
-      },
-      {
-        count: 2,
-        width: 494,
-        height: 494,
       },
     ],
   },

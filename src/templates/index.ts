@@ -20,6 +20,16 @@ import { renderWonderHome, renderWonderPage } from './themes/sensengWonder';
 import { renderArcadeHome, renderArcadePage } from './themes/sensengArcade';
 import { renderNatureHome, renderNaturePage } from './themes/sensengNature';
 import { renderMinimalHome, renderMinimalPage } from './themes/sensengMinimal';
+import { renderUniversalPage } from './themes/universalTrade';
+import { renderToysFigureThemePage } from './themes/toysFigure';
+import { renderPlushPage } from './themes/plushCushion';
+import { renderApparelPage } from './themes/apparelTextile';
+import { renderFootwearPage } from './themes/footwearShoes';
+import { renderLuggageBagsTemplate } from './themes/luggageBags';
+import { renderJewelryWatchesTemplate } from './themes/jewelryWatches';
+import { renderHomeDecorTemplate } from './themes/homeDecor';
+import { renderFurnitureStorageTemplate } from './themes/furnitureStorage';
+import { renderKitchenwareTablewareTemplate } from './themes/kitchenwareTableware';
 import { materialProductImage,materialsSensengBody,materialsSeo,materialsThemeStyle } from './materials-render';
 import { materialsRuntime } from '../shared/materials-runtime';
 import { productImageViewerRuntime } from '../shared/product-image-viewer';
@@ -58,22 +68,23 @@ function safeUrl(value: string, blob = false): string {
   return '';
 }
 function segment(id: string): string {
-  if (id === '.' || id === '..' || !id) throw Error('Invalid product identifier');
+  if (id === '.' || id === '..' || !id) return 'item';
   return encodeURIComponent(id).replace(/\./g, '%2E');
 }
-const productPath = (id: string) => `products/${segment(id)}/index.html`;
+const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
   const html = renderSiteContent(draft, options);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return html.replace('</body>', `<script id="wr-product-image-viewer-script">(()=>{const __name=(value)=>value;(${productImageViewerRuntime.toString()})();})();</script></body>`);
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
-  if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:options.productId??draft.primaryProductId});
-  const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: options.productId ?? draft.primaryProductId});
+  const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
+  const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
   // Several standalone headers build their own language links and used catalog
   // depth on product pages. Normalize those links at the common output boundary.
   const depth=options.page==='home'?'':options.page==='detail'?'../../':'../';
-  const target=options.page==='detail'?productPath(options.productId||draft.primaryProductId):options.page==='home'?'index.html':`${options.page}/index.html`;
+  const target=options.page==='detail'?(effectiveProductId?productPath(effectiveProductId):'catalog/index.html'):options.page==='home'?'index.html':`${options.page}/index.html`;
   const html=rendered.replace(/<a\b[^>]*\bdata-wr-lang="([a-z]{2})"[^>]*>/g,(tag,lang:string)=>draft.languages.includes(lang as Language)?tag.replace(/\bhref="[^"]*"/,`href="${esc(`${depth}../${lang}/${target}`)}"`):tag);
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
@@ -299,8 +310,9 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     .join('');
   const languageLinks = draft.languages
     .map((l) => {
+      const effectiveId = options.productId || draft.primaryProductId || draft.products[0]?.id;
       const target =
-        page === 'detail' && options.productId ? productPath(options.productId) : navPath(page);
+        page === 'detail' && effectiveId ? productPath(effectiveId) : navPath(page);
       return `<a href="${depth}../${l}/${target}" lang="${l}" data-wr-lang="${l}" aria-current="${l === lang}">${l.toUpperCase()}</a>`;
     })
     .join('');
@@ -340,6 +352,56 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   if (template === 'senseng-minimal') {
     const ctx = buildThemeContext(draft, options);
     const bodyHtml = renderMinimalPage(ctx);
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'universal-trade-banner' || template === 'universal-showcase-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderUniversalPage(ctx, template === 'universal-showcase-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'toys-figure-banner' || template === 'toys-interactive-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderToysFigureThemePage(ctx, template === 'toys-interactive-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'plush-cushion-banner' || template === 'plush-living-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderPlushPage(ctx, template === 'plush-living-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'apparel-fabric-banner' || template === 'apparel-runway-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderApparelPage(ctx, template === 'apparel-runway-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'footwear-craft-banner' || template === 'footwear-kinetic-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderFootwearPage(ctx, template === 'footwear-kinetic-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'luggage-leather-banner' || template === 'luggage-voyage-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderLuggageBagsTemplate(ctx, template === 'luggage-voyage-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'jewelry-luxury-banner' || template === 'jewelry-timeless-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderJewelryWatchesTemplate(ctx, template === 'jewelry-timeless-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'homedecor-aesthetic-banner' || template === 'homedecor-living-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderHomeDecorTemplate(ctx, template === 'homedecor-living-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'furniture-minimal-banner' || template === 'furniture-spatial-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderFurnitureStorageTemplate(ctx, template === 'furniture-spatial-video');
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
+  }
+  if (template === 'kitchen-culinary-banner' || template === 'kitchen-gourmet-video') {
+    const ctx = buildThemeContext(draft, options);
+    const bodyHtml = renderKitchenwareTablewareTemplate(ctx, template === 'kitchen-gourmet-video');
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
   }
   if (isReferenceTemplate(template)) return renderReferencePage(draft, { ...options, page }, content, script);

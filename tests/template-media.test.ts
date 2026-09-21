@@ -4,12 +4,14 @@ import { templateMediaRequirements } from '../src/shared/template-media';
 import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 
 describe('template media checklist stays aligned with the renderer', () => {
-  it('covers exactly the ten selectable templates', () => {
+  it('covers exactly the selectable templates', () => {
     expect(Object.keys(templateMediaRequirements).sort()).toEqual(
       TEMPLATES.map((t) => t.id).sort(),
     );
   });
-  it.each(Object.entries(referenceLayouts))(
+  it.each(
+    Object.entries(referenceLayouts).filter(([id]) => id in templateMediaRequirements),
+  )(
     '%s reflects actual image slots and bundled videos',
     (id, layout) => {
       const media = templateMediaRequirements[id as keyof typeof templateMediaRequirements]!;

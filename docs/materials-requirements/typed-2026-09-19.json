@@ -91,6 +91,126 @@
       "sha256": "53faa21f45266e356cb5b71573ac3a072e59413802f2422a37a0bbddac95c71d",
       "images": 4,
       "texts": 236
+    },
+    "universal-trade-banner": {
+      "contractRevision": "2026-09-19.universal-trade-banner-materials.1",
+      "sha256": "7f0b12982eb98a3c981245e857bb2e5609b1ca111a43fd57e82a8bc5fe901280",
+      "images": 3,
+      "texts": 235
+    },
+    "universal-showcase-video": {
+      "contractRevision": "2026-09-19.universal-showcase-video-materials.1",
+      "sha256": "32b646f18008cbad7431ec8b2e2a2a986748438b123c510735a1460fd6bf28dc",
+      "images": 3,
+      "texts": 244
+    },
+    "toys-figure-banner": {
+      "contractRevision": "2026-09-19.toys-figure-banner-materials.1",
+      "sha256": "a985894e19f4dac85ce14a30a4f504300d6d8f943d0a9c2fbcb1b1aad8c16ddc",
+      "images": 3,
+      "texts": 266
+    },
+    "toys-interactive-video": {
+      "contractRevision": "2026-09-19.toys-interactive-video-materials.1",
+      "sha256": "b173aa72e9a1fc42590a3a127a9b0c33be7ebf19e1b06ac41175881dd558d25c",
+      "images": 3,
+      "texts": 268
+    },
+    "plush-cushion-banner": {
+      "contractRevision": "2026-09-19.plush-cushion-banner-materials.1",
+      "sha256": "b396afd5d8e1c194016aff99c2e6912bbdde2bc56f742f1aaa2c9605aa077726",
+      "images": 3,
+      "texts": 232
+    },
+    "plush-living-video": {
+      "contractRevision": "2026-09-19.plush-living-video-materials.1",
+      "sha256": "0c2707a13f15eb3bc860ec14f2b515db5123021bf038053e40dea8919533b713",
+      "images": 3,
+      "texts": 241
+    },
+    "apparel-fabric-banner": {
+      "contractRevision": "2026-09-19.apparel-fabric-banner-materials.1",
+      "sha256": "c8de8081266788aa574706f70289b91929fdaf376ef10b165753a93b992a2a68",
+      "images": 3,
+      "texts": 218
+    },
+    "apparel-runway-video": {
+      "contractRevision": "2026-09-19.apparel-runway-video-materials.1",
+      "sha256": "d21c62dcb26278744adbafd6a1a47a5078c96b18d69d308f8c6e22eaa12b8152",
+      "images": 3,
+      "texts": 219
+    },
+    "footwear-craft-banner": {
+      "contractRevision": "2026-09-19.footwear-craft-banner-materials.1",
+      "sha256": "6710e9a4b2cf57add1ebdab5e25436c351cc7ec5bd30f324935c00db062a709b",
+      "images": 3,
+      "texts": 242
+    },
+    "footwear-kinetic-video": {
+      "contractRevision": "2026-09-19.footwear-kinetic-video-materials.1",
+      "sha256": "e414a2c0a1c642f937a1febe2958b2f5762abf2b78a66d757f699d0010058574",
+      "images": 3,
+      "texts": 251
+    },
+    "luggage-leather-banner": {
+      "contractRevision": "2026-09-19.luggage-leather-banner-materials.1",
+      "sha256": "137af7a5471f76f39ed4a63cb611cda7bd95fced348709cb0234339fb2624ee4",
+      "images": 3,
+      "texts": 234
+    },
+    "luggage-voyage-video": {
+      "contractRevision": "2026-09-19.luggage-voyage-video-materials.1",
+      "sha256": "e7f56393a772dd35e6d2c3b8427b2122b65651e324d1dd872cc3de4c061a2363",
+      "images": 3,
+      "texts": 242
+    },
+    "jewelry-luxury-banner": {
+      "contractRevision": "2026-09-19.jewelry-luxury-banner-materials.1",
+      "sha256": "66c798c0ff5969127a1a56f5b90bfa4412faba8e5f2ed0c253d2cb1064208ba5",
+      "images": 3,
+      "texts": 237
+    },
+    "jewelry-timeless-video": {
+      "contractRevision": "2026-09-19.jewelry-timeless-video-materials.1",
+      "sha256": "9478af2e77aced9df7300d97b143a9e2ec48bfb505468d8c1171f90ce18dd831",
+      "images": 3,
+      "texts": 242
+    },
+    "homedecor-aesthetic-banner": {
+      "contractRevision": "2026-09-19.homedecor-aesthetic-banner-materials.1",
+      "sha256": "a1e8135a784be21d28caf4cd775d672257fab7570a7e1eb642907ba0581b8707",
+      "images": 3,
+      "texts": 176
+    },
+    "homedecor-living-video": {
+      "contractRevision": "2026-09-19.homedecor-living-video-materials.1",
+      "sha256": "118eb18fa9c11e15c272b84a7972f47d6df17e113c8fefc369a5c38fc058fb25",
+      "images": 3,
+      "texts": 179
+    },
+    "furniture-minimal-banner": {
+      "contractRevision": "2026-09-19.furniture-minimal-banner-materials.1",
+      "sha256": "8c059af6903088f7d78c0ba7b302b48f3aec9e0917a80e61a8dfddd835a370be",
+      "images": 3,
+      "texts": 244
+    },
+    "furniture-spatial-video": {
+      "contractRevision": "2026-09-19.furniture-spatial-video-materials.1",
+      "sha256": "8058b20eb06120c9b78bf9628e862a00f5e923c12e29d3963abad78dd1245da9",
+      "images": 3,
+      "texts": 259
+    },
+    "kitchen-culinary-banner": {
+      "contractRevision": "2026-09-19.kitchen-culinary-banner-materials.1",
+      "sha256": "28ecfc4100e936fdb3b777ae9f9932b486a7e4b9f1f415de9b6ab8e1686eb6ba",
+      "images": 3,
+      "texts": 234
+    },
+    "kitchen-gourmet-video": {
+      "contractRevision": "2026-09-19.kitchen-gourmet-video-materials.1",
+      "sha256": "57b08dff321b938c1641aa60f8a813f3ab10ac74eff9994caecefd2cb6cb7716",
+      "images": 3,
+      "texts": 242
     }
   }
 }

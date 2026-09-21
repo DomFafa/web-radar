@@ -450,9 +450,9 @@ try {
   await page.getByLabel('公司 / 品牌名称',{exact:true}).waitFor();
   assert.equal(await page.getByText('AI 智能深度定制',{exact:true}).count(),0);
   await page.goto(origin+'/?project='+templateProject.id+'&tab=template');
-  await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'Senseng 经典工贸',exact:true})}).click();
+  await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'经典工贸',exact:true})}).click();
   await page.locator('.template-media-guide').waitFor();
-  assert.equal(await page.locator('.template-media-card').count(),15);
+  assert.equal(await page.locator('.template-media-card').count(), 29);
   assert.equal(await page.getByRole('button',{name:/切换为 AI/}).count(),0);
   await page.locator('.template-media-guide summary').click();
   assert.ok((await page.locator('.template-slot-sizes').innerText()).includes('1536 × 1024'));
