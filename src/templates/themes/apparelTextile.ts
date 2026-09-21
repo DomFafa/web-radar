@@ -27,7 +27,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: '20,000mm waterproof & 15,000g/m² breathable 3L ripstop laminate with fully taped seams and YKK AquaGuard weatherproof zippers.',
     badge: 'Performance Outerwear',
     category: 'outerwear',
-    categoryNameZh: '户外三防机能风衣',
+    categoryNameZh: '',
     categoryNameEn: 'Technical Outerwear',
     fabricComposition: '100% Recycled Nylon 70D + eVent PTFE Membrane',
     weightGsm: '165 GSM (3-Layer Laminate)',
@@ -42,7 +42,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: '19.5-micron superfine Merino wool knit on WholeGarment 3D seamless machines for zero-friction next-to-skin luxury warmth.',
     badge: 'Haute Knitwear',
     category: 'knitwear',
-    categoryNameZh: '全成型无缝美利奴羊毛针织',
+    categoryNameZh: '',
     categoryNameEn: 'Luxury Knitwear',
     fabricComposition: '100% Superfine Australian Merino Wool (19.5μm)',
     weightGsm: '14-Gauge Fine Knit (280g/pc)',
@@ -57,7 +57,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: 'Heavyweight Mulberry silk and TENCEL blend with natural fluid drape, horn buttons, and storm flap back for high-fashion silhouettes.',
     badge: 'Runway Tailoring',
     category: 'tailoring',
-    categoryNameZh: '重磅真丝双排扣垂坠风衣',
+    categoryNameZh: '',
     categoryNameEn: 'Runway Tailoring',
     fabricComposition: '32% Grade 6A Mulberry Silk + 68% TENCEL Lyocell',
     weightGsm: '260 GSM Twill Weave',
@@ -72,7 +72,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: 'Custom-developed 460GSM compact spun French terry cotton with pre-shrunk enzyme wash and double-needle cover-stitched seams.',
     badge: 'Streetwear Luxury',
     category: 'streetwear',
-    categoryNameZh: '460克重磅复古纯棉卫衣',
+    categoryNameZh: '',
     categoryNameEn: 'Luxury Streetwear',
     fabricComposition: '100% Combed Compact Cotton (Zero Shrinkage)',
     weightGsm: '460 GSM Heavyweight Loopback Terry',
@@ -87,7 +87,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: 'High-stretch micro-honeycomb mesh fabric infused with natural nano bamboo charcoal for odor control and sub-second moisture wicking.',
     badge: 'Eco Performance',
     category: 'activewear',
-    categoryNameZh: '竹炭抑菌吸湿速干运动T恤',
+    categoryNameZh: '',
     categoryNameEn: 'High-Performance Activewear',
     fabricComposition: '65% Bamboo Charcoal Poly + 30% Polyamide + 5% Spandex',
     weightGsm: '140 GSM Moisture-Wicking Mesh',
@@ -102,7 +102,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: 'Old-school shuttle loom woven 14oz ring-spun denim with red selvedge ID line, triple-stitched felled seams and antique brass hardware.',
     badge: 'Heritage Denim',
     category: 'denim',
-    categoryNameZh: '赤耳丹宁原牛重工夹克',
+    categoryNameZh: '',
     categoryNameEn: 'Heritage Denim',
     fabricComposition: '100% Long-Staple Cotton Ring-Spun Indigo Yarn',
     weightGsm: '14.5 oz Selvedge Denim',
@@ -117,7 +117,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: 'Pre-washed pure Normandy flax linen with relaxed Cuban collar, natural mother-of-pearl buttons, and airy breathable textured drape.',
     badge: 'Sustainable Resort',
     category: 'resort',
-    categoryNameZh: 'GOTS有机法式亚麻度假衬衫',
+    categoryNameZh: '',
     categoryNameEn: 'Resort & Linen',
     fabricComposition: '100% Certified Organic Normandy Flax Linen',
     weightGsm: '175 GSM Plain Weave',
@@ -132,7 +132,7 @@ export const APPAREL_DEFAULT_PRODUCTS: ThemedProductItem[] = [
     desc: 'Ultralight micro-fleece thermal underwear engineered with zoned ventilation and stitch-free bonded hem tape for invisible second-skin warmth.',
     badge: 'Thermal Innovation',
     category: 'baselayer',
-    categoryNameZh: '无感点胶保暖恒温打底套装',
+    categoryNameZh: '',
     categoryNameEn: 'Thermal Baselayers',
     fabricComposition: '55% Micro Acrylic + 38% Modal + 7% Spandex',
     weightGsm: '210 GSM Thermal Double-Brushed',
@@ -152,7 +152,7 @@ export function getApparelProducts(ctx: ThemeContext): ThemedProductItem[] {
       desc: translateProduct(p).description || '',
       badge: '',
       category: 'apparel',
-      categoryNameZh: '服装与纺织品',
+      categoryNameZh: '',
       categoryNameEn: 'Apparel & Textiles',
       fabricComposition: p.material || '',
       weightGsm: '',
@@ -162,7 +162,7 @@ export function getApparelProducts(ctx: ThemeContext): ThemedProductItem[] {
       img: ctx.productMainImage(p),
     }));
   }
-  const isZh = (ctx.lang as string) === 'zh';
+
   if (draft.products && draft.products.length > 0) {
     return draft.products.map((p, idx) => {
       const fallback = APPAREL_DEFAULT_PRODUCTS[idx % APPAREL_DEFAULT_PRODUCTS.length];
@@ -172,7 +172,7 @@ export function getApparelProducts(ctx: ThemeContext): ThemedProductItem[] {
         id: p.id,
         name: translated.name || fallback.name,
         desc: translated.description || fallback.desc,
-        badge: idx === 0 ? (isZh ? '秀场定制款' : 'Runway Spotlight') : (isZh ? '面料优选' : 'Fabric Tech Choice'),
+        badge: idx === 0 ? ('Runway Spotlight') : ('Fabric Tech Choice'),
         category: fallback.category,
         categoryNameZh: fallback.categoryNameZh,
         categoryNameEn: fallback.categoryNameEn,
@@ -191,17 +191,15 @@ export function getApparelProducts(ctx: ThemeContext): ThemedProductItem[] {
 export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
   const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const products = getApparelProducts(ctx);
   const heroProduct = products[0];
 
   const userCopy = draft.copy[ctx.lang];
   const copy = {
-    headline: userCopy?.headline || (isZh ? '高级成衣剪裁与高机能纺织品全球供应链' : 'Haute Couture Tailoring & High-Performance Textile Manufacturing'),
-    subtitle: userCopy?.subtitle || (isZh
-      ? '专注于户外三防机能面料、全成型无缝羊毛针织与高端设计师品牌柔性快反生产。拥有 GOTS 有机认证、OEKO-TEX 100 环保印染与日本全自动激光裁床。'
-      : 'Specializing in technical 3-layer outerwear, WholeGarment seamless knitwear, and GOTS certified luxury textiles. Fast-response supply chain for global fashion houses.'),
-    cta: userCopy?.cta || (isZh ? '探索当季成衣与面料谱系' : 'Explore Runway Collection'),
+    headline: userCopy?.headline || ('Haute Couture Tailoring & High-Performance Textile Manufacturing'),
+    subtitle: userCopy?.subtitle || ('Specializing in technical 3-layer outerwear, WholeGarment seamless knitwear, and GOTS certified luxury textiles. Fast-response supply chain for global fashion houses.'),
+    cta: userCopy?.cta || ('Explore Runway Collection'),
   };
 
   const videoAsset = ctx.asset(draft.heroAssetId);
@@ -217,7 +215,7 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
         <div style="position:absolute;inset:0;background:radial-gradient(circle at center, rgba(180,83,9,0.1) 0%, rgba(24,24,27,0.9) 75%);z-index:2;"></div>
         <div class="wrap" style="position:relative;z-index:3;padding:120px 20px 80px;text-align:center;max-width:960px;">
           <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:8px;padding:6px 20px;border-radius:9999px;background:rgba(255,255,255,0.1);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.25);font-size:0.8rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#d97706;margin-bottom:24px;">
-            ✨ ${isZh ? '当代成衣工坊 · 秀场级制造' : 'HAUTE RUNWAY ATELIER & TEXTILE MILL'}
+            ✨ HAUTE RUNWAY ATELIER & TEXTILE MILL
           </div>
           <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(2.4rem, 4.8vw, 4.2rem);font-weight:800;line-height:1.18;letter-spacing:-0.03em;color:#ffffff;margin:0 0 22px;font-family:Georgia, serif;">
             ${esc(copy.headline)}
@@ -230,7 +228,7 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
               ${esc(copy.cta)} ↗
             </a>
             <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:rgba(255,255,255,0.12);color:#ffffff;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.3);font-weight:700;padding:14px 32px;border-radius:4px;font-size:0.95rem;text-decoration:none;">
-              ${isZh ? '索取面料色卡与技术包' : 'Request Fabric Swatch Book'}
+              Request Fabric Swatch Book
             </a>
           </div>
         </div>
@@ -264,7 +262,7 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
                 ${esc(copy.cta)} ↗
               </a>
               <a class="button" href="${path('about/index.html')}" ${navAttrs('about')} style="background:transparent;color:#ffffff;border:1px solid #71717a;font-weight:700;padding:14px 30px;border-radius:4px;font-size:0.92rem;text-decoration:none;">
-                ${isZh ? '织造工坊与可持续标准 →' : 'Mill Craft & GOTS Standards →'}
+                Mill Craft & GOTS Standards →
               </a>
             </div>
           </div>
@@ -297,33 +295,33 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
       <div style="text-align:center;max-width:720px;margin:0 auto 40px;">
         <span style="font-size:0.78rem;letter-spacing:0.15em;text-transform:uppercase;color:#b45309;font-weight:800;">FABRIC INNOVATION MATRIX</span>
         <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:800;color:#18181b;letter-spacing:-0.02em;margin:10px 0 14px;font-family:Georgia, serif;">
-          ${isZh ? '高机能面料与可持续织造体系' : 'High-Performance Weaves & Eco-Textile Innovations'}
+          High-Performance Weaves & Eco-Textile Innovations
         </h2>
         <p style="font-size:1rem;color:#71717a;margin:0;">
-          ${isZh ? '涵盖三防贴膜、无缝全成型美利奴羊毛与 GOTS 有机棉麻，全色牢度 4.5 级以上。' : 'From 3-layer waterproof membranes to WholeGarment Merino and GOTS organic flax linen.'}
+          From 3-layer waterproof membranes to WholeGarment Merino and GOTS organic flax linen.
         </p>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;">
         <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:4px;padding:24px;">
           <div style="font-size:0.75rem;font-weight:800;color:#d97706;letter-spacing:0.08em;margin-bottom:8px;">MEMBRANE TECH</div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">${isZh ? '20k/15k 三防机能复合' : '3L StormShell Laminate'}</h3>
-          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">${isZh ? '耐水压 20,000mm，透湿率 15,000g/m²，全接缝压胶防暴雨工艺。' : '20k waterproof and 15k breathability with zero seam leakage.'}</p>
+          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">3L StormShell Laminate</h3>
+          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">20k waterproof and 15k breathability with zero seam leakage.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:4px;padding:24px;">
           <div style="font-size:0.75rem;font-weight:800;color:#d97706;letter-spacing:0.08em;margin-bottom:8px;">SEAMLESS 3D KNIT</div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">${isZh ? '全成型无缝美利奴羊毛' : 'WholeGarment 3D Knit'}</h3>
-          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">${isZh ? '日本岛精全成型针织，零裁剪损耗，贴肤零摩擦舒适感。' : 'Zero-waste seamless 3D knit from 19.5μm Australian Merino.'}</p>
+          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">WholeGarment 3D Knit</h3>
+          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">Zero-waste seamless 3D knit from 19.5μm Australian Merino.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:4px;padding:24px;">
           <div style="font-size:0.75rem;font-weight:800;color:#d97706;letter-spacing:0.08em;margin-bottom:8px;">HEAVYWEIGHT COTTON</div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">${isZh ? '460GSM 紧密纺毛圈' : '460GSM French Terry'}</h3>
-          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">${isZh ? '高克重紧密赛络纺纯棉，酵素洗水预缩，挺括不塌陷。' : 'Heavyweight compact loopback cotton with pre-shrunk enzyme wash.'}</p>
+          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">460GSM French Terry</h3>
+          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">Heavyweight compact loopback cotton with pre-shrunk enzyme wash.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:4px;padding:24px;">
           <div style="font-size:0.75rem;font-weight:800;color:#d97706;letter-spacing:0.08em;margin-bottom:8px;">ORGANIC FLUIDITY</div>
-          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">${isZh ? '真丝天丝混纺垂坠' : 'Silk-TENCEL Luxury Twill'}</h3>
-          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">${isZh ? '6A级桑蚕丝融合天丝莱赛尔，天然光泽与透气垂感兼备。' : 'Natural liquid drape with GOTS certification and botanical dye.'}</p>
+          <h3 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 8px;font-family:Georgia, serif;">Silk-TENCEL Luxury Twill</h3>
+          <p style="font-size:0.85rem;color:#71717a;line-height:1.6;margin:0;">Natural liquid drape with GOTS certification and botanical dye.</p>
         </div>
       </div>
     </section>
@@ -336,11 +334,11 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
         <div>
           <span style="font-size:0.78rem;font-weight:800;color:#b45309;letter-spacing:0.12em;text-transform:uppercase;">LOOKBOOK ARCHIVE</span>
           <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:800;color:#18181b;letter-spacing:-0.02em;margin:6px 0 0;font-family:Georgia, serif;">
-            ${isZh ? '当季成衣与面料精选目录' : 'Seasonal Lookbook & Garment Collection'}
+            Seasonal Lookbook & Garment Collection
           </h2>
         </div>
         <a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="font-weight:700;color:#d97706;text-decoration:none;font-size:0.92rem;">
-          ${isZh ? '查看全部 8 款成衣画报 ↗' : 'View Full Lookbook (8 Items) ↗'}
+          View Full Lookbook (8 Items) ↗
         </a>
       </div>
 
@@ -357,7 +355,7 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
             </div>
             <div style="padding:18px;display:flex;flex-direction:column;flex:1;">
               <div style="font-size:0.72rem;font-weight:800;color:#b45309;text-transform:uppercase;margin-bottom:4px;letter-spacing:0.06em;">
-                ${isZh ? p.categoryNameZh : p.categoryNameEn}
+                ${p.categoryNameEn}
               </div>
               <h3 style="font-size:1.05rem;font-weight:800;color:#18181b;margin:0 0 6px;line-height:1.35;font-family:Georgia, serif;">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:inherit;">${esc(p.name)}</a>
@@ -366,8 +364,8 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
                 ${esc(p.desc)}
               </p>
               <div style="border-top:1px solid #f4f4f5;padding-top:10px;font-size:0.75rem;color:#52525b;margin-bottom:12px;">
-                <div><strong>${isZh ? '成分' : 'Comp'}:</strong> ${esc(p.fabricComposition.slice(0, 30))}</div>
-                <div style="margin-top:2px;"><strong>${isZh ? '克重' : 'GSM'}:</strong> ${esc(p.weightGsm)}</div>
+                <div><strong>Comp:</strong> ${esc(p.fabricComposition.slice(0, 30))}</div>
+                <div style="margin-top:2px;"><strong>GSM:</strong> ${esc(p.weightGsm)}</div>
               </div>
               <div style="display:flex;gap:8px;">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="button" style="flex:1;text-align:center;background:#f4f4f5;color:#18181b;font-weight:700;padding:8px;border-radius:2px;font-size:0.8rem;text-decoration:none;">
@@ -395,7 +393,7 @@ export function renderApparelHome(ctx: ThemeContext, isVideo: boolean): string {
 
 export function renderApparelCatalog(ctx: ThemeContext): string {
   const { ui, path, navAttrs } = ctx;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const products = getApparelProducts(ctx);
 
   return `
@@ -406,10 +404,10 @@ export function renderApparelCatalog(ctx: ThemeContext): string {
             HAUTE RUNWAY CATALOG
           </div>
           <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:800;color:#18181b;letter-spacing:-0.02em;margin:0 0 12px;font-family:Georgia, serif;">
-            ${isZh ? '高级成衣与高机能面料画报目录' : 'Haute Apparel & Performance Textiles Catalog'}
+            Haute Apparel & Performance Textiles Catalog
           </h1>
           <p style="font-size:1.02rem;color:#71717a;line-height:1.65;margin:0;">
-            ${isZh ? '涵盖机能风衣、美利奴无缝针织、真丝风衣、复古重磅纯棉及有机亚麻全谱系。' : 'Browse luxury outerwear, WholeGarment knitwear, heavy French terry, and sustainable linen silhouettes.'}
+            Browse luxury outerwear, WholeGarment knitwear, heavy French terry, and sustainable linen silhouettes.
           </p>
         </header>
 
@@ -426,7 +424,7 @@ export function renderApparelCatalog(ctx: ThemeContext): string {
               </div>
               <div style="padding:20px;display:flex;flex-direction:column;flex:1;">
                 <div style="font-size:0.72rem;font-weight:800;color:#b45309;text-transform:uppercase;margin-bottom:4px;letter-spacing:0.06em;">
-                  ${isZh ? p.categoryNameZh : p.categoryNameEn}
+                  ${p.categoryNameEn}
                 </div>
                 <h2 style="font-size:1.1rem;font-weight:800;color:#18181b;margin:0 0 6px;line-height:1.35;font-family:Georgia, serif;">
                   <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:inherit;">${esc(p.name)}</a>
@@ -435,9 +433,9 @@ export function renderApparelCatalog(ctx: ThemeContext): string {
                   ${esc(p.desc)}
                 </p>
                 <div style="background:#fafafa;border:1px solid #f4f4f5;padding:10px 12px;font-size:0.75rem;color:#52525b;margin-bottom:14px;border-radius:2px;">
-                  <div><strong>${isZh ? '成分' : 'Composition'}:</strong> ${esc(p.fabricComposition)}</div>
-                  <div style="margin-top:2px;"><strong>${isZh ? '克重' : 'Weight'}:</strong> ${esc(p.weightGsm)}</div>
-                  <div style="margin-top:2px;"><strong>${isZh ? '起订' : 'MOQ'}:</strong> <span style="color:#b45309;font-weight:700;">${esc(p.moq)}</span></div>
+                  <div><strong>Composition:</strong> ${esc(p.fabricComposition)}</div>
+                  <div style="margin-top:2px;"><strong>Weight:</strong> ${esc(p.weightGsm)}</div>
+                  <div style="margin-top:2px;"><strong>MOQ:</strong> <span style="color:#b45309;font-weight:700;">${esc(p.moq)}</span></div>
                 </div>
                 <div style="display:flex;gap:8px;">
                   <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="button" style="flex:1;text-align:center;background:#f4f4f5;color:#18181b;font-weight:700;padding:8px;border-radius:2px;font-size:0.8rem;text-decoration:none;">
@@ -458,7 +456,7 @@ export function renderApparelCatalog(ctx: ThemeContext): string {
 
 export function renderApparelDetail(ctx: ThemeContext): string {
   const { ui, path, navAttrs } = ctx;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const products = getApparelProducts(ctx);
   const p = products.find((item) => item.id === ctx.options.productId) || products[0];
 
@@ -467,7 +465,7 @@ export function renderApparelDetail(ctx: ThemeContext): string {
       <section class="wrap" style="padding:40px 0 80px;" data-reveal="fade-up">
         <div style="margin-bottom:20px;">
           <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="font-size:0.86rem;font-weight:700;color:#b45309;text-decoration:none;">
-            ← ${isZh ? '返回成衣画报目录' : 'Back to Lookbook Catalog'}
+            ← Back to Lookbook Catalog
           </a>
         </div>
 
@@ -481,7 +479,7 @@ export function renderApparelDetail(ctx: ThemeContext): string {
 
           <div>
             <div style="font-size:0.75rem;font-weight:800;color:#b45309;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
-              ${isZh ? p.categoryNameZh : p.categoryNameEn} · ${esc(p.tagline)}
+              ${p.categoryNameEn} · ${esc(p.tagline)}
             </div>
             <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:800;color:#18181b;line-height:1.2;margin:0 0 14px;font-family:Georgia, serif;">
               ${esc(p.name)}
@@ -492,22 +490,22 @@ export function renderApparelDetail(ctx: ThemeContext): string {
 
             <div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:2px;padding:20px;margin-bottom:28px;">
               <h3 style="font-size:0.88rem;font-weight:800;color:#18181b;margin:0 0 14px;text-transform:uppercase;letter-spacing:0.06em;">
-                ${isZh ? '面料构成与技术包规格' : 'Fabric Composition & Tech Pack Specs'}
+                Fabric Composition & Tech Pack Specs
               </h3>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.84rem;color:#3f3f46;">
-                <div><strong>${isZh ? '面料成分' : 'Composition'}:</strong><br>${esc(p.fabricComposition)}</div>
-                <div><strong>${isZh ? '克重参数' : 'Weight (GSM)'}:</strong><br>${esc(p.weightGsm)}</div>
-                <div><strong>${isZh ? '工艺细节' : 'Craft & Finish'}:</strong><br>${esc(p.craftDetails)}</div>
-                <div><strong>${isZh ? '订货门槛' : 'MOQ'}:</strong><br><span style="color:#b45309;font-weight:800;">${esc(p.moq)}</span></div>
+                <div><strong>Composition:</strong><br>${esc(p.fabricComposition)}</div>
+                <div><strong>Weight (GSM):</strong><br>${esc(p.weightGsm)}</div>
+                <div><strong>Craft & Finish:</strong><br>${esc(p.craftDetails)}</div>
+                <div><strong>MOQ:</strong><br><span style="color:#b45309;font-weight:800;">${esc(p.moq)}</span></div>
               </div>
             </div>
 
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
               <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} class="button" style="background:#18181b;color:#ffffff;font-weight:700;padding:14px 32px;border-radius:2px;font-size:0.92rem;text-decoration:none;">
-                ${isZh ? '索取成衣大宗订货阶梯价 ↗' : 'Request Bulk Quote ↗'}
+                Request Bulk Quote ↗
               </a>
               <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:transparent;color:#18181b;border:1px solid #d4d4d8;font-weight:700;padding:13px 24px;border-radius:2px;font-size:0.92rem;text-decoration:none;">
-                ${isZh ? '申请实体面料色卡' : 'Request Swatches'}
+                Request Swatches
               </a>
             </div>
           </div>
@@ -520,86 +518,80 @@ export function renderApparelDetail(ctx: ThemeContext): string {
 export function renderApparelAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
-  const isZh = (ctx.lang as string) === 'zh';
 
-  const headline = getAboutHeadline(company, isZh ? `${company.name} · 当代成衣与织造工厂` : `${company.name} · Modern Garment Atelier & Textile Mill`);
+  const headline = getAboutHeadline(company, `${company.name} · Modern Garment Atelier & Textile Mill`);
   const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
   const highlights = parseAboutHighlights(company.aboutHighlights, [
-    { value: company.establishedYear || '2012', num: parseInt(company.establishedYear || '2012', 10), label: isZh ? '织造历史' : 'Established', desc: 'Over a decade of textile craftsmanship' },
-    { value: '450,000 pcs', num: 450000, suffix: ' pcs', label: isZh ? '月成衣产能' : 'Monthly Garment Capacity', desc: 'Automated laser cutting lines' },
-    { value: 'OEKO-TEX 100', label: isZh ? '环保印染认证' : 'Eco Dyeing Standard', desc: 'Zero toxic chemical discharge' },
-    { value: 'GOTS Certified', label: isZh ? '全球有机纺织品' : 'Organic Textile Standard', desc: 'Traceable organic supply chain' },
+    { value: company.establishedYear || '2012', num: parseInt(company.establishedYear || '2012', 10), label: 'Established', desc: 'Over a decade of textile craftsmanship' },
+    { value: '450,000 pcs', num: 450000, suffix: ' pcs', label: 'Monthly Garment Capacity', desc: 'Automated laser cutting lines' },
+    { value: 'OEKO-TEX 100', label: 'Eco Dyeing Standard', desc: 'Zero toxic chemical discharge' },
+    { value: 'GOTS Certified', label: 'Organic Textile Standard', desc: 'Traceable organic supply chain' },
   ]);
   const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
 
   return `
     <main class="wr-inner wr-apparel-inner" data-wr-page="about" style="padding-top:90px;background:#faf9f6;min-height:100vh;">
-      <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 0 80px;" data-reveal="fade-up">
-        <!-- Centered Vogue Retrospective Title -->
-        <header style="text-align:center;max-width:760px;margin:0 auto 48px;">
-          <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border:1px solid rgba(217,119,6,0.4);color:#d97706;font-size:0.75rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:14px;">
-            MILL RETROSPECTIVE & SUSTAINABILITY
-          </div>
-          <h1 style="font-size:clamp(2.3rem, 4.2vw, 3.6rem);font-weight:800;color:#18181b;letter-spacing:-0.02em;line-height:1.2;margin:0 0 16px;font-family:Georgia, serif;">
+      <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:60px 0 80px;" data-reveal="fade-up">
+        <!-- CENTERED EDITORIAL MASTHEAD -->
+        <header style="text-align:center;max-width:680px;margin:0 auto 56px;">
+          <div style="display:inline-block;width:40px;height:1px;background:#d97706;margin-bottom:20px;"></div>
+          <div style="font-size:0.72rem;font-weight:800;color:#d97706;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:16px;">MILL RETROSPECTIVE & SUSTAINABILITY</div>
+          <h1 style="font-size:clamp(2.4rem, 4.5vw, 3.8rem);font-weight:800;color:#18181b;letter-spacing:-0.02em;line-height:1.15;margin:0;font-family:Georgia,'Times New Roman',serif;">
             ${esc(headline)}
           </h1>
-          <p style="font-size:1.05rem;color:#71717a;line-height:1.75;margin:0;">
-            ${isZh ? '深耕高精纺织、无缝全成型针织与国际品牌成衣出海全链条。' : 'Dedicated to sustainable fiber sourcing, 3D seamless knitting, and luxury private label garment manufacturing.'}
-          </p>
         </header>
 
-        <!-- Panoramic Atelier Photography Card -->
-        <div style="border-radius:4px;overflow:hidden;background:#18181b;box-shadow:0 16px 40px rgba(0,0,0,0.06);margin-bottom:60px;">
-          <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:440px;object-fit:cover;display:block;" loading="lazy">
+        <!-- FULL-BLEED PANORAMIC ATELIER PHOTO -->
+        <div style="margin:0 -20px 64px;overflow:hidden;">
+          <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:480px;object-fit:cover;display:block;" loading="lazy">
         </div>
 
-        <!-- Minimalist Borderless Stat Row -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;border-top:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;padding:36px 0;margin-bottom:60px;">
-          ${highlights.map((h) => `
-            <div style="text-align:center;">
-              <div style="font-size:2.2rem;font-weight:800;color:#18181b;line-height:1;margin-bottom:8px;font-family:Georgia, serif;">
-                ${esc(h.value)}
+        <!-- EDITORIAL SUBTITLE -->
+        <div style="text-align:center;max-width:620px;margin:0 auto 48px;">
+          <p style="font-size:1.15rem;color:#71717a;line-height:1.8;margin:0;font-style:italic;font-family:Georgia,'Times New Roman',serif;">
+            Dedicated to sustainable fiber sourcing, 3D seamless knitting, and luxury private label garment manufacturing.
+          </p>
+        </div>
+
+        <!-- FLOWING PROSE STORY -->
+        <div style="max-width:720px;margin:0 auto 64px;color:#3f3f46;font-size:1.02rem;line-height:1.9;font-family:Georgia,'Times New Roman',serif;">
+          ${storyParagraphs.map((p) => `<p style="margin:0 0 20px;text-indent:2em;">${esc(p)}</p>`).join('')}
+        </div>
+
+        <!-- BORDERLESS STAT ROW WITH THIN RULES -->
+        <div style="border-top:1px solid #d4d4d8;border-bottom:1px solid #d4d4d8;padding:40px 0;margin-bottom:64px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:32px;">
+            ${highlights.map((h, i) => `
+              <div style="text-align:center;${i > 0 ? 'border-left:1px solid #e4e4e7;' : ''}">
+                <div style="font-size:2rem;font-weight:800;color:#18181b;line-height:1;margin-bottom:6px;font-family:Georgia,'Times New Roman',serif;">
+                  ${esc(h.value)}
+                </div>
+                <div style="font-size:0.8rem;font-weight:700;color:#b45309;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:2px;">${esc(h.label)}</div>
+                ${h.desc ? `<div style="font-size:0.75rem;color:#a1a1aa;">${esc(h.desc)}</div>` : ''}
               </div>
-              <div style="font-size:0.86rem;font-weight:700;color:#b45309;margin-bottom:4px;letter-spacing:0.04em;">${esc(h.label)}</div>
-              ${h.desc ? `<div style="font-size:0.78rem;color:#71717a;">${esc(h.desc)}</div>` : ''}
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
         </div>
 
-        <!-- Story Paragraphs Layout -->
-        <div style="max-width:800px;margin:0 auto 60px;color:#3f3f46;font-size:1.02rem;line-height:1.85;">
-          ${storyParagraphs.map((p) => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('')}
-        </div>
-
-        <!-- Mill Capacity & Eco Certs Split 50/50 -->
-        <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:4px;padding:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:36px;align-items:center;">
+        <!-- WIDE SUSTAINABLE MILL SHOWCASE -->
+        <div style="background:#18181b;border-radius:4px;padding:48px;display:grid;grid-template-columns:2fr 1fr;gap:48px;align-items:center;color:#ffffff;">
           <div>
-            <span style="font-size:0.75rem;font-weight:800;color:#b45309;letter-spacing:0.1em;text-transform:uppercase;">DIGITAL ATELIER</span>
-            <h2 style="font-size:1.5rem;font-weight:800;color:#18181b;margin:6px 0 12px;font-family:Georgia, serif;">${isZh ? '智能激光排料与无水定染车间' : 'Precision Laser Cutting & Zero-Water Dyeing'}</h2>
-            <p style="color:#71717a;font-size:0.92rem;line-height:1.7;margin:0 0 20px;">
-              ${isZh ? '引进德国自动电脑裁床与无缝超声波压胶设备。支持 15 天小批量快反试单与千打大货排产，面料缩水率控制在 1% 以内。' : 'Equipped with automated CAD laser cutting beds and ultrasonic seam sealing machinery.'}
+            <div style="font-size:0.7rem;font-weight:800;color:#d97706;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px;">DIGITAL ATELIER</div>
+            <h2 style="font-size:1.6rem;font-weight:800;color:#ffffff;margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;">Precision Laser Cutting & Zero-Water Dyeing</h2>
+            <p style="color:#a1a1aa;font-size:0.95rem;line-height:1.75;margin:0 0 24px;font-family:Georgia,'Times New Roman',serif;">
+              Equipped with automated CAD laser cutting beds and ultrasonic seam sealing machinery. Supporting 15-day fast-response trial runs and high-volume seasonal production with shrinkage controlled below 1%.
             </p>
-            <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:#18181b;color:#ffffff;font-weight:700;padding:12px 28px;border-radius:2px;font-size:0.86rem;text-decoration:none;">
-              ${isZh ? '预约工坊验厂与样衣评估' : 'Book Atelier Visit'}
+            <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;background:#d97706;color:#ffffff;font-weight:700;padding:12px 32px;font-size:0.86rem;text-decoration:none;letter-spacing:0.04em;">
+              Book Atelier Visit
             </a>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.84rem;">
-            <div style="background:#fafafa;border:1px solid #e4e4e7;padding:18px;border-radius:2px;">
-              <div style="color:#b45309;font-weight:800;margin-bottom:4px;">OEKO-TEX 100</div>
-              <div style="color:#71717a;">母婴级环保定染</div>
-            </div>
-            <div style="background:#fafafa;border:1px solid #e4e4e7;padding:18px;border-radius:2px;">
-              <div style="color:#b45309;font-weight:800;margin-bottom:4px;">GOTS Organic</div>
-              <div style="color:#71717a;">有机天然棉麻认证</div>
-            </div>
-            <div style="background:#fafafa;border:1px solid #e4e4e7;padding:18px;border-radius:2px;">
-              <div style="color:#b45309;font-weight:800;margin-bottom:4px;">GRS Recycled</div>
-              <div style="color:#71717a;">再生低碳纤维体系</div>
-            </div>
-            <div style="background:#fafafa;border:1px solid #e4e4e7;padding:18px;border-radius:2px;">
-              <div style="color:#b45309;font-weight:800;margin-bottom:4px;">ISO 9001</div>
-              <div style="color:#71717a;">国际成衣质检体系</div>
-            </div>
+          <div style="display:grid;gap:12px;font-size:0.82rem;">
+            ${[['OEKO-TEX 100','Infant-safe eco dyeing'],['GOTS Organic','Traceable organic fibers'],['GRS Recycled','Low-carbon recycled yarn'],['ISO 9001','Quality management system']].map(([title, desc]) => `
+              <div style="background:#27272a;border:1px solid #3f3f46;padding:16px 18px;">
+                <div style="color:#d97706;font-weight:800;margin-bottom:3px;">${title}</div>
+                <div style="color:#a1a1aa;font-size:0.78rem;">${desc}</div>
+              </div>
+            `).join('')}
           </div>
         </div>
       </section>
@@ -610,7 +602,6 @@ export function renderApparelAbout(ctx: ThemeContext): string {
 export function renderApparelContact(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
-  const isZh = (ctx.lang as string) === 'zh';
 
   return `
     <main class="wr-inner wr-apparel-inner" data-wr-page="contact" style="padding-top:90px;background:#faf9f6;min-height:100vh;">
@@ -620,10 +611,10 @@ export function renderApparelContact(ctx: ThemeContext): string {
             ${esc(ui.contact)} · FASHION TECH PACK ATELIER
           </div>
           <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:800;color:#18181b;letter-spacing:-0.02em;margin:0 0 12px;font-family:Georgia, serif;">
-            ${isZh ? '成衣制造定制与面料色卡索取' : 'Garment Manufacturing Inquiry & Swatch Kit'}
+            Garment Manufacturing Inquiry & Swatch Kit
           </h1>
           <p style="font-size:1.02rem;color:#71717a;line-height:1.65;margin:0;">
-            ${isZh ? '支持技术包 (Tech Pack) 上传、面料克重调配及小批量快反试产。' : 'Submit your garment tech pack or request physical fabric swatches. Response within 12 hours.'}
+            Submit your garment tech pack or request physical fabric swatches. Response within 12 hours.
           </p>
         </header>
 
@@ -632,15 +623,15 @@ export function renderApparelContact(ctx: ThemeContext): string {
           <div style="background:#18181b;color:#ffffff;border-radius:4px;padding:36px;box-shadow:0 12px 40px rgba(0,0,0,0.15);">
             <h2 style="font-size:1.35rem;font-weight:800;margin:0 0 16px;color:#ffffff;font-family:Georgia, serif;">${esc(company.name)}</h2>
             <p style="font-size:0.88rem;color:#a1a1aa;line-height:1.65;margin:0 0 28px;">
-              ${isZh ? '高端成衣与高机能纺织品研发工坊。服务全球设计师品牌、户外机能品牌及高端电商买手。' : 'Haute couture garment manufacturer serving international designer labels and outdoor brands.'}
+              Haute couture garment manufacturer serving international designer labels and outdoor brands.
             </p>
 
             <div style="background:#27272a;border:1px solid #3f3f46;border-radius:2px;padding:18px;margin-bottom:28px;">
-              <h3 style="font-size:0.82rem;font-weight:800;color:#d97706;text-transform:uppercase;margin:0 0 10px;">${isZh ? '打样与面料保障' : 'Atelier Commitments'}</h3>
+              <h3 style="font-size:0.82rem;font-weight:800;color:#d97706;text-transform:uppercase;margin:0 0 10px;">Atelier Commitments</h3>
               <ul style="margin:0;padding-left:16px;font-size:0.82rem;color:#d4d4d8;line-height:1.7;">
-                <li>${isZh ? '5个工作日内完成高精头样成衣制作' : '5 business days fast prototype garment sampling'}</li>
-                <li>${isZh ? '免费寄送当季面料色卡册与克重小样' : 'Complimentary seasonal fabric swatch cards'}</li>
-                <li>${isZh ? '色牢度 4.5 级，水洗缩水率 <1%' : 'Color fastness grade 4.5+ & shrinkage <1%'}</li>
+                <li>5 business days fast prototype garment sampling</li>
+                <li>Complimentary seasonal fabric swatch cards</li>
+                <li>Color fastness grade 4.5+ & shrinkage <1%</li>
               </ul>
             </div>
 
@@ -668,35 +659,35 @@ export function renderApparelContact(ctx: ThemeContext): string {
           <div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:4px;padding:36px;box-shadow:0 4px 16px rgba(0,0,0,0.02);">
             <form id="inquiry" action="${esc(safeUrl(ctx.options.inquiryUrl))}" method="post" style="display:grid;gap:16px;">
               <div>
-                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">${isZh ? '您的姓名 / 品牌买手' : 'Your Name'} *</label>
-                <input name="name" autocomplete="name" required maxlength="120" placeholder="${isZh ? '例如：Emma Watson' : 'e.g. Emma Watson'}" style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;box-sizing:border-box;">
+                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">Your Name *</label>
+                <input name="name" autocomplete="name" required maxlength="120" placeholder="e.g. Emma Watson" style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">${isZh ? '工作邮箱' : 'Business Email'} *</label>
+                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">Business Email *</label>
                 <input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="brand@fashionhouse.com" style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">${isZh ? '参考成衣款式' : 'Reference Silhouette'} (${esc(ui.optional)})</label>
+                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">Reference Silhouette (${esc(ui.optional)})</label>
                 <select name="productId" style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;background:#ffffff;box-sizing:border-box;">
-                  <option value="">— ${isZh ? '选择参考成衣款式' : 'Select Silhouette'} —</option>
+                  <option value="">— Select Silhouette —</option>
                   ${draft.products.map((item) => `<option value="${esc(item.id)}"${item.id === ctx.options.productId ? ' selected' : ''}>${esc(item.name)}</option>`).join('')}
                 </select>
               </div>
               <div>
-                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">${isZh ? '面料品类与需求类型' : 'Fabric Category'} (${esc(ui.optional)})</label>
+                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">Fabric Category (${esc(ui.optional)})</label>
                 <select name="fabricCategory" style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;background:#ffffff;box-sizing:border-box;">
-                  <option value="tech_outerwear">${isZh ? '机能三防压胶面料 / 风衣外套' : '3-Layer Technical Shell / Outerwear'}</option>
-                  <option value="seamless_knit">${isZh ? '美利奴羊毛无缝针织' : 'WholeGarment Merino Knitwear'}</option>
-                  <option value="heavyweight_cotton">${isZh ? '400+ GSM 重磅纯棉卫衣/T恤' : 'Heavyweight French Terry Cotton'}</option>
-                  <option value="organic_linen">${isZh ? 'GOTS 认证法国亚麻/真丝' : 'GOTS Organic Linen & Silk'}</option>
+                  <option value="tech_outerwear">3-Layer Technical Shell / Outerwear</option>
+                  <option value="seamless_knit">WholeGarment Merino Knitwear</option>
+                  <option value="heavyweight_cotton">Heavyweight French Terry Cotton</option>
+                  <option value="organic_linen">GOTS Organic Linen & Silk</option>
                 </select>
               </div>
               <div>
-                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">${isZh ? '定制细节与技术要求' : 'Inquiry Message'} *</label>
-                <textarea name="message" required maxlength="5000" rows="3" placeholder="${isZh ? '请简述预估订货量、目标客单价、克重要求或技术包说明...' : 'Describe your target quantities, fabric weight, colors, and deadline...'}" style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;box-sizing:border-box;font-family:inherit;"></textarea>
+                <label style="display:block;font-size:0.82rem;font-weight:800;color:#18181b;margin-bottom:6px;">Inquiry Message *</label>
+                <textarea name="message" required maxlength="5000" rows="3" placeholder="Describe your target quantities, fabric weight, colors, and deadline..." style="width:100%;padding:10px 12px;border-radius:2px;border:1px solid #d4d4d8;font-size:0.9rem;box-sizing:border-box;font-family:inherit;"></textarea>
               </div>
               <button type="submit" class="button"${ctx.options.preview ? ' disabled' : ''} style="background:#18181b;color:#ffffff;font-weight:700;padding:12px;border-radius:2px;font-size:0.92rem;border:none;cursor:pointer;margin-top:4px;">
-                ${isZh ? '提交成衣定制询盘 ↗' : 'Submit Apparel RFQ ↗'}
+                Submit Apparel RFQ ↗
               </button>
             </form>
           </div>
@@ -709,7 +700,7 @@ export function renderApparelContact(ctx: ThemeContext): string {
 export function renderApparelPage(ctx: ThemeContext, isVideo: boolean): string {
   const { draft, ui, path, navAttrs } = ctx;
   const page = ctx.page;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const company = draft.company;
 
   const brand = company.logoAssetId
@@ -738,7 +729,7 @@ export function renderApparelPage(ctx: ThemeContext, isVideo: boolean): string {
             ${languageLinks}
           </div>
           <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:#18181b;color:#ffffff;font-weight:700;padding:7px 16px;border-radius:2px;font-size:0.8rem;text-decoration:none;letter-spacing:0.04em;">
-            ${isZh ? '色卡索取 ↗' : 'Swatches ↗'}
+            Swatches ↗
           </a>
         </div>
       </div>
@@ -760,7 +751,7 @@ export function renderApparelPage(ctx: ThemeContext, isVideo: boolean): string {
         <div>
           <div style="font-size:1.15rem;font-weight:800;color:#ffffff;margin-bottom:10px;font-family:Georgia, serif;">${esc(company.name)}</div>
           <p style="font-size:0.82rem;line-height:1.65;color:#a1a1aa;margin:0 0 12px;">
-            ${isZh ? '高端成衣工坊与高机能纺织品全球供应链。GOTS 认证、绿色环保印染、全成型无缝针织。' : 'Haute couture atelier and high-performance textile mill for global fashion brands.'}
+            Haute couture atelier and high-performance textile mill for global fashion brands.
           </p>
           <div style="font-size:0.75rem;color:#d97706;font-weight:700;">GOTS · OEKO-TEX 100 · GRS · ISO9001</div>
         </div>
@@ -768,20 +759,20 @@ export function renderApparelPage(ctx: ThemeContext, isVideo: boolean): string {
         <div>
           <h4 style="font-size:0.82rem;font-weight:800;color:#ffffff;margin:0 0 10px;text-transform:uppercase;">${esc(ui.catalog)}</h4>
           <ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:0.8rem;">
-            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '户外机能三防风衣' : 'Technical Outerwear'}</a></li>
-            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '美利奴全成型针织' : 'WholeGarment Knitwear'}</a></li>
-            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '重磅真丝双排扣大衣' : 'Runway Tailoring'}</a></li>
-            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '重磅复古纯棉卫衣' : 'Luxury French Terry'}</a></li>
+            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Technical Outerwear</a></li>
+            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>WholeGarment Knitwear</a></li>
+            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Runway Tailoring</a></li>
+            <li><a style="text-decoration:none;color:#a1a1aa;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Luxury French Terry</a></li>
           </ul>
         </div>
 
         <div>
-          <h4 style="font-size:0.82rem;font-weight:800;color:#ffffff;margin:0 0 10px;text-transform:uppercase;">${isZh ? '工坊工艺实力' : 'Atelier Metrics'}</h4>
+          <h4 style="font-size:0.82rem;font-weight:800;color:#ffffff;margin:0 0 10px;text-transform:uppercase;">Atelier Metrics</h4>
           <ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:0.8rem;">
-            <li>✓ ${isZh ? '450,000 件高品质成衣月产能' : '450,000 Pcs Monthly Output'}</li>
-            <li>✓ ${isZh ? '5个工作日快速头样样衣交付' : '5-Day Fast Sample Turnaround'}</li>
-            <li>✓ ${isZh ? '100% 激光电脑裁床与无缝压胶' : '100% Automated Laser Cutting'}</li>
-            <li>✓ ${isZh ? '色牢度 4.5 级，水洗缩水率 <1%' : 'Grade 4.5+ Color Fastness'}</li>
+            <li>✓ 450,000 Pcs Monthly Output</li>
+            <li>✓ 5-Day Fast Sample Turnaround</li>
+            <li>✓ 100% Automated Laser Cutting</li>
+            <li>✓ Grade 4.5+ Color Fastness</li>
           </ul>
         </div>
 
@@ -795,7 +786,7 @@ export function renderApparelPage(ctx: ThemeContext, isVideo: boolean): string {
 
       <div class="wrap" style="border-top:1px solid #27272a;padding-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:0.78rem;color:#71717a;">
         <div>© ${new Date().getUTCFullYear()} ${esc(company.name)}. ${esc(ui.rights)}</div>
-        <div>👗 ${isZh ? '服装与纺织品秀场级制造出海旗舰版' : 'Apparel & Textiles Haute Runway Edition'}</div>
+        <div>👗 Apparel & Textiles Haute Runway Edition</div>
       </div>
     </footer>
   `;

@@ -28,7 +28,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Dual-density supercritical Pebax nitrogen foaming with full-length 3D curved carbon fiber plate delivering 85%+ energy return and supreme forward propulsion.',
     badge: 'Carbon Racer',
     category: 'running',
-    categoryNameZh: '先锋全掌碳板竞速跑鞋',
+    categoryNameZh: '',
     categoryNameEn: 'Carbon-Plate Racers',
     midsoleTech: 'Supercritical Pebax Nitrogen Foam + Full-Length 3D Carbon Plate',
     upperMaterial: 'Ultra-Breathable Monofilament Jacquard Mesh with Heat-Melt TPU Cage',
@@ -44,7 +44,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Gore-Tex waterproof bootie with Vibram Megagrip traction lug outsole, Kevlar reinforced mudguards, and dual-density EVA rock-plate midsole.',
     badge: 'Trail Alpine',
     category: 'trail',
-    categoryNameZh: '抓地防滑V底户外越野徒步鞋',
+    categoryNameZh: '',
     categoryNameEn: 'Vibram Trail & Hiking',
     midsoleTech: 'High-Density Anti-Perforation Rock Plate + Dual-Density EVA Midsole',
     upperMaterial: 'Hydrophobic Cordura 1000D + Seamless Heat-Bonded TPU Wrap',
@@ -60,7 +60,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Master handcrafted Goodyear welted construction with French vegetable-tanned full-grain calfskin, cork filler bed, and Dainite studded rubber soles.',
     badge: 'Goodyear Welt',
     category: 'heritage',
-    categoryNameZh: '固特异手工缝线头层牛皮切尔西靴',
+    categoryNameZh: '',
     categoryNameEn: 'Heritage Handcrafted Boots',
     midsoleTech: 'Natural Cork Cushion Bed with Tempered Spring Steel Shank',
     upperMaterial: '1.8mm French Full-Grain Vegetable-Tanned Calfskin Leather',
@@ -76,7 +76,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Minimalist Italian silhouette cut from buttery Nappa leather, featuring OrthoLite hybrid memory foam insole and recycled cupsole construction.',
     badge: 'Luxury Sneaker',
     category: 'sneakers',
-    categoryNameZh: '极简奢华纳帕皮质感小白鞋',
+    categoryNameZh: '',
     categoryNameEn: 'Luxury Minimalist Sneakers',
     midsoleTech: 'Cushioned Strobel Board with OrthoLite High-Rebound Memory Foam',
     upperMaterial: 'Full-Grain Buttery Soft Nappa Leather + Perforated Breathable Lining',
@@ -92,7 +92,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'One-piece injection molded supercritical aliphatic E-TPU recovery slide with anatomically sculpted deep heel cup and arch support cradle.',
     badge: 'Recovery Slide',
     category: 'recovery',
-    categoryNameZh: '超临界高弹足弓缓震恢复拖鞋',
+    categoryNameZh: '',
     categoryNameEn: 'Supercritical Recovery Slides',
     midsoleTech: '100% Supercritical Injected Aliphatic E-TPU (60% Cushion Rebound)',
     upperMaterial: 'Integrated Monolithic Molded Foam with Anti-Chafing Soft Texture',
@@ -108,7 +108,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Non-marking natural gum rubber outsole with lateral anti-roll TPU outrigger, carbon anti-torsion shank, and high-elastic forefoot bounce module.',
     badge: 'Court Pro',
     category: 'running',
-    categoryNameZh: '羽球排球侧向支撑专业球鞋',
+    categoryNameZh: '',
     categoryNameEn: 'Indoor Court Footwear',
     midsoleTech: 'Forefoot EnergyGel Pad + Rearfoot Absorbing Cushion + Carbon Shank',
     upperMaterial: 'High-Strength Microfiber Synthetic Leather with KPU Armor Lattice',
@@ -124,7 +124,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Water-resistant waxed suede upper lined with 100% genuine Australian shearling fleece, thermal foil sub-insole, and ice-grip composite lugs.',
     badge: 'Arctic Winter',
     category: 'heritage',
-    categoryNameZh: '防泼水羊羔绒保暖雪地马球靴',
+    categoryNameZh: '',
     categoryNameEn: 'Thermal Winter Boots',
     midsoleTech: 'Thermal Reflective Aluminum Layer + Shock-Absorbing Molded PU Bed',
     upperMaterial: 'Water-Repellent Hydro-Treated Split Suede with Genuine Shearling',
@@ -140,7 +140,7 @@ export const FOOTWEAR_DEFAULT_PRODUCTS: ThemedFootwearItem[] = [
     desc: 'Seamless 3D computerized knit upper reinforced with exoskeleton TPU lacing ribbons, paired with sculpted open-cavity geometric spring soles.',
     badge: 'Cyber Kinetic',
     category: 'sneakers',
-    categoryNameZh: '几何镂空流体机能潮流针织鞋',
+    categoryNameZh: '',
     categoryNameEn: 'Futuristic Knit Sneakers',
     midsoleTech: 'Hollow-Core Mechanical Structural Spring Chambers + Bio-TPU Frame',
     upperMaterial: 'Multi-Density Engineered FlyKnit with Integrated Reflective Yarn',
@@ -161,7 +161,7 @@ export function getFootwearProducts(ctx: ThemeContext): ThemedFootwearItem[] {
       desc: translateProduct(p).description || '',
       badge: 'Athletic Tech',
       category: 'footwear',
-      categoryNameZh: '运动与机能鞋履',
+      categoryNameZh: '',
       categoryNameEn: 'Footwear & Athletic Shoes',
       midsoleTech: p.material || '',
       upperMaterial: '',
@@ -172,7 +172,7 @@ export function getFootwearProducts(ctx: ThemeContext): ThemedFootwearItem[] {
       img: ctx.productMainImage(p),
     }));
   }
-  const isZh = (ctx.lang as string) === 'zh';
+
   if (draft.products && draft.products.length > 0) {
     return draft.products.map((p, idx) => {
       const fallback = FOOTWEAR_DEFAULT_PRODUCTS[idx % FOOTWEAR_DEFAULT_PRODUCTS.length];
@@ -182,7 +182,7 @@ export function getFootwearProducts(ctx: ThemeContext): ThemedFootwearItem[] {
         id: p.id,
         name: translated.name || fallback.name,
         desc: translated.description || fallback.desc,
-        badge: idx === 0 ? (isZh ? '全掌碳板旗舰' : 'Carbon Flagship') : (isZh ? '力学优选' : 'Kinetic Choice'),
+        badge: idx === 0 ? ('Carbon Flagship') : ('Kinetic Choice'),
         category: fallback.category,
         categoryNameZh: fallback.categoryNameZh,
         categoryNameEn: fallback.categoryNameEn,
@@ -202,17 +202,15 @@ export function getFootwearProducts(ctx: ThemeContext): ThemedFootwearItem[] {
 export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string {
   const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const products = getFootwearProducts(ctx);
   const heroProduct = products[0];
 
   const userCopy = draft.copy[ctx.lang];
   const copy = {
-    headline: userCopy?.headline || (isZh ? '先锋生物力学竞速跑鞋与高性能户外鞋履工贸旗舰' : 'Biomechanical Footwear Engineering & Performance Athletic Shoe Factory'),
-    subtitle: userCopy?.subtitle || (isZh
-      ? '专注于全掌碳板推进系统、超临界物理发泡中底、Vibram 防滑大底与固特异手工制鞋工艺。拥有 3000+ 专属运动鞋楦库，为全球顶级品牌提供高动能出海制造。'
-      : 'Specializing in full-length carbon plate racing shoes, supercritical nitrogen midsoles, and Goodyear welted craftsmanship. 3,000+ proprietary athletic lasts.'),
-    cta: userCopy?.cta || (isZh ? '探索鞋履科技货盘' : 'Explore Performance Lineup'),
+    headline: userCopy?.headline || ('Biomechanical Footwear Engineering & Performance Athletic Shoe Factory'),
+    subtitle: userCopy?.subtitle || ('Specializing in full-length carbon plate racing shoes, supercritical nitrogen midsoles, and Goodyear welted craftsmanship. 3,000+ proprietary athletic lasts.'),
+    cta: userCopy?.cta || ('Explore Performance Lineup'),
   };
 
   const videoAsset = ctx.asset(draft.heroAssetId);
@@ -228,7 +226,7 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
         <div style="position:absolute;inset:0;background:radial-gradient(circle at center, rgba(132,204,22,0.1) 0%, rgba(13,17,23,0.92) 80%);z-index:2;"></div>
         <div class="wrap" style="position:relative;z-index:3;padding:120px 20px 80px;text-align:center;max-width:980px;">
           <div data-reveal="fade-up" style="display:inline-flex;align-items:center;gap:8px;padding:6px 20px;border-radius:9999px;background:rgba(132,204,22,0.15);backdrop-filter:blur(20px);border:1px solid rgba(132,204,22,0.4);font-size:0.82rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#84cc16;margin-bottom:24px;">
-            ⚡ ${isZh ? '动能鞋履工坊 · 生物力学研发' : 'KINETIC BIOMECHANICS & PERFORMANCE FOOTWEAR'}
+            ⚡ KINETIC BIOMECHANICS & PERFORMANCE FOOTWEAR
           </div>
           <h1 class="hero-title" data-reveal="fade-up" style="font-size:clamp(2.4rem, 5vw, 4.2rem);font-weight:900;line-height:1.15;letter-spacing:-0.03em;color:#ffffff;margin:0 0 22px;">
             ${esc(copy.headline)}
@@ -241,26 +239,26 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
               ${esc(copy.cta)} ⚡
             </a>
             <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:rgba(255,255,255,0.1);color:#ffffff;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.25);font-weight:700;padding:15px 32px;border-radius:8px;font-size:0.95rem;text-decoration:none;">
-              ${isZh ? '鞋楦与开模打样定制' : 'Shoe Last & Mold Prototyping'}
+              Shoe Last & Mold Prototyping
             </a>
           </div>
           <!-- Kinetic Metrics Bar -->
           <div data-reveal="fade-up" style="margin-top:50px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;padding:24px;border-radius:16px;background:rgba(17,24,39,0.8);backdrop-filter:blur(24px);border:1px solid rgba(132,204,22,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.5);">
             <div>
               <div style="font-size:2rem;font-weight:900;color:#84cc16;">85%+</div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">${isZh ? '超临界中底回弹率' : 'Cushion Energy Return'}</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">Cushion Energy Return</div>
             </div>
             <div>
               <div style="font-size:2rem;font-weight:900;color:#38bdf8;">100,000+</div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">${isZh ? '曲折耐久测试周期' : 'Flex Cycle Passed'}</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">Flex Cycle Passed</div>
             </div>
             <div>
               <div style="font-size:2rem;font-weight:900;color:#84cc16;">3,000+</div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">${isZh ? '专属人体工学鞋楦' : 'Proprietary Lasts'}</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">Proprietary Lasts</div>
             </div>
             <div>
               <div style="font-size:2rem;font-weight:900;color:#34d399;">SATRA Passed</div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">${isZh ? '国际鞋履检测认证' : 'Footwear Testing Lab'}</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-top:4px;">Footwear Testing Lab</div>
             </div>
           </div>
         </div>
@@ -281,7 +279,7 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
           <!-- Left Info -->
           <div data-reveal="fade-up">
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:6px;background:rgba(132,204,22,0.15);border:1px solid rgba(132,204,22,0.35);color:#84cc16;font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;">
-              ⚡ ${isZh ? '先锋动能制鞋 · 生物力学实验室' : 'KINETIC FOOTWEAR & LAST ENGINEERING'}
+              ⚡ KINETIC FOOTWEAR & LAST ENGINEERING
             </div>
             <h1 class="hero-title" style="font-size:clamp(2.3rem, 4.2vw, 3.6rem);font-weight:900;color:#ffffff;line-height:1.18;letter-spacing:-0.03em;margin:0 0 20px;">
               ${esc(copy.headline)}
@@ -294,7 +292,7 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
                 ${esc(copy.cta)} ⚡
               </a>
               <a class="button" href="${path('about/index.html')}" ${navAttrs('about')} style="background:rgba(255,255,255,0.06);color:#ffffff;backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.2);font-weight:700;padding:14px 30px;border-radius:6px;font-size:0.95rem;text-decoration:none;">
-                ${isZh ? '鞋楦工坊与实验室标准 →' : 'Last Workshop & Labs →'}
+                Last Workshop & Labs →
               </a>
             </div>
           </div>
@@ -338,38 +336,38 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
       <div style="text-align:center;max-width:720px;margin:0 auto 40px;">
         <span style="font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:#84cc16;font-weight:800;">BIOMECHANICAL SHOE CRAFT</span>
         <h2 style="font-size:clamp(1.9rem, 3.4vw, 2.6rem);font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:10px 0 14px;">
-          ${isZh ? '五阶生物力学制鞋工艺管线' : '5-Stage Biomechanical Footwear Pipeline'}
+          5-Stage Biomechanical Footwear Pipeline
         </h2>
         <p style="font-size:1rem;color:#64748b;margin:0;">
-          ${isZh ? '从足底动力学测绘、中底超临界发泡到 100,000 次弯折疲劳测试。' : 'From kinetic foot mapping to nitrogen foam expansion and flex cycle endurance.'}
+          From kinetic foot mapping to nitrogen foam expansion and flex cycle endurance.
         </p>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;border-top:3px solid #84cc16;">
           <div style="font-size:0.75rem;font-weight:900;color:#84cc16;margin-bottom:6px;">01 FOOT LAST MAPPING</div>
-          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">${isZh ? '3D足型测绘与鞋楦开模' : '3D Last Engineering'}</h3>
-          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">${isZh ? '3000+ 专属楦型数据，精准适配亚洲、欧美足弓弧度。' : '3,000+ ergonomic lasts tailored for global arch contours.'}</p>
+          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">3D Last Engineering</h3>
+          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">3,000+ ergonomic lasts tailored for global arch contours.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;border-top:3px solid #84cc16;">
           <div style="font-size:0.75rem;font-weight:900;color:#84cc16;margin-bottom:6px;">02 NITROGEN FOAMING</div>
-          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">${isZh ? '超临界氮气物理发泡' : 'Supercritical Foaming'}</h3>
-          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">${isZh ? 'Pebax / 脂肪族 E-TPU 超临界中底，85%+ 动能回弹。' : 'Pebax nitrogen expansion delivering 85%+ energy return.'}</p>
+          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">Supercritical Foaming</h3>
+          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">Pebax nitrogen expansion delivering 85%+ energy return.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;border-top:3px solid #84cc16;">
           <div style="font-size:0.75rem;font-weight:900;color:#84cc16;margin-bottom:6px;">03 3D CARBON EMBED</div>
-          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">${isZh ? '3D全掌曲面碳板植入' : '3D Carbon Plate Embed'}</h3>
-          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">${isZh ? '高刚性双弧度碳纤维板，提供强劲滚动推进力与抗扭转。' : 'Curved aerospace carbon fiber for forward propulsion.'}</p>
+          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">3D Carbon Plate Embed</h3>
+          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">Curved aerospace carbon fiber for forward propulsion.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;border-top:3px solid #84cc16;">
           <div style="font-size:0.75rem;font-weight:900;color:#84cc16;margin-bottom:6px;">04 SEAMLESS UPPER</div>
-          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">${isZh ? '单丝贾卡与飞织鞋面' : 'Jacquard & FlyKnit Upper'}</h3>
-          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">${isZh ? '超轻透气单丝网布，热熔 TPU 补强，包裹锁足无滑动。' : 'Featherweight breathable mesh with heat-melt TPU cage.'}</p>
+          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">Jacquard & FlyKnit Upper</h3>
+          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">Featherweight breathable mesh with heat-melt TPU cage.</p>
         </div>
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;border-top:3px solid #84cc16;">
           <div style="font-size:0.75rem;font-weight:900;color:#84cc16;margin-bottom:6px;">05 SATRA LAB QC</div>
-          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">${isZh ? '10万次弯折与止滑测试' : '100k Flex Cycle Testing'}</h3>
-          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">${isZh ? '耐磨大底 1000km+ 寿命，SATRA 湿地止滑标准检验通过。' : 'Tested to SATRA wet-slip and 100k flex durability.'}</p>
+          <h3 style="font-size:1.05rem;font-weight:900;color:#0f172a;margin:0 0 6px;">100k Flex Cycle Testing</h3>
+          <p style="font-size:0.82rem;color:#64748b;line-height:1.5;margin:0;">Tested to SATRA wet-slip and 100k flex durability.</p>
         </div>
       </div>
     </section>
@@ -382,11 +380,11 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
         <div>
           <span style="font-size:0.78rem;font-weight:800;color:#84cc16;letter-spacing:0.08em;text-transform:uppercase;">PERFORMANCE FOOTWEAR VAULT</span>
           <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:6px 0 0;">
-            ${isZh ? '先锋竞速与户外鞋履精选展厅' : 'Featured Performance Footwear Lineup'}
+            Featured Performance Footwear Lineup
           </h2>
         </div>
         <a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="font-weight:800;color:#65a30d;text-decoration:none;font-size:0.92rem;">
-          ${isZh ? '查看全部 8 款鞋履档案 ↗' : 'View Full Footwear Catalog (8 Items) ↗'}
+          View Full Footwear Catalog (8 Items) ↗
         </a>
       </div>
 
@@ -403,7 +401,7 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
             </div>
             <div style="padding:20px;display:flex;flex-direction:column;flex:1;">
               <div style="font-size:0.75rem;font-weight:800;color:#65a30d;text-transform:uppercase;margin-bottom:6px;">
-                ${isZh ? p.categoryNameZh : p.categoryNameEn}
+                ${p.categoryNameEn}
               </div>
               <h3 style="font-size:1.1rem;font-weight:900;color:#0f172a;margin:0 0 8px;line-height:1.35;">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:inherit;">${esc(p.name)}</a>
@@ -412,8 +410,8 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
                 ${esc(p.desc)}
               </p>
               <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#475569;margin-bottom:14px;">
-                <div><strong>${isZh ? '中底科技' : 'Midsole'}:</strong> ${esc(p.midsoleTech.slice(0, 30))}</div>
-                <div style="margin-top:2px;"><strong>${isZh ? '起订门槛' : 'MOQ'}:</strong> <span style="color:#65a30d;font-weight:800;">${esc(p.moq)}</span></div>
+                <div><strong>Midsole:</strong> ${esc(p.midsoleTech.slice(0, 30))}</div>
+                <div style="margin-top:2px;"><strong>MOQ:</strong> <span style="color:#65a30d;font-weight:800;">${esc(p.moq)}</span></div>
               </div>
               <div style="display:flex;gap:8px;">
                 <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="button" style="flex:1;text-align:center;background:#f1f5f9;color:#0f172a;font-weight:800;padding:10px;border-radius:6px;font-size:0.82rem;text-decoration:none;">
@@ -441,7 +439,7 @@ export function renderFootwearHome(ctx: ThemeContext, isVideo: boolean): string 
 
 export function renderFootwearCatalog(ctx: ThemeContext): string {
   const { ui, path, navAttrs } = ctx;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const products = getFootwearProducts(ctx);
 
   return `
@@ -449,13 +447,13 @@ export function renderFootwearCatalog(ctx: ThemeContext): string {
       <section class="wrap" style="padding:40px 0 80px;" data-reveal="fade-up">
         <header style="text-align:center;max-width:760px;margin:0 auto 40px;">
           <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:6px;background:rgba(132,204,22,0.15);color:#65a30d;font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">
-            ${isZh ? '动能鞋履全系展厅' : 'PERFORMANCE FOOTWEAR CATALOG'}
+            PERFORMANCE FOOTWEAR CATALOG
           </div>
           <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 14px;">
-            ${isZh ? '竞速跑鞋、户外徒步靴与工艺鞋履目录' : 'Racing Shoes, Trail Boots & Handcrafted Footwear'}
+            Racing Shoes, Trail Boots & Handcrafted Footwear
           </h1>
           <p style="font-size:1.05rem;color:#64748b;line-height:1.65;margin:0;">
-            ${isZh ? '涵盖全掌碳板跑鞋、V底户外徒步、固特异手工切尔西与极简纳帕皮鞋履。' : 'Explore high-rebound marathon racers, Vibram alpine boots, and handcrafted welted silhouettes.'}
+            Explore high-rebound marathon racers, Vibram alpine boots, and handcrafted welted silhouettes.
           </p>
         </header>
 
@@ -472,7 +470,7 @@ export function renderFootwearCatalog(ctx: ThemeContext): string {
               </div>
               <div style="padding:22px;display:flex;flex-direction:column;flex:1;">
                 <div style="font-size:0.75rem;font-weight:800;color:#65a30d;text-transform:uppercase;margin-bottom:6px;">
-                  ${isZh ? p.categoryNameZh : p.categoryNameEn} · ${esc(p.tagline)}
+                  ${p.categoryNameEn} · ${esc(p.tagline)}
                 </div>
                 <h2 style="font-size:1.15rem;font-weight:900;color:#0f172a;margin:0 0 8px;line-height:1.35;">
                   <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:inherit;">${esc(p.name)}</a>
@@ -481,9 +479,9 @@ export function renderFootwearCatalog(ctx: ThemeContext): string {
                   ${esc(p.desc)}
                 </p>
                 <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;font-size:0.78rem;color:#334155;margin-bottom:16px;display:grid;gap:4px;">
-                  <div><strong>${isZh ? '中底' : 'Midsole'}:</strong> ${esc(p.midsoleTech.slice(0, 32))}</div>
-                  <div><strong>${isZh ? '鞋面' : 'Upper'}:</strong> ${esc(p.upperMaterial.slice(0, 32))}</div>
-                  <div><strong>${isZh ? '起订' : 'MOQ'}:</strong> <span style="color:#65a30d;font-weight:800;">${esc(p.moq)}</span></div>
+                  <div><strong>Midsole:</strong> ${esc(p.midsoleTech.slice(0, 32))}</div>
+                  <div><strong>Upper:</strong> ${esc(p.upperMaterial.slice(0, 32))}</div>
+                  <div><strong>MOQ:</strong> <span style="color:#65a30d;font-weight:800;">${esc(p.moq)}</span></div>
                 </div>
                 <div style="display:flex;gap:8px;">
                   <a href="${path(`products/${p.id}/index.html`)}" ${navAttrs('detail', p.id)} class="button" style="flex:1;text-align:center;background:#f1f5f9;color:#0f172a;font-weight:800;padding:10px;border-radius:6px;font-size:0.82rem;text-decoration:none;">
@@ -504,7 +502,7 @@ export function renderFootwearCatalog(ctx: ThemeContext): string {
 
 export function renderFootwearDetail(ctx: ThemeContext): string {
   const { ui, path, navAttrs } = ctx;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const products = getFootwearProducts(ctx);
   const p = products.find((item) => item.id === ctx.options.productId) || products[0];
 
@@ -513,7 +511,7 @@ export function renderFootwearDetail(ctx: ThemeContext): string {
       <section class="wrap" style="padding:40px 0 80px;" data-reveal="fade-up">
         <div style="margin-bottom:20px;">
           <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="font-size:0.86rem;font-weight:800;color:#65a30d;text-decoration:none;">
-            ← ${isZh ? '返回鞋履展厅目录' : 'Back to Footwear Catalog'}
+            ← Back to Footwear Catalog
           </a>
         </div>
 
@@ -527,7 +525,7 @@ export function renderFootwearDetail(ctx: ThemeContext): string {
 
           <div>
             <div style="font-size:0.82rem;font-weight:800;color:#65a30d;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">
-              ${isZh ? p.categoryNameZh : p.categoryNameEn} · ${esc(p.tagline)}
+              ${p.categoryNameEn} · ${esc(p.tagline)}
             </div>
             <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:#0f172a;line-height:1.2;margin:0 0 14px;">
               ${esc(p.name)}
@@ -538,24 +536,24 @@ export function renderFootwearDetail(ctx: ThemeContext): string {
 
             <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:28px;">
               <h3 style="font-size:0.92rem;font-weight:900;color:#0f172a;margin:0 0 14px;text-transform:uppercase;letter-spacing:0.04em;">
-                ${isZh ? '生物力学与制鞋参数' : 'Biomechanical & Tooling Specifications'}
+                Biomechanical & Tooling Specifications
               </h3>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.84rem;color:#334155;">
-                <div><strong>${isZh ? '中底科技' : 'Midsole Tech'}:</strong><br>${esc(p.midsoleTech)}</div>
-                <div><strong>${isZh ? '帮面材质' : 'Upper Material'}:</strong><br>${esc(p.upperMaterial)}</div>
-                <div><strong>${isZh ? '大底止滑' : 'Outsole Grip'}:</strong><br>${esc(p.outsoleGrip)}</div>
-                <div><strong>${isZh ? '落差与重量' : 'Drop & Stack'}:</strong><br>${esc(p.dropStack)}</div>
-                <div><strong>${isZh ? '起订门槛' : 'MOQ'}:</strong><br><span style="color:#65a30d;font-weight:800;">${esc(p.moq)}</span></div>
-                <div><strong>${isZh ? '检测标准' : 'QC Standard'}:</strong><br>SATRA 100k Flex Passed</div>
+                <div><strong>Midsole Tech:</strong><br>${esc(p.midsoleTech)}</div>
+                <div><strong>Upper Material:</strong><br>${esc(p.upperMaterial)}</div>
+                <div><strong>Outsole Grip:</strong><br>${esc(p.outsoleGrip)}</div>
+                <div><strong>Drop & Stack:</strong><br>${esc(p.dropStack)}</div>
+                <div><strong>MOQ:</strong><br><span style="color:#65a30d;font-weight:800;">${esc(p.moq)}</span></div>
+                <div><strong>QC Standard:</strong><br>SATRA 100k Flex Passed</div>
               </div>
             </div>
 
             <div style="display:flex;gap:14px;flex-wrap:wrap;">
               <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} class="button" style="background:#0f172a;color:#84cc16;font-weight:800;padding:14px 32px;border-radius:6px;font-size:0.92rem;text-decoration:none;">
-                ${isZh ? '针对该款索取大宗报价 ↗' : 'Request Footwear Quote ↗'}
+                Request Footwear Quote ↗
               </a>
               <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:#f1f5f9;color:#0f172a;font-weight:700;padding:14px 24px;border-radius:6px;font-size:0.92rem;text-decoration:none;">
-                ${isZh ? '申请试穿样鞋' : 'Request Fitting Sample'}
+                Request Fitting Sample
               </a>
             </div>
           </div>
@@ -568,93 +566,109 @@ export function renderFootwearDetail(ctx: ThemeContext): string {
 export function renderFootwearAbout(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
-  const isZh = (ctx.lang as string) === 'zh';
 
-  const headline = getAboutHeadline(company, isZh ? `${company.name} · 生物力学制鞋工程基地` : `${company.name} · Biomechanical Footwear Engineering Hub`);
+  const headline = getAboutHeadline(company, `${company.name} · Biomechanical Footwear Engineering Hub`);
   const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
   const highlights = parseAboutHighlights(company.aboutHighlights, [
-    { value: company.establishedYear || '2014', num: parseInt(company.establishedYear || '2014', 10), label: isZh ? '研发历程' : 'Established', desc: 'A decade of biomechanical footwear craft' },
-    { value: '3,000+ Lasts', label: isZh ? '专属人体工学鞋楦' : 'Ergonomic Lasts', desc: 'Global foot morphology database' },
-    { value: '100,000 Cycles', label: isZh ? 'SATRA 曲折疲劳测试' : 'Flex Endurance', desc: 'Zero sole delamination guarantee' },
-    { value: '45,000 Pairs', label: isZh ? '日均鞋履制造产能' : 'Daily Shoe Output', desc: 'Automated cementing & vulcanized lines' },
+    { value: company.establishedYear || '2014', num: parseInt(company.establishedYear || '2014', 10), label: 'Established', desc: 'A decade of biomechanical footwear craft' },
+    { value: '3,000+ Lasts', label: 'Ergonomic Lasts', desc: 'Global foot morphology database' },
+    { value: '100,000 Cycles', label: 'Flex Endurance', desc: 'Zero sole delamination guarantee' },
+    { value: '45,000 Pairs', label: 'Daily Shoe Output', desc: 'Automated cementing & vulcanized lines' },
   ]);
   const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
 
   return `
     <main class="wr-inner wr-footwear-inner" data-wr-page="about" style="padding-top:90px;background:#f8fafc;min-height:100vh;">
       <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 0 80px;" data-reveal="fade-up">
-        <!-- Biomechanics Dossier Layout -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:48px;align-items:center;margin-bottom:60px;">
-          <div>
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:6px;background:rgba(132,204,22,0.15);color:#65a30d;font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;">
-              ${isZh ? '关于鞋履力学工坊' : 'BIOMECHANICAL SHOE ENGINEERING'}
-            </div>
-            <h1 style="font-size:clamp(2.2rem, 4vw, 3.4rem);font-weight:900;color:#0f172a;letter-spacing:-0.03em;line-height:1.2;margin:0 0 20px;">
+        <!-- ANGLED SECTION HEADER WITH DIAGONAL ACCENT -->
+        <div style="position:relative;margin-bottom:48px;padding-bottom:20px;">
+          <div style="position:absolute;top:0;left:0;width:120px;height:4px;background:linear-gradient(135deg,#84cc16,#65a30d);transform:skewX(-20deg);"></div>
+          <div style="padding-top:20px;">
+            <div style="font-size:0.75rem;font-weight:800;color:#65a30d;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;">BIOMECHANICAL ENGINEERING LAB</div>
+            <h1 style="font-size:clamp(2.2rem, 4vw, 3.4rem);font-weight:900;color:#0f172a;letter-spacing:-0.03em;line-height:1.15;margin:0;">
               ${esc(headline)}
             </h1>
-            <div style="color:#475569;font-size:1.02rem;line-height:1.8;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
-              ${storyParagraphs.map((p) => `<p style="margin:0;">${esc(p)}</p>`).join('')}
+          </div>
+        </div>
+
+        <!-- 2x2 LAB TEST PHOTO MOSAIC + STORY -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:60px;align-items:start;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="grid-column:1/-1;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,0.06);">
+              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:300px;object-fit:cover;display:block;" loading="lazy">
             </div>
-            <div style="border-left:3px solid #84cc16;padding-left:16px;">
-              <div style="font-weight:800;color:#0f172a;font-size:0.92rem;">${isZh ? '“每一克减重与每一百分点的动能回弹，都源自对足底生物力学的极致敬畏。”' : '“Every gram reduced and every percentage of rebound is driven by pure biomechanical reverence.”'}</div>
-              <div style="color:#64748b;font-size:0.8rem;margin-top:4px;">${esc(company.name)} · Biomechanics Lab</div>
+            <div style="background:#0f172a;border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:1.8rem;font-weight:900;color:#84cc16;margin-bottom:4px;">SATRA</div>
+              <div style="font-size:0.78rem;color:#94a3b8;">Member Laboratory</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#65a30d,#84cc16);border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:center;">
+              <div style="font-size:1.8rem;font-weight:900;color:#ffffff;margin-bottom:4px;">ISO 20344</div>
+              <div style="font-size:0.78rem;color:rgba(255,255,255,0.8);">Footwear Testing</div>
             </div>
           </div>
-
-          <!-- Laboratory Photo Card -->
-          <div style="position:relative;">
-            <div style="border:1px solid #e2e8f0;border-radius:20px;overflow:hidden;background:#ffffff;box-shadow:0 16px 40px rgba(0,0,0,0.06);">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
+          <div>
+            <div style="color:#475569;font-size:1rem;line-height:1.85;margin-bottom:24px;">
+              ${storyParagraphs.map((p) => `<p style="margin:0 0 14px;">${esc(p)}</p>`).join('')}
             </div>
-            <div style="position:absolute;bottom:20px;left:20px;background:rgba(15,23,42,0.9);backdrop-filter:blur(16px);color:#ffffff;padding:10px 18px;border-radius:8px;font-size:0.8rem;font-weight:800;">
-              ⚡ ${isZh ? 'SATRA 会员实验室与超临界中底物理发泡中心' : 'SATRA Member Laboratory & Supercritical Center'}
+            <div style="border-left:3px solid #84cc16;padding-left:16px;margin-bottom:24px;">
+              <div style="font-weight:800;color:#0f172a;font-size:0.92rem;">"Every gram reduced and every percentage of rebound is driven by pure biomechanical reverence."</div>
+              <div style="color:#64748b;font-size:0.8rem;margin-top:4px;">${esc(company.name)} · Biomechanics Lab</div>
             </div>
           </div>
         </div>
 
-        <!-- 4 Metric Gauge Pods -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:60px;">
+        <!-- HORIZONTAL GAUGE STATS (progress-bar style) -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:60px;">
           ${highlights.map((h) => `
-            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px 20px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.02);">
-              <div style="font-size:2.2rem;font-weight:900;color:#65a30d;line-height:1;margin-bottom:8px;">
-                ${esc(h.value)}
+            <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+                <div style="font-size:0.84rem;font-weight:800;color:#0f172a;">${esc(h.label)}</div>
+                <div style="font-size:1.4rem;font-weight:900;color:#65a30d;">${esc(h.value)}</div>
               </div>
-              <div style="font-size:0.88rem;font-weight:800;color:#0f172a;margin-bottom:4px;">${esc(h.label)}</div>
-              ${h.desc ? `<div style="font-size:0.78rem;color:#64748b;">${esc(h.desc)}</div>` : ''}
+              <div style="height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${Math.min(100, Math.max(20, h.num > 1000 ? 95 : h.num > 100 ? 85 : h.num))}%;background:linear-gradient(90deg,#84cc16,#65a30d);border-radius:2px;"></div>
+              </div>
+              ${h.desc ? `<div style="font-size:0.75rem;color:#64748b;margin-top:8px;">${esc(h.desc)}</div>` : ''}
             </div>
           `).join('')}
         </div>
 
-        <!-- Shoe Last Engineering Workshop -->
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;align-items:center;">
-          <div>
-            <span style="font-size:0.78rem;font-weight:800;color:#65a30d;letter-spacing:0.08em;text-transform:uppercase;">LAST & MOLD ATELIER</span>
-            <h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:8px 0 12px;">${isZh ? '专业鞋楦研发与 3D 动力学扫描' : 'Ergonomic Shoe Last Engineering & CAD Scanning'}</h2>
-            <p style="color:#64748b;font-size:0.92rem;line-height:1.7;margin:0 0 20px;">
-              ${isZh ? '汇聚 3000+ 专属运动鞋楦，涵盖竞速、越野、极简与宽楦版型。配备全自动成型硫化流水线与环保水性冷贴工艺，年产鞋履超 1200 万双。' : 'Over 3,000 proprietary athletic lasts covering marathon racing, trail hiking, and barefoot ergonomic shapes.'}
-            </p>
-            <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:#0f172a;color:#84cc16;font-weight:800;padding:12px 28px;border-radius:6px;font-size:0.88rem;text-decoration:none;">
-              ${isZh ? '申请鞋楦开发与审厂' : 'Request Last Specs'}
-            </a>
+        <!-- TECHNICAL SPEC TABLE -->
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;margin-bottom:48px;">
+          <div style="background:#0f172a;padding:20px 28px;">
+            <span style="font-size:0.75rem;font-weight:800;color:#84cc16;letter-spacing:0.1em;text-transform:uppercase;">LAST & MOLD SPECIFICATIONS</span>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.84rem;">
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:18px;border-radius:10px;">
-              <div style="color:#65a30d;font-weight:800;margin-bottom:4px;">3,000+ Lasts</div>
-              <div style="color:#64748b;">人体工学楦型数据库</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+            ${[
+              ['Proprietary Lasts','3,000+ ergonomic shapes for marathon, trail, and barefoot categories'],
+              ['Flex Endurance','100,000 cycles without sole delamination (SATRA TM92)'],
+              ['Eco Cementing','Water-based adhesive bonding, zero-solvent cold attach process'],
+              ['Outsole Compounds','Vibram, Phylon, EVA, TPU multi-density injection molds'],
+              ['Size Standards','US / EU / UK / JP / KR conversion matrix available'],
+              ['Daily Capacity','45,000 pairs across automated cementing and vulcanization lines']
+            ].map(([label, value], i) => `
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:14px 28px;font-weight:700;color:#0f172a;width:30%;background:${i%2===0?'#fafafa':'#ffffff'}">${label}</td>
+                <td style="padding:14px 28px;color:#475569;background:${i%2===0?'#fafafa':'#ffffff'}">${value}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+
+        <!-- LAB EQUIPMENT STRIP -->
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;">
+          ${[
+            ['3D Foot Scanner','Digital morphology capture'],
+            ['Universal Tensile','Pull strength testing'],
+            ['Sole Flex Rig','SATRA TM92 endurance'],
+            ['Slip Resist','Wet & dry coefficient'],
+            ['Abrasion Drum','DIN outsole wear test']
+          ].map(([title, desc]) => `
+            <div style="min-width:180px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;flex-shrink:0;">
+              <div style="font-size:0.84rem;font-weight:800;color:#65a30d;margin-bottom:4px;">${title}</div>
+              <div style="font-size:0.75rem;color:#64748b;">${desc}</div>
             </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:18px;border-radius:10px;">
-              <div style="color:#65a30d;font-weight:800;margin-bottom:4px;">SATRA Lab</div>
-              <div style="color:#64748b;">10万次弯折抗疲劳</div>
-            </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:18px;border-radius:10px;">
-              <div style="color:#65a30d;font-weight:800;margin-bottom:4px;">Eco Cementing</div>
-              <div style="color:#64748b;">无毒水性环保冷粘</div>
-            </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:18px;border-radius:10px;">
-              <div style="color:#65a30d;font-weight:800;margin-bottom:4px;">ISO 20344</div>
-              <div style="color:#10b981;">国际鞋履标准检验合格</div>
-            </div>
-          </div>
+          `).join('')}
         </div>
       </section>
     </main>
@@ -664,7 +678,6 @@ export function renderFootwearAbout(ctx: ThemeContext): string {
 export function renderFootwearContact(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const company = draft.company;
-  const isZh = (ctx.lang as string) === 'zh';
 
   return `
     <main class="wr-inner wr-footwear-inner" data-wr-page="contact" style="padding-top:90px;background:#f8fafc;min-height:100vh;">
@@ -674,10 +687,10 @@ export function renderFootwearContact(ctx: ThemeContext): string {
             ${esc(ui.contact)} · FOOTWEAR DEVELOPMENT LAB
           </div>
           <h1 style="font-size:clamp(2.2rem, 4vw, 3.2rem);font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 14px;">
-            ${isZh ? '开启鞋履开模与大宗制造合作洽谈' : 'Start Your Footwear Tooling & Manufacturing RFQ'}
+            Start Your Footwear Tooling & Manufacturing RFQ
           </h1>
           <p style="font-size:1.05rem;color:#64748b;line-height:1.65;margin:0;">
-            ${isZh ? '支持大底模具立项、鞋楦开发调校及样鞋试跑，12 小时内由制鞋工程师接洽。' : 'Submit your footwear design, tooling specs, or bulk orders. Engineering response within 12 hours.'}
+            Submit your footwear design, tooling specs, or bulk orders. Engineering response within 12 hours.
           </p>
         </header>
 
@@ -686,15 +699,15 @@ export function renderFootwearContact(ctx: ThemeContext): string {
           <div style="background:#0d1117;color:#ffffff;border-radius:18px;padding:36px;box-shadow:0 12px 40px rgba(0,0,0,0.15);border-top:4px solid #84cc16;">
             <h2 style="font-size:1.35rem;font-weight:900;margin:0 0 16px;color:#ffffff;">${esc(company.name)}</h2>
             <p style="font-size:0.9rem;color:#94a3b8;line-height:1.65;margin:0 0 28px;">
-              ${isZh ? '专业运动鞋履与机能鞋靴工贸一体制造基地。服务全球运动品牌、户外装备商及高端鞋履买手。' : 'Professional athletic and technical footwear manufacturing base serving global performance brands.'}
+              Professional athletic and technical footwear manufacturing base serving global performance brands.
             </p>
 
             <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;margin-bottom:28px;">
-              <h3 style="font-size:0.84rem;font-weight:800;color:#84cc16;text-transform:uppercase;margin:0 0 10px;">${isZh ? '制鞋打样与开模服务' : 'Tooling Commitments'}</h3>
+              <h3 style="font-size:0.84rem;font-weight:800;color:#84cc16;text-transform:uppercase;margin:0 0 10px;">Tooling Commitments</h3>
               <ul style="margin:0;padding-left:16px;font-size:0.82rem;color:#cbd5e1;line-height:1.7;">
-                <li>${isZh ? '7个工作日完成 3D 打印实物鞋楦与初样鞋' : '7 business days for 3D printed prototype samples'}</li>
-                <li>${isZh ? '提供全码段 (US 4-15 / EU 36-48) 级放数据' : 'Full grade sizing runs from US 4 to 15 (EU 36-48)'}</li>
-                <li>${isZh ? '超临界中底模具费阶梯返还政策' : 'Tooling amortization rebate on volume orders'}</li>
+                <li>7 business days for 3D printed prototype samples</li>
+                <li>Full grade sizing runs from US 4 to 15 (EU 36-48)</li>
+                <li>Tooling amortization rebate on volume orders</li>
               </ul>
             </div>
 
@@ -722,35 +735,35 @@ export function renderFootwearContact(ctx: ThemeContext): string {
           <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:18px;padding:36px;box-shadow:0 6px 20px rgba(0,0,0,0.02);">
             <form id="inquiry" action="${esc(safeUrl(ctx.options.inquiryUrl))}" method="post" style="display:grid;gap:16px;">
               <div>
-                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${isZh ? '您的姓名 / 品牌代表' : 'Your Name'} *</label>
-                <input name="name" autocomplete="name" required maxlength="120" placeholder="${isZh ? '例如：Alex Jordan' : 'e.g. Alex Jordan'}" style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;box-sizing:border-box;">
+                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Your Name *</label>
+                <input name="name" autocomplete="name" required maxlength="120" placeholder="e.g. Alex Jordan" style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${isZh ? '工作邮箱' : 'Business Email'} *</label>
+                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Business Email *</label>
                 <input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="alex@footwearbrand.com" style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;box-sizing:border-box;">
               </div>
               <div>
-                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${isZh ? '意向鞋型款式' : 'Selected Silhouette'} (${esc(ui.optional)})</label>
+                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Selected Silhouette (${esc(ui.optional)})</label>
                 <select name="productId" style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;background:#ffffff;box-sizing:border-box;">
-                  <option value="">— ${isZh ? '选择参考鞋款' : 'Select Silhouette'} —</option>
+                  <option value="">— Select Silhouette —</option>
                   ${draft.products.map((item) => `<option value="${esc(item.id)}"${item.id === ctx.options.productId ? ' selected' : ''}>${esc(item.name)}</option>`).join('')}
                 </select>
               </div>
               <div>
-                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${isZh ? '鞋履品类与工艺类型' : 'Footwear Category'} (${esc(ui.optional)})</label>
+                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Footwear Category (${esc(ui.optional)})</label>
                 <select name="footwearCategory" style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;background:#ffffff;box-sizing:border-box;">
-                  <option value="carbon_racing">${isZh ? '全掌碳板竞速跑鞋' : 'Carbon Plate Racing Shoes'}</option>
-                  <option value="trail_outdoor">${isZh ? 'V底户外徒步登山鞋' : 'Vibram Traction Trail Boots'}</option>
-                  <option value="goodyear_boots">${isZh ? '固特异手工头层牛皮靴' : 'Goodyear Welted Handcrafted Boots'}</option>
-                  <option value="supercritical_slide">${isZh ? '超临界发泡缓震拖鞋' : 'Supercritical Foam Recovery Slides'}</option>
+                  <option value="carbon_racing">Carbon Plate Racing Shoes</option>
+                  <option value="trail_outdoor">Vibram Traction Trail Boots</option>
+                  <option value="goodyear_boots">Goodyear Welted Handcrafted Boots</option>
+                  <option value="supercritical_slide">Supercritical Foam Recovery Slides</option>
                 </select>
               </div>
               <div>
-                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${isZh ? '开发与订单细节要求' : 'Inquiry Message'} *</label>
-                <textarea name="message" required maxlength="5000" rows="3" placeholder="${isZh ? '请注明预估起订量、尺码标准 (US/EU)、目标大底模具预算或技术说明...' : 'State your target pairs, sizing system (US/EU), tooling requirements, and target timeline...'}" style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;box-sizing:border-box;font-family:inherit;"></textarea>
+                <label style="display:block;font-size:0.84rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Inquiry Message *</label>
+                <textarea name="message" required maxlength="5000" rows="3" placeholder="State your target pairs, sizing system (US/EU), tooling requirements, and target timeline..." style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #cbd5e1;font-size:0.92rem;box-sizing:border-box;font-family:inherit;"></textarea>
               </div>
               <button type="submit" class="button"${ctx.options.preview ? ' disabled' : ''} style="background:#0f172a;color:#84cc16;font-weight:900;padding:13px;border-radius:6px;font-size:0.95rem;border:none;cursor:pointer;margin-top:4px;">
-                ${isZh ? '提交鞋履开模与制造询盘 ↗' : 'Submit Footwear RFQ ↗'}
+                Submit Footwear RFQ ↗
               </button>
             </form>
           </div>
@@ -763,7 +776,7 @@ export function renderFootwearContact(ctx: ThemeContext): string {
 export function renderFootwearPage(ctx: ThemeContext, isVideo: boolean): string {
   const { draft, ui, path, navAttrs } = ctx;
   const page = ctx.page;
-  const isZh = (ctx.lang as string) === 'zh';
+
   const company = draft.company;
 
   const brand = company.logoAssetId
@@ -792,7 +805,7 @@ export function renderFootwearPage(ctx: ThemeContext, isVideo: boolean): string 
             ${languageLinks}
           </div>
           <a class="button" href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:#0f172a;color:#84cc16;font-weight:900;padding:8px 18px;border-radius:6px;font-size:0.84rem;text-decoration:none;">
-            ${isZh ? '鞋履开模 ↗' : 'Tooling RFQ ↗'}
+            Tooling RFQ ↗
           </a>
         </div>
       </div>
@@ -814,7 +827,7 @@ export function renderFootwearPage(ctx: ThemeContext, isVideo: boolean): string 
         <div>
           <div style="font-size:1.25rem;font-weight:900;color:#ffffff;margin-bottom:10px;">${esc(company.name)}</div>
           <p style="font-size:0.84rem;line-height:1.65;color:#94a3b8;margin:0 0 12px;">
-            ${isZh ? '先锋动能制鞋与生物力学鞋楦工坊。全掌碳板推进系统、超临界中底物理发泡、SATRA 国际认证检验。' : 'Biomechanical athletic and technical footwear manufacturing base serving international performance brands.'}
+            Biomechanical athletic and technical footwear manufacturing base serving international performance brands.
           </p>
           <div style="font-size:0.78rem;color:#84cc16;font-weight:700;">SATRA Member · ISO 20344 · CE Safety · BSCI · ISO9001</div>
         </div>
@@ -822,20 +835,20 @@ export function renderFootwearPage(ctx: ThemeContext, isVideo: boolean): string 
         <div>
           <h4 style="font-size:0.86rem;font-weight:800;color:#ffffff;margin:0 0 12px;text-transform:uppercase;">${esc(ui.catalog)}</h4>
           <ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:0.82rem;">
-            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '全掌碳板竞速跑鞋' : 'Carbon Plate Racers'}</a></li>
-            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? 'V底户外徒步登山鞋' : 'Vibram Trail Boots'}</a></li>
-            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '固特异手工切尔西靴' : 'Goodyear Welted Boots'}</a></li>
-            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>${isZh ? '超临界缓震恢复拖鞋' : 'Recovery Slides'}</a></li>
+            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Carbon Plate Racers</a></li>
+            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Vibram Trail Boots</a></li>
+            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Goodyear Welted Boots</a></li>
+            <li><a style="text-decoration:none;color:#94a3b8;" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>Recovery Slides</a></li>
           </ul>
         </div>
 
         <div>
-          <h4 style="font-size:0.86rem;font-weight:800;color:#ffffff;margin:0 0 12px;text-transform:uppercase;">${isZh ? '鞋履工艺指标' : 'Performance Specs'}</h4>
+          <h4 style="font-size:0.86rem;font-weight:800;color:#ffffff;margin:0 0 12px;text-transform:uppercase;">Performance Specs</h4>
           <ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:0.82rem;">
-            <li>✓ ${isZh ? '85%+ 超临界中底动能回弹率' : '85%+ Energy Return Midsoles'}</li>
-            <li>✓ ${isZh ? '100,000次 SATRA 弯折疲劳测试' : '100,000 Flex Cycles Passed'}</li>
-            <li>✓ ${isZh ? '3,000+ 专属人体工学鞋楦库' : '3,000+ Ergonomic Shoe Lasts'}</li>
-            <li>✓ ${isZh ? '日均 45,000 双高品质出海产能' : '45,000 Pairs Daily Capacity'}</li>
+            <li>✓ 85%+ Energy Return Midsoles</li>
+            <li>✓ 100,000 Flex Cycles Passed</li>
+            <li>✓ 3,000+ Ergonomic Shoe Lasts</li>
+            <li>✓ 45,000 Pairs Daily Capacity</li>
           </ul>
         </div>
 
@@ -849,7 +862,7 @@ export function renderFootwearPage(ctx: ThemeContext, isVideo: boolean): string 
 
       <div class="wrap" style="border-top:1px solid #1f2937;padding-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:0.8rem;color:#64748b;">
         <div>© ${new Date().getUTCFullYear()} ${esc(company.name)}. ${esc(ui.rights)}</div>
-        <div>👟 ${isZh ? '运动鞋履与机能鞋靴工贸一体出海旗舰版' : 'Footwear & Athletic Shoes Global Trade Edition'}</div>
+        <div>👟 Footwear & Athletic Shoes Global Trade Edition</div>
       </div>
     </footer>
   `;
