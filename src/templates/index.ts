@@ -68,7 +68,7 @@ function safeUrl(value: string, blob = false): string {
   return '';
 }
 function segment(id: string): string {
-  if (id === '.' || id === '..' || !id) throw Error('Invalid product identifier');
+  if (!id || id === '.' || id === '..') return 'default';
   return encodeURIComponent(id).replace(/\./g, '%2E');
 }
 const productPath = (id: string) => `products/${segment(id)}/index.html`;
@@ -83,7 +83,12 @@ function renderSiteContent(draft: Draft, options: RenderOptions): string {
   // Several standalone headers build their own language links and used catalog
   // depth on product pages. Normalize those links at the common output boundary.
   const depth=options.page==='home'?'':options.page==='detail'?'../../':'../';
-  const target=options.page==='detail'?productPath(options.productId||draft.primaryProductId):options.page==='home'?'index.html':`${options.page}/index.html`;
+  const activeProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  const target = options.page === 'detail'
+    ? (activeProductId ? productPath(activeProductId) : 'catalog/index.html')
+    : options.page === 'home'
+      ? 'index.html'
+      : `${options.page}/index.html`;
   const html=rendered.replace(/<a\b[^>]*\bdata-wr-lang="([a-z]{2})"[^>]*>/g,(tag,lang:string)=>draft.languages.includes(lang as Language)?tag.replace(/\bhref="[^"]*"/,`href="${esc(`${depth}../${lang}/${target}`)}"`):tag);
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
@@ -290,7 +295,8 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     `;
   }
   if (page === 'detail') {
-    const p = draft.products.find((item) => item.id === options.productId);
+    const activeProductId = options.productId || draft.primaryProductId;
+    const p = (activeProductId ? draft.products.find((item) => item.id === activeProductId) : undefined) ?? draft.products[0];
     content = p
       ? `<section class="detail wrap"><div>${img(p)}${gallery(p)}</div><div><a class="text-link" href="${path('catalog/index.html')}" ${navAttrs('catalog')}>← ${esc(ui.back)}</a><h1>${esc(translate(p).name)}</h1>${websiteDetails(p)}${translate(p).description ? `<p>${esc(translate(p).description)}</p>` : ''}<dl class="specs">${p.material ? `<div><dt>${esc(ui.material)}</dt><dd>${esc(p.material)}</dd></div>` : ''}${p.dimensions ? `<div><dt>${esc(ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd></div>` : ''}</dl><a class="button" href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)}>${esc(ui.inquire)} ↗</a></div></section><section class="chapter wrap"><div class="section-top"><h2>${esc(ui.related)}</h2></div>${cards(draft.products.filter((item) => item.id !== p.id).slice(0, 3))}</section>`
       : `<section class="chapter wrap"><h1>${esc(ui.noProducts)}</h1></section>`;
@@ -309,8 +315,11 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     .join('');
   const languageLinks = draft.languages
     .map((l) => {
+      const activeProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
       const target =
-        page === 'detail' && options.productId ? productPath(options.productId) : navPath(page);
+        page === 'detail'
+          ? (activeProductId ? productPath(activeProductId) : navPath('catalog'))
+          : navPath(page);
       return `<a href="${depth}../${l}/${target}" lang="${l}" data-wr-lang="${l}" aria-current="${l === lang}">${l.toUpperCase()}</a>`;
     })
     .join('');

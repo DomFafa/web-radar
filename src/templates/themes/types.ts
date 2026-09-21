@@ -37,7 +37,7 @@ export function safeUrl(value: string, blob = false): string {
 }
 
 export function segment(id: string): string {
-  if (id === '.' || id === '..' || !id) throw Error('Invalid product identifier');
+  if (!id || id === '.' || id === '..') return 'default';
   return encodeURIComponent(id).replace(/\./g, '%2E');
 }
 
@@ -116,8 +116,11 @@ export function buildThemeContext(draft: Draft, options: RenderOptions): ThemeCo
 
   const languageLinks = draft.languages
     .map((l) => {
+      const activeProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
       const target =
-        page === 'detail' && options.productId ? productPath(options.productId) : navPath(page);
+        page === 'detail'
+          ? (activeProductId ? productPath(activeProductId) : navPath('catalog'))
+          : navPath(page);
       return `<a href="${depth}../${l}/${target}" lang="${l}" data-wr-lang="${l}" aria-current="${l === lang}">${l.toUpperCase()}</a>`;
     })
     .join('');
