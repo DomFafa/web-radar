@@ -1,6 +1,6 @@
 export const themeStyles = `
 /* ------------------------------------------------------------- */
-/* 01. SENSENG CLEAN (模版 1: 100% 还原 webimg / 玩趣与生活消费品) */
+/* 01. SENSENG CLEAN (Template 1: Clean Living & Consumer Goods) */
 /* ------------------------------------------------------------- */
 html {
   height: 100%;
@@ -920,7 +920,7 @@ body[data-template="senseng-video"] .senseng-newsletter button { background: #ff
 
 
 /* ------------------------------------------------------------- */
-/* 02. SENSENG VIDEO (模版 2: 模版 1 变体，100vh 动态全屏铺满视频) */
+/* 02. SENSENG VIDEO (Template 2: 100vh Dynamic Fullscreen Video Hero) */
 /* ------------------------------------------------------------- */
 body[data-template="senseng-video"] {
   --paper: #ffffff;
@@ -993,7 +993,7 @@ body[data-template="senseng-video"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 03. SAAS AUTOMATION (模版 3: automation-saas 动态视频背景科技) */
+/* 03. SAAS AUTOMATION (Template 3: Automation SaaS Video Background) */
 /* ------------------------------------------------------------- */
 body[data-template="saas-automation"] {
   --paper: #090d16;
@@ -1066,7 +1066,7 @@ body[data-template="saas-automation"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 04. FINTECH PLATFORM (模版 4: 金融科技 / 资金管理平台) */
+/* 04. FINTECH PLATFORM (Template 4: Financial Technology & Asset Management) */
 /* ------------------------------------------------------------- */
 body[data-template="fintech-platform"] {
   --paper: #f8fafc;
@@ -1099,7 +1099,7 @@ body[data-template="fintech-platform"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 05. DIGITAL MARKETING (模版 5: 数字营销与增长 Agency) */
+/* 05. DIGITAL MARKETING (Template 5: Digital Marketing & Growth Agency) */
 /* ------------------------------------------------------------- */
 body[data-template="digital-marketing"] {
   --paper: #ffffff;
@@ -1128,7 +1128,7 @@ body[data-template="digital-marketing"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 06. PORTO ACCOUNTING (模版 6: 经典审计会计与商务财税事务所) */
+/* 06. PORTO ACCOUNTING (Template 6: Audit, Accounting & Corporate Tax Advisory) */
 /* ------------------------------------------------------------- */
 body[data-template="porto-accounting"] {
   --paper: #fdf1f3;
@@ -1171,7 +1171,7 @@ body[data-template="porto-accounting"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 07. CRAFTO CORPORATE (模版 7: 现代高阶跨国企业集团) */
+/* 07. CRAFTO CORPORATE (Template 7: Global Multinational Enterprise Group) */
 /* ------------------------------------------------------------- */
 body[data-template="crafto-corporate"] {
   --paper: #f9fafb;
@@ -1209,7 +1209,7 @@ body[data-template="crafto-corporate"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 08. JUNO TOYS (模版 8: 儿童玩具与母婴亲子零售) */
+/* 08. JUNO TOYS (Template 8: Children Toys & Family Retail) */
 /* ------------------------------------------------------------- */
 body[data-template="juno-toys"] {
   --paper: #fffdf5;
@@ -1249,7 +1249,7 @@ body[data-template="juno-toys"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 09. CORPOX AI AGENCY (模版 9: 下一代人工智能与创意机构) */
+/* 09. CORPOX AI AGENCY (Template 9: Artificial Intelligence & Creative Studio) */
 /* ------------------------------------------------------------- */
 body[data-template="corpox-ai-agency"] {
   --paper: #050811;
@@ -1291,7 +1291,7 @@ body[data-template="corpox-ai-agency"] {
 }
 
 /* ------------------------------------------------------------- */
-/* 10. CORPOX CONSULTING (模版 10: 顶级管理战略咨询与企业智库) */
+/* 10. CORPOX CONSULTING (Template 10: Global Strategic Management Advisory) */
 /* ------------------------------------------------------------- */
 body[data-template="corpox-consulting"] {
   --paper: #f8fafc;
