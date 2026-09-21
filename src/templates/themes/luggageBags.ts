@@ -291,6 +291,9 @@ export function renderLuggagePage(ctx: ThemeContext, isVideo: boolean): string {
   let mainHtml = '';
 
   if (page === 'home') {
+    const heroProduct = (products[0] || defaultMeta) as (Product | ThemedItem);
+    const heroImg = (heroProduct as any).img || ctx.productMainImage(heroProduct as Product) || defaultMeta.img;
+    const heroMeta = (heroProduct as ThemedItem).spec1 ? (heroProduct as ThemedItem) : defaultMeta;
     if (isVideo) {
       // -------------------------------------------------------------
       // 1. VIDEO TEMPLATE: CyberVoyage Aerodynamic High-Tech
@@ -455,7 +458,7 @@ export function renderLuggagePage(ctx: ThemeContext, isVideo: boolean): string {
               <!-- Hero Featured Duffle Card -->
               <div data-reveal="fade-up" style="background:#ffffff;border:1px solid #dfd4c7;border-radius:20px;padding:24px;box-shadow:0 12px 36px rgba(35,25,21,0.06);">
                 <div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#f0eae0;margin-bottom:20px;">
-                  <img src="${esc(defaultMeta.img)}" alt="${esc(defaultMeta.name)}" style="width:100%;height:100%;object-fit:cover;">
+                  <img src="${esc(heroImg)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:cover;">
                   <span style="position:absolute;bottom:12px;left:12px;padding:4px 12px;border-radius:4px;background:#231915;color:#ffffff;font-size:0.75rem;font-weight:800;">
                     Certified Tuscan Cowhide
                   </span>
@@ -463,13 +466,13 @@ export function renderLuggagePage(ctx: ThemeContext, isVideo: boolean): string {
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                   <div>
                     <h3 style="font-size:1.15rem;font-weight:900;color:#231915;margin:0 0 4px;">
-                      ${esc(defaultMeta.name)}
+                      ${esc(heroProduct.name)}
                     </h3>
                     <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;">
-                      ${esc(defaultMeta.spec1)}
+                      ${esc(heroMeta.spec1)}
                     </p>
                   </div>
-                  <a href="${path(`products/${defaultMeta.id}/index.html`)}" ${navAttrs('detail', defaultMeta.id)} style="text-decoration:none;padding:8px 16px;border-radius:6px;background:#231915;color:#ffffff;font-size:0.82rem;font-weight:700;">
+                  <a href="${path(`products/${heroProduct.id}/index.html`)}" ${navAttrs('detail', heroProduct.id)} style="text-decoration:none;padding:8px 16px;border-radius:6px;background:#231915;color:#ffffff;font-size:0.82rem;font-weight:700;">
                     ${esc(ui.details)} ↗
                   </a>
                 </div>

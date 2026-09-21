@@ -154,63 +154,63 @@
     },
     "luggage-leather-banner": {
       "contractRevision": "2026-09-19.luggage-leather-banner-materials.1",
-      "sha256": "e16e366374748f3a37ec43dc1bea5cef30bb5edbd8c6a680a0b6e290a6d9c861",
+      "sha256": "71ce627d6976719f8b3030a99e8c79fbf55a4d4074c3b3d37b5f3653265f7208",
       "images": 3,
-      "texts": 206
+      "texts": 210
     },
     "luggage-voyage-video": {
       "contractRevision": "2026-09-19.luggage-voyage-video-materials.1",
-      "sha256": "c19391edae45f8a5c872446f5d76a9eabc6d1751401ac3513cf903990646e155",
+      "sha256": "0889a2834e0ff104f6559499efe481d10aea700e4a436c0d8c5a735c072d4113",
       "images": 3,
-      "texts": 207
+      "texts": 212
     },
     "jewelry-luxury-banner": {
       "contractRevision": "2026-09-19.jewelry-luxury-banner-materials.1",
-      "sha256": "dd7b3eb6769172c2ede60bf421a6a2f72ace27d0468fd2c99ae9f68a4c243bb3",
+      "sha256": "8a266aaac705d733f358552d1f108edd0e9d7af94ef39898b31da58fa9b4e9b1",
       "images": 3,
-      "texts": 206
+      "texts": 208
     },
     "jewelry-timeless-video": {
       "contractRevision": "2026-09-19.jewelry-timeless-video-materials.1",
-      "sha256": "cd12f445f3629620f5bfa12c7a48173651505eb62895eefc536ae6cabb5616da",
+      "sha256": "eb535c307cb20e802cf6aca4fe14bbed653423373560f8f29f226dde1bfba6a8",
       "images": 3,
-      "texts": 207
+      "texts": 210
     },
     "homedecor-aesthetic-banner": {
       "contractRevision": "2026-09-19.homedecor-aesthetic-banner-materials.1",
-      "sha256": "3fca3dada2c2fcc4461dc388bdfd51f7105ad5c6d7e355f4e280505eebfb5613",
+      "sha256": "27c1a4b22359073803405acc2220faea5e13e8c63a2e216efec4d87b478ffd9b",
       "images": 3,
-      "texts": 206
+      "texts": 209
     },
     "homedecor-living-video": {
       "contractRevision": "2026-09-19.homedecor-living-video-materials.1",
-      "sha256": "fea7fe78802ab3a43d86a83ec6f6beb9677b141e5a3c6b57157198b89ce69136",
+      "sha256": "a9e3259155750f634b011d2c49ac861c3ca7d078e793927d0f3dc41a122a4c05",
       "images": 3,
-      "texts": 207
+      "texts": 211
     },
     "furniture-minimal-banner": {
       "contractRevision": "2026-09-19.furniture-minimal-banner-materials.1",
-      "sha256": "7a0969aecbba985a8f8c76e27a2c12499e32b866d610493dc4293a3d7ba3c561",
+      "sha256": "f63d7887cd83520d77e28db0ce382ec7b9f52634162607ff89327ec1d4dc3d28",
       "images": 3,
-      "texts": 206
+      "texts": 209
     },
     "furniture-spatial-video": {
       "contractRevision": "2026-09-19.furniture-spatial-video-materials.1",
-      "sha256": "69951479aefdccf71f912221efa2ef0dd20dc8adf0eab35d8678aecd7f20abf2",
+      "sha256": "fc94eabc7a4189c32c1d99b9a6cbd479d6af90a90565cc79dde57ce14e5a30ed",
       "images": 3,
-      "texts": 207
+      "texts": 220
     },
     "kitchen-culinary-banner": {
       "contractRevision": "2026-09-19.kitchen-culinary-banner-materials.1",
-      "sha256": "adf9e9db59dc19a1097f2f7e922aaa82920da754dcd9a49a48db56965d08550e",
+      "sha256": "8d217a184f4ea6a86fb1ee11c8b58179980ff449cd5aecae7b32d326ea824e8f",
       "images": 3,
-      "texts": 206
+      "texts": 209
     },
     "kitchen-gourmet-video": {
       "contractRevision": "2026-09-19.kitchen-gourmet-video-materials.1",
-      "sha256": "45604ba72ce956083c264f73c298f0209c3b74adb8213d14bfdfeb2f33bf275c",
+      "sha256": "5bb37741d25da6ead1cf44c863212e2f521f3bad627adc11313c0d8b55c1ea05",
       "images": 3,
-      "texts": 207
+      "texts": 211
     }
   }
 }
