@@ -604,7 +604,14 @@ body[data-template="senseng-video"] .senseng-newsletter button { background: #ff
   background: linear-gradient(180deg, #d3f0fe 0%, #edf8ff 100%);
   min-height: 190px;
   overflow: hidden;
+  gap: 32px;
 }
+.senseng-cat-hero > div { min-width: 0; }
+.senseng-cat-hero > .cat-hero-left { flex: 1; }
+.senseng-cat-hero > div:last-child { max-width: 36%; }
+/* Responsive image dimensions must not reserve the source width in this flex row. */
+.senseng-cat-hero img { width: auto; max-width: 100%; max-height: 175px; }
+.senseng-cat-hero picture { display: contents; }
 .senseng-cat-filter-bar {
   max-width: 1536px;
   margin: 20px auto 28px;
@@ -1411,7 +1418,7 @@ body[data-template="corpox-consulting"] {
   .senseng-cat-filter-bar > div:first-child { flex-wrap: wrap; }
   .senseng-filter-pill { padding: 8px 14px; font-size: 13px; }
   .senseng-cat-hero { flex-direction: column; align-items: stretch; height: auto; padding: 28px 20px; gap: 20px; }
-  .senseng-cat-hero > div { min-width: 0; }
+  .senseng-cat-hero > div:last-child { max-width: 100%; }
   .senseng-cat-hero h1 { font-size: 36px !important; }
   .senseng-cat-hero h2 { font-size: 22px !important; }
   .senseng-cat-section { padding: 0 20px; }
