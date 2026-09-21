@@ -87,11 +87,11 @@ export function SitePreview({
   draftPreview?: boolean;
 }) {
   const pages = plannedPages(project.draft);
-  const defaultProductId =
-    project.draft.primaryProductId || project.draft.products[0]?.id || '';
   const [lang, setLang] = useState<Language>('en'),
     [page, setPage] = useState<DesignPage>('home'),
-    [productId, setProductId] = useState(defaultProductId);
+    [productId, setProductId] = useState(
+      project.draft.primaryProductId || project.draft.products[0]?.id || '',
+    );
   const [mobile, setMobile] = useState(false),
     [html, setHtml] = useState(''),
     [error, setError] = useState(''),
@@ -120,11 +120,10 @@ export function SitePreview({
     setError('');
     setHtml('');
     (async () => {
-      const activeProductId = productId || defaultProductId;
       const query = new URLSearchParams({
         lang,
         page,
-        ...(page === 'detail' && activeProductId ? { productId: activeProductId } : {}),
+        ...(page === 'detail' ? { productId } : {}),
       });
       const path = `/api/projects/${encodeURIComponent(project.id)}/preview?${query}`;
       const result = draftPreview
@@ -233,7 +232,7 @@ export function SitePreview({
           const page = link.dataset.wrPage || ${scriptJson(page)};
           if (link.dataset.wrPage || link.dataset.wrLang) parent.postMessage({
             type:'wr:preview-navigate', channel:${scriptJson(renderChannel)},
-            page, lang:link.dataset.wrLang, productId:link.dataset.wrProductId || ${scriptJson(activeProductId)}
+            page, lang:link.dataset.wrLang, productId:link.dataset.wrProductId || ${scriptJson(productId)}
           }, ${scriptJson(window.location.origin)});
         });
       `;
@@ -250,7 +249,7 @@ export function SitePreview({
       active = false;
       media.current = [];
     };
-  }, [project.id, project.version, project.draft, draftPreview, lang, page, productId, defaultProductId, retry]);
+  }, [project.id, project.version, project.draft, draftPreview, lang, page, productId, retry]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -312,10 +311,10 @@ export function SitePreview({
               </option>
             ))}
           </select>
-          {page === 'detail' && project.draft.products.length > 0 && (
+          {page === 'detail' && (
             <select
               aria-label="预览产品"
-              value={productId || defaultProductId}
+              value={productId}
               onChange={(e) => setProductId(e.target.value)}
             >
               {project.draft.products.map((product) => (

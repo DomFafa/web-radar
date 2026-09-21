@@ -151,66 +151,6 @@
       "sha256": "4572b6ea638249de2fd8b0b717fdfc6cde2ab0f7fdb11ea5d0bc4802c05ba31b",
       "images": 3,
       "texts": 222
-    },
-    "luggage-leather-banner": {
-      "contractRevision": "2026-09-19.luggage-leather-banner-materials.1",
-      "sha256": "71ce627d6976719f8b3030a99e8c79fbf55a4d4074c3b3d37b5f3653265f7208",
-      "images": 3,
-      "texts": 210
-    },
-    "luggage-voyage-video": {
-      "contractRevision": "2026-09-19.luggage-voyage-video-materials.1",
-      "sha256": "0889a2834e0ff104f6559499efe481d10aea700e4a436c0d8c5a735c072d4113",
-      "images": 3,
-      "texts": 212
-    },
-    "jewelry-luxury-banner": {
-      "contractRevision": "2026-09-19.jewelry-luxury-banner-materials.1",
-      "sha256": "8a266aaac705d733f358552d1f108edd0e9d7af94ef39898b31da58fa9b4e9b1",
-      "images": 3,
-      "texts": 208
-    },
-    "jewelry-timeless-video": {
-      "contractRevision": "2026-09-19.jewelry-timeless-video-materials.1",
-      "sha256": "eb535c307cb20e802cf6aca4fe14bbed653423373560f8f29f226dde1bfba6a8",
-      "images": 3,
-      "texts": 210
-    },
-    "homedecor-aesthetic-banner": {
-      "contractRevision": "2026-09-19.homedecor-aesthetic-banner-materials.1",
-      "sha256": "27c1a4b22359073803405acc2220faea5e13e8c63a2e216efec4d87b478ffd9b",
-      "images": 3,
-      "texts": 209
-    },
-    "homedecor-living-video": {
-      "contractRevision": "2026-09-19.homedecor-living-video-materials.1",
-      "sha256": "a9e3259155750f634b011d2c49ac861c3ca7d078e793927d0f3dc41a122a4c05",
-      "images": 3,
-      "texts": 211
-    },
-    "furniture-minimal-banner": {
-      "contractRevision": "2026-09-19.furniture-minimal-banner-materials.1",
-      "sha256": "f63d7887cd83520d77e28db0ce382ec7b9f52634162607ff89327ec1d4dc3d28",
-      "images": 3,
-      "texts": 209
-    },
-    "furniture-spatial-video": {
-      "contractRevision": "2026-09-19.furniture-spatial-video-materials.1",
-      "sha256": "fc94eabc7a4189c32c1d99b9a6cbd479d6af90a90565cc79dde57ce14e5a30ed",
-      "images": 3,
-      "texts": 220
-    },
-    "kitchen-culinary-banner": {
-      "contractRevision": "2026-09-19.kitchen-culinary-banner-materials.1",
-      "sha256": "8d217a184f4ea6a86fb1ee11c8b58179980ff449cd5aecae7b32d326ea824e8f",
-      "images": 3,
-      "texts": 209
-    },
-    "kitchen-gourmet-video": {
-      "contractRevision": "2026-09-19.kitchen-gourmet-video-materials.1",
-      "sha256": "5bb37741d25da6ead1cf44c863212e2f521f3bad627adc11313c0d8b55c1ea05",
-      "images": 3,
-      "texts": 211
     }
   }
 }

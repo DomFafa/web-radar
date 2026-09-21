@@ -690,17 +690,12 @@ export class DomainService {
         'invalid_page',
         '页面不存在。',
       );
-      const rawProductId = url.searchParams.get('productId');
-      const productId =
-        rawProductId && rawProductId.trim() !== ''
-          ? rawProductId.trim()
-          : (draft.primaryProductId || draft.products[0]?.id || undefined);
       return json({
         html: await this.renderPage(draft, {
           projectId: project.id,
           lang,
           page,
-          productId,
+          productId: url.searchParams.get('productId') ?? undefined,
           assetUrl: (id: string) => `/api/projects/${project.id}/assets/${id}`,
           inquiryUrl: `/api/public/sites/${project.id}/inquiries`,
           preview: true,
@@ -3160,10 +3155,9 @@ export class DomainService {
     options: Parameters<typeof renderSite>[1],
     basePath?: string,
   ): Promise<string> {
-    const targetProductId = options.productId || draft.primaryProductId || draft.products[0]?.id || undefined;
     if (draft.buildBranch === 'clone' && hasCloneOutput(draft.cloneConfig)) {
       const files = renderCloneFiles(await loadCloneOutput(this.env, options.projectId, draft), { ...options, basePath });
-      const key = siteFilePath(options.lang, options.page, targetProductId);
+      const key = siteFilePath(options.lang, options.page, options.productId ?? draft.primaryProductId);
       requireCondition(files[key], 404, 'page_not_found', '页面不存在。');
       return files[key];
     }
@@ -3176,7 +3170,7 @@ export class DomainService {
     const path = siteFilePath(
       options.lang ?? 'en',
       options.page ?? 'home',
-      targetProductId,
+      options.productId ?? draft.primaryProductId,
     );
     requireCondition(files[path], 404, 'page_not_found', '页面不存在。');
     return files[path];

@@ -621,7 +621,7 @@ export function renderApparelDetail(ctx: ThemeContext): string {
   const { draft, ui, path, navAttrs } = ctx;
   const isZh = (ctx.lang as string) === 'zh';
   const products = getApparelProducts(ctx);
-  const p = products.find((item) => item.id === ctx.options.productId) || products[0] || APPAREL_DEFAULT_PRODUCTS[0];
+  const p = products.find((item) => item.id === ctx.options.productId) || products[0];
   const related = products.filter((item) => item.id !== p.id).slice(0, 3);
 
   return `
