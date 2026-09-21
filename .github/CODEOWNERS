@@ -1,0 +1,30 @@
+# wuyueerhao maintains Web Radar through fork PRs; DomFafa owns and merges it.
+# CODEOWNERS is reviewer routing, not directory Write isolation. A fork author
+# without verified upstream Write must not be listed as a required code owner.
+* @DomFafa
+
+# Web Radar maintainer: templates, machine manifests, rendering and integration.
+/src/templates/ @DomFafa
+/src/worker/template-guides/ @DomFafa
+/src/worker/materials-*.ts @DomFafa
+/src/worker/project-*.ts @DomFafa
+/src/worker/product-radar.ts @DomFafa
+/src/shared/materials*.ts @DomFafa
+/tests/materials*.test.ts @DomFafa
+/tests/product-radar-entrypoint.test.ts @DomFafa
+/tests/project-service.test.ts @DomFafa
+
+# Owner review is retained for shared security, quota, storage and dispatch.
+/src/worker/auth.ts @DomFafa
+/src/worker/materials-auth.ts @DomFafa
+/src/worker/index.ts @DomFafa
+/src/worker/coordinator.ts @DomFafa
+/src/worker/env.ts @DomFafa
+/src/worker/website-quota.ts @DomFafa
+/migrations/ @DomFafa
+/.github/ @DomFafa
+/scripts/ @DomFafa
+/wrangler*.jsonc @DomFafa
+/package.json @DomFafa
+/package-lock.json @DomFafa
+/docs/integration-maintenance.md @DomFafa

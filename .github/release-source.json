@@ -1,0 +1,5 @@
+{
+  "repository": "git@github.com:DomFafa/web-radar.git",
+  "releaseBranch": "codex/web-radar-v1",
+  "requiredAncestors": ["09fb979aae69319c750d19fd14fcc664282a60ff"]
+}

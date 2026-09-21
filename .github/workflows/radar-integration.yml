@@ -1,0 +1,27 @@
+name: radar-integration
+
+on:
+  pull_request:
+  push:
+    branches: [codex/web-radar-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  web-radar-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: node --test scripts/verify-release-source.test.mjs
+      - run: node scripts/verify-release-source.mjs --candidate
+      - run: npm ci
+      - run: npx vitest run tests/product-radar-entrypoint.test.ts tests/project-service.test.ts tests/materials*.test.ts tests/template-guides.test.ts tests/templates.test.ts tests/website-quota.test.ts tests/publication.test.ts
