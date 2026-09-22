@@ -201,7 +201,7 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
   const brandName = company.name || (isVideo ? 'ThermalTech Sourcing Lab' : 'Kiln & Clay Ceramic Atelier');
   const brandTagline = isVideo ? 'Precision Vacuum Engineering' : 'Handcrafted Stoneware & Porcelain';
 
-  // Light palettes only - No dark mode
+  // Light palettes only - strictly no dark mode
   const theme = isVideo
     ? {
       bg: '#f0f9ff',
@@ -237,10 +237,10 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
   // Distinct Header for each variant
   const headerHtml = isVideo ? `
     <header class="drinkware-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.04);">
-      <div style="background:#e0f2fe;padding:4px 24px;display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:${theme.primary};font-weight:700;">
+      <div style="background:#e0f2fe;padding:5px 24px;display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:${theme.primary};font-weight:700;letter-spacing:0.04em;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${theme.primary};"></span>
-          <span>LAB CALIBRATION: VACUUM TEST PASS (0.001 Pa)</span>
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${theme.primary};"></span>
+          <span>LAB CALIBRATION: VACUUM 10⁻⁵ PA · CRYOGENIC HELIUM TEST PASS</span>
         </div>
         <div>24H HOT / 48H COLD GUARANTEED</div>
       </div>
@@ -272,7 +272,10 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
           ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
           <div style="display:flex;flex-direction:column;">
-            <span style="font-family:Georgia,serif;font-size:1.25rem;font-weight:900;color:${theme.text};letter-spacing:-0.01em;">${esc(brandName)}</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:Georgia,serif;font-size:1.25rem;font-weight:900;color:${theme.text};letter-spacing:-0.01em;">${esc(brandName)}</span>
+              <span style="display:inline-block;padding:2px 6px;border-radius:3px;border:1px solid ${theme.primary};color:${theme.primary};font-size:0.62rem;font-weight:800;letter-spacing:0.06em;">KILN</span>
+            </div>
             <span style="font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:${theme.primary};font-weight:700;">${esc(brandTagline)}</span>
           </div>
         </a>
@@ -296,118 +299,217 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
 
   if (page === 'home') {
     if (isVideo) {
-      // TECHNICAL HUD & LAB CONSOLE HERO FOR THERMAL FLASKS
+      // 1. THERMAL LAB HUD & TELEMETRY CONSOLE HERO
       mainHtml = `
         <main class="drinkware-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
-          <!-- Technical Hero Stage -->
-          <section style="position:relative;padding:70px 0 90px;border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.1fr 0.9fr;gap:44px;align-items:center;">
+          <!-- Telemetry Command Center Hero -->
+          <section style="position:relative;padding:60px 0 80px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:44px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:18px;">
-                  ✦ Engineered Vacuum Metallurgy · Double-Wall 18/8
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:18px;">
+                  ✦ Cryogenic Vacuum Metallurgy · 18/8 & 316 Stainless
                 </div>
-                <h1 style="font-size:clamp(2.2rem, 4.2vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 16px;">
+                <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 16px;">
                   ${esc(draft.copy[ctx.lang]?.headline || 'Precision Thermal Insulation: 24H Hot, 48H Cold')}
                 </h1>
-                <p style="font-size:1.08rem;line-height:1.7;color:${theme.textMuted};margin:0 0 28px;max-width:600px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Surgical grade 304/316 stainless steel with copper-plated vacuum barrier layers, engineered for extreme thermal endurance.')}
+                <p style="font-size:1.05rem;line-height:1.7;color:${theme.textMuted};margin:0 0 28px;max-width:580px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Surgical grade 304 and 316 stainless steel with copper-plated vacuum barrier layers, engineered for extreme thermal endurance in any climate.')}
                 </p>
                 <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:34px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.94rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-                    Explore Flasks & Tumblers ↗
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Parametric Catalog ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
-                    Download Technical Specs
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    Download Technical Whitepaper
                   </a>
                 </div>
-                <!-- Telemetry Matrix -->
+                <!-- Realtime Lab Metrics Telemetry -->
                 <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:20px;border-top:1px solid ${theme.cardBorder};">
-                  <div>
-                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">0.001 Pa</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Vacuum Pressure</div>
+                  <div style="background:${theme.cardBg};padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <div style="font-size:0.7rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">Vacuum Seal</div>
+                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">10⁻⁵ Pa</div>
+                    <div style="font-size:0.7rem;color:${theme.textMuted};">High-vacuum furnace</div>
                   </div>
-                  <div>
-                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">18/8 & 316</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Surgical Stainless Steel</div>
+                  <div style="background:${theme.cardBg};padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <div style="font-size:0.7rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">Hot Retention</div>
+                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">> 68°C / 24H</div>
+                    <div style="font-size:0.7rem;color:${theme.textMuted};">Tested from 98°C</div>
                   </div>
-                  <div>
-                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">48 Hours</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Cold Retention Test</div>
+                  <div style="background:${theme.cardBg};padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <div style="font-size:0.7rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">Cold Retention</div>
+                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">< 8°C / 48H</div>
+                    <div style="font-size:0.7rem;color:${theme.textMuted};">Tested from 0°C</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Thermal Video / Screen Console -->
+              <!-- 16:9 Central Telemetry Screen Monitor -->
               <div style="position:relative;">
-                <div style="border-radius:18px;overflow:hidden;background:${theme.cardBg};border:2px solid ${theme.cardBorder};box-shadow:0 20px 50px rgba(2,132,199,0.12);position:relative;">
+                <div style="border-radius:16px;overflow:hidden;background:${theme.cardBg};border:2px solid ${theme.cardBorder};box-shadow:0 20px 48px rgba(2,132,199,0.14);position:relative;">
                   <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:380px;object-fit:cover;display:block;" fetchpriority="high">
-                  <div style="position:absolute;top:16px;right:16px;background:rgba(15,23,42,0.85);backdrop-filter:blur(10px);color:#fff;padding:6px 12px;border-radius:6px;font-size:0.72rem;font-weight:800;letter-spacing:0.06em;">
-                    LIVE LAB DEMO
+                  <div style="position:absolute;top:16px;left:16px;background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);color:#fff;padding:6px 12px;border-radius:6px;font-size:0.72rem;font-family:monospace;font-weight:700;letter-spacing:0.05em;">
+                    LIVE LAB SENSOR: OK
+                  </div>
+                  <div style="position:absolute;bottom:16px;right:16px;background:rgba(2,132,199,0.92);color:#fff;padding:6px 12px;border-radius:6px;font-size:0.72rem;font-weight:800;">
+                    316 SURGICAL LINER
                   </div>
                 </div>
-                <div style="position:absolute;bottom:-18px;left:20px;right:20px;background:${theme.cardBg};border-radius:12px;padding:16px 20px;border:1px solid ${theme.cardBorder};display:flex;align-items:center;justify-content:space-between;box-shadow:0 12px 32px rgba(0,0,0,0.06);">
-                  <div>
-                    <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">Copper Thermal Shield</div>
-                    <div style="font-size:0.9rem;font-weight:800;color:${theme.text};">${esc(heroProduct.name)}</div>
-                  </div>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:8px 18px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.78rem;font-weight:800;">Specs ↗</a>
+                <div style="margin-top:14px;background:${theme.cardBg};border-radius:10px;padding:12px 18px;border:1px solid ${theme.cardBorder};display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;">
+                  <span style="font-weight:700;color:${theme.text};">MODEL: ${esc(heroProduct.name)}</span>
+                  <span style="font-weight:800;color:${theme.primary};">${esc(heroProduct.moq)} MOQ</span>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Thermal Benchmark Comparison Matrix -->
+          <!-- 5-Layer Exploded Thermal Architecture Diagram -->
+          <section style="padding:70px 0;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;max-width:700px;margin:0 auto 48px;">
+                <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">Engineering Cross-Section</span>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:8px 0 12px;">
+                  5-Layer Vacuum Thermal Shield Architecture
+                </h2>
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
+                  Every vessel incorporates multi-stage isolation metallurgy designed to eliminate radiation, convection, and conduction heat transfer.
+                </p>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:16px;">
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:8px;">01</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">Powder Coat</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Anti-scratch electrostatic textured exterior</p>
+                </div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:8px;">02</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">18/8 Steel Wall</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Food-grade 304 outer structural casing</p>
+                </div>
+                <div style="background:${theme.cardBg};border:2px solid ${theme.primary};border-radius:12px;padding:22px 16px;text-align:center;box-shadow:0 8px 24px rgba(2,132,199,0.1);">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:8px;">03</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.primary};margin:0 0 6px;">Cryo Vacuum</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">10⁻⁵ Pa vacuum space prevents convective loss</p>
+                </div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:8px;">04</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">Copper Plating</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Reflective copper shield reflects infrared radiation</p>
+                </div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:8px;">05</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">316 Core Liner</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Medical surgical interior with electrolytic polishing</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 24H Thermal Decay Telemetry Chart -->
           <section style="padding:70px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;">
-              <div style="text-align:center;margin-bottom:44px;">
-                <span style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;">Engineering Superiority</span>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:8px 0 0;">Thermal Benchmark vs Conventional Flasks</h2>
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;">
+              <div>
+                <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">Telemetry Benchmark</span>
+                <h3 style="font-size:clamp(1.6rem, 2.5vw, 2.2rem);font-weight:900;color:${theme.text};margin:8px 0 14px;">
+                  Laboratory Temperature Decay Curves
+                </h3>
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;margin-bottom:24px;">
+                  Continuous telemetry tests conducted in 20°C ambient atmosphere with boiling water at 98°C and ice water at 0°C.
+                </p>
+                <div style="space-y:16px;">
+                  <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:6px;">
+                      <span>ThermalTech 316 Double-Wall (24H)</span>
+                      <strong style="color:${theme.primary};">68.5°C</strong>
+                    </div>
+                    <div style="height:10px;border-radius:5px;background:#e2e8f0;overflow:hidden;">
+                      <div style="width:70%;height:100%;background:${theme.btnGradient};border-radius:5px;"></div>
+                    </div>
+                  </div>
+                  <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:6px;">
+                      <span>Industry Standard Vacuum Bottle (24H)</span>
+                      <strong style="color:${theme.textSub};">48.2°C</strong>
+                    </div>
+                    <div style="height:10px;border-radius:5px;background:#e2e8f0;overflow:hidden;">
+                      <div style="width:49%;height:100%;background:#94a3b8;border-radius:5px;"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;margin-bottom:6px;">
+                      <span>Single Wall Stainless Bottle (6H)</span>
+                      <strong style="color:${theme.textSub};">24.0°C (Ambient)</strong>
+                    </div>
+                    <div style="height:10px;border-radius:5px;background:#e2e8f0;overflow:hidden;">
+                      <div style="width:24%;height:100%;background:#cbd5e1;border-radius:5px;"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;">
-                <div style="padding:24px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
-                  <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Triple-Layer Shield</div>
-                  <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;">Inner 304 liner + copper radiant reflective coating + outer 304 wall stops 99.7% of radiation heat loss.</div>
+
+              <!-- Telemetry Curve Visualization Box -->
+              <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                  <strong style="font-size:0.85rem;color:${theme.text};font-family:monospace;">HEAT DECAY CURVE (0 - 24 HOURS)</strong>
+                  <span style="font-size:0.7rem;color:${theme.primary};font-weight:700;background:${theme.pillBg};padding:3px 8px;border-radius:4px;">CALIBRATED</span>
                 </div>
-                <div style="padding:24px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
-                  <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Sweat-Free Exterior</div>
-                  <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;">Zero condensation with ice drinks and zero exterior heating with boiling liquids. Powder-coat durable finish.</div>
-                </div>
-                <div style="padding:24px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
-                  <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Food-Grade Sealing</div>
-                  <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;">BPA-free Eastman Tritan and LFGB/FDA silicone gaskets for 100% leakproof inverted transport.</div>
-                </div>
+                <svg viewBox="0 0 500 200" style="width:100%;height:auto;display:block;">
+                  <line x1="40" y1="20" x2="40" y2="170" stroke="#cbd5e1" stroke-width="1.5" />
+                  <line x1="40" y1="170" x2="480" y2="170" stroke="#cbd5e1" stroke-width="1.5" />
+                  <text x="5" y="25" fill="#64748b" font-size="10" font-family="monospace">100°C</text>
+                  <text x="12" y="95" fill="#64748b" font-size="10" font-family="monospace">50°C</text>
+                  <text x="18" y="170" fill="#64748b" font-size="10" font-family="monospace">0°C</text>
+                  <text x="40" y="188" fill="#64748b" font-size="10" font-family="monospace">0h</text>
+                  <text x="140" y="188" fill="#64748b" font-size="10" font-family="monospace">6h</text>
+                  <text x="250" y="188" fill="#64748b" font-size="10" font-family="monospace">12h</text>
+                  <text x="360" y="188" fill="#64748b" font-size="10" font-family="monospace">18h</text>
+                  <text x="460" y="188" fill="#64748b" font-size="10" font-family="monospace">24h</text>
+                  <!-- Standard Bottle Curve -->
+                  <path d="M 40 25 Q 140 100, 470 145" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4" />
+                  <!-- ThermalTech Curve -->
+                  <path d="M 40 25 Q 200 45, 470 78" fill="none" stroke="${theme.primary}" stroke-width="3.5" />
+                  <circle cx="470" cy="78" r="5" fill="${theme.primary}" />
+                  <text x="410" y="68" fill="${theme.primary}" font-weight="bold" font-size="11" font-family="monospace">68.5°C</text>
+                </svg>
               </div>
             </div>
           </section>
 
-          <!-- Technical Catalog Grid -->
-          <section style="padding:80px 0;">
+          <!-- Parametric Products Showcase -->
+          <section style="padding:70px 0;">
             <div class="wrap" style="padding:0 24px;">
-              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
                 <div>
-                  <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;">Product Catalog</div>
-                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:6px 0 0;">Vacuum Flasks & Drinkware</h2>
+                  <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">Certified Production Models</span>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;">
+                    Thermal Laboratory Fleet
+                  </h2>
                 </div>
-                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.9rem;font-weight:800;color:${theme.primary};">View Full Lineup →</a>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};">
+                  View Full Parametric Grid (${products.length}) →
+                </a>
               </div>
+
               <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
-                ${products.slice(0, 8).map(p => `
-                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
+                ${products.slice(0, 4).map(p => `
+                  <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.03);">
                     <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                      <div style="aspect-ratio:1.05;background:#f8fafc;position:relative;overflow:hidden;">
-                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:18px;">
-                        <span style="position:absolute;top:12px;left:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:4px;">${esc(p.badge)}</span>
-                      </div>
-                      <div style="padding:20px;">
-                        <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                        <h3 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
-                        <div style="font-size:0.8rem;color:${theme.textSub};margin-bottom:12px;">${esc(p.material)} · ${esc(p.dimensions)}</div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid ${theme.cardBorder};">
-                          <span style="font-size:0.78rem;font-weight:700;color:${theme.textMuted};">MOQ: ${esc(p.moq)}</span>
-                          <span style="font-size:0.8rem;font-weight:800;color:${theme.primary};">RFQ Details ↗</span>
-                        </div>
+                      <div style="aspect-ratio:1.1;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
+                        <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;font-family:monospace;">${esc(p.badge)}</span>
                       </div>
                     </a>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">
+                        <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                      </h3>
+                      <div style="font-size:0.8rem;color:${theme.textMuted};margin-bottom:14px;line-height:1.5;">${esc(p.dimensions)} · ${esc(p.material)}</div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
+                        <span style="font-weight:700;color:${theme.primary};">${esc(p.extra)}</span>
+                        <span style="font-weight:800;color:${theme.text};">MOQ: ${esc(p.moq)}</span>
+                      </div>
+                    </div>
                   </article>
                 `).join('')}
               </div>
@@ -416,121 +518,160 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         </main>
       `;
     } else {
-      // ASYMMETRIC CERAMIC ART GALLERY & EDITORIAL HERO
+      // 2. ARTISAN CERAMIC ATELIER EDITORIAL CANVAS HERO
       mainHtml = `
         <main class="drinkware-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
-          <!-- Asymmetric Editorial Hero -->
-          <section style="position:relative;padding:90px 0 100px;border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;">
+          <!-- Asymmetric Editorial Atelier Canvas Hero -->
+          <section style="position:relative;padding:60px 0 80px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:48px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px;">
-                  ✦ Single-Origin Ceramic Pottery · Kiln Fired at 1280°C
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:18px;">
+                  [ ATELIER HAND-CRAFTED · 1280°C KILN FIRED ]
                 </div>
-                <h1 style="font-family:Georgia,serif;font-size:clamp(2.4rem, 4.8vw, 3.8rem);font-weight:900;line-height:1.1;color:${theme.text};letter-spacing:-0.02em;margin:0 0 22px;">
-                  ${esc(draft.copy[ctx.lang]?.headline || 'Artisan Stoneware Pottery: Master Craft Meets Pure Form')}
+                <h1 style="font-family:Georgia,serif;font-size:clamp(2.2rem, 4.2vw, 3.4rem);font-weight:900;line-height:1.16;color:${theme.text};letter-spacing:-0.02em;margin:0 0 18px;">
+                  ${esc(draft.copy[ctx.lang]?.headline || 'Artisan Kiln-Fired Stoneware: Craft Meets Pure Mineral Glazes')}
                 </h1>
-                <p style="font-size:1.1rem;line-height:1.8;color:${theme.textMuted};margin:0 0 34px;max-width:540px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Hand-thrown on traditional kick wheels with natural Shigaraki clay and reactive wood-ash glazes for heirloom-grade tableware.')}
+                <p style="font-size:1.08rem;line-height:1.75;color:${theme.textMuted};margin:0 0 28px;max-width:580px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Hand-thrown on traditional kick wheels with single-origin natural clay, raw wood-ash reduction glazes, and days of sustained wood fire.')}
                 </p>
-                <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:40px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 36px;border-radius:999px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 24px ${theme.accentGlow};">
-                    Explore Ceramic Collection ↗
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:34px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:999px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Exhibition Archive ↗
                   </a>
-                  <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;padding:16px 30px;border-radius:999px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
-                    Kiln Craftsmanship
+                  <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;padding:14px 26px;border-radius:999px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    Our Mountain Kiln Story
                   </a>
                 </div>
-                <div style="display:flex;gap:32px;padding-top:24px;border-top:1px solid ${theme.cardBorder};">
-                  <div>
-                    <div style="font-family:Georgia,serif;font-size:1.8rem;font-weight:900;color:${theme.primary};">1280°C</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;text-transform:uppercase;">Wood-Fired Vitrification</div>
+                <!-- Master Potter Craft Seal & Signature -->
+                <div style="display:flex;align-items:center;gap:18px;padding-top:20px;border-top:1px solid ${theme.cardBorder};">
+                  <div style="width:48px;height:48px;border-radius:50%;border:2px solid ${theme.primary};display:flex;align-items:center;justify-content:center;color:${theme.primary};font-weight:900;font-size:0.8rem;background:#fff;">
+                    1280°
                   </div>
                   <div>
-                    <div style="font-family:Georgia,serif;font-size:1.8rem;font-weight:900;color:${theme.primary};">100%</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;text-transform:uppercase;">Hand-Thrown Ceramics</div>
-                  </div>
-                  <div>
-                    <div style="font-family:Georgia,serif;font-size:1.8rem;font-weight:900;color:${theme.primary};">Lead-Free</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;text-transform:uppercase;">Natural Mineral Glaze</div>
+                    <div style="font-weight:800;font-size:0.9rem;color:${theme.text};">Single-Batch Reduction Firing</div>
+                    <div style="font-size:0.78rem;color:${theme.textSub};">Lead-free, food-safe raw mineral glaze composition</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Arch Shaped Feature Showcase -->
-              <div style="position:relative;display:flex;justify-content:center;">
-                <div style="width:100%;max-width:480px;aspect-ratio:3/4;border-radius:200px 200px 24px 24px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 24px 60px rgba(180,83,9,0.1);padding:16px;">
-                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:184px 184px 16px 16px;" fetchpriority="high">
-                </div>
-                <div style="position:absolute;bottom:20px;left:20px;background:${theme.glassBg};backdrop-filter:blur(16px);border:1px solid ${theme.cardBorder};border-radius:16px;padding:14px 20px;box-shadow:0 12px 30px rgba(0,0,0,0.06);">
-                  <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">Artisan Selection</div>
-                  <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:${theme.text};">${esc(heroProduct.name)}</div>
+              <!-- Asymmetric Floating Studio Card -->
+              <div style="position:relative;">
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;overflow:hidden;box-shadow:0 24px 50px rgba(180,83,9,0.08);position:relative;">
+                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:420px;object-fit:cover;display:block;" fetchpriority="high">
+                  <div style="position:absolute;top:20px;left:20px;background:rgba(253,251,247,0.92);backdrop-filter:blur(8px);padding:8px 16px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.04em;">ATELIER MASTERPIECE #01</span>
+                  </div>
+                  <div style="position:absolute;bottom:20px;right:20px;background:${theme.primary};color:#fff;padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:800;">
+                    WOOD-ASH SHINO
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Craftsmanship Heritage Process -->
-          <section style="padding:80px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+          <!-- 4-Stage Kiln Craft Horizontal Process Timeline -->
+          <section style="padding:70px 0;border-bottom:1px solid ${theme.cardBorder};background:#ffffff;">
             <div class="wrap" style="padding:0 24px;">
-              <div style="text-align:center;max-width:640px;margin:0 auto 50px;">
-                <span style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;">Four-Stage Pottery Heritage</span>
-                <h2 style="font-family:Georgia,serif;font-size:clamp(1.9rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};margin:8px 0 12px;">From Single-Origin Clay to Heirloom Tableware</h2>
+              <div style="text-align:center;max-width:680px;margin:0 auto 48px;">
+                <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">The Ceramic Journey</span>
+                <h2 style="font-family:Georgia,serif;font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:8px 0 12px;">
+                  Four Sacred Stages of Reduction Craft
+                </h2>
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
+                  From riverbed natural clay preparation to the intense transformation inside our climbing wood kiln.
+                </p>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;">
-                <div style="padding:28px;border-radius:16px;background:${theme.bg};border:1px solid ${theme.cardBorder};text-align:center;">
-                  <div style="font-family:Georgia,serif;font-size:1.6rem;color:${theme.primary};margin-bottom:10px;">01. Sourcing</div>
-                  <h3 style="font-size:0.95rem;font-weight:800;margin:0 0 8px;">Single-Origin Clay</h3>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.6;margin:0;">Naturally weathered Shigaraki clay with rich mineral iron content.</p>
+
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:20px;">
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 20px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:8px;">STAGE 01</div>
+                  <h4 style="font-size:1.05rem;font-weight:900;color:${theme.text};margin:0 0 8px;">Clay Wedging</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Single-origin mountain clay aged for 90 days and hand-kneaded to expel all micro air bubbles.
+                  </p>
                 </div>
-                <div style="padding:28px;border-radius:16px;background:${theme.bg};border:1px solid ${theme.cardBorder};text-align:center;">
-                  <div style="font-family:Georgia,serif;font-size:1.6rem;color:${theme.primary};margin-bottom:10px;">02. Shaping</div>
-                  <h3 style="font-size:0.95rem;font-weight:800;margin:0 0 8px;">Kick-Wheel Wheelwork</h3>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.6;margin:0;">Every vessel thrown individually by master potters for tactile harmony.</p>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 20px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:8px;">STAGE 02</div>
+                  <h4 style="font-size:1.05rem;font-weight:900;color:${theme.text};margin:0 0 8px;">Kick-Wheel Forming</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Thrown manually on weighted wooden flywheels, preserving subtle hand throwing spiral ridges.
+                  </p>
                 </div>
-                <div style="padding:28px;border-radius:16px;background:${theme.bg};border:1px solid ${theme.cardBorder};text-align:center;">
-                  <div style="font-family:Georgia,serif;font-size:1.6rem;color:${theme.primary};margin-bottom:10px;">03. Glazing</div>
-                  <h3 style="font-size:0.95rem;font-weight:800;margin:0 0 8px;">Wood-Ash Minerals</h3>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.6;margin:0;">Custom feldspar and organic reactive glazes produce unique kiln-flower patterns.</p>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 20px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:8px;">STAGE 03</div>
+                  <h4 style="font-size:1.05rem;font-weight:900;color:${theme.text};margin:0 0 8px;">Natural Ash Glaze</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Brushed with pine wood ash and pulverized feldspar minerals for rich tactile texture.
+                  </p>
                 </div>
-                <div style="padding:28px;border-radius:16px;background:${theme.bg};border:1px solid ${theme.cardBorder};text-align:center;">
-                  <div style="font-family:Georgia,serif;font-size:1.6rem;color:${theme.primary};margin-bottom:10px;">04. Firing</div>
-                  <h3 style="font-size:0.95rem;font-weight:800;margin:0 0 8px;">1280°C Vitrification</h3>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.6;margin:0;">72-hour reduction kiln cycle achieves complete stone vitrification.</p>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 20px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:8px;">STAGE 04</div>
+                  <h4 style="font-size:1.05rem;font-weight:900;color:${theme.text};margin:0 0 8px;">1280°C Vitrification</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    72 hours of oxygen-reduced wood firing transforms clay into durable vitrified stoneware.
+                  </p>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Art Gallery Product Showcase -->
-          <section style="padding:90px 0;">
+          <!-- Curated Asymmetric Exhibition Plates -->
+          <section style="padding:70px 0;">
             <div class="wrap" style="padding:0 24px;">
-              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:48px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
                 <div>
-                  <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.12em;text-transform:uppercase;">Exhibition Lineup</div>
-                  <h2 style="font-family:Georgia,serif;font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;color:${theme.text};margin:6px 0 0;">Tableware & Artisan Drinkware</h2>
+                  <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">Seasonal Kiln Release</span>
+                  <h2 style="font-family:Georgia,serif;font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;">
+                    Featured Studio Pieces
+                  </h2>
                 </div>
-                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:800;color:${theme.primary};">All Works (RFQ) →</a>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};">
+                  Explore Full Archive (${products.length}) →
+                </a>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
-                ${products.slice(0, 8).map(p => `
-                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;overflow:hidden;box-shadow:0 8px 24px rgba(180,83,9,0.04);transition:transform 0.3s;">
-                    <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                      <div style="aspect-ratio:1;background:${theme.bg};position:relative;overflow:hidden;">
-                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;padding:20px;">
-                        <span style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.9);color:${theme.primary};font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:999px;border:1px solid ${theme.cardBorder};">${esc(p.badge)}</span>
-                      </div>
-                      <div style="padding:22px;">
-                        <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
-                        <h3 style="font-family:Georgia,serif;font-size:1.05rem;font-weight:900;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
-                        <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.6;margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid ${theme.cardBorder};">
-                          <span style="font-size:0.78rem;color:${theme.textSub};">MOQ: ${esc(p.moq)}</span>
-                          <span style="font-size:0.82rem;font-weight:800;color:${theme.primary};">Inspect Piece ↗</span>
+
+              <!-- Asymmetric 1-wide + 2-stacked layout -->
+              <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:28px;">
+                <!-- Wide Masterpiece Plate -->
+                <article data-wr-product-id="${esc(heroProduct.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;overflow:hidden;box-shadow:0 8px 24px rgba(180,83,9,0.06);display:flex;flex-direction:column;">
+                  <a href="${path('products/' + heroProduct.id + '/index.html')}" ${navAttrs('detail', heroProduct.id)} style="text-decoration:none;flex:1;">
+                    <div style="aspect-ratio:1.3;background:#fcfaf6;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" loading="lazy" style="width:75%;height:75%;object-fit:contain;">
+                    </div>
+                  </a>
+                  <div style="padding:24px;">
+                    <span style="font-size:0.75rem;color:${theme.primary};font-weight:800;letter-spacing:0.04em;">ATELIER MASTERPLATE #01</span>
+                    <h3 style="font-family:Georgia,serif;font-size:1.35rem;font-weight:900;color:${theme.text};margin:6px 0 10px;">
+                      <a href="${path('products/' + heroProduct.id + '/index.html')}" ${navAttrs('detail', heroProduct.id)} style="text-decoration:none;color:${theme.text};">${esc(heroProduct.name)}</a>
+                    </h3>
+                    <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.6;margin-bottom:18px;">${esc(heroProduct.desc)}</p>
+                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;padding-top:14px;border-top:1px solid ${theme.cardBorder};">
+                      <span style="color:${theme.textSub};">${esc(heroProduct.material)}</span>
+                      <strong style="color:${theme.primary};">MOQ: ${esc(heroProduct.moq)}</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Stacked Side Plates -->
+                <div style="display:flex;flex-direction:column;gap:24px;">
+                  ${products.slice(1, 3).map((p, idx) => `
+                    <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 6px 20px rgba(180,83,9,0.04);display:grid;grid-template-columns:140px 1fr;align-items:center;">
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;height:100%;">
+                        <div style="height:100%;min-height:140px;background:#fcfaf6;display:flex;align-items:center;justify-content:center;border-right:1px solid ${theme.cardBorder};">
+                          <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
                         </div>
+                      </a>
+                      <div style="padding:18px 20px;">
+                        <span style="font-size:0.7rem;font-weight:800;color:${theme.primary};">STUDIO SELECTION #0${idx + 2}</span>
+                        <h4 style="font-family:Georgia,serif;font-size:1.05rem;font-weight:900;color:${theme.text};margin:4px 0 6px;">
+                          <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                        </h4>
+                        <div style="font-size:0.78rem;color:${theme.textMuted};margin-bottom:8px;">${esc(p.dimensions)}</div>
+                        <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};">${esc(p.moq)}</div>
                       </div>
-                    </a>
-                  </article>
-                `).join('')}
+                    </article>
+                  `).join('')}
+                </div>
               </div>
             </div>
           </section>
@@ -539,46 +680,54 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
     }
   } else if (page === 'catalog') {
     if (!isVideo) {
-      // Ceramic Artisan Exhibition Catalog
+      // CERAMIC MUSEUM EXHIBITION ARCHIVE CATALOG
       mainHtml = `
         <main class="drinkware-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
-              <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">
-                  Atelier Collection · Kiln Batch 2026-A
-                </div>
-                <h1 style="font-size:clamp(1.9rem, 3.5vw, 2.6rem);font-weight:900;color:${theme.text};margin:0;letter-spacing:-0.02em;">
-                  Artisan Ceramic &amp; Stoneware Catalog
-                </h1>
+            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:28px;margin-bottom:36px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
+                Atelier Collection Archive · Kiln Firing Batch
               </div>
+              <h1 style="font-family:Georgia,serif;font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.02em;">
+                Handcrafted Ceramic Exhibition Catalog
+              </h1>
               <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:6px 14px;border-radius:20px;background:${theme.primary};color:#fff;">All Studio Ware (${products.length})</span>
-                <span style="padding:6px 14px;border-radius:20px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Stoneware Mugs</span>
-                <span style="padding:6px 14px;border-radius:20px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Pour-Over Sets</span>
-                <span style="padding:6px 14px;border-radius:20px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">High-Fire Porcelain</span>
+                <span style="padding:7px 16px;border-radius:999px;background:${theme.primary};color:#fff;">All Studio Vessels (${products.length})</span>
+                <span style="padding:7px 16px;border-radius:999px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Wood-Ash Shino</span>
+                <span style="padding:7px 16px;border-radius:999px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Longquan Celadon</span>
+                <span style="padding:7px 16px;border-radius:999px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Tenmoku Iron</span>
+                <span style="padding:7px 16px;border-radius:999px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Raw Bisque</span>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
+            <!-- Gallery Cards with Clay Origin, Temperature, and Studio Edition -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:32px;">
               ${products.map(p => `
-                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 6px 20px rgba(180,83,9,0.04);transition:transform 0.2s ease;">
+                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(180,83,9,0.05);">
                   <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
                     <div style="aspect-ratio:1.05;background:#fcfaf6;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:85%;height:85%;object-fit:contain;transition:transform 0.3s ease;">
-                      <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:0.04em;">${esc(p.badge)}</span>
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:82%;height:82%;object-fit:contain;">
+                      <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
                       <span style="position:absolute;bottom:12px;right:12px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">1280°C Fired</span>
                     </div>
-                    <div style="padding:20px;">
-                      <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
-                      <h2 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
-                      <p style="font-size:0.82rem;color:${theme.textMuted};margin:0 0 14px;line-height:1.5;">${esc(p.desc)}</p>
-                      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed ${theme.cardBorder};padding-top:12px;font-size:0.78rem;">
-                        <span style="color:${theme.textSub};font-weight:600;">MOQ: <strong style="color:${theme.text};">${esc(p.moq)}</strong></span>
-                        <span style="color:${theme.primary};font-weight:800;">Request Studio Sample ↗</span>
-                      </div>
-                    </div>
                   </a>
+                  <div style="padding:22px;">
+                    <span style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">${esc(p.categoryNameEn)}</span>
+                    <h3 style="font-family:Georgia,serif;font-size:1.15rem;font-weight:900;color:${theme.text};margin:6px 0 10px;line-height:1.3;">
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                    </h3>
+                    <p style="font-size:0.84rem;color:${theme.textMuted};line-height:1.6;margin-bottom:16px;">${esc(p.desc)}</p>
+                    <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:8px;padding:10px 12px;font-size:0.78rem;margin-bottom:16px;">
+                      <div style="color:${theme.text};font-weight:700;">${esc(p.material)}</div>
+                      <div style="color:${theme.textSub};">${esc(p.dimensions)}</div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};">
+                      <span style="font-size:0.78rem;color:${theme.textSub};">MOQ: <strong style="color:${theme.primary};">${esc(p.moq)}</strong></span>
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-size:0.82rem;font-weight:800;color:${theme.primary};">
+                        Vessel Dossier →
+                      </a>
+                    </div>
+                  </div>
                 </article>
               `).join('')}
             </div>
@@ -586,58 +735,57 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         </main>
       `;
     } else {
-      // Thermal Engineering Spec Catalog
+      // THERMAL HARDWARE PARAMETRIC SPEC CATALOG
       mainHtml = `
         <main class="drinkware-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 32px;margin-bottom:32px;box-shadow:0 4px 20px rgba(0,0,0,0.02);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
-              <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
-                  Thermal Telemetry Matrix · Active SKUs (${products.length})
-                </div>
-                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:${theme.text};margin:0;">
-                  Engineered Thermal Drinkware Catalog
-                </h1>
+            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
+                Lab Certified Fleet · Parametric Specifications
               </div>
-              <div style="display:flex;gap:12px;align-items:center;font-size:0.8rem;color:${theme.textMuted};">
-                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
-                  <strong>Standard Liner:</strong> 18/8 &amp; 316 Medical
-                </span>
-                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
-                  <strong>Vacuum Spec:</strong> 0.001 Pa Tested
-                </span>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
+                Vacuum Insulated Hardware Catalog
+              </h1>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Thermal Capacities (${products.length})</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">350ml Compact</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">500ml Commuter</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">750ml Field Flask</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">1200ml Expedition Growler</span>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:24px;">
+            <!-- Parametric Hardware Cards with Spec Matrix -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
               ${products.map(p => `
-                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(2,132,199,0.04);">
+                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(2,132,199,0.04);">
                   <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.2;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:75%;height:75%;object-fit:contain;">
-                      <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;">
-                        <span style="background:${theme.primary};color:#fff;font-size:0.68rem;font-weight:800;padding:2px 6px;border-radius:4px;">${esc(p.badge)}</span>
-                      </div>
-                      <div style="position:absolute;bottom:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(255,255,255,0.9);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:0.68rem;font-weight:700;color:${theme.primary};">
-                        <span>24H HOT: 58°C+</span>
-                        <span>48H COLD: 8°C-</span>
-                      </div>
-                    </div>
-                    <div style="padding:18px;">
-                      <div style="font-size:0.7rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                      <h2 style="font-size:1rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;margin-bottom:14px;font-size:0.75rem;color:${theme.textMuted};">
-                        <div><strong>Material:</strong> ${esc(p.material.slice(0, 20))}...</div>
-                        <div><strong>MOQ:</strong> <span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
-                        <div><strong>Dimensions:</strong> ${esc(p.dimensions.slice(0, 16))}</div>
-                        <div><strong>Grade:</strong> Surgical Liner</div>
-                      </div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;font-weight:700;color:${theme.primary};">
-                        <span>Inspect Telemetry &amp; CAD Data</span>
-                        <span>↗</span>
-                      </div>
+                    <div style="aspect-ratio:1.1;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
+                      <span style="position:absolute;top:10px;left:10px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-family:monospace;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:10px;right:10px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">VACUUM 10⁻⁵ PA</span>
                     </div>
                   </a>
+                  <div style="padding:20px;">
+                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                    <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};margin:0 0 10px;line-height:1.3;">
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                    </h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;font-size:0.75rem;margin-bottom:14px;">
+                      <div>
+                        <span style="color:${theme.textSub};display:block;">Steel Alloy:</span>
+                        <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;">Dimensions:</span>
+                        <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                      </div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
+                      <span style="color:${theme.primary};font-weight:800;">${esc(p.extra)}</span>
+                      <strong style="color:${theme.text};">MOQ: ${esc(p.moq)}</strong>
+                    </div>
+                  </div>
                 </article>
               `).join('')}
             </div>
@@ -648,7 +796,7 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
   } else if (page === 'detail') {
     const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
     if (!isVideo) {
-      // Ceramic Artisan Detail Page
+      // CERAMIC ARTISAN DETAIL PAGE: FILMSTRIP + HANKO STAMP SELECTOR
       mainHtml = `
         <main class="drinkware-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
@@ -658,13 +806,15 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
               </a>
             </div>
 
-            <div style="display:grid;grid-template-columns:minmax(300px, 1fr) minmax(340px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
+            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
+              <!-- Left Column: Vessel Portrait & Macro Filmstrip -->
               <div>
                 <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:36px;position:relative;box-shadow:0 12px 32px rgba(180,83,9,0.05);text-align:center;">
                   <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
                   <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;">
                     1280°C Vitrified Clay
                   </div>
+                  <!-- Thumbnails filmstrip container -->
                   <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
                     <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
                       <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
@@ -672,6 +822,7 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
                   </div>
                 </div>
 
+                <!-- Kiln Craft Metrics -->
                 <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
                   <div>
                     <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">1280°C</div>
@@ -690,19 +841,21 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
                 </div>
               </div>
 
+              <!-- Right Column: Atelier Specifications & Bottom Seal Selector -->
               <div>
                 <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
                   ${esc(p.categoryNameEn)} · Hand-Thrown Studio Model
                 </div>
-                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                <h1 style="font-family:Georgia,serif;font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
                   ${esc(p.name)}
                 </h1>
                 <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
                   ${esc(p.desc)}
                 </p>
 
+                <!-- Ceramic Material Specifications Table -->
                 <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px;margin-bottom:28px;">
-                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
+                  <h3 style="font-family:Georgia,serif;font-size:0.95rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
                     Ceramic &amp; Material Specifications
                   </h3>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:0.85rem;">
@@ -725,19 +878,25 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
                   </div>
                 </div>
 
-                <div style="background:#fff9f0;border:1px solid #fde68a;border-radius:16px;padding:20px;margin-bottom:28px;">
-                  <h4 style="font-size:0.85rem;font-weight:800;color:#92400e;margin:0 0 6px;">Bespoke Glaze &amp; Custom Bottom Stamp</h4>
-                  <p style="font-size:0.82rem;color:#78350f;margin:0;line-height:1.6;">
-                    We support private retail brands with custom reactive glaze development, laser-engraved raw stoneware foot stamps, and FSC wood gift box packaging.
+                <!-- Interactive Bottom Hanko Seal Selector -->
+                <div style="background:#fff9f0;border:1px solid #fde68a;border-radius:16px;padding:22px;margin-bottom:28px;">
+                  <h4 style="font-size:0.88rem;font-weight:800;color:#92400e;margin:0 0 8px;">Bespoke Glaze &amp; Custom Bottom Stamp</h4>
+                  <p style="font-size:0.82rem;color:#78350f;margin:0 0 14px;line-height:1.6;">
+                    Each piece can be stamped on the unglazed foot ring with your studio mark, private brand monogram, or master kiln chop.
                   </p>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <span style="padding:6px 14px;background:#fff;border:1px solid #d97706;color:#92400e;border-radius:6px;font-size:0.75rem;font-weight:700;">[ Studio Seal Mark ]</span>
+                    <span style="padding:6px 14px;background:#fff;border:1px solid #d97706;color:#92400e;border-radius:6px;font-size:0.75rem;font-weight:700;">[ Master Potter Hanko ]</span>
+                    <span style="padding:6px 14px;background:#fff;border:1px solid #d97706;color:#92400e;border-radius:6px;font-size:0.75rem;font-weight:700;">[ Custom Client Monogram ]</span>
+                  </div>
                 </div>
 
-                <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:15px 34px;border-radius:12px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-                    Request Studio Sample &amp; Pricing ↗
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:999px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Commission Studio Batch ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 26px;border-radius:12px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:700;">
-                    Download Glaze Catalog
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:999px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    View Other Vessels
                   </a>
                 </div>
               </div>
@@ -746,92 +905,113 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         </main>
       `;
     } else {
-      // Thermal Vacuum Spec Detail Page
+      // THERMAL HARDWARE DETAIL PAGE: 24H SVG CURVE + EXPLODED LID SCHEMATIC + PALLET CALCULATOR
       mainHtml = `
         <main class="drinkware-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
             <div style="margin-bottom:28px;">
               <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
-                ← Return to Thermal Engineering Catalog
+                ← Return to Vacuum Hardware Catalog
               </a>
             </div>
 
             <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
+              <!-- Left Column: Vessel Image & Gallery -->
               <div>
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;box-shadow:0 8px 30px rgba(2,132,199,0.05);position:relative;">
-                  <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:${theme.primary};font-weight:800;margin-bottom:12px;">
-                    <span>CALIBRATED: 0.001 Pa VACUUM</span>
-                    <span>360° INSPECTION</span>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;position:relative;box-shadow:0 12px 32px rgba(2,132,199,0.06);text-align:center;">
+                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
+                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
+                    VACUUM TEST: PASS
                   </div>
-                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:440px;object-fit:contain;display:block;" fetchpriority="high">
-                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
+                  <!-- Thumbnails -->
+                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
                     <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:50px;height:50px;object-fit:cover;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
                     </button>
                   </div>
                 </div>
 
-                <div style="margin-top:20px;background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;">
-                  <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:10px;">
-                    24-Hour Thermal Retention Degradation Curve
+                <!-- 24H Decay SVG Telemetry Curve Graph -->
+                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.04em;">24H TEMPERATURE PROBE CURVE</span>
+                    <span style="font-size:0.7rem;font-family:monospace;color:${theme.textSub};">ISO 20°C AMBIENT</span>
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;text-align:center;font-size:0.75rem;">
-                    <div style="background:${theme.bg};padding:8px 4px;border-radius:6px;">
-                      <div style="font-weight:900;color:${theme.text};">98°C</div>
-                      <div style="color:${theme.textSub};">0h Initial</div>
-                    </div>
-                    <div style="background:${theme.bg};padding:8px 4px;border-radius:6px;">
-                      <div style="font-weight:900;color:${theme.text};">84°C</div>
-                      <div style="color:${theme.textSub};">6h Bench</div>
-                    </div>
-                    <div style="background:${theme.bg};padding:8px 4px;border-radius:6px;">
-                      <div style="font-weight:900;color:${theme.text};">72°C</div>
-                      <div style="color:${theme.textSub};">12h Field</div>
-                    </div>
-                    <div style="background:${theme.bg};padding:8px 4px;border-radius:6px;">
-                      <div style="font-weight:900;color:${theme.primary};">58°C</div>
-                      <div style="color:${theme.textSub};">24h Limit</div>
-                    </div>
-                  </div>
+                  <svg viewBox="0 0 400 120" style="width:100%;height:auto;display:block;">
+                    <line x1="30" y1="10" x2="30" y2="100" stroke="#cbd5e1" stroke-width="1" />
+                    <line x1="30" y1="100" x2="380" y2="100" stroke="#cbd5e1" stroke-width="1" />
+                    <text x="5" y="15" fill="#64748b" font-size="8">98°</text>
+                    <text x="5" y="55" fill="#64748b" font-size="8">68°</text>
+                    <text x="5" y="98" fill="#64748b" font-size="8">20°</text>
+                    <path d="M 30 15 Q 180 35, 380 55" fill="none" stroke="${theme.primary}" stroke-width="2.5" />
+                    <circle cx="380" cy="55" r="4" fill="${theme.primary}" />
+                    <text x="330" y="48" fill="${theme.primary}" font-weight="bold" font-size="10">68.5°C</text>
+                  </svg>
                 </div>
               </div>
 
+              <!-- Right Column: Technical Dossier & Shipping Pallet Calculator -->
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:8px;">
-                  ${esc(p.categoryNameEn)} · ${esc(p.badge)}
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
+                  ${esc(p.categoryNameEn)} · Commercial Model
                 </div>
                 <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
                   ${esc(p.name)}
                 </h1>
-                <p style="font-size:1.02rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
                   ${esc(p.desc)}
                 </p>
 
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:22px;margin-bottom:24px;">
-                  <h3 style="font-size:0.88rem;font-weight:800;text-transform:uppercase;color:${theme.primary};margin:0 0 16px;">
-                    5-Layer Thermal Barrier Architecture
+                <!-- Technical Spec Grid -->
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:24px;">
+                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
+                    Hardware Engineering Specifications
                   </h3>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.82rem;color:${theme.textMuted};">
-                    <div><strong>Alloy Liner:</strong><br>${esc(p.material)}</div>
-                    <div><strong>Form Factor:</strong><br>${esc(p.dimensions)}</div>
-                    <div><strong>Barrier Core:</strong><br>0.001 Pa Vacuum + Cu Shield</div>
-                    <div><strong>Batch MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
+                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Steel Grade</span>
+                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                    </div>
+                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Capacity &amp; Dimensions</span>
+                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Thermal Retention</span>
+                      <strong style="color:${theme.primary};">${esc(p.extra)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Production MOQ</span>
+                      <strong style="color:${theme.text};">${esc(p.moq)}</strong>
+                    </div>
                   </div>
                 </div>
 
-                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:18px;margin-bottom:28px;">
-                  <h4 style="font-size:0.82rem;font-weight:800;color:#166534;margin:0 0 4px;">Bulk Export &amp; Custom Branding Options</h4>
-                  <p style="font-size:0.8rem;color:#15803d;margin:0;line-height:1.5;">
-                    Supported OEM finishes: Electrostatic matte powder coating, 360° laser rotary engraving, Tritan leakproof cap variants, and retail color master boxes.
-                  </p>
+                <!-- Export Pallet Logistics Calculator -->
+                <div style="background:#f8fafc;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
+                  <h4 style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:0 0 10px;">Export Shipping &amp; Pallet Logistics</h4>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:0.8rem;text-align:center;">
+                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                      <div style="color:${theme.textSub};">Carton Pack</div>
+                      <strong style="color:${theme.text};font-size:0.95rem;">24 Pcs / Ctn</strong>
+                    </div>
+                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                      <div style="color:${theme.textSub};">Standard Pallet</div>
+                      <strong style="color:${theme.text};font-size:0.95rem;">48 Ctns (1,152 Pcs)</strong>
+                    </div>
+                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                      <div style="color:${theme.textSub};">20GP Container</div>
+                      <strong style="color:${theme.primary};font-size:0.95rem;">12,000 Pcs</strong>
+                    </div>
+                  </div>
                 </div>
 
-                <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:15px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;box-shadow:0 6px 18px ${theme.accentGlow};">
-                    Submit Thermal RFQ &amp; Sample Request ↗
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Submit Technical RFQ ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 24px;border-radius:10px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
-                    Download Test Dossier
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    Explore All Hardware
                   </a>
                 </div>
               </div>
@@ -841,322 +1021,327 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
       `;
     }
   } else if (page === 'about') {
-    const headline = getAboutHeadline(company, isVideo ? `${company.name} · Precision Thermal Testing Lab` : `${company.name} · Master Ceramic Atelier`);
-    const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
+    const headline = getAboutHeadline(company, isVideo ? 'Precision Thermal Engineering & Sourcing Facility' : 'Generations of Kiln Fire & Handcrafted Heritage');
+    const paragraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || (isVideo ? 'Founded on strict thermodynamics principles, ThermalTech operates high-vacuum braze furnaces reaching 10⁻⁵ Pa vacuum purity. Every thermal tumbler and flask undergoes 100% helium mass spectrometry leak detection.' : 'Our studio rests on the mountain slopes where natural stoneware clay has been dug by hand for over two centuries. Every vessel begins with unrefined earth, wedged and thrown on human-powered kick wheels.'));
+    const images = getAboutImages(ctx);
     const highlights = parseAboutHighlights(company.aboutHighlights, isVideo ? [
-      { value: company.establishedYear || '2017', num: 2017, label: 'Established', desc: 'Cryogenic lab operation' },
-      { value: '0.001 Pa', num: 1, label: 'Vacuum Seal', desc: 'Helium spectrometer pass' },
-      { value: '18/8 & 316', num: 316, label: 'Alloy Purity', desc: 'Surgical food contact' },
-      { value: '48h Hot/Cold', num: 48, label: 'Thermal Retention', desc: 'Dual-wall copper barrier' },
-    ] : [
-      { value: company.establishedYear || '2014', num: 2014, label: 'Atelier Est.', desc: 'Continuous kiln heritage' },
-      { value: '1280°C', num: 1280, label: 'Kiln Temp', desc: 'High-fire vitrification' },
-      { value: '100% Lead-Free', num: 100, label: 'Food-Safe', desc: 'FDA & LFGB compliant' },
-      { value: '45+ Countries', num: 45, label: 'Global Retailers', desc: 'Direct export shipments' },
-    ]);
-    const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
+    { value: '10⁻⁵ Pa', label: 'Vacuum Integrity', desc: 'Cryogenic vacuum furnace rating' },
+    { value: '24 Hours', label: 'Thermal Retention', desc: 'Sustained hot beverage performance' },
+    { value: '100%', label: 'Helium Leak Tested', desc: 'Mass spectrometry verified' },
+  ] : [
+    { value: '1280°C', label: 'Kiln Vitrification', desc: 'High-temperature reduction wood fire' },
+    { value: '200+ Yrs', label: 'Clay Quarry Heritage', desc: 'Single-origin mountain stoneware' },
+    { value: '0% Lead', label: 'Pure Mineral Glazes', desc: 'Natural wood-ash food-safe craft' },
+  ]);
+    const primaryImage = images.primary || (isVideo ? getIndustryPlaceholder('drinkware', 2) : getIndustryPlaceholder('drinkware', 0));
 
     if (!isVideo) {
-      // Ceramic Artisan About
+      // CERAMIC MOUNTAIN KILN ABOUT: CHRONICLE TIMELINE
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:50px;align-items:center;margin-bottom:60px;">
+        <main class="drinkware-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
+            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
+              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Wood Kiln Chronicle &amp; Master Craft
+              </span>
+              <h1 style="font-family:Georgia,serif;font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+                ${esc(headline)}
+              </h1>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
+              <div style="border-radius:24px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(180,83,9,0.06);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:440px;object-fit:cover;display:block;" loading="lazy">
+              </div>
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
-                  ${esc(ui.about)} · Ceramic Atelier Heritage
-                </div>
-                <h1 style="font-size:clamp(2rem, 4vw, 2.9rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 18px;">
-                  ${esc(headline)}
-                </h1>
-                ${storyParagraphs.map(p => `<p style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};margin:0 0 16px;">${esc(p)}</p>`).join('')}
-              </div>
-              <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(180,83,9,0.08);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            </div>
-
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;margin-bottom:50px;">
-              <h2 style="font-size:1.25rem;font-weight:900;color:${theme.text};margin:0 0 24px;text-align:center;">Four-Stage Kiln Process &amp; Firing Profile</h2>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:20px;">
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="color:${theme.primary};font-weight:900;font-size:1.3rem;margin-bottom:4px;">01. Clay Selection</div>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">Single-origin feldspathic stoneware clay with zero heavy metal contaminants.</p>
-                </div>
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="color:${theme.primary};font-weight:900;font-size:1.3rem;margin-bottom:4px;">02. Kick-Wheel Throw</div>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">Master artisan shaping for balanced thermal mass and ergonomic vessel lip.</p>
-                </div>
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="color:${theme.primary};font-weight:900;font-size:1.3rem;margin-bottom:4px;">03. Bisque &amp; Glaze</div>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">800°C primary firing followed by mineral-rich natural ash dip.</p>
-                </div>
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="color:${theme.primary};font-weight:900;font-size:1.3rem;margin-bottom:4px;">04. 1280°C Kiln Fire</div>
-                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">High-fire vitrification eliminating porosity for lifetime durability.</p>
+                <div style="font-size:1.05rem;line-height:1.8;color:${theme.textMuted};">
+                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
+                    <p style="margin:0 0 18px;">Our studio rests on the mountain slopes where natural stoneware clay has been dug by hand for over two centuries. Every vessel begins with unrefined earth, wedged and thrown on human-powered kick wheels.</p>
+                    <p style="margin:0 0 18px;">We do not use synthetic pigments. Our glazes are blended strictly from pine wood ash, feldspar rock, and river sediment, vitrifying into durable ceramic art at 1280°C.</p>
+                  `}
                 </div>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
-              ${highlights.map(h => `
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                  <div style="font-size:1.9rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
-                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
-                </div>
-              `).join('')}
-            </div>
-
-            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:40px;">
-              <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Collaborate on Custom Ceramic Assortments</h2>
-              <p style="font-size:0.95rem;color:${theme.textMuted};margin:0 0 20px;max-width:560px;margin-left:auto;margin-right:auto;">Direct atelier export pricing, specialized glaze formulation, and global palletized logistics.</p>
-              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
-                Inquire With Studio Team ↗
-              </a>
-            </div>
-          </section>
+            <!-- Highlights Matrix -->
+            ${highlights.length > 0 ? `
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
+                ${highlights.map(h => `
+                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;text-align:center;">
+                    <div style="font-family:Georgia,serif;font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
+                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || "")}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
         </main>
       `;
     } else {
-      // Thermal Laboratory About
+      // THERMAL CRYOGENIC LAB ABOUT: HELIUM SPECTROMETRY STORY
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:50px;align-items:center;margin-bottom:60px;">
+        <main class="drinkware-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
+            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
+              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Laboratory Overview · Vacuum Metallurgy
+              </span>
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+                ${esc(headline)}
+              </h1>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
+              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(2,132,199,0.08);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
+              </div>
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
-                  ${esc(ui.about)} · Thermal Engineering Facility
-                </div>
-                <h1 style="font-size:clamp(2rem, 4vw, 2.9rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 18px;">
-                  ${esc(headline)}
-                </h1>
-                ${storyParagraphs.map(p => `<p style="font-size:1.02rem;line-height:1.75;color:${theme.textMuted};margin:0 0 16px;">${esc(p)}</p>`).join('')}
-              </div>
-              <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(2,132,199,0.08);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-            </div>
-
-            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;margin-bottom:50px;">
-              <h2 style="font-size:1.25rem;font-weight:900;color:${theme.text};margin:0 0 20px;text-align:center;">Thermal Testing Rig &amp; Certification Standards</h2>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;margin-bottom:6px;">Helium Mass Spectrometry</div>
-                  <p style="font-size:0.8rem;color:${theme.textMuted};margin:0;line-height:1.5;">Every batch is verified through automated 0.001 Pa vacuum chambers to eliminate thermal leakage.</p>
-                </div>
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;margin-bottom:6px;">Drop Shock Integrity</div>
-                  <p style="font-size:0.8rem;color:${theme.textMuted};margin:0;line-height:1.5;">2-meter angled drop impact test on concrete to ensure vacuum wall structural integrity.</p>
-                </div>
-                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
-                  <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;margin-bottom:6px;">FDA / LFGB / Prop 65</div>
-                  <p style="font-size:0.8rem;color:${theme.textMuted};margin:0;line-height:1.5;">Full chemical migration safety testing on inner liners, silicone seals, and Tritan lids.</p>
+                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
+                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
+                    <p style="margin:0 0 18px;">Founded on strict thermodynamics principles, ThermalTech operates high-vacuum braze furnaces reaching 10⁻⁵ Pa vacuum purity. Every thermal tumbler and flask undergoes 100% helium mass spectrometry leak detection.</p>
+                    <p style="margin:0 0 18px;">We supply international brand partners with audited surgical-grade 304 and 316 stainless steel vessels, adhering to FDA, LFGB, and California Prop 65 food-safety standards.</p>
+                  `}
                 </div>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
-              ${highlights.map(h => `
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                  <div style="font-size:1.9rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
-                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
-                </div>
-              `).join('')}
-            </div>
-
-            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:40px;">
-              <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Engineering &amp; OEM Contract Manufacturing</h2>
-              <p style="font-size:0.95rem;color:${theme.textMuted};margin:0 0 20px;max-width:560px;margin-left:auto;margin-right:auto;">Volume procurement, rapid 3D prototyping, and turnkey factory-direct export operations.</p>
-              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
-                Initiate Engineering RFQ ↗
-              </a>
-            </div>
-          </section>
+            <!-- Highlights Matrix -->
+            ${highlights.length > 0 ? `
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
+                ${highlights.map(h => `
+                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
+                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
+                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || "")}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
         </main>
       `;
     }
   } else if (page === 'contact') {
+    const selectedProd = ctx.options.productId || '';
     if (!isVideo) {
-      // Ceramic Studio Inquiry
+      // CERAMIC ATELIER COMMISSION DESK
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-          <section class="wrap" style="padding:40px 24px 80px;">
-            <header style="text-align:center;max-width:640px;margin:0 auto 48px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-                ${esc(ui.contact)} · Ceramic Sourcing Desk
-              </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">Request Studio Samples &amp; Glaze Consultation</h1>
-              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Connect directly with our master ceramicists for custom batch inquiries, private backstamps, and international freight quotes.</p>
-            </header>
+        <main class="drinkware-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Atelier Commission &amp; Wholesale Inquiries
+              </span>
+              <h1 style="font-family:Georgia,serif;font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
+                Commission Handcrafted Stoneware
+              </h1>
+              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
+                Connect with our master potters to discuss kiln firing schedules, custom clay bodies, bespoke bottom stamps, and wooden gift box sets.
+              </p>
+            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;box-shadow:0 8px 28px rgba(180,83,9,0.04);">
-                <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Ceramic Order Quotation</h2>
-                <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:16px;">
+            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:40px;box-shadow:0 12px 36px rgba(180,83,9,0.06);">
+              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Select Ceramic Vessel</label>
-                    <select name="productId" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                      <option value="">— Choose a Ceramic Product —</option>
-                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)} (${esc(p.categoryNameEn)})</option>`).join('')}
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Your Name / Studio Representative</label>
+                    <input type="text" name="name" required placeholder="Master Potter / Sourcing Director" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Direct Email Address</label>
+                    <input type="email" name="email" required placeholder="artisan@client-atelier.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Selected Ceramic Piece</label>
+                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                    <option value="">General Ceramic Inquiry (All Studio Pieces)</option>
+                    ${products.map(p => `
+                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} (${esc(p.moq)})</option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Glaze Preference</label>
+                    <select name="glaze" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                      <option>Wood-Ash Shino (Warm Russet)</option>
+                      <option>Longquan Celadon (Jade Crackle)</option>
+                      <option>Tenmoku Iron (Oil Spot)</option>
+                      <option>Raw Bisque Sand (Unglazed Tactile)</option>
                     </select>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Batch Quantity</label>
-                      <input type="text" name="quantity" placeholder="e.g. 300 Sets" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    </div>
-                    <div>
-                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Custom Glaze / Stamp</label>
-                      <input type="text" name="customization" placeholder="Reactive glaze / Bottom logo" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    </div>
-                  </div>
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Business Email</label>
-                    <input type="email" name="email" placeholder="purchasing@company.com" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Packaging Specification</label>
+                    <select name="packaging" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                      <option>Paulownia Wooden Presentation Box</option>
+                      <option>Recycled Kraft Retail Gift Carton</option>
+                      <option>Standard Bulk Protective Export Carton</option>
+                    </select>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Specific Requirements / Packaging</label>
-                    <textarea name="message" rows="4" placeholder="Mention drop-test packaging requirements, retail wooden crates, or target delivery port..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
-                  </div>
-                  <button type="submit" style="padding:14px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 16px ${theme.accentGlow};">
-                    Submit Studio RFQ ↗
-                  </button>
-                </form>
-              </div>
+                </div>
 
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;display:flex;flex-direction:column;justify-content:space-between;">
                 <div>
-                  <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Ceramic Export Dispatch Desk</h2>
-                  <p style="font-size:0.92rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
-                    We handle international palletized crating, moisture-barrier wrapping, and food-grade LFGB certification documentation for containerized sea shipments.
-                  </p>
-                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:2;">
-                    <div><strong>Atelier Name:</strong> ${esc(company.name || brandName)}</div>
-                    <div><strong>Inquiry Email:</strong> ${esc(company.email || 'export@ceramicatelier.com')}</div>
-                    <div><strong>Kiln Location:</strong> ${esc(company.address || 'Artisan Ceramic Zone')}</div>
-                    <div><strong>Lead Times:</strong> 7 Days for Samples · 30 Days for Production</div>
-                  </div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Project Notes &amp; Custom Seal Requirements</label>
+                  <textarea name="message" rows="4" placeholder="Detail your project timeline, desired vessel modifications, or custom bottom stamp marks..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
                 </div>
-                <div style="background:#fcfaf6;border:1px solid ${theme.cardBorder};border-radius:12px;padding:18px;font-size:0.8rem;color:${theme.primary};line-height:1.6;margin-top:24px;">
-                  🏺 Studio Verification: Custom glaze swatches and pre-production physical samples ship internationally within 5 business days.
-                </div>
-              </div>
+
+                <button type="submit" style="padding:16px;border-radius:999px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
+                  Transmit Atelier Commission Request ↗
+                </button>
+              </form>
             </div>
-          </section>
+          </div>
         </main>
       `;
     } else {
-      // Thermal Engineering Inquiry
+      // THERMAL LABORATORY TECHNICAL RFQ TERMINAL
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-          <section class="wrap" style="padding:40px 24px 80px;">
-            <header style="text-align:center;max-width:640px;margin:0 auto 48px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-                ${esc(ui.contact)} · Thermal Procurement Telemetry
-              </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">Submit Engineering RFQ &amp; Volume Pricing</h1>
-              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Receive factory-direct FOB unit costs, mold tooling schedules, and laboratory temperature validation within 24 hours.</p>
-            </header>
+        <main class="drinkware-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                ThermalTech Engineering &amp; OEM Sourcing Desk
+              </span>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
+                Submit Thermal Hardware RFQ
+              </h1>
+              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
+                Request container pricing, laser engraving samples, custom Pantone powder coat finishes, and full ISO/FDA compliance dossiers.
+              </p>
+            </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:36px;box-shadow:0 8px 30px rgba(2,132,199,0.04);">
-                <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 20px;">B2B Specification Request</h2>
-                <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:16px;">
+            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:40px;box-shadow:0 12px 36px rgba(2,132,199,0.06);">
+              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Thermal SKU / Hardware Platform</label>
-                    <select name="productId" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                      <option value="">— Select Target Hardware SKU —</option>
-                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)} (${esc(p.categoryNameEn)})</option>`).join('')}
-                    </select>
-                  </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Order Volume</label>
-                      <input type="text" name="quantity" placeholder="e.g. 2,000 Units" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    </div>
-                    <div>
-                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Branding / Powder Coat</label>
-                      <input type="text" name="customization" placeholder="Pantone color / Laser etch" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    </div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Procurement Contact</label>
+                    <input type="text" name="name" required placeholder="Senior Hardware Buyer" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
                   </div>
                   <div>
                     <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email</label>
-                    <input type="email" name="email" placeholder="procurement@brand.com" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    <input type="email" name="email" required placeholder="sourcing@enterprise.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Thermal Model</label>
+                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                    <option value="">General Hardware Inquiries (All Thermal Capacities)</option>
+                    ${products.map(p => `
+                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
+                    `).join('')}
+                  </select>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Estimated Container Volume</label>
+                    <select name="volume" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                      <option>LCL Trial Batch (500 - 2,000 Pcs)</option>
+                      <option>20GP Full Container (~12,000 Pcs)</option>
+                      <option>40HQ High Cube (~28,000 Pcs)</option>
+                    </select>
                   </div>
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Thermal Specs &amp; Logistics Port</label>
-                    <textarea name="message" rows="4" placeholder="Specify liner requirements (SUS304 vs SUS316), lid mechanism, destination port (FOB/DDP)..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Customization Modality</label>
+                    <select name="finish" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                      <option>Pantone Electrostatic Powder Coat</option>
+                      <option>360° Seamless Laser Etching</option>
+                      <option>Raw Brushed Surgical Steel Finish</option>
+                    </select>
                   </div>
-                  <button type="submit" style="padding:14px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 16px ${theme.accentGlow};">
-                    Submit Thermal Procurement RFQ ↗
-                  </button>
-                </form>
-              </div>
+                </div>
 
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:36px;display:flex;flex-direction:column;justify-content:space-between;">
                 <div>
-                  <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Thermal Engineering Hub</h2>
-                  <p style="font-size:0.92rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
-                    Automated manufacturing with robotic laser welding, vacuum annealing, and computerized drop testing rigs.
-                  </p>
-                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:2;">
-                    <div><strong>Enterprise:</strong> ${esc(company.name || brandName)}</div>
-                    <div><strong>Lab Contact:</strong> ${esc(company.email || 'thermal-rfq@sourcingspec.com')}</div>
-                    <div><strong>Engineering Facility:</strong> ${esc(company.address || 'Cryogenic Manufacturing Park')}</div>
-                    <div><strong>Testing Lead:</strong> 24 Hours for Quotation · 3 Days for Rapid Prototype</div>
-                  </div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Technical Requirements &amp; Target Destination Port</label>
+                  <textarea name="message" rows="4" placeholder="Specify destination port (FOB / CIF), thermal testing protocol requirements, or custom lid engineering specifications..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
                 </div>
-                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:18px;font-size:0.8rem;color:${theme.primary};line-height:1.6;margin-top:24px;">
-                  ⚡ Rapid Dispatch: Certified vacuum testing samples with factory calibration data dispatch within 48 hours.
-                </div>
-              </div>
+
+                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
+                  Submit Technical RFQ Specification ↗
+                </button>
+              </form>
             </div>
-          </section>
+          </div>
         </main>
       `;
     }
   }
 
-  const footerHtml = `
-    <footer class="drinkware-footer" style="background:#ffffff;border-top:1px solid ${theme.cardBorder};padding:50px 0 30px;color:${theme.textSub};font-size:0.84rem;">
-      <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:32px;margin-bottom:40px;">
+  // Distinct Footer for each variant
+  const footerHtml = isVideo ? `
+    <footer style="background:#0f172a;color:#f8fafc;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.1);">
+      <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
         <div>
-          <div style="font-size:1.05rem;font-weight:900;color:${theme.text};margin-bottom:10px;">${esc(brandName)}</div>
-          <div style="line-height:1.6;max-width:280px;">${esc(brandTagline)}</div>
-        </div>
-        <div>
-          <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">Navigation</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.home)}</a>
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.catalog)}</a>
-            <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.about)}</a>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.contact)}</a>
+          <div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
+          <p style="color:#94a3b8;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+            Engineered cryogenic vacuum thermal vessels. Double-wall surgical stainless steel laboratory calibration.
+          </p>
+          <div style="display:flex;gap:8px;">
+            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">ISO 9001</span>
+            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">FDA / LFGB</span>
+            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">BPA FREE</span>
           </div>
         </div>
         <div>
-          <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">Quality Guarantees</div>
-          <div style="line-height:1.7;">
-            <div>✓ FDA & LFGB Compliant</div>
-            <div>✓ AQL 2.5 Quality Inspection</div>
-            <div>✓ Drop Test & Thermal Certified</div>
-          </div>
+          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Telemetry Standards</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.82rem;line-height:2;">
+            <li>Vacuum Test: 10⁻⁵ Pa Purity</li>
+            <li>Surgical 316 Stainless Liner</li>
+            <li>Helium Mass Spectrometry 100%</li>
+            <li>Thermal Shock Cycle: -20°C ~ 120°C</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">OEM Procurement</h4>
+          <p style="color:#94a3b8;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'rfq@thermaltech-lab.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#38bdf8;text-decoration:none;font-weight:700;font-size:0.82rem;">Direct Sourcing Terminal →</a>
         </div>
       </div>
-      <div class="wrap" style="padding:0 24px;border-top:1px solid ${theme.cardBorder};padding-top:24px;display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;">
-        <div>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved. B2B Export Portal.</div>
-        <div style="display:flex;gap:16px;">
-          <span>ISO 9001 Certified</span>
-          <span>Lead-Free Tested</span>
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+        <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
+        <span>Laboratory Cryogenic Vacuum Engineering Division</span>
+      </div>
+    </footer>
+  ` : `
+    <footer style="background:#1c1917;color:#fdfbf7;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.08);">
+      <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+        <div>
+          <div style="font-family:Georgia,serif;font-size:1.25rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
+          <p style="color:#a8a29e;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+            Single-origin wood-fired stoneware and porcelain vessels. Vitrified at 1280°C with natural ash reduction glazes.
+          </p>
+          <div style="display:flex;gap:8px;">
+            <span style="padding:3px 8px;border-radius:4px;background:#292524;color:#fde68a;font-size:0.7rem;font-weight:700;">1280°C KILN</span>
+            <span style="padding:3px 8px;border-radius:4px;background:#292524;color:#fde68a;font-size:0.7rem;font-weight:700;">LEAD FREE</span>
+            <span style="padding:3px 8px;border-radius:4px;background:#292524;color:#fde68a;font-size:0.7rem;font-weight:700;">KICK WHEEL</span>
+          </div>
         </div>
+        <div>
+          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Studio Archive</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#a8a29e;font-size:0.82rem;line-height:2;">
+            <li>Wood-Ash Shino Stoneware</li>
+            <li>Longquan Ice-Crackle Celadon</li>
+            <li>Barista Pour-Over Extraction Sets</li>
+            <li>Traditional Gongfu Tea Vessels</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Atelier Sourcing</h4>
+          <p style="color:#a8a29e;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'atelier@kilnclay.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#fde68a;text-decoration:none;font-weight:700;font-size:0.82rem;">Commission Studio Batch →</a>
+        </div>
+      </div>
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #292524;padding-top:24px;display:flex;justify-content:space-between;color:#78716c;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+        <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
+        <span>Artisan Kiln-Fired Ceramics &amp; Stoneware Atelier</span>
       </div>
     </footer>
   `;
 
-  return `
-    ${headerHtml}
-    ${mainHtml}
-    ${footerHtml}
-  `;
+  return `${headerHtml}${mainHtml}${footerHtml}`;
 }

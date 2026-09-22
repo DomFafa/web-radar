@@ -214,63 +214,63 @@
     },
     "drinkware-ceramic-banner": {
       "contractRevision": "2026-09-19.drinkware-ceramic-banner-materials.1",
-      "sha256": "f0788d69741c61ec2a37650844a25eaeb80e014eeba7b7e5f9480a0c233f36fc",
+      "sha256": "9d44b8c9079a4e343f42ba4711478fc130a2145b303ed59d7ae7e777d3ab977d",
       "images": 3,
-      "texts": 260
+      "texts": 274
     },
     "drinkware-thermal-video": {
       "contractRevision": "2026-09-19.drinkware-thermal-video-materials.1",
-      "sha256": "d14afaecae123eb5cefc5ce3864f611c37a87820b6dd6be249c64f736b013c38",
+      "sha256": "56bd67c0516b4ae930011d673f437ec64afcfbd4cc35e29765a7e2143574eed3",
       "images": 3,
-      "texts": 284
+      "texts": 308
     },
     "beauty-skincare-banner": {
       "contractRevision": "2026-09-19.beauty-skincare-banner-materials.1",
-      "sha256": "824b57dc5bd2be6e2b4bbe91b12632bf8ed4175ac9a4f90e8f52206742528179",
+      "sha256": "2bfa81d911c89a55090da51e48a9dbe2d46013b1d5811059a9009db45b518888",
       "images": 3,
-      "texts": 257
+      "texts": 271
     },
     "beauty-glow-video": {
       "contractRevision": "2026-09-19.beauty-glow-video-materials.1",
-      "sha256": "ba2ad081fae18a010238d4ed3ecf0589e09800bde77248652161167466968635",
+      "sha256": "6a2402df9e7188961c8699cc75d777d76b120990e953c265b1531879d16d22e9",
       "images": 3,
-      "texts": 284
+      "texts": 296
     },
     "electronics-gadget-banner": {
       "contractRevision": "2026-09-19.electronics-gadget-banner-materials.1",
-      "sha256": "51245a7639b589611a2ca273b5136535f7e4ad1a3942f2411091e4928dca78f5",
+      "sha256": "0965f04163d2210509f3a02684c52e624fac967d5990bd09c4357c37612ca4e4",
       "images": 3,
-      "texts": 263
+      "texts": 274
     },
     "electronics-smart-video": {
       "contractRevision": "2026-09-19.electronics-smart-video-materials.1",
-      "sha256": "bbb2d1fcd9671c72470cf07dac46e734140d31cb748ce7af05c8d6add144ee18",
+      "sha256": "bbcafec72c924f7ea029fd159dcceccdf221f650d4bb64c1d34561d464913e34",
       "images": 3,
-      "texts": 290
+      "texts": 292
     },
     "tools-precision-banner": {
       "contractRevision": "2026-09-19.tools-precision-banner-materials.1",
-      "sha256": "1e40575a637c3ec9519d47a91657142891a08bbabe401d0209e9752efd6e2e36",
+      "sha256": "db403f1b471f21a11b801363f9e68b893101681e1466390ff2e96c8dfe71fe97",
       "images": 3,
-      "texts": 291
+      "texts": 273
     },
     "tools-workshop-video": {
       "contractRevision": "2026-09-19.tools-workshop-video-materials.1",
-      "sha256": "6baabb39ea4ac2b48ed8e8cf11a01141d4e06efd9539997f19a39e05d87e3f54",
+      "sha256": "be753feda0c2fbcd6f9201145a6845912e8f0eca5ac5322a5b092ba016c8eacc",
       "images": 3,
-      "texts": 294
+      "texts": 292
     },
     "sports-trail-banner": {
       "contractRevision": "2026-09-19.sports-trail-banner-materials.1",
-      "sha256": "26c266a2f363dab99e0d484ddfcd6f976e85902c496c5b88b7a385b8c058b675",
+      "sha256": "1785a8ec64d43f6bb012116a352db924a1a7217492a150cc9558b2ce6b5f3851",
       "images": 3,
-      "texts": 303
+      "texts": 275
     },
     "sports-kinetic-video": {
       "contractRevision": "2026-09-19.sports-kinetic-video-materials.1",
-      "sha256": "7b40d92c5f7119b57c36f67dc554d11b75a4993afd75830c79fa8004c72a88bc",
+      "sha256": "167341bd9ff5573b0c9f5f8d0dbc5fe540c78e9ea85f7df4099d8b0b997b6d20",
       "images": 3,
-      "texts": 295
+      "texts": 296
     }
   }
 }
