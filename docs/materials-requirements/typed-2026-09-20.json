@@ -325,9 +325,9 @@
     },
     "tools-workshop-video": {
       "contractRevision": "2026-09-20.tools-workshop-video-materials.2",
-      "sha256": "04eda0fb732e66257cb5f9f956f46f6c9dc2e6200d720e73bc98e94bb0db61dc",
+      "sha256": "60229d0f29ab68fbdee10b75edfbd04633f8b28599d87ea67db8329c3e775c70",
       "images": 4,
-      "texts": 286
+      "texts": 419
     },
     "sports-trail-banner": {
       "contractRevision": "2026-09-20.sports-trail-banner-materials.2",
