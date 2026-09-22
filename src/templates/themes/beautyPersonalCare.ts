@@ -526,198 +526,581 @@ export function renderBeautyPage(ctx: ThemeContext, isVideo: boolean): string {
       `;
     }
   } else if (page === 'catalog') {
-    mainHtml = `
-      <main class="beauty-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.catalog)} · Complete Export Assortment
-            </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">
-              ${isVideo ? 'Clinical Beauty & Aesthetic Devices' : 'Botanical Skincare & Personal Care Formulations'}
-            </h1>
-            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Custom packaging, private label branding, and clinical dossier support on all SKUs.</p>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
-            ${products.map(p => `
-              <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-                <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                  <div style="aspect-ratio:1;background:#f8fafc;position:relative;">
-                    <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;">
-                    <span style="position:absolute;top:10px;left:10px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                  </div>
-                  <div style="padding:18px;">
-                    <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h2 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 6px;line-height:1.3;">${esc(p.name)}</h2>
-                    <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 10px;line-height:1.5;">${esc(p.desc)}</p>
-                    <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">Formulation & MOQ ↗</div>
-                  </div>
-                </a>
-              </article>
-            `).join('')}
-          </div>
-        </div>
-      </main>
-    `;
-  } else if (page === 'detail') {
-    const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
-    mainHtml = `
-      <main class="beauty-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:24px;">
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">← Back to Catalog</a>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:30px;position:relative;">
-              <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;display:block;" fetchpriority="high">
-              <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;">
-                <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
-                  <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:50px;height:50px;object-fit:cover;">
-                </button>
+    if (!isVideo) {
+      // Botanical Skincare Formulation Catalog
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">
+                  Bio-Active Archive · Clean Skincare Dossier
+                </div>
+                <h1 style="font-size:clamp(1.9rem, 3.5vw, 2.6rem);font-weight:900;color:${theme.text};margin:0;letter-spacing:-0.02em;">
+                  Botanical Skincare &amp; Formulation Catalog
+                </h1>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
+                <span style="padding:6px 14px;border-radius:20px;background:${theme.primary};color:#fff;">All Formulations (${products.length})</span>
+                <span style="padding:6px 14px;border-radius:20px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Serums &amp; Elixirs</span>
+                <span style="padding:6px 14px;border-radius:20px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Barrier Creams</span>
+                <span style="padding:6px 14px;border-radius:20px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Clean Cleansers</span>
               </div>
             </div>
-            <div>
-              <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${esc(p.categoryNameEn)} · ${esc(p.badge)}</div>
-              <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">${esc(p.name)}</h1>
-              <p style="font-size:1.02rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">${esc(p.desc)}</p>
-              
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
-                <h3 style="font-size:0.88rem;font-weight:800;text-transform:uppercase;color:${theme.text};margin:0 0 14px;">Formulation & Packaging Specs</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem;color:${theme.textMuted};">
-                  <div><strong>Active Complex:</strong><br>${esc(p.material)}</div>
-                  <div><strong>Packaging:</strong><br>${esc(p.dimensions)}</div>
-                  <div><strong>Certification:</strong><br>${esc(p.extra)}</div>
-                  <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
+              ${products.map(p => `
+                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 6px 20px rgba(157,78,221,0.04);transition:transform 0.2s ease;">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.05;background:#fcfbf9;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;transition:transform 0.3s ease;">
+                      <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:12px;right:12px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">100% Vegan</span>
+                    </div>
+                    <div style="padding:20px;">
+                      <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
+                      <h2 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
+                      <p style="font-size:0.82rem;color:${theme.textMuted};margin:0 0 14px;line-height:1.5;">${esc(p.desc)}</p>
+                      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed ${theme.cardBorder};padding-top:12px;font-size:0.78rem;">
+                        <span style="color:${theme.textSub};font-weight:600;">MOQ: <strong style="color:${theme.text};">${esc(p.moq)}</strong></span>
+                        <span style="color:${theme.primary};font-weight:800;">Request Formula Sample ↗</span>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    } else {
+      // Clinical Aesthetic Device Catalog
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 32px;margin-bottom:32px;box-shadow:0 4px 20px rgba(99,102,241,0.03);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+                  Phototherapy &amp; Microcurrent Devices · Active SKUs (${products.length})
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:${theme.text};margin:0;">
+                  Clinical Beauty &amp; Aesthetic Devices
+                </h1>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;font-size:0.8rem;color:${theme.textMuted};">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Spectra:</strong> 630nm / 415nm / 850nm
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Probe:</strong> Medical Titanium
+                </span>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:24px;">
+              ${products.map(p => `
+                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(99,102,241,0.04);">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.2;background:#fbfbfe;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:75%;height:75%;object-fit:contain;">
+                      <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;">
+                        <span style="background:${theme.primary};color:#fff;font-size:0.68rem;font-weight:800;padding:2px 6px;border-radius:4px;">${esc(p.badge)}</span>
+                      </div>
+                      <div style="position:absolute;bottom:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(255,255,255,0.92);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:0.68rem;font-weight:700;color:${theme.primary};">
+                        <span>LED PHOTOTHERAPY</span>
+                        <span>MICROCURRENT 1-5</span>
+                      </div>
+                    </div>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.7rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h2 style="font-size:1rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;margin-bottom:14px;font-size:0.75rem;color:${theme.textMuted};">
+                        <div><strong>Active Tech:</strong> ${esc(p.material.slice(0, 18))}...</div>
+                        <div><strong>MOQ:</strong> <span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                        <div><strong>Form:</strong> ${esc(p.dimensions.slice(0, 16))}</div>
+                        <div><strong>Standard:</strong> CE / Medical</div>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;font-weight:700;color:${theme.primary};">
+                        <span>Inspect Clinical Efficacy Dossier</span>
+                        <span>↗</span>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
+  } else if (page === 'detail') {
+    const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
+    if (!isVideo) {
+      // Botanical Skincare Detail Page
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:28px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
+                ← Return to Botanical Skincare Archive
+              </a>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(300px, 1fr) minmax(340px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
+              <div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:36px;position:relative;box-shadow:0 12px 32px rgba(157,78,221,0.05);text-align:center;">
+                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
+                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;">
+                    Organic Botanical Active
+                  </div>
+                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
+                    </button>
+                  </div>
+                </div>
+
+                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
+                  <div>
+                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">ISO 22716</div>
+                    <div style="color:${theme.textSub};">GMP Cleanroom</div>
+                  </div>
+                  <div style="width:1px;background:${theme.cardBorder};"></div>
+                  <div>
+                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">100% Vegan</div>
+                    <div style="color:${theme.textSub};">Cruelty-Free</div>
+                  </div>
+                  <div style="width:1px;background:${theme.cardBorder};"></div>
+                  <div>
+                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">${esc(p.moq)}</div>
+                    <div style="color:${theme.textSub};">Batch Minimum</div>
+                  </div>
                 </div>
               </div>
 
-              <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
-                  Request Sample Batch ↗
-                </a>
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:10px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
-                  Private Label OEM
-                </a>
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
+                  ${esc(p.categoryNameEn)} · Cosmeceutical Formula
+                </div>
+                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px;margin-bottom:28px;">
+                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
+                    Formulation &amp; Regulatory Dossier
+                  </h3>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:0.85rem;">
+                    <div style="border-bottom:1px dashed ${theme.cardBorder};padding-bottom:10px;">
+                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Bio-Active Complex</span>
+                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                    </div>
+                    <div style="border-bottom:1px dashed ${theme.cardBorder};padding-bottom:10px;">
+                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Packaging Format</span>
+                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Safety Certification</span>
+                      <strong style="color:${theme.text};">${esc(p.extra)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Production Batch MOQ</span>
+                      <strong style="color:${theme.primary};">${esc(p.moq)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:16px;padding:20px;margin-bottom:28px;">
+                  <h4 style="font-size:0.85rem;font-weight:800;color:#6b21a8;margin:0 0 6px;">Private Label Turnkey Services</h4>
+                  <p style="font-size:0.82rem;color:#581c87;margin:0;line-height:1.6;">
+                    We provide stock and custom formula compounding, EU CPNP cosmetic notification, US FDA VCRP listing, and sustainable PCR cosmetic packaging with bespoke silk-screen printing.
+                  </p>
+                </div>
+
+                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:15px 34px;border-radius:12px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Request Lab Batch Samples ↗
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 26px;border-radius:12px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:700;">
+                    Download Safety Dossier (MSDS)
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // Clinical Aesthetic Device Detail Page
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:28px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
+                ← Return to Clinical Aesthetic Device Catalog
+              </a>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
+              <div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;box-shadow:0 8px 30px rgba(99,102,241,0.05);position:relative;">
+                  <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:${theme.primary};font-weight:800;margin-bottom:12px;">
+                    <span>OPTICAL SPECTRUM: 630/415/850nm</span>
+                    <span>TITANIUM PROBE</span>
+                  </div>
+                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:440px;object-fit:contain;display:block;" fetchpriority="high">
+                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:50px;height:50px;object-fit:cover;">
+                    </button>
+                  </div>
+                </div>
+
+                <div style="margin-top:20px;background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;">
+                  <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:10px;">
+                    28-Day Human Clinical Trial Metrics (n=64)
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;text-align:center;font-size:0.75rem;">
+                    <div style="background:${theme.bg};padding:10px 4px;border-radius:8px;">
+                      <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">+42%</div>
+                      <div style="color:${theme.textSub};">Collagen Density</div>
+                    </div>
+                    <div style="background:${theme.bg};padding:10px 4px;border-radius:8px;">
+                      <div style="font-weight:900;color:${theme.text};font-size:1.1rem;">-31%</div>
+                      <div style="color:${theme.textSub};">Fine Line Depth</div>
+                    </div>
+                    <div style="background:${theme.bg};padding:10px 4px;border-radius:8px;">
+                      <div style="font-weight:900;color:${theme.text};font-size:1.1rem;">96%</div>
+                      <div style="color:${theme.textSub};">Firmness Index</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:8px;">
+                  ${esc(p.categoryNameEn)} · ${esc(p.badge)}
+                </div>
+                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1.02rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:22px;margin-bottom:24px;">
+                  <h3 style="font-size:0.88rem;font-weight:800;text-transform:uppercase;color:${theme.primary};margin:0 0 16px;">
+                    Bio-Photonic &amp; Electronic Hardware Specs
+                  </h3>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.82rem;color:${theme.textMuted};">
+                    <div><strong>Optical Emission:</strong><br>${esc(p.material)}</div>
+                    <div><strong>Battery &amp; Charging:</strong><br>${esc(p.dimensions)}</div>
+                    <div><strong>Regulatory Class:</strong><br>CE Medical, FDA 510(k) Ready</div>
+                    <div><strong>OEM Batch MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                  </div>
+                </div>
+
+                <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;padding:18px;margin-bottom:28px;">
+                  <h4 style="font-size:0.82rem;font-weight:800;color:#3730a3;margin:0 0 4px;">Hardware Customization &amp; International Adapters</h4>
+                  <p style="font-size:0.8rem;color:#312e81;margin:0;line-height:1.5;">
+                    Supported OEM configurations: CNC anodized alloy handle, custom OLED screen animation, multi-voltage inductive charging cradle, and international plug adapters (US/EU/UK/AU).
+                  </p>
+                </div>
+
+                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:15px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;box-shadow:0 6px 18px ${theme.accentGlow};">
+                    Submit Clinical Device RFQ ↗
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 24px;border-radius:10px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    Download Clinical Trial Report
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'about') {
-    const headline = getAboutHeadline(company, `${company.name} · Certified Cosmeceutical Laboratory`);
+    const headline = getAboutHeadline(company, isVideo ? `${company.name} · Bio-Photonic Aesthetic Laboratory` : `${company.name} · Botanical Cosmeceutical Laboratory`);
     const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
-    const highlights = parseAboutHighlights(company.aboutHighlights, [
-      { value: company.establishedYear || '2015', num: 2015, label: 'Established', desc: 'Continuous lab operation' },
-      { value: 'ISO 22716', num: 22716, label: 'GMP Cleanroom', desc: 'Cosmetic ISO certified' },
-      { value: '100% Vegan', num: 100, label: 'Cruelty-Free', desc: 'Clean formulations' },
-      { value: '60+ Markets', num: 60, label: 'Global Compliance', desc: 'FDA & CPNP registered' },
+    const highlights = parseAboutHighlights(company.aboutHighlights, isVideo ? [
+      { value: company.establishedYear || '2016', num: 2016, label: 'Established', desc: 'Aesthetic device R&D' },
+      { value: 'ISO 13485', num: 13485, label: 'Medical Quality', desc: 'Device quality system' },
+      { value: 'CE Medical', num: 1, label: 'Safety Certified', desc: 'EMC & Biocompatibility pass' },
+      { value: '50+ Patents', num: 50, label: 'Proprietary Optics', desc: 'Light & microcurrent tech' },
+    ] : [
+      { value: company.establishedYear || '2015', num: 2015, label: 'Lab Est.', desc: 'Continuous lab compounding' },
+      { value: 'ISO 22716', num: 22716, label: 'GMP Cleanroom', desc: 'Class 100K cosmetic facility' },
+      { value: '100% Vegan', num: 100, label: 'Cruelty-Free', desc: 'Clean beauty formulation' },
+      { value: '60+ Markets', num: 60, label: 'Global Exports', desc: 'FDA VCRP & EU CPNP ready' },
     ]);
     const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
 
-    mainHtml = `
-      <main class="beauty-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
-                ${esc(ui.about)} · Lab Heritage
-              </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
-                ${esc(headline)}
-              </h1>
-              ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
-            </div>
-            <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(0,0,0,0.06);">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
-            ${highlights.map(h => `
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;text-align:center;">
-                <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
-                <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:36px;">
-            <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Formulate With Our Chemists</h2>
-            <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">Contact our laboratory for bulk active formulas, stability testing, custom fragrance blends, and turnkey export packaging.</p>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-              Initiate Cosmetic RFQ ↗
-            </a>
-          </div>
-        </section>
-      </main>
-    `;
-  } else if (page === 'contact') {
-    mainHtml = `
-      <main class="beauty-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.contact)} · B2B Sourcing Desk
-            </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Submit Your Formulation Request</h1>
-            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory formulation consultation with stability sample dispatch within 5 business days.</p>
-          </header>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.03);">
-              <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Request For Quotation</h2>
-              <form style="display:grid;gap:16px;">
-                <div>
-                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Product / Formulation of Interest</label>
-                  <select name="productId" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    <option value="">— Select Formula / SKU (Optional) —</option>
-                    ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
-                  </select>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Batch Size</label>
-                    <input type="text" disabled placeholder="e.g. 1000 Units" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Packaging Preference</label>
-                    <input type="text" disabled placeholder="Airless Pump / Dropper / Jar" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                </div>
-                <div>
-                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Custom Formulation Requirements</label>
-                  <textarea disabled rows="4" placeholder="Mention desired active ingredients, fragrance-free requirements, or target market regulatory needs (FDA / EU CPNP)..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
-                </div>
-                <button type="submit" disabled style="padding:14px;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
-                  Submit Cosmetic Inquiry ↗
-                </button>
-              </form>
-            </div>
-
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+    if (!isVideo) {
+      // Botanical Skincare About
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:50px;align-items:center;margin-bottom:60px;">
               <div>
-                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Regulatory & Lab Compliance</h2>
-                <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
-                  We provide complete CPSR (Cosmetic Product Safety Report), MSDS documentation, PIF dossier preparation, and heavy metal challenge testing for international market compliance.
-                </p>
-                <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
-                  <div><strong>Company:</strong> ${esc(company.name || brandName)}</div>
-                  <div><strong>Email:</strong> ${esc(company.email || 'cosmetics@beautysourcing.com')}</div>
-                  <div><strong>Cleanroom Standard:</strong> Class 100,000 ISO 22716 GMP</div>
-                  <div><strong>Certifications:</strong> FDA VCRP, EU CPNP, Vegan Registered</div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                  ${esc(ui.about)} · Clean Formulation Heritage
                 </div>
+                <h1 style="font-size:clamp(2rem, 4vw, 2.9rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 18px;">
+                  ${esc(headline)}
+                </h1>
+                ${storyParagraphs.map(p => `<p style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};margin:0 0 16px;">${esc(p)}</p>`).join('')}
               </div>
-              <div style="padding:16px;background:${theme.bg};border-radius:10px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
-                🌿 Stability Verified: Every formulation undergoes 12-week accelerated thermal stability & preservative efficacy challenge testing.
+              <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(157,78,221,0.08);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
               </div>
             </div>
-          </div>
-        </section>
-      </main>
-    `;
+
+            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;margin-bottom:50px;">
+              <h2 style="font-size:1.25rem;font-weight:900;color:${theme.text};margin:0 0 24px;text-align:center;">Botanical Extraction &amp; Green Formulation Pipeline</h2>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:20px;">
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="color:${theme.primary};font-weight:900;font-size:1.2rem;margin-bottom:4px;">01. Organic Sourcing</div>
+                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">Single-origin botanical harvests certified non-GMO and pesticide-free.</p>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="color:${theme.primary};font-weight:900;font-size:1.2rem;margin-bottom:4px;">02. Cold-Bio Fermentation</div>
+                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">Low-temperature enzyme extraction maintaining molecular bio-activity.</p>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="color:${theme.primary};font-weight:900;font-size:1.2rem;margin-bottom:4px;">03. Stability Challenge</div>
+                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">12-week accelerated heat, light, and preservative challenge testing.</p>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="color:${theme.primary};font-weight:900;font-size:1.2rem;margin-bottom:4px;">04. Turnkey Export Pack</div>
+                  <p style="font-size:0.82rem;color:${theme.textMuted};margin:0;line-height:1.5;">Class 100K cleanroom aseptic filling into airless PCR cosmetic bottles.</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
+              ${highlights.map(h => `
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
+                  <div style="font-size:1.9rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:40px;">
+              <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Formulate Your Clean Beauty Line With Us</h2>
+              <p style="font-size:0.95rem;color:${theme.textMuted};margin:0 0 20px;max-width:560px;margin-left:auto;margin-right:auto;">From custom active complexes to bulk concentrate export and regulatory dossier registration.</p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                Initiate Formulation Dialogue ↗
+              </a>
+            </div>
+          </section>
+        </main>
+      `;
+    } else {
+      // Clinical Aesthetic Device About
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:50px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                  ${esc(ui.about)} · Aesthetic Device Engineering
+                </div>
+                <h1 style="font-size:clamp(2rem, 4vw, 2.9rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 18px;">
+                  ${esc(headline)}
+                </h1>
+                ${storyParagraphs.map(p => `<p style="font-size:1.02rem;line-height:1.75;color:${theme.textMuted};margin:0 0 16px;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(99,102,241,0.08);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            </div>
+
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;margin-bottom:50px;">
+              <h2 style="font-size:1.25rem;font-weight:900;color:${theme.text};margin:0 0 20px;text-align:center;">Bio-Photonic Optical Testing &amp; Medical Engineering</h2>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;margin-bottom:6px;">Spectroradiometer Calibration</div>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};margin:0;line-height:1.5;">Exact peak wavelength verification for 630nm red, 415nm blue, and 850nm NIR chips.</p>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;margin-bottom:6px;">ISO 10993 Biocompatibility</div>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};margin:0;line-height:1.5;">Medical titanium probe contact testing for zero skin sensitization or cytotoxicity.</p>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;margin-bottom:6px;">EMC &amp; Electrical Safety</div>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};margin:0;line-height:1.5;">Full CE Medical Directive and FCC Part 15 Class B radiation and immunity compliance.</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
+              ${highlights.map(h => `
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
+                  <div style="font-size:1.9rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:40px;">
+              <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Aesthetic Device OEM &amp; Brand Partnership</h2>
+              <p style="font-size:0.95rem;color:${theme.textMuted};margin:0 0 20px;max-width:560px;margin-left:auto;margin-right:auto;">Turnkey hardware manufacturing, customized charging bases, and distributor documentation.</p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                Initiate Device Sourcing RFQ ↗
+              </a>
+            </div>
+          </section>
+        </main>
+      `;
+    }
+  } else if (page === 'contact') {
+    if (!isVideo) {
+      // Botanical Skincare Inquiry
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section class="wrap" style="padding:40px 24px 80px;">
+            <header style="text-align:center;max-width:640px;margin:0 auto 48px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+                ${esc(ui.contact)} · Clean Formulation Salon
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">Request Formulation Samples &amp; Private Label Quotes</h1>
+              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Consult directly with our cosmetic chemists for stock formula sampling, custom compounding, and turnkey packaging.</p>
+            </header>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;box-shadow:0 8px 28px rgba(157,78,221,0.04);">
+                <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Cosmetic Sourcing Quotation</h2>
+                <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:16px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Select Formula / Product SKU</label>
+                    <select name="productId" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                      <option value="">— Choose a Target Formulation —</option>
+                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)} (${esc(p.categoryNameEn)})</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Batch Volume</label>
+                      <input type="text" name="quantity" placeholder="e.g. 1,000 Units" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Packaging Preference</label>
+                      <input type="text" name="customization" placeholder="Airless pump / Dropper" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Business Email</label>
+                    <input type="email" name="email" placeholder="brand@cleanbeauty.com" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Specific Ingredients &amp; Target Regulatory Markets</label>
+                    <textarea name="message" rows="4" placeholder="Detail your active botanical preferences, fragrance-free requirements, or target market compliance (CPNP/FDA)..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                  </div>
+                  <button type="submit" style="padding:14px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 16px ${theme.accentGlow};">
+                    Submit Formulation Inquiry ↗
+                  </button>
+                </form>
+              </div>
+
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:36px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Regulatory &amp; Laboratory Compliance</h2>
+                  <p style="font-size:0.92rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                    We support B2B clients with complete CPSR safety dossiers, microbial challenge testing, stability reports, and customs export clearance.
+                  </p>
+                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:2;">
+                    <div><strong>Laboratory:</strong> ${esc(company.name || brandName)}</div>
+                    <div><strong>Formulation Contact:</strong> ${esc(company.email || 'cosmetics@beautysourcing.com')}</div>
+                    <div><strong>Facility Location:</strong> ${esc(company.address || 'Bio-Cosmetic Science Park')}</div>
+                    <div><strong>Cleanroom Standard:</strong> ISO 22716 Cosmetics GMP</div>
+                  </div>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:18px;font-size:0.8rem;color:${theme.primary};line-height:1.6;margin-top:24px;">
+                  🌿 Stability Assurance: Custom lab batch samples with certified certificates of analysis (CoA) dispatch within 5 business days.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    } else {
+      // Clinical Aesthetic Device Inquiry
+      mainHtml = `
+        <main class="beauty-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section class="wrap" style="padding:40px 24px 80px;">
+            <header style="text-align:center;max-width:640px;margin:0 auto 48px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+                ${esc(ui.contact)} · Aesthetic Device OEM Portal
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">Submit Device Engineering RFQ &amp; Distributor Inquiries</h1>
+              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Receive factory-direct pricing, tooling timelines, optical test certificates, and distributor territory terms within 24 hours.</p>
+            </header>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:36px;box-shadow:0 8px 30px rgba(99,102,241,0.04);">
+                <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Device Hardware Procurement</h2>
+                <form id="inquiry" action="${esc(ctx.options.inquiryUrl)}" method="post" style="display:grid;gap:16px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Select Device Architecture</label>
+                    <select name="productId" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                      <option value="">— Choose a Device Model —</option>
+                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)} (${esc(p.categoryNameEn)})</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Quantity</label>
+                      <input type="text" name="quantity" placeholder="e.g. 500 Units" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Plug Standard &amp; Shell</label>
+                      <input type="text" name="customization" placeholder="US/EU plug / Anodized finish" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email</label>
+                    <input type="email" name="email" placeholder="devices@brandclinic.com" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Clinical Specs &amp; Regulatory Dossier Needs</label>
+                    <textarea name="message" rows="4" placeholder="Specify optical wavelength configurations, custom gift box requirements, destination country certifications (CE / FDA)..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                  </div>
+                  <button type="submit" style="padding:14px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 16px ${theme.accentGlow};">
+                    Submit Device Hardware RFQ ↗
+                  </button>
+                </form>
+              </div>
+
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:36px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Medical Device Engineering Center</h2>
+                  <p style="font-size:0.92rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                    ISO 13485 certified production lines with automated laser optical calibration, high-voltage insulation testers, and ultrasonic shell welding.
+                  </p>
+                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:2;">
+                    <div><strong>Enterprise:</strong> ${esc(company.name || brandName)}</div>
+                    <div><strong>Device Division:</strong> ${esc(company.email || 'devices@medcosmetics.com')}</div>
+                    <div><strong>Factory Facility:</strong> ${esc(company.address || 'Optoelectronic Technology Zone')}</div>
+                    <div><strong>Regulatory Support:</strong> CE Medical, FDA 510(k), FCC, RoHS</div>
+                  </div>
+                </div>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:18px;font-size:0.8rem;color:${theme.primary};line-height:1.6;margin-top:24px;">
+                  ⚡ Rapid Prototype: Factory-calibrated optical evaluation devices dispatch internationally within 72 hours.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    }
   }
 
   const footerHtml = `

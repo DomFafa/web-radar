@@ -543,198 +543,554 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
       `;
     }
   } else if (page === 'catalog') {
-    mainHtml = `
-      <main class="sports-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.catalog)} · Complete Outdoor Assortment
+    if (!isVideo) {
+      // Alpine Mountaineering & Trail Expedition Catalog
+      mainHtml = `
+        <main class="sports-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px 32px;margin-bottom:32px;box-shadow:0 4px 20px rgba(21,128,61,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+                  ${esc(ui.catalog)} · Alpine Expedition Gear Wall (${products.length} SKUs)
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:${theme.text};margin:0;">
+                  Alpine Mountaineering &amp; Trail Gear
+                </h1>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;font-size:0.8rem;color:${theme.textMuted};flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:${theme.bg};border-radius:999px;border:1px solid ${theme.cardBorder};">
+                  <strong>Waterproof:</strong> 20,000mm H<sub>2</sub>O
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:${theme.bg};border-radius:999px;border:1px solid ${theme.cardBorder};">
+                  <strong>Fabric:</strong> Dyneema® &amp; Cordura®
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:${theme.bg};border-radius:999px;border:1px solid ${theme.cardBorder};">
+                  <strong>Standard:</strong> UIAA &amp; CE Certified
+                </span>
+              </div>
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">
-              ${isVideo ? 'Kinetic Athletic & Fitness Equipment Lineup' : 'Alpine Mountaineering & Outdoor Expedition Gear'}
-            </h1>
-            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Custom colorways, private label branding, and bulk wholesale logistics support.</p>
-          </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
-            ${products.map(p => `
-              <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-                <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                  <div style="aspect-ratio:1;background:#f8fafc;position:relative;">
-                    <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;">
-                    <span style="position:absolute;top:10px;left:10px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                  </div>
-                  <div style="padding:18px;">
-                    <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h2 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 6px;line-height:1.3;">${esc(p.name)}</h2>
-                    <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 10px;line-height:1.5;">${esc(p.desc)}</p>
-                    <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">View Specs & MOQ ↗</div>
-                  </div>
-                </a>
-              </article>
-            `).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:24px;">
+              ${products.map(p => `
+                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(21,128,61,0.03);position:relative;">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.15;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:78%;height:78%;object-fit:contain;">
+                      <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;">
+                        <span style="background:${theme.primary};color:#fff;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:999px;">${esc(p.badge)}</span>
+                      </div>
+                      <div style="position:absolute;bottom:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(255,255,255,0.92);backdrop-filter:blur(4px);padding:4px 10px;border-radius:8px;font-size:0.68rem;font-weight:700;color:${theme.primary};">
+                        <span>HYDROSTATIC: 20,000MM</span>
+                        <span>ELEVATION: 5,000M</span>
+                      </div>
+                    </div>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.7rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h2 style="font-size:0.98rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:10px;margin-bottom:12px;font-size:0.75rem;color:${theme.textMuted};">
+                        <div><strong>Fabric:</strong> ${esc(p.material.slice(0, 16))}</div>
+                        <div><strong>MOQ:</strong> <span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                        <div><strong>Rating:</strong> ${esc(p.extra.slice(0, 16))}</div>
+                        <div><strong>Weight:</strong> ${esc(p.dimensions.slice(0, 14))}</div>
+                      </div>
+                      <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 12px;line-height:1.5;">${esc(p.desc)}</p>
+                      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed ${theme.cardBorder};padding-top:10px;font-size:0.78rem;">
+                        <span style="color:${theme.textSub};">Alpine Grade</span>
+                        <span style="color:${theme.primary};font-weight:800;">Expedition Dossier &rarr;</span>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              `).join('')}
+            </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // Kinetic Athletic Performance & Supercritical Footwear Catalog
+      mainHtml = `
+        <main class="sports-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px 32px;margin-bottom:32px;box-shadow:0 4px 20px rgba(101,163,13,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+                  ${esc(ui.catalog)} · Kinetic Athlete Performance Deck (${products.length} SKUs)
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:${theme.text};margin:0;">
+                  Kinetic Athletics &amp; Footwear Systems
+                </h1>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;font-size:0.8rem;color:${theme.textMuted};flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:${theme.bg};border-radius:999px;border:1px solid ${theme.cardBorder};">
+                  <strong>Rebound:</strong> 82% Supercritical PEBA
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:${theme.bg};border-radius:999px;border:1px solid ${theme.cardBorder};">
+                  <strong>Plate:</strong> Curved 3K Carbon Spoon
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:${theme.bg};border-radius:999px;border:1px solid ${theme.cardBorder};">
+                  <strong>Durability:</strong> 1,000km Outsole Rubber
+                </span>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:24px;">
+              ${products.map(p => `
+                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(101,163,13,0.03);position:relative;">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.15;background:#f7fee7;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:78%;height:78%;object-fit:contain;">
+                      <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;">
+                        <span style="background:${theme.primary};color:#fff;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:999px;">${esc(p.badge)}</span>
+                      </div>
+                      <div style="position:absolute;bottom:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(255,255,255,0.92);backdrop-filter:blur(4px);padding:4px 10px;border-radius:8px;font-size:0.68rem;font-weight:700;color:${theme.primary};">
+                        <span>REBOUND: 82% PEBA</span>
+                        <span>CADENCE: SUB-4:00/KM</span>
+                      </div>
+                    </div>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.7rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h2 style="font-size:0.98rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:10px;margin-bottom:12px;font-size:0.75rem;color:${theme.textMuted};">
+                        <div><strong>Foam:</strong> ${esc(p.material.slice(0, 16))}</div>
+                        <div><strong>MOQ:</strong> <span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                        <div><strong>Form:</strong> ${esc(p.dimensions.slice(0, 16))}</div>
+                        <div><strong>Plate:</strong> Carbon Vector</div>
+                      </div>
+                      <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 12px;line-height:1.5;">${esc(p.desc)}</p>
+                      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed ${theme.cardBorder};padding-top:10px;font-size:0.78rem;">
+                        <span style="color:${theme.textSub};">Kinetic Lab Series</span>
+                        <span style="color:${theme.primary};font-weight:800;">Biomechanics HUD &rarr;</span>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'detail') {
     const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
-    mainHtml = `
-      <main class="sports-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:24px;">
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">← Back to Outdoor Catalog</a>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:30px;position:relative;">
-              <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;display:block;" fetchpriority="high">
-              <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;">
-                <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:6px;padding:4px;background:#fff;cursor:pointer;">
-                  <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:50px;height:50px;object-fit:cover;">
-                </button>
-              </div>
+    if (!isVideo) {
+      // Alpine Expedition Detail
+      mainHtml = `
+        <main class="sports-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:24px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">&larr; Back to Alpine Gear Catalog</a>
             </div>
-            <div>
-              <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${esc(p.categoryNameEn)} · ${esc(p.badge)}</div>
-              <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">${esc(p.name)}</h1>
-              <p style="font-size:1.02rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">${esc(p.desc)}</p>
-              
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
-                <h3 style="font-size:0.88rem;font-weight:800;text-transform:uppercase;color:${theme.text};margin:0 0 14px;">Technical Specifications</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem;color:${theme.textMuted};">
-                  <div><strong>Fabric / Alloy:</strong><br>${esc(p.material)}</div>
-                  <div><strong>Dimensions / Weight:</strong><br>${esc(p.dimensions)}</div>
-                  <div><strong>Performance:</strong><br>${esc(p.extra)}</div>
-                  <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;margin-bottom:48px;">
+              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;box-shadow:0 8px 30px rgba(21,128,61,0.04);position:relative;">
+                <div style="position:absolute;top:16px;right:16px;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:0.72rem;font-weight:800;padding:4px 12px;border-radius:999px;letter-spacing:0.04em;">
+                  20,000MM HYDROSTATIC TESTED
+                </div>
+                <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;display:block;margin:16px 0;" fetchpriority="high">
+                <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;justify-content:center;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:999px;padding:4px;background:#fff;cursor:pointer;">
+                    <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:52px;height:52px;object-fit:cover;border-radius:50%;">
+                  </button>
                 </div>
               </div>
 
-              <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
-                  Request Sample Batch ↗
-                </a>
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:999px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
-                  OEM Brand Customization
-                </a>
+              <div>
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+                  ${esc(p.categoryNameEn)} &middot; ${esc(p.badge)}
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <!-- Alpine Weatherproofing Spec Dossier -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:28px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:0.82rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;">
+                    <span>🏔️ Expedition Weatherproofing &amp; Fabric Dossier</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;color:${theme.textMuted};">
+                    <div><strong>Hydrostatic Head:</strong><br><span style="color:${theme.text};font-weight:700;">20,000mm H<sub>2</sub>O (ISO 811)</span></div>
+                    <div><strong>Breathability Index:</strong><br><span style="color:${theme.text};font-weight:700;">25,000 g/m&sup2;/24h (JIS B-1)</span></div>
+                    <div><strong>Fabric / Membrane:</strong><br><span style="color:${theme.text};font-weight:700;">${esc(p.material)}</span></div>
+                    <div><strong>Weight / Dimensions:</strong><br><span style="color:${theme.text};font-weight:700;">${esc(p.dimensions)}</span></div>
+                    <div><strong>Wind &amp; Storm Proof:</strong><br><span style="color:${theme.text};font-weight:700;">Beaufort 10 Gale Tested</span></div>
+                    <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                  </div>
+                </div>
+
+                <div style="background:#f0fdf4;border-left:4px solid ${theme.primary};padding:16px;border-radius:0 12px 12px 0;margin-bottom:28px;font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">
+                  <strong>High Alpine Guide Proven:</strong> Field tested above 4,000 meters in the Swiss Alps and Karakoram range. 100% seam-sealed with multi-ply heat-welded tape to prevent moisture ingress under extreme blizzard conditions.
+                </div>
+
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                    Request Alpine Field Sample &rarr;
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:999px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                    OEM Fabric &amp; Colorway Program
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // Kinetic Athletic Footwear Detail
+      mainHtml = `
+        <main class="sports-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:24px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">&larr; Back to Kinetic Performance Deck</a>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;margin-bottom:48px;">
+              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;box-shadow:0 8px 30px rgba(101,163,13,0.04);position:relative;">
+                <div style="position:absolute;top:16px;right:16px;background:#f7fee7;border:1px solid #d9f99d;color:#65a30d;font-size:0.72rem;font-weight:800;padding:4px 12px;border-radius:999px;letter-spacing:0.04em;">
+                  82% KINETIC REBOUND SCORE
+                </div>
+                <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;display:block;margin:16px 0;" fetchpriority="high">
+                <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;justify-content:center;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:999px;padding:4px;background:#fff;cursor:pointer;">
+                    <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:52px;height:52px;object-fit:cover;border-radius:50%;">
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+                  ${esc(p.categoryNameEn)} &middot; ${esc(p.badge)}
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <!-- Kinetic Biomechanics & Foam HUD -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:28px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:0.82rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;">
+                    <span>⚡ Kinetic Biomechanics &amp; Foam Telemetry HUD</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;color:${theme.textMuted};">
+                    <div><strong>Midsole Supercritical Foam:</strong><br><span style="color:${theme.text};font-weight:700;">82% Rebound Nitrogen PEBA</span></div>
+                    <div><strong>Propulsion Carbon Plate:</strong><br><span style="color:${theme.text};font-weight:700;">3K Curved Carbon Vector Spoon</span></div>
+                    <div><strong>Outsole Abrasion Index:</strong><br><span style="color:${theme.text};font-weight:700;">&lt;50mm&sup3; DIN 53516 (1,000km)</span></div>
+                    <div><strong>Stack Height &amp; Drop:</strong><br><span style="color:${theme.text};font-weight:700;">38mm Heel / 30mm Forefoot (8mm)</span></div>
+                    <div><strong>Upper Matrix:</strong><br><span style="color:${theme.text};font-weight:700;">${esc(p.material)}</span></div>
+                    <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                  </div>
+                </div>
+
+                <div style="background:#f7fee7;border-left:4px solid ${theme.primary};padding:16px;border-radius:0 12px 12px 0;margin-bottom:28px;font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">
+                  <strong>Human Kinetics Motion Lab Validated:</strong> Laboratory verified on 3D force plates and high-speed infrared motion capture, delivering a measured 3.8% reduction in athlete oxygen consumption over marathon distances.
+                </div>
+
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                    Request Performance Trial Pair &rarr;
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:999px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                    Athletic Team Fleet Inquiry
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'about') {
-    const headline = getAboutHeadline(company, `${company.name} · Certified Expedition Gear Works`);
+    const headline = getAboutHeadline(company, isVideo
+      ? `${company.name} · Human Kinetics & Athletic Footwear Laboratory`
+      : `${company.name} · High-Elevation Alpine Gear & Expedition Works`);
     const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
-    const highlights = parseAboutHighlights(company.aboutHighlights, [
-      { value: company.establishedYear || '2014', num: 2014, label: 'Established', desc: 'Continuous field testing' },
-      { value: '5,000 M', num: 5000, label: 'Elevation Tested', desc: 'High alpine validation' },
-      { value: 'UIAA / CE', num: 100, label: 'Safety Certified', desc: 'Climbing standard certified' },
-      { value: '50+ Expeditions', num: 50, label: 'Worldwide Expeditions', desc: 'Karakoram & Alps tested' },
-    ]);
     const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
 
-    mainHtml = `
-      <main class="sports-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
-                ${esc(ui.about)} · Alpine Heritage
-              </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
-                ${esc(headline)}
-              </h1>
-              ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
-            </div>
-            <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(0,0,0,0.06);">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
-            ${highlights.map(h => `
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;text-align:center;">
-                <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
-                <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:36px;">
-            <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Direct Outdoor Factory Partnership</h2>
-            <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We support private label technical outdoor apparel, custom backpack colorways, branded tent kits, and wholesale export programs.</p>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-              Initiate Gear RFQ ↗
-            </a>
-          </div>
-        </section>
-      </main>
-    `;
-  } else if (page === 'contact') {
-    mainHtml = `
-      <main class="sports-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.contact)} · Outdoor Sourcing Desk
-            </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Submit Your Outdoor Gear Inquiry</h1>
-            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory response with container volume pricing, fabric sample swatches, and OEM lead times.</p>
-          </header>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.03);">
-              <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Request For Quotation</h2>
-              <form style="display:grid;gap:16px;">
-                <div>
-                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Gear Category / SKU</label>
-                  <select name="productId" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    <option value="">— Select Outdoor Equipment (Optional) —</option>
-                    ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
-                  </select>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Order Quantity</label>
-                    <input type="text" disabled placeholder="e.g. 300 Sets" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Custom Logo / Branding</label>
-                    <input type="text" disabled placeholder="Heat Transfer / Embroidery" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                </div>
-                <div>
-                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Technical Requirements</label>
-                  <textarea disabled rows="4" placeholder="Detail required fabric specs (Dyneema, Cordura, Pertex), waterproof ratings (10K/20K), or field test certifications..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
-                </div>
-                <button type="submit" disabled style="padding:14px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
-                  Submit Gear Inquiry ↗
-                </button>
-              </form>
-            </div>
-
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+    if (!isVideo) {
+      // Alpine Expedition Gear About
+      const highlights = parseAboutHighlights(company.aboutHighlights, [
+        { value: '5,000 M', num: 5000, label: 'Elevation Tested', desc: 'High alpine snow and ice ascents' },
+        { value: 'UIAA / CE', num: 100, label: 'Safety Certified', desc: 'Mountaineering equipment standards' },
+        { value: '20,000 mm', num: 20000, label: 'Waterproof Column', desc: 'Continuous storm pressure testing' },
+        { value: '55+ Outfits', num: 55, label: 'Alpine Partnerships', desc: 'Certified mountain guide teams' },
+      ]);
+      mainHtml = `
+        <main class="sports-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
               <div>
-                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Export Factory Office</h2>
-                <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
-                  Equipped with automated laser cutting tables, hot-air seam taping machines, high-frequency ultrasonic welding, and computerized hydrostatic pressure test columns.
-                </p>
-                <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
-                  <div><strong>Company:</strong> ${esc(company.name || brandName)}</div>
-                  <div><strong>Email:</strong> ${esc(company.email || 'export@outdoorequipment.com')}</div>
-                  <div><strong>Factory Location:</strong> High-Tech Textile & Gear Manufacturing Zone</div>
-                  <div><strong>Certifications:</strong> UIAA, CE EN 1078, RDS Down, Bluesign</div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                  ${esc(ui.about)} · Alpine Heritage
                 </div>
+                <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
+                  ${esc(headline)}
+                </h1>
+                ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
               </div>
-              <div style="padding:16px;background:${theme.bg};border-radius:10px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
-                🏔️ Field Proven: All production runs undergo rain chamber simulation and fabric tear tensile testing before container loading.
+              <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(21,128,61,0.06);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
               </div>
             </div>
-          </div>
-        </section>
-      </main>
-    `;
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
+              ${highlights.map(h => `
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;text-align:center;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
+                  <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- 4-Stage Alpine Verification Protocol -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:36px;margin-bottom:60px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 6px;">Alpine Extreme Weather Verification Protocol</h2>
+              <p style="font-size:0.9rem;color:${theme.textMuted};margin:0 0 24px;">Engineered to endure hurricane-force gales, sub-zero cold cracking, and sharp granite rock abrasion.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Protocol 01</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Rain Tower Chamber</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">24-hour continuous 100L/m&sup2;/h simulated alpine storm testing checking 100% seam sealing integrity.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Protocol 02</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Martindale Abrasion Test</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">20,000 cycles under 12kPa pressure testing against rough granite aggregate with zero fiber puncture.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Protocol 03</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">-30&deg;C Cold-Crack Chamber</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Sub-zero deep freeze cycle evaluating waterproof membrane suppleness and buckle impact resilience.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Protocol 04</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">UIAGM Guide Field Run</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Direct alpine ascents with certified mountain guide partners across Mont Blanc and Matterhorn routes.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:36px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Direct Outdoor Factory Partnership</h2>
+              <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We support private label technical outdoor apparel, custom backpack colorways, branded tent kits, and wholesale export programs.</p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                Initiate Gear RFQ &rarr;
+              </a>
+            </div>
+          </section>
+        </main>
+      `;
+    } else {
+      // Kinetic Motion Lab & Footwear Facility About
+      const highlights = parseAboutHighlights(company.aboutHighlights, [
+        { value: '82% Rebound', num: 82, label: 'Energy Return', desc: 'Supercritical nitrogen PEBA foam' },
+        { value: '350,000 Pairs', num: 350000, label: 'Monthly Output', desc: 'Automated footwear assembly lines' },
+        { value: '16-Cam MoCap', num: 16, label: 'Biomechanics Lab', desc: '3D motion capture force plates' },
+        { value: '40+ Teams', num: 40, label: 'Athletic Squads', desc: 'National marathon & track runners' },
+      ]);
+      mainHtml = `
+        <main class="sports-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                  ${esc(ui.about)} · Kinetic Motion Lab
+                </div>
+                <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
+                  ${esc(headline)}
+                </h1>
+                ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="border-radius:20px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(101,163,13,0.06);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
+              ${highlights.map(h => `
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;text-align:center;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
+                  <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- 4-Stage Biomechanics Testing Rig Module -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:18px;padding:36px;margin-bottom:60px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 6px;">Supercritical Footwear &amp; Biomechanics Testing</h2>
+              <p style="font-size:0.9rem;color:${theme.textMuted};margin:0 0 24px;">High-speed dynamic instrumentation verifying energy return, torsional rigidity, and outsole durability.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 01</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Nitrogen Extrusion Cell</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">High-pressure supercritical gas injection forming uniform microcellular PEBA bead matrices with 0.11g/cm&sup3; density.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 02</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Dynamic Impact Rig</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">100,000 automated mechanical heel-strike impacts measuring compression set and residual resilience curves.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 03</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Force Plate Gait Analysis</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">High-speed 1,000Hz triaxial force plates measuring ground reaction force and propulsive toe-off vectors.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:12px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 04</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">1,000km Outsole Abrasion</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Rotary drum abrasion and wet friction coefficient testing ensuring elite grip on wet asphalt and track.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:36px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Athletic Brand OEM &amp; Footwear Innovation</h2>
+              <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We deliver turnkey supercritical racing footwear, custom engineered Jacquard uppers, carbon plate tooling, and private label apparel collections.</p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                Initiate Athletic Partnership &rarr;
+              </a>
+            </div>
+          </section>
+        </main>
+      `;
+    }
+  } else if (page === 'contact') {
+    if (!isVideo) {
+      // Alpine Expedition Contact
+      mainHtml = `
+        <main class="sports-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section class="wrap" style="padding:40px 24px 80px;">
+            <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+                ${esc(ui.contact)} &middot; Outdoor Outfitter Desk
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Submit Outdoor Gear Inquiry</h1>
+              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory response with container volume pricing, fabric sample swatches, and OEM lead times.</p>
+            </header>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 8px 24px rgba(21,128,61,0.03);">
+                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Expedition Gear Quotation</h2>
+                <form id="inquiry" style="display:grid;gap:16px;">
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Gear Model / SKU</label>
+                    <select name="productId" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                      <option value="">— Select Alpine Gear (Optional) —</option>
+                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Order Quantity</label>
+                      <input type="text" disabled placeholder="e.g. 300 Sets / Units" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Waterproof Specification</label>
+                      <input type="text" disabled placeholder="10K / 20K / 30K Extreme" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Technical Fabric &amp; Expedition Notes</label>
+                    <textarea disabled rows="4" placeholder="Specify technical fabric requirements (Dyneema, 500D Cordura, Pertex Quantum), seam tape ratings, custom colorways, or port..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                  </div>
+                  <button type="submit" disabled style="padding:14px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Submit Gear Inquiry &rarr;
+                  </button>
+                </form>
+              </div>
+
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Alpine Equipment Development Office</h2>
+                  <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
+                    Automated laser cutting benches, ultrasonic hot-air seam sealers, hydrostatic pressure test columns, and certified high-elevation field testing groups.
+                  </p>
+                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
+                    <div><strong>Headquarters:</strong> ${esc(company.name || brandName)} Outdoor Works</div>
+                    <div><strong>Technical Office:</strong> ${esc(company.email || 'export@outdoorequipment.com')}</div>
+                    <div><strong>Certifications:</strong> UIAA, CE EN 1078, Bluesign, OEKO-TEX</div>
+                    <div><strong>Sustainability:</strong> PFC-Free DWR, Recycled Ocean Polymers</div>
+                  </div>
+                </div>
+                <div style="padding:16px;background:${theme.bg};border-radius:10px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
+                  🏔️ Mountain Guide Guarantee: 100% waterproof hydrostatic and seam-tear verification conducted on every batch before FOB dispatch.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    } else {
+      // Kinetic Athletic Footwear Contact
+      mainHtml = `
+        <main class="sports-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section class="wrap" style="padding:40px 24px 80px;">
+            <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+                ${esc(ui.contact)} &middot; Athletic Team &amp; Fleet Desk
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Athletic Fleet &amp; OEM Footwear RFQ</h1>
+              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Custom supercritical shoe lasts, nitrogen foaming tooling, bespoke racing colorways, and container wholesale programs.</p>
+            </header>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;box-shadow:0 8px 24px rgba(101,163,13,0.03);">
+                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Kinetic Footwear Quotation</h2>
+                <form id="inquiry" style="display:grid;gap:16px;">
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Performance Footwear SKU</label>
+                    <select name="productId" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                      <option value="">— Select Performance Model (Optional) —</option>
+                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Batch Volume</label>
+                      <input type="text" disabled placeholder="e.g. 1,000 Pairs / Container" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Midsole Technology</label>
+                      <input type="text" disabled placeholder="Supercritical Nitrogen PEBA" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Shoe Last &amp; Upper Specification</label>
+                    <textarea disabled rows="4" placeholder="Detail engineered Jacquard mesh density, carbon plate stiffness grade (Medium/Stiff), team colorways, packaging box design..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                  </div>
+                  <button type="submit" disabled style="padding:14px;border-radius:999px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Submit Athletic Fleet RFQ &rarr;
+                  </button>
+                </form>
+              </div>
+
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Footwear Engineering &amp; Innovation Facility</h2>
+                  <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
+                    Automated supercritical nitrogen foaming chambers, robotic sole cementing workcells, dynamic impact rigs, and SATRA certified footwear testing facilities.
+                  </p>
+                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
+                    <div><strong>Innovation Hub:</strong> ${esc(company.name || brandName)} Kinetic Lab</div>
+                    <div><strong>Fleet Logistics:</strong> ${esc(company.email || 'wholesale@kineticfootwear.com')}</div>
+                    <div><strong>Compliance:</strong> SATRA Member, ASTM F1976 Cushioning Standard</div>
+                    <div><strong>Warranty:</strong> 1,000km Outsole Performance Guarantee</div>
+                  </div>
+                </div>
+                <div style="padding:16px;background:${theme.bg};border-radius:10px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
+                  ⚡ Kinetic Athlete Advantage: 100% mechanical impact and rebound elasticity testing performed on every production run.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    }
   }
 
   const footerHtml = `

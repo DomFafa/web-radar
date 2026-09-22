@@ -543,198 +543,554 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
       `;
     }
   } else if (page === 'catalog') {
-    mainHtml = `
-      <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.catalog)} · Industrial Export Catalog
+    if (!isVideo) {
+      // Precision Metrology & Tooling Catalog
+      mainHtml = `
+        <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 32px;margin-bottom:32px;box-shadow:0 4px 20px rgba(2,132,199,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+                  ${esc(ui.catalog)} · Metrology &amp; Industrial Tooling (${products.length} SKUs)
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:${theme.text};margin:0;">
+                  Precision Tooling &amp; Metrology Systems
+                </h1>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;font-size:0.8rem;color:${theme.textMuted};flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Tolerance:</strong> &plusmn;0.005mm DIN
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Metallurgy:</strong> HRC 62-65 Carbide
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Surface:</strong> Ra 0.2&mu;m Mirror Lap
+                </span>
+              </div>
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">
-              ${isVideo ? 'Power Tools & Workshop Equipment Lineup' : 'Precision Mechanical & Hand Tool Systems'}
-            </h1>
-            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Custom colorways, laser branded serialization, and container wholesale programs.</p>
-          </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
-            ${products.map(p => `
-              <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
-                <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                  <div style="aspect-ratio:1;background:#f8fafc;position:relative;">
-                    <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;">
-                    <span style="position:absolute;top:10px;left:10px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                  </div>
-                  <div style="padding:18px;">
-                    <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h2 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 6px;line-height:1.3;">${esc(p.name)}</h2>
-                    <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 10px;line-height:1.5;">${esc(p.desc)}</p>
-                    <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">View Dimensions & MOQ ↗</div>
-                  </div>
-                </a>
-              </article>
-            `).join('')}
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:24px;">
+              ${products.map(p => `
+                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(2,132,199,0.03);position:relative;">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.15;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:78%;height:78%;object-fit:contain;">
+                      <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;">
+                        <span style="background:${theme.primary};color:#fff;font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
+                      </div>
+                      <div style="position:absolute;bottom:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(255,255,255,0.92);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:0.68rem;font-weight:700;color:${theme.primary};">
+                        <span>CALIBRATION: ISO 17025</span>
+                        <span>HARDNESS: 62 HRC</span>
+                      </div>
+                    </div>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.7rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h2 style="font-size:0.98rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;margin-bottom:12px;font-size:0.75rem;color:${theme.textMuted};">
+                        <div><strong>Material:</strong> ${esc(p.material.slice(0, 16))}</div>
+                        <div><strong>MOQ:</strong> <span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                        <div><strong>Standard:</strong> ${esc(p.extra.slice(0, 16))}</div>
+                        <div><strong>Accuracy:</strong> &plusmn;0.005mm</div>
+                      </div>
+                      <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 12px;line-height:1.5;">${esc(p.desc)}</p>
+                      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed ${theme.cardBorder};padding-top:10px;font-size:0.78rem;">
+                        <span style="color:${theme.textSub};">Tooling Dossier</span>
+                        <span style="color:${theme.primary};font-weight:800;">Blueprint &amp; Tolerances &rarr;</span>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              `).join('')}
+            </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // Heavy-Duty Power Tools & Jobsite Workshop Equipment Catalog
+      mainHtml = `
+        <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px 32px;margin-bottom:32px;box-shadow:0 4px 20px rgba(217,119,6,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">
+                  ${esc(ui.catalog)} · Contractor Machinery &amp; Power Tools (${products.length} SKUs)
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.4rem);font-weight:900;color:${theme.text};margin:0;">
+                  Heavy-Duty Power Tools &amp; Jobsite Gear
+                </h1>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;font-size:0.8rem;color:${theme.textMuted};flex-wrap:wrap;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Drive:</strong> Brushless High-Torque
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Impact:</strong> 2.0m Drop Concrete
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:${theme.bg};border-radius:6px;border:1px solid ${theme.cardBorder};">
+                  <strong>Rating:</strong> IP56 Jobsite Certified
+                </span>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:24px;">
+              ${products.map(p => `
+                <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(217,119,6,0.03);position:relative;">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.15;background:#fafaf9;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:78%;height:78%;object-fit:contain;">
+                      <div style="position:absolute;top:10px;left:10px;display:flex;gap:6px;">
+                        <span style="background:${theme.primary};color:#fff;font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
+                      </div>
+                      <div style="position:absolute;bottom:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(255,255,255,0.92);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:0.68rem;font-weight:700;color:${theme.primary};">
+                        <span>TORQUE: 180 N&middot;m PEAK</span>
+                        <span>PLATFORM: 20V MAX</span>
+                      </div>
+                    </div>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.7rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h2 style="font-size:0.98rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h2>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;margin-bottom:12px;font-size:0.75rem;color:${theme.textMuted};">
+                        <div><strong>Platform:</strong> ${esc(p.material.slice(0, 16))}</div>
+                        <div><strong>MOQ:</strong> <span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                        <div><strong>Dimensions:</strong> ${esc(p.dimensions.slice(0, 16))}</div>
+                        <div><strong>Standard:</strong> CE / GS / ETL</div>
+                      </div>
+                      <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 12px;line-height:1.5;">${esc(p.desc)}</p>
+                      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed ${theme.cardBorder};padding-top:10px;font-size:0.78rem;">
+                        <span style="color:${theme.textSub};">Contractor Line</span>
+                        <span style="color:${theme.primary};font-weight:800;">Performance HUD &rarr;</span>
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'detail') {
     const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
-    mainHtml = `
-      <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <div class="wrap" style="padding:0 24px;">
-          <div style="margin-bottom:24px;">
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">← Back to Tooling Catalog</a>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:30px;position:relative;">
-              <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;display:block;" fetchpriority="high">
-              <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;">
-                <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:6px;padding:4px;background:#fff;cursor:pointer;">
-                  <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:50px;height:50px;object-fit:cover;">
-                </button>
-              </div>
+    if (!isVideo) {
+      // Precision Metrology Detail
+      mainHtml = `
+        <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:24px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">&larr; Back to Precision Tooling Catalog</a>
             </div>
-            <div>
-              <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${esc(p.categoryNameEn)} · ${esc(p.badge)}</div>
-              <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">${esc(p.name)}</h1>
-              <p style="font-size:1.02rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">${esc(p.desc)}</p>
-              
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;margin-bottom:28px;">
-                <h3 style="font-size:0.88rem;font-weight:800;text-transform:uppercase;color:${theme.text};margin:0 0 14px;">Machining & Material Standards</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem;color:${theme.textMuted};">
-                  <div><strong>Alloy Grade:</strong><br>${esc(p.material)}</div>
-                  <div><strong>Dimensions / Weight:</strong><br>${esc(p.dimensions)}</div>
-                  <div><strong>Standard:</strong><br>${esc(p.extra)}</div>
-                  <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;margin-bottom:48px;">
+              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(2,132,199,0.04);position:relative;">
+                <div style="position:absolute;top:16px;right:16px;background:#f0f9ff;border:1px solid #bae6fd;color:#0284c7;font-size:0.72rem;font-weight:800;padding:4px 10px;border-radius:4px;letter-spacing:0.04em;">
+                  METROLOGY TOLERANCE &plusmn;0.005MM
+                </div>
+                <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;display:block;margin:16px 0;" fetchpriority="high">
+                <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;justify-content:center;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:6px;padding:4px;background:#fff;cursor:pointer;">
+                    <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:52px;height:52px;object-fit:cover;">
+                  </button>
                 </div>
               </div>
 
-              <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
-                  Request Commercial Sample ↗
-                </a>
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:6px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
-                  OEM Brand Packaging
-                </a>
+              <div>
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+                  ${esc(p.categoryNameEn)} &middot; ${esc(p.badge)}
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <!-- Blueprint & Metrology Spec Dossier -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:24px;margin-bottom:28px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:0.82rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;">
+                    <span>📐 Metrology &amp; Metallurgy Specification Dossier</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;color:${theme.textMuted};">
+                    <div><strong>Dimensional Tolerance:</strong><br><span style="color:${theme.text};font-weight:700;">&plusmn;0.005mm (ISO 2768-mK)</span></div>
+                    <div><strong>Metallurgy / Alloy:</strong><br><span style="color:${theme.text};font-weight:700;">${esc(p.material)}</span></div>
+                    <div><strong>Surface Finish:</strong><br><span style="color:${theme.text};font-weight:700;">Ra 0.2&mu;m Precision Lapped</span></div>
+                    <div><strong>Hardness Rating:</strong><br><span style="color:${theme.text};font-weight:700;">HRC 62-65 Rockwell C</span></div>
+                    <div><strong>Form Factor / Dimensions:</strong><br><span style="color:${theme.text};font-weight:700;">${esc(p.dimensions)}</span></div>
+                    <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                  </div>
+                </div>
+
+                <div style="background:#f8fafc;border-left:4px solid ${theme.primary};padding:16px;border-radius:0 8px 8px 0;margin-bottom:28px;font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">
+                  <strong>100% CMM Optical Inspection:</strong> Every master tooling piece undergoes multi-axis coordinate measurement and spectral hardness analysis prior to protective oil dipping and crate export.
+                </div>
+
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                    Request Metrology Sample &rarr;
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:6px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                    Submit Engineering CAD (STEP/IGES)
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    `;
+        </main>
+      `;
+    } else {
+      // Heavy-Duty Power Tools Detail
+      mainHtml = `
+        <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:24px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">&larr; Back to Contractor Equipment Lineup</a>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;margin-bottom:48px;">
+              <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(217,119,6,0.04);position:relative;">
+                <div style="position:absolute;top:16px;right:16px;background:#fffbeb;border:1px solid #fde68a;color:#d97706;font-size:0.72rem;font-weight:800;padding:4px 10px;border-radius:4px;letter-spacing:0.04em;">
+                  2.0M CONCRETE DROP TESTED
+                </div>
+                <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:400px;object-fit:contain;display:block;margin:16px 0;" fetchpriority="high">
+                <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;justify-content:center;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:6px;padding:4px;background:#fff;cursor:pointer;">
+                    <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:52px;height:52px;object-fit:cover;">
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">
+                  ${esc(p.categoryNameEn)} &middot; ${esc(p.badge)}
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <!-- Jobsite Durability & Motor HUD -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:24px;margin-bottom:28px;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:0.82rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;">
+                    <span>⚡ Jobsite Performance &amp; Motor Telemetry HUD</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;color:${theme.textMuted};">
+                    <div><strong>Peak Torque Output:</strong><br><span style="color:${theme.text};font-weight:700;">180 N&middot;m Brushless Drive</span></div>
+                    <div><strong>Continuous Duty Life:</strong><br><span style="color:${theme.text};font-weight:700;">500h Heavy Load Tested</span></div>
+                    <div><strong>Ingress Sealing:</strong><br><span style="color:${theme.text};font-weight:700;">IP56 Dust &amp; Water Seal</span></div>
+                    <div><strong>Battery Ecosystem:</strong><br><span style="color:${theme.text};font-weight:700;">20V Universal Li-Ion Rail</span></div>
+                    <div><strong>Housing Armor:</strong><br><span style="color:${theme.text};font-weight:700;">Glass-Filled Nylon &amp; TPR</span></div>
+                    <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+                  </div>
+                </div>
+
+                <div style="background:#fefce8;border-left:4px solid ${theme.primary};padding:16px;border-radius:0 8px 8px 0;margin-bottom:28px;font-size:0.84rem;color:${theme.textMuted};line-height:1.6;">
+                  <strong>Contractor Durability Standard:</strong> All-metal planetary gearsets, anti-kickback electronic sensors, and conformal coated motor electronics ensure uninterrupted performance on commercial construction jobsites.
+                </div>
+
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                    Request Contractor Evaluation Unit &rarr;
+                  </a>
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:6px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                    Distributor Container Program (FOB)
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    }
   } else if (page === 'about') {
-    const headline = getAboutHeadline(company, `${company.name} · Certified Industrial Tool Works`);
+    const headline = getAboutHeadline(company, isVideo
+      ? `${company.name} · Industrial Power Tool Manufacturing Facility`
+      : `${company.name} · Certified Precision Tooling & Metrology Works`);
     const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
-    const highlights = parseAboutHighlights(company.aboutHighlights, [
-      { value: company.establishedYear || '2012', num: 2012, label: 'Established', desc: 'Precision manufacturing' },
-      { value: 'ISO 9001:2015', num: 9001, label: 'Quality System', desc: 'Audited production lines' },
-      { value: '500,000 Sq Ft', num: 500000, label: 'Manufacturing', desc: 'Drop-forge & CNC facility' },
-      { value: '80+ Countries', num: 80, label: 'Global Shipments', desc: 'Industrial supply networks' },
-    ]);
     const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
 
-    mainHtml = `
-      <main class="tools-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
-                ${esc(ui.about)} · Plant & Facilities
-              </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
-                ${esc(headline)}
-              </h1>
-              ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
-            </div>
-            <div style="border-radius:16px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(0,0,0,0.06);">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
-            ${highlights.map(h => `
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px;text-align:center;">
-                <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
-                <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:36px;">
-            <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Direct Tooling Factory Partnership</h2>
-            <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We support contract manufacturing, private label blow-molded tool sets, customized laser etchings, and container FOB shipments.</p>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-              Initiate Commercial RFQ ↗
-            </a>
-          </div>
-        </section>
-      </main>
-    `;
-  } else if (page === 'contact') {
-    mainHtml = `
-      <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.contact)} · Industrial Sourcing Desk
-            </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Submit Your Tooling Request</h1>
-            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory response with container load quantities, pallet configurations, and OEM lead times.</p>
-          </header>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.03);">
-              <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Request For Quotation</h2>
-              <form style="display:grid;gap:16px;">
-                <div>
-                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Product / Tool Model</label>
-                  <select name="productId" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                    <option value="">— Select Tooling SKU (Optional) —</option>
-                    ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
-                  </select>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Order Volume (Sets/Units)</label>
-                    <input type="text" disabled placeholder="e.g. 500 Sets" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Custom Packaging</label>
-                    <input type="text" disabled placeholder="Blow Mold / Color Box" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                </div>
-                <div>
-                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Technical Requirements & Certifications</label>
-                  <textarea disabled rows="4" placeholder="Specify required alloy grade (CrV, CrMo, S2, HSS), DIN standards, testing reports, or port of destination..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
-                </div>
-                <button type="submit" disabled style="padding:14px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
-                  Submit Tooling Inquiry ↗
-                </button>
-              </form>
-            </div>
-
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+    if (!isVideo) {
+      // Precision Metrology Lab About
+      const highlights = parseAboutHighlights(company.aboutHighlights, [
+        { value: '±0.003mm', num: 3, label: 'Metrology Precision', desc: 'Zeiss CMM laser scanned' },
+        { value: '120+ Units', num: 120, label: 'CNC Machining Centers', desc: '5-axis German & Japanese mills' },
+        { value: 'ISO 17025', num: 17025, label: 'Calibration Lab', desc: 'Accredited inspection standard' },
+        { value: '65+ Markets', num: 65, label: 'Industrial Supply', desc: 'Aerospace & automotive clients' },
+      ]);
+      mainHtml = `
+        <main class="tools-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
               <div>
-                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Export Plant Engineering Office</h2>
-                <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
-                  Equipped with 2500T hydraulic drop-forge presses, automated continuous quenching furnaces, CNC 5-axis machining centers, and comprehensive torque test benches.
-                </p>
-                <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
-                  <div><strong>Company:</strong> ${esc(company.name || brandName)}</div>
-                  <div><strong>Email:</strong> ${esc(company.email || 'export@toolsmachinery.com')}</div>
-                  <div><strong>Facility:</strong> National Heavy Tool Industrial Zone</div>
-                  <div><strong>Standards:</strong> DIN, ISO, ASME, GS, CE</div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                  ${esc(ui.about)} · Metrology &amp; Tooling Lab
                 </div>
+                <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
+                  ${esc(headline)}
+                </h1>
+                ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
               </div>
-              <div style="padding:16px;background:${theme.bg};border-radius:8px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
-                🛠️ Pre-Shipment Inspection: 100% torque failure and dimensional inspection reports issued with every production run.
+              <div style="border-radius:16px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(2,132,199,0.06);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
               </div>
             </div>
-          </div>
-        </section>
-      </main>
-    `;
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
+              ${highlights.map(h => `
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px;text-align:center;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
+                  <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- 4-Stage Metrology Verification Module -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:36px;margin-bottom:60px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 6px;">Sub-Micron Tooling Quality Protocol</h2>
+              <p style="font-size:0.9rem;color:${theme.textMuted};margin:0 0 24px;">From incoming vacuum degassed alloy bars to finished micron-lapped inspection tools.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Stage 01</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Optical Spectroscopy</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">OES spectral verification of chromium-vanadium, molybdenum, and tungsten carbide grain structure.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Stage 02</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">5-Axis CNC &amp; Wire EDM</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Sub-micron precision contouring with oil-cooled Japanese wire EDM and German multi-axis tooling.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Stage 03</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Cryogenic Quenching</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Vacuum furnace heat treatment down to -196&deg;C deep freeze to stabilize martensitic phase hardness.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Stage 04</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Zeiss CMM Calibration</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Temperature-controlled (20&deg;C &plusmn;0.5&deg;C) coordinate measurement and dimensional calibration certificate issue.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:36px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Contract Manufacturing &amp; Private Label Metrology</h2>
+              <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We engineer custom precision tools, calibrated gauge blocks, and turnkey OEM master sets with private label laser serialization.</p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                Initiate Metrology Consultation &rarr;
+              </a>
+            </div>
+          </section>
+        </main>
+      `;
+    } else {
+      // Heavy Power Equipment Manufacturing Facility About
+      const highlights = parseAboutHighlights(company.aboutHighlights, [
+        { value: '250,000 Pcs', num: 250000, label: 'Monthly Capacity', desc: 'Brushless power tools' },
+        { value: '12 Lines', num: 12, label: 'Robotic Motor Winding', desc: 'Automated armature production' },
+        { value: '100% Tested', num: 100, label: 'Torque Dynamometer', desc: 'Pre-shipment bench testing' },
+        { value: '75+ Countries', num: 75, label: 'Global Shipments', desc: 'Contractor tool distribution' },
+      ]);
+      mainHtml = `
+        <main class="tools-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                  ${esc(ui.about)} · Motor &amp; Assembly Plant
+                </div>
+                <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
+                  ${esc(headline)}
+                </h1>
+                ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
+              </div>
+              <div style="border-radius:16px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(217,119,6,0.06);">
+                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
+              ${highlights.map(h => `
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px;text-align:center;">
+                  <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
+                  <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                  <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- Heavy Durability Test Rig Module -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:36px;margin-bottom:60px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 6px;">Industrial Jobsite Reliability Standards</h2>
+              <p style="font-size:0.9rem;color:${theme.textMuted};margin:0 0 24px;">Automated stress-testing protocols validating every brushless armature, planetary gearbox, and battery controller.</p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 01</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Dynamometer Torque Peak</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Continuous full-load torque profiling and thermal heat-dissipation curve monitoring under heavy current.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 02</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Drop &amp; Vibration Shake Table</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Multi-axis high-frequency harmonic vibration and 2-meter repeated concrete impact drop qualification.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 03</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">IP56 Ingress Enclosure</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">Pressurized water jet spray and silica dust chamber testing ensuring impenetrable motor cavity seals.</div>
+                </div>
+                <div style="background:${theme.bg};padding:20px;border-radius:10px;border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">Test 04</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">Li-Ion BMS Aging Racks</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.5;">1,000-cycle high-draw charge/discharge validation with over-current and temperature shutdown triggers.</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:36px;">
+              <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Contractor Brand ODM &amp; Distributor Supply</h2>
+              <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We support custom housing color molding, full pallet container load-outs, CE/GS/ETL certification transfers, and spare parts supply agreements.</p>
+              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                Initiate Distributor RFQ &rarr;
+              </a>
+            </div>
+          </section>
+        </main>
+      `;
+    }
+  } else if (page === 'contact') {
+    if (!isVideo) {
+      // Precision Metrology Contact
+      mainHtml = `
+        <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section class="wrap" style="padding:40px 24px 80px;">
+            <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+                ${esc(ui.contact)} &middot; Precision Engineering Desk
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Submit Engineering Drawings &amp; RFQ</h1>
+              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory engineering response with CMM dimensional tolerance feasibility, alloy options, and export crate MOQ.</p>
+            </header>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 24px rgba(2,132,199,0.03);">
+                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Precision Tooling Request</h2>
+                <form id="inquiry" style="display:grid;gap:16px;">
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Tool SKU / Reference Model</label>
+                    <select name="productId" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                      <option value="">— Select Precision SKU (Optional) —</option>
+                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Tolerance Requirement</label>
+                      <input type="text" disabled placeholder="&plusmn;0.005mm / DIN 2768" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Alloy / Steel Grade</label>
+                      <input type="text" disabled placeholder="Cr-V / S2 / Tungsten Carbide" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">CAD File &amp; Technical Notes</label>
+                    <textarea disabled rows="4" placeholder="Share STEP / IGES drawing links, required Rockwell hardness (HRC), calibration certificate needs, or destination port..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                  </div>
+                  <button type="submit" disabled style="padding:14px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Submit Metrology Inquiry &rarr;
+                  </button>
+                </form>
+              </div>
+
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Precision Engineering Plant Office</h2>
+                  <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
+                    ISO 17025 accredited metrology lab equipped with multi-sensor Zeiss CMM machines, Mitutoyo surface roughness testers, and optical profile projectors.
+                  </p>
+                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
+                    <div><strong>Facility:</strong> ${esc(company.name || brandName)} Precision Works</div>
+                    <div><strong>Engineering:</strong> ${esc(company.email || 'engineering@precisiontools.com')}</div>
+                    <div><strong>Calibration Lab:</strong> Temperature Controlled (20&deg;C &plusmn;0.5&deg;C)</div>
+                    <div><strong>Certifications:</strong> ISO 9001:2015, ISO 17025, DIN, ASME</div>
+                  </div>
+                </div>
+                <div style="padding:16px;background:${theme.bg};border-radius:8px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
+                  📐 Factory Guarantee: 100% CMM dimensional inspection and full material batch trace reports provided with export orders.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    } else {
+      // Heavy-Duty Power Tools Contact
+      mainHtml = `
+        <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <section class="wrap" style="padding:40px 24px 80px;">
+            <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+                ${esc(ui.contact)} &middot; Contractor Fleet &amp; Distributor Desk
+              </div>
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Contractor Fleet &amp; Wholesale RFQ</h1>
+              <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory container wholesale pricing, customized housing Pantone matching, and regional distributor support.</p>
+            </header>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 24px rgba(217,119,6,0.03);">
+                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Equipment Wholesale Quotation</h2>
+                <form id="inquiry" style="display:grid;gap:16px;">
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Power Tool / Machine SKU</label>
+                    <select name="productId" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                      <option value="">— Select Equipment SKU (Optional) —</option>
+                      ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Container Order Volume</label>
+                      <input type="text" disabled placeholder="e.g. 1x 20GP / 1x 40HQ" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Voltage / Battery Platform</label>
+                      <input type="text" disabled placeholder="20V Max / 230V EU / 110V US" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    </div>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Customization &amp; Distributor Scope</label>
+                    <textarea disabled rows="4" placeholder="Detail private label branding, blow-molded tool case specs, battery cell brand preferences (Samsung/LG/Domestic), or target port..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                  </div>
+                  <button type="submit" disabled style="padding:14px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Submit Contractor RFQ &rarr;
+                  </button>
+                </form>
+              </div>
+
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Power Equipment Manufacturing Headquarters</h2>
+                  <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
+                    Automated motor armature winding lines, robotic assembly workcells, and high-volume automated battery testing racks with container FOB logistics.
+                  </p>
+                  <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
+                    <div><strong>Headquarters:</strong> ${esc(company.name || brandName)} Heavy Machinery Hub</div>
+                    <div><strong>Commercial Desk:</strong> ${esc(company.email || 'wholesale@powerequipment.com')}</div>
+                    <div><strong>Compliance:</strong> CE, GS, EMC, RoHS, UL, ETL Certified</div>
+                    <div><strong>Warranty Support:</strong> 2-Year Commercial Contractor Warranty</div>
+                  </div>
+                </div>
+                <div style="padding:16px;background:${theme.bg};border-radius:8px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
+                  ⚡ Distributor Advantage: 100% dynamometer torque testing and complete spare-parts supply programs provided for worldwide importers.
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      `;
+    }
   }
 
   const footerHtml = `
