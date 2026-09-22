@@ -312,8 +312,10 @@ function removeUnboundTemplateBackgrounds(root:Node){
 }
 export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):string{
   const preferExplicitHero=draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision;
-  const modern=draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||preferExplicitHero;
-  const inv=modern?modernInventory(draft.template,draft.materials?.contractRevision):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
+  const isExecutable=Boolean(draft.materials?.contractRevision?.startsWith('2026-09-22.'));
+  const modern=draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||isExecutable||preferExplicitHero;
+  const modernRevision=preferExplicitHero?aiAgencyHeroRevision:modernMaterialsRevision(draft.template);
+  const inv=modern?modernInventory(draft.template,modernRevision):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
   const modernAbout=modern&&options.page==='about';if(modernAbout)draft=aboutDraft(draft,options.lang);
   const m=draft.materials!,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
   if(inv.legacyText&&!modernAbout){

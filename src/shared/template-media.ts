@@ -390,6 +390,146 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'drinkware-ceramic-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 artisan stoneware kiln studio）',
+    bannerNote: 'Warm stoneware kiln photography with ceramic texture backgrounds.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'drinkware-thermal-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 thermal insulation lab demo video）',
+    bannerNote: 'Vacuum insulation thermal performance demonstration video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'beauty-skincare-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 luminous skincare studio）',
+    bannerNote: 'Rose-gold dewy skincare editorial photography.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'beauty-glow-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 holographic glow serum application video）',
+    bannerNote: 'Iridescent holographic glow serum texture video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'electronics-gadget-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 dark tech showcase studio）',
+    bannerNote: 'Dark graphite floating device photography with spec callouts.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'electronics-smart-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 deep-space smart device demo video）',
+    bannerNote: 'Neon-pulse smart device feature demonstration video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'tools-precision-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 industrial blueprint workshop）',
+    bannerNote: 'Blueprint grid with safety-orange precision tool photography.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'tools-workshop-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 dark forge welding workshop video）',
+    bannerNote: 'Welding spark and forging process demonstration video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'sports-trail-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 alpine trail expedition scene）',
+    bannerNote: 'Topographic contour mountain trail expedition photography.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'sports-kinetic-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 high-velocity sports action video）',
+    bannerNote: 'Kinetic motion-blur action sports performance video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',

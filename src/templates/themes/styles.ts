@@ -1838,6 +1838,46 @@ body[data-template="kitchen-gourmet-video"] {
   background: #fffbeb;
   color: #271b12;
 }
+body[data-template="drinkware-ceramic-banner"] {
+  background: #fdfbf7;
+  color: #1c1917;
+}
+body[data-template="drinkware-thermal-video"] {
+  background: #0c141d;
+  color: #f1f5f9;
+}
+body[data-template="beauty-skincare-banner"] {
+  background: #fffbfb;
+  color: #1c1917;
+}
+body[data-template="beauty-glow-video"] {
+  background: #0d0714;
+  color: #f8fafc;
+}
+body[data-template="electronics-gadget-banner"] {
+  background: #09090b;
+  color: #fafafa;
+}
+body[data-template="electronics-smart-video"] {
+  background: #030712;
+  color: #f9fafb;
+}
+body[data-template="tools-precision-banner"] {
+  background: #f8fafc;
+  color: #0f172a;
+}
+body[data-template="tools-workshop-video"] {
+  background: #0c0a09;
+  color: #fafaf9;
+}
+body[data-template="sports-trail-banner"] {
+  background: #f8fafc;
+  color: #0f172a;
+}
+body[data-template="sports-kinetic-video"] {
+  background: #050811;
+  color: #f8fafc;
+}
 
 @keyframes wrPulse {
   0%, 100% {
