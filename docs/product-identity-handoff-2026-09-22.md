@@ -78,3 +78,7 @@ Web Radar 新默认合同为 `2026-09-22.<template>-materials.5`，声明 `produ
 ## 复验入口
 
 Product Radar：`tests/product-identity*.test.ts`、`product-series-generation`、`product-presentation-append-jobs`、`presentation-template-flow`、`website-materials-submission`。Web Radar：`tests/product-identity.test.ts`、`materials-plugin-contract`、`materials-service`。两仓集成使用 Product Radar 的 `tests/helpers/run-template-plugin-integration.mjs`，提供两仓绝对路径。正式发布验证另见同目录验收记录。
+
+## 同事同期上线的模板
+
+发布核对发现同事已将 `bafe6c1`（PR #6）部署到线上，原上游分支尚未包含。此次完整保留该提交的十个新模板及其指南、资源与注册；没有覆盖或退回旧目录。杯壶、美妆、电子、工具、运动分别匹配 drinkware、beauty、electronics、tools、outdoor。新十个模板的身份合同使用 `2026-09-22.industry-bafe6c1` 冻结渲染器；旧29个模板继续使用原快照。

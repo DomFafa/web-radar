@@ -5,9 +5,11 @@ import type { MaterialsTemplateContract } from '../shared/materials';
 import type { RenderOptions } from './index';
 import { getMaterialsTemplate as frozenContract, renderSite as frozenRender } from './releases/baseline-20260922.mjs';
 import { frozenMaterialsPreviewRuntime } from './releases/baseline-preview-20260922';
-import { getModernMaterialsTemplate, getTypedMaterialsTemplate } from './materials-typed';
+import { getMaterialsTemplate as industryContract, renderSite as industryRender } from './releases/industry-20260922.mjs';
+import { frozenIndustryPreviewRuntime } from './releases/industry-preview-20260922';
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
+export const industryRendererRevision = '2026-09-22.industry-bafe6c1';
 export const executableMaterialsRevision = (id: string) => `2026-09-22.${id}-materials.4`;
 
 
@@ -16,11 +18,13 @@ const templateProductFamilies: Record<string, ProductIdentity["family"][]> = {
   toys: ['toy'], plush: ['plush'], apparel: ['apparel'], footwear: ['footwear'], luggage: ['bags'],
   jewelry: ['jewelry'], homedecor: ['home'], furniture: ['furniture'], kitchen: ['kitchen', 'drinkware'],
   juno: ['toy', 'plush'], senseng: ['toy', 'plush'],
+  drinkware: ['drinkware'], beauty: ['beauty'], electronics: ['electronics'], tools: ['tools'], sports: ['outdoor'],
 };
 export function identityMaterialsContract(id: string): MaterialsTemplateContract | undefined {
   const contract = executableMaterialsContract(id);
   if (!contract) return;
   contract.contractRevision = identityMaterialsRevision(id);
+  if (!frozenContract(id)) contract.rendererRevision = industryRendererRevision;
   contract.productApplicability = { version: 1, preferredFamilies: templateProductFamilies[id.split('-')[0]] ?? [],
     requiresPackaging: contract.imageSlots.some(slot => slot.role === 'packaging' && slot.required) };
   contract.requiredCapabilities = [...contract.requiredCapabilities!, 'product.identity.v1'].sort();
@@ -29,7 +33,7 @@ export function identityMaterialsContract(id: string): MaterialsTemplateContract
 
 /** Execution metadata is published only in a new revision. Historical documents stay byte-for-byte unchanged. */
 export function executableMaterialsContract(id: string): MaterialsTemplateContract | undefined {
-  const contract = frozenContract(id) ?? getModernMaterialsTemplate(id);
+  const contract = frozenContract(id) ?? industryContract(id, executableMaterialsRevision(id));
   if (!contract) return;
   contract.contractRevision = executableMaterialsRevision(id);
   return declareExecutionMetadata(contract);
@@ -65,10 +69,7 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
   if (revision === executableMaterialsRevision(id)) return executableMaterialsContract(id);
   const frozen = frozenContract(id, revision);
   if (frozen) return frozen;
-  const modern = getModernMaterialsTemplate(id, revision);
-  if (modern && modern.contractRevision === revision) return modern;
-  const typed = getTypedMaterialsTemplate(id);
-  if (typed && typed.contractRevision === revision) return typed;
+  return industryContract(id, revision);
 }
 
 export function renderReleasedMaterials(draft: Draft, options: RenderOptions): string | undefined {
@@ -77,7 +78,11 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release) return renderMaterialsTemplateRelease(release,draft,options);
   const original = frozenContract(draft.template, [executableMaterialsRevision(draft.template), identityMaterialsRevision(draft.template)].includes(revision) ? undefined : revision);
-  if (!original) return;
+  if (!original) {
+    const innerRevision = revision === identityMaterialsRevision(draft.template) ? executableMaterialsRevision(draft.template) : revision;
+    if (!industryContract(draft.template, innerRevision)) return;
+    return industryRender({ ...draft, materials: { ...draft.materials!, contractRevision: innerRevision } }, options);
+  }
   const frozenDraft = revision === original.contractRevision ? draft : { ...draft, materials: { ...draft.materials!, contractRevision: original.contractRevision } };
   return frozenRender(frozenDraft, options);
 }
@@ -85,7 +90,7 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   const revision = draft.materials?.contractRevision;
-  if (revision && releasedMaterialsContract(draft.template, revision)) return frozenMaterialsPreviewRuntime;
+  if (revision && releasedMaterialsContract(draft.template, revision)) return frozenContract(draft.template) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
 }
 
 /** Explicit mappings let a new template choose stable slot names without Product Radar knowing them. */
