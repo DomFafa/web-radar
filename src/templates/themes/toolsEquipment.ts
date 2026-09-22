@@ -727,55 +727,113 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // CONTRACTOR HEAVY EQUIPMENT CATALOG
+      // CONTRACTOR JOBSITE POWER EQUIPMENT & HEAVY MACHINERY DECK
       mainHtml = `
-        <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                Contractor Power Equipment · Heavy-Duty Fleet
+
+            <!-- Top Dynamometer Heavy Lab HUD -->
+            <div style="background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:12px;padding:12px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 10px rgba(217,119,6,0.04);">
+              <div style="display:flex;align-items:center;gap:10px;font-family:monospace;font-size:0.75rem;font-weight:800;color:#d97706;letter-spacing:0.06em;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#d97706;box-shadow:0 0 8px #d97706;"></span>
+                <span>[HEAVY POWER &amp; DYNAMOMETER LAB: ACTIVE] // 180 N·M TORQUE PEAK · IP56 JOBSITE SEALED · 2.5M IMPACT DROP TESTED · 3-YEAR FLEET WARRANTY</span>
               </div>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                Jobsite Power &amp; Pneumatic Tool Catalog
-              </h1>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Equipment (${products.length})</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Brushless Rotary Hammers</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">High-Torque Impact Drivers</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Pneumatic Impact Wrenches</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Magnesium Circular Saws</span>
+              <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#64748b;">
+                COMMERCIAL FLEET: CONTRACTOR GRADE
               </div>
             </div>
 
-            <!-- Heavy Equipment Cards Grid -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
-              ${products.map(p => `
-                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(217,119,6,0.04);">
-                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.1;background:#fffdf5;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
-                      <span style="position:absolute;top:10px;left:10px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                      <span style="position:absolute;bottom:10px;right:10px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">IP56 SEALED</span>
+            <!-- Page Title & Classification Filter Matrix -->
+            <div style="border-bottom:2px solid rgba(217,119,6,0.2);padding-bottom:28px;margin-bottom:36px;">
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 12px;border-radius:6px;background:#fef3c7;color:#b45309;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;border:1px solid #fde68a;">
+                <span style="font-family:monospace;font-weight:900;">RIG-FLEET // 2026-HEAVY</span>
+                <span>• Commercial Contractor Jobsite Machinery Registry</span>
+              </div>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 2.9rem);font-weight:900;color:#0f172a;margin:0 0 16px;letter-spacing:-0.03em;">
+                Contractor Power Equipment &amp; Heavy Machinery Deck
+              </h1>
+              <p style="font-size:1.02rem;color:#475569;line-height:1.7;max-width:820px;margin:0 0 20px;">
+                High-torque 4-pole brushless demolition hammers, twin-hammer pneumatic wrenches, and magnesium-chassis circular saws engineered for abusive continuous concrete and structural steel jobsite environments.
+              </p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:800;font-family:monospace;">
+                <span style="padding:8px 18px;border-radius:8px;background:#d97706;color:#fff;box-shadow:0 4px 12px rgba(217,119,6,0.25);">[MACHINERY-01: ALL CONTRACTOR FLEET (${products.length})]</span>
+                <span style="padding:8px 18px;border-radius:8px;background:#fff;color:#475569;border:1px solid #cbd5e1;">[MACHINERY-02: BRUSHLESS ROTARY HAMMERS]</span>
+                <span style="padding:8px 18px;border-radius:8px;background:#fff;color:#475569;border:1px solid #cbd5e1;">[MACHINERY-03: HIGH-TORQUE IMPACT DRIVERS]</span>
+                <span style="padding:8px 18px;border-radius:8px;background:#fff;color:#475569;border:1px solid #cbd5e1;">[MACHINERY-04: HEAVY PNEUMATIC WRENCHES]</span>
+              </div>
+            </div>
+
+            <!-- Heavy Contractor Equipment Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:28px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:20px;overflow:hidden;box-shadow:0 8px 24px rgba(217,119,6,0.06);display:flex;flex-direction:column;position:relative;transition:transform 0.2s ease, box-shadow 0.2s ease;">
+                  <!-- Card Header HUD -->
+                  <div style="background:#fffbeb;border-bottom:1px solid #fef3c7;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-family:monospace;font-size:0.72rem;">
+                    <span style="font-weight:800;color:#d97706;">RIG-HD0${idx + 1} // BLDC MOTOR FLEET</span>
+                    <span style="padding:2px 6px;border-radius:4px;background:#fef2f2;color:#dc2626;font-weight:800;border:1px solid #fecaca;">DROP PASS 2.5M</span>
+                  </div>
+
+                  <!-- Workshop Forged Viewport Frame -->
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;position:relative;">
+                    <div style="aspect-ratio:1.05;background:radial-gradient(circle at center, #ffffff 0%, #fffdf7 100%);position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #fde68a;overflow:hidden;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;position:relative;z-index:1;transition:transform 0.3s ease;">
+                      <span style="position:absolute;top:12px;left:12px;background:#ffffff;border:1px solid #fde68a;color:#b45309;font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:6px;font-family:monospace;z-index:2;box-shadow:0 2px 6px rgba(217,119,6,0.1);">
+                        ${esc(p.badge)}
+                      </span>
+                      <span style="position:absolute;bottom:12px;right:12px;background:#fef3c7;color:#b45309;font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:6px;font-family:monospace;z-index:2;border:1px solid #fde68a;">
+                        IP56 SEALED
+                      </span>
                     </div>
                   </a>
-                  <div style="padding:20px;">
-                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};margin:0 0 10px;line-height:1.3;">
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
-                    </h3>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;font-size:0.75rem;margin-bottom:14px;">
-                      <div>
-                        <span style="color:${theme.textSub};display:block;">Housing:</span>
-                        <strong style="color:${theme.text};">${esc(p.material)}</strong>
+
+                  <!-- Card Body -->
+                  <div style="padding:22px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div>
+                      <div style="font-family:monospace;font-size:0.72rem;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">
+                        ${esc(p.categoryNameEn)}
                       </div>
-                      <div>
-                        <span style="color:${theme.textSub};display:block;">Specs:</span>
-                        <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                      <h3 style="font-size:1.18rem;font-weight:900;color:#0f172a;margin:0 0 10px;line-height:1.35;">
+                        <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:#0f172a;">${esc(p.name)}</a>
+                      </h3>
+                      <p style="font-size:0.86rem;color:#475569;line-height:1.6;margin:0 0 18px;">
+                        ${esc(p.desc)}
+                      </p>
+
+                      <!-- Dual Dynamometer Telemetry Gauge -->
+                      <div style="background:#fffdfa;border:1px solid #fed7aa;border-radius:12px;padding:12px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                          <div style="font-size:0.7rem;font-family:monospace;color:#64748b;margin-bottom:3px;">PEAK TORQUE:</div>
+                          <div style="font-size:0.92rem;font-weight:900;color:#d97706;font-family:monospace;">180 N·m Peak</div>
+                        </div>
+                        <div>
+                          <div style="font-size:0.7rem;font-family:monospace;color:#64748b;margin-bottom:3px;">VIBRATION (HAV):</div>
+                          <div style="font-size:0.92rem;font-weight:900;color:#059669;font-family:monospace;">&lt; 1.2 m/s²</div>
+                        </div>
+                      </div>
+
+                      <!-- Spec Strip -->
+                      <div style="display:flex;flex-direction:column;gap:6px;font-size:0.78rem;margin-bottom:18px;">
+                        <div style="display:flex;justify-content:space-between;color:#64748b;border-bottom:1px dashed #fed7aa;padding-bottom:4px;">
+                          <span>Motor &amp; Enclosure:</span>
+                          <strong style="color:#0f172a;">${esc(p.material)}</strong>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;color:#64748b;border-bottom:1px dashed #fed7aa;padding-bottom:4px;">
+                          <span>Dimensions &amp; Weight:</span>
+                          <strong style="color:#0f172a;">${esc(p.dimensions)}</strong>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;color:#64748b;padding-bottom:2px;">
+                          <span>Rating / Capacity:</span>
+                          <strong style="color:#d97706;">${esc(p.extra)}</strong>
+                        </div>
                       </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
-                      <span style="color:${theme.primary};font-weight:800;">${esc(p.extra)}</span>
-                      <strong style="color:${theme.text};">MOQ: ${esc(p.moq)}</strong>
+
+                    <!-- Footer Action Strip -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid #fde68a;">
+                      <span style="font-size:0.8rem;color:#64748b;font-family:monospace;">MOQ: <strong style="color:#d97706;">${esc(p.moq)}</strong></span>
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-size:0.84rem;font-weight:800;color:#d97706;display:inline-flex;align-items:center;gap:4px;">
+                        INSPECT CONTRACTOR RIG ↗
+                      </a>
                     </div>
                   </div>
                 </article>
@@ -1046,117 +1104,259 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // CONTRACTOR HEAVY EQUIPMENT DETAIL: EXPLODED GEARBOX + PALLET FLEET CALCULATOR
+      // 3-TIER HEAVY EQUIPMENT TELEMETRY & FLEET WORKSTATION
       mainHtml = `
-        <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="margin-bottom:28px;">
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
-                ← Return to Jobsite Equipment Catalog
-              </a>
+
+            <!-- Tier 1: Heavy Equipment Breadcrumb & Jobsite Badges -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid rgba(217,119,6,0.2);">
+              <div style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:0.82rem;font-weight:800;">
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:#d97706;">HEAVY_FORGE</a>
+                <span style="color:#94a3b8;">//</span>
+                <span style="color:#64748b;">FLEET_RIG_DECK</span>
+                <span style="color:#94a3b8;">//</span>
+                <span style="color:#0f172a;">${esc(p.id).toUpperCase()}</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="padding:4px 12px;border-radius:20px;background:#fef3c7;color:#b45309;font-size:0.72rem;font-weight:800;border:1px solid #fde68a;font-family:monospace;">
+                  IP56 DUST/INGRESS SEALED
+                </span>
+                <span style="padding:4px 12px;border-radius:20px;background:#fee2e2;color:#b91c1c;font-size:0.72rem;font-weight:800;border:1px solid #fecaca;font-family:monospace;">
+                  2.5-METER DROP RATED
+                </span>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
-              <!-- Left Column: Tool Portrait & Gallery -->
+            <!-- Tier 2: Two-Column Heavy Equipment Telemetry Deck -->
+            <div style="display:grid;grid-template-columns:minmax(340px, 1.05fr) minmax(360px, 1.25fr);gap:44px;align-items:start;margin-bottom:48px;">
+              <!-- Left Column: Workshop Viewport, Dynamometer Telemetry & Thermal Duty Cycle -->
               <div>
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;position:relative;box-shadow:0 12px 32px rgba(217,119,6,0.06);text-align:center;">
-                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
-                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
-                    HEAVY IMPACT RATED
+                <div style="background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:24px;overflow:hidden;box-shadow:0 12px 32px rgba(217,119,6,0.06);position:relative;">
+                  <!-- Top Telemetry Status Header -->
+                  <div style="background:#fffbeb;border-bottom:1px solid #fef3c7;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;font-family:monospace;font-size:0.72rem;">
+                    <span style="font-weight:800;color:#d97706;">DYNAMO: 180 N·M STALL // MOTOR: BRUSHLESS 4-POLE</span>
+                    <span style="color:#059669;font-weight:800;">CALIBRATED 100%</span>
                   </div>
-                  <!-- Thumbnails -->
-                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
-                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
+
+                  <!-- Image Viewport -->
+                  <div style="aspect-ratio:1.05;background:radial-gradient(circle at center, #ffffff 0%, #fffdf5 100%);position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #fde68a;overflow:hidden;padding:24px;">
+                    <img id="wr-detail-main-img" data-wr-material-image="product-main" data-wr-material-product="${esc(p.id)}" src="${esc(p.img)}" alt="${esc(p.name)}" style="max-width:85%;max-height:85%;object-fit:contain;position:relative;z-index:1;" fetchpriority="high">
+                    <div style="position:absolute;top:16px;right:16px;background:#ffffff;border:1px solid #fde68a;color:#b45309;font-size:0.75rem;font-weight:800;padding:4px 12px;border-radius:6px;font-family:monospace;z-index:2;box-shadow:0 2px 6px rgba(217,119,6,0.1);">
+                      HEAVY IMPACT RATED
+                    </div>
+                  </div>
+
+                  <!-- Channel / Viewpoint Thumbs Container -->
+                  <div class="wr-detail-thumbs" style="padding:16px 20px;display:flex;gap:12px;background:#ffffff;justify-content:center;border-bottom:1px solid #fde68a;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #d97706;border-radius:8px;padding:3px;background:#ffffff;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:monospace;font-size:0.72rem;font-weight:800;color:#d97706;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:36px;height:36px;object-fit:contain;">
+                      <span>CH-1: RIG PROFILE</span>
                     </button>
+                    <button type="button" class="wr-detail-thumb" style="border:1px solid #cbd5e1;border-radius:8px;padding:3px;background:#ffffff;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:monospace;font-size:0.72rem;font-weight:800;color:#64748b;">
+                      <span style="display:inline-block;width:36px;height:36px;background:#fef3c7;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#b45309;font-size:0.75rem;">BLDC</span>
+                      <span>CH-2: MOTOR</span>
+                    </button>
+                    <button type="button" class="wr-detail-thumb" style="border:1px solid #cbd5e1;border-radius:8px;padding:3px;background:#ffffff;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:monospace;font-size:0.72rem;font-weight:800;color:#64748b;">
+                      <span style="display:inline-block;width:36px;height:36px;background:#fef3c7;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#b45309;font-size:0.75rem;">AZ91D</span>
+                      <span>CH-3: GEARBOX</span>
+                    </button>
+                  </div>
+
+                  <!-- Quick Telemetry Strip -->
+                  <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:#fffdfa;text-align:center;font-size:0.78rem;">
+                    <div>
+                      <div style="font-weight:900;color:#d97706;font-size:1.15rem;font-family:monospace;">180 N·m</div>
+                      <div style="color:#64748b;font-size:0.72rem;font-family:monospace;">STALL TORQUE</div>
+                    </div>
+                    <div style="border-left:1px solid #fed7aa;border-right:1px solid #fed7aa;">
+                      <div style="font-weight:900;color:#059669;font-size:1.15rem;font-family:monospace;">IP56</div>
+                      <div style="color:#64748b;font-size:0.72rem;font-family:monospace;">SILICA SEALED</div>
+                    </div>
+                    <div>
+                      <div style="font-weight:900;color:#d97706;font-size:1.15rem;font-family:monospace;">${esc(p.moq)}</div>
+                      <div style="color:#64748b;font-size:0.72rem;font-family:monospace;">FLEET MOQ</div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Motor Telemetry Benchmark -->
-                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">180 N·m</div>
-                    <div style="color:${theme.textSub};">Max Torque</div>
+                <!-- Thermal Rise & Continuous Torque Duty Cycle Benchmark -->
+                <div style="margin-top:20px;background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:18px;padding:22px;box-shadow:0 4px 16px rgba(217,119,6,0.04);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div style="font-size:0.74rem;font-family:monospace;font-weight:800;color:#d97706;letter-spacing:0.06em;text-transform:uppercase;">
+                      [DYNAMOMETER THERMAL RISE &amp; SUSTAINED TORQUE CURVE]
+                    </div>
+                    <span style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:#fef3c7;color:#b45309;font-weight:800;">500H CERTIFIED</span>
                   </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">IP56</div>
-                    <div style="color:${theme.textSub};">Jobsite Seal</div>
-                  </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">${esc(p.moq)}</div>
-                    <div style="color:${theme.textSub};">Fleet MOQ</div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">0 - 5 Min: Cold Inrush &amp; Peak Breakaway</span>
+                        <span style="color:#d97706;font-weight:800;">180 N·m · 42°C Armature</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:96%;background:linear-gradient(90deg, #d97706, #f59e0b);border-radius:3px;"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">15 Min: Heavy Continuous Concrete Chipping</span>
+                        <span style="color:#d97706;font-weight:800;">165 N·m · 68°C Armature</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:84%;background:linear-gradient(90deg, #d97706, #f59e0b);border-radius:3px;"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">45 Min: Structural Core Drilling Load</span>
+                        <span style="color:#d97706;font-weight:800;">155 N·m · 78°C Thermal Equilibrium</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:74%;background:linear-gradient(90deg, #d97706, #f59e0b);border-radius:3px;"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">240 Min: All-Day Shift Continuous Fleet Operation</span>
+                        <span style="color:#059669;font-weight:800;">Sustained 150 N·m · Zero Throttling</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:68%;background:linear-gradient(90deg, #059669, #10b981);border-radius:3px;"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Right Column: Contractor Specs & Fleet Logistics -->
+              <!-- Right Column: Engineering Matrix & Pallet Logistics Calculator -->
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
-                  ${esc(p.categoryNameEn)} · Commercial Contractor Model
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:#fef3c7;color:#b45309;font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;border:1px solid #fde68a;">
+                  <span>${esc(p.categoryNameEn)}</span>
+                  <span>• Commercial Contractor Specification</span>
                 </div>
-                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                <h1 style="font-size:clamp(1.9rem, 3.2vw, 2.7rem);font-weight:900;color:#0f172a;margin:0 0 14px;line-height:1.2;letter-spacing:-0.03em;">
                   ${esc(p.name)}
                 </h1>
-                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                <p style="font-size:1.05rem;color:#475569;line-height:1.75;margin:0 0 24px;">
                   ${esc(p.desc)}
                 </p>
 
-                <!-- Technical Spec Grid -->
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:24px;">
-                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
-                    Equipment Engineering Specifications
-                  </h3>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
-                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Housing &amp; Motor</span>
-                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                <!-- 4-Cell Heavy Industrial Engineering Matrix -->
+                <div style="background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:0 6px 20px rgba(217,119,6,0.04);">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#d97706;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;">
+                    [HEAVY CONTRACTOR POWERTRAIN ARCHITECTURE]
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+                    <div style="background:#fffdfa;padding:14px;border-radius:10px;border:1px solid #fed7aa;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">MOTOR TOPOLOGY</span>
+                      <strong style="color:#0f172a;font-size:0.88rem;display:block;">${esc(p.material)}</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">4-pole brushless BLDC with neodymium magnets</span>
                     </div>
-                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Dimensions &amp; Net Weight</span>
-                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    <div style="background:#fffdfa;padding:14px;border-radius:10px;border:1px solid #fed7aa;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">GEARBOX ENCLOSURE</span>
+                      <strong style="color:#0f172a;font-size:0.88rem;display:block;">${esc(p.dimensions)}</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">Die-cast magnesium AZ91D heat dissipation housing</span>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Torque / Impact Rating</span>
-                      <strong style="color:${theme.primary};">${esc(p.extra)}</strong>
+                    <div style="background:#fffdfa;padding:14px;border-radius:10px;border:1px solid #fed7aa;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">TORQUE &amp; SAFETY RATING</span>
+                      <strong style="color:#d97706;font-size:0.88rem;display:block;">${esc(p.extra)}</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">Dual mechanical overload clutch with electronic cut-off</span>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Production MOQ</span>
-                      <strong style="color:${theme.text};">${esc(p.moq)}</strong>
+                    <div style="background:#fffdfa;padding:14px;border-radius:10px;border:1px solid #fed7aa;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">SEAL &amp; DROP RATING</span>
+                      <strong style="color:#059669;font-size:0.88rem;display:block;">IP56 · 2.5m Concrete Drop</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">Silica dust labyrinth defense with rubberized bumper</span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Heavy Fleet Pallet Calculator -->
-                <div style="background:#fffbeb;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
-                  <h4 style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:0 0 10px;">Wholesale Pallet &amp; Fleet Logistics</h4>
-                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:0.8rem;text-align:center;">
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Master Ctn</div>
-                      <strong style="color:${theme.text};font-size:0.95rem;">4 Sets / Ctn</strong>
+                <!-- Contractor Commercial Pallet & Container Loadout Calculator -->
+                <div style="background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:0 6px 20px rgba(217,119,6,0.04);">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#d97706;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;">
+                    [COMMERCIAL PALLET &amp; CONTAINER FLEET CALCULATOR]
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div style="border:1px solid #fed7aa;border-radius:12px;padding:12px;text-align:center;background:#fffdfa;">
+                      <div style="font-size:0.72rem;font-family:monospace;color:#64748b;margin-bottom:4px;">LCL TRIAL FLEET</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#d97706;">200 Sets</div>
+                      <div style="font-size:0.72rem;color:#64748b;">50 master cartons</div>
                     </div>
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Pallet Load</div>
-                      <strong style="color:${theme.text};font-size:0.95rem;">36 Ctns (144 Units)</strong>
+                    <div style="border:2px solid #d97706;border-radius:12px;padding:12px;text-align:center;background:#fef3c7;">
+                      <div style="font-size:0.72rem;font-family:monospace;color:#b45309;font-weight:800;margin-bottom:4px;">20GP CONTAINER</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#b45309;">1,800 Sets</div>
+                      <div style="font-size:0.72rem;color:#b45309;">Dual-shot custom brand</div>
                     </div>
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">20GP Container</div>
-                      <strong style="color:${theme.primary};font-size:0.95rem;">1,800 Units</strong>
+                    <div style="border:1px solid #fed7aa;border-radius:12px;padding:12px;text-align:center;background:#fffdfa;">
+                      <div style="font-size:0.72rem;font-family:monospace;color:#64748b;margin-bottom:4px;">40HQ HIGH CUBE</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#d97706;">4,200 Sets</div>
+                      <div style="font-size:0.72rem;color:#64748b;">Full commercial rollout</div>
                     </div>
                   </div>
                 </div>
 
+                <!-- Trade Warranty & Certification Bar -->
+                <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:18px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:800;color:#b45309;">3-Year Commercial Fleet Warranty Guaranteed</div>
+                    <div style="font-size:0.78rem;color:#78350f;">Complete spare parts consignment and regional service center calibration support.</div>
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <span style="padding:4px 8px;background:#ffffff;border:1px solid #fde68a;color:#b45309;border-radius:6px;font-size:0.72rem;font-weight:800;font-family:monospace;">UL / CSA</span>
+                    <span style="padding:4px 8px;background:#ffffff;border:1px solid #fde68a;color:#b45309;border-radius:6px;font-size:0.72rem;font-weight:800;font-family:monospace;">CE RED</span>
+                  </div>
+                </div>
+
+                <!-- Action Strip -->
                 <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-                    Submit Fleet Wholesale RFQ ↗
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:16px 32px;border-radius:12px;background:linear-gradient(135deg, #d97706 0%, #f59e0b 100%);color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px rgba(217,119,6,0.25);">
+                    REQUEST FLEET OEM SPECIFICATION &amp; QUOTE ↗
                   </a>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:12px;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-size:0.95rem;font-weight:800;">
                     Explore All Equipment
                   </a>
                 </div>
               </div>
             </div>
+
+            <!-- Tier 3: 4-Stage Heavy Industrial Testing & Validation Pipeline Ribbon -->
+            <div style="background:#ffffff;border:1px solid rgba(217,119,6,0.22);border-radius:20px;padding:32px;box-shadow:0 8px 24px rgba(217,119,6,0.04);">
+              <div style="text-align:center;max-width:700px;margin:0 auto 28px;">
+                <span style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#d97706;letter-spacing:0.08em;text-transform:uppercase;background:#fef3c7;padding:4px 12px;border-radius:20px;">
+                  [HEAVY INDUSTRIAL RIGOROUS TESTING STANDARDS]
+                </span>
+                <h3 style="font-size:1.35rem;font-weight:900;color:#0f172a;margin:10px 0 6px;">
+                  Jobsite Abuse Validation &amp; Quality Gates
+                </h3>
+                <p style="font-size:0.88rem;color:#64748b;margin:0;">
+                  Every power tool model undergoes grueling cyclic endurance testing before commercial container dispatch.
+                </p>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:#fffdfa;border:1px solid #fed7aa;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#d97706;font-weight:800;margin-bottom:6px;">STAGE 01</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Armature Dynamic Balancing</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">Rotors dynamically trimmed to Grade G1.0 at 30,000 RPM, keeping user vibration below 1.2 m/s².</div>
+                </div>
+                <div style="background:#fffdfa;border:1px solid #fed7aa;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#d97706;font-weight:800;margin-bottom:6px;">STAGE 02</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Dynamometer Stall Testing</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">Full-load computer brake dyno verification confirming 180 N·m stall torque and zero clutch slip.</div>
+                </div>
+                <div style="background:#fffdfa;border:1px solid #fed7aa;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#b91c1c;font-weight:800;margin-bottom:6px;">STAGE 03</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">2.5-Meter Concrete Drop</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">Repeated drop impacts on solid concrete pad across 6 structural axes validating magnesium alloy integrity.</div>
+                </div>
+                <div style="background:#fffdfa;border:1px solid #fed7aa;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#059669;font-weight:800;margin-bottom:6px;">STAGE 04</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Silica Dust Chamber Slurry</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">500-hour continuous silica dust slurry circulating chamber test certifying IP56 seal defense.</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </main>
       `;
@@ -1529,73 +1729,154 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // CONTRACTOR FLEET & DISTRIBUTOR WHOLESALE DESK
+      // TWO-COLUMN CONTRACTOR FLEET & WHOLESALE EQUIPMENT PROCUREMENT TERMINAL
       mainHtml = `
         <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Contractor Fleet &amp; Wholesale Equipment Desk
+            <div style="max-width:840px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;background:#fffbeb;color:#b45309;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;border:1px solid #fde68a;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#d97706;"></span>
+                [CONTRACTOR FLEET PROCUREMENT // DIRECT FACTORY DESK]
               </span>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
-                Submit Equipment Fleet RFQ
+              <h1 style="font-size:clamp(2rem, 3.5vw, 2.8rem);font-weight:900;color:#0f172a;margin:0 0 16px;letter-spacing:-0.03em;">
+                Wholesale Equipment Sourcing &amp; Fleet Tender
               </h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
-                Inquire about container loadouts, private label contractor branding, regional safety certifications (UL, CSA, CE), and battery platform OEM.
+              <p style="font-size:1.05rem;color:#475569;line-height:1.7;max-width:700px;margin:0 auto;">
+                Direct manufacturer liaison for commercial contractor distributors, container loadout scheduling, private-label branding, and ISO 9001 / UL 60745 testing compliance.
               </p>
             </div>
 
-            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:40px;box-shadow:0 12px 36px rgba(217,119,6,0.06);">
-              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Wholesale Buyer</label>
-                    <input type="text" name="name" required placeholder="Fleet Procurement Manager" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+            <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:36px;max-width:1120px;margin:0 auto;align-items:start;">
+              <!-- Left Column: Workshop Manufacturing Capabilities & Direct Fleet Desk -->
+              <div style="display:flex;flex-direction:column;gap:20px;">
+                <!-- Capabilities Card -->
+                <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:20px;padding:32px;box-shadow:0 10px 30px rgba(217,119,6,0.04);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#d97706;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [HEAVY WORKSHOP CAPABILITIES]
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email</label>
-                    <input type="email" name="email" required placeholder="buyer@contractor-fleet.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  <h3 style="font-size:1.2rem;font-weight:800;color:#0f172a;margin:0 0 18px;">
+                    Contractor Rig Engineering &amp; Assembly
+                  </h3>
+                  <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#fffbeb;color:#d97706;border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Automated SMT &amp; BLDC Armature Winding</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Computerized multi-pole copper winding with 100% high-speed dynamic balancing.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#fffbeb;color:#d97706;border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">AZ91D Magnesium Die-Casting &amp; Gearbox CNC</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Lightweight high-dissipation housings protecting planetary reduction gears.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#fffbeb;color:#d97706;border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Full Dynamometer Stall &amp; Thermal Burn-in</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Every production lot verified under 180 N·m stall resistance and thermal rise tests.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#fffbeb;color:#d97706;border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Global Trade Safety Certifications (UL/CSA/CE)</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">UL 60745, CSA C22.2, CE-LVD, and IP56 jobsite dust/water laboratory verified.</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Selected Power Equipment Model</label>
-                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                    <option value="">General Fleet Inquiries (All Power Tools)</option>
-                    ${products.map(p => `
-                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
-                    `).join('')}
-                  </select>
+                <!-- Direct Fleet Desk -->
+                <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:20px;padding:26px;box-shadow:0 6px 20px rgba(217,119,6,0.03);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#b45309;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [DIRECT FLEET DESK]
+                  </div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Wholesale Equipment &amp; OEM Liaison</div>
+                  <div style="font-size:0.82rem;color:#64748b;margin-bottom:14px;line-height:1.6;">Direct manufacturer response within 4 operational hours.</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:64px;">Email:</span>
+                      <a href="mailto:${esc(company.email || 'fleet@titanforge-tools.com')}" style="color:#d97706;text-decoration:none;font-weight:700;">${esc(company.email || 'fleet@titanforge-tools.com')}</a>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:64px;">Terminal:</span>
+                      <span style="color:#64748b;">${esc(company.address || 'TitanForge Commercial Logistics & Heavy Lab')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:64px;">Hours:</span>
+                      <span style="color:#64748b;">Mon - Fri, 07:00 - 19:00 EST</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Interactive Consultation RFQ Console -->
+              <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:20px;padding:36px;box-shadow:0 12px 36px rgba(217,119,6,0.06);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #fed7aa;padding-bottom:16px;margin-bottom:24px;">
+                  <div>
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#d97706;letter-spacing:0.06em;">[TERMINAL // FLEET-RFQ-INIT]</span>
+                    <h2 style="font-size:1.3rem;font-weight:900;color:#0f172a;margin:4px 0 0;">Contractor Equipment Tender Console</h2>
+                  </div>
+                  <span style="font-size:0.75rem;padding:4px 10px;border-radius:6px;background:#ecfdf5;color:#059669;font-weight:800;">DISPATCH READY</span>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Wholesale Buyer / Manager</label>
+                      <input type="text" name="name" required placeholder="e.g. David Vance" style="width:100%;padding:12px;border:1px solid #fed7aa;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#fffbeb;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Corporate Email</label>
+                      <input type="email" name="email" required placeholder="procurement@contractor-fleet.com" style="width:100%;padding:12px;border:1px solid #fed7aa;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#fffbeb;">
+                    </div>
+                  </div>
+
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Container Order Tier</label>
-                    <select name="volume" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>LCL Trial Fleet (200 - 500 Units)</option>
-                      <option>20GP Full Container (~1,800 Units)</option>
-                      <option>40HQ High Cube (~4,200 Units)</option>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Selected Power Equipment Model</label>
+                    <select name="productId" style="width:100%;padding:12px;border:1px solid #fed7aa;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#fffbeb;outline:none;color:#0f172a;">
+                      <option value="">General Fleet Inquiries (All Power Equipment)</option>
+                      ${products.map(p => `
+                        <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra || p.moq)}</option>
+                      `).join('')}
                     </select>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Battery Platform</label>
-                    <select name="battery" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>20V Max Lithium 4.0Ah / 5.0Ah</option>
-                      <option>40V Extreme Heavy Concrete Pack</option>
-                      <option>Tool Body Only (Bare Tool Fleet)</option>
-                    </select>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Container Order Tier</label>
+                      <select name="volume" style="width:100%;padding:12px;border:1px solid #fed7aa;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#fffbeb;outline:none;color:#0f172a;">
+                        <option>LCL Trial Fleet (200 - 500 Units)</option>
+                        <option>20GP Full Container (~1,800 Units)</option>
+                        <option>40HQ High Cube (~4,200 Units)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Battery Platform</label>
+                      <select name="battery" style="width:100%;padding:12px;border:1px solid #fed7aa;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#fffbeb;outline:none;color:#0f172a;">
+                        <option>20V Max Lithium 4.0Ah / 5.0Ah</option>
+                        <option>40V Extreme Heavy Concrete Pack</option>
+                        <option>Tool Body Only (Bare Tool Fleet)</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Contractor Fleet Branding &amp; Shipping Port</label>
-                  <textarea name="message" rows="4" placeholder="Specify destination port, private label dual-shot mold colors, or custom heavy blow-molded case requirements..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-                </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Contractor Livery Branding &amp; Shipping Port</label>
+                    <textarea name="message" rows="4" placeholder="Specify destination port, private label dual-shot mold colors, or custom heavy blow-molded case requirements..." style="width:100%;padding:12px;border:1px solid #fed7aa;border-radius:10px;font-size:0.88rem;box-sizing:border-box;resize:vertical;outline:none;background:#fffbeb;"></textarea>
+                  </div>
 
-                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Transmit Fleet RFQ Specification ↗
-                </button>
-              </form>
+                  <button type="submit" style="padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg, #d97706 0%, #f59e0b 100%);color:#ffffff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(217,119,6,0.25);transition:transform 0.2s ease;">
+                    Transmit Fleet Tender Specification ↗
+                  </button>
+                  <div style="font-size:0.75rem;color:#94a3b8;text-align:center;">
+                    Direct manufacturer tender response within 4 hours. Technical specification sheet &amp; pallet packing list provided with quote.
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </main>
@@ -1605,22 +1886,25 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
 
   // Distinct Footer for each variant
   const footerHtml = isVideo ? `
-    <footer style="background:#0f172a;color:#f8fafc;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.1);">
+    <footer style="background:#ffffff;color:#0f172a;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid #fed7aa;">
       <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
         <div>
-          <div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
-          <p style="color:#94a3b8;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+          <div style="font-size:1.2rem;font-weight:900;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:2px;background:#d97706;"></span>
+            ${esc(brandName)}
+          </div>
+          <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
             Commercial contractor power tools and pneumatic heavy equipment. Brushless motors, IP56 jobsite sealing, and 180 N·m peak torque endurance.
           </p>
           <div style="display:flex;gap:8px;">
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#f59e0b;font-size:0.7rem;font-weight:700;">IP56</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#f59e0b;font-size:0.7rem;font-weight:700;">BRUSHLESS</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#f59e0b;font-size:0.7rem;font-weight:700;">2.5M DROP</span>
+            <span style="padding:4px 9px;border-radius:6px;background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.72rem;font-weight:800;font-family:monospace;">IP56 SEALED</span>
+            <span style="padding:4px 9px;border-radius:6px;background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.72rem;font-weight:800;font-family:monospace;">BLDC 4-POLE</span>
+            <span style="padding:4px 9px;border-radius:6px;background:#fffbeb;color:#b45309;border:1px solid #fde68a;font-size:0.72rem;font-weight:800;font-family:monospace;">2.5M DROP</span>
           </div>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Equipment Series</h4>
-          <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.82rem;line-height:2;">
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;letter-spacing:0.04em;">Equipment Series</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#64748b;font-size:0.82rem;line-height:2.1;">
             <li>3.2J Brushless Rotary Hammers</li>
             <li>180 N·m Compact Impact Drivers</li>
             <li>Twin-Hammer Pneumatic Wrenches</li>
@@ -1628,12 +1912,12 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
           </ul>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Fleet Procurement</h4>
-          <p style="color:#94a3b8;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'fleet@titanforge-tools.com')}</p>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#f59e0b;text-decoration:none;font-weight:700;font-size:0.82rem;">Direct Sourcing Terminal →</a>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;letter-spacing:0.04em;">Fleet Procurement</h4>
+          <p style="color:#64748b;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'fleet@titanforge-tools.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#d97706;text-decoration:none;font-weight:800;font-size:0.84rem;">Direct Fleet Sourcing Terminal →</a>
         </div>
       </div>
-      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #fed7aa;padding-top:24px;display:flex;justify-content:space-between;color:#94a3b8;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
         <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
         <span>Commercial Contractor Power &amp; Pneumatic Equipment Division</span>
       </div>
