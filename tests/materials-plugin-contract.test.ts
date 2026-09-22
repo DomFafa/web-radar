@@ -5,7 +5,7 @@ import { templateGuides } from '../src/worker/template-guides/catalog';
 describe('executable template materials contracts', () => {
   it.each(templateGuides)('$templateId declares executable source, scope, reuse and copy capabilities', ({ templateId }) => {
     const contract = getMaterialsTemplate(templateId)!;
-    expect(contract.contractRevision).toBe(`2026-09-22.${templateId}-materials.4`);
+    expect(contract.contractRevision).toBe(`2026-09-22.${templateId}-materials.5`);
     expect(contract.rendererRevision).toBe('2026-09-22.baseline-09fb979');
     expect(contract.requiredCapabilities).toContain('image.product-primary.v1');
     for (const slot of contract.imageSlots) {

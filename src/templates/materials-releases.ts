@@ -1,4 +1,5 @@
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
+import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
 import type { MaterialsTemplateContract } from '../shared/materials';
 import type { RenderOptions } from './index';
@@ -7,6 +8,23 @@ import { frozenMaterialsPreviewRuntime } from './releases/baseline-preview-20260
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
 export const executableMaterialsRevision = (id: string) => `2026-09-22.${id}-materials.4`;
+
+
+export const identityMaterialsRevision = (id: string) => `2026-09-22.${id}-materials.5`;
+const templateProductFamilies: Record<string, ProductIdentity["family"][]> = {
+  toys: ['toy'], plush: ['plush'], apparel: ['apparel'], footwear: ['footwear'], luggage: ['bags'],
+  jewelry: ['jewelry'], homedecor: ['home'], furniture: ['furniture'], kitchen: ['kitchen', 'drinkware'],
+  juno: ['toy', 'plush'], senseng: ['toy', 'plush'],
+};
+export function identityMaterialsContract(id: string): MaterialsTemplateContract | undefined {
+  const contract = executableMaterialsContract(id);
+  if (!contract) return;
+  contract.contractRevision = identityMaterialsRevision(id);
+  contract.productApplicability = { version: 1, preferredFamilies: templateProductFamilies[id.split('-')[0]] ?? [],
+    requiresPackaging: contract.imageSlots.some(slot => slot.role === 'packaging' && slot.required) };
+  contract.requiredCapabilities = [...contract.requiredCapabilities!, 'product.identity.v1'].sort();
+  return contract;
+}
 
 /** Execution metadata is published only in a new revision. Historical documents stay byte-for-byte unchanged. */
 export function executableMaterialsContract(id: string): MaterialsTemplateContract | undefined {
@@ -42,7 +60,8 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));
   if (release) return structuredClone(release.contract);
-  if (!revision || revision === executableMaterialsRevision(id)) return executableMaterialsContract(id);
+  if (!revision || revision === identityMaterialsRevision(id)) return identityMaterialsContract(id);
+  if (revision === executableMaterialsRevision(id)) return executableMaterialsContract(id);
   return frozenContract(id, revision);
 }
 
@@ -51,7 +70,7 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
   if (!revision) return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release) return renderMaterialsTemplateRelease(release,draft,options);
-  const original = frozenContract(draft.template, revision === executableMaterialsRevision(draft.template) ? undefined : revision);
+  const original = frozenContract(draft.template, [executableMaterialsRevision(draft.template), identityMaterialsRevision(draft.template)].includes(revision) ? undefined : revision);
   if (!original) return;
   const frozenDraft = revision === original.contractRevision ? draft : { ...draft, materials: { ...draft.materials!, contractRevision: original.contractRevision } };
   return frozenRender(frozenDraft, options);
@@ -87,7 +106,7 @@ export function validateMaterialsTemplateRelease(release:MaterialsTemplateReleas
   const source=frozenContract(release.rendererTemplateId,release.rendererContractRevision);
   if(!source||release.contract.rendererRevision!==materialsRendererRevision)return ['renderer_release_unavailable'];
   const expected=declareExecutionMetadata(source),contract=release.contract;
-  if(frozenContract(contract.templateId,contract.contractRevision)||(contract.contractRevision===executableMaterialsRevision(contract.templateId)&&frozenContract(contract.templateId)))errors.push('published_template_revision_collision');
+  if(frozenContract(contract.templateId,contract.contractRevision)||([executableMaterialsRevision(contract.templateId),identityMaterialsRevision(contract.templateId)].includes(contract.contractRevision)&&frozenContract(contract.templateId)))errors.push('published_template_revision_collision');
   if(contract.schemaVersion!=='wr-template-materials-v1'||!contract.materialsReady||contract.imagePolicy!==expected.imagePolicy||contract.contentPolicy!==expected.contentPolicy||JSON.stringify(contract.pages)!==JSON.stringify(expected.pages)||JSON.stringify(contract.selectionGroups)!==JSON.stringify(expected.selectionGroups)||JSON.stringify(contract.optionalSections.map(s=>s.id))!==JSON.stringify(expected.optionalSections.map(s=>s.id)))errors.push('renderer_contract_incompatible');
   const compare=(kind:'image'|'text')=>{
     const slots=kind==='image'?contract.imageSlots:contract.textSlots;
@@ -104,7 +123,7 @@ export function validateMaterialsTemplateRelease(release:MaterialsTemplateReleas
     }
   };
   compare('image');compare('text');
-  if(JSON.stringify([...(contract.requiredCapabilities||[])].sort())!==JSON.stringify(expected.requiredCapabilities))errors.push('capability_declaration_mismatch');
+  if(JSON.stringify([...(contract.requiredCapabilities||[])].sort())!==JSON.stringify([...(expected.requiredCapabilities||[]), ...(contract.productApplicability ? ['product.identity.v1'] : [])].sort()))errors.push('capability_declaration_mismatch');
   return [...new Set(errors)];
 }
 

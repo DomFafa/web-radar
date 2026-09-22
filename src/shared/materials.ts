@@ -1,3 +1,4 @@
+import { ProductIdentitySchema } from "./product-identity";
 import { z } from 'zod';
 
 export const materialsLocales = ['en', 'de', 'fr', 'es', 'pt', 'it'] as const;
@@ -46,7 +47,7 @@ export const confirmedMaterialsSchema = z.strictObject({
   }),
   contact:z.strictObject({cardId:id,cardVersion:id,name:z.string().min(1).max(300),email:z.email().max(254),phone:z.string().max(200).optional(),whatsapp:z.string().max(200).optional()}),
   products:z.array(z.strictObject({
-    id,sourceVersion:id,name:z.string().min(1).max(300),description:text,material:text,dimensions:z.string().max(300),
+    id,sourceVersion:id,productIdentity:ProductIdentitySchema.optional(),name:z.string().min(1).max(300),description:text,material:text,dimensions:z.string().max(300),
     primaryMediaId:id,galleryMediaIds:z.array(id).min(1).max(11),tagline:z.string().max(160).optional(),sellingPoints:z.array(z.string().max(180)).max(5).optional(),applications:z.array(z.string().max(180)).max(5).optional(),
     translations:z.partialRecord(locale,z.strictObject({name:z.string().min(1).max(300),description:text})).optional(),factReferences:facts,
   })).min(1).max(20),
@@ -110,6 +111,7 @@ interface Slot {
   id:string;page:typeof materialsPages[number];purpose:string;min:number;max:number;required:boolean;binding:'supported'|'unsupported';
 }
 export interface MaterialsTemplateContract {
+  productApplicability?: import("./product-identity").TemplateProductApplicability;
   schemaVersion:'wr-template-materials-v1';templateId:string;guideRevision:string;contractRevision:string;materialsReady:boolean;pages:Array<typeof materialsPages[number]>;
   rendererRevision?:string;requiredCapabilities?:string[];
   imagePolicy?:'typed-regions-v1';selectionGroups?:{scene:number;featured:number};
