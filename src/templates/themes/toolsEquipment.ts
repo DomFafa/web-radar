@@ -609,51 +609,114 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
     }
   } else if (page === 'catalog') {
     if (!isVideo) {
-      // METROLOGY & PRECISION CNC TOOLING CATALOG
+      // METROLOGY & PRECISION CNC TOOLING CAD DECK
       mainHtml = `
-        <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:28px;margin-bottom:36px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                Machining &amp; Metrology Index · Sub-Micron Precision
+
+            <!-- Top Blueprint CAD HUD -->
+            <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.2);border-radius:12px;padding:12px 20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 10px rgba(2,132,199,0.04);">
+              <div style="display:flex;align-items:center;gap:10px;font-family:monospace;font-size:0.75rem;font-weight:800;color:#0284c7;letter-spacing:0.06em;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0284c7;box-shadow:0 0 8px #0284c7;"></span>
+                <span>[DIN EN ISO 286 METROLOGY: ACTIVE] // 5-AXIS CNC · RUNOUT TIR &lt; 0.002MM · SPINDLE BALANCED G2.5 40,000 RPM · 100% CMM INSPECTED</span>
               </div>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                Precision CNC Tooling &amp; Metrology Catalog
+              <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#64748b;">
+                CALIBRATION LAB: ISO 17025 ACCREDITED
+              </div>
+            </div>
+
+            <!-- Page Title & Engineering Filter Matrix -->
+            <div style="border-bottom:2px solid rgba(2,132,199,0.18);padding-bottom:28px;margin-bottom:36px;">
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 12px;border-radius:6px;background:#e0f2fe;color:#0369a1;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;border:1px solid #bae6fd;">
+                <span style="font-family:monospace;font-weight:900;">CAD-REF // 2026-IT5</span>
+                <span>• Sub-Micron Solid Carbide &amp; Metrology Registry</span>
+              </div>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 2.9rem);font-weight:900;color:#0f172a;margin:0 0 16px;letter-spacing:-0.03em;">
+                Industrial Hardware &amp; Precision CNC Tooling Deck
               </h1>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Precision Tooling (${products.length})</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Solid Carbide End Mills</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">PCD Diamond Inserts</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Digital Metrology Calipers</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">72-Tooth CrV Ratchets</span>
+              <p style="font-size:1.02rem;color:#475569;line-height:1.7;max-width:820px;margin:0 0 20px;">
+                Aerospace-grade solid micrograin carbide end mills, indexable PCD/CBN inserts, and calibrated digital optical micrometers engineered for CNC machining centers under continuous heavy-feed conditions.
+              </p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:800;font-family:monospace;">
+                <span style="padding:8px 18px;border-radius:8px;background:#0284c7;color:#fff;box-shadow:0 4px 12px rgba(2,132,199,0.25);">[TOOL-01: ALL PRECISION HARDWARE (${products.length})]</span>
+                <span style="padding:8px 18px;border-radius:8px;background:#fff;color:#475569;border:1px solid #cbd5e1;">[TOOL-02: SOLID CARBIDE END MILLS]</span>
+                <span style="padding:8px 18px;border-radius:8px;background:#fff;color:#475569;border:1px solid #cbd5e1;">[TOOL-03: PCD / CBN INSERT SERIES]</span>
+                <span style="padding:8px 18px;border-radius:8px;background:#fff;color:#475569;border:1px solid #cbd5e1;">[TOOL-04: DIGITAL MICROMETERS &amp; CALIPERS]</span>
               </div>
             </div>
 
             <!-- Blueprint Technical Tool Cards Grid -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:32px;">
-              ${products.map(p => `
-                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(2,132,199,0.05);">
-                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.05;background:#f5f9ff;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:82%;height:82%;object-fit:contain;">
-                      <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.badge)}</span>
-                      <span style="position:absolute;bottom:12px;right:12px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">DIN IT5</span>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:28px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid rgba(2,132,199,0.22);border-radius:20px;overflow:hidden;box-shadow:0 8px 24px rgba(2,132,199,0.06);display:flex;flex-direction:column;position:relative;transition:transform 0.2s ease, box-shadow 0.2s ease;">
+                  <!-- Card Header Blueprint HUD -->
+                  <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-family:monospace;font-size:0.72rem;">
+                    <span style="font-weight:800;color:#0284c7;">TL-DIN0${idx + 1} // 4-FLUTE SOLID CARBIDE</span>
+                    <span style="padding:2px 6px;border-radius:4px;background:#ecfdf5;color:#059669;font-weight:800;border:1px solid #a7f3d0;">ISO 17025 PASS</span>
+                  </div>
+
+                  <!-- Technical CAD Blueprint Viewport Frame -->
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;position:relative;">
+                    <div style="aspect-ratio:1.05;background:radial-gradient(circle at center, #ffffff 0%, #f0f7ff 100%);position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #e2e8f0;overflow:hidden;">
+                      <!-- Blueprint Grid Subtle Lines -->
+                      <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(2,132,199,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(2,132,199,0.06) 1px, transparent 1px);background-size:20px 20px;pointer-events:none;"></div>
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;position:relative;z-index:1;transition:transform 0.3s ease;">
+                      <span style="position:absolute;top:12px;left:12px;background:#ffffff;border:1px solid #bae6fd;color:#0369a1;font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:6px;font-family:monospace;z-index:2;box-shadow:0 2px 6px rgba(2,132,199,0.1);">
+                        ${esc(p.badge)}
+                      </span>
+                      <span style="position:absolute;bottom:12px;right:12px;background:#e0f2fe;color:#0369a1;font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:6px;font-family:monospace;z-index:2;border:1px solid #bae6fd;">
+                        DIN IT5 (±0.002mm)
+                      </span>
                     </div>
                   </a>
-                  <div style="padding:22px;">
-                    <span style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">${esc(p.categoryNameEn)}</span>
-                    <h3 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:6px 0 10px;line-height:1.3;">
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
-                    </h3>
-                    <p style="font-size:0.84rem;color:${theme.textMuted};line-height:1.6;margin-bottom:16px;">${esc(p.desc)}</p>
-                    <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:8px;padding:10px 12px;font-size:0.78rem;margin-bottom:16px;">
-                      <div style="color:${theme.text};font-weight:700;">${esc(p.material)}</div>
-                      <div style="color:${theme.textSub};">${esc(p.dimensions)}</div>
+
+                  <!-- Card Body -->
+                  <div style="padding:22px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div>
+                      <div style="font-family:monospace;font-size:0.72rem;color:#64748b;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">
+                        ${esc(p.categoryNameEn)}
+                      </div>
+                      <h3 style="font-size:1.18rem;font-weight:900;color:#0f172a;margin:0 0 10px;line-height:1.35;">
+                        <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:#0f172a;">${esc(p.name)}</a>
+                      </h3>
+                      <p style="font-size:0.86rem;color:#475569;line-height:1.6;margin:0 0 18px;">
+                        ${esc(p.desc)}
+                      </p>
+
+                      <!-- Dual Metrology Telemetry Gauge -->
+                      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                          <div style="font-size:0.7rem;font-family:monospace;color:#64748b;margin-bottom:3px;">RUNOUT (TIR):</div>
+                          <div style="font-size:0.92rem;font-weight:900;color:#0284c7;font-family:monospace;">&lt; 0.002 mm</div>
+                        </div>
+                        <div>
+                          <div style="font-size:0.7rem;font-family:monospace;color:#64748b;margin-bottom:3px;">HARDNESS:</div>
+                          <div style="font-size:0.92rem;font-weight:900;color:#ea580c;font-family:monospace;">HRC 68+</div>
+                        </div>
+                      </div>
+
+                      <!-- Spec Strip -->
+                      <div style="display:flex;flex-direction:column;gap:6px;font-size:0.78rem;margin-bottom:18px;">
+                        <div style="display:flex;justify-content:space-between;color:#64748b;border-bottom:1px dashed #e2e8f0;padding-bottom:4px;">
+                          <span>Substrate / Matrix:</span>
+                          <strong style="color:#0f172a;">${esc(p.material)}</strong>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;color:#64748b;border-bottom:1px dashed #e2e8f0;padding-bottom:4px;">
+                          <span>Dimensions / Geometry:</span>
+                          <strong style="color:#0f172a;">${esc(p.dimensions)}</strong>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;color:#64748b;padding-bottom:2px;">
+                          <span>Surface Nanocoating:</span>
+                          <strong style="color:#0284c7;">${esc(p.extra)}</strong>
+                        </div>
+                      </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};">
-                      <span style="font-size:0.78rem;color:${theme.textSub};">MOQ: <strong style="color:${theme.primary};">${esc(p.moq)}</strong></span>
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-size:0.82rem;font-weight:800;color:${theme.primary};">
-                        Tooling Dossier →
+
+                    <!-- Footer Action Strip -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid #e2e8f0;">
+                      <span style="font-size:0.8rem;color:#64748b;font-family:monospace;">MOQ: <strong style="color:#0284c7;">${esc(p.moq)}</strong></span>
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-size:0.84rem;font-weight:800;color:#0284c7;display:inline-flex;align-items:center;gap:4px;">
+                        INSPECT TOOLING BLUEPRINT ↗
                       </a>
                     </div>
                   </div>
@@ -725,111 +788,260 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
   } else if (page === 'detail') {
     const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
     if (!isVideo) {
-      // METROLOGY & PRECISION CNC TOOLING DETAIL: CAD DOSSIER + HARDNESS WEAR CURVE
+      // 3-TIER CAD METROLOGY DOSSIER & TOOLING WORKSTATION
       mainHtml = `
-        <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="margin-bottom:28px;">
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
-                ← Return to Precision Machining Catalog
-              </a>
+
+            <!-- Tier 1: Metrology Breadcrumb & Tolerance Badges -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid rgba(2,132,199,0.18);">
+              <div style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:0.82rem;font-weight:800;">
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:#0284c7;">METROLOGY_LAB</a>
+                <span style="color:#94a3b8;">//</span>
+                <span style="color:#64748b;">CNC_TOOLING_DECK</span>
+                <span style="color:#94a3b8;">//</span>
+                <span style="color:#0f172a;">${esc(p.id).toUpperCase()}</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="padding:4px 12px;border-radius:20px;background:#e0f2fe;color:#0369a1;font-size:0.72rem;font-weight:800;border:1px solid #bae6fd;font-family:monospace;">
+                  DIN IT5 CERTIFIED (±0.002MM)
+                </span>
+                <span style="padding:4px 12px;border-radius:20px;background:#fef3c7;color:#b45309;font-size:0.72rem;font-weight:800;border:1px solid #fde68a;font-family:monospace;">
+                  ISO 17025 CMM SERIALIZED
+                </span>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
-              <!-- Left Column: Tooling Portrait & Macro Flute View -->
+            <!-- Tier 2: Two-Column Metrology Workbench -->
+            <div style="display:grid;grid-template-columns:minmax(340px, 1.05fr) minmax(360px, 1.25fr);gap:44px;align-items:start;margin-bottom:48px;">
+              <!-- Left Column: Drafting Viewport, Spindle Telemetry & Wear Benchmarks -->
               <div>
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:36px;position:relative;box-shadow:0 12px 32px rgba(2,132,199,0.05);text-align:center;">
-                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
-                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
-                    DIN EN ISO 286
+                <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.22);border-radius:24px;overflow:hidden;box-shadow:0 12px 32px rgba(2,132,199,0.06);position:relative;">
+                  <!-- Top Telemetry Status Header -->
+                  <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;font-family:monospace;font-size:0.72rem;">
+                    <span style="font-weight:800;color:#0284c7;">BALANCED: G2.5 @ 40,000 RPM // RUNOUT &lt; 0.002MM</span>
+                    <span style="color:#059669;font-weight:800;">PASS CMM</span>
                   </div>
-                  <!-- Thumbnails container -->
-                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
-                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
+
+                  <!-- Image Viewport with Blueprint Drafting Backdrop -->
+                  <div style="aspect-ratio:1.05;background:radial-gradient(circle at center, #ffffff 0%, #f0f7ff 100%);position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #e2e8f0;overflow:hidden;padding:24px;">
+                    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(2,132,199,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(2,132,199,0.06) 1px, transparent 1px);background-size:24px 24px;pointer-events:none;"></div>
+                    <img id="wr-detail-main-img" data-wr-material-image="product-main" data-wr-material-product="${esc(p.id)}" src="${esc(p.img)}" alt="${esc(p.name)}" style="max-width:85%;max-height:85%;object-fit:contain;position:relative;z-index:1;" fetchpriority="high">
+                    <div style="position:absolute;top:16px;right:16px;background:#ffffff;border:1px solid #bae6fd;color:#0369a1;font-size:0.75rem;font-weight:800;padding:4px 12px;border-radius:6px;font-family:monospace;z-index:2;box-shadow:0 2px 6px rgba(2,132,199,0.1);">
+                      DIN EN ISO 286
+                    </div>
+                  </div>
+
+                  <!-- Channel / Viewpoint Thumbs Container -->
+                  <div class="wr-detail-thumbs" style="padding:16px 20px;display:flex;gap:12px;background:#ffffff;justify-content:center;border-bottom:1px solid #e2e8f0;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #0284c7;border-radius:8px;padding:3px;background:#ffffff;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:monospace;font-size:0.72rem;font-weight:800;color:#0284c7;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:36px;height:36px;object-fit:contain;">
+                      <span>CH-1: PROFILE</span>
                     </button>
+                    <button type="button" class="wr-detail-thumb" style="border:1px solid #cbd5e1;border-radius:8px;padding:3px;background:#ffffff;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:monospace;font-size:0.72rem;font-weight:800;color:#64748b;">
+                      <span style="display:inline-block;width:36px;height:36px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#0284c7;font-size:0.75rem;">30°</span>
+                      <span>CH-2: HELIX</span>
+                    </button>
+                    <button type="button" class="wr-detail-thumb" style="border:1px solid #cbd5e1;border-radius:8px;padding:3px;background:#ffffff;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:monospace;font-size:0.72rem;font-weight:800;color:#64748b;">
+                      <span style="display:inline-block;width:36px;height:36px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#ea580c;font-size:0.75rem;">PVD</span>
+                      <span>CH-3: COATING</span>
+                    </button>
+                  </div>
+
+                  <!-- Metrology Calibration Quick Strip -->
+                  <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:#f8fafc;text-align:center;font-size:0.78rem;">
+                    <div>
+                      <div style="font-weight:900;color:#0284c7;font-size:1.15rem;font-family:monospace;">±0.002 mm</div>
+                      <div style="color:#64748b;font-size:0.72rem;font-family:monospace;">DIAMETER RUNOUT</div>
+                    </div>
+                    <div style="border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+                      <div style="font-weight:900;color:#ea580c;font-size:1.15rem;font-family:monospace;">HRC 68+</div>
+                      <div style="color:#64748b;font-size:0.72rem;font-family:monospace;">MICROGRAIN WC</div>
+                    </div>
+                    <div>
+                      <div style="font-weight:900;color:#0284c7;font-size:1.15rem;font-family:monospace;">${esc(p.moq)}</div>
+                      <div style="color:#64748b;font-size:0.72rem;font-family:monospace;">TOOLING MOQ</div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Metrology Calibration Metrics -->
-                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">±0.002mm</div>
-                    <div style="color:${theme.textSub};">Diameter Runout</div>
+                <!-- Multi-Material Tool Wear & Cutting Speed Step Benchmark -->
+                <div style="margin-top:20px;background:#ffffff;border:1px solid rgba(2,132,199,0.2);border-radius:18px;padding:22px;box-shadow:0 4px 16px rgba(2,132,199,0.04);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div style="font-size:0.74rem;font-family:monospace;font-weight:800;color:#0284c7;letter-spacing:0.06em;text-transform:uppercase;">
+                      [CUTTING SPEED (Vc) &amp; TOOL WEAR BENCHMARK]
+                    </div>
+                    <span style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:#e0f2fe;color:#0369a1;font-weight:800;">WALTER 5-AXIS VERIFIED</span>
                   </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">HRC 65+</div>
-                    <div style="color:${theme.textSub};">Substrate Hardness</div>
-                  </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">${esc(p.moq)}</div>
-                    <div style="color:${theme.textSub};">Tooling MOQ</div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">Aluminum 6061-T6 (High-Speed Finishing)</span>
+                        <span style="color:#0284c7;font-weight:800;">Vc = 450 m/min · 180+ hrs</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:94%;background:linear-gradient(90deg, #0284c7, #38bdf8);border-radius:3px;"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">Pre-Hardened P20 Mold Steel</span>
+                        <span style="color:#0284c7;font-weight:800;">Vc = 220 m/min · 120+ hrs</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:76%;background:linear-gradient(90deg, #0284c7, #38bdf8);border-radius:3px;"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">D2 High-Carbon Tool Steel (HRC 58)</span>
+                        <span style="color:#ea580c;font-weight:800;">Vc = 140 m/min · 85+ hrs</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:58%;background:linear-gradient(90deg, #ea580c, #f59e0b);border-radius:3px;"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-family:monospace;margin-bottom:4px;">
+                        <span style="color:#0f172a;font-weight:800;">Aerospace Inconel 718 Superalloy</span>
+                        <span style="color:#b91c1c;font-weight:800;">Vc = 75 m/min · 45+ hrs</span>
+                      </div>
+                      <div style="height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden;">
+                        <div style="height:100%;width:38%;background:linear-gradient(90deg, #dc2626, #f87171);border-radius:3px;"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Right Column: Engineering CAD Specifications & Nanocoating Dossier -->
+              <!-- Right Column: Metallurgy Matrix & Fleet Volume Calculator -->
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
-                  ${esc(p.categoryNameEn)} · Sub-Micron Precision Class
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:#e0f2fe;color:#0369a1;font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;border:1px solid #bae6fd;">
+                  <span>${esc(p.categoryNameEn)}</span>
+                  <span>• DIN IT5 Sub-Micron Precision Class</span>
                 </div>
-                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                <h1 style="font-size:clamp(1.9rem, 3.2vw, 2.7rem);font-weight:900;color:#0f172a;margin:0 0 14px;line-height:1.2;letter-spacing:-0.03em;">
                   ${esc(p.name)}
                 </h1>
-                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                <p style="font-size:1.05rem;color:#475569;line-height:1.75;margin:0 0 24px;">
                   ${esc(p.desc)}
                 </p>
 
-                <!-- Tooling CAD Specifications Table -->
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px;margin-bottom:28px;">
-                  <h3 style="font-size:0.95rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
-                    Metrology &amp; Substrate Specifications
-                  </h3>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:0.85rem;">
-                    <div style="border-bottom:1px dashed ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Substrate Metallurgy</span>
-                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                <!-- 4-Cell Tooling Metallurgy & Geometry Matrix -->
+                <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.2);border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:0 6px 20px rgba(2,132,199,0.04);">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#0284c7;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;">
+                    [METROLOGY &amp; SUBSTRATE ARCHITECTURE MATRIX]
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+                    <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">SUBSTRATE METALLURGY</span>
+                      <strong style="color:#0f172a;font-size:0.88rem;display:block;">${esc(p.material)}</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">0.4μm ultra-fine grain sintered matrix</span>
                     </div>
-                    <div style="border-bottom:1px dashed ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">CAD Flute Dimensions</span>
-                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">FLUTE GEOMETRY</span>
+                      <strong style="color:#0f172a;font-size:0.88rem;display:block;">${esc(p.dimensions)}</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">30° variable helix anti-vibration pitch</span>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Coating &amp; Hardness</span>
-                      <strong style="color:${theme.text};">${esc(p.extra)}</strong>
+                    <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">PVD NANOCOATING</span>
+                      <strong style="color:#0284c7;font-size:0.88rem;display:block;">${esc(p.extra)}</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">3,400 HV surface hardness, 900°C resist</span>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:3px;">Batch Production MOQ</span>
-                      <strong style="color:${theme.primary};">${esc(p.moq)}</strong>
+                    <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                      <span style="font-size:0.72rem;font-family:monospace;color:#64748b;display:block;margin-bottom:4px;">RUNOUT &amp; BALANCING</span>
+                      <strong style="color:#059669;font-size:0.88rem;display:block;">G2.5 @ 40,000 RPM</strong>
+                      <span style="font-size:0.72rem;color:#64748b;">Radial runout TIR &lt; 0.002mm at flute</span>
                     </div>
                   </div>
                 </div>
 
-                <!-- Calibration Traceability Dossier -->
-                <div style="background:#f0f7ff;border:1px solid #bae6fd;border-radius:16px;padding:22px;margin-bottom:28px;">
-                  <h4 style="font-size:0.88rem;font-weight:800;color:#0369a1;margin:0 0 8px;">ISO 17025 Metrology Inspection Certificate</h4>
-                  <p style="font-size:0.82rem;color:#075985;margin:0 0 14px;line-height:1.6;">
-                    Supplied with serialized laser-etched batch code and full 3D CMM inspection report indicating individual flute pitch, core diameter, and radial runout.
-                  </p>
-                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <span style="padding:6px 14px;background:#fff;border:1px solid #7dd3fc;color:#0369a1;border-radius:6px;font-size:0.75rem;font-weight:700;">[ Zeiss 3D CMM Report ]</span>
-                    <span style="padding:6px 14px;background:#fff;border:1px solid #7dd3fc;color:#0369a1;border-radius:6px;font-size:0.75rem;font-weight:700;">[ Serialized Laser Code ]</span>
-                    <span style="padding:6px 14px;background:#fff;border:1px solid #7dd3fc;color:#0369a1;border-radius:6px;font-size:0.75rem;font-weight:700;">[ AlTiN PVD Cert ]</span>
+                <!-- Factory CNC Machining Fleet Volume Calculator -->
+                <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.2);border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:0 6px 20px rgba(2,132,199,0.04);">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#ea580c;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;">
+                    [FACTORY CNC TOOLING FLEET VOLUME CALCULATOR]
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;text-align:center;background:#f8fafc;">
+                      <div style="font-size:0.72rem;font-family:monospace;color:#64748b;margin-bottom:4px;">EVALUATION TRIAL</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#0284c7;">10 Pcs</div>
+                      <div style="font-size:0.72rem;color:#64748b;">Immediate dispatch</div>
+                    </div>
+                    <div style="border:2px solid #0284c7;border-radius:12px;padding:12px;text-align:center;background:#e0f2fe;">
+                      <div style="font-size:0.72rem;font-family:monospace;color:#0369a1;font-weight:800;margin-bottom:4px;">PRODUCTION BATCH</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#0369a1;">200 Pcs</div>
+                      <div style="font-size:0.72rem;color:#0369a1;">Standard tool crib stock</div>
+                    </div>
+                    <div style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;text-align:center;background:#f8fafc;">
+                      <div style="font-size:0.72rem;font-family:monospace;color:#64748b;margin-bottom:4px;">ANNUAL CONTRACT</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#0284c7;">1,000+ Pcs</div>
+                      <div style="font-size:0.72rem;color:#64748b;">Custom flute &amp; regrind</div>
+                    </div>
                   </div>
                 </div>
 
+                <!-- Traceability & Calibration Dossier Badge Bar -->
+                <div style="background:#f0f7ff;border:1px solid #bae6fd;border-radius:16px;padding:18px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:800;color:#0369a1;">ISO 17025 Metrology Inspection Certificate Included</div>
+                    <div style="font-size:0.78rem;color:#075985;">Laser serialized tool shank with individual Zeiss 3D CMM inspection profile.</div>
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <span style="padding:4px 8px;background:#ffffff;border:1px solid #7dd3fc;color:#0369a1;border-radius:6px;font-size:0.72rem;font-weight:800;font-family:monospace;">CMM 3D</span>
+                    <span style="padding:4px 8px;background:#ffffff;border:1px solid #7dd3fc;color:#0369a1;border-radius:6px;font-size:0.72rem;font-weight:800;font-family:monospace;">PVD CERT</span>
+                  </div>
+                </div>
+
+                <!-- Action Strip -->
                 <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-                    Request CAD Model &amp; Quote ↗
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:16px 32px;border-radius:12px;background:linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px rgba(2,132,199,0.25);">
+                    REQUEST STEP CAD &amp; CUSTOM REGRIND QUOTE ↗
                   </a>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
-                    View All Tooling
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:12px;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-size:0.95rem;font-weight:800;">
+                    Browse All Tooling
                   </a>
                 </div>
               </div>
             </div>
+
+            <!-- Tier 3: 4-Stage Precision CNC Tooling Life-Cycle Pipeline Ribbon -->
+            <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.2);border-radius:20px;padding:32px;box-shadow:0 8px 24px rgba(2,132,199,0.04);">
+              <div style="text-align:center;max-width:700px;margin:0 auto 28px;">
+                <span style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#0284c7;letter-spacing:0.08em;text-transform:uppercase;background:#e0f2fe;padding:4px 12px;border-radius:20px;">
+                  [PRECISION MANUFACTURING WORKFLOW]
+                </span>
+                <h3 style="font-size:1.35rem;font-weight:900;color:#0f172a;margin:10px 0 6px;">
+                  Sub-Micron CNC Tooling Fabrication Lifecycle
+                </h3>
+                <p style="font-size:0.88rem;color:#64748b;margin:0;">
+                  From ultra-fine powder vacuum metallurgy to 100% automated optical CMM quality gates.
+                </p>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#0284c7;font-weight:800;margin-bottom:6px;">STAGE 01</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Vacuum HIP Sintering</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">0.4μm tungsten carbide sintered under 100 bar isostatic pressure at 1,450°C.</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#0284c7;font-weight:800;margin-bottom:6px;">STAGE 02</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">5-Axis Walter Flute Grinding</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">Diamond grinding wheels with oil coolant maintaining ±0.002mm web core concentricity.</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#ea580c;font-weight:800;margin-bottom:6px;">STAGE 03</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Cathodic Arc PVD Nanocoating</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">AlTiN multilayers deposited at 480°C giving 3,400 HV hardness and 0.3 friction coefficient.</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#059669;font-weight:800;margin-bottom:6px;">STAGE 04</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Zeiss 3D CMM Serial Inspection</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">100% automated optical profile scan with laser engraving of serialized QR batch codes.</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </main>
       `;
@@ -1163,74 +1375,155 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
   } else if (page === 'contact') {
     const selectedProd = ctx.options.productId || '';
     if (!isVideo) {
-      // METROLOGY & PRECISION CNC TOOLING CAD DESK
+      // TWO-COLUMN PRECISION MACHINING & CAD TOOLING DRAWING TERMINAL
       mainHtml = `
         <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Precision Engineering &amp; CAD Model Portal
+            <div style="max-width:840px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;background:#e0f2fe;color:#0369a1;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;border:1px solid #bae6fd;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#0284c7;"></span>
+                DIN IT5 Precision Engineering &amp; CAD Model Portal
               </span>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
-                Submit Tooling Drawing &amp; CAD Request
+              <h1 style="font-size:clamp(2rem, 3.5vw, 2.8rem);font-weight:900;color:#0f172a;margin:0 0 16px;letter-spacing:-0.03em;">
+                Submit Tooling Drawing &amp; CAD Specification Request
               </h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
-                Upload part specifications or workpiece materials (Titanium, Inconel, Pre-Hardened Steel) to receive custom carbide tool designs and STEP CAD models.
+              <p style="font-size:1.05rem;color:#475569;line-height:1.7;max-width:700px;margin:0 auto;">
+                Connect directly with our senior tooling design engineers for custom tungsten carbide geometry, 3D STEP/IGES CAD models, and volume regrind contract scheduling.
               </p>
             </div>
 
-            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:40px;box-shadow:0 12px 36px rgba(2,132,199,0.06);">
-              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Tooling Engineer / Buyer</label>
-                    <input type="text" name="name" required placeholder="CNC Production Manager" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+            <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:36px;max-width:1120px;margin:0 auto;align-items:start;">
+              <!-- Left Column: Tooling Capabilities & Applications Desk -->
+              <div style="display:flex;flex-direction:column;gap:20px;">
+                <!-- Capabilities Card -->
+                <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.22);border-radius:20px;padding:32px;box-shadow:0 10px 30px rgba(2,132,199,0.04);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#0284c7;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [FACTORY TOOLROOM CAPABILITIES]
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email Address</label>
-                    <input type="email" name="email" required placeholder="machining@precision-aero.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  <h3 style="font-size:1.2rem;font-weight:800;color:#0f172a;margin:0 0 18px;">
+                    Sub-Micron Machining &amp; Metrology
+                  </h3>
+                  <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">5-Axis Walter Helitronic Flute Grinding</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Simultaneous 5-axis robotic grinding maintaining ±0.002mm core web runout.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Zeiss PRISMO Ultra-Precision 3D CMM</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Sub-micron tactile and optical verification with ISO 17025 inspection certificates.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">In-House Cathodic Arc PVD Coating</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">AlTiN, TiAlSiN, and DLC diamond coatings tailored for titanium and Inconel.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Custom Step CAD &amp; Regrind Program</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Fast 3D STEP delivery and automated CNC regrinding restoring 98% original tool life.</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Precision Tool</label>
-                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                    <option value="">General Tooling Inquiries (All Diameters)</option>
-                    ${products.map(p => `
-                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} (${esc(p.moq)})</option>
-                    `).join('')}
-                  </select>
+                <!-- Direct Liaison Desk -->
+                <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.2);border-radius:20px;padding:26px;box-shadow:0 6px 20px rgba(2,132,199,0.03);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#ea580c;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [APPLICATIONS ENGINEERING DESK]
+                  </div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Tooling Applications &amp; CAD Support</div>
+                  <div style="font-size:0.82rem;color:#64748b;margin-bottom:14px;line-height:1.6;">Direct tooling engineer response within 4 operational hours.</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Direct:</span>
+                      <a href="mailto:${esc(company.email || 'tooling@vektor-precision.com')}" style="color:#0284c7;text-decoration:none;font-weight:700;">${esc(company.email || 'tooling@vektor-precision.com')}</a>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Location:</span>
+                      <span style="color:#64748b;">${esc(company.address || 'Vektor Precision Toolroom & Metrology Center')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Hours:</span>
+                      <span style="color:#64748b;">Mon - Fri, 08:00 - 19:00 CET</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Interactive Consultation RFQ Console -->
+              <div style="background:#ffffff;border:1px solid rgba(2,132,199,0.22);border-radius:20px;padding:36px;box-shadow:0 12px 36px rgba(2,132,199,0.06);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:16px;margin-bottom:24px;">
+                  <div>
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#0284c7;letter-spacing:0.06em;">[TERMINAL // CAD-SPEC-INIT]</span>
+                    <h2 style="font-size:1.3rem;font-weight:900;color:#0f172a;margin:4px 0 0;">Request Tooling STEP &amp; Quotation</h2>
+                  </div>
+                  <span style="font-size:0.75rem;padding:4px 10px;border-radius:6px;background:#ecfdf5;color:#059669;font-weight:800;">ENCRYPTED TLS</span>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Tooling Engineer / Buyer</label>
+                      <input type="text" name="name" required placeholder="e.g. Marcus Vance" style="width:100%;padding:12px;border:1px solid #bae6fd;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#f0f7ff;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Corporate Email</label>
+                      <input type="email" name="email" required placeholder="engineering@aerocnc-corp.com" style="width:100%;padding:12px;border:1px solid #bae6fd;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#f0f7ff;">
+                    </div>
+                  </div>
+
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Workpiece Hardness Class</label>
-                    <select name="workpiece" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>Hardened Steel (HRC 45 - 68)</option>
-                      <option>Titanium &amp; High-Temp Inconel</option>
-                      <option>Non-Ferrous Aluminum &amp; Copper Alloys</option>
-                      <option>Carbon Fiber Composites (CFRP)</option>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Target Precision Tool</label>
+                    <select name="productId" style="width:100%;padding:12px;border:1px solid #bae6fd;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#f0f7ff;outline:none;color:#0f172a;">
+                      <option value="">General Tooling Inquiries (All Diameters)</option>
+                      ${products.map(p => `
+                        <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} (${esc(p.moq)})</option>
+                      `).join('')}
                     </select>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Tolerance Requirement</label>
-                    <select name="tolerance" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>DIN IT5 Precision (±0.002 mm)</option>
-                      <option>DIN IT7 Standard (±0.005 mm)</option>
-                      <option>Special Micro-Runout TIR &lt; 0.001 mm</option>
-                    </select>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Workpiece Hardness Class</label>
+                      <select name="workpiece" style="width:100%;padding:12px;border:1px solid #bae6fd;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#f0f7ff;outline:none;color:#0f172a;">
+                        <option>Hardened Steel (HRC 45 - 68)</option>
+                        <option>Titanium &amp; High-Temp Inconel</option>
+                        <option>Non-Ferrous Aluminum &amp; Copper Alloys</option>
+                        <option>Carbon Fiber Composites (CFRP)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Tolerance Class</label>
+                      <select name="tolerance" style="width:100%;padding:12px;border:1px solid #bae6fd;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#f0f7ff;outline:none;color:#0f172a;">
+                        <option>DIN IT5 Precision (±0.002 mm)</option>
+                        <option>DIN IT7 Standard (±0.005 mm)</option>
+                        <option>Special Micro-Runout TIR &lt; 0.001 mm</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Workpiece Drawings &amp; Application Parameters</label>
-                  <textarea name="message" rows="4" placeholder="Specify milling spindle speed (RPM), feed rate, depth of cut (Ap/Ae), or coolant requirements..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-                </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Workpiece Drawings &amp; Application Parameters</label>
+                    <textarea name="message" rows="4" placeholder="Specify milling spindle speed (RPM), feed rate, depth of cut (Ap/Ae), or coolant requirements..." style="width:100%;padding:12px;border:1px solid #bae6fd;border-radius:10px;font-size:0.88rem;box-sizing:border-box;resize:vertical;outline:none;background:#f0f7ff;"></textarea>
+                  </div>
 
-                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Transmit CAD Drawing Request ↗
-                </button>
-              </form>
+                  <button type="submit" style="padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);color:#ffffff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(2,132,199,0.25);transition:transform 0.2s ease;">
+                    Transmit CAD Drawing Request ↗
+                  </button>
+                  <div style="font-size:0.75rem;color:#94a3b8;text-align:center;">
+                    Secure engineering transmission. Non-disclosure agreement guaranteed on uploaded drawings.
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </main>
@@ -1340,41 +1633,44 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
           <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#f59e0b;text-decoration:none;font-weight:700;font-size:0.82rem;">Direct Sourcing Terminal →</a>
         </div>
       </div>
-      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:gap:12px;">
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
         <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
         <span>Commercial Contractor Power &amp; Pneumatic Equipment Division</span>
       </div>
     </footer>
   ` : `
-    <footer style="background:#0f172a;color:#f8fafc;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.08);">
+    <footer style="background:#ffffff;color:#0f172a;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(2,132,199,0.18);">
       <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
         <div>
-          <div style="font-size:1.25rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
-          <p style="color:#94a3b8;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+          <div style="font-size:1.25rem;font-weight:900;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:#0284c7;"></span>
+            ${esc(brandName)}
+          </div>
+          <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
             Sub-micron solid carbide cutting tools and optical metrology systems. DIN IT5 tolerance class, AlTiN nanocoatings, and ISO 17025 laboratory calibration.
           </p>
-          <div style="display:flex;gap:8px;">
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">DIN IT5</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">HRC 65+</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">ISO 17025</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="padding:4px 10px;border-radius:6px;background:#e0f2fe;color:#0369a1;font-size:0.7rem;font-weight:800;">DIN IT5</span>
+            <span style="padding:4px 10px;border-radius:6px;background:#fef3c7;color:#b45309;font-size:0.7rem;font-weight:800;">HRC 68+</span>
+            <span style="padding:4px 10px;border-radius:6px;background:#f8fafc;color:#475569;font-size:0.7rem;font-weight:800;border:1px solid #e2e8f0;">ISO 17025</span>
           </div>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Tooling Standards</h4>
-          <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.82rem;line-height:2;">
-            <li>±0.002mm Diameter Runout TIR</li>
-            <li>0.4μm Ultra-Fine Grain Carbide</li>
-            <li>AlTiN Multilayer PVD Nanocoating</li>
-            <li>Zeiss 3D CMM Metrology Verified</li>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 16px;">Tooling Standards</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#64748b;font-size:0.82rem;line-height:2.1;">
+            <li>• ±0.002mm Diameter Runout TIR</li>
+            <li>• 0.4μm Ultra-Fine Grain Carbide</li>
+            <li>• AlTiN Multilayer PVD Nanocoating</li>
+            <li>• Zeiss 3D CMM Metrology Verified</li>
           </ul>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Tooling Engineering</h4>
-          <p style="color:#94a3b8;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'tooling@vektor-precision.com')}</p>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#38bdf8;text-decoration:none;font-weight:700;font-size:0.82rem;">Submit Technical CAD Inquiry →</a>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 16px;">Tooling Engineering</h4>
+          <p style="color:#64748b;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'tooling@vektor-precision.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;padding:8px 16px;background:#e0f2fe;color:#0369a1;text-decoration:none;font-weight:800;font-size:0.8rem;border-radius:8px;border:1px solid #bae6fd;">Submit Technical CAD Inquiry →</a>
         </div>
       </div>
-      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #e2e8f0;padding-top:24px;display:flex;justify-content:space-between;color:#94a3b8;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
         <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
         <span>Sub-Micron Precision Tooling &amp; Metrology Laboratory</span>
       </div>
