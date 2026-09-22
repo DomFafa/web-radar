@@ -951,7 +951,7 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
     }
   } else if (page === 'about') {
     const headline = getAboutHeadline(company, isVideo ? '16-Camera 3D Motion Analysis & Biomechanics Lab' : 'UIAGM Certified Mountain Guide Field Testing Protocol');
-    const paragraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || (isVideo ? 'At our high-speed sports science research complex, instrumented force plates and high-speed infrared motion capture cameras track kinetic energy transfer and joint angles down to 0.1 degrees.' : 'Our alpine expedition laboratory partners with UIAGM certified mountain guides across Chamonix and the Karakoram to test weatherproofing membranes under real glacial storms and hurricane winds.'));
+    const paragraphs = getAboutStoryParagraphs(company);
     const images = getAboutImages(ctx);
     const highlights = parseAboutHighlights(company.aboutHighlights, isVideo ? [
       { value: '82.4%', label: 'PEBA Rebound Rate', desc: 'Supercritical nitrogen autoclave expansion' },
@@ -965,88 +965,192 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
     const primaryImage = images.primary || (isVideo ? getIndustryPlaceholder('sports', 1) : getIndustryPlaceholder('sports', 0));
 
     if (!isVideo) {
-      // ALPINE EXPEDITION GUIDE ABOUT
+      // SPORTS TRAIL BANNER: ALPINE EXPEDITION FIELD JOURNAL
       mainHtml = `
-        <main class="sports-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
-          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
-            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                High-Altitude Testing &amp; Alpine Integrity
+        <main class="sports-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Mountain Guide Telemetry Log Header -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#ffffff;border:1px solid #fed7aa;border-radius:12px;margin-bottom:36px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#c2410c;box-shadow:0 2px 8px rgba(234,88,12,0.04);flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea580c;"></span>
+                <strong style="color:#9a3412;">UIAGM EXPEDITION FIELD LOG #842</strong>
+              </div>
+              <div style="display:flex;gap:18px;align-items:center;font-weight:700;">
+                <span>MONT BLANC RIDGE: 4,000M</span>
+                <span>TEMP: -14°C</span>
+                <span>PRESSURE: 610 HPA</span>
+              </div>
+            </div>
+
+            <!-- Page Title & Alpine Lead Story -->
+            <div style="max-width:880px;margin-bottom:40px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                High-Altitude Field Testing &amp; Dyneema Composite Weave
               </span>
-              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;letter-spacing:-0.03em;">
                 ${esc(headline)}
               </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'ApexTrail engineers mountaineering gear tested directly alongside certified UIAGM guides across grueling 4,000m glacial ascents where gear failure is not an option.')}
+              </p>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
-              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(234,88,12,0.06);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-              <div>
-                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                    <p style="margin:0 0 18px;">ApexTrail designs mountaineering equipment tested directly by UIAGM mountain guides along high-alpine routes across the European Alps, Patagonia, and the Himalayas.</p>
-                    <p style="margin:0 0 18px;">We reject heavy redundant hardware. By pioneering Dyneema composite weaves and microporous ePTFE membranes, our gear delivers extreme blizzard protection at minimal pack weights for thru-hikers and alpine climbers.</p>
-                  `}
-                </div>
-              </div>
-            </div>
-
-            <!-- Highlights Matrix -->
-            ${highlights.length > 0 ? `
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
-                ${highlights.map(h => `
-                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
-                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || '')}</div>
+            <!-- Field Journal Spread -->
+            <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(234,88,12,0.06);margin-bottom:36px;position:relative;">
+              
+              <div style="display:grid;grid-template-columns:minmax(320px, 1.2fr) minmax(320px, 1.3fr);gap:44px;align-items:center;">
+                
+                <!-- Left: Polaroid / Field Expedition Image Frame -->
+                <div style="position:relative;background:#fefce8;border:1px solid #fef08a;border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(234,88,12,0.08);">
+                  <div style="border-radius:10px;overflow:hidden;background:#fff;">
+                    <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
                   </div>
-                `).join('')}
+                  <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;font-family:ui-monospace,monospace;font-size:0.75rem;color:#9a3412;font-weight:700;">
+                    <span>LOC: 45°50'01"N 6°51'54"E</span>
+                    <span style="background:#ea580c;color:#fff;padding:2px 8px;border-radius:4px;">SUMMIT PASS</span>
+                  </div>
+                </div>
+
+                <!-- Right: Annotated Expedition Field Log -->
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#fff7ed;color:#ea580c;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;border:1px solid #fed7aa;">
+                    Elevation Ascent Profile
+                  </div>
+                  <h2 style="font-size:1.5rem;font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.3;">
+                    Dyneema Weaves &amp; Microporous ePTFE Membranes
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.75;color:#44403c;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">We eliminate unnecessary seams and heavy hardware. Dyneema composite weaves provide 15× the tensile strength of steel at a fraction of the weight, resisting sharp granite abrasion during technical chimney climbs.</p>
+                      <p style="margin:0;">Our 3-layer ePTFE laminates maintain 20,000mm hydrostatic resistance while expelling moisture vapor under intense high-output alpine ascents.</p>
+                    `}
+                  </div>
+
+                  <!-- Route Elevation Stepper -->
+                  <div style="display:flex;justify-content:space-between;align-items:center;background:#fff7ed;border:1px solid #ffedd5;border-radius:12px;padding:12px 18px;font-family:ui-monospace,monospace;font-size:0.75rem;color:#9a3412;font-weight:700;flex-wrap:wrap;gap:8px;">
+                    <span>Base: 1,200m</span>
+                    <span>→</span>
+                    <span>Refuge: 2,800m</span>
+                    <span>→</span>
+                    <span>Col: 3,842m</span>
+                    <span>→</span>
+                    <strong style="color:#ea580c;">Summit: 4,810m</strong>
+                  </div>
+                </div>
+
               </div>
-            ` : ''}
+            </div>
+
+            <!-- Gram-Scale Highlights Strips -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+              ${highlights.map(h => `
+                <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:18px;padding:26px;box-shadow:0 4px 16px rgba(234,88,12,0.03);position:relative;">
+                  <div style="font-size:2.2rem;font-weight:900;color:#ea580c;margin-bottom:6px;line-height:1;letter-spacing:-0.03em;">${esc(h.value)}</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:${theme.text};margin-bottom:6px;">${esc(h.label)}</div>
+                  <div style="font-size:0.8rem;color:#78716c;line-height:1.5;">${esc(h.desc || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
           </div>
         </main>
       `;
     } else {
-      // BIOMECHANICS LAB ABOUT
+      // SPORTS KINETIC VIDEO: BIOMECHANICS LAB COCKPIT
       mainHtml = `
-        <main class="sports-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
-          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
-            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Human Kinetics &amp; 3D Motion Analysis Lab
+        <main class="sports-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Vicon Motion Capture Telemetry Bar -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:#ffffff;border:1px solid #bbf7d0;border-radius:14px;margin-bottom:36px;font-family:ui-monospace,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#15803d;box-shadow:0 4px 12px rgba(22,163,74,0.04);flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,0.2);"></span>
+                <strong style="color:#14532d;">VICON 250 FPS MOTION LAB: ACTIVE</strong>
+              </div>
+              <div style="display:flex;gap:20px;align-items:center;font-weight:700;">
+                <span>REBOUND: 82.4% PEBA</span>
+                <span>METABOLIC VO₂: -3.8%</span>
+                <span>STACK: 39.5MM COMPLIANT</span>
+              </div>
+            </div>
+
+            <!-- Page Title & Biomechanics Narrative -->
+            <div style="max-width:880px;margin-bottom:40px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Supercritical PEBA Midsole &amp; Carbon Spoon Kinetics
               </span>
-              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;letter-spacing:-0.03em;">
                 ${esc(headline)}
               </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'Kinetix operates an instrumented running kinetics facility utilizing 16-camera Vicon 3D motion capture and Bertec force plates to engineer maximum racing energy return.')}
+              </p>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
-              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(22,163,74,0.08);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-              <div>
-                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                    <p style="margin:0 0 18px;">Kinetix operates a state-of-the-art human kinetics research center equipped with 16-camera Vicon 3D motion capture, Bertec instrumented treadmills, and dynamic foot plantar pressure mapping.</p>
-                    <p style="margin:0 0 18px;">Our footwear engineering team collaborates with elite marathon runners and sports science institutes to optimize carbon plate torsional flex and supercritical nitrogen foaming density for maximum competitive energy conversion.</p>
-                  `}
-                </div>
-              </div>
-            </div>
-
-            <!-- Highlights Matrix -->
-            ${highlights.length > 0 ? `
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
-                ${highlights.map(h => `
-                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
-                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || '')}</div>
+            <!-- Motion Tracking Cockpit Viewport -->
+            <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(22,163,74,0.06);margin-bottom:36px;position:relative;">
+              
+              <div style="display:grid;grid-template-columns:minmax(320px, 1.2fr) minmax(320px, 1.3fr);gap:44px;align-items:center;">
+                
+                <!-- Left: Reticle Framed Motion Capture Frame -->
+                <div style="position:relative;">
+                  <div style="border-radius:18px;overflow:hidden;border:2px solid #86efac;box-shadow:0 12px 30px rgba(22,163,74,0.08);background:#000;">
+                    <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
                   </div>
-                `).join('')}
+                  <!-- Plantar Zones Floating Pill -->
+                  <div style="position:absolute;bottom:16px;left:16px;right:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;font-family:ui-monospace,monospace;font-size:0.72rem;font-weight:700;color:#15803d;">
+                    <span>HEEL: 14%</span>
+                    <span>MIDFOOT: 32%</span>
+                    <span>SPRING: 54%</span>
+                  </div>
+                </div>
+
+                <!-- Right: Energy Return & Respiration Telemetry -->
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#f0fdf4;color:#16a34a;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;border:1px solid #bbf7d0;">
+                    Bertec Force Plate Gait Analysis
+                  </div>
+                  <h2 style="font-size:1.5rem;font-weight:900;color:#0f172a;margin:0 0 16px;line-height:1.3;">
+                    3K Torsional Carbon Plate &amp; Nitrogen Autoclave Foam
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.75;color:#475569;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">By infusing supercritical nitrogen gas into high-purity PEBA pellets inside pressurized autoclaves, our midsoles achieve 0.11 g/cm³ density while returning 82.4% of impact force back to the athlete.</p>
+                      <p style="margin:0;">The embedded 3K spoon-shaped carbon plate stabilizes ankle inversion during midstance, reducing metatarsophalangeal joint flexion fatigue over marathon distances.</p>
+                    `}
+                  </div>
+
+                  <!-- Energy Rebound Comparison Matrix -->
+                  <div style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:12px;padding:16px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;font-weight:800;margin-bottom:6px;color:#14532d;">
+                      <span>Kinetix PEBA + 3K Plate</span>
+                      <span>82.4% Rebound</span>
+                    </div>
+                    <div style="background:#dcfce7;height:8px;border-radius:4px;overflow:hidden;margin-bottom:12px;">
+                      <div style="background:#16a34a;width:82.4%;height:100%;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#64748b;">
+                      <span>Standard EVA Competitor Midsole</span>
+                      <span>54.0% Rebound</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-            ` : ''}
+            </div>
+
+            <!-- Lab Highlights Telemetry Cards -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+              ${highlights.map(h => `
+                <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:18px;padding:26px;box-shadow:0 4px 16px rgba(22,163,74,0.03);position:relative;">
+                  <div style="font-size:2.2rem;font-weight:900;color:#16a34a;margin-bottom:6px;line-height:1;letter-spacing:-0.03em;">${esc(h.value)}</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${esc(h.label)}</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">${esc(h.desc || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
           </div>
         </main>
       `;

@@ -918,7 +918,7 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
     }
   } else if (page === 'about') {
     const headline = getAboutHeadline(company, isVideo ? 'IoT Wireless Protocol Testing & Anechoic Chamber Lab' : 'Robotic SMT Surface Mount & 3D AOI Inspection Lines');
-    const paragraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || (isVideo ? 'Aether Living leads connected hardware architecture, standardizing on Matter 1.3 over Thread mesh topologies for zero-cloud latency and local security.' : 'VoltCraft operates 8 high-speed surface mount technology (SMT) lines capable of mounting 01005 passives and ultra-fine pitch BGA ICs with sub-10 micron placement repeatability.'));
+    const paragraphs = getAboutStoryParagraphs(company);
     const images = getAboutImages(ctx);
     const highlights = parseAboutHighlights(company.aboutHighlights, isVideo ? [
       { value: 'Matter 1.3', label: 'Protocol Certified', desc: 'Cross-platform native ecosystem interoperability' },
@@ -932,88 +932,217 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
     const primaryImage = images.primary || (isVideo ? getIndustryPlaceholder('electronics', 1) : getIndustryPlaceholder('electronics', 0));
 
     if (!isVideo) {
-      // CNC HARDWARE SMT & AOI ABOUT
+      // ELECTRONICS GADGET BANNER: APPLE-STYLE HARDWARE BENTO GRID
       mainHtml = `
-        <main class="electronics-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
-          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
-            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Manufacturing Precision &amp; Engineering Quality
+        <main class="electronics-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Top Hardware Dossier Header Bar -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:40px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#64748b;flex-wrap:wrap;gap:12px;box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0284c7;"></span>
+                <strong style="color:#0f172a;">HARDWARE R&amp;D SPECIFICATION</strong>
+              </div>
+              <div style="display:flex;gap:20px;align-items:center;font-weight:600;">
+                <span>REV: 2026.4</span>
+                <span>GAN III SILICON</span>
+                <span>SMT ISO 9001:2015</span>
+              </div>
+            </div>
+
+            <!-- Main Title & Narrative Intro -->
+            <div style="margin-bottom:44px;max-width:880px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;">
+                Gallium Nitride &amp; Unibody CNC Architecture
               </span>
-              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+              <h1 style="font-size:clamp(2.2rem, 4vw, 3.4rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.15;letter-spacing:-0.03em;">
                 ${esc(headline)}
               </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'Our laboratory pioneers high-density Gallium Nitride (GaN III) power conversion topologies and 5-axis unibody CNC aluminum thermal enclosures for tier-one commercial deployments.')}
+              </p>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
-              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(15,23,42,0.06);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-              <div>
-                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                    <p style="margin:0 0 18px;">Our facility houses automated high-speed Surface Mount Technology (SMT) lines equipped with 3D solder paste inspection (SPI) and 3D automated optical inspection (AOI) to guarantee zero cold-solder defects on high-density GaN PCB assemblies.</p>
-                    <p style="margin:0 0 18px;">Every production batch undergoes 72 hours of continuous full-load burn-in testing in environmental chambers cycling between -20°C and 70°C, ensuring mission-critical reliability for tier-one global consumer brands.</p>
-                  `}
+            <!-- Apple-Style Bento Grid -->
+            <div style="display:grid;grid-template-columns:repeat(12, 1fr);gap:24px;margin-bottom:32px;">
+              
+              <!-- Bento Card 1: Lead Narrative & Silicon Topologies (7 Cols) -->
+              <div style="grid-column:span 7;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;padding:36px;box-shadow:0 10px 30px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#f0f9ff;color:#0284c7;font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:16px;">
+                    Integrated GaN Architecture
+                  </div>
+                  <h2 style="font-size:1.4rem;font-weight:800;color:#0f172a;margin:0 0 14px;line-height:1.3;">
+                    Synchronous Rectification &amp; Dynamic Power Allocation
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.7;color:#475569;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">Operating at 300kHz switching frequencies, our GaN III power stage slashes thermal energy loss by 42% compared to traditional silicon MOSFETs. Integrated planar transformers and copper shielding eliminate coil whine across 100-240V international grids.</p>
+                      <p style="margin:0;">Precision 5-axis CNC machining carves aerospace-grade 6063 aluminum billets with 0.05mm dimensional tolerances, delivering structural rigidity and passive heatsink dissipation.</p>
+                    `}
+                  </div>
+                </div>
+
+                <!-- Inline Silicon Metrics -->
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:20px;border-top:1px solid #f1f5f9;">
+                  <div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Switching Freq</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0284c7;margin-top:2px;">300 kHz</div>
+                  </div>
+                  <div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Enclosure Alloy</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin-top:2px;">6063 CNC</div>
+                  </div>
+                  <div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Drop Rating</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin-top:2px;">1.5 m Steel</div>
+                  </div>
                 </div>
               </div>
+
+              <!-- Bento Card 2: Hardware Primary Image (5 Cols) -->
+              <div style="grid-column:span 5;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,0.04);position:relative;display:flex;flex-direction:column;">
+                <div style="position:relative;flex:1;min-height:320px;">
+                  <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                  <div style="position:absolute;bottom:16px;left:16px;right:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border:1px solid rgba(226,232,240,0.8);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+                    <div style="font-size:0.75rem;font-weight:800;color:#0f172a;">ANODIZED 180-MESH MATTE</div>
+                    <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:700;">PASSIVATED</div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <!-- Highlights Matrix -->
-            ${highlights.length > 0 ? `
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
-                ${highlights.map(h => `
-                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
-                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || '')}</div>
+            <!-- Bento Second Row: Highlights Stat Cards -->
+            <div style="display:grid;grid-template-columns:repeat(12, 1fr);gap:24px;">
+              
+              ${highlights.map((h, idx) => `
+                <div style="grid-column:span 4;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px;box-shadow:0 4px 16px rgba(15,23,42,0.02);display:flex;flex-direction:column;justify-content:space-between;">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                    <span style="font-family:ui-monospace,monospace;font-size:0.7rem;font-weight:700;color:#94a3b8;background:#f8fafc;padding:3px 8px;border-radius:6px;border:1px solid #f1f5f9;">PARAM #0${idx+1}</span>
+                    <span style="font-size:0.75rem;font-weight:800;color:#0284c7;">VERIFIED</span>
                   </div>
-                `).join('')}
+                  <div>
+                    <div style="font-size:2.2rem;font-weight:900;color:#0f172a;letter-spacing:-0.03em;line-height:1;margin-bottom:8px;">
+                      ${esc(h.value)}
+                    </div>
+                    <div style="font-size:0.95rem;font-weight:800;color:#334155;margin-bottom:4px;">
+                      ${esc(h.label)}
+                    </div>
+                    <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">
+                      ${esc(h.desc || 'Comprehensive hardware quality verification benchmark standard.')}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+
+              <!-- Production SMT Status Ribbon -->
+              <div style="grid-column:span 12;background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);border:1px solid #e2e8f0;border-radius:18px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);"></span>
+                  <span style="font-size:0.85rem;font-weight:800;color:#0f172a;">Yamaha SMT Fleet Online</span>
+                  <span style="font-size:0.8rem;color:#64748b;">· 0201 Component Placement Accuracy · 3D AOI &amp; Solder Paste Inspection</span>
+                </div>
+                <div style="font-family:ui-monospace,monospace;font-size:0.75rem;color:#475569;font-weight:600;">
+                  72H BURN-IN CHAMBER: -20°C TO +70°C VALIDATED
+                </div>
               </div>
-            ` : ''}
+
+            </div>
+
           </div>
         </main>
       `;
     } else {
-      // SMART LIVING PROTOCOL LAB ABOUT
+      // ELECTRONICS SMART VIDEO: IOT MESH NETWORK TOPOLOGY CONSOLE
       mainHtml = `
-        <main class="electronics-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
-          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
-            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                IoT Wireless Protocols &amp; RF Verification
+        <main class="electronics-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Top IoT Telemetry Bar -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;margin-bottom:36px;font-family:ui-monospace,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#6b21a8;box-shadow:0 4px 12px rgba(124,58,237,0.04);flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.2);"></span>
+                <strong style="color:#581c87;">TOPOLOGY CONSOLE: ONLINE</strong>
+              </div>
+              <div style="display:flex;gap:20px;align-items:center;font-weight:700;">
+                <span>THREAD MESH 802.15.4</span>
+                <span>CSA MATTER 1.3 CERTIFIED</span>
+                <span>LOCAL LATENCY: &lt; 15MS</span>
+              </div>
+            </div>
+
+            <!-- Header & Story Lead -->
+            <div style="max-width:880px;margin-bottom:40px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Unified Local Mesh &amp; Edge Intelligence Lab
               </span>
-              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;letter-spacing:-0.03em;">
                 ${esc(headline)}
               </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'Our wireless engineering center specializes in multi-admin Matter fabrics, Thread border routing controllers, and zero-cloud local edge execution for commercial smart installations.')}
+              </p>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
-              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(124,58,237,0.08);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-              <div>
-                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                    <p style="margin:0 0 18px;">Our specialized IoT laboratory operates 3-meter semi-anechoic chambers for electromagnetic compatibility (EMC) testing and Thread radio-frequency (RF) calibration across 2.4GHz IEEE 802.15.4 channels.</p>
-                    <p style="margin:0 0 18px;">We offer end-to-end turnkey firmware customization, assisting partners in obtaining official Connectivity Standards Alliance (CSA) Matter certifications and Apple HomeKit MFi pre-audits.</p>
-                  `}
-                </div>
-              </div>
-            </div>
-
-            <!-- Highlights Matrix -->
-            ${highlights.length > 0 ? `
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
-                ${highlights.map(h => `
-                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
-                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || '')}</div>
+            <!-- Central Mesh Network Topology Canvas Viewport -->
+            <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(124,58,237,0.06);margin-bottom:36px;position:relative;overflow:hidden;background-image:radial-gradient(#e9d5ff 1.2px, transparent 1.2px);background-size:24px 24px;">
+              
+              <div style="display:grid;grid-template-columns:minmax(280px, 1.2fr) minmax(320px, 1.4fr);gap:40px;align-items:center;">
+                
+                <!-- Left: Device Chassis Photo with Network Tags -->
+                <div style="position:relative;">
+                  <div style="border-radius:20px;overflow:hidden;border:2px solid #f3e8ff;box-shadow:0 12px 30px rgba(88,28,135,0.08);background:#ffffff;">
+                    <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
                   </div>
-                `).join('')}
+                  <!-- Floating Node Badges -->
+                  <div style="position:absolute;top:-12px;left:16px;background:#ffffff;border:1px solid #e9d5ff;border-radius:20px;padding:6px 14px;font-size:0.75rem;font-weight:800;color:#6b21a8;box-shadow:0 4px 12px rgba(88,28,135,0.06);display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
+                    NODE #01: LIGHTING MESH
+                  </div>
+                  <div style="position:absolute;bottom:-12px;right:16px;background:#ffffff;border:1px solid #e9d5ff;border-radius:20px;padding:6px 14px;font-size:0.75rem;font-weight:800;color:#6b21a8;box-shadow:0 4px 12px rgba(88,28,135,0.06);display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#7c3aed;"></span>
+                    NODE #02: HVAC &amp; SENSORS
+                  </div>
+                </div>
+
+                <!-- Right: RF Anechoic Chamber Validation & Protocols -->
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#faf5ff;color:#7c3aed;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;border:1px solid #e9d5ff;">
+                    3-Meter RF Anechoic Chamber
+                  </div>
+                  <h2 style="font-size:1.5rem;font-weight:900;color:#1e1b4b;margin:0 0 14px;line-height:1.3;">
+                    Zero-Cloud Local Intelligence &amp; Multi-Fabric Roaming
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.75;color:#475569;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">Operating across 2.4GHz IEEE 802.15.4 frequencies with AES-128 cryptographic key exchanges, our gateway hardware coordinates up to 254 active mesh end-devices with deterministic sub-15ms responsiveness.</p>
+                      <p style="margin:0;">Every firmware revision undergoes continuous OTA stress testing in our semi-anechoic RF chambers, ensuring full compliance with Apple HomeKit, Google Home, and Amazon Alexa Matter controllers.</p>
+                    `}
+                  </div>
+
+                  <!-- Protocol Feature Chips -->
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <span style="padding:6px 14px;border-radius:8px;background:#faf5ff;border:1px solid #e9d5ff;color:#6b21a8;font-size:0.78rem;font-weight:700;">Thread Border Router 1.3</span>
+                    <span style="padding:6px 14px;border-radius:8px;background:#faf5ff;border:1px solid #e9d5ff;color:#6b21a8;font-size:0.78rem;font-weight:700;">Zero-Cloud Edge Hub</span>
+                    <span style="padding:6px 14px;border-radius:8px;background:#faf5ff;border:1px solid #f3e8ff;color:#6b21a8;font-size:0.78rem;font-weight:700;">AES-128 Encryption</span>
+                  </div>
+                </div>
+
               </div>
-            ` : ''}
+            </div>
+
+            <!-- Highlights Protocol Metrics -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+              ${highlights.map(h => `
+                <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:26px;box-shadow:0 4px 16px rgba(124,58,237,0.03);position:relative;">
+                  <div style="font-size:2.2rem;font-weight:900;color:#7c3aed;margin-bottom:6px;line-height:1;">${esc(h.value)}</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">${esc(h.label)}</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">${esc(h.desc || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
           </div>
         </main>
       `;

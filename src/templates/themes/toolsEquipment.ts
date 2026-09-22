@@ -951,7 +951,7 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
     }
   } else if (page === 'about') {
     const headline = getAboutHeadline(company, isVideo ? 'Contractor Power Tool Endurance & Testing Center' : 'Temperature-Controlled Metrology Laboratory (20°C)');
-    const paragraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || (isVideo ? 'Built for extreme jobsite environments, TitanWorks subjects every brushless powertrain to 500-hour continuous dynamometer torture cycles and 2.5-meter concrete drop impacts.' : 'Our ISO/IEC 17025 accredited metrology center is maintained at an exacting 20.0°C ±0.5°C with active humidity filtering. High-precision laser scanning micrometers and Zeiss 3D coordinate measuring machines verify cutting tool tolerances down to ±0.002mm.'));
+    const paragraphs = getAboutStoryParagraphs(company);
     const images = getAboutImages(ctx);
     const highlights = parseAboutHighlights(company.aboutHighlights, isVideo ? [
       { value: '180 N·m', label: 'Dynamometer Peak Torque', desc: 'Continuous commercial duty test pass' },
@@ -965,88 +965,197 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
     const primaryImage = images.primary || (isVideo ? getIndustryPlaceholder('tools', 1) : getIndustryPlaceholder('tools', 0));
 
     if (!isVideo) {
-      // METROLOGY & PRECISION LAB ABOUT
+      // TOOLS PRECISION BANNER: TECHNICAL BLUEPRINT DRAFTING TABLE
       mainHtml = `
-        <main class="tools-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
-          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
-            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Temperature-Controlled Metrology Standards
+        <main class="tools-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Technical Coordinate Blueprint Header -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#ffffff;border:1px solid #bae6fd;border-radius:12px;margin-bottom:36px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#0284c7;box-shadow:0 2px 8px rgba(2,132,199,0.04);flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0284c7;"></span>
+                <strong style="color:#0369a1;">DIN EN ISO 2768-mK METROLOGY DRAFT</strong>
+              </div>
+              <div style="display:flex;gap:18px;align-items:center;font-weight:700;">
+                <span>STABILITY: 20.0°C ±0.5°C</span>
+                <span>ZEISS 3D CMM: ACTIVE</span>
+                <span>RUNOUT: &lt; 0.003MM</span>
+              </div>
+            </div>
+
+            <!-- Page Title & Engineering Lead Narrative -->
+            <div style="max-width:880px;margin-bottom:40px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Sub-Micron Calibration &amp; Tungsten Substrate Science
               </span>
-              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;letter-spacing:-0.03em;">
                 ${esc(headline)}
               </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'Our temperature-controlled metrology laboratory operates under constant 20.0°C conditions to eliminate thermal expansion variance during sub-micron dimensional verification.')}
+              </p>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
-              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(2,132,199,0.06);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-              <div>
-                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                    <p style="margin:0 0 18px;">Our metrology center operates under strict international calibration protocols, maintaining a constant 20.0°C ±0.5°C atmosphere and 45% relative humidity to eliminate thermal expansion variance during sub-micron measurement.</p>
-                    <p style="margin:0 0 18px;">Equipped with high-precision Zeiss 3D coordinate measuring machines (CMM) and Mitutoyo roundness testers, we provide ISO 17025 accredited calibration reports with every batch of precision tooling and inspection gages.</p>
-                  `}
-                </div>
-              </div>
-            </div>
+            <!-- Technical Drafting Table Canvas -->
+            <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(2,132,199,0.06);margin-bottom:36px;background-image:linear-gradient(to right, rgba(2,132,199,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(2,132,199,0.06) 1px, transparent 1px);background-size:24px 24px;position:relative;">
+              
+              <div style="display:grid;grid-template-columns:minmax(320px, 1.2fr) minmax(320px, 1.3fr);gap:44px;align-items:center;">
+                
+                <!-- Left: Blueprint Framed Primary Image with Corner Ticks -->
+                <div style="position:relative;background:#f8fafc;border:2px dashed #0284c7;border-radius:18px;padding:12px;">
+                  <!-- Corner Tick Marks -->
+                  <span style="position:absolute;top:-8px;left:-8px;background:#0284c7;color:#fff;font-family:monospace;font-size:0.65rem;font-weight:900;padding:1px 6px;border-radius:3px;">⌜ 0,0</span>
+                  <span style="position:absolute;bottom:-8px;right:-8px;background:#0284c7;color:#fff;font-family:monospace;font-size:0.65rem;font-weight:900;padding:1px 6px;border-radius:3px;">⌟ 120,45</span>
 
-            <!-- Highlights Matrix -->
-            ${highlights.length > 0 ? `
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
-                ${highlights.map(h => `
-                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
-                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || '')}</div>
+                  <div style="border-radius:12px;overflow:hidden;background:#ffffff;">
+                    <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
                   </div>
-                `).join('')}
+
+                  <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-family:ui-monospace,monospace;font-size:0.72rem;color:#0369a1;font-weight:700;">
+                    <span>COATING: AlTiN NANO-PVD</span>
+                    <span>TOLERANCE: ±0.002MM</span>
+                  </div>
+                </div>
+
+                <!-- Right: Metrology Inspection Clipboard -->
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#f0f9ff;color:#0284c7;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;border:1px solid #bae6fd;">
+                    Zeiss 3D CMM &amp; Optical Profilometry
+                  </div>
+                  <h2 style="font-size:1.5rem;font-weight:900;color:#0f172a;margin:0 0 16px;line-height:1.3;">
+                    ISO 17025 Accredited Calibration Protocol
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.75;color:#475569;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">Every carbide cutter and measuring standard is measured using Zeiss PRISMO 3D coordinate measuring machines with continuous high-speed scanning probes accurate to 0.5μm.</p>
+                      <p style="margin:0;">Substrates undergo deep cryo-stabilization treatment at -196°C to convert retained austenite into ultra-stable martensite, preventing dimensional creep across years of high-volume CNC cutting.</p>
+                    `}
+                  </div>
+
+                  <!-- Metrology Verification Checks -->
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;gap:10px;font-size:0.85rem;color:#0f172a;font-weight:700;">
+                      <span style="color:#0284c7;font-weight:900;">✓</span>
+                      <span>100% Optical Runout Inspection (&lt; 0.003mm)</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;font-size:0.85rem;color:#0f172a;font-weight:700;">
+                      <span style="color:#0284c7;font-weight:900;">✓</span>
+                      <span>Sub-Micron Laser Diffraction Grain Size Verification</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;font-size:0.85rem;color:#0f172a;font-weight:700;">
+                      <span style="color:#0284c7;font-weight:900;">✓</span>
+                      <span>Full Batch Traceability Certificate Included</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-            ` : ''}
+            </div>
+
+            <!-- Metrology Highlights Benchmark Strips -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+              ${highlights.map(h => `
+                <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:18px;padding:26px;box-shadow:0 4px 16px rgba(2,132,199,0.03);position:relative;">
+                  <div style="font-size:2.2rem;font-weight:900;color:#0284c7;margin-bottom:6px;line-height:1;letter-spacing:-0.03em;">${esc(h.value)}</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">${esc(h.label)}</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">${esc(h.desc || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
           </div>
         </main>
       `;
     } else {
-      // CONTRACTOR EQUIPMENT TESTING ABOUT
+      // TOOLS WORKSHOP VIDEO: JOBSITE TORTURE DOSSIER & FLEET RIG
       mainHtml = `
-        <main class="tools-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
-          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;">
-            <div style="max-width:840px;margin:0 auto 50px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Heavy Equipment Endurance &amp; Motor Winding Facility
+        <main class="tools-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Warning Hazard Stripe Banner Header -->
+            <div style="background:#1c1917;color:#fef08a;border-radius:12px;padding:12px 20px;margin-bottom:36px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:0 4px 16px rgba(0,0,0,0.08);font-family:ui-monospace,monospace;font-size:0.75rem;letter-spacing:0.05em;border-left:8px solid #d97706;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="background:#d97706;color:#ffffff;padding:2px 8px;border-radius:4px;font-weight:900;">TORTURE RIG</span>
+                <strong>HEAVY EQUIPMENT DEPLOYMENT LAB</strong>
+              </div>
+              <div style="display:flex;gap:18px;align-items:center;font-weight:700;color:#e7e5e4;">
+                <span>DROP TEST: 2.5M PASSED</span>
+                <span>ARMATURE: G1.0 DYNAMIC</span>
+                <span>SEAL: IP56 DUSTPROOF</span>
+              </div>
+            </div>
+
+            <!-- Page Title & Contractor Fleet Narrative -->
+            <div style="max-width:880px;margin-bottom:40px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Industrial Jobsite Endurance &amp; Motor Engineering
               </span>
-              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 20px;line-height:1.2;">
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;letter-spacing:-0.03em;">
                 ${esc(headline)}
               </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'TitanForge tests commercial power tools on robotic torture benches, conducting continuous concrete drilling and 2.5m steel-plate drop drops to guarantee survival on brutal job sites.')}
+              </p>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:64px;">
-              <div style="border-radius:18px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(217,119,6,0.08);">
-                <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:420px;object-fit:cover;display:block;" loading="lazy">
-              </div>
-              <div>
-                <div style="font-size:1.02rem;line-height:1.8;color:${theme.textMuted};">
-                  ${paragraphs.length > 0 ? paragraphs.map(p => `<p style="margin:0 0 18px;">${esc(p)}</p>`).join('') : `
-                    <p style="margin:0 0 18px;">TitanForge engineers commercial contractor tools using automated armature winding robotics, balancing motor rotors to grade G1.0 standards to minimize vibration fatigue on jobsites.</p>
-                    <p style="margin:0 0 18px;">Our heavy equipment testing center subjects every power tool chassis to continuous concrete drilling dynamometer torture cycles and 2.5-meter drop tests, ensuring long service life for commercial trade fleets.</p>
-                  `}
-                </div>
-              </div>
-            </div>
-
-            <!-- Highlights Matrix -->
-            ${highlights.length > 0 ? `
-              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:24px;margin-bottom:50px;">
-                ${highlights.map(h => `
-                  <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:24px;text-align:center;">
-                    <div style="font-size:2rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">${esc(h.value)}</div>
-                    <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${esc(h.label)}</div>
-                    <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc || '')}</div>
+            <!-- Heavy Equipment Chassis Rig Split -->
+            <div style="background:#ffffff;border:2px solid #fed7aa;border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(217,119,6,0.06);margin-bottom:36px;position:relative;">
+              
+              <div style="display:grid;grid-template-columns:minmax(320px, 1.2fr) minmax(320px, 1.3fr);gap:44px;align-items:center;">
+                
+                <!-- Left: Stamped Heavy-Duty Image -->
+                <div style="position:relative;">
+                  <div style="border-radius:18px;overflow:hidden;border:3px solid #1c1917;box-shadow:0 12px 28px rgba(0,0,0,0.12);background:#000;">
+                    <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
                   </div>
-                `).join('')}
+                  <!-- Rubber Stamp Badge -->
+                  <div style="position:absolute;top:16px;right:16px;background:#dc2626;color:#ffffff;border:2px solid #ffffff;border-radius:8px;padding:6px 14px;font-family:ui-monospace,monospace;font-size:0.72rem;font-weight:900;letter-spacing:0.08em;transform:rotate(4deg);box-shadow:0 4px 12px rgba(220,38,38,0.3);">
+                    PASSED 2.5M IMPACT
+                  </div>
+                </div>
+
+                <!-- Right: Commercial Trade Fleet Dossier -->
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#fef3c7;color:#b45309;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;border:1px solid #fde68a;">
+                    Commercial Fleet Specifications
+                  </div>
+                  <h2 style="font-size:1.5rem;font-weight:900;color:#1c1917;margin:0 0 16px;line-height:1.3;">
+                    Robotic Armature Balancing &amp; Dynamometer Validation
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.75;color:#57534e;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">Each motor rotor is dynamically balanced to Grade G1.0, slashing operator hand-arm vibration (HAV) below 1.2 m/s² for all-day continuous trade comfort.</p>
+                      <p style="margin:0;">Magnesium-alloy gear housings dissipate internal heat 3.4× faster than aluminum, protecting the precision helical gearing during full-load demolition hammer tasks.</p>
+                    `}
+                  </div>
+
+                  <!-- Fleet Feature Matrix -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;">
+                      <div style="font-size:0.72rem;font-weight:800;color:#b45309;text-transform:uppercase;">Motor Topology</div>
+                      <div style="font-size:0.95rem;font-weight:900;color:#1c1917;margin-top:2px;">Brushless BLDC</div>
+                    </div>
+                    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px;">
+                      <div style="font-size:0.72rem;font-weight:800;color:#b45309;text-transform:uppercase;">Gearbox Alloy</div>
+                      <div style="font-size:0.95rem;font-weight:900;color:#1c1917;margin-top:2px;">Magnesium AZ91D</div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-            ` : ''}
+            </div>
+
+            <!-- Highlights Test Cards -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+              ${highlights.map(h => `
+                <div style="background:#ffffff;border:1px solid #fed7aa;border-radius:18px;padding:26px;box-shadow:0 4px 16px rgba(217,119,6,0.03);position:relative;">
+                  <div style="font-size:2.2rem;font-weight:900;color:#d97706;margin-bottom:6px;line-height:1;letter-spacing:-0.03em;">${esc(h.value)}</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#1c1917;margin-bottom:6px;">${esc(h.label)}</div>
+                  <div style="font-size:0.8rem;color:#78716c;line-height:1.5;">${esc(h.desc || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
           </div>
         </main>
       `;
