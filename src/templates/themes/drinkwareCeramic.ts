@@ -657,55 +657,116 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         </main>
       `;
     } else {
-      // THERMAL HARDWARE PARAMETRIC SPEC CATALOG
+      // THERMAL TELEMETRY HARDWARE BENCHMARK MATRIX CATALOG
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
-          <div class="wrap" style="padding:0 24px;">
-            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                Lab Certified Fleet · Parametric Specifications
+        <main class="drinkware-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 90px;">
+          <div class="wrap" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Cryogenic Test Rig HUD Console Bar -->
+            <div style="background:#0284c7;color:#ffffff;border-radius:12px;padding:12px 20px;margin-bottom:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;letter-spacing:0.04em;box-shadow:0 4px 14px rgba(2,132,199,0.15);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,0.3);"></span>
+                <strong style="color:#ffffff;">CRYOGENIC TEST RIG: ACTIVE</strong>
+                <span style="color:#bae6fd;">// CHAMBER #04</span>
               </div>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                Vacuum Insulated Hardware Catalog
-              </h1>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Thermal Capacities (${products.length})</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">316L Surgical Grade</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Copper Vacuum Barrier</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Pure Titanium Grade 1</span>
+              <div style="display:flex;gap:18px;align-items:center;font-weight:700;color:#f0f9ff;">
+                <span>VACUUM: 10⁻⁵ PA</span>
+                <span>AUDITED: ${products.length} SPECIMENS</span>
+                <span>REV: TR-2026.4</span>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
-              ${products.map(p => `
-                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(2,132,199,0.05);">
-                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.15;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:78%;height:78%;object-fit:contain;">
-                      <span style="position:absolute;top:10px;left:10px;background:#0284c7;color:#fff;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                      <span style="position:absolute;bottom:10px;right:10px;background:#e0f2fe;color:#0369a1;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.extra)}</span>
+            <!-- Page Title & Testing Benchmark Intro -->
+            <div style="margin-bottom:36px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Parametric Telemetry Specimen Matrix
+              </span>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;letter-spacing:-0.03em;">
+                Vacuum Insulated Hardware Catalog
+              </h1>
+              <p style="font-size:1.02rem;color:${theme.textMuted};max-width:820px;line-height:1.65;margin:0 0 24px;">
+                All production tumblers and flasks undergo 10⁻⁵ Pa vacuum brazing with double-wall copper heat radiation barriers, electropolished 316L surgical liners, and 100% helium mass spectrometry testing.
+              </p>
+
+              <!-- Oscilloscope Channel Selector Filter -->
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:ui-monospace,monospace;font-size:0.75rem;font-weight:700;">
+                <span style="padding:8px 16px;border-radius:6px;background:#0284c7;color:#fff;">[CH-01: ALL SPECIMENS (${products.length})]</span>
+                <span style="padding:8px 16px;border-radius:6px;background:#fff;color:#0369a1;border:1px solid #bae6fd;">[CH-02: 316L SURGICAL]</span>
+                <span style="padding:8px 16px;border-radius:6px;background:#fff;color:#0369a1;border:1px solid #bae6fd;">[CH-03: COPPER POT BARRIER]</span>
+                <span style="padding:8px 16px;border-radius:6px;background:#fff;color:#0369a1;border:1px solid #bae6fd;">[CH-04: TITANIUM GRADE 1]</span>
+              </div>
+            </div>
+
+            <!-- Bespoke Tested Specimen Modules Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:28px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid #bae6fd;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(2,132,199,0.06);display:flex;flex-direction:column;justify-content:space-between;position:relative;">
+                  
+                  <!-- Top Card Inspection HUD Header -->
+                  <div style="padding:10px 16px;background:#f0f9ff;border-bottom:1px solid #e0f2fe;display:flex;justify-content:space-between;align-items:center;font-family:ui-monospace,monospace;font-size:0.7rem;font-weight:700;color:#0369a1;">
+                    <span>SPECIMEN #TL-0${idx + 1}</span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;color:#0284c7;">
+                      <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
+                      CALIBRATED
+                    </span>
+                  </div>
+
+                  <!-- Specimen Image in CAD Frame with Reticle -->
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;padding:24px 24px 16px;background:radial-gradient(#e0f2fe 1px, transparent 1px);background-size:16px 16px;position:relative;border-bottom:1px solid #f1f5f9;">
+                    <div style="aspect-ratio:1.2;position:relative;display:flex;align-items:center;justify-content:center;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="max-width:80%;max-height:80%;object-fit:contain;display:block;">
+                      <span style="position:absolute;top:0;left:0;background:#0284c7;color:#fff;font-family:ui-monospace,monospace;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:0;right:0;background:#ffffff;border:1px solid #bae6fd;color:#0369a1;font-family:ui-monospace,monospace;font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">10⁻⁵ PA</span>
                     </div>
                   </a>
-                  <div style="padding:20px;">
-                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 8px;line-height:1.3;">
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
-                    </h3>
-                    <p style="font-size:0.84rem;color:${theme.textMuted};line-height:1.5;margin-bottom:14px;">${esc(p.desc)}</p>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.75rem;background:#f0f9ff;padding:10px;border-radius:6px;margin-bottom:14px;">
-                      <div><span style="color:${theme.textSub};">Volume:</span> <strong style="color:${theme.text};">${esc(p.dimensions.split('·')[1] || p.dimensions)}</strong></div>
-                      <div><span style="color:${theme.textSub};">Liner:</span> <strong style="color:${theme.text};">316L Stainless</strong></div>
+
+                  <!-- Specimen Telemetry Content -->
+                  <div style="padding:20px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div>
+                      <div style="font-size:0.72rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">${esc(p.categoryNameEn)} · INDUSTRIAL THERMODYNAMICS</div>
+                      <h3 style="font-size:1.15rem;font-weight:900;color:#0f172a;margin:0 0 10px;line-height:1.3;">
+                        <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:#0f172a;">${esc(p.name)}</a>
+                      </h3>
+                      <p style="font-size:0.85rem;color:#475569;line-height:1.55;margin:0 0 16px;">${esc(p.desc)}</p>
+
+                      <!-- Dual Thermometer Hold Gauges -->
+                      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-bottom:6px;">
+                          <span style="color:#0284c7;font-weight:700;">Sub-Zero Cold Hold:</span>
+                          <strong style="font-family:ui-monospace,monospace;color:#0369a1;">&lt; 6°C @ 48H</strong>
+                        </div>
+                        <div style="width:100%;height:6px;background:#e0f2fe;border-radius:3px;overflow:hidden;margin-bottom:10px;">
+                          <div style="width:92%;height:100%;background:#0284c7;"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;margin-bottom:6px;">
+                          <span style="color:#d97706;font-weight:700;">Hot Beverage Hold:</span>
+                          <strong style="font-family:ui-monospace,monospace;color:#b45309;">&gt; 65°C @ 24H</strong>
+                        </div>
+                        <div style="width:100%;height:6px;background:#fef3c7;border-radius:3px;overflow:hidden;">
+                          <div style="width:84%;height:100%;background:#d97706;"></div>
+                        </div>
+                      </div>
+
+                      <!-- Material Metallurgy Callout -->
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#64748b;padding-bottom:12px;">
+                        <span>Liner: <strong style="color:#0f172a;">316L Surgical</strong></span>
+                        <span>Dimensions: <strong style="color:#0f172a;">${esc(p.dimensions)}</strong></span>
+                      </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.8rem;">
-                      <span style="font-weight:700;color:${theme.textSub};">MOQ: <strong style="color:${theme.primary};">${esc(p.moq)}</strong></span>
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-weight:800;color:${theme.primary};">
-                        Full Telemetry →
+
+                    <!-- Bottom Action & MOQ Bar -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid #f1f5f9;font-size:0.82rem;">
+                      <span style="color:#64748b;font-weight:700;">MOQ: <strong style="color:#0284c7;">${esc(p.moq)}</strong></span>
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-weight:800;color:#0284c7;display:inline-flex;align-items:center;gap:4px;">
+                        Inspect Telemetry Sheet →
                       </a>
                     </div>
                   </div>
+
                 </article>
               `).join('')}
             </div>
+
           </div>
         </main>
       `;
@@ -813,96 +874,194 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         </main>
       `;
     } else {
-      // THERMAL TELEMETRY HARDWARE SPECIFICATION DOSSIER
+      // THERMAL MULTI-CHANNEL TELEMETRY WORKSTATION & CROSS-SECTION WORKBENCH
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 90px;">
-          <div class="wrap" style="padding:0 24px;">
-            <div style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:${theme.textSub};margin-bottom:28px;">
-              <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">Engineering Hub</a>
-              <span>/</span>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">Parametric Fleet</a>
-              <span>/</span>
-              <span style="color:${theme.primary};font-weight:700;">${esc(prod.name)}</span>
+        <main class="drinkware-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 100px;">
+          <div class="wrap" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Tier 1: Lab Console Breadcrumb & Mass Spec Seal Header -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#ffffff;border:1px solid #bae6fd;border-radius:12px;margin-bottom:32px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#0284c7;box-shadow:0 2px 8px rgba(2,132,199,0.04);flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:#0369a1;font-weight:700;">LAB SYSTEM</a>
+                <span>&gt;</span>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:#0369a1;font-weight:700;">THERMAL BENCH</a>
+                <span>&gt;</span>
+                <span style="color:#0284c7;font-weight:800;">SPECIMEN TR-${esc(prod.id.toUpperCase())}</span>
+              </div>
+              <div style="display:flex;gap:16px;align-items:center;font-weight:700;">
+                <span>MASS SPEC: &lt; 1×10⁻¹⁰ MBAR·L/S</span>
+                <span>DEEP CRYOGENIC ANNEALED</span>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:flex-start;">
-              <!-- Product Telemetry Viewer -->
+            <!-- Tier 2: Asymmetric Split Telemetry Workbench -->
+            <div style="display:grid;grid-template-columns:minmax(320px, 1.15fr) minmax(340px, 1.25fr);gap:44px;align-items:start;margin-bottom:48px;">
+              
+              <!-- Left Column: Cryogenic Chamber Testing Viewport & Degradation Curve -->
               <div>
-                <div style="background:#fff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(2,132,199,0.06);position:relative;">
-                  <img id="wr-detail-main-img" src="${esc(prod.img)}" alt="${esc(prod.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(prod.id)}" style="width:100%;height:460px;object-fit:contain;background:#f8fafc;display:block;">
-                  <div style="position:absolute;top:20px;left:20px;background:#0284c7;color:#fff;padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:800;">
-                    ${esc(prod.badge)}
+                <!-- Environmental Chamber Frame -->
+                <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(2,132,199,0.06);position:relative;">
+                  <!-- Live Chamber Digital Readout Header -->
+                  <div style="padding:10px 16px;background:#f0f9ff;border-bottom:1px solid #e0f2fe;display:flex;justify-content:space-between;align-items:center;font-family:ui-monospace,monospace;font-size:0.72rem;font-weight:700;color:#0369a1;">
+                    <span>CHAMBER SENSOR: -20.0°C AMBIENT</span>
+                    <span style="color:#0284c7;">CORE HOLD: 4.2°C // 48H</span>
                   </div>
-                  <div style="position:absolute;bottom:20px;right:20px;background:#e0f2fe;color:#0369a1;padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:800;">
-                    ${esc(prod.extra)}
+
+                  <!-- Specimen Image Viewport -->
+                  <div style="position:relative;background:radial-gradient(#e0f2fe 1px, transparent 1px);background-size:20px 20px;padding:32px;text-align:center;">
+                    <img id="wr-detail-main-img" src="${esc(prod.img)}" alt="${esc(prod.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(prod.id)}" style="width:100%;max-height:440px;object-fit:contain;display:inline-block;" fetchpriority="high">
+                    
+                    <div style="position:absolute;top:16px;left:16px;background:#0284c7;color:#fff;padding:4px 10px;border-radius:4px;font-family:ui-monospace,monospace;font-size:0.72rem;font-weight:800;">
+                      ${esc(prod.badge)}
+                    </div>
+                    <div style="position:absolute;bottom:16px;right:16px;background:#ffffff;border:1px solid #bae6fd;color:#0369a1;padding:4px 12px;border-radius:6px;font-family:ui-monospace,monospace;font-size:0.72rem;font-weight:800;">
+                      ${esc(prod.extra)}
+                    </div>
+                  </div>
+
+                  <!-- Multi-Channel Thumbnails Tray -->
+                  <div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;padding:16px;background:#f8fafc;border-top:1px solid #e2e8f0;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #0284c7;border-radius:8px;overflow:hidden;background:#ffffff;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                      <img src="${esc(prod.img)}" alt="CH-01 Specimen Front" style="width:100%;aspect-ratio:1.2;object-fit:contain;">
+                      <span style="font-family:ui-monospace,monospace;font-size:0.65rem;font-weight:800;color:#0284c7;">CH-1: PROFILE</span>
+                    </button>
+                    <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid #bae6fd;border-radius:8px;overflow:hidden;background:#ffffff;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                      <img src="${esc(products[1]?.img || prod.img)}" alt="CH-02 Vacuum Gap" style="width:100%;aspect-ratio:1.2;object-fit:contain;">
+                      <span style="font-family:ui-monospace,monospace;font-size:0.65rem;font-weight:800;color:#64748b;">CH-2: GAP</span>
+                    </button>
+                    <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid #bae6fd;border-radius:8px;overflow:hidden;background:#ffffff;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                      <img src="${esc(products[2]?.img || prod.img)}" alt="CH-03 Lid Gasket" style="width:100%;aspect-ratio:1.2;object-fit:contain;">
+                      <span style="font-family:ui-monospace,monospace;font-size:0.65rem;font-weight:800;color:#64748b;">CH-3: SEAL</span>
+                    </button>
                   </div>
                 </div>
 
-                <div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;margin-top:16px;">
-                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;overflow:hidden;background:#f8fafc;padding:4px;cursor:pointer;">
-                    <img src="${esc(prod.img)}" alt="Front Angle" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;">
-                  </button>
-                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#f8fafc;padding:4px;cursor:pointer;">
-                    <img src="${esc(products[1]?.img || prod.img)}" alt="Cross Section" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;">
-                  </button>
-                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#f8fafc;padding:4px;cursor:pointer;">
-                    <img src="${esc(products[2]?.img || prod.img)}" alt="Lid Seal" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;">
-                  </button>
+                <!-- 24-Hour Thermal Degradation Curve Simulator -->
+                <div style="margin-top:24px;background:#ffffff;border:1px solid #bae6fd;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(2,132,199,0.04);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-family:ui-monospace,monospace;font-size:0.75rem;">
+                    <span style="font-weight:800;color:#0369a1;">HOT BEVERAGE THERMAL DECAY CURVE</span>
+                    <span style="color:#64748b;">INITIAL: 98.0°C</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:8px;padding:8px;">
+                      <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#64748b;">0 HOURS</div>
+                      <div style="font-size:1.1rem;font-weight:900;color:#0284c7;margin-top:2px;">98.0°C</div>
+                    </div>
+                    <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:8px;padding:8px;">
+                      <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#64748b;">6 HOURS</div>
+                      <div style="font-size:1.1rem;font-weight:900;color:#0284c7;margin-top:2px;">89.4°C</div>
+                    </div>
+                    <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:8px;padding:8px;">
+                      <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#64748b;">12 HOURS</div>
+                      <div style="font-size:1.1rem;font-weight:900;color:#0284c7;margin-top:2px;">81.2°C</div>
+                    </div>
+                    <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:8px;padding:8px;">
+                      <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#64748b;">24 HOURS</div>
+                      <div style="font-size:1.1rem;font-weight:900;color:#0284c7;margin-top:2px;">72.5°C</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Engineering Specification Sheet -->
+              <!-- Right Column: Parametric Metallurgy & Engineering Dossier -->
               <div>
-                <div style="display:inline-block;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                  HARDWARE DOSSIER #TR-800
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                  Parametric Telemetry Specimen · TR-${esc(prod.id.toUpperCase())}
                 </div>
-                <h1 style="font-size:clamp(2rem, 3.4vw, 2.6rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;">
+                <h1 style="font-size:clamp(2rem, 3.2vw, 2.7rem);font-weight:900;color:#0f172a;margin:0 0 14px;line-height:1.2;letter-spacing:-0.03em;">
                   ${esc(prod.name)}
                 </h1>
-                <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                <p style="font-size:1.02rem;color:#475569;line-height:1.75;margin:0 0 24px;">
                   ${esc(prod.desc)}
                 </p>
 
-                <!-- Parameter Spec Table -->
-                <div style="background:#fff;border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;margin-bottom:28px;">
-                  <div style="padding:14px 20px;background:#f0f9ff;border-bottom:1px solid ${theme.cardBorder};font-size:0.8rem;font-weight:800;color:${theme.primary};">
-                    PARAMETRIC TELEMETRY SPECIFICATION
+                <!-- 4-Cell Vacuum Metallurgy Micro-Architecture Matrix -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+                  <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:16px;">
+                    <div style="font-size:0.72rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:4px;">Vacuum Level</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0284c7;">10⁻⁵ Pa Purity</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Cryogenic vacuum braze</div>
                   </div>
-                  <div style="padding:20px;display:flex;flex-direction:column;gap:12px;font-size:0.88rem;">
-                    <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:8px;">
-                      <span style="color:${theme.textSub};">Material Architecture:</span>
-                      <strong style="color:${theme.text};">${esc(prod.material)}</strong>
+                  <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:16px;">
+                    <div style="font-size:0.72rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:4px;">Core Metallurgy</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;">316L Surgical</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Electropolished Ra &lt; 0.2μm</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:16px;">
+                    <div style="font-size:0.72rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:4px;">Radiation Shield</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;">0.02mm Copper</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">Reflective barrier film</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:12px;padding:16px;">
+                    <div style="font-size:0.72rem;font-weight:800;color:#0369a1;text-transform:uppercase;margin-bottom:4px;">Getter Stability</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;">Zr-Al Getter Pill</div>
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">10-Year vacuum integrity</div>
+                  </div>
+                </div>
+
+                <!-- Export Logistics & Packaging Calculator -->
+                <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:14px;padding:18px 20px;margin-bottom:28px;">
+                  <div style="font-weight:800;font-size:0.85rem;color:#0369a1;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                    <span>Wholesale Logistics &amp; Container Specification</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:0.8rem;">
+                    <div>
+                      <span style="color:#64748b;display:block;">Master Carton</span>
+                      <strong style="color:#0f172a;">24 Units / Box</strong>
                     </div>
-                    <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:8px;">
-                      <span style="color:${theme.textSub};">Dimensional Bounds:</span>
-                      <strong style="color:${theme.text};">${esc(prod.dimensions)}</strong>
+                    <div>
+                      <span style="color:#64748b;display:block;">Pallet Load</span>
+                      <strong style="color:#0f172a;">36 Ctns (864 Pcs)</strong>
                     </div>
-                    <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:8px;">
-                      <span style="color:${theme.textSub};">Insulation Decay Rating:</span>
-                      <strong style="color:${theme.primary};">${esc(prod.extra)}</strong>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;">
-                      <span style="color:${theme.textSub};">Production Lot MOQ:</span>
-                      <strong style="color:${theme.text};">${esc(prod.moq)}</strong>
+                    <div>
+                      <span style="color:#64748b;display:block;">40HQ Cargo</span>
+                      <strong style="color:#0284c7;">28,800 Units Fleet</strong>
                     </div>
                   </div>
                 </div>
 
-                <div style="background:#f0f9ff;border:1px solid rgba(2,132,199,0.25);border-radius:10px;padding:18px 20px;margin-bottom:32px;">
-                  <div style="font-weight:800;font-size:0.88rem;color:${theme.text};margin-bottom:4px;">Wholesale Pallet &amp; Shipping Optimization</div>
-                  <div style="font-size:0.78rem;color:${theme.textMuted};line-height:1.5;">Master export cartons packed 24 units/case. Standard 40HQ container accommodates 28,800 units with drop-tested honeycomb palletizing.</div>
-                </div>
-
-                <div style="display:flex;gap:14px;">
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;flex:1;padding:16px;text-align:center;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-                    Submit RFQ Specification ↗
+                <!-- Action CTA -->
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(prod.id)}" ${navAttrs('contact')} style="text-decoration:none;flex:1;min-width:220px;padding:16px;text-align:center;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Submit Technical RFQ Specification ↗
                   </a>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:8px;background:#fff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:700;">
-                    Back to Fleet
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:8px;background:#ffffff;color:#0f172a;border:1px solid #bae6fd;font-size:0.95rem;font-weight:700;">
+                    Return to Fleet
                   </a>
                 </div>
               </div>
+
             </div>
+
+            <!-- Tier 3: 5-Layer Exploded Vacuum Barrier Cross-Section Ribbon -->
+            <div style="background:#ffffff;border:1px solid #bae6fd;border-radius:18px;padding:28px 32px;box-shadow:0 4px 20px rgba(2,132,199,0.04);">
+              <div style="font-family:ui-monospace,monospace;font-size:0.75rem;font-weight:800;color:#0369a1;margin-bottom:16px;letter-spacing:0.04em;">
+                CROSS-SECTION DIAGNOSTIC: 5-LAYER CRYOGENIC THERMAL BARRIER
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:16px;position:relative;">
+                <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:800;">LAYER 01</div>
+                  <div style="font-weight:800;font-size:0.88rem;color:#0f172a;margin-top:2px;">316L Core</div>
+                </div>
+                <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:800;">LAYER 02</div>
+                  <div style="font-weight:800;font-size:0.88rem;color:#0f172a;margin-top:2px;">Copper Foil</div>
+                </div>
+                <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:800;">LAYER 03</div>
+                  <div style="font-weight:800;font-size:0.88rem;color:#0f172a;margin-top:2px;">10⁻⁵ Pa Void</div>
+                </div>
+                <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:800;">LAYER 04</div>
+                  <div style="font-weight:800;font-size:0.88rem;color:#0f172a;margin-top:2px;">Getter Pill</div>
+                </div>
+                <div style="background:#f0f9ff;border:1px solid #e0f2fe;border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:800;">LAYER 05</div>
+                  <div style="font-weight:800;font-size:0.88rem;color:#0f172a;margin-top:2px;">304 Armor</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </main>
       `;
@@ -1115,73 +1274,145 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
         </main>
       `;
     } else {
-      // THERMAL CRYOGENIC LAB TECHNICAL RFQ TERMINAL
+      // THERMAL CRYOGENIC LAB TECHNICAL RFQ WORKSTATION & TOOLING TERMINAL
       mainHtml = `
-        <main class="drinkware-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+        <main class="drinkware-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                ThermalTech Engineering RFQ Terminal
-              </span>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
-                Request Technical Proposal
-              </h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
-                Inquire about custom tooling, vacuum brazing cycles, OEM dual-wall hydroforming, and international laboratory compliance certifications.
-              </p>
+            <!-- Top Status Bar -->
+            <div style="background:#0284c7;color:#ffffff;padding:10px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.78rem;font-weight:700;flex-wrap:wrap;gap:10px;">
+              <span>[CRYOGENIC TOOLING RFQ TERMINAL] // LAB DISPATCH · HELIUM LEAK RATE: &lt; 1×10⁻⁹ PA·M³/S</span>
+              <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;">STATUS: AUDIT READY · ISO 9001</span>
             </div>
 
-            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:40px;box-shadow:0 12px 36px rgba(2,132,199,0.06);">
-              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Procurement Contact</label>
-                    <input type="text" name="name" required placeholder="Lead Hardware Engineer" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email</label>
-                    <input type="email" name="email" required placeholder="procurement@brand.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
-                  </div>
-                </div>
-
+            <!-- Main Workstation Box -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-top:none;border-radius:0 0 16px 16px;padding:36px;box-shadow:0 12px 36px rgba(2,132,199,0.06);margin-bottom:40px;">
+              <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:40px;align-items:start;">
+                <!-- Left Column: Laboratory Testing & Tooling Consultation Desk -->
                 <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Thermal Vessel Architecture</label>
-                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                    <option value="">General Custom Hardware Program</option>
-                    ${products.map(p => `
-                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
-                    `).join('')}
-                  </select>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Stainless Grade</label>
-                    <select name="grade" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>Surgical 316L Inner + 304 Outer</option>
-                      <option>Standard 304 Dual-Wall Stainless</option>
-                      <option>Grade 1 Pure Titanium (Backpacking)</option>
-                    </select>
+                  <div style="margin-bottom:28px;">
+                    <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:#e0f2fe;color:#0369a1;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;">
+                      Engineering Liaison &amp; DFM Advisory
+                    </span>
+                    <h1 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 12px;line-height:1.2;">
+                      Thermal Hardware RFQ Workstation
+                    </h1>
+                    <p style="font-size:0.92rem;color:${theme.textMuted};line-height:1.7;margin:0;">
+                      Initiate direct tooling feasibility reviews, helium mass spectrometer validation, vacuum brazing cycles, and wholesale export packaging programs with our engineering team.
+                    </p>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Annual Production Volume</label>
-                    <select name="volume" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>LCL Pilot Lot (1,000 - 3,000 Units)</option>
-                      <option>20GP Full Container (~15,000 Units)</option>
-                      <option>40HQ Enterprise Program (~45,000+ Units)</option>
-                    </select>
+
+                  <!-- Lab Protocol Checklist -->
+                  <div style="background:#f8fafc;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;margin-bottom:24px;">
+                    <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#0284c7;margin-bottom:14px;letter-spacing:0.04em;">
+                      LABORATORY AUDIT PROTOCOLS (INCLUDED PER BATCH)
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;color:${theme.text};">
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#0284c7;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>100% Helium Mass Spectrometry:</strong> Vacuum leak check &lt; 1×10⁻⁹ Pa·m³/s</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#0284c7;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Thermal Chamber Imaging:</strong> Fluke Ti480 24-hour decay curve validation</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#0284c7;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Torsional &amp; Drop Impact:</strong> 1.5-meter drop test and 1.5 bar lid hydrostatic seal</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#0284c7;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Global Food Migration Audits:</strong> FDA 21 CFR, LFGB, and California Prop 65</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Direct Technical Liaison Card -->
+                  <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:20px;">
+                    <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#0284c7;margin-bottom:10px;">
+                      DIRECT METALLURGY LIAISON DESK
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.82rem;">
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">Response SLA</span>
+                        <strong style="color:${theme.text};">&lt; 4 Working Hours</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">CAD Formats</span>
+                        <strong style="color:${theme.text};">STEP, IGES, SolidWorks, DWG</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">Lab Dispatch</span>
+                        <strong style="color:${theme.text};">${esc(company.email || 'engineering@thermallab.com')}</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">Tooling Lead Time</span>
+                        <strong style="color:${theme.text};">14 - 18 Calendar Days</strong>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Engineering Notes &amp; Destination Port</label>
-                  <textarea name="message" rows="4" placeholder="Specify insulation hours, powder-coating pantones, laser engraving, or custom tooling requirements..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-                </div>
+                <!-- Right Column: Interactive Cryogenic RFQ Console -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:28px;box-shadow:0 4px 20px rgba(2,132,199,0.04);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid ${theme.cardBorder};padding-bottom:12px;">
+                    <span style="font-weight:800;font-size:0.95rem;color:${theme.text};">RFQ SPECIFICATION FORM</span>
+                    <span style="font-family:monospace;font-size:0.75rem;color:#0284c7;font-weight:700;">FORM_ID: RFQ-VAC2026</span>
+                  </div>
 
-                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Transmit Technical RFQ Specification ↗
-                </button>
-              </form>
+                  <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Contact &amp; Title</label>
+                        <input type="text" name="name" required placeholder="Lead Hardware Engineer" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#f8fafc;">
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Corporate Email</label>
+                        <input type="email" name="email" required placeholder="engineering@company.com" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#f8fafc;">
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Target Thermal Vessel Architecture</label>
+                      <select name="productId" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#ffffff;">
+                        <option value="">General Custom Thermal Tooling Program (All Specifications)</option>
+                        ${products.map(p => `
+                          <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
+                        `).join('')}
+                      </select>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Stainless Metallurgy &amp; Wall Spec</label>
+                        <select name="grade" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#ffffff;">
+                          <option>Surgical 316L Inner + 304 Outer (Electrolytic)</option>
+                          <option>Standard 304 Dual-Wall Commercial Grade</option>
+                          <option>Grade 1 Pure Titanium (Ultralight Backcountry)</option>
+                          <option>Double-Wall with 0.02mm Copper Foil Interlayer</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Batch Volume &amp; Logistics Program</label>
+                        <select name="volume" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#ffffff;">
+                          <option>LCL Pilot Lot (1,000 - 3,000 Units)</option>
+                          <option>20GP Full Container (~15,000 Units)</option>
+                          <option>40HQ Enterprise High-Cube (~45,000+ Units)</option>
+                          <option>Annual OEM Program (100,000+ Units / Year)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Engineering Tolerances &amp; Custom Requirements</label>
+                      <textarea name="message" rows="4" placeholder="Specify required hold hours, thermal decay targets, Pantone powder-coat codes, laser engraving, or custom lid hydroforming tolerances..." style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;resize:vertical;background:#f8fafc;"></textarea>
+                    </div>
+
+                    <button type="submit" style="padding:15px;border-radius:8px;border:none;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};transition:all 0.2s ease;">
+                      TRANSMIT CRYOGENIC RFQ &amp; DFM BRIEF ↗
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -1208,10 +1439,10 @@ export function renderDrinkwarePage(ctx: ThemeContext, isVideo: boolean): string
             </div>
           </div>
           <div>
-            <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">Atelier Inquiry</div>
+            <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">${isVideo ? 'Lab &amp; Engineering Inquiry' : 'Atelier Inquiry'}</div>
             <div style="color:${theme.textSub};line-height:1.6;">
-              <div>${esc(company.address || 'Export Craft District, Global Logistics Center')}</div>
-              <div>${esc(company.email || 'export@atelier-craft.com')}</div>
+              <div>${esc(company.address || (isVideo ? 'Cryogenic Metallurgy Industrial Park, Precision Park' : 'Export Craft District, Global Logistics Center'))}</div>
+              <div>${esc(company.email || (isVideo ? 'engineering@thermallab.com' : 'export@atelier-craft.com'))}</div>
             </div>
           </div>
         </div>
