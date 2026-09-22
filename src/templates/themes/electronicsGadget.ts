@@ -625,56 +625,88 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
         </main>
       `;
     } else {
-      // SMART LIVING SUBSYSTEM INDEX CATALOG
+      // WHOLE-HOUSE SPATIAL IOT NODE MATRIX & AUTOMATION DECK
       mainHtml = `
-        <main class="electronics-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="electronics-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                Matter over Thread Ecosystem · Protocol Devices
-              </div>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                Smart Living Subsystem Index
-              </h1>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Smart Subsystems (${products.length})</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Border Gateways</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Climate Sensors</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Biometric Locks</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Wearable Health</span>
+            <!-- Top IoT Mesh Console HUD Header Bar -->
+            <div style="background:#7c3aed;color:#ffffff;padding:10px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.78rem;font-weight:700;flex-wrap:wrap;gap:10px;">
+              <span>[AIOT SPATIAL MESH: ACTIVE] // GATEWAY #01 · 254 NODES ONLINE · THREAD 1.3</span>
+              <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;">LATENCY: 8.4MS · ZERO-CLOUD LOCAL PING</span>
+            </div>
+
+            <!-- Protocol Filter Header Bar -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-top:none;border-radius:0 0 16px 16px;padding:28px 32px;margin-bottom:36px;box-shadow:0 8px 30px rgba(124,58,237,0.04);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;">
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:#f3e8ff;color:#6d28d9;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">
+                    Matter 1.3 over Thread Ecosystem
+                  </div>
+                  <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};margin:0;letter-spacing:-0.03em;">
+                    Smart Living Subsystem &amp; Node Index
+                  </h1>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:monospace;font-size:0.75rem;font-weight:700;">
+                  <span style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#ffffff;border:1px solid #7c3aed;cursor:pointer;">[NODE-01: ALL SMART NODES (${products.length})]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#faf5ff;color:#6d28d9;border:1px solid ${theme.cardBorder};cursor:pointer;">[NODE-02: BORDER ROUTERS]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#faf5ff;color:#6d28d9;border:1px solid ${theme.cardBorder};cursor:pointer;">[NODE-03: SENSORS &amp; CLIMATE]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#faf5ff;color:#6d28d9;border:1px solid ${theme.cardBorder};cursor:pointer;">[NODE-04: ROBOTIC APPLIANCES]</span>
+                </div>
               </div>
             </div>
 
-            <!-- Smart Hardware Cards -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
-              ${products.map(p => `
-                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(124,58,237,0.04);">
-                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.1;background:#faf5ff;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
-                      <span style="position:absolute;top:10px;left:10px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-family:monospace;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                      <span style="position:absolute;bottom:10px;right:10px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">MATTER 1.3</span>
+            <!-- Bespoke IoT Node Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:28px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(124,58,237,0.06);display:flex;flex-direction:column;transition:transform 0.2s ease, box-shadow 0.2s ease;">
+                  <!-- Top Node Status HUD -->
+                  <div style="background:#faf5ff;border-bottom:1px solid ${theme.cardBorder};padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.72rem;">
+                    <span style="color:#7c3aed;font-weight:800;">NODE-TH${idx + 1} // THREAD 1.3</span>
+                    <span style="background:#f3e8ff;color:#6d28d9;padding:2px 6px;border-radius:4px;font-weight:700;">RSSI: -42 DBM</span>
+                  </div>
+
+                  <!-- Optical CAD Viewport -->
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;background:linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);padding:20px;position:relative;border-bottom:1px solid ${theme.cardBorder};">
+                    <div style="aspect-ratio:1.2;position:relative;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#ffffff;border:1px dashed rgba(124,58,237,0.25);overflow:hidden;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:82%;height:82%;object-fit:contain;display:block;">
+                      <span style="position:absolute;top:10px;left:10px;background:#7c3aed;color:#ffffff;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:10px;right:10px;background:#f3e8ff;color:#6d28d9;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.extra)}</span>
                     </div>
                   </a>
-                  <div style="padding:20px;">
-                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};margin:0 0 10px;line-height:1.3;">
+
+                  <!-- Node Card Body -->
+                  <div style="padding:22px;flex:1;display:flex;flex-direction:column;">
+                    <div style="font-family:monospace;font-size:0.72rem;color:#0284c7;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
+                      TOPOLOGY LAYER // ${esc(p.categoryNameEn)}
+                    </div>
+                    <h3 style="font-size:1.18rem;font-weight:900;color:${theme.text};margin:0 0 10px;line-height:1.3;">
                       <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
                     </h3>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;font-size:0.75rem;margin-bottom:14px;">
-                      <div>
-                        <span style="color:${theme.textSub};display:block;">Protocol/Mesh:</span>
-                        <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                    <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;margin:0 0 18px;flex:1;">
+                      ${esc(p.desc)}
+                    </p>
+
+                    <!-- Dual IoT Telemetry Meters -->
+                    <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:8px;padding:12px;margin-bottom:18px;">
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:6px;">
+                        <span style="color:#64748b;font-weight:700;">Local Edge Latency:</span>
+                        <strong style="color:#7c3aed;font-family:monospace;">&lt; 12ms Peer-to-Peer</strong>
                       </div>
-                      <div>
-                        <span style="color:${theme.textSub};display:block;">Dimensions:</span>
-                        <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
+                        <span style="color:#64748b;font-weight:700;">Dynamic Mesh Capacity:</span>
+                        <strong style="color:#0891b2;font-family:monospace;">254 Self-Healing Nodes</strong>
                       </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
-                      <span style="color:${theme.primary};font-weight:800;">${esc(p.extra)}</span>
-                      <strong style="color:${theme.text};">MOQ: ${esc(p.moq)}</strong>
+
+                    <!-- Node Parameter Specs Strip -->
+                    <div style="font-size:0.78rem;color:${theme.textSub};border-top:1px solid ${theme.cardBorder};padding-top:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+                      <span>Protocol: <strong style="color:${theme.text};">${esc(p.material.slice(0, 22))}</strong></span>
+                      <span>MOQ: <strong style="color:#7c3aed;">${esc(p.moq)}</strong></span>
                     </div>
+
+                    <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;text-align:center;padding:12px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.85rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;box-shadow:0 4px 14px rgba(124,58,237,0.18);">
+                      INSPECT NODE SPECIFICATIONS ↗
+                    </a>
                   </div>
                 </article>
               `).join('')}
@@ -801,114 +833,197 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
         </main>
       `;
     } else {
-      // SMART LIVING DETAIL: MATTER TOPOLOGY + REST/MQTT API GUIDE
+      // 3-TIER IOT NODE TELEMETRY WORKSTATION & MESH BENCHMARK
       mainHtml = `
-        <main class="electronics-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="electronics-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="margin-bottom:28px;">
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
-                ← Return to Smart Subsystem Index
-              </a>
+            <!-- Tier 1: Ecosystem Status & Badges -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:0.8rem;color:${theme.textSub};">
+                <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">IOT_ECOSYSTEM</a>
+                <span>//</span>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">SPATIAL_AUTOMATION</a>
+                <span>//</span>
+                <span style="color:#7c3aed;font-weight:800;">${esc(p.id.toUpperCase())}</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="background:#f3e8ff;color:#6d28d9;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.72rem;font-weight:800;">MATTER 1.3 CERTIFIED</span>
+                <span style="background:#e0f2fe;color:#0369a1;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.72rem;font-weight:800;">THREAD GROUP TESTED &amp; VERIFIED</span>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
-              <!-- Left Column: Smart Device Portrait & Gallery -->
+            <!-- Tier 2: Split Workstation -->
+            <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:start;margin-bottom:48px;">
+              <!-- Left Column: Viewport & Signal Telemetry -->
               <div>
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;position:relative;box-shadow:0 12px 32px rgba(124,58,237,0.06);text-align:center;">
-                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
-                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
-                    THREAD 1.3 NODE
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 12px 36px rgba(124,58,237,0.06);position:relative;">
+                  <!-- Live Telemetry Status Bar -->
+                  <div style="background:#7c3aed;color:#ffffff;padding:8px 16px;display:flex;justify-content:space-between;font-family:monospace;font-size:0.75rem;font-weight:700;">
+                    <span>[LIVE RF TELEMETRY] TX: +20 DBM // FREQ: 2.405-2.480 GHZ</span>
+                    <span>MESH: PAIRED</span>
                   </div>
-                  <!-- Thumbnails -->
-                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
-                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
-                    </button>
+
+                  <div style="position:relative;background:#faf5ff;padding:28px;display:flex;align-items:center;justify-content:center;">
+                    <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(p.id)}" style="width:100%;height:440px;object-fit:contain;display:block;">
+                    <div style="position:absolute;top:20px;left:20px;background:#ffffff;border:1px solid ${theme.cardBorder};color:#7c3aed;padding:6px 12px;border-radius:6px;font-family:monospace;font-size:0.75rem;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                      ${esc(p.badge)}
+                    </div>
                   </div>
                 </div>
 
-                <!-- Local Mesh Telemetry Stats -->
-                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">12 ms</div>
-                    <div style="color:${theme.textSub};">Local Latency</div>
+                <!-- Channel Switcher Thumbnails -->
+                <div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:16px;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #7c3aed;border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(p.img)}" alt="Node Profile" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:#7c3aed;display:block;margin-top:4px;">CH-1: NODE PROFILE</span>
+                  </button>
+                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(products[1]?.img || p.img)}" alt="RF Antenna" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:${theme.textSub};display:block;margin-top:4px;">CH-2: RF ANTENNA</span>
+                  </button>
+                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(products[2]?.img || p.img)}" alt="PCB Architecture" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:${theme.textSub};display:block;margin-top:4px;">CH-3: PCB ARCH</span>
+                  </button>
+                </div>
+
+                <!-- Local Latency vs Multi-Hop Packet Delivery Matrix -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-top:20px;box-shadow:0 4px 16px rgba(124,58,237,0.04);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;">
+                      LOCAL LATENCY &amp; MULTI-HOP PACKET DELIVERY BENCHMARK
+                    </span>
+                    <span style="font-family:monospace;font-size:0.7rem;color:#0891b2;font-weight:700;">THREAD 1.3 MESH</span>
                   </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">100 m</div>
-                    <div style="color:${theme.textSub};">Thread Range</div>
-                  </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">${esc(p.moq)}</div>
-                    <div style="color:${theme.textSub};">System MOQ</div>
+                  <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">8.2 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">1-Hop Direct</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">99.99% Reliability</div>
+                    </div>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">14.6 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">3-Hop Mesh</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">99.98% Local Rx</div>
+                    </div>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">18.5 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">Border Router</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">Zero Cloud Hop</div>
+                    </div>
+                    <div style="background:#f0fdf4;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#059669;">42.0 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:#059669;margin-top:2px;">TLS Fallback</div>
+                      <div style="font-size:0.68rem;color:#059669;margin-top:4px;">AES-128 Encrypted</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Right Column: Ecosystem Specs & White-Label Integration -->
+              <!-- Right Column: Architecture Matrix & Whole-Home Calculator -->
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
-                  ${esc(p.categoryNameEn)} · Matter over Thread Ecosystem
+                <div style="display:inline-block;padding:3px 10px;border-radius:4px;background:#f3e8ff;color:#6d28d9;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;">
+                  SMART HARDWARE DOSSIER // MATTER 1.3
                 </div>
-                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                <h1 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;">
                   ${esc(p.name)}
                 </h1>
-                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
                   ${esc(p.desc)}
                 </p>
 
-                <!-- Hardware Engineering Spec Grid -->
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:24px;">
-                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
-                    Smart Device Specifications
-                  </h3>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
-                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Wireless Protocol</span>
-                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                <!-- 4-Cell AIoT Micro-Architecture Matrix -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">CORE COMPUTING</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">Dual-Core RISC-V + NPU</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">WIRELESS PROTOCOL</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">${esc(p.material)}</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">HARDWARE SECURITY</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">Secure Boot · AES-128</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">ECOSYSTEM SUPPORT</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">Apple, Google, SmartThings</div>
+                  </div>
+                </div>
+
+                <!-- Whole-Home Deployment Logistics Calculator -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(124,58,237,0.04);">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:12px;">
+                    WHOLE-HOME &amp; HOSPITALITY DEPLOYMENT TIERS
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">50 Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Apartment Pilot</div>
                     </div>
-                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Dimensions &amp; Enclosure</span>
-                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">200 Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Hospitality Floor</div>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Ecosystem Features</span>
-                      <strong style="color:${theme.primary};">${esc(p.extra)}</strong>
-                    </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Production MOQ</span>
-                      <strong style="color:${theme.text};">${esc(p.moq)}</strong>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">2,500+ Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Global Wholesale</div>
                     </div>
                   </div>
                 </div>
 
-                <!-- White-Label App & REST/MQTT Integration -->
-                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
-                  <h4 style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:0 0 10px;">White-Label App &amp; Gateway Firmware Architecture</h4>
-                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:0.8rem;text-align:center;">
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Commissioning</div>
-                      <strong style="color:${theme.text};font-size:0.95rem;">BLE &amp; QR Code</strong>
-                    </div>
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Local Control</div>
-                      <strong style="color:${theme.text};font-size:0.95rem;">REST / MQTT API</strong>
-                    </div>
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">OTA Updates</div>
-                      <strong style="color:${theme.primary};font-size:0.95rem;">Encrypted Dual-Bank</strong>
-                    </div>
-                  </div>
-                </div>
-
+                <!-- Action Terminal -->
                 <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-                    Inquire Smart Living OEM ↗
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;flex:1;min-width:240px;padding:16px;text-align:center;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    REQUEST AIOT DFM &amp; SDK DOSSIER ↗
                   </a>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
-                    Explore All Subsystems
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:8px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.9rem;font-weight:700;">
+                    Return to Subsystem Index
                   </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tier 3: 4-Layer AIoT Spatial Automation Pipeline Ribbon -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(124,58,237,0.05);">
+              <div style="text-align:center;max-width:700px;margin:0 auto 28px;">
+                <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;letter-spacing:0.06em;text-transform:uppercase;">
+                  WHOLE-HOUSE DISTRIBUTED PIPELINE
+                </span>
+                <h3 style="font-size:1.5rem;font-weight:900;color:${theme.text};margin:6px 0 0;">
+                  4-Phase AIoT Spatial Automation Pathway
+                </h3>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">PHASE 01 // SENSING</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Sensor Event Detect</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Sub-micron radar, PIR or climate transducer captures physical state change with microampere sleep currents.
+                  </p>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">PHASE 02 // PROPAGATION</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Thread Mesh Hop</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Encrypted IPv6 datagram travels across multi-hop peer-to-peer 802.15.4 routers with sub-15ms hop latency.
+                  </p>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">PHASE 03 // ARBITRATION</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Edge NPU Automation</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Local Matter Border Gateway arbitrates logic rules with zero cloud dependency and AES-128 secure execution.
+                  </p>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#0891b2;margin-bottom:8px;">PHASE 04 // ACTUATION</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Ecosystem Actuation</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Synchronized relays, motors, lighting, and robotic appliances trigger simultaneously across all platform controllers.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1224,73 +1339,156 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
         </main>
       `;
     } else {
-      // SMART LIVING OEM & GATEWAY FIRMWARE DESK
+      // SMART LIVING OEM & FIRMWARE GATEWAY CONSULTATION TERMINAL
       mainHtml = `
         <main class="electronics-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Matter 1.3 OEM &amp; Firmware Gateway Desk
+            <div style="max-width:840px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;background:#f3e8ff;color:#7c3aed;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;border:1px solid #e9d5ff;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#7c3aed;"></span>
+                Matter 1.3 OEM &amp; Firmware Gateway Consultation Terminal
               </span>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
-                Inquire Smart Living OEM Ecosystem
+              <h1 style="font-size:clamp(2rem, 3.5vw, 2.8rem);font-weight:900;color:#0f172a;margin:0 0 16px;letter-spacing:-0.03em;">
+                Deploy Whole-House Spatial AIoT Infrastructure
               </h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
-                Connect with our IoT system architects regarding Matter commissioning QR codes, custom iOS/Android companion app shells, and volume hardware pricing.
+              <p style="font-size:1.05rem;color:#64748b;line-height:1.7;max-width:680px;margin:0 auto;">
+                Connect directly with our senior embedded IoT architects for custom Matter commissioning credentials, border router firmware customization, and enterprise volume scheduling.
               </p>
             </div>
 
-            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:40px;box-shadow:0 12px 36px rgba(124,58,237,0.06);">
-              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">System Architect / Buyer</label>
-                    <input type="text" name="name" required placeholder="Smart Home Platform Director" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+            <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:36px;max-width:1120px;margin:0 auto;align-items:start;">
+              <!-- Left Column: Technical Capabilities & Liaison -->
+              <div style="display:flex;flex-direction:column;gap:20px;">
+                <!-- Capabilities Card -->
+                <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:32px;box-shadow:0 10px 30px rgba(124,58,237,0.04);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#7c3aed;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [FACTORY ODM CAPABILITIES]
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email</label>
-                    <input type="email" name="email" required placeholder="iot@smartliving-enterprise.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  <h3 style="font-size:1.2rem;font-weight:800;color:#0f172a;margin:0 0 18px;">
+                    Smart Living Embedded Engineering
+                  </h3>
+                  <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Class 10,000 SMT &amp; RF Chamber Validation</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">2.4 GHz OTA TRP/TIS sensitivity tuning with certified anechoic chamber sweeps.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Matter VID/PID &amp; Commissioning Injection</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Secure pre-flashed DAC private keys, factory setup payloads, and QR labeling.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">White-Label Companion App SDK</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Ready-to-brand iOS/Android mobile SDKs with Bluetooth onboarding and cloud sync.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Global Wireless Compliance Guarantee</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Pre-certified FCC Part 15C, CE RED, TELEC Japan, SRRC, and KC modular certifications.</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Smart Subsystem</label>
-                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                    <option value="">General Smart Living Ecosystem Inquiries</option>
-                    ${products.map(p => `
-                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
-                    `).join('')}
-                  </select>
+                <!-- Direct Liaison Card -->
+                <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:26px;box-shadow:0 6px 20px rgba(124,58,237,0.03);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#06b6d4;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [DIRECT LIAISON DESK]
+                  </div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">IoT Solutions Architecture Team</div>
+                  <div style="font-size:0.82rem;color:#64748b;margin-bottom:14px;line-height:1.6;">Dedicated hardware engineering response within 4 operational hours.</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Direct:</span>
+                      <a href="mailto:${esc(company.email || 'iot-architect@smartliving.com')}" style="color:#7c3aed;text-decoration:none;font-weight:700;">${esc(company.email || 'iot-architect@smartliving.com')}</a>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Location:</span>
+                      <span style="color:#64748b;">${esc(company.address || 'AIoT Hardware Innovation Park, Hi-Tech Zone')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Hours:</span>
+                      <span style="color:#64748b;">Mon - Fri, 08:30 - 20:30 CST (UTC+8)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Interactive Consultation RFQ Console -->
+              <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:36px;box-shadow:0 12px 36px rgba(124,58,237,0.06);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f3e8ff;padding-bottom:16px;margin-bottom:24px;">
+                  <div>
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;letter-spacing:0.06em;">[TERMINAL // RFQ-GATEWAY-INIT]</span>
+                    <h2 style="font-size:1.3rem;font-weight:900;color:#0f172a;margin:4px 0 0;">Request Technical Sourcing Package</h2>
+                  </div>
+                  <span style="font-size:0.75rem;padding:4px 10px;border-radius:6px;background:#ecfdf5;color:#059669;font-weight:800;">ENCRYPTED TLS</span>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">System Architect / Lead</label>
+                      <input type="text" name="name" required placeholder="e.g. Alex Chen" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#faf5ff;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Corporate Email</label>
+                      <input type="email" name="email" required placeholder="name@enterprise-iot.com" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#faf5ff;">
+                    </div>
+                  </div>
+
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Estimated Deployment Scale</label>
-                    <select name="volume" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>Developer Sample Kit (10 - 50 Units)</option>
-                      <option>Pilot Installation (500 - 2,000 Units)</option>
-                      <option>Volume Commercial Rollout (5,000+ Units)</option>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Target Smart Living Node</label>
+                    <select name="productId" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#faf5ff;outline:none;color:#0f172a;">
+                      <option value="">General Smart Living Ecosystem Inquiries (All Nodes)</option>
+                      ${products.map(p => `
+                        <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra || p.moq)}</option>
+                      `).join('')}
                     </select>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Software Integration Level</label>
-                    <select name="integration" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>Standard Matter Direct Commissioning</option>
-                      <option>Custom White-Label iOS & Android App</option>
-                      <option>Open REST / WebSocket API Gateway</option>
-                    </select>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Planned Deployment Scale</label>
+                      <select name="volume" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#faf5ff;outline:none;color:#0f172a;">
+                        <option>Engineering Sample Kit (10 - 50 Units)</option>
+                        <option>Pilot Installation (200 - 1,000 Units)</option>
+                        <option>Volume Commercial Rollout (2,500+ Units)</option>
+                        <option>Global Enterprise Sourcing (10,000+ Units)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Primary Wireless Mesh</label>
+                      <select name="protocol" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#faf5ff;outline:none;color:#0f172a;">
+                        <option>Matter over Thread (Local Mesh)</option>
+                        <option>Matter over Wi-Fi 6 (High Throughput)</option>
+                        <option>BLE 5.3 Long-Range Mesh</option>
+                        <option>Zigbee 3.0 to Matter Bridge</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Project Specifications &amp; RF Frequency Customization</label>
-                  <textarea name="message" rows="4" placeholder="Detail your target smart ecosystem requirements, custom cloud integration, or Thread routing topology..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-                </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Hardware Specifications &amp; Firmware Customization Notes</label>
+                    <textarea name="message" rows="4" placeholder="Specify custom VID/PID requirements, target PCB form-factor, antenna gain, or companion app integration..." style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;resize:vertical;outline:none;background:#faf5ff;"></textarea>
+                  </div>
 
-                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Submit Smart Living OEM Inquiry ↗
-                </button>
-              </form>
+                  <button type="submit" style="padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);color:#ffffff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(124,58,237,0.25);transition:transform 0.2s ease;">
+                    Submit Smart Living OEM Inquiry ↗
+                  </button>
+                  <div style="font-size:0.75rem;color:#94a3b8;text-align:center;">
+                    Direct transmission to engineering. Strict NDA guaranteed upon payload submission.
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </main>
@@ -1300,35 +1498,38 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
 
   // Distinct Footer for each variant
   const footerHtml = isVideo ? `
-    <footer style="background:#0f172a;color:#f8fafc;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.1);">
+    <footer style="background:#ffffff;color:#0f172a;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid #f3e8ff;">
       <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
         <div>
-          <div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
-          <p style="color:#94a3b8;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+          <div style="font-size:1.25rem;font-weight:900;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:#7c3aed;"></span>
+            ${esc(brandName)}
+          </div>
+          <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
             Matter over Thread smart living hardware and gateway systems. Local mesh networking, sub-15ms trigger latency, and zero-cloud dependency.
           </p>
-          <div style="display:flex;gap:8px;">
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#a855f7;font-size:0.7rem;font-weight:700;">MATTER 1.3</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#a855f7;font-size:0.7rem;font-weight:700;">THREAD MESH</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#a855f7;font-size:0.7rem;font-weight:700;">APPLE HOME</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="padding:4px 10px;border-radius:6px;background:#f3e8ff;color:#7c3aed;font-size:0.7rem;font-weight:800;">MATTER 1.3</span>
+            <span style="padding:4px 10px;border-radius:6px;background:#e0f2fe;color:#0284c7;font-size:0.7rem;font-weight:800;">THREAD MESH</span>
+            <span style="padding:4px 10px;border-radius:6px;background:#f8fafc;color:#475569;font-size:0.7rem;font-weight:800;border:1px solid #e2e8f0;">APPLE HOME</span>
           </div>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Supported Ecosystems</h4>
-          <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.82rem;line-height:2;">
-            <li>Apple HomeKit (Siri Voice)</li>
-            <li>Google Home & Nest Ecosystem</li>
-            <li>Samsung SmartThings Hub</li>
-            <li>Home Assistant Local API</li>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 16px;">Supported Ecosystems</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#64748b;font-size:0.82rem;line-height:2.1;">
+            <li>• Apple HomeKit (Siri Voice &amp; Home Hub)</li>
+            <li>• Google Home &amp; Nest Hub Ecosystem</li>
+            <li>• Samsung SmartThings Hub v3</li>
+            <li>• Home Assistant Local REST &amp; WebSocket</li>
           </ul>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">OEM Procurement</h4>
-          <p style="color:#94a3b8;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'iot-oem@matterlink.com')}</p>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#a855f7;text-decoration:none;font-weight:700;font-size:0.82rem;">Direct Sourcing Terminal →</a>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 16px;">OEM Procurement</h4>
+          <p style="color:#64748b;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'iot-oem@matterlink.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;padding:8px 16px;background:#f3e8ff;color:#7c3aed;text-decoration:none;font-weight:800;font-size:0.8rem;border-radius:8px;border:1px solid #e9d5ff;">Direct Sourcing Terminal →</a>
         </div>
       </div>
-      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #f3e8ff;padding-top:24px;display:flex;justify-content:space-between;color:#94a3b8;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
         <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
         <span>Matter &amp; Thread Smart Living Protocol Division</span>
       </div>
