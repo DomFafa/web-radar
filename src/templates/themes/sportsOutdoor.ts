@@ -695,55 +695,83 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // ATHLETIC RACE DECK CATALOG
+      // KINETIC AERO PERFORMANCE FLEET & WIND TUNNEL TELEMETRY GRID
       mainHtml = `
         <main class="sports-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                Human Performance Race Fleet · Biomechanics Engineering
+            <!-- Topographic Wind-Tunnel Telemetry HUD Bar -->
+            <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:12px;padding:12px 20px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 4px 16px rgba(22,163,74,0.04);">
+              <div style="display:flex;align-items:center;gap:10px;font-family:monospace;font-size:0.75rem;font-weight:800;color:#15803d;letter-spacing:0.04em;">
+                <span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
+                [WIND-TUNNEL VELOCITY LAB: ACTIVE] // CdA 0.218 M² AERODYNAMIC DRAG · 82.4% PEBA ENERGY RETURN · WA 39.5MM COMPLIANT
               </div>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                Supercritical Footwear &amp; Racing Gear Catalog
-              </h1>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Racing Gear (${products.length})</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Marathon Carbon Racers</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Race-Cut Hydration Vests</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Aero Cycling Helmets</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Hydrophobic Sport Optics</span>
+              <div style="font-family:monospace;font-size:0.72rem;font-weight:700;color:#64748b;">
+                16-CAMERA 3D VICON MOTION CAPTURE CERTIFIED
               </div>
             </div>
 
-            <!-- Racing Product Cards Grid -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
-              ${products.map(p => `
-                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(22,163,74,0.04);">
+            <!-- Page Header & Velocity Classification Filter Tabs -->
+            <div style="border-bottom:1px solid #bbf7d0;padding-bottom:28px;margin-bottom:36px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#f0fdf4;color:#15803d;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;border:1px solid #bbf7d0;">
+                Human Performance Race Fleet · Biomechanics Engineering
+              </div>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:#0f172a;margin:0 0 14px;letter-spacing:-0.03em;">
+                Supercritical Footwear &amp; Aero Racing Fleet
+              </h1>
+              <p style="font-size:1rem;color:#475569;margin:0 0 20px;max-width:760px;line-height:1.6;">
+                Engineered for elite marathon podiums and high-velocity road cycling. Nitrogen-foamed supercritical PEBA, 3K spoon-curved carbon fiber, and wind-tunnel aero channeling.
+              </p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
+                <span style="padding:7px 16px;border-radius:8px;background:#16a34a;color:#ffffff;font-family:monospace;letter-spacing:0.03em;">[PROPULSION-01: ALL RACING FLEET (${products.length})]</span>
+                <span style="padding:7px 16px;border-radius:8px;background:#ffffff;color:#475569;border:1px solid #bbf7d0;font-family:monospace;letter-spacing:0.03em;">[PROPULSION-02: CARBON RACERS]</span>
+                <span style="padding:7px 16px;border-radius:8px;background:#ffffff;color:#475569;border:1px solid #bbf7d0;font-family:monospace;letter-spacing:0.03em;">[PROPULSION-03: AERO HELMETS]</span>
+                <span style="padding:7px 16px;border-radius:8px;background:#ffffff;color:#475569;border:1px solid #bbf7d0;font-family:monospace;letter-spacing:0.03em;">[PROPULSION-04: KINETIC PACKS]</span>
+              </div>
+            </div>
+
+            <!-- Kinetic Aero Product Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:30px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid #bbf7d0;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(22,163,74,0.05);display:flex;flex-direction:column;">
+                  <div style="background:#f0fdf4;padding:8px 14px;border-bottom:1px solid #bbf7d0;display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;font-family:monospace;font-weight:800;">
+                    <span style="color:#15803d;">SPEED-KN0${idx + 1} // PEBA+CARBON</span>
+                    <span style="color:#059669;background:#ecfdf5;padding:2px 6px;border-radius:4px;border:1px solid #a7f3d0;">WA COMPLIANT</span>
+                  </div>
                   <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.1;background:#f0fdf4;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
-                      <span style="position:absolute;top:10px;left:10px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                      <span style="position:absolute;bottom:10px;right:10px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">PEBA REBOUND</span>
+                    <div style="aspect-ratio:1.08;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #bbf7d0;background-image:radial-gradient(#bbf7d0 1px, transparent 1px);background-size:16px 16px;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:82%;height:82%;object-fit:contain;">
+                      <span style="position:absolute;top:12px;left:12px;background:#ffffff;border:1px solid #bbf7d0;color:#15803d;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:12px;right:12px;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;font-family:monospace;">CdA 0.218</span>
                     </div>
                   </a>
-                  <div style="padding:20px;">
-                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};margin:0 0 10px;line-height:1.3;">
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                  <div style="padding:22px;display:flex;flex-direction:column;flex-grow:1;">
+                    <span style="font-size:0.72rem;color:#64748b;font-weight:800;text-transform:uppercase;font-family:monospace;">${esc(p.categoryNameEn)}</span>
+                    <h3 style="font-size:1.12rem;font-weight:900;color:#0f172a;margin:6px 0 10px;line-height:1.3;">
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:#0f172a;">${esc(p.name)}</a>
                     </h3>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;font-size:0.75rem;margin-bottom:14px;">
-                      <div>
-                        <span style="color:${theme.textSub};display:block;">Materials:</span>
-                        <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                    <p style="font-size:0.84rem;color:#475569;line-height:1.6;margin-bottom:16px;flex-grow:1;">${esc(p.desc)}</p>
+
+                    <!-- Dual Biomechanics Telemetry Meters -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+                      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;">
+                        <div style="font-size:0.68rem;font-weight:800;color:#14532d;font-family:monospace;text-transform:uppercase;">Energy Return</div>
+                        <div style="font-size:0.88rem;font-weight:900;color:#16a34a;margin-top:2px;">82.4% PEBA</div>
                       </div>
-                      <div>
-                        <span style="color:${theme.textSub};display:block;">Specs:</span>
-                        <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;">
+                        <div style="font-size:0.68rem;font-weight:800;color:#14532d;font-family:monospace;text-transform:uppercase;">VO₂ Economy</div>
+                        <div style="font-size:0.88rem;font-weight:900;color:#059669;margin-top:2px;">-3.8% Cost</div>
                       </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
-                      <span style="color:${theme.primary};font-weight:800;">${esc(p.extra)}</span>
-                      <strong style="color:${theme.text};">MOQ: ${esc(p.moq)}</strong>
+
+                    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:0.78rem;margin-bottom:16px;">
+                      <div style="color:#0f172a;font-weight:700;">${esc(p.material)}</div>
+                      <div style="color:#64748b;font-size:0.75rem;margin-top:2px;">${esc(p.dimensions)}</div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #bbf7d0;">
+                      <span style="font-size:0.78rem;color:#64748b;">MOQ: <strong style="color:#15803d;">${esc(p.moq)}</strong></span>
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-size:0.82rem;font-weight:800;color:#16a34a;">
+                        Inspect Telemetry ↗
+                      </a>
                     </div>
                   </div>
                 </article>
@@ -953,117 +981,199 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // ATHLETIC RACE DETAIL: BIOMECHANICS HUD + 3K CARBON SPOON CURVE + 1,000KM OUTSOLE REPORT
+      // 3-TIER KINETIC AERODYNAMIC TELEMETRY & PROPULSION WORKSTATION
       mainHtml = `
-        <main class="sports-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="sports-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="margin-bottom:28px;">
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
-                ← Return to Performance Footwear Catalog
-              </a>
+
+            <!-- Tier 1: Speed & Biomechanics Breadcrumb & Compliance Badges -->
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;padding-bottom:18px;border-bottom:1px solid #bbf7d0;">
+              <div style="display:flex;align-items:center;gap:10px;font-family:monospace;font-size:0.82rem;">
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="color:#15803d;text-decoration:none;font-weight:800;">
+                  ← KINETIX_LAB // VELOCITY_PROPULSION_DECK
+                </a>
+                <span style="color:#cbd5e1;">/</span>
+                <span style="color:#64748b;font-weight:700;">${esc(p.id).toUpperCase()}</span>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <span style="padding:5px 12px;border-radius:6px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:0.75rem;font-weight:800;font-family:monospace;">
+                  WORLD ATHLETICS 39.5MM APPROVED
+                </span>
+                <span style="padding:5px 12px;border-radius:6px;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;font-size:0.75rem;font-weight:800;font-family:monospace;">
+                  WIND-TUNNEL TESTED (CdA 0.218)
+                </span>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
-              <!-- Left Column: Footwear Portrait & Gallery -->
+            <!-- Tier 2: Two-Column Telemetry Viewport & Team Fleet Matrix -->
+            <div style="display:grid;grid-template-columns:minmax(340px, 1.1fr) minmax(360px, 1.35fr);gap:44px;align-items:start;margin-bottom:50px;">
+              <!-- Left Column: Viewport & Dynamic Gait Cycle Stride Propulsion Benchmark -->
               <div>
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;position:relative;box-shadow:0 12px 32px rgba(22,163,74,0.06);text-align:center;">
-                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
-                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
-                    WORLD ATHLETICS LEGAL
+                <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:20px;overflow:hidden;box-shadow:0 12px 32px rgba(22,163,74,0.06);">
+                  <!-- Viewport Top Telemetry Header -->
+                  <div style="background:#f0fdf4;padding:12px 18px;border-bottom:1px solid #bbf7d0;display:flex;align-items:center;justify-content:space-between;font-family:monospace;font-size:0.75rem;font-weight:800;">
+                    <span style="color:#15803d;">VELOCITY: 24.5 KM/H TEST PACE // DRAG: CdA 0.218 M²</span>
+                    <span style="color:#059669;background:#ecfdf5;padding:2px 8px;border-radius:4px;border:1px solid #a7f3d0;">ELITE COMPLIANT</span>
                   </div>
-                  <!-- Thumbnails -->
-                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
-                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
+
+                  <div style="padding:36px;text-align:center;position:relative;background:#ffffff;background-image:radial-gradient(#bbf7d0 1px, transparent 1px);background-size:20px 20px;">
+                    <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(p.id)}" style="width:100%;max-height:420px;object-fit:contain;display:inline-block;" fetchpriority="high">
+                    <span style="position:absolute;top:16px;right:16px;background:#ffffff;border:1px solid #bbf7d0;color:#15803d;font-size:0.72rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
+                      ${esc(p.badge)}
+                    </span>
+                  </div>
+
+                  <!-- High-Speed Camera Inspection Tabs -->
+                  <div class="wr-detail-thumbs" style="padding:14px 20px;background:#fafaf9;border-top:1px solid #bbf7d0;display:flex;align-items:center;gap:12px;justify-content:center;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #16a34a;border-radius:8px;padding:3px;background:#fff;cursor:pointer;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;">
                     </button>
+                    <div style="display:flex;gap:8px;">
+                      <span style="font-size:0.7rem;font-family:monospace;padding:4px 8px;border-radius:4px;background:#ffffff;border:1px solid #bbf7d0;color:#15803d;font-weight:700;">CAM-1: STRIKE</span>
+                      <span style="font-size:0.7rem;font-family:monospace;padding:4px 8px;border-radius:4px;background:#ffffff;border:1px solid #bbf7d0;color:#15803d;font-weight:700;">CAM-2: 3K SPOON</span>
+                      <span style="font-size:0.7rem;font-family:monospace;padding:4px 8px;border-radius:4px;background:#ffffff;border:1px solid #bbf7d0;color:#15803d;font-weight:700;">CAM-3: PEBA</span>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Biomechanics Energy Rebound Indicator -->
-                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">82.4%</div>
-                    <div style="color:${theme.textSub};">Energy Return</div>
+                <!-- 4-Phase Dynamic Gait Cycle & Stride Propulsion Benchmark -->
+                <div style="margin-top:24px;background:#ffffff;border:1px solid #bbf7d0;border-radius:18px;padding:24px;box-shadow:0 8px 24px rgba(22,163,74,0.04);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid #bbf7d0;padding-bottom:10px;">
+                    <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;letter-spacing:0.06em;text-transform:uppercase;">
+                      [DYNAMIC GAIT CYCLE STRIDE PROPULSION BENCHMARK]
+                    </div>
+                    <span style="font-size:0.72rem;font-family:monospace;color:#059669;font-weight:800;">PASS WA RULE 5</span>
                   </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">39.5mm</div>
-                    <div style="color:${theme.textSub};">Max Stack Height</div>
-                  </div>
-                  <div style="width:1px;background:${theme.cardBorder};"></div>
-                  <div>
-                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">${esc(p.moq)}</div>
-                    <div style="color:${theme.textSub};">Team MOQ</div>
+                  <div style="display:flex;flex-direction:column;gap:10px;font-size:0.82rem;">
+                    <div style="display:flex;justify-content:space-between;padding:10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                      <span style="font-weight:700;color:#0f172a;">0% Initial Footstrike (Heel/Midfoot)</span>
+                      <span style="color:#15803d;font-weight:800;font-family:monospace;">Shock Attenuation 72% · Decel &lt; 1.8G</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                      <span style="font-weight:700;color:#0f172a;">35% Mid-Stance Compression</span>
+                      <span style="color:#15803d;font-weight:800;font-family:monospace;">21mm Midsole Compression · 3K Pre-Load</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                      <span style="font-weight:700;color:#0f172a;">65% Forefoot Roll &amp; Energy Return</span>
+                      <span style="color:#15803d;font-weight:800;font-family:monospace;">82.4% Rebound Force @ 185ms Contact</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                      <span style="font-weight:700;color:#0f172a;">100% Terminal Toe-Off Launch</span>
+                      <span style="color:#059669;font-weight:800;font-family:monospace;">VO₂ Savings -3.8% · Max CoF 0.88</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Right Column: Kinematics Specs & Outsole Abrasion Report -->
+              <!-- Right Column: Kinematic Architecture Matrix & Team Fleet Calculator -->
               <div>
-                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#f0fdf4;color:#15803d;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;border:1px solid #bbf7d0;">
                   ${esc(p.categoryNameEn)} · Supercritical Nitrogen Platform
-                </div>
-                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                </span>
+                <h1 style="font-size:clamp(1.9rem, 3.2vw, 2.7rem);font-weight:900;color:#0f172a;margin:0 0 14px;letter-spacing:-0.03em;line-height:1.2;">
                   ${esc(p.name)}
                 </h1>
-                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                <p style="font-size:1.02rem;color:#475569;line-height:1.75;margin:0 0 24px;">
                   ${esc(p.desc)}
                 </p>
 
-                <!-- Technical Spec Grid -->
-                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:24px;">
-                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
-                    Biomechanics Engineering Specifications
-                  </h3>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
-                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Midsole Foam &amp; Plate</span>
-                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                <!-- 4-Cell Kinematic Architecture Matrix -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+                  <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:12px;padding:14px;box-shadow:0 4px 12px rgba(22,163,74,0.03);">
+                    <div style="font-size:0.7rem;font-family:monospace;color:#15803d;font-weight:800;text-transform:uppercase;">Midsole / Matrix Foam</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:#0f172a;margin-top:3px;">${esc(p.material)}</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:12px;padding:14px;box-shadow:0 4px 12px rgba(22,163,74,0.03);">
+                    <div style="font-size:0.7rem;font-family:monospace;color:#15803d;font-weight:800;text-transform:uppercase;">Torsional Propulsion Plate</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:#0f172a;margin-top:3px;">3K Full Spoon-Curved Carbon</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:12px;padding:14px;box-shadow:0 4px 12px rgba(22,163,74,0.03);">
+                    <div style="font-size:0.7rem;font-family:monospace;color:#15803d;font-weight:800;text-transform:uppercase;">Kinematic Certification</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:#0f172a;margin-top:3px;">${esc(p.extra)}</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:12px;padding:14px;box-shadow:0 4px 12px rgba(22,163,74,0.03);">
+                    <div style="font-size:0.7rem;font-family:monospace;color:#15803d;font-weight:800;text-transform:uppercase;">Dimensions / Weight</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:#0f172a;margin-top:3px;">${esc(p.dimensions)}</div>
+                  </div>
+                </div>
+
+                <!-- Athletic Team Fleet & OEM Production Scale Calculator -->
+                <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:18px;padding:24px;margin-bottom:24px;box-shadow:0 8px 24px rgba(22,163,74,0.04);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;letter-spacing:0.06em;text-transform:uppercase;">
+                      [ATHLETIC TEAM FLEET TIERS]
                     </div>
-                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Size Range &amp; Weight</span>
-                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    <span style="font-size:0.75rem;color:#64748b;">Custom Team Sourcing</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                    <div style="border:1px solid #bbf7d0;border-radius:10px;padding:12px;background:#f0fdf4;text-align:center;">
+                      <div style="font-size:0.72rem;font-weight:800;color:#14532d;">Pro Team Sample</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin:3px 0;">20 Pairs</div>
+                      <div style="font-size:0.72rem;color:#64748b;">Custom last prototype</div>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Propulsion Rating</span>
-                      <strong style="color:${theme.primary};">${esc(p.extra)}</strong>
+                    <div style="border:1px solid #bbf7d0;border-radius:10px;padding:12px;background:#f0fdf4;text-align:center;">
+                      <div style="font-size:0.72rem;font-weight:800;color:#14532d;">Club Fleet Order</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin:3px 0;">200 Pairs</div>
+                      <div style="font-size:0.72rem;color:#64748b;">Custom Pantone livery</div>
                     </div>
-                    <div>
-                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Production MOQ</span>
-                      <strong style="color:${theme.text};">${esc(p.moq)}</strong>
+                    <div style="border:1px solid #bbf7d0;border-radius:10px;padding:12px;background:#f0fdf4;text-align:center;">
+                      <div style="font-size:0.72rem;font-weight:800;color:#14532d;">Championship Bulk</div>
+                      <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin:3px 0;">1,000+ Pairs</div>
+                      <div style="font-size:0.72rem;color:#64748b;">Global distributor</div>
                     </div>
                   </div>
                 </div>
 
-                <!-- 1,000km Outsole Abrasion Report -->
-                <div style="background:#f0fdf4;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
-                  <h4 style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:0 0 10px;">1,000km Outsole Rubber Endurance Report</h4>
-                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:0.8rem;text-align:center;">
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Wet Traction</div>
-                      <strong style="color:${theme.text};font-size:0.95rem;">CoF 0.85</strong>
-                    </div>
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Volume Loss</div>
-                      <strong style="color:${theme.text};font-size:0.95rem;">&lt; 65 mm³</strong>
-                    </div>
-                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
-                      <div style="color:${theme.textSub};">Midsole Creep</div>
-                      <strong style="color:${theme.primary};font-size:0.95rem;">&lt; 4.2%</strong>
-                    </div>
+                <!-- Elite Performance Warranty Bar -->
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;margin-bottom:28px;display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:1.4rem;">⚡</span>
+                  <div>
+                    <div style="font-size:0.85rem;font-weight:800;color:#0f172a;">World Athletics Technical Certification Guaranteed</div>
+                    <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">Laboratory audited under World Athletics Rule 5 (stack limit &lt; 40mm) with verified certification paperwork.</div>
                   </div>
                 </div>
 
+                <!-- Action Button Cluster -->
                 <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
-                    Submit Racing Team RFQ ↗
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:15px 30px;border-radius:10px;background:linear-gradient(135deg, #16a34a 0%, #22c55e 100%);color:#ffffff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px rgba(22,163,74,0.25);">
+                    Request Team Fleet Tender &amp; OEM Pricing ↗
                   </a>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
-                    View All Footwear
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 24px;border-radius:10px;background:#ffffff;color:#0f172a;border:1px solid #bbf7d0;font-size:0.92rem;font-weight:800;">
+                    Return to Racing Fleet
                   </a>
                 </div>
               </div>
             </div>
+
+            <!-- Tier 3: 4-Stage Human Performance Testing & Validation Pipeline Ribbon -->
+            <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:20px;padding:28px;box-shadow:0 8px 24px rgba(22,163,74,0.04);">
+              <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:18px;">
+                [HUMAN PERFORMANCE TESTING &amp; VALIDATION PIPELINE]
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="border-left:3px solid #16a34a;padding-left:14px;">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;">STAGE 01 // FOAMING</div>
+                  <div style="font-size:0.9rem;font-weight:800;color:#0f172a;margin:4px 0 2px;">Nitrogen Supercritical Autoclave</div>
+                  <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Expanding virgin PEBA pellets under 250 bar supercritical nitrogen.</div>
+                </div>
+                <div style="border-left:3px solid #16a34a;padding-left:14px;">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;">STAGE 02 // CARBON</div>
+                  <div style="font-size:0.9rem;font-weight:800;color:#0f172a;margin:4px 0 2px;">3K Spoon Compression Molding</div>
+                  <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Curing multi-axial aerospace carbon fiber prepreg at 160°C.</div>
+                </div>
+                <div style="border-left:3px solid #16a34a;padding-left:14px;">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;">STAGE 03 // VICON</div>
+                  <div style="font-size:0.9rem;font-weight:800;color:#0f172a;margin:4px 0 2px;">16-Camera 3D Motion Capture</div>
+                  <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Force plate treadmill measuring joint torque and -3.8% VO₂ savings.</div>
+                </div>
+                <div style="border-left:3px solid #16a34a;padding-left:14px;">
+                  <div style="font-size:0.75rem;font-family:monospace;font-weight:800;color:#15803d;">STAGE 04 // 1000KM</div>
+                  <div style="font-size:0.9rem;font-weight:800;color:#0f172a;margin:4px 0 2px;">Abrasion Drum &amp; Creep Test</div>
+                  <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Verifying wet asphalt CoF 0.85 and rubber volume loss under 65 mm³.</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </main>
       `;
@@ -1430,73 +1540,173 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // RACING TEAM & FOOTWEAR OEM DESK
+      // ATHLETIC TEAM FLEET & FOOTWEAR OEM DESK
       mainHtml = `
-        <main class="sports-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+        <main class="sports-main" data-wr-page="contact" style="background:#ffffff;color:#0f172a;min-height:80vh;padding:48px 0 80px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Athletic Team Fleet &amp; Footwear OEM Partnership Desk
-              </span>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
-                Inquire Footwear OEM &amp; Team Fleet
-              </h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
-                Connect with our biomechanics engineers regarding custom racing lasts, team colorways, World Athletics compliance certificates, and volume production.
-              </p>
+            <!-- Top Biomechanics Workstation Header -->
+            <div style="border-bottom:1px solid #bbf7d0;padding-bottom:28px;margin-bottom:36px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                  <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;padding:3px 8px;border-radius:4px;letter-spacing:0.06em;">
+                    [PROPULSION LAB // ATHLETIC OEM CONSOLE]
+                  </span>
+                  <span style="font-size:0.75rem;color:#15803d;background:#dcfce7;padding:3px 8px;border-radius:4px;font-weight:700;">
+                    4H SOURCING RESPONSE SLA
+                  </span>
+                </div>
+                <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.6rem);font-weight:900;color:#0f172a;margin:0 0 8px;letter-spacing:-0.03em;">
+                  Athletic Team Fleet &amp; Footwear OEM Partnership
+                </h1>
+                <p style="font-size:0.92rem;color:#64748b;margin:0;max-width:680px;line-height:1.6;">
+                  Direct engineering channel for elite athletic teams, national federation programs, and footwear private-label brands requiring supercritical foam compound formulation and custom torsional carbon tooling.
+                </p>
+              </div>
+              <div style="display:flex;gap:12px;font-family:monospace;font-size:0.78rem;">
+                <div style="background:#f8fafc;border:1px solid #bbf7d0;padding:8px 14px;border-radius:8px;">
+                  <div style="color:#64748b;font-size:0.7rem;">WA COMPLIANCE</div>
+                  <div style="font-weight:800;color:#16a34a;">RULE 5 VERIFIED</div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #bbf7d0;padding:8px 14px;border-radius:8px;">
+                  <div style="color:#64748b;font-size:0.7rem;">PRODUCTION SLA</div>
+                  <div style="font-weight:800;color:#0f172a;">35 DAYS DISPATCH</div>
+                </div>
+              </div>
             </div>
 
-            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:40px;box-shadow:0 12px 36px rgba(22,163,74,0.06);">
-              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Team Director / Sourcing Buyer</label>
-                    <input type="text" name="name" required placeholder="Athletic Fleet Director" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+            <!-- Two-Column Layout -->
+            <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:36px;align-items:start;">
+              <!-- Left Column: Biomechanics Lab Capabilities & Direct Team Desk -->
+              <div style="display:flex;flex-direction:column;gap:24px;">
+                <!-- Capabilities Card -->
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:18px;padding:26px;">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#16a34a;font-weight:800;letter-spacing:0.08em;margin-bottom:12px;text-transform:uppercase;">
+                    [LAB PROTOCOLS // FOOTWEAR ENGINEERING]
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email Address</label>
-                    <input type="email" name="email" required placeholder="racing@athletic-team.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  <h3 style="font-size:1.15rem;font-weight:900;color:#0f172a;margin:0 0 16px;">
+                    Kinetic Performance OEM Capabilities
+                  </h3>
+
+                  <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#ffffff;color:#16a34a;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">16-Camera 3D Vicon Motion Capture &amp; Gait Telemetry</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">High-speed 500 FPS synchronized plantar pressure mapping and strike kinematics analysis.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#ffffff;color:#16a34a;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Supercritical Nitrogen Autoclave Midsole Molding</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Closed-cell nitrogen expansion yielding 82.4% rebound resilience and ultra-low 0.12 g/cm³ density.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#ffffff;color:#16a34a;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Custom 3K Carbon Spoon Plate CNC Tooling</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Proprietary curvature geometry optimized for team pace bands (2:00 to 2:45 marathon targets).</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#ffffff;color:#16a34a;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">World Athletics Technical Rule 5 Certification Filing</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Pre-competition stack height (&lt; 40.0mm) and plate count verification documentation.</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Racing Footwear Model</label>
-                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                    <option value="">General Racing Footwear Inquiries</option>
-                    ${products.map(p => `
-                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
-                    `).join('')}
-                  </select>
+                <!-- Direct Athletic Team Liaison Desk -->
+                <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:18px;padding:26px;box-shadow:0 6px 20px rgba(22,163,74,0.03);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#16a34a;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [DIRECT TEAM LIAISON DESK]
+                  </div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Kinetic Performance Propulsion Center</div>
+                  <div style="font-size:0.82rem;color:#64748b;margin-bottom:14px;line-height:1.6;">Direct sports science and OEM liaison response within 4 operational hours.</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:64px;">Email:</span>
+                      <a href="mailto:${esc(company.email || 'racing@kinetix-lab.com')}" style="color:#16a34a;text-decoration:none;font-weight:700;">${esc(company.email || 'racing@kinetix-lab.com')}</a>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:64px;">Lab:</span>
+                      <span style="color:#64748b;">${esc(company.address || 'Kinetix Velocity Wind Tunnel & Footwear Biomechanics Lab')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:64px;">Hours:</span>
+                      <span style="color:#64748b;">Mon - Fri, 08:30 - 18:30 CET</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Interactive Consultation RFQ Console -->
+              <div style="background:#ffffff;border:1px solid #bbf7d0;border-radius:20px;padding:36px;box-shadow:0 12px 36px rgba(22,163,74,0.06);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #bbf7d0;padding-bottom:16px;margin-bottom:24px;">
+                  <div>
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#16a34a;letter-spacing:0.06em;">[TERMINAL // OEM-PROPULSION-INIT]</span>
+                    <h2 style="font-size:1.3rem;font-weight:900;color:#0f172a;margin:4px 0 0;">Racing Fleet OEM Tender Console</h2>
+                  </div>
+                  <span style="font-size:0.75rem;padding:4px 10px;border-radius:6px;background:#f0fdf4;color:#16a34a;font-weight:800;border:1px solid #bbf7d0;">FLEET READY</span>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Team Director / Sourcing Buyer</label>
+                      <input type="text" name="name" required placeholder="e.g. Marcus Vance" style="width:100%;padding:12px;border:1px solid #bbf7d0;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#f0fdf4;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Corporate Email</label>
+                      <input type="email" name="email" required placeholder="fleet@athletic-team.com" style="width:100%;padding:12px;border:1px solid #bbf7d0;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#f0fdf4;">
+                    </div>
+                  </div>
+
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Racing Distance</label>
-                    <select name="distance" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>Marathon (42.195K) Road Racing</option>
-                      <option>Half Marathon / 10K High-Speed</option>
-                      <option>Ultra-Distance Trail 50K - 100M</option>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Target Racing Footwear Model</label>
+                    <select name="productId" style="width:100%;padding:12px;border:1px solid #bbf7d0;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#f0fdf4;outline:none;color:#0f172a;">
+                      <option value="">General Racing Footwear Fleet (All Models)</option>
+                      ${products.map(p => `
+                        <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} (${esc(p.moq)})</option>
+                      `).join('')}
                     </select>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Plate Torsional Rigidity</label>
-                    <select name="plate" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>3K Full-Length Spoon Carbon Plate</option>
-                      <option>Dual-Fork Semi-Rigid Carbon Rods</option>
-                      <option>Pebax Kinetic Responsive Shank</option>
-                    </select>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Target Racing Distance</label>
+                      <select name="distance" style="width:100%;padding:12px;border:1px solid #bbf7d0;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#f0fdf4;outline:none;color:#0f172a;">
+                        <option>Marathon (42.195K) Road Racing</option>
+                        <option>Half Marathon / 10K High-Speed</option>
+                        <option>Ultra-Distance Trail 50K - 100M</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Plate Torsional Rigidity</label>
+                      <select name="plate" style="width:100%;padding:12px;border:1px solid #bbf7d0;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#f0fdf4;outline:none;color:#0f172a;">
+                        <option>3K Full-Length Spoon Carbon Plate</option>
+                        <option>Dual-Fork Semi-Rigid Carbon Rods</option>
+                        <option>Pebax Kinetic Responsive Shank</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Custom Last Ergonomics &amp; Production Scale</label>
-                  <textarea name="message" rows="4" placeholder="Specify custom wide/narrow forefoot last requirements, team Pantone livery, or championship delivery date..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-                </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Custom Last Ergonomics &amp; Production Scale</label>
+                    <textarea name="message" rows="4" placeholder="Specify custom wide/narrow forefoot last requirements, team Pantone livery, or championship delivery date..." style="width:100%;padding:12px;border:1px solid #bbf7d0;border-radius:10px;font-size:0.88rem;box-sizing:border-box;resize:vertical;outline:none;background:#f0fdf4;"></textarea>
+                  </div>
 
-                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Submit Racing Fleet OEM Inquiry ↗
-                </button>
-              </form>
+                  <button type="submit" style="padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg, #16a34a 0%, #22c55e 100%);color:#ffffff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(22,163,74,0.25);transition:transform 0.2s ease;">
+                    Transmit Racing Fleet OEM Inquiry ↗
+                  </button>
+                  <div style="font-size:0.75rem;color:#94a3b8;text-align:center;">
+                    Direct footwear engineer response within 4 hours. Technical specification sheet &amp; biomechanics report provided.
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </main>
@@ -1506,22 +1716,25 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
 
   // Distinct Footer for each variant
   const footerHtml = isVideo ? `
-    <footer style="background:#0f172a;color:#f8fafc;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.1);">
+    <footer style="background:#ffffff;color:#0f172a;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid #bbf7d0;">
       <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
         <div>
-          <div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
-          <p style="color:#94a3b8;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+          <div style="font-size:1.25rem;font-weight:900;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:2px;background:#16a34a;"></span>
+            ${esc(brandName)}
+          </div>
+          <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
             Human performance footwear biomechanics. Supercritical nitrogen-foamed PEBA midsoles, 3K carbon plates, and World Athletics certified geometry.
           </p>
           <div style="display:flex;gap:8px;">
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#22c55e;font-size:0.7rem;font-weight:700;">82% PEBA</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#22c55e;font-size:0.7rem;font-weight:700;">3K CARBON</span>
-            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#22c55e;font-size:0.7rem;font-weight:700;">WA LEGAL</span>
+            <span style="padding:4px 9px;border-radius:6px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:0.72rem;font-weight:800;font-family:monospace;">82.4% PEBA</span>
+            <span style="padding:4px 9px;border-radius:6px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:0.72rem;font-weight:800;font-family:monospace;">3K CARBON</span>
+            <span style="padding:4px 9px;border-radius:6px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;font-size:0.72rem;font-weight:800;font-family:monospace;">WA LEGAL</span>
           </div>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Propulsion Series</h4>
-          <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.82rem;line-height:2;">
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;letter-spacing:0.04em;">Propulsion Series</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#64748b;font-size:0.82rem;line-height:2.1;">
             <li>Supercritical Marathon Carbon Racers</li>
             <li>Race-Cut Ergonomic Hydration Packs</li>
             <li>Aerodynamic Wind-Tunnel Cycling Helmets</li>
@@ -1529,12 +1742,12 @@ export function renderSportsPage(ctx: ThemeContext, isVideo: boolean): string {
           </ul>
         </div>
         <div>
-          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Team Partnerships</h4>
-          <p style="color:#94a3b8;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'racing@kinetix-lab.com')}</p>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#22c55e;text-decoration:none;font-weight:700;font-size:0.82rem;">Direct Sourcing Terminal →</a>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;letter-spacing:0.04em;">Team Partnerships</h4>
+          <p style="color:#64748b;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'racing@kinetix-lab.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#16a34a;text-decoration:none;font-weight:800;font-size:0.84rem;">Direct Sourcing Terminal →</a>
         </div>
       </div>
-      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #bbf7d0;padding-top:24px;display:flex;justify-content:space-between;color:#94a3b8;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
         <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
         <span>Human Kinetics &amp; Supercritical Athletic Engineering Division</span>
       </div>
