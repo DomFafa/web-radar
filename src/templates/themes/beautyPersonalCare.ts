@@ -632,47 +632,88 @@ export function renderBeautyPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // CLINICAL MODALITY DECK CATALOG
+      // CLINICAL MODALITY DECK & HOLOGRAPHIC TREATMENT MATRIX
       mainHtml = `
-        <main class="beauty-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <main class="beauty-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:24px;margin-bottom:36px;">
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                Medical Aesthetic Modality Deck · ISO 13485
-              </div>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
-                Clinical Device &amp; Modality Catalog
-              </h1>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Clinical Devices (${products.length})</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">4.0 MHz Radiofrequency</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Quad-Band LED</span>
-                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">28 kHz Ultrasonic</span>
+            <!-- Top Status Console Bar -->
+            <div style="background:#e11d48;color:#ffffff;padding:10px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.78rem;font-weight:700;flex-wrap:wrap;gap:10px;">
+              <span>[CLINICAL MODALITY DECK: ACTIVE] // ISO 13485 CLEANROOM · 4.0 MHZ MULTI-POLAR RF</span>
+              <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;">CALIBRATION: ±1.5NM · MEDICAL CLASS IIA</span>
+            </div>
+
+            <!-- Modality Filter Header Bar -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-top:none;border-radius:0 0 16px 16px;padding:28px 32px;margin-bottom:36px;box-shadow:0 8px 30px rgba(225,29,72,0.04);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;">
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:#ffe4e6;color:#be123c;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">
+                    Dermatological Phototherapy &amp; Dermal Infusion
+                  </div>
+                  <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};margin:0;letter-spacing:-0.03em;">
+                    Clinical Modality &amp; Formulation Portfolio
+                  </h1>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:monospace;font-size:0.75rem;font-weight:700;">
+                  <span style="padding:8px 14px;border-radius:6px;background:#e11d48;color:#ffffff;border:1px solid #e11d48;cursor:pointer;">[MODALITY-01: ALL SYSTEMS (${products.length})]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#fff5f6;color:#9f1239;border:1px solid ${theme.cardBorder};cursor:pointer;">[MODALITY-02: 4.0 MHZ RF]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#fff5f6;color:#9f1239;border:1px solid ${theme.cardBorder};cursor:pointer;">[MODALITY-03: QUAD-BAND LED]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#fff5f6;color:#9f1239;border:1px solid ${theme.cardBorder};cursor:pointer;">[MODALITY-04: TRANSDERMAL BIO]</span>
+                </div>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
-              ${products.map(p => `
-                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(225,29,72,0.05);">
-                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                    <div style="aspect-ratio:1.15;background:#fff5f6;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
-                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:78%;height:78%;object-fit:contain;">
-                      <span style="position:absolute;top:10px;left:10px;background:#e11d48;color:#fff;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
-                      <span style="position:absolute;bottom:10px;right:10px;background:#ffe4e6;color:#be123c;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.extra)}</span>
+            <!-- Bespoke Clinical Modality Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:28px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(225,29,72,0.06);display:flex;flex-direction:column;transition:transform 0.2s ease, box-shadow 0.2s ease;">
+                  <!-- Top Clinical HUD Bar -->
+                  <div style="background:#fff1f2;border-bottom:1px solid ${theme.cardBorder};padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.72rem;">
+                    <span style="color:#e11d48;font-weight:800;">SYS-MD${idx + 1} // MDR CLASS IIA</span>
+                    <span style="background:#ffe4e6;color:#9f1239;padding:2px 6px;border-radius:4px;font-weight:700;">AUDIT PASS</span>
+                  </div>
+
+                  <!-- Optical Viewport Frame -->
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;background:linear-gradient(180deg, #fff8f8 0%, #ffffff 100%);padding:20px;position:relative;border-bottom:1px solid ${theme.cardBorder};">
+                    <div style="aspect-ratio:1.2;position:relative;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#ffffff;border:1px dashed rgba(225,29,72,0.25);overflow:hidden;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:82%;height:82%;object-fit:contain;display:block;">
+                      <span style="position:absolute;top:10px;left:10px;background:#e11d48;color:#ffffff;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:10px;right:10px;background:#ffe4e6;color:#be123c;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.extra)}</span>
                     </div>
                   </a>
-                  <div style="padding:20px;">
-                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 8px;line-height:1.3;">
+
+                  <!-- Clinical Card Body -->
+                  <div style="padding:22px;flex:1;display:flex;flex-direction:column;">
+                    <div style="font-family:monospace;font-size:0.72rem;color:#0284c7;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
+                      MODALITY ARCHITECTURE // ${esc(p.categoryNameEn)}
+                    </div>
+                    <h3 style="font-size:1.18rem;font-weight:900;color:${theme.text};margin:0 0 10px;line-height:1.3;">
                       <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
                     </h3>
-                    <p style="font-size:0.84rem;color:${theme.textMuted};line-height:1.5;margin-bottom:14px;">${esc(p.desc)}</p>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.8rem;">
-                      <span style="font-weight:700;color:${theme.textSub};">MOQ: <strong style="color:${theme.primary};">${esc(p.moq)}</strong></span>
-                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;font-weight:800;color:${theme.primary};">
-                        Clinical Specs →
-                      </a>
+                    <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;margin:0 0 18px;flex:1;">
+                      ${esc(p.desc)}
+                    </p>
+
+                    <!-- Dual Clinical Efficacy Meter -->
+                    <div style="background:#fff5f6;border:1px solid ${theme.cardBorder};border-radius:8px;padding:12px;margin-bottom:18px;">
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:6px;">
+                        <span style="color:#64748b;font-weight:700;">Epidermal Penetration:</span>
+                        <strong style="color:#e11d48;font-family:monospace;">3.5mm Reticular Dermis</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
+                        <span style="color:#64748b;font-weight:700;">28-Day Neocollagenesis:</span>
+                        <strong style="color:#059669;font-family:monospace;">+48.6% Density Benchmark</strong>
+                      </div>
                     </div>
+
+                    <!-- Clinical Parameter Specs Strip -->
+                    <div style="font-size:0.78rem;color:${theme.textSub};border-top:1px solid ${theme.cardBorder};padding-top:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+                      <span>Clinical Contact: <strong style="color:${theme.text};">${esc(p.material.slice(0, 22))}</strong></span>
+                      <span>MOQ: <strong style="color:#e11d48;">${esc(p.moq)}</strong></span>
+                    </div>
+
+                    <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;text-align:center;padding:12px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.85rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;box-shadow:0 4px 14px rgba(225,29,72,0.18);">
+                      INSPECT CLINICAL DOSSIER ↗
+                    </a>
                   </div>
                 </article>
               `).join('')}
@@ -767,82 +808,197 @@ export function renderBeautyPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // CLINICAL DEVICE DOSSIER
+      // CLINICAL TREATMENT WORKSTATION & TRANSDERMAL BENCHMARK
       mainHtml = `
-        <main class="beauty-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 90px;">
+        <main class="beauty-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="display:flex;gap:8px;align-items:center;font-size:0.82rem;color:${theme.textSub};margin-bottom:28px;">
-              <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">Clinical Hub</a>
-              <span>/</span>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">Device Deck</a>
-              <span>/</span>
-              <span style="color:${theme.primary};font-weight:700;">${esc(prod.name)}</span>
+            <!-- Tier 1: Clinical Breadcrumb & Certification Badges -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:0.8rem;color:${theme.textSub};">
+                <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">CLINICAL_HUB</a>
+                <span>//</span>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">MODALITY_DECK</a>
+                <span>//</span>
+                <span style="color:#e11d48;font-weight:800;">${esc(prod.id.toUpperCase())}</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="background:#e0f2fe;color:#0369a1;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.72rem;font-weight:800;">ISO 13485 CLEANROOM CERTIFIED</span>
+                <span style="background:#ecfdf5;color:#047857;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.72rem;font-weight:800;">28-DAY CLINIC STUDY VALIDATED</span>
+              </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:flex-start;">
+            <!-- Tier 2: Split Workstation -->
+            <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:start;margin-bottom:48px;">
+              <!-- Left Column: Viewport & Optical Telemetry -->
               <div>
-                <div style="background:#fff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 16px 40px rgba(225,29,72,0.06);position:relative;">
-                  <img id="wr-detail-main-img" src="${esc(prod.img)}" alt="${esc(prod.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(prod.id)}" style="width:100%;height:460px;object-fit:contain;background:#fff5f6;display:block;">
-                  <div style="position:absolute;top:20px;left:20px;background:#e11d48;color:#fff;padding:6px 12px;border-radius:6px;font-size:0.75rem;font-weight:800;">
-                    ${esc(prod.badge)}
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 12px 36px rgba(225,29,72,0.06);position:relative;">
+                  <!-- Live Telemetry Status Bar -->
+                  <div style="background:#e11d48;color:#ffffff;padding:8px 16px;display:flex;justify-content:space-between;font-family:monospace;font-size:0.75rem;font-weight:700;">
+                    <span>[LIVE TELEMETRY] OUTPUT: 4.0 MHZ // DERMAL FLUX: 12 J/CM²</span>
+                    <span>PROBE: 41.5°C</span>
+                  </div>
+
+                  <div style="position:relative;background:#fff8f8;padding:28px;display:flex;align-items:center;justify-content:center;">
+                    <img id="wr-detail-main-img" src="${esc(prod.img)}" alt="${esc(prod.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(prod.id)}" style="width:100%;height:440px;object-fit:contain;display:block;">
+                    <div style="position:absolute;top:20px;left:20px;background:#ffffff;border:1px solid ${theme.cardBorder};color:#e11d48;padding:6px 12px;border-radius:6px;font-family:monospace;font-size:0.75rem;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                      ${esc(prod.badge)}
+                    </div>
                   </div>
                 </div>
 
-                <div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;margin-top:16px;">
-                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;overflow:hidden;background:#fff5f6;padding:4px;cursor:pointer;">
-                    <img src="${esc(prod.img)}" alt="Main Device" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;">
+                <!-- Channel Switcher Thumbnails -->
+                <div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:16px;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #e11d48;border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(prod.img)}" alt="Probe Head" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:#e11d48;display:block;margin-top:4px;">CH-1: PROBE HEAD</span>
                   </button>
-                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff5f6;padding:4px;cursor:pointer;">
-                    <img src="${esc(products[1]?.img || prod.img)}" alt="Probe Head" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;">
+                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(products[1]?.img || prod.img)}" alt="RF Flux" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:${theme.textSub};display:block;margin-top:4px;">CH-2: RF FLUX</span>
                   </button>
-                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff5f6;padding:4px;cursor:pointer;">
-                    <img src="${esc(products[2]?.img || prod.img)}" alt="Charging Base" style="width:100%;aspect-ratio:1;object-fit:contain;display:block;">
+                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(products[2]?.img || prod.img)}" alt="Optical Emission" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:${theme.textSub};display:block;margin-top:4px;">CH-3: OPTICAL</span>
                   </button>
+                </div>
+
+                <!-- Transdermal Absorption & Dermal Remodeling Step-Curve Chart -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-top:20px;box-shadow:0 4px 16px rgba(225,29,72,0.04);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;">
+                      TRANSDERMAL ABSORPTION &amp; COLLAGEN REGENERATION DYNAMICS
+                    </span>
+                    <span style="font-family:monospace;font-size:0.7rem;color:#059669;font-weight:700;">DOUBLE-BLIND AUDITED</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#fff5f6;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#e11d48;">0 Min</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">Top Corneum</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">Hydration +18%</div>
+                    </div>
+                    <div style="background:#fff5f6;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#e11d48;">5 Min</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">Basal Layer</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">1.2mm Channeling</div>
+                    </div>
+                    <div style="background:#fff5f6;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#e11d48;">15 Min</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">Deep Dermis</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">3.5mm Infusion</div>
+                    </div>
+                    <div style="background:#ecfdf5;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#047857;">28 Days</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:#047857;margin-top:2px;">Neocollagenesis</div>
+                      <div style="font-size:0.68rem;color:#047857;margin-top:4px;">+52.4% Density</div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Right Column: Architecture Matrix & Clinic Fleet Calculator -->
               <div>
-                <div style="display:inline-block;padding:4px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
-                  CLINICAL INSTRUMENT DOSSIER
+                <div style="display:inline-block;padding:3px 10px;border-radius:4px;background:#ffe4e6;color:#be123c;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;">
+                  CLINICAL INSTRUMENT DOSSIER // MDR CLASS IIA
                 </div>
-                <h1 style="font-size:clamp(2rem, 3.4vw, 2.6rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;">
+                <h1 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;">
                   ${esc(prod.name)}
                 </h1>
-                <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
                   ${esc(prod.desc)}
                 </p>
 
-                <div style="background:#fff;border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;margin-bottom:28px;">
-                  <div style="padding:14px 20px;background:#fff1f2;border-bottom:1px solid ${theme.cardBorder};font-size:0.8rem;font-weight:800;color:${theme.primary};">
-                    CLINICAL PARAMETER SPECIFICATIONS
+                <!-- 4-Cell Clinical Architecture Matrix -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">ENERGY MODALITY</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">${esc(prod.extra)}</div>
                   </div>
-                  <div style="padding:20px;display:flex;flex-direction:column;gap:12px;font-size:0.88rem;">
-                    <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:8px;">
-                      <span style="color:${theme.textSub};">Contact Material:</span>
-                      <strong style="color:${theme.text};">${esc(prod.material)}</strong>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">EPIDERMAL CONTACT</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">${esc(prod.material)}</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">SAFETY MECHANISM</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">42.0°C Active Thermal Cut-off</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">REGULATORY CLEARANCE</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">ISO 13485 · CE MDR IIa</div>
+                  </div>
+                </div>
+
+                <!-- Clinic Fleet & Private Label Logistics Calculator -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(225,29,72,0.04);">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;margin-bottom:12px;">
+                    CLINIC FLEET &amp; PRIVATE LABEL LOGISTICS TIERS
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#fff5f6;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#e11d48;">50 Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Evaluation Batch</div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:8px;">
-                      <span style="color:${theme.textSub};">Dimensions &amp; Weight:</span>
-                      <strong style="color:${theme.text};">${esc(prod.dimensions)}</strong>
+                    <div style="background:#fff5f6;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#e11d48;">250 Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Clinic Fleet Run</div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;border-bottom:1px solid ${theme.cardBorder};padding-bottom:8px;">
-                      <span style="color:${theme.textSub};">Optical Output:</span>
-                      <strong style="color:${theme.primary};">${esc(prod.extra)}</strong>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;">
-                      <span style="color:${theme.textSub};">OEM Lot MOQ:</span>
-                      <strong style="color:${theme.text};">${esc(prod.moq)}</strong>
+                    <div style="background:#fff5f6;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#e11d48;">1,000+ Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Global Wholesale</div>
                     </div>
                   </div>
                 </div>
 
-                <div style="display:flex;gap:14px;">
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;flex:1;padding:16px;text-align:center;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-                    Inquire Clinic Procurement ↗
+                <!-- Action Terminal -->
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(prod.id)}" ${navAttrs('contact')} style="text-decoration:none;flex:1;min-width:240px;padding:16px;text-align:center;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    REQUEST CLINICAL DFM &amp; OEM DOSSIER ↗
                   </a>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:8px;background:#fff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.95rem;font-weight:700;">
-                    Back to Deck
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:8px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.9rem;font-weight:700;">
+                    Return to Deck
                   </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tier 3: 4-Layer Transdermal Delivery Schematic Ribbon -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(225,29,72,0.05);">
+              <div style="text-align:center;max-width:700px;margin:0 auto 28px;">
+                <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;letter-spacing:0.06em;text-transform:uppercase;">
+                  BIOPHYSICAL MECHANISM OF ACTION
+                </span>
+                <h3 style="font-size:1.5rem;font-weight:900;color:${theme.text};margin:6px 0 0;">
+                  4-Phase Transdermal &amp; Dermal Remodeling Pathway
+                </h3>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:#fff8f8;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;margin-bottom:8px;">PHASE 01 // 0-2 MIN</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Stratum Permeabilization</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Radiofrequency oscillation and acoustic micro-cavitation disrupt hydrophobic lipid junctions in the stratum corneum.
+                  </p>
+                </div>
+                <div style="background:#fff8f8;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;margin-bottom:8px;">PHASE 02 // 2-8 MIN</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Lipid Channeling</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Bio-active peptide nanosomes and hyaluronic polymers migrate through transient aqueous micro-channels into the basal epidermis.
+                  </p>
+                </div>
+                <div style="background:#fff8f8;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;margin-bottom:8px;">PHASE 03 // 8-20 MIN</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Fibroblast Activation</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Controlled 41.5°C thermal gradient triggers heat-shock chaperone protein HSP47, initiating rapid collagen triple-helix assembly.
+                  </p>
+                </div>
+                <div style="background:#fff8f8;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#047857;margin-bottom:8px;">PHASE 04 // 28+ DAYS</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Neocollagenesis</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Sustained Type I and Type III collagen matrix deposition with clinically measured +52.4% dermal density and tissue elasticity.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1070,73 +1226,144 @@ export function renderBeautyPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
-      // CLINICAL DEVICE OEM RFQ DESK
+      // TWO-COLUMN AESTHETIC DEVICE OEM & CLINICAL FORMULATION RFQ TERMINAL
       mainHtml = `
-        <main class="beauty-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+        <main class="beauty-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 90px;">
           <div class="wrap" style="padding:0 24px;">
-            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
-              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
-                Medical &amp; Aesthetic Device OEM Portal
-              </span>
-              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
-                Request Device Manufacturing Spec
-              </h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
-                Inquire about custom wavelength diode binning, RF PCB design, private-label firmware interfaces, and ISO 13485 cleanroom contract manufacturing.
-              </p>
+            <!-- Top Status Bar -->
+            <div style="background:#e11d48;color:#ffffff;padding:10px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.78rem;font-weight:700;flex-wrap:wrap;gap:10px;">
+              <span>[AESTHETIC MEDICAL OEM PORTAL] // ISO 13485 CLEANROOM DISPATCH</span>
+              <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;">CE MDR &amp; FDA 510(K) AUDIT READY</span>
             </div>
 
-            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:40px;box-shadow:0 12px 36px rgba(225,29,72,0.06);">
-              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Clinic / Distributor Representative</label>
-                    <input type="text" name="name" required placeholder="Clinic Procurement Director" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email</label>
-                    <input type="email" name="email" required placeholder="procurement@medclinic.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
-                  </div>
-                </div>
-
+            <!-- Main Workstation Box -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-top:none;border-radius:0 0 16px 16px;padding:36px;box-shadow:0 12px 36px rgba(225,29,72,0.06);margin-bottom:40px;">
+              <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:40px;align-items:start;">
+                <!-- Left Column: Cleanroom Capabilities & Engineering Advisory -->
                 <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Selected Modality Architecture</label>
-                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                    <option value="">General Aesthetic Device Portfolio</option>
-                    ${products.map(p => `
-                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
-                    `).join('')}
-                  </select>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Medical Regulatory Standard</label>
-                    <select name="certification" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>CE Medical Directive (MDR Class IIa)</option>
-                      <option>FDA 510(k) Cleared Platform</option>
-                      <option>CB / IEC 60601-1 Electrical Safety</option>
-                    </select>
+                  <div style="margin-bottom:28px;">
+                    <span style="display:inline-block;padding:3px 10px;border-radius:4px;background:#ffe4e6;color:#be123c;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;">
+                      Cleanroom Contract Engineering
+                    </span>
+                    <h1 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 12px;line-height:1.2;">
+                      Aesthetic Device &amp; Formulation OEM Portal
+                    </h1>
+                    <p style="font-size:0.92rem;color:${theme.textMuted};line-height:1.7;margin:0;">
+                      Initiate custom optical wavelength diode binning, multi-polar RF PCB simulations, titanium probe CNC hydroforming, and international medical regulatory filings.
+                    </p>
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Order Volume Tier</label>
-                    <select name="volume" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
-                      <option>Evaluation Batch (50 - 100 Units)</option>
-                      <option>Clinic Fleet Batch (200 - 500 Units)</option>
-                      <option>Global Wholesale Program (1,000+ Units)</option>
-                    </select>
+
+                  <!-- Cleanroom Protocol Checklist -->
+                  <div style="background:#fff8f8;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;margin-bottom:24px;">
+                    <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;margin-bottom:14px;letter-spacing:0.04em;">
+                      CLEANROOM &amp; REGULATORY CAPABILITIES (INCLUDED)
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;color:${theme.text};">
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#e11d48;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Class 10,000 Cleanroom:</strong> Automated SMT placement and sterile medical assembly</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#e11d48;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Optical Diode Calibration:</strong> High-precision spectral binning within ±1.5nm</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#e11d48;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Multi-Polar RF Circuit Simulation:</strong> Thermal dissipation and impedance control</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="background:#e11d48;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;">✓</span>
+                        <span><strong>Global Regulatory Dossiers:</strong> CE MDR Class IIa, FDA 510(k), and CB/IEC 60601-1</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Direct Clinical Engineering Liaison Card -->
+                  <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:20px;">
+                    <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#e11d48;margin-bottom:10px;">
+                      DIRECT CLINICAL ENGINEERING DESK
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.82rem;">
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">Response SLA</span>
+                        <strong style="color:${theme.text};">&lt; 4 Working Hours</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">CAD / PCB Formats</span>
+                        <strong style="color:${theme.text};">STEP, Altium, Gerber, DWG</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">Cleanroom Desk</span>
+                        <strong style="color:${theme.text};">${esc(company.email || 'clinical-oem@lumina-med.com')}</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;font-size:0.72rem;text-transform:uppercase;">Prototyping Lead</span>
+                        <strong style="color:${theme.text};">12 - 15 Calendar Days</strong>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">OEM Customization &amp; Firmware Specs</label>
-                  <textarea name="message" rows="4" placeholder="Detail custom logo placement on titanium probe, localized UI languages, custom frequency profiles, or packaging..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-                </div>
+                <!-- Right Column: Interactive Clinical RFQ Console -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:28px;box-shadow:0 4px 20px rgba(225,29,72,0.04);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-bottom:1px solid ${theme.cardBorder};padding-bottom:12px;">
+                    <span style="font-weight:800;font-size:0.95rem;color:${theme.text};">CLINICAL OEM SPECIFICATION FORM</span>
+                    <span style="font-family:monospace;font-size:0.75rem;color:#e11d48;font-weight:700;">FORM_ID: RFQ-MED2026</span>
+                  </div>
 
-                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Transmit Device OEM Specification ↗
-                </button>
-              </form>
+                  <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Procurement Officer / Title</label>
+                        <input type="text" name="name" required placeholder="Clinic Procurement Director" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#f8fafc;">
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Corporate Work Email</label>
+                        <input type="email" name="email" required placeholder="procurement@medclinic.com" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#f8fafc;">
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Selected Modality Architecture</label>
+                      <select name="productId" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#ffffff;">
+                        <option value="">General Custom Aesthetic Device Platform (All Modalities)</option>
+                        ${products.map(p => `
+                          <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra)}</option>
+                        `).join('')}
+                      </select>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Medical Regulatory Standard</label>
+                        <select name="certification" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#ffffff;">
+                          <option>CE Medical Directive (MDR Class IIa)</option>
+                          <option>FDA 510(k) Cleared Platform</option>
+                          <option>CB / IEC 60601-1 Electrical Safety</option>
+                          <option>Cosmetic GMP / ISO 22716 Cleanroom</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">Deployment Volume Tier</label>
+                        <select name="volume" style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;background:#ffffff;">
+                          <option>Evaluation Pilot Batch (50 - 100 Units)</option>
+                          <option>Regional Clinic Fleet (200 - 500 Units)</option>
+                          <option>Global Wholesale Program (1,000+ Units)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;color:${theme.text};">OEM Customization &amp; Firmware Specs</label>
+                      <textarea name="message" rows="4" placeholder="Detail custom logo placement on titanium probe, localized UI languages, custom frequency profiles, or packaging constraints..." style="width:100%;padding:11px 12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.88rem;box-sizing:border-box;resize:vertical;background:#f8fafc;"></textarea>
+                    </div>
+
+                    <button type="submit" style="padding:15px;border-radius:8px;border:none;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};transition:all 0.2s ease;">
+                      TRANSMIT CLINICAL OEM SPECIFICATION ↗
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -1163,10 +1390,10 @@ export function renderBeautyPage(ctx: ThemeContext, isVideo: boolean): string {
             </div>
           </div>
           <div>
-            <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">Compliance &amp; Export</div>
+            <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">${isVideo ? 'Medical Cleanroom &amp; OEM Desk' : 'Compliance &amp; Export'}</div>
             <div style="color:${theme.textSub};line-height:1.6;">
-              <div>${esc(company.address || 'Cosmetic Science Park, Life Sciences Corridor')}</div>
-              <div>${esc(company.email || 'compliance@clean-beauty-lab.com')}</div>
+              <div>${esc(company.address || (isVideo ? 'Medical Aesthetic Technology Park, Optical Cleanroom Zone' : 'Cosmetic Science Park, Life Sciences Corridor'))}</div>
+              <div>${esc(company.email || (isVideo ? 'clinical-oem@lumina-med.com' : 'compliance@clean-beauty-lab.com'))}</div>
             </div>
           </div>
         </div>
