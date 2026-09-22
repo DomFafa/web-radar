@@ -4,13 +4,14 @@ import type { MaterialsTemplateContract } from '../shared/materials';
 import type { RenderOptions } from './index';
 import { getMaterialsTemplate as frozenContract, renderSite as frozenRender } from './releases/baseline-20260922.mjs';
 import { frozenMaterialsPreviewRuntime } from './releases/baseline-preview-20260922';
+import { getModernMaterialsTemplate, getTypedMaterialsTemplate } from './materials-typed';
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
 export const executableMaterialsRevision = (id: string) => `2026-09-22.${id}-materials.4`;
 
 /** Execution metadata is published only in a new revision. Historical documents stay byte-for-byte unchanged. */
 export function executableMaterialsContract(id: string): MaterialsTemplateContract | undefined {
-  const contract = frozenContract(id);
+  const contract = frozenContract(id) ?? getModernMaterialsTemplate(id);
   if (!contract) return;
   contract.contractRevision = executableMaterialsRevision(id);
   return declareExecutionMetadata(contract);
@@ -43,7 +44,12 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));
   if (release) return structuredClone(release.contract);
   if (!revision || revision === executableMaterialsRevision(id)) return executableMaterialsContract(id);
-  return frozenContract(id, revision);
+  const frozen = frozenContract(id, revision);
+  if (frozen) return frozen;
+  const modern = getModernMaterialsTemplate(id, revision);
+  if (modern && (!revision || modern.contractRevision === revision)) return modern;
+  const typed = getTypedMaterialsTemplate(id);
+  if (typed && typed.contractRevision === revision) return typed;
 }
 
 export function renderReleasedMaterials(draft: Draft, options: RenderOptions): string | undefined {
