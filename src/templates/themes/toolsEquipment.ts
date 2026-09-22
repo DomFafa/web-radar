@@ -98,92 +98,96 @@ export const TOOLS_DEFAULT_PRODUCTS: ThemedToolsItem[] = [
   },
   {
     id: 'tl-6',
-    name: 'Fiberglass Anti-Shock Dead Blow Hammer',
-    desc: 'Shot-filled dead blow hammer with fiberglass handle, non-marring polyurethane head, and anti-shock vibration dampening.',
-    badge: 'Dead Blow',
-    category: 'hammer',
+    name: 'Heavy-Duty Cantilever Tool Chest',
+    desc: '5-tray cantilever steel toolbox with powder-coated rust-proof finish, dual padlock eyes, and full-length steel piano hinges.',
+    badge: 'Steel Armor',
+    category: 'storage',
     categoryNameZh: '',
-    categoryNameEn: 'Specialty Hammers',
-    material: 'Fiberglass + Polyurethane Head',
-    dimensions: '340mm Length · 900g',
-    extra: 'Non-Marring Dead Blow',
-    moq: '500 Units',
-    tagline: 'Non-Marring Anti-Shock Design',
+    categoryNameEn: 'Tool Storage',
+    material: 'Cold-Rolled Steel 1.2mm SPCC',
+    dimensions: '530 × 200 × 210 mm · 5.8kg',
+    extra: '5-Tray Cantilever Design',
+    moq: '200 Units',
+    tagline: 'Cold-Rolled SPCC Steel Armor',
     img: getIndustryPlaceholder('tools', 5),
   },
   {
     id: 'tl-7',
-    name: 'Rolling Tool Cabinet 7-Drawer',
-    desc: 'Heavy-duty rolling tool cabinet with 7 ball-bearing slide drawers, EVA foam liner, and 350kg load capacity.',
-    badge: 'Pro Storage',
-    category: 'toolbox',
+    name: 'Digital Display Inverter Welder 200A',
+    desc: 'IGBT digital inverter arc welder with hot start, arc force, anti-stick, and digital amperage display. 110V/220V dual voltage.',
+    badge: 'IGBT Inverter',
+    category: 'welder',
     categoryNameZh: '',
-    categoryNameEn: 'Tool Storage',
-    material: 'Cold-Rolled Steel 1.2mm',
-    dimensions: '680 × 460 × 1000 mm · 42kg',
-    extra: '350kg Load Capacity',
+    categoryNameEn: 'Welding Machines',
+    material: 'IGBT Inverter Module + Copper Coil',
+    dimensions: '290 × 120 × 198 mm · 4.2kg',
+    extra: '200A Dual Voltage 110/220V',
     moq: '100 Units',
-    tagline: '350kg Heavy-Duty Ball-Bearing',
+    tagline: '200A IGBT Dual Voltage Arc',
     img: getIndustryPlaceholder('tools', 6),
   },
   {
     id: 'tl-8',
-    name: 'IGBT 200A MIG/TIG Inverter Welder',
-    desc: 'Dual-process MIG/TIG inverter welder with IGBT technology, digital display, and gas/gasless flux-core capability.',
-    badge: 'IGBT Dual',
-    category: 'welder',
+    name: 'Auto-Ranging True-RMS Multimeter',
+    desc: '6000-count true-RMS digital multimeter with NCV non-contact voltage detection, capacitance, temperature, and CAT III 600V safety.',
+    badge: 'True RMS',
+    category: 'meter',
     categoryNameZh: '',
-    categoryNameEn: 'Inverter Welders',
-    material: 'IGBT Inverter Module',
-    dimensions: '480 × 210 × 360 mm · 11kg',
-    extra: '200A IGBT MIG/TIG',
-    moq: '100 Units',
-    tagline: '200A IGBT Dual-Process',
+    categoryNameEn: 'Digital Multimeters',
+    material: 'Double-Molded Rugged ABS Armor',
+    dimensions: '147 × 71 × 45 mm · 220g',
+    extra: 'CAT III 600V True-RMS',
+    moq: '500 Units',
+    tagline: '6000-Count True-RMS CAT III',
     img: getIndustryPlaceholder('tools', 7),
-  }
+  },
 ];
 
-export function getToolsProducts(ctx: ThemeContext): ThemedToolsItem[] {
-  const { draft, translateProduct } = ctx;
-  if (isTypedMaterialsSource(draft)) {
-    return draft.products.map((p, idx) => ({
-      id: p.id,
-      name: translateProduct(p).name || `Product ${idx + 1}`,
-      desc: translateProduct(p).description || '',
-      badge: '',
-      category: 'tools',
-      categoryNameZh: '',
-      categoryNameEn: 'Ratchet Wrenches',
-      material: p.material || '',
-      dimensions: p.dimensions || '',
-      extra: '',
-      moq: '',
-      tagline: p.tagline || '',
-      img: ctx.productMainImage(p),
-    }));
-  }
-  if (draft.products && draft.products.length > 0) {
-    return draft.products.map((p, idx) => {
-      const fallback = TOOLS_DEFAULT_PRODUCTS[idx % TOOLS_DEFAULT_PRODUCTS.length]!;
-      const translated = ctx.translateProduct(p);
-      const mainImg = ctx.productMainImage(p) || fallback.img;
+function getToolsProducts(ctx: ThemeContext): ThemedToolsItem[] {
+  const isTyped = isTypedMaterialsSource(ctx.draft);
+  if (isTyped) {
+    return ctx.draft.products.map((p, i) => {
+      const def = TOOLS_DEFAULT_PRODUCTS[i % TOOLS_DEFAULT_PRODUCTS.length]!;
       return {
         id: p.id,
-        name: translated.name || fallback.name,
-        desc: translated.description || fallback.desc,
-        badge: fallback.badge,
-        category: fallback.category,
+        name: p.name || def.name,
+        desc: p.description || def.desc,
+        badge: def.badge,
+        category: def.category,
         categoryNameZh: '',
-        categoryNameEn: fallback.categoryNameEn,
-        material: p.material || fallback.material,
-        dimensions: p.dimensions || fallback.dimensions,
-        extra: fallback.extra,
-        moq: fallback.moq,
-        tagline: p.tagline || fallback.tagline,
-        img: mainImg,
+        categoryNameEn: def.categoryNameEn,
+        material: p.material || def.material,
+        dimensions: p.dimensions || def.dimensions,
+        extra: def.extra,
+        moq: def.moq,
+        tagline: def.tagline,
+        img: p.imageAssetId ? safeUrl(ctx.options.assetUrl(p.imageAssetId), ctx.options.preview) : def.img,
       };
     });
   }
+
+  if (ctx.draft.products && ctx.draft.products.length > 0) {
+    return ctx.draft.products.map((p, i) => {
+      const def = TOOLS_DEFAULT_PRODUCTS[i % TOOLS_DEFAULT_PRODUCTS.length]!;
+      const imgUrl = p.imageAssetId ? safeUrl(ctx.options.assetUrl(p.imageAssetId), ctx.options.preview) : def.img;
+      return {
+        id: p.id,
+        name: p.name || def.name,
+        desc: p.description || def.desc,
+        badge: def.badge,
+        category: def.category,
+        categoryNameZh: '',
+        categoryNameEn: def.categoryNameEn,
+        material: p.material || def.material,
+        dimensions: p.dimensions || def.dimensions,
+        extra: def.extra,
+        moq: def.moq,
+        tagline: def.tagline,
+        img: imgUrl,
+      };
+    });
+  }
+
   return TOOLS_DEFAULT_PRODUCTS;
 }
 
@@ -194,43 +198,91 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
   const products = getToolsProducts(ctx);
   const heroProduct = products[0]!;
 
-  const brandName = company.name || (isVideo ? 'IronSpark Fabrication Lab' : 'PrecisionForge Tool Works');
-  const brandTagline = isVideo ? 'Heavy-Duty Fabrication & Welding' : 'Professional-Grade Precision Tools';
+  const brandName = company.name || (isVideo ? 'ForgeMaster Workshop Tools' : 'PrecisionTech Industrial Tools');
+  const brandTagline = isVideo ? 'Heavy-Duty Power Tools & Fabrication Gear' : 'German Standard Precision Mechanics & Hand Tools';
 
+  // Light Palettes Only - No dark mode!
   const theme = isVideo
     ? {
-      bg: '#1c1917', cardBg: '#292524', cardBorder: 'rgba(251,146,60,0.20)',
-      primary: '#fb923c', primaryHover: '#f97316', text: '#fafaf9', textMuted: '#a8a29e', textSub: '#78716c',
-      glassBg: 'rgba(28,25,23,0.92)', pillBg: 'rgba(251,146,60,0.15)', pillText: '#fb923c',
-      btnGradient: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)', accentGlow: 'rgba(251,146,60,0.25)',
+      bg: '#f5f5f4',
+      cardBg: '#ffffff',
+      cardBorder: 'rgba(234,88,12,0.16)',
+      primary: '#ea580c',
+      primaryHover: '#c2410c',
+      text: '#1c1917',
+      textMuted: '#52525b',
+      textSub: '#71717a',
+      glassBg: 'rgba(245,245,244,0.92)',
+      pillBg: '#ffedd5',
+      pillText: '#c2410c',
+      btnGradient: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)',
+      accentGlow: 'rgba(234,88,12,0.2)',
     }
     : {
-      bg: '#f4f4f5', cardBg: '#ffffff', cardBorder: 'rgba(234,88,12,0.14)',
-      primary: '#ea580c', primaryHover: '#c2410c', text: '#18181b', textMuted: '#52525b', textSub: '#71717a',
-      glassBg: 'rgba(244,244,245,0.92)', pillBg: '#fff7ed', pillText: '#c2410c',
-      btnGradient: 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)', accentGlow: 'rgba(234,88,12,0.18)',
+      bg: '#f4f4f6',
+      cardBg: '#ffffff',
+      cardBorder: 'rgba(2,132,199,0.16)',
+      primary: '#0284c7',
+      primaryHover: '#0369a1',
+      text: '#0f172a',
+      textMuted: '#475569',
+      textSub: '#64748b',
+      glassBg: 'rgba(244,244,246,0.92)',
+      pillBg: '#e0f2fe',
+      pillText: '#0369a1',
+      btnGradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+      accentGlow: 'rgba(2,132,199,0.2)',
     };
 
-  const headerHtml = `
-    <header class="tools-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.04);">
-      <div class="wrap" style="height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+  // Distinct Header
+  const headerHtml = isVideo ? `
+    <header class="tools-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(234,88,12,0.04);">
+      <div style="background:#ffedd5;padding:5px 24px;display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:${theme.primary};font-weight:800;">
+        <div>20V MAX BLDC BRUSHLESS PLATFORM · CE / GS / UL CERTIFIED</div>
+        <div>CONTAINER WHOLESALE EXPORT PROGRAM</div>
+      </div>
+      <div class="wrap" style="height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
         <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
-          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
+          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:36px;width:auto;object-fit:contain;">` : ''}
           <div style="display:flex;flex-direction:column;">
-            <span style="font-size:1.2rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};">${esc(brandName)}</span>
-            <span style="font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:${theme.primary};font-weight:700;">${esc(brandTagline)}</span>
+            <span style="font-size:1.18rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};">${esc(brandName)}</span>
+            <span style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:${theme.primary};font-weight:800;">${esc(brandTagline)}</span>
           </div>
         </a>
-        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:28px;">
-          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.home)}</a>
-          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.catalog)}</a>
-          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.about)}</a>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.contact)}</a>
+        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:26px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};">${esc(ui.home)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};">${esc(ui.catalog)}</a>
+          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};">${esc(ui.about)}</a>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};">${esc(ui.contact)}</a>
+        </nav>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="languages" style="display:flex;gap:6px;">${ctx.languageLinks}</div>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:9px 20px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.84rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+            Workshop RFQ ↗
+          </a>
+        </div>
+      </div>
+    </header>
+  ` : `
+    <header class="tools-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};">
+      <div class="wrap" style="height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+        <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
+          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:36px;width:auto;object-fit:contain;">` : ''}
+          <div style="display:flex;flex-direction:column;">
+            <span style="font-size:1.2rem;font-weight:900;letter-spacing:-0.03em;color:${theme.text};">${esc(brandName)}</span>
+            <span style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:${theme.primary};font-weight:800;">${esc(brandTagline)}</span>
+          </div>
+        </a>
+        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:30px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};">${esc(ui.home)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};">${esc(ui.catalog)}</a>
+          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};">${esc(ui.about)}</a>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};">${esc(ui.contact)}</a>
         </nav>
         <div style="display:flex;align-items:center;gap:16px;">
           <div class="languages" style="display:flex;gap:6px;">${ctx.languageLinks}</div>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 20px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
-            B2B Sourcing RFQ ↗
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 22px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+            Tooling Catalog ↗
           </a>
         </div>
       </div>
@@ -241,69 +293,115 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
 
   if (page === 'home') {
     if (isVideo) {
+      // WORKSHOP ACTION VIDEO & HIGH-TORQUE GAUGE HUD
       mainHtml = `
         <main class="tools-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
-          <section style="position:relative;overflow:hidden;padding:80px 0 100px;border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+          <section style="position:relative;padding:70px 0 90px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
-                  ✦ Forge & Fabrication Lab
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:18px;">
+                  ✦ Heavy-Duty Workshop Fabrication · 20V BLDC Platform
                 </div>
-                <h1 style="font-size:clamp(2.2rem, 4.5vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 18px;">
-                  ${esc(draft.copy[ctx.lang]?.headline || 'Heavy-Duty Fabrication: IGBT Welding & CNC Precision')}
+                <h1 style="font-size:clamp(2.2rem, 4.2vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 16px;">
+                  ${esc(draft.copy[ctx.lang]?.headline || 'Heavy-Duty Power Tools: High-Torque Brushless Performance')}
                 </h1>
-                <p style="font-size:1.1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 30px;max-width:620px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || 'IGBT inverter welders, brushless angle grinders, and industrial-grade CNC machining accessories.')}
+                <p style="font-size:1.08rem;line-height:1.7;color:${theme.textMuted};margin:0 0 28px;max-width:580px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Engineered with 800 N·m brushless motor power, all-metal planetary gearboxes, and anti-vibration ergonomic housings for rigorous job-site demands.')}
                 </p>
-                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};transition:transform 0.2s;">
-                    Explore Products ↗
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:34px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.94rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Explore Workshop Lineup ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:10px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
-                    Request Pricing
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:6px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                    Distributor Program
                   </a>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid ${theme.cardBorder};">
-                  ${[['HRC 52', 'Steel Hardness'], ['ISO', '9001 QMS'], ['CE', 'Certified']].map(([v, l]) => `
-                    <div><div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">${v}</div><div style="font-size:0.75rem;color:${theme.textSub};">${l}</div></div>
-                  `).join('')}
+                <!-- Mechanical HUD Telemetry -->
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:20px;border-top:1px solid ${theme.cardBorder};">
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">800 N·m</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Max Breakaway Torque</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">5800 RPM</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Brushless High-Speed Motor</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">IP56 Rated</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Dust & Water Protection</div>
+                  </div>
                 </div>
               </div>
+
+              <!-- Power Tool Console Display -->
               <div style="position:relative;">
-                <div style="aspect-ratio:4/3;border-radius:20px;overflow:hidden;background:${theme.cardBg};border:1px solid ${theme.cardBorder};box-shadow:0 20px 50px rgba(0,0,0,0.15);">
-                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:cover;" fetchpriority="high">
-                </div>
-                <div style="position:absolute;bottom:-16px;left:24px;right:24px;background:${theme.glassBg};backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:14px;padding:16px 20px;border:1px solid ${theme.cardBorder};display:flex;align-items:center;justify-content:space-between;">
-                  <div>
-                    <div style="font-size:0.82rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;">${esc(heroProduct.categoryNameEn)}</div>
-                    <div style="font-size:0.92rem;font-weight:700;color:${theme.text};margin-top:2px;">${esc(heroProduct.name)}</div>
+                <div style="border-radius:18px;overflow:hidden;background:#ffffff;border:2px solid ${theme.cardBorder};box-shadow:0 24px 60px rgba(234,88,12,0.12);position:relative;">
+                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:380px;object-fit:contain;padding:24px;display:block;" fetchpriority="high">
+                  <div style="position:absolute;top:16px;left:16px;background:rgba(28,25,23,0.85);backdrop-filter:blur(10px);color:#fff;padding:6px 12px;border-radius:4px;font-size:0.72rem;font-weight:800;">
+                    JOB-SITE TESTED
                   </div>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.78rem;font-weight:800;">View ↗</a>
+                </div>
+                <div style="position:absolute;bottom:-18px;left:20px;right:20px;background:#ffffff;border-radius:10px;padding:16px 20px;border:1px solid ${theme.cardBorder};display:flex;align-items:center;justify-content:space-between;box-shadow:0 12px 30px rgba(0,0,0,0.06);">
+                  <div>
+                    <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">Brushless Impact Platform</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};">${esc(heroProduct.name)}</div>
+                  </div>
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:8px 18px;border-radius:4px;background:${theme.btnGradient};color:#fff;font-size:0.78rem;font-weight:800;">View Specs ↗</a>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Product Grid -->
+          <!-- Extreme Environment Durability Matrix -->
+          <section style="padding:70px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;margin-bottom:44px;">
+                <span style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;">Rigorous Reliability</span>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:8px 0 0;">Job-Site Durability & Stress Testing</h2>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;">
+                <div style="padding:24px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">2.5m Concrete Drop Test</div>
+                  <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;">Glass-filled polyamide housing absorbs repetitive impacts without hairline fractures or battery release.</div>
+                </div>
+                <div style="padding:24px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">All-Metal Gear Train</div>
+                  <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;">Precision powdered metallurgy gears with hardened planetary pinions for zero tooth strip under heavy torque.</div>
+                </div>
+                <div style="padding:24px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.3rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Extreme Climate Ready</div>
+                  <div style="font-size:0.86rem;color:${theme.textMuted};line-height:1.6;">Sub-zero -20°C starting capability and high-temperature 60°C continuous motor thermal dissipation.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Product Catalog -->
           <section style="padding:80px 0;">
             <div class="wrap" style="padding:0 24px;">
-              <div style="text-align:center;margin-bottom:50px;">
-                <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Featured Products</div>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};margin:0;">Our Product Range</h2>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;">
+                <div>
+                  <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;">Workshop Equipment Catalog</div>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:6px 0 0;">Power Tools & Fabrication Gear</h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.9rem;font-weight:800;color:${theme.primary};">All Models (RFQ) →</a>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
                 ${products.slice(0, 8).map(p => `
-                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;transition:transform 0.3s,box-shadow 0.3s;">
+                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
                     <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                      <div style="aspect-ratio:1;overflow:hidden;background:${theme.bg};position:relative;">
-                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;transition:transform 0.4s;">
-                        ${p.badge ? `<span style="position:absolute;top:12px;left:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:6px;">${esc(p.badge)}</span>` : ''}
+                      <div style="aspect-ratio:1.05;background:${theme.bg};position:relative;overflow:hidden;">
+                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:18px;">
+                        <span style="position:absolute;top:12px;left:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:4px;">${esc(p.badge)}</span>
                       </div>
-                      <div style="padding:18px;">
-                        <div style="font-size:0.72rem;font-weight:700;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
+                      <div style="padding:20px;">
+                        <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
                         <h3 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
-                        <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                        <div style="font-size:0.78rem;color:${theme.primary};font-weight:700;">View Details →</div>
+                        <div style="font-size:0.8rem;color:${theme.textSub};margin-bottom:12px;">${esc(p.material)} · ${esc(p.dimensions)}</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid ${theme.cardBorder};">
+                          <span style="font-size:0.78rem;font-weight:700;color:${theme.textMuted};">MOQ: ${esc(p.moq)}</span>
+                          <span style="font-size:0.8rem;font-weight:800;color:${theme.primary};">Tool Details ↗</span>
+                        </div>
                       </div>
                     </a>
                   </article>
@@ -314,88 +412,126 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
         </main>
       `;
     } else {
+      // ENGINEERING BLUEPRINT & DIMENSION MEASUREMENT DRAFTING TABLE
       mainHtml = `
         <main class="tools-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
-          <!-- Hero Banner -->
-          <section style="position:relative;overflow:hidden;padding:100px 0 80px;">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
+          <!-- Blueprint Drafting Hero -->
+          <section style="position:relative;padding:80px 0 90px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
-                  ✦ Industrial Precision Workshop
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;">
+                  ✦ German Standard Precision Mechanics · DIN / ISO 9001
                 </div>
-                <h1 style="font-size:clamp(2.4rem, 5vw, 3.6rem);font-weight:900;line-height:1.1;color:${theme.text};letter-spacing:-0.03em;margin:0 0 20px;">
-                  ${esc(draft.copy[ctx.lang]?.headline || 'Professional-Grade CrV Steel & BLDC Power Tools')}
+                <h1 style="font-size:clamp(2.3rem, 4.5vw, 3.6rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 16px;">
+                  ${esc(draft.copy[ctx.lang]?.headline || 'Micron Precision Mechanics: Professional Tooling Systems')}
                 </h1>
-                <p style="font-size:1.08rem;line-height:1.7;color:${theme.textMuted};margin:0 0 32px;max-width:580px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Chrome vanadium 72-tooth ratchets, brushless motor drills, and laser-calibrated measuring instruments.')}
+                <p style="font-size:1.08rem;line-height:1.7;color:${theme.textMuted};margin:0 0 30px;max-width:580px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Drop-forged chrome vanadium steel, sub-micron dimensional tolerances, and cryogenic hardening for industrial assembly lines.')}
                 </p>
-                <div style="display:flex;flex-wrap:wrap;gap:14px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:12px;background:${theme.btnGradient};color:#ffffff;font-size:0.98rem;font-weight:800;box-shadow:0 6px 24px ${theme.accentGlow};transition:transform 0.2s;">
-                    Explore Collection ↗
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#ffffff;font-size:0.94rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Explore Precision Tools ↗
                   </a>
-                  <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;padding:15px 28px;border-radius:12px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.98rem;font-weight:700;">
-                    Our Story
+                  <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;padding:14px 26px;border-radius:6px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                    Metallurgy Standards
                   </a>
                 </div>
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid ${theme.cardBorder};">
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">±0.001mm</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Tolerance Calibration</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">HRC 65+</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Hardened Tool Steel</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">DIN 863</div>
+                    <div style="font-size:0.75rem;color:${theme.textSub};font-weight:600;">Metrology Compliant</div>
+                  </div>
+                </div>
               </div>
+
+              <!-- Blueprint Drawing Card -->
               <div style="position:relative;">
-                <div style="aspect-ratio:4/3;border-radius:24px;overflow:hidden;background:${theme.cardBg};border:1px solid ${theme.cardBorder};box-shadow:0 24px 60px rgba(0,0,0,0.08);">
-                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:contain;padding:20px;" fetchpriority="high">
+                <div style="border-radius:16px;overflow:hidden;background:#ffffff;border:1px solid ${theme.cardBorder};box-shadow:0 20px 50px rgba(2,132,199,0.08);padding:24px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:0.75rem;color:${theme.primary};font-weight:800;">
+                    <span>TECHNICAL DRAWING NO. 884-A</span>
+                    <span>SCALE 1:1</span>
+                  </div>
+                  <div style="aspect-ratio:4/3;background:#f8fafc;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+                    <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:contain;padding:16px;" fetchpriority="high">
+                  </div>
+                  <div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;">
+                    <div>
+                      <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">Master Mechanical Grade</div>
+                      <div style="font-size:0.95rem;font-weight:800;color:${theme.text};">${esc(heroProduct.name)}</div>
+                    </div>
+                    <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:8px 18px;border-radius:4px;background:${theme.btnGradient};color:#fff;font-size:0.78rem;font-weight:800;">Spec Sheet ↗</a>
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Stats Row -->
-          <section style="padding:50px 0;border-top:1px solid ${theme.cardBorder};border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:repeat(4, 1fr);gap:24px;">
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">HRC 52</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">Steel Hardness</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">Heat-treated CrV alloy</div>
+          <!-- Tolerances & Metallurgy Testing Laboratory -->
+          <section style="padding:80px 0;background:#ffffff;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="text-align:center;max-width:640px;margin:0 auto 48px;">
+                <span style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.12em;text-transform:uppercase;">Quality Assurance</span>
+                <h2 style="font-size:clamp(1.9rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};margin:8px 0 12px;">Metallurgy & Precision Verification</h2>
               </div>
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">ISO</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">9001 QMS</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">Quality management system</div>
-              </div>
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">CE</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">Certified</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">EU safety compliance</div>
-              </div>
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">GS</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">Mark</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">German safety standard</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+                <div style="padding:26px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Cryogenic Hardening</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin-bottom:4px;">-196°C Liquid Nitrogen</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;">Converts retained austenite to martensite for maximum edge retention.</div>
+                </div>
+                <div style="padding:26px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Optical Zeiss CMM</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin-bottom:4px;">Multi-Sensor Coordinate Check</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;">Computer controlled 3D verification ensuring batch repeatability under 3 microns.</div>
+                </div>
+                <div style="padding:26px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Salt Spray 400H</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin-bottom:4px;">Electrostatic Chrome Finish</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;">High-density microporous trivalent chromium barrier prevents shop corrosion.</div>
+                </div>
+                <div style="padding:26px;border-radius:14px;background:${theme.bg};border:1px solid ${theme.cardBorder};">
+                  <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">Torsion Life 50,000x</div>
+                  <div style="font-size:0.88rem;font-weight:800;color:${theme.text};margin-bottom:4px;">Proof Torque Compliance</div>
+                  <div style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;">Exceeds ASME and DIN test limits by at least 150% without permanent distortion.</div>
+                </div>
               </div>
             </div>
           </section>
 
-          <!-- Product Grid -->
-          <section style="padding:80px 0;">
+          <!-- Precision Catalog Shelf -->
+          <section style="padding:90px 0;">
             <div class="wrap" style="padding:0 24px;">
-              <div style="text-align:center;margin-bottom:50px;">
-                <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Product Showcase</div>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};margin:0;">Featured Products</h2>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:48px;">
+                <div>
+                  <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.12em;text-transform:uppercase;">Industrial Tooling Lineup</div>
+                  <h2 style="font-size:clamp(1.9rem, 3.2vw, 2.6rem);font-weight:900;color:${theme.text};margin:6px 0 0;">Precision Mechanics & Hand Tools</h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:800;color:${theme.primary};">Full Tooling Catalog →</a>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:28px;">
                 ${products.slice(0, 8).map(p => `
-                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;transition:transform 0.3s,box-shadow 0.3s;">
+                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(2,132,199,0.04);transition:transform 0.3s;">
                     <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                      <div style="aspect-ratio:1;overflow:hidden;background:linear-gradient(135deg, ${theme.bg}, ${theme.cardBg});position:relative;">
-                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:20px;transition:transform 0.4s;">
-                        ${p.badge ? `<span style="position:absolute;top:12px;right:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:6px;">${esc(p.badge)}</span>` : ''}
+                      <div style="aspect-ratio:1;background:${theme.bg};position:relative;overflow:hidden;">
+                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:20px;">
+                        <span style="position:absolute;top:12px;left:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:4px;">${esc(p.badge)}</span>
                       </div>
-                      <div style="padding:18px;">
-                        <div style="font-size:0.72rem;font-weight:700;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
-                        <h3 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
-                        <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                        <div style="font-size:0.78rem;color:${theme.primary};font-weight:700;">View Details →</div>
+                      <div style="padding:22px;">
+                        <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
+                        <h3 style="font-size:1.02rem;font-weight:900;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
+                        <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.6;margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid ${theme.cardBorder};">
+                          <span style="font-size:0.78rem;color:${theme.textSub};">MOQ: ${esc(p.moq)}</span>
+                          <span style="font-size:0.82rem;font-weight:800;color:${theme.primary};">Technical Specs ↗</span>
+                        </div>
                       </div>
                     </a>
                   </article>
@@ -408,216 +544,191 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
     }
   } else if (page === 'catalog') {
     mainHtml = `
-      <main class="tools-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="margin-bottom:40px;">
-            <h1 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 8px;">${esc(ui.catalog)}</h1>
-            <p style="font-size:0.95rem;color:${theme.textMuted};margin:0;">Browse our complete range of products for B2B wholesale and OEM sourcing.</p>
-          </header>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px;">
+      <main class="tools-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <div class="wrap" style="padding:0 24px;">
+          <div style="text-align:center;max-width:680px;margin:0 auto 40px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+              ${esc(ui.catalog)} · Industrial Export Catalog
+            </div>
+            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">
+              ${isVideo ? 'Power Tools & Workshop Equipment Lineup' : 'Precision Mechanical & Hand Tool Systems'}
+            </h1>
+            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Custom colorways, laser branded serialization, and container wholesale programs.</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
             ${products.map(p => `
-              <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;transition:transform 0.3s,box-shadow 0.3s;">
+              <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.03);">
                 <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                  <div style="aspect-ratio:1;overflow:hidden;background:${theme.bg};">
-                    <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;transition:transform 0.3s;">
+                  <div style="aspect-ratio:1;background:#f8fafc;position:relative;">
+                    <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;">
+                    <span style="position:absolute;top:10px;left:10px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:4px;">${esc(p.badge)}</span>
                   </div>
-                  <div style="padding:16px;">
-                    <div style="font-size:0.72rem;font-weight:700;color:${theme.primary};text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:0.92rem;font-weight:800;color:${theme.text};margin:0 0 6px;line-height:1.3;">${esc(p.name)}</h3>
-                    <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                      <span style="font-size:0.74rem;color:${theme.textSub};">MOQ: ${esc(p.moq)}</span>
-                      <span style="font-size:0.78rem;color:${theme.primary};font-weight:700;">Details →</span>
-                    </div>
+                  <div style="padding:18px;">
+                    <div style="font-size:0.72rem;font-weight:800;color:${theme.primary};text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                    <h2 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 6px;line-height:1.3;">${esc(p.name)}</h2>
+                    <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 10px;line-height:1.5;">${esc(p.desc)}</p>
+                    <div style="font-size:0.78rem;font-weight:700;color:${theme.primary};">View Dimensions & MOQ ↗</div>
                   </div>
                 </a>
               </article>
             `).join('')}
           </div>
-        </section>
+        </div>
       </main>
     `;
   } else if (page === 'detail') {
-    const prodId = ctx.options.productId || products[0].id;
-    const p = products.find(item => item.id === prodId) || products[0];
+    const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
     mainHtml = `
-      <main class="tools-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <div style="margin-bottom:20px;">
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="font-size:0.86rem;font-weight:800;color:${theme.primary};text-decoration:none;">← Back to Catalog</a>
+      <main class="tools-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+        <div class="wrap" style="padding:0 24px;">
+          <div style="margin-bottom:24px;">
+            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:700;color:${theme.primary};">← Back to Tooling Catalog</a>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:50px;align-items:start;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:36px;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
-            <div style="background:${theme.bg};border-radius:20px;padding:40px;display:flex;align-items:center;justify-content:center;border:1px solid ${theme.cardBorder};position:relative;">
-              ${p.badge ? `<span style="position:absolute;top:20px;left:20px;background:${theme.primary};color:#fff;font-size:0.75rem;font-weight:800;padding:5px 12px;border-radius:6px;">${esc(p.badge)}</span>` : ''}
-              <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;" loading="eager" fetchpriority="high">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:start;">
+            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:30px;position:relative;">
+              <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:420px;object-fit:contain;display:block;" fetchpriority="high">
+              <div class="wr-detail-thumbs" style="display:flex;gap:12px;margin-top:20px;">
+                <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:6px;padding:4px;background:#fff;cursor:pointer;">
+                  <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:50px;height:50px;object-fit:cover;">
+                </button>
+              </div>
             </div>
             <div>
-              <div style="font-size:0.82rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${p.categoryNameEn} · ${esc(p.tagline)}</div>
-              <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 14px;">${esc(p.name)}</h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.65;margin:0 0 24px;">${esc(p.desc)}</p>
-              <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;margin-bottom:28px;">
-                <h3 style="font-size:0.92rem;font-weight:900;color:${theme.text};margin:0 0 14px;text-transform:uppercase;letter-spacing:0.04em;">Specifications</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.84rem;color:${theme.textMuted};">
-                  <div><strong>Material:</strong><br>${esc(p.material)}</div>
-                  <div><strong>Dimensions:</strong><br>${esc(p.dimensions)}</div>
-                  <div><strong>Feature:</strong><br>${esc(p.extra)}</div>
-                  <div><strong>MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
+              <div style="font-size:0.8rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${esc(p.categoryNameEn)} · ${esc(p.badge)}</div>
+              <h1 style="font-size:clamp(1.8rem, 3vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">${esc(p.name)}</h1>
+              <p style="font-size:1.02rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">${esc(p.desc)}</p>
+              
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;margin-bottom:28px;">
+                <h3 style="font-size:0.88rem;font-weight:800;text-transform:uppercase;color:${theme.text};margin:0 0 14px;">Machining & Material Standards</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.85rem;color:${theme.textMuted};">
+                  <div><strong>Alloy Grade:</strong><br>${esc(p.material)}</div>
+                  <div><strong>Dimensions / Weight:</strong><br>${esc(p.dimensions)}</div>
+                  <div><strong>Standard:</strong><br>${esc(p.extra)}</div>
+                  <div><strong>Production MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
                 </div>
               </div>
+
               <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:${theme.btnGradient};color:#ffffff;font-weight:800;padding:15px 32px;border-radius:10px;font-size:0.92rem;box-shadow:0 6px 20px ${theme.accentGlow};text-decoration:none;">
-                  Request Quote & Sample ↗
+                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="text-decoration:none;padding:14px 32px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.94rem;font-weight:800;box-shadow:0 4px 16px ${theme.accentGlow};">
+                  Request Commercial Sample ↗
                 </a>
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-weight:800;padding:15px 28px;border-radius:10px;font-size:0.92rem;text-decoration:none;">
-                  Custom OEM Inquiry
+                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:6px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.94rem;font-weight:700;">
+                  OEM Brand Packaging
                 </a>
               </div>
             </div>
           </div>
-        </section>
+        </div>
       </main>
     `;
   } else if (page === 'about') {
-    const headline = getAboutHeadline(company, `${company.name} · Industrial Mastery`);
+    const headline = getAboutHeadline(company, `${company.name} · Certified Industrial Tool Works`);
     const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
     const highlights = parseAboutHighlights(company.aboutHighlights, [
-      { value: company.establishedYear || '2018', num: parseInt(company.establishedYear || '2018', 10), label: 'Established', desc: 'Heat-treated CrV alloy' },
-      { value: 'HRC 52', num: 100, label: 'Steel Hardness', desc: 'Heat-treated CrV alloy' },
-      { value: 'ISO', num: 99, label: '9001 QMS', desc: 'Quality management system' },
-      { value: 'GS', num: 100, label: 'Mark', desc: 'German safety standard' },
+      { value: company.establishedYear || '2012', num: 2012, label: 'Established', desc: 'Precision manufacturing' },
+      { value: 'ISO 9001:2015', num: 9001, label: 'Quality System', desc: 'Audited production lines' },
+      { value: '500,000 Sq Ft', num: 500000, label: 'Manufacturing', desc: 'Drop-forge & CNC facility' },
+      { value: '80+ Countries', num: 80, label: 'Global Shipments', desc: 'Industrial supply networks' },
     ]);
     const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
-    const pipeline = isVideo ? [['IGBT Assembly', 'Power semiconductor module assembly and bonding'], ['Arc Calibration', 'Welding arc stability and spatter optimization'], ['Thermal Cycling', 'Accelerated thermal cycling stress testing'], ['EMC Shielding', 'Electromagnetic interference suppression testing'], ['Field Trials', 'Professional welder field durability validation']] : [['Steel Forging', 'CrV and CrMo alloy hot-forging and heat treatment'], ['CNC Machining', 'Multi-axis CNC milling and precision grinding'], ['Heat Treatment', 'Induction hardening and tempering to HRC 48-52'], ['Surface Finish', 'Chrome plating, powder coating, and laser marking'], ['Torque Testing', 'Calibrated torque and fatigue cycle testing']];
+
     mainHtml = `
-      <main class="tools-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
+      <main class="tools-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
         <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-          <!-- Hero Section -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:48px;align-items:center;margin-bottom:60px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:48px;align-items:center;margin-bottom:60px;">
             <div>
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;">
-                ${esc(ui.about)}
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:14px;">
+                ${esc(ui.about)} · Plant & Facilities
               </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
+              <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
                 ${esc(headline)}
               </h1>
-              ${storyParagraphs.map(p => `<p style="font-size:0.98rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
+              ${storyParagraphs.map(p => `<p style="font-size:1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
             </div>
-            <div style="border-radius:20px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.08);">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
+            <div style="border-radius:16px;overflow:hidden;border:1px solid ${theme.cardBorder};box-shadow:0 16px 40px rgba(0,0,0,0.06);">
+              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
             </div>
           </div>
 
-          <!-- Highlight Stats -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-bottom:60px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:20px;margin-bottom:60px;">
             ${highlights.map(h => `
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;text-align:center;backdrop-filter:blur(10px);">
+              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px;text-align:center;">
                 <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                <div style="font-size:0.82rem;font-weight:700;color:${theme.text};margin:6px 0 4px;">${esc(h.label)}</div>
-                <div style="font-size:0.74rem;color:${theme.textSub};">${esc(h.desc)}</div>
+                <div style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:4px 0 2px;">${esc(h.label)}</div>
+                <div style="font-size:0.75rem;color:${theme.textSub};">${esc(h.desc)}</div>
               </div>
             `).join('')}
           </div>
 
-          <!-- Pipeline -->
-          <div style="margin-bottom:60px;">
-            <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};text-align:center;margin:0 0 36px;">
-              ${isVideo ? 'Engineering & Quality Pipeline' : 'Craftsmanship Pipeline'}
-            </h2>
-            <div style="display:flex;align-items:flex-start;justify-content:center;gap:12px;flex-wrap:wrap;">
-              ${pipeline.map(([title, desc], i) => `
-                <div style="text-align:center;flex:1;min-width:140px;">
-                  <div style="width:44px;height:44px;border-radius:50%;background:${theme.pillBg};display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.1rem;font-weight:900;color:${theme.primary};">${i + 1}</div>
-                  <div style="font-size:0.82rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${title}</div>
-                  <div style="font-size:0.76rem;color:${theme.textSub};line-height:1.5;">${desc}</div>
-                </div>
-                ${i < pipeline.length - 1 ? `<div style="width:40px;height:2px;background:${theme.cardBorder};flex-shrink:0;margin-top:22px;"></div>` : ''}
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- CTA -->
-          <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:40px;backdrop-filter:blur(10px);">
-            <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 12px;">Ready to Partner?</h2>
-            <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 24px;">Contact our B2B team for wholesale pricing, OEM customization, and sample requests.</p>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-              Start a Conversation ↗
+          <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;padding:36px;">
+            <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 10px;">Direct Tooling Factory Partnership</h2>
+            <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 20px;">We support contract manufacturing, private label blow-molded tool sets, customized laser etchings, and container FOB shipments.</p>
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:12px 28px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.9rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+              Initiate Commercial RFQ ↗
             </a>
           </div>
         </section>
       </main>
     `;
   } else if (page === 'contact') {
-    const fields = isVideo ? [{ label: 'Welding Process', options: 'MIG|TIG|Stick/MMA|Flux-Core|Multi-Process' }, { label: 'Amperage Range', options: '140A|160A|200A|250A|300A' }, { label: 'Gas Type', options: 'Argon|CO2|Ar/CO2 Mix|Gasless Flux-Core' }] : [{ label: 'Tool Category', options: 'Hand Tools|Power Tools|Measuring|Storage|Custom' }, { label: 'Material Grade', options: 'CrV Steel|CrMo Steel|S2 Steel|Carbide' }, { label: 'Voltage Standard', options: '20V DC|110V AC|220V AC|Dual Voltage' }];
     mainHtml = `
-      <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
+      <main class="tools-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
         <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="text-align:center;margin-bottom:50px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.contact)}
+          <header style="text-align:center;max-width:620px;margin:0 auto 48px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;">
+              ${esc(ui.contact)} · Industrial Sourcing Desk
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">Start Your B2B Sourcing Inquiry</h1>
-            <p style="font-size:1.02rem;color:${theme.textMuted};margin:0;">Submit your requirements and our team will respond within 24 hours with pricing and sample options.</p>
+            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 10px;">Submit Your Tooling Request</h1>
+            <p style="font-size:1rem;color:${theme.textMuted};margin:0;">Direct factory response with container load quantities, pallet configurations, and OEM lead times.</p>
           </header>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:40px;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
-              <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Inquiry Form</h2>
-              <form style="display:grid;gap:18px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">Company Name</label>
-                    <input type="text" disabled value="${esc(company.name)}" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">Email</label>
-                    <input type="email" disabled value="${esc(company.email)}" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
-                  </div>
-                </div>
-                ${fields.map(f => `
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">${f.label}</label>
-                    <select disabled style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
-                      ${f.options.split('|').map(o => `<option>${o}</option>`).join('')}
-                    </select>
-                  </div>
-                `).join('')}
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:40px;">
+            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.03);">
+              <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Request For Quotation</h2>
+              <form style="display:grid;gap:16px;">
                 <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">
-                    ${esc(ui.product)} (${esc(ui.optional)})
-                  </label>
-                  <select name="productId" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
-                    <option value="">— Select Product of Interest (Optional) —</option>
-                    ${products.map((p) => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Target Product / Tool Model</label>
+                  <select name="productId" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                    <option value="">— Select Tooling SKU (Optional) —</option>
+                    ${products.map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
                   </select>
                 </div>
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">Requirements</label>
-                  <textarea disabled rows="4" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;resize:vertical;box-sizing:border-box;" placeholder="Describe your sourcing requirements, target quantity, and timeline..."></textarea>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Order Volume (Sets/Units)</label>
+                    <input type="text" disabled placeholder="e.g. 500 Sets" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Custom Packaging</label>
+                    <input type="text" disabled placeholder="Blow Mold / Color Box" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;">
+                  </div>
                 </div>
-                <button type="submit" disabled style="padding:14px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.96rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Submit Inquiry ↗
+                <div>
+                  <label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:6px;">Technical Requirements & Certifications</label>
+                  <textarea disabled rows="4" placeholder="Specify required alloy grade (CrV, CrMo, S2, HSS), DIN standards, testing reports, or port of destination..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid ${theme.cardBorder};background:${theme.bg};font-size:0.88rem;box-sizing:border-box;"></textarea>
+                </div>
+                <button type="submit" disabled style="padding:14px;border-radius:6px;background:${theme.btnGradient};color:#fff;font-size:0.92rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 4px 14px ${theme.accentGlow};">
+                  Submit Tooling Inquiry ↗
                 </button>
               </form>
             </div>
 
-            <div>
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;margin-bottom:24px;">
-                <h2 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 16px;">${esc(company.name)}</h2>
-                <div style="display:grid;gap:14px;font-size:0.88rem;color:${theme.textMuted};">
-                  <div>✉ ${esc(company.email)}</div>
-                  ${company.phone ? `<div>☎ ${esc(company.phone)}</div>` : ''}
-                  ${company.address ? `<div>📍 ${esc(company.address)}</div>` : ''}
-                  ${company.whatsapp ? `<div>💬 WhatsApp: ${esc(company.whatsapp)}</div>` : ''}
+            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;">
+              <div>
+                <h2 style="font-size:1.15rem;font-weight:900;color:${theme.text};margin:0 0 16px;">Export Plant Engineering Office</h2>
+                <p style="font-size:0.9rem;color:${theme.textMuted};line-height:1.7;margin:0 0 20px;">
+                  Equipped with 2500T hydraulic drop-forge presses, automated continuous quenching furnaces, CNC 5-axis machining centers, and comprehensive torque test benches.
+                </p>
+                <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.8;">
+                  <div><strong>Company:</strong> ${esc(company.name || brandName)}</div>
+                  <div><strong>Email:</strong> ${esc(company.email || 'export@toolsmachinery.com')}</div>
+                  <div><strong>Facility:</strong> National Heavy Tool Industrial Zone</div>
+                  <div><strong>Standards:</strong> DIN, ISO, ASME, GS, CE</div>
                 </div>
               </div>
-              <div style="background:${theme.pillBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;">
-                <h3 style="font-size:0.92rem;font-weight:800;color:${theme.primary};margin:0 0 10px;">Why Choose Us?</h3>
-                <ul style="margin:0;padding:0 0 0 18px;font-size:0.86rem;color:${theme.textMuted};line-height:1.8;">
-                  <li>Experienced export team with global logistics</li>
-                  <li>Flexible MOQ for trial orders</li>
-                  <li>OEM/ODM customization support</li>
-                  <li>Quality assurance & compliance certification</li>
-                </ul>
+              <div style="padding:16px;background:${theme.bg};border-radius:8px;font-size:0.78rem;color:${theme.textSub};line-height:1.5;margin-top:24px;">
+                🛠️ Pre-Shipment Inspection: 100% torque failure and dimensional inspection reports issued with every production run.
               </div>
             </div>
           </div>
@@ -627,46 +738,43 @@ export function renderToolsPage(ctx: ThemeContext, isVideo: boolean): string {
   }
 
   const footerHtml = `
-    <footer class="tools-footer" style="background:${theme.cardBg};border-top:1px solid ${theme.cardBorder};padding:50px 0 30px;">
-      <div class="wrap" style="padding:0 24px;">
-        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
-          <div>
-            <div style="font-size:1.2rem;font-weight:900;color:${theme.text};margin-bottom:8px;">${esc(brandName)}</div>
-            <p style="font-size:0.86rem;color:${theme.textMuted};max-width:380px;line-height:1.6;margin:0 0 16px;">
-              ${esc(company.description || (isVideo ? 'IronSpark Fabrication Lab' : 'PrecisionForge Tool Works'))}
-            </p>
-          </div>
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">Navigation</div>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
-              <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.home)}</a>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.catalog)}</a>
-              <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.about)}</a>
-              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.contact)}</a>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">Business Contact</div>
-            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;color:${theme.textMuted};">
-              <div>${esc(company.email)}</div>
-              ${company.phone ? `<div>${esc(company.phone)}</div>` : ''}
-              ${company.address ? `<div>${esc(company.address)}</div>` : ''}
-            </div>
+    <footer class="tools-footer" style="background:#ffffff;border-top:1px solid ${theme.cardBorder};padding:50px 0 30px;color:${theme.textSub};font-size:0.84rem;">
+      <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:32px;margin-bottom:40px;">
+        <div>
+          <div style="font-size:1.05rem;font-weight:900;color:${theme.text};margin-bottom:10px;">${esc(brandName)}</div>
+          <div style="line-height:1.6;max-width:280px;">${esc(brandTagline)}</div>
+        </div>
+        <div>
+          <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">Navigation</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.home)}</a>
+            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.catalog)}</a>
+            <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.about)}</a>
+            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;color:${theme.textSub};">${esc(ui.contact)}</a>
           </div>
         </div>
-        <div style="border-top:1px solid ${theme.cardBorder};padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:${theme.textSub};">
-          <div>© ${new Date().getUTCFullYear()} ${esc(brandName)}. All rights reserved.</div>
-          <div>Quality Certified · ISO9001</div>
+        <div>
+          <div style="font-weight:800;color:${theme.text};margin-bottom:12px;text-transform:uppercase;font-size:0.75rem;">Quality Guarantees</div>
+          <div style="line-height:1.7;">
+            <div>✓ DIN / ISO Metric Tolerances</div>
+            <div>✓ Proof Torque Tested</div>
+            <div>✓ GS & CE Certified</div>
+          </div>
+        </div>
+      </div>
+      <div class="wrap" style="padding:0 24px;border-top:1px solid ${theme.cardBorder};padding-top:24px;display:flex;align-items:center;justify-content:space-between;font-size:0.78rem;">
+        <div>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved. Industrial Tools Export Portal.</div>
+        <div style="display:flex;gap:16px;">
+          <span>ISO 9001:2015</span>
+          <span>TÜV GS Tested</span>
         </div>
       </div>
     </footer>
   `;
 
   return `
-    <div class="tools-site-wrapper" style="min-height:100vh;display:flex;flex-direction:column;background:${theme.bg};">
-      ${headerHtml}
-      ${mainHtml}
-      ${footerHtml}
-    </div>
+    ${headerHtml}
+    ${mainHtml}
+    ${footerHtml}
   `;
 }
