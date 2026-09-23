@@ -1,3 +1,4 @@
+import {resolveSenderDomains} from '../lib/sender-domains';
 import { registerResendRoutes } from './resend.routes';
 import { resendRequest } from '../lib/resend';
 import { publicFetch as fetch } from "../lib/network";
@@ -20,11 +21,16 @@ providersRoutes.use("/*", requireAuth);
 providersRoutes.use("/*", async (c,next) => {
   if(c.req.method !== 'GET' && !['owner','admin'].includes(c.get('user')!.role)) return c.json({error:'仅工作空间管理员可配置服务商'},403);
   const id=c.req.path.split('/providers/')[1]?.split('/')[0];
-  if(id && id !== 'test') {
+  if(id && !['test','sender-domains'].includes(id)) {
     const row=await createDb(c.env.DB).select().from(providers).where(and(eq(providers.id,id),eq(providers.userId,c.get('user')!.id))).get();
     if(!row) return c.json({error:'服务商配置不存在'},404);
   }
   await next();
+});
+
+providersRoutes.get('/sender-domains',async c=>{
+  const result=await resolveSenderDomains(await loadProviders(createDb(c.env.DB),c.env,c.get('user')!.id));
+  return c.json({data:result.domains,errors:result.errors});
 });
 
 // 掩码函数

@@ -106,3 +106,41 @@ for(const code of [401,403,429])test(`Resend ${code} rejection is safely retryab
  await handleEmailQueue({messages:[msg]} as any,env);expect(row().status).toBe('queued');expect(msg.retry).toHaveBeenCalledWith({delaySeconds:code===429?60:300});
  expect(stats().status).toBe(code===429?'sending':'paused');expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()!.n).toBe(0);
 });
+
+test('sender-domain whitelist includes verified sending-enabled Resend and Mailchimp domains only',async()=>{
+ const {resolveSenderDomains}=await import('../../src/outreach/server/lib/sender-domains');
+ const base={id:'p',name:'Resend',userId:'u',provider:'resend',status:'active',apiKey:'test',config:null,isDefault:true};
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'ACFILTER.NET',status:'verified'},{name:'pending.example',status:'pending'},{name:'inbound.example',status:'verified',capabilities:{sending:'disabled'}}]})));
+ const result=await resolveSenderDomains([base,{...base,id:'m',provider:'mailchimp',config:JSON.stringify({mailchimpDomains:[{domain:'oilsfilter.org',validSigning:true}]})},{...base,id:'disabled',status:'inactive'}]);
+ expect(result.domains.map(d=>d.domain)).toEqual(['acfilter.net','oilsfilter.org']);expect(result.errors).toEqual([]);
+ const {selectEmailProviderForSender}=await import('../../src/outreach/server/lib/email-provider-selection');
+ expect(selectEmailProviderForSender(result.providers,'u','re@acfilter.net').provider?.id).toBe('p');
+ expect(selectEmailProviderForSender(result.providers,'u','re@oilsfilter.org').provider?.id).toBe('m');
+ expect(selectEmailProviderForSender([result.providers[0]],'u','re@unknown.example').provider).toBeUndefined();
+});
+test('sender-domain endpoint is workspace scoped, returns partial errors and never invents domains',async()=>{
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'verified'}]})));
+ let response=await app().request('/providers/sender-domains',{},env);expect(response.status).toBe(200);expect((await response.json() as any).data).toMatchObject([{domain:'acfilter.net',providerId:'p'}]);
+ response=await app('admin','other').request('/providers/sender-domains',{},env);expect(await response.json()).toEqual({data:[],errors:[]});
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({message:'restricted'}, {status:403})));
+ response=await app().request('/providers/sender-domains',{},env);const body:any=await response.json();expect(body.data).toEqual([]);expect(body.errors[0].message).toContain('Full access');expect(JSON.stringify(body)).not.toContain('re_test');
+});
+test('verified domain chooses its Resend account ahead of a different default account',async()=>{
+ const {selectEmailProviderForSender}=await import('../../src/outreach/server/lib/email-provider-selection');
+ const base={id:'default',userId:'u',provider:'resend',status:'active',apiKey:'fake',config:JSON.stringify({resendDomains:[{domain:'first.example',status:'verified'}]}),isDefault:true};
+ const matching={...base,id:'matching',isDefault:false,config:JSON.stringify({resendDomains:[{domain:'second.example',status:'verified'}]})};
+ expect(selectEmailProviderForSender([base,matching],'u','re@second.example').provider?.id).toBe('matching');
+});
+test('campaign submission selects the verified Resend account and blocks removed domains before queueing',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin'});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at) VALUES ('t','u','Template','Hello','<p>Hello</p>',0,0);
+ UPDATE edm_campaigns SET status='draft',template_id='t',sender_email='re@acfilter.net';
+ INSERT INTO edm_providers(id,user_id,provider,name,api_key,config,is_default,created_at,updated_at) VALUES ('m','u','mailchimp','Mailchimp','unused','{}',1,0,0);`);
+ sqlite.prepare("UPDATE edm_providers SET api_key=?,config=? WHERE id='m'").run(await seal('test-mailchimp','m',env),await seal(JSON.stringify({mailchimpDomains:[{domain:'oilsfilter.org',status:'verified'}]}),'m:config',env));
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'verified'}]})));
+ const sendBatch=vi.fn();env.EMAIL_QUEUE={sendBatch};
+ let response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(200);expect(sendBatch.mock.calls[0][0][0].body.providerId).toBe('p');
+ sqlite.exec("UPDATE edm_campaigns SET status='draft'");sendBatch.mockClear();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'pending'}]})));
+ response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(400);expect(sendBatch).not.toHaveBeenCalled();expect(stats().status).toBe('draft');
+});

@@ -17,9 +17,10 @@ export function senderDomain(senderEmail: string): string {
 }
 
 function hasBoundDomain(provider: ProviderRecord, domain: string): boolean {
-  if (provider.provider !== "mailchimp" || !domain) return false;
-  const domains = parseProviderConfig(provider.config).mailchimpDomains;
-  return Array.isArray(domains) && domains.some((item) => String(item?.domain || "").toLowerCase() === domain);
+  if (!domain || !['mailchimp','resend'].includes(provider.provider)) return false;
+  const config = parseProviderConfig(provider.config);
+  const domains = provider.provider==='resend' ? config.resendDomains : config.mailchimpDomains;
+  return Array.isArray(domains) && domains.some((item) => String(item?.domain || "").trim().toLowerCase() === domain && (provider.provider!=="resend" || item.status==="verified"));
 }
 
 export function selectEmailProviderForSender<T extends ProviderRecord>(
@@ -29,10 +30,6 @@ export function selectEmailProviderForSender<T extends ProviderRecord>(
 ): { provider?: T; matchedDomain: boolean } {
   const active = configuredProviders.filter((provider) => provider.status === "active" && provider.userId === userId);
   const owned = active.filter((provider) => provider.userId === userId);
-  // An explicitly selected Resend default takes precedence over legacy
-  // Mailchimp domain bindings retained in this workspace.
-  const resendDefault = owned.find(p => p.provider === 'resend' && p.isDefault);
-  if (resendDefault) return {provider: resendDefault, matchedDomain: false};
   const domain = senderDomain(senderEmail);
   const ownedMatches = owned.filter((provider) => hasBoundDomain(provider, domain));
   const allMatches = active.filter((provider) => hasBoundDomain(provider, domain));
@@ -40,11 +37,11 @@ export function selectEmailProviderForSender<T extends ProviderRecord>(
   if (matches.length) {
     return { provider: matches.find((provider) => provider.isDefault) || matches[0], matchedDomain: true };
   }
+  // Resend must match a domain freshly verified for that account.
+  const fallback = owned.filter(p=>p.provider!=='resend');
   return {
-    provider: owned.find((provider) => provider.isDefault)
-      || owned[0]
-      || active.find((provider) => provider.isDefault)
-      || active[0],
+    provider: fallback.find((provider) => provider.isDefault)
+      || fallback[0],
     matchedDomain: false,
   };
 }

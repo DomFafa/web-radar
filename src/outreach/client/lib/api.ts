@@ -224,6 +224,7 @@ export const userApi = {
 
 // ====== Providers API ======
 export const providersApi = {
+  senderDomains: () => fetchApi<{data: {domain:string;providerId:string;providerName:string;providerType:string;isDefault:boolean}[];errors:{providerName:string;message:string}[]}>("/providers/sender-domains"),
   resendDomains: (id: string) => fetchApi(`/providers/${id}/resend/domains`),
   resendDomain: (id: string, domainId: string) => fetchApi(`/providers/${id}/resend/domains/${encodeURIComponent(domainId)}`),
   resendTracking: (id: string, domainId: string) => fetchApi(`/providers/${id}/resend/domains/${encodeURIComponent(domainId)}/tracking`, { method: 'POST', body: JSON.stringify({openTracking:true,clickTracking:true}) }),

@@ -1,3 +1,4 @@
+import {resolveSenderDomains} from '../lib/sender-domains';
 import { emailOverview } from "../lib/overview";
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
@@ -688,9 +689,13 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   }
 
   const emailProviders = (await loadProviders(db,c.env,user.id)).filter(p=>p.status==="active" && (EMAIL_PROVIDER_TYPES as readonly string[]).includes(p.provider));
-  const selectedProvider = selectEmailProviderForSender(emailProviders, user.id, campaign.senderEmail).provider;
+  const senderAccounts = await resolveSenderDomains(emailProviders);
+  const senderSelection = selectEmailProviderForSender(senderAccounts.providers, user.id, campaign.senderEmail);
+  // An unavailable Resend account must not silently fall back to another provider.
+  const requiresDomainMatch = emailProviders.some(provider=>provider.provider==='resend');
+  const selectedProvider = requiresDomainMatch && !senderSelection.matchedDomain ? undefined : senderSelection.provider;
   if (!selectedProvider) {
-    return c.json({ success: false, error: "没有可用的邮件发信服务商，请先在服务商配置中添加并启用账号" }, 400);
+    return c.json({ success: false, error: senderAccounts.errors.length ? "无法验证发信帐号域名，请在发信域名页面检查帐号权限后重试" : "没有与发件人域名匹配的可用发信帐号，请检查域名验证状态" }, 400);
   }
 
   // 更新活动状态为发送中
