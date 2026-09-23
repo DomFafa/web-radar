@@ -29,6 +29,10 @@ export function selectEmailProviderForSender<T extends ProviderRecord>(
 ): { provider?: T; matchedDomain: boolean } {
   const active = configuredProviders.filter((provider) => provider.status === "active" && provider.userId === userId);
   const owned = active.filter((provider) => provider.userId === userId);
+  // An explicitly selected Resend default takes precedence over legacy
+  // Mailchimp domain bindings retained in this workspace.
+  const resendDefault = owned.find(p => p.provider === 'resend' && p.isDefault);
+  if (resendDefault) return {provider: resendDefault, matchedDomain: false};
   const domain = senderDomain(senderEmail);
   const ownedMatches = owned.filter((provider) => hasBoundDomain(provider, domain));
   const allMatches = active.filter((provider) => hasBoundDomain(provider, domain));

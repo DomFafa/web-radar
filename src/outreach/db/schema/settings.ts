@@ -10,7 +10,7 @@ export const providers = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     provider: text("provider", {
-      enum: ["amazon_ses", "sendgrid", "mailchimp", "mailgun", "brevo", "smtp", "openai", "anthropic", "deepseek"],
+      enum: ["resend", "amazon_ses", "sendgrid", "mailchimp", "mailgun", "brevo", "smtp", "openai", "anthropic", "deepseek"],
     }).notNull(),
     name: text("name").notNull(), // 用户可自定义配置名称
     apiKey: text("api_key").notNull(),

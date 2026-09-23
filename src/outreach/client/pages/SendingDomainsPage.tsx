@@ -1,4 +1,5 @@
 /** @jsxImportSource react */
+import { ResendDomainsPanel } from "./ResendDomainsPanel";
 import React, { useEffect, useMemo, useState } from "react";
 import readXlsxFile from "read-excel-file/browser";
 import { providersApi } from "../lib/api";
@@ -371,19 +372,20 @@ export function SendingDomainsPage({ onNavigate }: SendingDomainsPageProps) {
             disabled={loading || domainLoading || !mailchimpProviders.length}
             onClick={openAddModal}
           >
-            + 添加发信域名
+            + 添加 Mailchimp 域名
           </button>
         </div>
       </div>
 
       <div className="page-body sending-domains-body">
+        {providers.filter(p=>p.provider==='resend').map(p=><ResendDomainsPanel key={p.id} provider={p}/>)}
         {loading ? (
           <div className="loading-overlay"><div className="spinner" /></div>
-        ) : mailchimpProviders.length === 0 ? (
+        ) : mailchimpProviders.length === 0 ? (providers.some(p=>p.provider==='resend')?null:
           <div className="card sending-domains-empty">
             <div className="empty-icon">🌐</div>
-            <h3>请先配置 Mailchimp Transactional</h3>
-            <p>发信域名认证依赖 Transactional / Mandrill API Key。完成服务商配置后即可在这里自动添加域名和 DNS 记录。</p>
+            <h3>请先配置 Resend 或 Mailchimp Transactional</h3>
+            <p>Resend 支持帐号检测、域名状态和追踪设置；Mailchimp Transactional 支持添加域名与 DNS 配置。</p>
             <button className="btn btn-primary" onClick={() => onNavigate("providers")}>前往服务商配置</button>
           </div>
         ) : (
@@ -393,7 +395,7 @@ export function SendingDomainsPage({ onNavigate }: SendingDomainsPageProps) {
                 <span className="sending-domain-provider-icon">📨</span>
                 <div>
                   <h3>发信域名</h3>
-                  <p>当前支持 Mailchimp Transactional / Mandrill，后续可在此扩展其他发信服务商。</p>
+                  <p>Mailchimp Transactional / Mandrill 域名与 DNS 配置。</p>
                 </div>
               </div>
               <div className="sending-domain-provider-select">

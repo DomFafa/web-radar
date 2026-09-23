@@ -26,7 +26,7 @@ export const campaignRoutes = new Hono<Env>();
 campaignRoutes.use("/*", requireAuth);
 
 const MAILCHIMP_MARKETING_KEY_SUFFIX = /-[a-z]{2}\d+$/i;
-const EMAIL_PROVIDER_TYPES = ["amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
+const EMAIL_PROVIDER_TYPES = ["resend", "amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
 
 function getMailchimpApiType(provider: any): "marketing" | "transactional" {
   let config: any = {};

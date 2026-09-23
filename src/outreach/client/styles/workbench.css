@@ -156,3 +156,20 @@
 .outreach .stat-card .stat-value { font-weight: 650; }
 .outreach .contact-import-progress-percentage { font-weight: 650; }
 .outreach .contact-import-progress-bar { background: var(--forest); }
+
+.outreach .resend-domains { margin-bottom:24px; }
+.outreach .resend-note { margin:12px 0; color:var(--muted); font-size:12px; line-height:1.7; }
+.outreach .resend-error { padding:12px; margin:12px 0; background:#fff8f8; color:var(--red); border:1px solid #f0c9c9; border-radius:6px; }
+.outreach .resend-domain { padding:18px 0; border-top:1px solid var(--line); }
+.outreach .resend-domain-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.outreach .resend-domain-heading strong { margin-right:12px; overflow-wrap:anywhere; }
+.outreach .resend-domain-heading p { margin-top:6px; color:var(--muted); font-size:12px; }
+.outreach .resend-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.outreach .resend-domains .table-container { margin-top:16px; }
+.outreach .resend-dns-value { max-width:360px; overflow-wrap:anywhere; white-space:normal; }
+.outreach .resend-domains { min-width:0; max-width:100%; }
+.outreach .resend-domains .section-heading { display:flex; flex-wrap:wrap; gap:12px; padding:0 0 18px; align-items:flex-start; }
+.outreach .resend-domains .section-heading > div { min-width:0; flex:1 1 220px; }
+.outreach .resend-domains .table-container { overflow-x:auto; }
+.outreach .resend-domains table { min-width:550px; table-layout:fixed; }
+.outreach .resend-domains th, .outreach .resend-domains td { overflow-wrap:anywhere; white-space:normal; }

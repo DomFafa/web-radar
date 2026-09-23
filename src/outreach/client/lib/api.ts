@@ -224,6 +224,10 @@ export const userApi = {
 
 // ====== Providers API ======
 export const providersApi = {
+  resendDomains: (id: string) => fetchApi(`/providers/${id}/resend/domains`),
+  resendDomain: (id: string, domainId: string) => fetchApi(`/providers/${id}/resend/domains/${encodeURIComponent(domainId)}`),
+  resendTracking: (id: string, domainId: string) => fetchApi(`/providers/${id}/resend/domains/${encodeURIComponent(domainId)}/tracking`, { method: 'POST', body: JSON.stringify({openTracking:true,clickTracking:true}) }),
+  resendWebhook: (id: string) => fetchApi(`/providers/${id}/resend/webhook`, {method:'POST'}),
   list: () => fetchApi("/providers"),
   create: (data: any) => fetchApi("/providers", { method: "POST", body: JSON.stringify(data) }),
   update: (id: string, data: any) => fetchApi(`/providers/${id}`, { method: "PUT", body: JSON.stringify(data) }),

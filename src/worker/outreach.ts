@@ -1,3 +1,4 @@
+import { resendWebhookRoutes } from '../outreach/server/routes/resend.routes';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { AppEnv } from './env';
@@ -35,6 +36,7 @@ privateApi.notFound(c=>c.json({error:'接口不存在'},404));
 export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<typeof privateApi.fetch>[2]) {
   const path=new URL(request.url).pathname;
   const bindings=outreachBindings(env);
+  if(request.method==='POST' && /^\/api\/outreach\/webhooks\/resend\/[a-f0-9-]+$/.test(path)) return resendWebhookRoutes.fetch(request,bindings,ctx);
   if(request.method==='GET' && /^\/api\/outreach\/(unsubscribe|preferences|tracking\/(open|click))$/.test(path)) return publicRoutes.fetch(request,bindings,ctx);
   if(request.method==='GET' && /^\/api\/outreach\/images\/[a-f0-9-]+\.(png|jpg|jpeg|webp|gif)$/.test(path)) {
     const app=new Hono<{Bindings:Bindings}>();app.route('/api/outreach/images',imagesRoutes);return app.fetch(request,bindings,ctx);
