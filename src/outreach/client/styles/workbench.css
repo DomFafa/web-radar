@@ -1,0 +1,158 @@
+/* Adapt the imported module to the host workbench. Keep email content in its iframe. */
+.outreach {
+  --font-sans: var(--radar-font);
+  --color-bg-primary: var(--paper);
+  --color-bg-secondary: var(--panel);
+  --color-bg-card: var(--panel);
+  --color-bg-card-hover: #fafafa;
+  --color-bg-elevated: var(--panel);
+  --color-bg-input: var(--panel);
+  --color-border: var(--line);
+  --color-border-hover: #d4d6da;
+  --color-border-focus: var(--forest);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--muted);
+  --color-text-muted: var(--muted);
+  --color-accent: var(--forest);
+  --color-accent-hover: #514ae6;
+  --color-accent-subtle: var(--lime);
+  --color-accent-soft: var(--soft-green);
+  --color-accent-gradient: var(--forest);
+  --color-danger: var(--red);
+  --radius-sm: 6px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --shadow-sm: 0 1px 2px #14182108;
+  --shadow-glow: none;
+  --shadow-glow-hover: none;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  font-family: var(--radar-font);
+  font-size: 13px;
+  line-height: 1.7;
+  background: transparent;
+}
+.outreach :is(button, input, select, textarea) { font-family: var(--radar-font); }
+.outreach :is(h1, h2, h3, h4) { color: var(--ink); font-weight: 650; }
+.outreach .outreach-heading { margin: 0 0 24px; }
+.outreach .outreach-heading h1,
+.outreach .site-message-heading h1 {
+  font-family: var(--radar-font);
+  font-size: 24px;
+  line-height: 1.45;
+  letter-spacing: -.4px;
+  margin: 0 0 8px;
+}
+.outreach .outreach-heading p,
+.outreach .site-message-heading p { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 0; }
+.outreach .outreach-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.outreach .outreach-tabs button {
+  min-height: 36px;
+  padding: 8px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+.outreach .outreach-tabs button:hover { color: var(--ink); background: #f0f0f3; }
+.outreach .outreach-tabs button[aria-current] { color: var(--forest); background: var(--lime); border-color: transparent; font-weight: 650; }
+.outreach .page-header {
+  position: static;
+  padding: 0;
+  margin: 0 0 20px;
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+  z-index: auto;
+}
+.outreach .page-header h2 { font-size: 18px; font-weight: 650; letter-spacing: -.3px; }
+.outreach .page-header p { color: var(--muted); font-size: 13px; line-height: 1.7; margin-top: 4px; }
+.outreach .page-header-actions { gap: 16px; flex-wrap: wrap; }
+.outreach .site-message-heading { margin-bottom: 24px; }
+.outreach .page-body,
+.outreach .page-content { min-width: 0; width: 100%; padding: 0; margin: 0; }
+.outreach .sending-center-card { width: 100%; max-width: none; margin: 0; padding: 24px; font-size: 13px; }
+.outreach .sending-center-card h3 { font-size: 18px; font-weight: 650; }
+.outreach .sending-steps { margin-bottom: 24px; }
+.outreach :is(.card, .stat-card, .site-message-list) { border-radius: 10px; box-shadow: 0 1px 2px #14182105; }
+.outreach :is(.card, .stat-card):hover { box-shadow: 0 1px 2px #14182105; transform: none; border-color: var(--line); }
+.outreach .stat-card:hover::before { opacity: 0; }
+.outreach .btn {
+  min-height: 36px;
+  padding: 8px 13px;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+  border: 1px solid #d4d6da;
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+.outreach .btn:hover:not(:disabled) { transform: none; background: #f4f4f6; border-color: #bfc1c7; box-shadow: var(--shadow-sm); }
+.outreach .btn-primary { background: var(--forest); border-color: var(--forest); color: white; }
+.outreach .btn-primary:hover:not(:disabled) { background: #514ae6; border-color: #514ae6; color: white; box-shadow: var(--shadow-sm); }
+.outreach .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
+.outreach .btn-danger { background: #fff8f8; border-color: #f0c9c9; color: var(--red); }
+.outreach .btn-danger:hover:not(:disabled) { background: #fceeee; color: var(--red); }
+.outreach .btn-sm { min-height: 30px; padding: 5px 10px; }
+.outreach .btn-icon { width: 32px; min-height: 32px; padding: 6px; }
+.outreach :is(.form-input, .form-select, .form-textarea) {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 9px 11px;
+  border-radius: 6px;
+  border-color: var(--line);
+}
+.outreach .form-select { padding-right: 32px; }
+.outreach :is(.form-input, .form-select, .form-textarea):focus { border-color: var(--forest); box-shadow: 0 0 0 3px #625bf61a; }
+.outreach .form-label { color: #41454d; font-size: 13px; font-weight: 600; }
+.outreach :is(.form-help, .form-hint) { font-size: 12px; color: var(--muted); }
+.outreach :is(.table-container, .site-message-list) { min-width: 0; max-width: 100%; }
+.outreach :is(th, td) { font-size: 13px; }
+.outreach th { font-weight: 600; color: var(--muted); background: #fafafa; }
+.outreach .site-message-stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 0; }
+.outreach .site-message-stats .stat-card { padding: 16px; }
+.outreach .site-message-stats .stat-card .stat-icon { width: 28px; height: 28px; margin-bottom: 10px; color: var(--muted); }
+.outreach .site-message-stats .stat-card .stat-value { font-size: 24px; font-weight: 650; letter-spacing: -.4px; }
+.outreach .site-message-stats .stat-card .stat-label { color: var(--muted); }
+.outreach .site-message-notice { border: 1px solid #e4e1ff; border-radius: 8px; background: var(--soft-green); color: var(--muted); }
+.outreach .site-message-notice-icon { color: var(--forest); background: transparent; }
+.outreach .site-message-notice strong { font-size: 13px; font-weight: 600; color: var(--ink); }
+.outreach .site-message-notice p { font-size: 12px; }
+.outreach .section-heading h3 { font-size: 15px; font-weight: 650; }
+.outreach .site-message-empty { min-height: 260px; padding: 32px 20px; }
+.outreach .site-message-empty > span { display: flex; color: #989ca3; }
+.outreach .site-message-empty h3 { font-size: 16px; font-weight: 650; }
+.outreach .site-message-empty p { font-size: 13px; color: var(--muted); }
+.outreach .modal { padding: 0; border-radius: 12px; }
+.outreach .modal-title { font-size: 20px; font-weight: 650; }
+.outreach .modal-overlay { backdrop-filter: none; background: #17192266; }
+.outreach .ql-toolbar { font-family: var(--radar-font); border-color: var(--line); }
+.outreach .ql-container { font-family: var(--radar-font); font-size: 13px; border-color: var(--line); }
+@media (max-width: 640px) {
+  .outreach .outreach-heading h1, .outreach .site-message-heading h1 { font-size: 23px; }
+  .outreach .outreach-tabs { gap: 4px; padding-bottom: 16px; }
+  .outreach .outreach-tabs button { padding: 7px 10px; font-size: 12px; }
+  .outreach .sending-center-card { padding: 20px 16px; }
+  .outreach .page-header-actions { align-items: flex-start; }
+  .outreach .site-message-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .outreach .site-message-notice { padding: 12px; gap: 8px; }
+  .outreach .site-message-notice-icon { flex-basis: 24px; width: 24px; height: 24px; }
+}
+
+.outreach .stat-card .stat-value { font-weight: 650; }
+.outreach .contact-import-progress-percentage { font-weight: 650; }
+.outreach .contact-import-progress-bar { background: var(--forest); }

@@ -10,6 +10,7 @@ import { EmailGuidePage } from './pages/EmailGuidePage';
 import { SiteMessagesPage } from './pages/SiteMessagesPage';
 import './styles/index.css';
 import './styles/quill.css';
+import './styles/workbench.css';
 
 type Toast={id:string;type:'success'|'error'|'warning';message:string};
 export const ToastContext=createContext({addToast:(_type:Toast['type'],_message:string)=>{}});
@@ -27,7 +28,7 @@ export default function Outreach({principal,section}:{principal:Principal;sectio
   return <AuthContext.Provider value={{user:{id:principal.workspaceId,name:principal.displayName,email:principal.email,role:admin?'admin':'member'}}}>
     <ToastContext.Provider value={{addToast:(type,message)=>setToasts(t=>[...t,{id:crypto.randomUUID(),type,message}])}}>
       <div className="outreach">
-        <header className="outreach-heading"><h1>{section==='edm'?'EDM 邮件':'站内信'}</h1><p>{section==='edm'?'管理联系人、邮件内容与营销活动，查看发送进度和效果。':'管理目标网站的联系表单留言，查看执行进度与结果。'}</p></header>
+        {section==='edm'&&<header className="outreach-heading"><h1>EDM 邮件</h1><p>管理联系人、邮件内容与营销活动，查看发送进度和效果。</p></header>}
         {section==='edm'&&<nav className="outreach-tabs" aria-label="EDM 邮件功能">{pages.filter(p=>admin||!['providers','domains'].includes(p[0])).map(([id,label])=><button key={id} aria-current={page===id?'page':undefined} onClick={()=>navigate(id)}>{label}</button>)}</nav>}
         {section==='site-messages'?<SiteMessagesPage/>:<>
           {page==='send'&&<SendingCenterPage onNavigate={navigate}/>}

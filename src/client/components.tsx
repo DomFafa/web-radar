@@ -22,6 +22,12 @@ export function Brand() {
 }
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
+    search: <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></>,
+    user: <><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
+    users: <><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6m2 4a5 5 0 0 1 3 4v3"/></>,
+    tag: <><path d="M3 3h8l10 10-8 8L3 11Z"/><circle cx="7.5" cy="7.5" r=".5"/></>,
+    chart: <><path d="M4 3v17h17M8 15l4-5 4 2 5-7"/></>,
+    help: <><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2c-1 1-2 1-2 3m0 3h.01"/></>,
     plus: <path d="M12 5v14M5 12h14" />,
     arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
     back: <path d="M19 12H5m6-6-6 6 6 6" />,

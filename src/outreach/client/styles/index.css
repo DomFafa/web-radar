@@ -3522,14 +3522,3 @@
 @media (max-width: 720px) {
   .outreach .sending-template-grid { grid-template-columns: minmax(0, 1fr); }
 }
-
-.outreach { min-width:0; padding:28px; color:var(--color-text-primary); font-family:var(--radar-font); }
-.outreach .outreach-heading { margin-bottom:20px; }
-.outreach .outreach-heading h1 { font-size:26px; margin:0 0 8px; }
-.outreach .outreach-heading p { color:var(--color-text-muted); }
-.outreach .outreach-tabs { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px; }
-.outreach .outreach-tabs button { padding:10px 16px;border:1px solid #e5e6e9;border-radius:8px;background:#fff;color:#1b1d21; }
-.outreach .outreach-tabs button[aria-current] { background:#eeedff;color:#4338ca;border-color:#625bf6; }
-.outreach .page-header { margin-bottom:24px; }
-.outreach .table-container { overflow:auto; }
-@media(max-width:640px) { .outreach {padding:16px;} .outreach .outreach-tabs {gap:6px;} }

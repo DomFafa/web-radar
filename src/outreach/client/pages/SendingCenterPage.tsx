@@ -1,3 +1,4 @@
+import { Icon } from "../../../client/components";
 /** @jsxImportSource react */
 import React, { useEffect, useMemo, useState } from "react";
 import { campaignsApi, contactsApi, providersApi, templatesApi } from "../lib/api";
@@ -278,7 +279,7 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
           <h2>发送中心</h2>
           <p>选择收件人和邮件内容，确认后即可发送</p>
         </div>
-        <button className="btn btn-secondary" type="button" onClick={() => onNavigate?.("email-guide")}>📖 使用指南</button>
+        <button className="btn btn-secondary" type="button" onClick={() => onNavigate?.("email-guide")}><Icon name="help" size={16}/>使用指南</button>
       </div>
     </div>
     <div className="page-body">
@@ -295,19 +296,19 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
           <p className="recipient-intro">选择下面任意一种收件人方式即可。</p>
 
           <div className="recipient-method-grid" role="radiogroup" aria-label="收件人选择方式">
-            <button type="button" role="radio" aria-checked={audienceMethod === "group"} className={`recipient-method-card ${audienceMethod === "group" ? "is-selected" : ""}`} onClick={() => changeAudienceMethod("group")}><span className="recipient-method-icon">📁</span><span><strong>按分组选择</strong><small>适合按名单或业务范围批量发送</small></span><span className="recipient-method-radio"></span></button>
-            <button type="button" role="radio" aria-checked={audienceMethod === "tag"} className={`recipient-method-card ${audienceMethod === "tag" ? "is-selected" : ""}`} onClick={() => changeAudienceMethod("tag")}><span className="recipient-method-icon">🏷️</span><span><strong>按标签选择</strong><small>跨分组选择相同特征的联系人</small></span><span className="recipient-method-radio"></span></button>
-            <button type="button" role="radio" aria-checked={audienceMethod === "contact"} className={`recipient-method-card ${audienceMethod === "contact" ? "is-selected" : ""}`} onClick={() => changeAudienceMethod("contact")}><span className="recipient-method-icon">👤</span><span><strong>单独选择联系人</strong><small>搜索并添加少量指定收件人</small></span><span className="recipient-method-radio"></span></button>
+            <button type="button" role="radio" aria-checked={audienceMethod === "group"} className={`recipient-method-card ${audienceMethod === "group" ? "is-selected" : ""}`} onClick={() => changeAudienceMethod("group")}><span className="recipient-method-icon"><Icon name="folder" size={18}/></span><span><strong>按分组选择</strong><small>适合按名单或业务范围批量发送</small></span><span className="recipient-method-radio"></span></button>
+            <button type="button" role="radio" aria-checked={audienceMethod === "tag"} className={`recipient-method-card ${audienceMethod === "tag" ? "is-selected" : ""}`} onClick={() => changeAudienceMethod("tag")}><span className="recipient-method-icon"><Icon name="tag" size={18}/></span><span><strong>按标签选择</strong><small>跨分组选择相同特征的联系人</small></span><span className="recipient-method-radio"></span></button>
+            <button type="button" role="radio" aria-checked={audienceMethod === "contact"} className={`recipient-method-card ${audienceMethod === "contact" ? "is-selected" : ""}`} onClick={() => changeAudienceMethod("contact")}><span className="recipient-method-icon"><Icon name="user" size={18}/></span><span><strong>单独选择联系人</strong><small>搜索并添加少量指定收件人</small></span><span className="recipient-method-radio"></span></button>
           </div>
 
           {audienceMethod === "group" && <section className="recipient-section recipient-method-panel">
             <div className="recipient-section-heading"><div><h4>选择一个或多个分组</h4><p>同一联系人出现在多个分组时会自动去重</p></div></div>
             <div className="recipient-group-grid">
               <button type="button" className={`recipient-group-card ${selectedGroups.includes("null") ? "is-selected" : ""}`} onClick={() => toggle(selectedGroups, "null", setSelectedGroups)}>
-                <span className="recipient-group-icon">👥</span><span className="recipient-group-copy"><strong>默认分组</strong><small>{defaultGroupCount} 位已订阅联系人</small></span><span className="recipient-group-check">✓</span>
+                <span className="recipient-group-icon"><Icon name="users" size={18}/></span><span className="recipient-group-copy"><strong>默认分组</strong><small>{defaultGroupCount} 位已订阅联系人</small></span><span className="recipient-group-check">✓</span>
               </button>
               {groups.map((group) => <button type="button" key={group.id} className={`recipient-group-card ${selectedGroups.includes(group.id) ? "is-selected" : ""}`} onClick={() => toggle(selectedGroups, group.id, setSelectedGroups)}>
-                <span className="recipient-group-icon">📁</span><span className="recipient-group-copy"><strong>{group.name}</strong><small>{group.contactCount} 位联系人{group.description ? ` · ${group.description}` : ""}</small></span><span className="recipient-group-check">✓</span>
+                <span className="recipient-group-icon"><Icon name="folder" size={18}/></span><span className="recipient-group-copy"><strong>{group.name}</strong><small>{group.contactCount} 位联系人{group.description ? ` · ${group.description}` : ""}</small></span><span className="recipient-group-check">✓</span>
               </button>)}
             </div>
           </section>}
