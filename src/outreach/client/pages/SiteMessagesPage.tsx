@@ -1,5 +1,6 @@
 /** @jsxImportSource react */
 import React, { useEffect, useMemo, useState } from "react";
+import { Icon } from "../../../client/components";
 import { siteMessagesApi } from "../lib/api";
 import { useToast } from "../App";
 
@@ -246,35 +247,35 @@ export function SiteMessagesPage() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header site-message-heading">
         <div className="page-header-actions">
-          <div><h2>站内信</h2><p>自动查找目标网站的联系页面，并提交合规的业务咨询</p></div>
+          <div><h1>站内信</h1><p>管理目标网站的联系表单留言，查看执行进度与结果。</p></div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button className="btn btn-primary" onClick={openCreate}>＋ 新建任务</button>
+            <button className="btn btn-primary" onClick={openCreate}><Icon name="plus" size={16}/>新建任务</button>
           </div>
         </div>
       </div>
       <div className="page-content site-message-page">
         <div className="site-message-notice">
-          <div className="site-message-notice-icon">🛡️</div>
+          <div className="site-message-notice-icon"><Icon name="lock" size={18}/></div>
           <div><strong>保守执行规则</strong><p>同一任务内每个域名仅执行一次；检测到验证码、人机验证、文件上传或无法识别的必填字段时自动跳过，不尝试绕过网站保护。</p></div>
         </div>
         <div className="stats-grid site-message-stats">
           {[
-            ["任务数", overview.jobs, "🗂️"],
-            ["目标网站", overview.targets, "🌐"],
-            ["已提交", overview.submitted, "✅"],
-            ["失败", overview.failed, "❌"],
-            ["无联系页", overview.noContact, "🔍"],
-            ["无法访问", overview.inaccessible, "🚫"],
-            ["成功率", overviewSuccessRate, "📈"],
-          ].map(([label, value, icon]) => <div className="stat-card" key={String(label)}><div className="stat-icon">{icon}</div><div className="stat-value">{value}</div><div className="stat-label">{label}</div></div>)}
+            ["任务数", overview.jobs, "folder"],
+            ["目标网站", overview.targets, "globe"],
+            ["已提交", overview.submitted, "check"],
+            ["失败", overview.failed, "close"],
+            ["无联系页", overview.noContact, "search"],
+            ["无法访问", overview.inaccessible, "alert"],
+            ["成功率", overviewSuccessRate, "chart"],
+          ].map(([label, value, icon]) => <div className="stat-card" key={String(label)}><div className="stat-icon"><Icon name={String(icon)} size={20}/></div><div className="stat-value">{value}</div><div className="stat-label">{label}</div></div>)}
         </div>
 
         <div className="site-message-list">
           <div className="section-heading"><div><h3>执行任务</h3><p>查看每批网站的发现和提交结果</p></div></div>
           {loading ? <div className="site-message-empty"><div className="spinner"></div><p>正在加载任务...</p></div> : jobs.length === 0 ? (
-            <div className="site-message-empty"><span>💬</span><h3>还没有站内信任务</h3><p>新建任务后，系统会逐个网站查找联系页面并记录结果。</p><button className="btn btn-primary" onClick={openCreate}>新建第一个任务</button></div>
+            <div className="site-message-empty"><span><Icon name="message" size={32}/></span><h3>还没有站内信任务</h3><p>新建任务后，系统会逐个网站查找联系页面并记录结果。</p><button className="btn btn-primary" onClick={openCreate}>新建第一个任务</button></div>
           ) : (
             <div className="table-container"><table><thead><tr><th>任务</th><th>状态</th><th>目标</th><th>已提交</th><th>失败</th><th>无联系页面</th><th>无法访问</th><th>成功率</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
               {jobs.map((job) => {
