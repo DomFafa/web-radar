@@ -10,7 +10,7 @@ import type {Asset} from '../src/shared/model';
 import manifest from '../docs/materials-requirements/typed-2026-09-19.json';
 import currentManifest from '../docs/materials-requirements/typed-2026-09-20.json';
 
-const templates=Object.keys(templateMediaRequirements);
+const templates=Object.keys(manifest.templates);
 describe('versioned modern About materials',()=>{
  it.each(templates)('%s keeps both published contract revisions immutable',id=>{
   const old=getMaterialsTemplate(id,`2026-09-19.${id}-materials.1`)!;

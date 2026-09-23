@@ -530,6 +530,118 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'pet-supplies-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 warm coral pet supplies showcase）',
+    bannerNote: 'Playful coral-apricot pet product floating display.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'pet-wellness-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 teal-mint pet wellness lifestyle video）',
+    bannerNote: 'Pet wellness and care lifestyle cinematic video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'stationery-craft-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 sage cream stationery craft studio）',
+    bannerNote: 'Sage-cream minimalist desk workspace photography.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'stationery-studio-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 luxury desk studio writing demo video）',
+    bannerNote: 'Premium desk accessory and writing demonstration video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'poster-graphic-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 pop-art graphic print gallery）',
+    bannerNote: 'Memphis-style pop-art graphic print display.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'poster-gallery-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 sunset gallery exhibition showcase video）',
+    bannerNote: 'Art gallery exhibition and print showcase cinematic video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'food-artisan-banner': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 960（16:6 terracotta artisan farm-to-table studio）',
+    bannerNote: 'Terracotta and olive artisan food photography.',
+    videos: 0,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'food-harvest-video': {
+    productCount: 8,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 golden harvest table cinematic video）',
+    bannerNote: 'Golden amber harvest table and ingredient cinematic video.',
+    videos: 1,
+    slots: [
+      {
+        count: 8,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',
