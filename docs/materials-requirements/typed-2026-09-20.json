@@ -5,271 +5,341 @@
       "contractRevision": "2026-09-20.senseng-clean-materials.2",
       "sha256": "afad1c7a0f3cf3526db1b3a07eecc4a35b2b8c1703dddfbaf6fc2aeba931a17b",
       "imageSlots": 7,
-      "textSlots": 220
+      "textSlots": 220,
+      "images": 7,
+      "texts": 220
     },
     "senseng-video": {
       "contractRevision": "2026-09-20.senseng-video-materials.2",
       "sha256": "b4debd43e6b3d2ce110d98dc4db6bade1e4a5e944ebbd37cb330b3be078f78d5",
       "imageSlots": 7,
-      "textSlots": 239
+      "textSlots": 239,
+      "images": 7,
+      "texts": 239
     },
     "senseng-candy": {
       "contractRevision": "2026-09-20.senseng-candy-materials.2",
       "sha256": "b62b848e6f57894d3350a738cf2b3dac2e2421dadf1660a59109a0a87c90582d",
       "imageSlots": 4,
-      "textSlots": 271
+      "textSlots": 271,
+      "images": 4,
+      "texts": 271
     },
     "senseng-wonder": {
       "contractRevision": "2026-09-20.senseng-wonder-materials.2",
       "sha256": "b43e1bf26f5b61d9cec2d27ffe06d18bb5891e44cfd759d551315a2782f70da5",
       "imageSlots": 5,
-      "textSlots": 254
+      "textSlots": 254,
+      "images": 5,
+      "texts": 254
     },
     "senseng-arcade": {
       "contractRevision": "2026-09-20.senseng-arcade-materials.2",
       "sha256": "083b0515a7528002ed891b5e9b9277aaddbe4f17422937fda92d5fbd3b3a6446",
       "imageSlots": 4,
-      "textSlots": 267
+      "textSlots": 267,
+      "images": 4,
+      "texts": 267
     },
     "senseng-nature": {
       "contractRevision": "2026-09-20.senseng-nature-materials.2",
       "sha256": "789a5b11d16a2454231b68e081c22ac5fa60c39b5ca70ed27f7e67f93014a20a",
       "imageSlots": 4,
-      "textSlots": 242
+      "textSlots": 242,
+      "images": 4,
+      "texts": 242
     },
     "senseng-minimal": {
       "contractRevision": "2026-09-20.senseng-minimal-materials.2",
       "sha256": "1cbb201289f6b55ccd868e11bb9407b22c098dd7482af1e2645d4b6c055c3e52",
       "imageSlots": 4,
-      "textSlots": 243
+      "textSlots": 243,
+      "images": 4,
+      "texts": 243
     },
     "saas-automation": {
       "contractRevision": "2026-09-20.saas-automation-materials.2",
       "sha256": "d5e8996414b2fc3c56598b97fc2fda33b29cce0b4057afe738afac74e59612fa",
       "imageSlots": 16,
-      "textSlots": 489
+      "textSlots": 489,
+      "images": 16,
+      "texts": 489
     },
     "fintech-platform": {
       "contractRevision": "2026-09-20.fintech-platform-materials.2",
       "sha256": "cd86e3997c30998a30edc6fdb1bfbdfc849044db9ea71e9c1e10ee7d788539b7",
       "imageSlots": 11,
-      "textSlots": 520
+      "textSlots": 520,
+      "images": 11,
+      "texts": 520
     },
     "digital-marketing": {
       "contractRevision": "2026-09-20.digital-marketing-materials.2",
       "sha256": "0149b309d4678e00f1fac3a83557247a722dd5413b7b111b56494c93eb1290d3",
       "imageSlots": 8,
-      "textSlots": 437
+      "textSlots": 437,
+      "images": 8,
+      "texts": 437
     },
     "porto-accounting": {
       "contractRevision": "2026-09-20.porto-accounting-materials.2",
       "sha256": "c26d85ad8cc9d7663766ef8fdf4a1b234115d0a184db85279707abd1aea21bde",
       "imageSlots": 6,
-      "textSlots": 480
+      "textSlots": 480,
+      "images": 6,
+      "texts": 480
     },
     "crafto-corporate": {
       "contractRevision": "2026-09-20.crafto-corporate-materials.2",
       "sha256": "5c28d2ef38ba546b24e138e2055888c7e98cf4ffb30e3f73441deb7d99ba636b",
       "imageSlots": 11,
-      "textSlots": 466
+      "textSlots": 466,
+      "images": 11,
+      "texts": 466
     },
     "juno-toys": {
       "contractRevision": "2026-09-20.juno-toys-materials.2",
       "sha256": "abaa1679b8ae549d74cef2a3fe761aac68677e8de580af3be0b49dd3aeb632ab",
       "imageSlots": 12,
-      "textSlots": 225
+      "textSlots": 225,
+      "images": 12,
+      "texts": 225
     },
     "corpox-ai-agency": {
       "contractRevision": "2026-09-20.corpox-ai-agency-materials.2",
       "sha256": "09ac4657dfeb847cae551c1aca2f3fd1a02746cf4b6fa0c6c9cc8fe031cfa15a",
       "imageSlots": 8,
-      "textSlots": 394
+      "textSlots": 394,
+      "images": 8,
+      "texts": 394
     },
     "corpox-consulting": {
       "contractRevision": "2026-09-20.corpox-consulting-materials.2",
       "sha256": "e41783f40a1d1aea247548583d410ad71cf4b8c3f4b9bc48e4e56a5b7020fabd",
       "imageSlots": 9,
-      "textSlots": 467
+      "textSlots": 467,
+      "images": 9,
+      "texts": 467
     },
     "universal-trade-banner": {
       "contractRevision": "2026-09-20.universal-trade-banner-materials.2",
       "sha256": "2800e03bd6ddc37bae5f011394b924847834a34f1424577417280028a926da03",
       "imageSlots": 4,
-      "textSlots": 229
+      "textSlots": 229,
+      "images": 4,
+      "texts": 229
     },
     "universal-showcase-video": {
       "contractRevision": "2026-09-20.universal-showcase-video-materials.2",
       "sha256": "3575245985a465cebcdbac24eff3b23153fc5e6bbd7eb297f99ca1a9aed6869b",
       "imageSlots": 4,
-      "textSlots": 238
+      "textSlots": 238,
+      "images": 4,
+      "texts": 238
     },
     "toys-figure-banner": {
       "contractRevision": "2026-09-20.toys-figure-banner-materials.2",
       "sha256": "a24f01e8543b2517846450041348ba43e901f62ca37c7307477d6569254e4720",
       "imageSlots": 4,
-      "textSlots": 260
+      "textSlots": 260,
+      "images": 4,
+      "texts": 260
     },
     "toys-interactive-video": {
       "contractRevision": "2026-09-20.toys-interactive-video-materials.2",
       "sha256": "76b417d83b64eedfdcbba702da680d74e221a071b1d02147f075a2457797e9ad",
       "imageSlots": 4,
-      "textSlots": 262
+      "textSlots": 262,
+      "images": 4,
+      "texts": 262
     },
     "plush-cushion-banner": {
       "contractRevision": "2026-09-20.plush-cushion-banner-materials.2",
       "sha256": "b610c8deb590a7173cc361b5bf68692a65157562c811354862951e5e58b95639",
       "imageSlots": 4,
-      "textSlots": 227
+      "textSlots": 227,
+      "images": 4,
+      "texts": 227
     },
     "plush-living-video": {
       "contractRevision": "2026-09-20.plush-living-video-materials.2",
       "sha256": "afd1ac1e84c91d9eea32ac0e3cb994245120afd7ad7aed9ccdde4f207d35d1d9",
       "imageSlots": 4,
-      "textSlots": 236
+      "textSlots": 236,
+      "images": 4,
+      "texts": 236
     },
     "apparel-fabric-banner": {
       "contractRevision": "2026-09-20.apparel-fabric-banner-materials.2",
       "sha256": "d7dd165ebd75256258291acbec35ee9918a8615bbf45da304badff72d8566080",
       "imageSlots": 4,
-      "textSlots": 212
+      "textSlots": 212,
+      "images": 4,
+      "texts": 212
     },
     "apparel-runway-video": {
       "contractRevision": "2026-09-20.apparel-runway-video-materials.2",
       "sha256": "479b7d7762814bf7e28bcc0458827e44df1910cecc7c3f5c421ea2f59ac3078c",
       "imageSlots": 4,
-      "textSlots": 213
+      "textSlots": 213,
+      "images": 4,
+      "texts": 213
     },
     "footwear-craft-banner": {
       "contractRevision": "2026-09-20.footwear-craft-banner-materials.2",
       "sha256": "3b38f6709d093f074f8632048a8ade931d78d52f76bf5b27f94a2c63e9a626f4",
       "imageSlots": 4,
-      "textSlots": 237
+      "textSlots": 237,
+      "images": 4,
+      "texts": 237
     },
     "footwear-kinetic-video": {
       "contractRevision": "2026-09-20.footwear-kinetic-video-materials.2",
       "sha256": "e81a6e0001cd669258b1263db9c6b27c655a94b8c6bd590fe24117fc116c7475",
       "imageSlots": 4,
-      "textSlots": 246
+      "textSlots": 246,
+      "images": 4,
+      "texts": 246
     },
     "luggage-leather-banner": {
       "contractRevision": "2026-09-20.luggage-leather-banner-materials.2",
       "sha256": "949bafc3faf9d0eeeb886221513d3cd3e52e963d9cea8f5638b1c2599f653ffa",
       "imageSlots": 4,
-      "textSlots": 215
+      "textSlots": 215,
+      "images": 4,
+      "texts": 215
     },
     "luggage-voyage-video": {
       "contractRevision": "2026-09-20.luggage-voyage-video-materials.2",
       "sha256": "6908e1e58fcd508cf473fe74b8a325356fa1cf13252584db9e8da348b73e38e3",
       "imageSlots": 4,
-      "textSlots": 223
+      "textSlots": 223,
+      "images": 4,
+      "texts": 223
     },
     "jewelry-luxury-banner": {
       "contractRevision": "2026-09-20.jewelry-luxury-banner-materials.2",
       "sha256": "f3e61982a8edc04bca028477bf40e6c1926a1d04daa19318b282a337814752c7",
       "imageSlots": 4,
-      "textSlots": 218
+      "textSlots": 218,
+      "images": 4,
+      "texts": 218
     },
     "jewelry-timeless-video": {
       "contractRevision": "2026-09-20.jewelry-timeless-video-materials.2",
       "sha256": "aa479422d31f90c996f80ceb7c77c695421b18c779f1fca7d789666717a8a407",
       "imageSlots": 4,
-      "textSlots": 223
+      "textSlots": 223,
+      "images": 4,
+      "texts": 223
     },
     "homedecor-aesthetic-banner": {
       "contractRevision": "2026-09-20.homedecor-aesthetic-banner-materials.2",
       "sha256": "80dec61e79b3b781297780d22d934f048b3520fec9ca114e7636d4352b3f5fdd",
       "imageSlots": 4,
-      "textSlots": 156
+      "textSlots": 156,
+      "images": 4,
+      "texts": 156
     },
     "homedecor-living-video": {
       "contractRevision": "2026-09-20.homedecor-living-video-materials.2",
       "sha256": "da78a6e37ac53564146b7046378184c57f4e574f04f00c71307288d93389f9e4",
       "imageSlots": 4,
-      "textSlots": 159
+      "textSlots": 159,
+      "images": 4,
+      "texts": 159
     },
     "furniture-minimal-banner": {
       "contractRevision": "2026-09-20.furniture-minimal-banner-materials.2",
       "sha256": "6390c3dd4bcecbfaf52aaa1dcaa91385c3b74a284977363c999c843360479233",
       "imageSlots": 4,
-      "textSlots": 225
+      "textSlots": 225,
+      "images": 4,
+      "texts": 225
     },
     "furniture-spatial-video": {
       "contractRevision": "2026-09-20.furniture-spatial-video-materials.2",
       "sha256": "8fbc789e5fb33251584b2fd032746c4863f63259ea32e7b93257abd57492b739",
       "imageSlots": 4,
-      "textSlots": 240
+      "textSlots": 240,
+      "images": 4,
+      "texts": 240
     },
     "kitchen-culinary-banner": {
       "contractRevision": "2026-09-20.kitchen-culinary-banner-materials.2",
       "sha256": "a9fe05f911b689778da6854b34819866ab277df06bf0ac07d81810b263d5450c",
       "imageSlots": 4,
-      "textSlots": 215
+      "textSlots": 215,
+      "images": 4,
+      "texts": 215
     },
     "kitchen-gourmet-video": {
       "contractRevision": "2026-09-20.kitchen-gourmet-video-materials.2",
       "sha256": "44993c01d49788aab20fa900cf253146046ce82949ea748450f9ef0c2869b056",
       "imageSlots": 4,
-      "textSlots": 223
+      "textSlots": 223,
+      "images": 4,
+      "texts": 223
     },
     "drinkware-ceramic-banner": {
       "contractRevision": "2026-09-20.drinkware-ceramic-banner-materials.2",
-      "sha256": "0a273796aa878958279c50a8d62146ad986c309d397fe2118c4c586cb8ea0e96",
-      "imageSlots": 4,
-      "textSlots": 167
+      "sha256": "a19bd7bd73b21abc36ea64e594bbb47b4807312c25b05c8b33ed97bb074abd05",
+      "images": 4,
+      "texts": 268
     },
     "drinkware-thermal-video": {
       "contractRevision": "2026-09-20.drinkware-thermal-video-materials.2",
-      "sha256": "65979320c69d41562a898774288cdb44612d115d36488f148de8ccefc3aebb3c",
-      "imageSlots": 4,
-      "textSlots": 159
+      "sha256": "bdd022776234f996b2fea11a5d2f11d0a929bdc9846638d541089e04ba143efb",
+      "images": 4,
+      "texts": 302
     },
     "beauty-skincare-banner": {
       "contractRevision": "2026-09-20.beauty-skincare-banner-materials.2",
-      "sha256": "41f1eb5e4f7c660c88a98dd6e7146a6651f39934e6465aa2ef8fe30594db64be",
-      "imageSlots": 4,
-      "textSlots": 169
+      "sha256": "cee17dc7d14cb10361fd0c156e6572d64803edca99d0ebfcaac61e4d0c0b0f2f",
+      "images": 4,
+      "texts": 265
     },
     "beauty-glow-video": {
       "contractRevision": "2026-09-20.beauty-glow-video-materials.2",
-      "sha256": "29994436cc2bb2645aa8cbd24fa0068a37779139e7146bc5186a7f7c3aa379a3",
-      "imageSlots": 4,
-      "textSlots": 161
+      "sha256": "35b7e3e72b09e6dbed2f3927f1af78839a8635887b78091db9ff364b087dc6d6",
+      "images": 4,
+      "texts": 291
     },
     "electronics-gadget-banner": {
       "contractRevision": "2026-09-20.electronics-gadget-banner-materials.2",
-      "sha256": "ba2a185228ce99d3e2f0010de90f8a7677e3df0ef48e16e4e44242e09447e274",
-      "imageSlots": 4,
-      "textSlots": 170
+      "sha256": "2d7b3119c4b8a2d25705e4239db549b9333cd5446494980e1c86623c3346d6ae",
+      "images": 4,
+      "texts": 269
     },
     "electronics-smart-video": {
       "contractRevision": "2026-09-20.electronics-smart-video-materials.2",
-      "sha256": "db4a4edd573ae1eed94d948611f050436e99547ea9fba225e14b9601adb85f59",
-      "imageSlots": 4,
-      "textSlots": 161
+      "sha256": "75c9ca3811bd0a7260f125a927f7651c4215ea023ef5895745e8dbafa571e893",
+      "images": 4,
+      "texts": 286
     },
     "tools-precision-banner": {
       "contractRevision": "2026-09-20.tools-precision-banner-materials.2",
-      "sha256": "fda2d469a5c5a8e8d8b73d188d06cf002f21c43dbfa5034691b38b6063d79bb9",
-      "imageSlots": 4,
-      "textSlots": 166
+      "sha256": "627ca8621cb1839c2aca178b08f0e628e5129a4ac96bdf301895f8553dcedd63",
+      "images": 4,
+      "texts": 268
     },
     "tools-workshop-video": {
       "contractRevision": "2026-09-20.tools-workshop-video-materials.2",
-      "sha256": "40db8ea614f5fb9cd3a923afd5ab640bf8d3bdda09bf4ab288ae07ce48458c3d",
-      "imageSlots": 4,
-      "textSlots": 162
+      "sha256": "60229d0f29ab68fbdee10b75edfbd04633f8b28599d87ea67db8329c3e775c70",
+      "images": 4,
+      "texts": 419
     },
     "sports-trail-banner": {
       "contractRevision": "2026-09-20.sports-trail-banner-materials.2",
-      "sha256": "fc8fe4c32f3e2280f5f01243184021be11925715bc1d4ff0d0e971ad0a4a90d0",
-      "imageSlots": 4,
-      "textSlots": 168
+      "sha256": "749fcb3316d4a65ab20c6a89692f70a8708f6f2129d726390bac4499afde26c7",
+      "images": 4,
+      "texts": 269
     },
     "sports-kinetic-video": {
       "contractRevision": "2026-09-20.sports-kinetic-video-materials.2",
-      "sha256": "b626c6d859344caba94b0f25227aa46f5ba74baae22e4335e463e54e4211d478",
-      "imageSlots": 4,
-      "textSlots": 162
+      "sha256": "01456c74b6f80ac113999c82c91e1db7a526830e44aa431f10543688095ec5c2",
+      "images": 4,
+      "texts": 290
     }
   }
 }

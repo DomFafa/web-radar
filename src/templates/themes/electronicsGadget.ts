@@ -23,6 +23,36 @@ export interface ThemedElectronicsItem {
 export const ELECTRONICS_DEFAULT_PRODUCTS: ThemedElectronicsItem[] = [
   {
     id: 'el-1',
+    name: '140W GaN III Fast Desktop Charger',
+    desc: 'Gallium Nitride III architecture delivering 140W PD 3.1 ultra-fast charging across 3 USB-C and 1 USB-A ports with dynamic power allocation.',
+    badge: 'GaN III 140W',
+    category: 'power',
+    categoryNameZh: '',
+    categoryNameEn: 'Fast Charging',
+    material: 'Gallium Nitride III + 6063 Aluminum Enclosure',
+    dimensions: '105 × 75 × 32 mm · 295g',
+    extra: 'PD 3.1 & QC 5.0 Protocols',
+    moq: '500 Units',
+    tagline: '140W PD 3.1 Gallium Nitride',
+    img: getIndustryPlaceholder('electronics', 0),
+  },
+  {
+    id: 'el-2',
+    name: 'Matter over Thread Smart Home Gateway',
+    desc: 'Unified local smart home controller supporting Matter 1.3, Thread border routing, Zigbee 3.0, and sub-15ms local response times.',
+    badge: 'Matter 1.3',
+    category: 'smart',
+    categoryNameZh: '',
+    categoryNameEn: 'Smart Living',
+    material: 'Polycarbonate + Dual-Band Wi-Fi 6',
+    dimensions: '110 × 110 × 26 mm · 180g',
+    extra: 'Zero-Cloud Local Mesh Hub',
+    moq: '300 Units',
+    tagline: 'Matter & Thread Local Mesh Hub',
+    img: getIndustryPlaceholder('electronics', 1),
+  },
+  {
+    id: 'el-3',
     name: 'Hybrid ANC True Wireless Earbuds',
     desc: 'Adaptive hybrid active noise cancellation with -42dB reduction, custom 11mm dynamic drivers, and Bluetooth 5.4 multipoint.',
     badge: 'ANC Pro',
@@ -34,10 +64,10 @@ export const ELECTRONICS_DEFAULT_PRODUCTS: ThemedElectronicsItem[] = [
     extra: '-42dB Hybrid ANC',
     moq: '1000 Units',
     tagline: 'Hybrid ANC -42dB Adaptive',
-    img: getIndustryPlaceholder('electronics', 0),
+    img: getIndustryPlaceholder('electronics', 2),
   },
   {
-    id: 'el-2',
+    id: 'el-4',
     name: 'AMOLED Smart Health Watch',
     desc: '1.43-inch AMOLED always-on display with blood oxygen, ECG, and sleep tracking. IP68 waterproof with 14-day battery.',
     badge: 'Health Monitor',
@@ -48,142 +78,116 @@ export const ELECTRONICS_DEFAULT_PRODUCTS: ThemedElectronicsItem[] = [
     dimensions: '47 × 47 × 11.8 mm',
     extra: 'SpO2 + ECG + HRV',
     moq: '500 Units',
-    tagline: 'AMOLED Always-On Health Tracking',
-    img: getIndustryPlaceholder('electronics', 1),
-  },
-  {
-    id: 'el-3',
-    name: 'GaN 140W 4-Port Fast Charger',
-    desc: 'Gallium nitride 140W USB-PD 3.1 charger with 4 ports (2C+2A), foldable prongs, and intelligent power distribution.',
-    badge: 'GaN Power',
-    category: 'charger',
-    categoryNameZh: '',
-    categoryNameEn: 'GaN Chargers',
-    material: 'GaN FET Technology',
-    dimensions: '72 × 72 × 34 mm · 192g',
-    extra: 'PD 3.1 EPR 140W',
-    moq: '2000 Units',
-    tagline: 'GaN 140W PD 3.1 EPR',
-    img: getIndustryPlaceholder('electronics', 2),
-  },
-  {
-    id: 'el-4',
-    name: 'Tunable CCT Smart LED Panel',
-    desc: 'WiFi and Bluetooth mesh smart panel light with 2700K-6500K tunable color temperature, CRI 97+, and circadian rhythm modes.',
-    badge: 'Smart Light',
-    category: 'lighting',
-    categoryNameZh: '',
-    categoryNameEn: 'Smart Lighting',
-    material: 'Samsung LM301H LEDs',
-    dimensions: '600 × 600 × 10 mm · 40W',
-    extra: 'CRI 97+ Tunable CCT',
-    moq: '300 Units',
-    tagline: 'CRI 97+ Circadian Lighting',
+    tagline: '1.43 AMOLED 14-Day Battery',
     img: getIndustryPlaceholder('electronics', 3),
   },
   {
     id: 'el-5',
-    name: 'LiFePO4 Portable Power Station',
-    desc: '1024Wh lithium iron phosphate battery with 2000W pure sine wave inverter, MPPT solar input, and UPS function.',
-    badge: 'Off-Grid Power',
+    name: 'Magnetic Wireless Power Bank 10,000mAh',
+    desc: 'Qi2 certified 15W magnetic snap-on wireless power bank with 20W USB-C bi-directional fast charging and LED battery display.',
+    badge: 'Qi2 Certified',
     category: 'power',
     categoryNameZh: '',
-    categoryNameEn: 'Power Stations',
-    material: 'LiFePO4 3500+ Cycles',
-    dimensions: '340 × 262 × 226 mm · 12.5kg',
-    extra: '2000W Pure Sine Wave',
-    moq: '100 Units',
-    tagline: 'LiFePO4 3500-Cycle Capacity',
+    categoryNameEn: 'Power Banks',
+    material: 'Fireproof PC/ABS + N52 Neodymium',
+    dimensions: '104 × 68 × 16 mm · 210g',
+    extra: '15W Magnetic Fast Charge',
+    moq: '1000 Units',
+    tagline: 'Qi2 15W Magnetic Snap Power',
     img: getIndustryPlaceholder('electronics', 4),
   },
   {
     id: 'el-6',
-    name: 'Qi2 MagSafe Battery Pack 10000mAh',
-    desc: '10000mAh magnetic wireless battery with Qi2 15W and USB-C PD 27W fast charging, airline-safe lithium polymer.',
-    badge: 'MagSafe Pro',
-    category: 'accessory',
+    name: '10-in-1 USB4 CNC Aluminum Docking Station',
+    desc: '40Gbps USB4 dual 4K/120Hz display dock with 100W PD pass-through, 2.5G Ethernet, SD 4.0, and unibody heat-dissipating CNC aluminum.',
+    badge: 'USB4 40Gbps',
+    category: 'dock',
     categoryNameZh: '',
-    categoryNameEn: 'Mobile Accessories',
-    material: 'Lithium Polymer + N52 Magnets',
-    dimensions: '96 × 70 × 16 mm · 218g',
-    extra: 'Qi2 15W + PD 27W',
-    moq: '2000 Units',
-    tagline: 'Qi2 Magnetic Fast Charge',
+    categoryNameEn: 'Hubs & Docks',
+    material: 'Unibody 6063 Anodized Aluminum',
+    dimensions: '160 × 60 × 20 mm · 240g',
+    extra: 'Dual 4K/120Hz DisplayPort',
+    moq: '300 Units',
+    tagline: '40Gbps Dual 4K Aluminum Dock',
     img: getIndustryPlaceholder('electronics', 5),
   },
   {
     id: 'el-7',
-    name: '15.6" Portable USB-C OLED Monitor',
-    desc: 'Ultra-slim portable OLED display with 100% DCI-P3, USB-C single-cable connection, HDR10, and built-in speakers.',
-    badge: 'OLED Display',
-    category: 'display',
+    name: 'Smart Thread Climate & Environmental Sensor',
+    desc: 'Ultra-low power Matter over Thread temperature, humidity, and atmospheric pressure sensor with 5-year coin cell battery lifespan.',
+    badge: 'Thread Sensor',
+    category: 'smart',
     categoryNameZh: '',
-    categoryNameEn: 'Portable Monitors',
-    material: 'OLED Panel, Aluminum Alloy',
-    dimensions: '357 × 225 × 5.2 mm · 650g',
-    extra: '100% DCI-P3 HDR10',
-    moq: '200 Units',
-    tagline: '100% DCI-P3 OLED Portable',
+    categoryNameEn: 'Smart Living',
+    material: 'Matte ABS + Sensirion Micro Sensor',
+    dimensions: '42 × 42 × 13 mm · 28g',
+    extra: '5-Year CR2450 Battery Life',
+    moq: '1000 Units',
+    tagline: 'Sub-15ms Thread Local Sensor',
     img: getIndustryPlaceholder('electronics', 6),
   },
   {
     id: 'el-8',
-    name: 'Hot-Swap Gasket Mechanical Keyboard',
-    desc: 'Gasket-mounted hot-swappable mechanical keyboard with south-facing RGB, PBT keycaps, and tri-mode connectivity.',
-    badge: 'Custom Mech',
-    category: 'gaming',
+    name: 'Smart Biometric Door Lock with Matter',
+    desc: '3D biometric fingerprint scanner with keypad, NFC card entry, and Matter over Thread remote status monitoring and emergency key.',
+    badge: 'Matter Security',
+    category: 'smart',
     categoryNameZh: '',
-    categoryNameEn: 'Mechanical Keyboards',
-    material: 'Aluminum CNC Case + PBT Keycaps',
-    dimensions: '325 × 145 × 42 mm · 1.2kg',
-    extra: 'Gasket + Hot-Swap',
-    moq: '500 Units',
-    tagline: 'Gasket-Mount Hot-Swap RGB',
+    categoryNameEn: 'Smart Security',
+    material: 'Zinc Alloy + Tempered Glass Keypad',
+    dimensions: '360 × 75 × 25 mm · 3.2kg',
+    extra: 'Class-C Anti-Theft Lock Body',
+    moq: '200 Units',
+    tagline: 'Matter 1.3 Biometric Smart Lock',
     img: getIndustryPlaceholder('electronics', 7),
-  }
+  },
 ];
 
-export function getElectronicsProducts(ctx: ThemeContext): ThemedElectronicsItem[] {
-  const { draft, translateProduct } = ctx;
-  if (isTypedMaterialsSource(draft)) {
-    return draft.products.map((p, idx) => ({
-      id: p.id,
-      name: translateProduct(p).name || `Product ${idx + 1}`,
-      desc: translateProduct(p).description || '',
-      badge: '',
-      category: 'electronics',
-      categoryNameZh: '',
-      categoryNameEn: 'Wireless Audio',
-      material: p.material || '',
-      dimensions: p.dimensions || '',
-      extra: '',
-      moq: '',
-      tagline: p.tagline || '',
-      img: ctx.productMainImage(p),
-    }));
-  }
-  if (draft.products && draft.products.length > 0) {
-    return draft.products.map((p, idx) => {
-      const fallback = ELECTRONICS_DEFAULT_PRODUCTS[idx % ELECTRONICS_DEFAULT_PRODUCTS.length]!;
-      const translated = ctx.translateProduct(p);
-      const mainImg = ctx.productMainImage(p) || fallback.img;
+function getElectronicsProducts(ctx: ThemeContext): ThemedElectronicsItem[] {
+  const isTyped = isTypedMaterialsSource(ctx.draft);
+  if (isTyped) {
+    return ctx.draft.products.map((p, i) => {
+      const def = ELECTRONICS_DEFAULT_PRODUCTS[i % ELECTRONICS_DEFAULT_PRODUCTS.length]!;
       return {
         id: p.id,
-        name: translated.name || fallback.name,
-        desc: translated.description || fallback.desc,
-        badge: fallback.badge,
-        category: fallback.category,
+        name: p.name || def.name,
+        desc: p.description || def.desc,
+        badge: def.badge,
+        category: def.category,
         categoryNameZh: '',
-        categoryNameEn: fallback.categoryNameEn,
-        material: p.material || fallback.material,
-        dimensions: p.dimensions || fallback.dimensions,
-        extra: fallback.extra,
-        moq: fallback.moq,
-        tagline: p.tagline || fallback.tagline,
-        img: mainImg,
+        categoryNameEn: def.categoryNameEn,
+        material: p.material || def.material,
+        dimensions: p.dimensions || def.dimensions,
+        extra: def.extra,
+        moq: def.moq,
+        tagline: def.tagline,
+        img: p.imageAssetId ? safeUrl(ctx.options.assetUrl(p.imageAssetId), ctx.options.preview) : def.img,
       };
     });
   }
+
+  if (ctx.draft.products && ctx.draft.products.length > 0) {
+    return ctx.draft.products.map((p, i) => {
+      const def = ELECTRONICS_DEFAULT_PRODUCTS[i % ELECTRONICS_DEFAULT_PRODUCTS.length]!;
+      const imgUrl = p.imageAssetId ? safeUrl(ctx.options.assetUrl(p.imageAssetId), ctx.options.preview) : def.img;
+      return {
+        id: p.id,
+        name: p.name || def.name,
+        desc: p.description || def.desc,
+        badge: def.badge,
+        category: def.category,
+        categoryNameZh: '',
+        categoryNameEn: def.categoryNameEn,
+        material: p.material || def.material,
+        dimensions: p.dimensions || def.dimensions,
+        extra: def.extra,
+        moq: def.moq,
+        tagline: def.tagline,
+        img: imgUrl,
+      };
+    });
+  }
+
   return ELECTRONICS_DEFAULT_PRODUCTS;
 }
 
@@ -194,43 +198,97 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
   const products = getElectronicsProducts(ctx);
   const heroProduct = products[0]!;
 
-  const brandName = company.name || (isVideo ? 'NeonPulse Smart Device Lab' : 'TechForge Electronics Lab');
-  const brandTagline = isVideo ? 'Next-Gen Smart Device Innovation' : 'Consumer Electronics & Smart Devices';
+  const brandName = company.name || (isVideo ? 'MatterLink Smart Living Systems' : 'AeroPower CNC Hardware & GaN Labs');
+  const brandTagline = isVideo ? 'Matter 1.3 & Thread Mesh Protocols' : 'Unibody CNC Aluminum & GaN III Fast Charge';
 
+  // Light palettes only - strictly no dark mode
   const theme = isVideo
     ? {
-      bg: '#09090b', cardBg: '#18181b', cardBorder: 'rgba(99,102,241,0.25)',
-      primary: '#6366f1', primaryHover: '#4f46e5', text: '#fafafa', textMuted: '#a1a1aa', textSub: '#71717a',
-      glassBg: 'rgba(9,9,11,0.92)', pillBg: 'rgba(99,102,241,0.15)', pillText: '#818cf8',
-      btnGradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', accentGlow: 'rgba(99,102,241,0.30)',
+      bg: '#faf5ff',
+      cardBg: '#ffffff',
+      cardBorder: 'rgba(124,58,237,0.16)',
+      primary: '#7c3aed',
+      primaryHover: '#6d28d9',
+      text: '#0f172a',
+      textMuted: '#475569',
+      textSub: '#64748b',
+      glassBg: 'rgba(250,245,255,0.92)',
+      pillBg: '#f3e8ff',
+      pillText: '#6d28d9',
+      btnGradient: 'linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)',
+      accentGlow: 'rgba(124,58,237,0.22)',
     }
     : {
-      bg: '#18181b', cardBg: '#27272a', cardBorder: 'rgba(59,130,246,0.20)',
-      primary: '#3b82f6', primaryHover: '#2563eb', text: '#f4f4f5', textMuted: '#a1a1aa', textSub: '#71717a',
-      glassBg: 'rgba(24,24,27,0.92)', pillBg: 'rgba(59,130,246,0.15)', pillText: '#60a5fa',
-      btnGradient: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', accentGlow: 'rgba(59,130,246,0.25)',
+      bg: '#f8fafc',
+      cardBg: '#ffffff',
+      cardBorder: 'rgba(15,23,42,0.12)',
+      primary: '#0284c7',
+      primaryHover: '#0369a1',
+      text: '#0f172a',
+      textMuted: '#475569',
+      textSub: '#64748b',
+      glassBg: 'rgba(248,250,252,0.92)',
+      pillBg: '#e0f2fe',
+      pillText: '#0369a1',
+      btnGradient: 'linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%)',
+      accentGlow: 'rgba(2,132,199,0.2)',
     };
 
-  const headerHtml = `
-    <header class="electronics-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};box-shadow:0 4px 20px rgba(0,0,0,0.04);">
-      <div class="wrap" style="height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+  // Distinct Header for each variant
+  const headerHtml = isVideo ? `
+    <header class="electronics-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};">
+      <div style="background:#f3e8ff;padding:5px 24px;display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:${theme.primary};font-weight:700;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${theme.primary};"></span>
+          <span>THREAD MESH: 32 NODES CONNECTED · LOCAL LATENCY: 12ms</span>
+        </div>
+        <div>MATTER 1.3 COMPLIANT · APPLE HOME / GOOGLE HOME CERTIFIED</div>
+      </div>
+      <div class="wrap" style="height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
         <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
           ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
           <div style="display:flex;flex-direction:column;">
-            <span style="font-size:1.2rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};">${esc(brandName)}</span>
-            <span style="font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:${theme.primary};font-weight:700;">${esc(brandTagline)}</span>
+            <span style="font-size:1.18rem;font-weight:900;letter-spacing:-0.02em;color:${theme.text};">${esc(brandName)}</span>
+            <span style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:${theme.primary};font-weight:700;">${esc(brandTagline)}</span>
           </div>
         </a>
-        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:28px;">
-          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.home)}</a>
-          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.catalog)}</a>
-          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.about)}</a>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};transition:color 0.2s;">${esc(ui.contact)}</a>
+        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:24px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};">${esc(ui.home)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};">${esc(ui.catalog)}</a>
+          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};">${esc(ui.about)}</a>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.9rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};">${esc(ui.contact)}</a>
+        </nav>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="languages" style="display:flex;gap:6px;">${ctx.languageLinks}</div>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:9px 18px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.84rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+            Smart Living RFQ ↗
+          </a>
+        </div>
+      </div>
+    </header>
+  ` : `
+    <header class="electronics-header" style="position:sticky;top:0;z-index:100;background:${theme.glassBg};backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid ${theme.cardBorder};">
+      <div class="wrap" style="height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;">
+        <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;display:flex;align-items:center;gap:12px;">
+          ${ctx.brandLogo ? `<img src="${esc(ctx.brandLogo)}" alt="${esc(brandName)}" style="height:38px;width:auto;object-fit:contain;">` : ''}
+          <div style="display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.25rem;font-weight:900;color:${theme.text};letter-spacing:-0.02em;">${esc(brandName)}</span>
+              <span style="display:inline-block;padding:2px 6px;border-radius:3px;background:#e2e8f0;color:#0f172a;font-size:0.62rem;font-weight:800;font-family:monospace;">6063 CNC</span>
+            </div>
+            <span style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:${theme.primary};font-weight:700;">${esc(brandTagline)}</span>
+          </div>
+        </a>
+        <nav aria-label="Main Navigation" style="display:flex;align-items:center;gap:32px;">
+          <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'home' ? theme.primary : theme.textMuted};">${esc(ui.home)}</a>
+          <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'catalog' ? theme.primary : theme.textMuted};">${esc(ui.catalog)}</a>
+          <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'about' ? theme.primary : theme.textMuted};">${esc(ui.about)}</a>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;font-size:0.92rem;font-weight:700;color:${page === 'contact' ? theme.primary : theme.textMuted};">${esc(ui.contact)}</a>
         </nav>
         <div style="display:flex;align-items:center;gap:16px;">
           <div class="languages" style="display:flex;gap:6px;">${ctx.languageLinks}</div>
-          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 20px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};display:inline-block;">
-            B2B Sourcing RFQ ↗
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:10px 22px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.86rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+            Hardware ODM Desk ↗
           </a>
         </div>
       </div>
@@ -241,71 +299,142 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
 
   if (page === 'home') {
     if (isVideo) {
+      // 1. MATTER 1.3 & THREAD SMART LIVING SCENARIO CONSOLE
       mainHtml = `
         <main class="electronics-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
-          <section style="position:relative;overflow:hidden;padding:80px 0 100px;border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:48px;align-items:center;">
+          <!-- Smart Living Scenario Console Hero -->
+          <section style="position:relative;padding:60px 0 80px;border-bottom:1px solid ${theme.cardBorder};">
+            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:44px;align-items:center;">
               <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
-                  ✦ Smart Device Lab
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:18px;">
+                  ✦ Matter 1.3 Standard · Thread Self-Healing Mesh Topology
                 </div>
-                <h1 style="font-size:clamp(2.2rem, 4.5vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 18px;">
-                  ${esc(draft.copy[ctx.lang]?.headline || 'Next-Generation Smart Device Technology')}
+                <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 16px;">
+                  ${esc(draft.copy[ctx.lang]?.headline || 'Seamless Smart Living: Matter 1.3 over Thread Mesh')}
                 </h1>
-                <p style="font-size:1.1rem;line-height:1.7;color:${theme.textMuted};margin:0 0 30px;max-width:620px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Cutting-edge IoT, AI-powered wearables, and USB-PD 3.1 power delivery systems.')}
+                <p style="font-size:1.05rem;line-height:1.7;color:${theme.textMuted};margin:0 0 28px;max-width:580px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Zero-cloud local mesh networking with sub-15ms trigger latency, universal ecosystem compatibility across Apple Home, Google Home, and SmartThings.')}
                 </p>
-                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:36px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 30px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};transition:transform 0.2s;">
-                    Explore Products ↗
+                <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:34px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    Smart Subsystem Index ↗
                   </a>
-                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 26px;border-radius:10px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.96rem;font-weight:700;">
-                    Request Pricing
+                  <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    Gateway Firmware SDK
                   </a>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid ${theme.cardBorder};">
-                  ${[['FCC', 'Certified'], ['99.8%', 'QC Pass Rate'], ['RoHS', 'Compliant']].map(([v, l]) => `
-                    <div><div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">${v}</div><div style="font-size:0.75rem;color:${theme.textSub};">${l}</div></div>
-                  `).join('')}
+                <!-- Thread Mesh Telemetry Indicators -->
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:20px;border-top:1px solid ${theme.cardBorder};">
+                  <div style="background:${theme.cardBg};padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <div style="font-size:0.7rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">Mesh Latency</div>
+                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">&lt; 15 ms</div>
+                    <div style="font-size:0.7rem;color:${theme.textMuted};">Local Thread network</div>
+                  </div>
+                  <div style="background:${theme.cardBg};padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <div style="font-size:0.7rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">Battery Life</div>
+                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">5 Years</div>
+                    <div style="font-size:0.7rem;color:${theme.textMuted};">Single CR2450 cell</div>
+                  </div>
+                  <div style="background:${theme.cardBg};padding:14px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                    <div style="font-size:0.7rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;">Max Node Count</div>
+                    <div style="font-size:1.4rem;font-weight:900;color:${theme.primary};">254 Nodes</div>
+                    <div style="font-size:0.7rem;color:${theme.textMuted};">Self-healing routing</div>
+                  </div>
                 </div>
               </div>
+
+              <!-- Interactive Scenario Monitor Console -->
               <div style="position:relative;">
-                <div style="aspect-ratio:4/3;border-radius:20px;overflow:hidden;background:${theme.cardBg};border:1px solid ${theme.cardBorder};box-shadow:0 20px 50px rgba(0,0,0,0.15);">
-                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:cover;" fetchpriority="high">
-                </div>
-                <div style="position:absolute;bottom:-16px;left:24px;right:24px;background:${theme.glassBg};backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:14px;padding:16px 20px;border:1px solid ${theme.cardBorder};display:flex;align-items:center;justify-content:space-between;">
-                  <div>
-                    <div style="font-size:0.82rem;font-weight:800;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;">${esc(heroProduct.categoryNameEn)}</div>
-                    <div style="font-size:0.92rem;font-weight:700;color:${theme.text};margin-top:2px;">${esc(heroProduct.name)}</div>
+                <div style="border-radius:16px;overflow:hidden;background:${theme.cardBg};border:2px solid ${theme.cardBorder};box-shadow:0 20px 48px rgba(124,58,237,0.14);position:relative;">
+                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:380px;object-fit:cover;display:block;" fetchpriority="high">
+                  <div style="position:absolute;top:16px;left:16px;background:rgba(15,23,42,0.88);backdrop-filter:blur(8px);color:#fff;padding:6px 12px;border-radius:6px;font-size:0.72rem;font-family:monospace;font-weight:700;">
+                    SCENARIO: ACTIVE LIVING
                   </div>
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:8px 18px;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.78rem;font-weight:800;">View ↗</a>
+                  <div style="position:absolute;bottom:16px;right:16px;background:rgba(124,58,237,0.92);color:#fff;padding:6px 12px;border-radius:6px;font-size:0.72rem;font-weight:800;">
+                    MATTER 1.3 CERTIFIED
+                  </div>
+                </div>
+                <div style="margin-top:14px;background:${theme.cardBg};border-radius:10px;padding:12px 18px;border:1px solid ${theme.cardBorder};display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;">
+                  <span style="font-weight:700;color:${theme.text};">DEVICE: ${esc(heroProduct.name)}</span>
+                  <span style="font-weight:800;color:${theme.primary};">${esc(heroProduct.moq)} MOQ</span>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- Product Grid -->
-          <section style="padding:80px 0;">
+          <!-- Matter Ecosystem Topology Breakdown -->
+          <section style="padding:70px 0;border-bottom:1px solid ${theme.cardBorder};background:#ffffff;">
             <div class="wrap" style="padding:0 24px;">
-              <div style="text-align:center;margin-bottom:50px;">
-                <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Featured Products</div>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};margin:0;">Our Product Range</h2>
+              <div style="text-align:center;max-width:700px;margin:0 auto 48px;">
+                <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">Protocol Architecture</span>
+                <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:8px 0 12px;">
+                  Multi-Ecosystem Local Control
+                </h2>
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.6;">
+                  One unified protocol standard eliminates cloud outages and enables native voice control across all major platforms.
+                </p>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
-                ${products.slice(0, 8).map(p => `
-                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;transition:transform 0.3s,box-shadow 0.3s;">
+
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">01</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">Apple HomeKit</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Native Siri voice triggers and Home app automations</p>
+                </div>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">02</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">Google Home</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Seamless Fast Pair and Nest Hub integration</p>
+                </div>
+                <div style="background:${theme.bg};border:2px solid ${theme.primary};border-radius:12px;padding:22px 16px;text-align:center;box-shadow:0 8px 24px rgba(124,58,237,0.1);">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">03</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.primary};margin:0 0 6px;">Thread Mesh Hub</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Border router bridge uniting IP-based accessories</p>
+                </div>
+                <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:12px;padding:22px 16px;text-align:center;">
+                  <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};margin-bottom:6px;">04</div>
+                  <h4 style="font-size:0.88rem;font-weight:800;color:${theme.text};margin:0 0 6px;">Home Assistant</h4>
+                  <p style="font-size:0.76rem;color:${theme.textMuted};margin:0;line-height:1.5;">Full local telemetry via WebSocket and REST APIs</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Smart Devices Showcase -->
+          <section style="padding:70px 0;">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+                <div>
+                  <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">Connected Hardware Subsystems</span>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;">
+                    Smart Living Fleet
+                  </h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};">
+                  View Full Smart Ecosystem (${products.length}) →
+                </a>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
+                ${products.slice(0, 4).map(p => `
+                  <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(124,58,237,0.04);">
                     <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                      <div style="aspect-ratio:1;overflow:hidden;background:${theme.bg};position:relative;">
-                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;transition:transform 0.4s;">
-                        ${p.badge ? `<span style="position:absolute;top:12px;left:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:6px;">${esc(p.badge)}</span>` : ''}
-                      </div>
-                      <div style="padding:18px;">
-                        <div style="font-size:0.72rem;font-weight:700;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
-                        <h3 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
-                        <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                        <div style="font-size:0.78rem;color:${theme.primary};font-weight:700;">View Details →</div>
+                      <div style="aspect-ratio:1.1;background:#faf5ff;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
+                        <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
                       </div>
                     </a>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">
+                        <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                      </h3>
+                      <div style="font-size:0.8rem;color:${theme.textMuted};margin-bottom:14px;line-height:1.5;">${esc(p.material)} · ${esc(p.dimensions)}</div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
+                        <span style="font-weight:700;color:${theme.primary};">${esc(p.extra)}</span>
+                        <span style="font-weight:800;color:${theme.text};">MOQ: ${esc(p.moq)}</span>
+                      </div>
+                    </div>
                   </article>
                 `).join('')}
               </div>
@@ -314,90 +443,120 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
         </main>
       `;
     } else {
+      // 2. APPLE-STYLE CNC HARDWARE & GAN BENTO GRID HERO
       mainHtml = `
         <main class="electronics-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;">
-          <!-- Hero Banner -->
-          <section style="position:relative;overflow:hidden;padding:100px 0 80px;">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
-              <div>
-                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:20px;">
-                  ✦ Precision Tech Showcase
-                </div>
-                <h1 style="font-size:clamp(2.4rem, 5vw, 3.6rem);font-weight:900;line-height:1.1;color:${theme.text};letter-spacing:-0.03em;margin:0 0 20px;">
-                  ${esc(draft.copy[ctx.lang]?.headline || 'Precision Engineered Consumer Electronics')}
-                </h1>
-                <p style="font-size:1.08rem;line-height:1.7;color:${theme.textMuted};margin:0 0 32px;max-width:580px;">
-                  ${esc(draft.copy[ctx.lang]?.subtitle || 'From GaN fast-charging to hybrid ANC audio, engineered for the connected lifestyle.')}
-                </p>
-                <div style="display:flex;flex-wrap:wrap;gap:14px;">
-                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:12px;background:${theme.btnGradient};color:#ffffff;font-size:0.98rem;font-weight:800;box-shadow:0 6px 24px ${theme.accentGlow};transition:transform 0.2s;">
-                    Explore Collection ↗
-                  </a>
-                  <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;padding:15px 28px;border-radius:12px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.98rem;font-weight:700;">
-                    Our Story
-                  </a>
-                </div>
-              </div>
-              <div style="position:relative;">
-                <div style="aspect-ratio:4/3;border-radius:24px;overflow:hidden;background:${theme.cardBg};border:1px solid ${theme.cardBorder};box-shadow:0 24px 60px rgba(0,0,0,0.08);">
-                  <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;height:100%;object-fit:contain;padding:20px;" fetchpriority="high">
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Stats Row -->
-          <section style="padding:50px 0;border-top:1px solid ${theme.cardBorder};border-bottom:1px solid ${theme.cardBorder};">
-            <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:repeat(4, 1fr);gap:24px;">
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">FCC</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">Certified</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">US market compliance</div>
-              </div>
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">99.8%</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">QC Pass Rate</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">Automated AOI testing</div>
-              </div>
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">RoHS</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">Compliant</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">Lead-free manufacturing</div>
-              </div>
-
-              <div style="text-align:center;">
-                <div style="font-size:1.6rem;font-weight:900;color:${theme.primary};">ISO</div>
-                <div style="font-size:0.78rem;font-weight:700;color:${theme.text};margin:4px 0 2px;">14001 EMS</div>
-                <div style="font-size:0.72rem;color:${theme.textSub};">Environmental management</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Product Grid -->
-          <section style="padding:80px 0;">
+          <!-- Apple Bento Grid Canvas Hero -->
+          <section style="position:relative;padding:60px 0 80px;border-bottom:1px solid ${theme.cardBorder};">
             <div class="wrap" style="padding:0 24px;">
-              <div style="text-align:center;margin-bottom:50px;">
-                <div style="font-size:0.78rem;font-weight:800;color:${theme.primary};letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Product Showcase</div>
-                <h2 style="font-size:clamp(1.8rem, 3vw, 2.6rem);font-weight:900;color:${theme.text};margin:0;">Featured Products</h2>
+              <div style="max-width:760px;margin-bottom:40px;">
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.78rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;">
+                  ✦ Unibody 6063 Aluminum · GaN III Semiconductor Architecture
+                </div>
+                <h1 style="font-size:clamp(2.2rem, 4.2vw, 3.4rem);font-weight:900;line-height:1.15;color:${theme.text};letter-spacing:-0.03em;margin:0 0 16px;">
+                  ${esc(draft.copy[ctx.lang]?.headline || 'Precision Engineered Power: 140W PD 3.1 GaN III')}
+                </h1>
+                <p style="font-size:1.08rem;line-height:1.7;color:${theme.textMuted};margin:0;max-width:620px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || 'Precision CNC machined from aerospace 6063 aluminum alloy with multi-point graphene thermal dissipation and automated SMT packaging.')}
+                </p>
               </div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;">
-                ${products.slice(0, 8).map(p => `
-                  <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;overflow:hidden;transition:transform 0.3s,box-shadow 0.3s;">
+
+              <!-- Bento Grid Architecture -->
+              <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:24px;margin-bottom:28px;">
+                <!-- Bento Cell 1: Hero Hardware Lead -->
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:36px;box-shadow:0 16px 40px rgba(15,23,42,0.06);display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;align-items:center;">
+                  <div>
+                    <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.04em;">AEROSPACE UNIBODY</span>
+                    <h3 style="font-size:1.6rem;font-weight:900;color:${theme.text};margin:8px 0 12px;line-height:1.2;">
+                      ${esc(heroProduct.name)}
+                    </h3>
+                    <p style="font-size:0.88rem;color:${theme.textMuted};line-height:1.6;margin-bottom:20px;">
+                      ${esc(heroProduct.desc)}
+                    </p>
+                    <div style="display:flex;gap:12px;">
+                      <a href="${path('products/' + heroProduct.id + '/index.html')}" ${navAttrs('detail', heroProduct.id)} style="text-decoration:none;padding:12px 24px;border-radius:8px;background:${theme.btnGradient};color:#fff;font-size:0.85rem;font-weight:800;">
+                        Engineering Dossier →
+                      </a>
+                    </div>
+                  </div>
+                  <div style="background:#f1f5f9;border-radius:16px;padding:20px;text-align:center;border:1px solid ${theme.cardBorder};">
+                    <img src="${esc(heroProduct.img)}" alt="${esc(heroProduct.name)}" style="width:100%;max-height:220px;object-fit:contain;" fetchpriority="high">
+                  </div>
+                </div>
+
+                <!-- Bento Cell 2: GaN III Efficiency Telemetry -->
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:32px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 16px 40px rgba(15,23,42,0.04);">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                      <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};text-transform:uppercase;">Semiconductor Telemetry</span>
+                      <span style="font-family:monospace;font-size:0.72rem;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:4px;">94.5% EFFICIENCY</span>
+                    </div>
+                    <div style="font-size:3rem;font-weight:900;color:${theme.text};line-height:1;margin-bottom:8px;">140W</div>
+                    <div style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;">Full USB-C Power Delivery 3.1 Extended Power Range (EPR) 28V/5A output.</div>
+                  </div>
+                  <div style="padding-top:20px;border-top:1px solid ${theme.cardBorder};display:flex;justify-content:space-between;font-size:0.78rem;">
+                    <span>Operating Temp: <strong style="color:${theme.primary};">&lt; 48°C</strong></span>
+                    <span>SMT Yield: <strong style="color:${theme.text};">99.8%</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bento Lower Row: 3 Modular Specs -->
+              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;">
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">PORT ARCHITECTURE</div>
+                  <h4 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 6px;">3C + 1A Dynamic Split</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">Simultaneous high-speed fast charging for 2 laptops and 2 mobile devices.</p>
+                </div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">THERMAL DISSIPATION</div>
+                  <h4 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 6px;">Graphene Phase Change</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">Internal copper potting and dual graphene sheets for uniform thermal dissipation.</p>
+                </div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:24px;">
+                  <div style="font-size:0.75rem;font-weight:800;color:${theme.primary};margin-bottom:6px;">GLOBAL COMPLIANCE</div>
+                  <h4 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 6px;">UL / CE / FCC / PSE</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">Over-voltage, over-current, short-circuit, and anti-interference protections.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Modular Hardware Grid -->
+          <section style="padding:70px 0;">
+            <div class="wrap" style="padding:0 24px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+                <div>
+                  <span style="font-size:0.75rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;">CNC Hardware Models</span>
+                  <h2 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:6px 0 0;">
+                    Production Hardware Series
+                  </h2>
+                </div>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};">
+                  Explore Full Hardware Matrix (${products.length}) →
+                </a>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:24px;">
+                ${products.slice(0, 4).map(p => `
+                  <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,0.04);">
                     <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                      <div style="aspect-ratio:1;overflow:hidden;background:linear-gradient(135deg, ${theme.bg}, ${theme.cardBg});position:relative;">
-                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:20px;transition:transform 0.4s;">
-                        ${p.badge ? `<span style="position:absolute;top:12px;right:12px;background:${theme.primary};color:#fff;font-size:0.7rem;font-weight:800;padding:4px 10px;border-radius:6px;">${esc(p.badge)}</span>` : ''}
-                      </div>
-                      <div style="padding:18px;">
-                        <div style="font-size:0.72rem;font-weight:700;color:${theme.primary};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${esc(p.categoryNameEn)}</div>
-                        <h3 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">${esc(p.name)}</h3>
-                        <p style="font-size:0.82rem;color:${theme.textMuted};line-height:1.5;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                        <div style="font-size:0.78rem;color:${theme.primary};font-weight:700;">View Details →</div>
+                      <div style="aspect-ratio:1.1;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                        <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
+                        <span style="position:absolute;top:12px;left:12px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
                       </div>
                     </a>
+                    <div style="padding:18px;">
+                      <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                      <h3 style="font-size:1.05rem;font-weight:800;color:${theme.text};margin:0 0 8px;line-height:1.3;">
+                        <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                      </h3>
+                      <div style="font-size:0.8rem;color:${theme.textMuted};margin-bottom:14px;line-height:1.5;">${esc(p.material)} · ${esc(p.dimensions)}</div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
+                        <span style="font-weight:700;color:${theme.primary};">${esc(p.extra)}</span>
+                        <span style="font-weight:800;color:${theme.text};">MOQ: ${esc(p.moq)}</span>
+                      </div>
+                    </div>
                   </article>
                 `).join('')}
               </div>
@@ -407,266 +566,1009 @@ export function renderElectronicsPage(ctx: ThemeContext, isVideo: boolean): stri
       `;
     }
   } else if (page === 'catalog') {
-    mainHtml = `
-      <main class="electronics-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="margin-bottom:40px;">
-            <h1 style="font-size:clamp(1.8rem, 3vw, 2.4rem);font-weight:900;color:${theme.text};margin:0 0 8px;">${esc(ui.catalog)}</h1>
-            <p style="font-size:0.95rem;color:${theme.textMuted};margin:0;">Browse our complete range of products for B2B wholesale and OEM sourcing.</p>
-          </header>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px;">
-            ${products.map(p => `
-              <article style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;transition:transform 0.3s,box-shadow 0.3s;">
-                <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
-                  <div style="aspect-ratio:1;overflow:hidden;background:${theme.bg};">
-                    <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:contain;padding:16px;transition:transform 0.3s;">
-                  </div>
-                  <div style="padding:16px;">
-                    <div style="font-size:0.72rem;font-weight:700;color:${theme.primary};text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
-                    <h3 style="font-size:0.92rem;font-weight:800;color:${theme.text};margin:0 0 6px;line-height:1.3;">${esc(p.name)}</h3>
-                    <p style="font-size:0.8rem;color:${theme.textMuted};margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${esc(p.desc)}</p>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                      <span style="font-size:0.74rem;color:${theme.textSub};">MOQ: ${esc(p.moq)}</span>
-                      <span style="font-size:0.78rem;color:${theme.primary};font-weight:700;">Details →</span>
+    if (!isVideo) {
+      // CNC HARDWARE POWER MATRIX CATALOG
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="border-bottom:2px solid ${theme.cardBorder};padding-bottom:28px;margin-bottom:36px;">
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">
+                Aerospace Hardware Matrix · SMT Certified Fleet
+              </div>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 16px;letter-spacing:-0.03em;">
+                CNC Aluminum &amp; GaN Hardware Catalog
+              </h1>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:0.8rem;font-weight:700;">
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.primary};color:#fff;">All Power Hardware (${products.length})</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">140W PD 3.1 GaN III</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">USB4 40Gbps Docks</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Qi2 Magnetic Batteries</span>
+                <span style="padding:7px 16px;border-radius:6px;background:${theme.cardBg};color:${theme.textMuted};border:1px solid ${theme.cardBorder};">Hybrid ANC Audio</span>
+              </div>
+            </div>
+
+            <!-- Hardware Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:28px;">
+              ${products.map(p => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,0.04);">
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;">
+                    <div style="aspect-ratio:1.1;background:#f8fafc;position:relative;display:flex;align-items:center;justify-content:center;border-bottom:1px solid ${theme.cardBorder};">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:80%;height:80%;object-fit:contain;">
+                      <span style="position:absolute;top:10px;left:10px;background:#fff;border:1px solid ${theme.cardBorder};color:${theme.primary};font-size:0.68rem;font-family:monospace;font-weight:800;padding:2px 8px;border-radius:4px;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:10px;right:10px;background:${theme.pillBg};color:${theme.pillText};font-size:0.68rem;font-weight:800;padding:2px 8px;border-radius:4px;">6063 CNC</span>
+                    </div>
+                  </a>
+                  <div style="padding:20px;">
+                    <div style="font-size:0.72rem;color:${theme.textSub};font-weight:700;text-transform:uppercase;margin-bottom:4px;">${esc(p.categoryNameEn)}</div>
+                    <h3 style="font-size:1.08rem;font-weight:800;color:${theme.text};margin:0 0 10px;line-height:1.3;">
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                    </h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;background:${theme.bg};padding:10px;border-radius:8px;font-size:0.75rem;margin-bottom:14px;">
+                      <div>
+                        <span style="color:${theme.textSub};display:block;">Materials:</span>
+                        <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                      </div>
+                      <div>
+                        <span style="color:${theme.textSub};display:block;">Dimensions:</span>
+                        <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                      </div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid ${theme.cardBorder};font-size:0.78rem;">
+                      <span style="color:${theme.primary};font-weight:800;">${esc(p.extra)}</span>
+                      <strong style="color:${theme.text};">MOQ: ${esc(p.moq)}</strong>
                     </div>
                   </div>
-                </a>
-              </article>
-            `).join('')}
-          </div>
-        </section>
-      </main>
-    `;
-  } else if (page === 'detail') {
-    const prodId = ctx.options.productId || products[0].id;
-    const p = products.find(item => item.id === prodId) || products[0];
-    mainHtml = `
-      <main class="electronics-main" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <div style="margin-bottom:20px;">
-            <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="font-size:0.86rem;font-weight:800;color:${theme.primary};text-decoration:none;">← Back to Catalog</a>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:50px;align-items:start;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:24px;padding:36px;box-shadow:0 10px 30px rgba(0,0,0,0.04);">
-            <div style="background:${theme.bg};border-radius:20px;padding:40px;display:flex;align-items:center;justify-content:center;border:1px solid ${theme.cardBorder};position:relative;">
-              ${p.badge ? `<span style="position:absolute;top:20px;left:20px;background:${theme.primary};color:#fff;font-size:0.75rem;font-weight:800;padding:5px 12px;border-radius:6px;">${esc(p.badge)}</span>` : ''}
-              <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:380px;object-fit:contain;" loading="eager" fetchpriority="high">
-            </div>
-            <div>
-              <div style="font-size:0.82rem;font-weight:800;color:${theme.primary};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">${p.categoryNameEn} · ${esc(p.tagline)}</div>
-              <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};line-height:1.2;margin:0 0 14px;">${esc(p.name)}</h1>
-              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.65;margin:0 0 24px;">${esc(p.desc)}</p>
-              <div style="background:${theme.bg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;margin-bottom:28px;">
-                <h3 style="font-size:0.92rem;font-weight:900;color:${theme.text};margin:0 0 14px;text-transform:uppercase;letter-spacing:0.04em;">Specifications</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.84rem;color:${theme.textMuted};">
-                  <div><strong>Material:</strong><br>${esc(p.material)}</div>
-                  <div><strong>Dimensions:</strong><br>${esc(p.dimensions)}</div>
-                  <div><strong>Feature:</strong><br>${esc(p.extra)}</div>
-                  <div><strong>MOQ:</strong><br><span style="color:${theme.primary};font-weight:800;">${esc(p.moq)}</span></div>
-                </div>
-              </div>
-              <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                <a href="${path('contact/index.html')}?productId=${esc(encodeURIComponent(p.id))}" ${navAttrs('contact', p.id)} style="background:${theme.btnGradient};color:#ffffff;font-weight:800;padding:15px 32px;border-radius:10px;font-size:0.92rem;box-shadow:0 6px 20px ${theme.accentGlow};text-decoration:none;">
-                  Request Quote & Sample ↗
-                </a>
-                <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-weight:800;padding:15px 28px;border-radius:10px;font-size:0.92rem;text-decoration:none;">
-                  Custom OEM Inquiry
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-    `;
-  } else if (page === 'about') {
-    const headline = getAboutHeadline(company, `${company.name} · Precision Engineering`);
-    const storyParagraphs = getAboutStoryParagraphs(company, draft.copy[ctx.lang]?.about || '');
-    const highlights = parseAboutHighlights(company.aboutHighlights, [
-      { value: company.establishedYear || '2018', num: parseInt(company.establishedYear || '2018', 10), label: 'Established', desc: 'US market compliance' },
-      { value: 'FCC', num: 100, label: 'Certified', desc: 'US market compliance' },
-      { value: '99.8%', num: 99, label: 'QC Pass Rate', desc: 'Automated AOI testing' },
-      { value: 'ISO', num: 100, label: '14001 EMS', desc: 'Environmental management' },
-    ]);
-    const { primary: primaryImage } = getAboutImages(ctx, path('assets/about-reference.jpg'), '');
-    const pipeline = isVideo ? [['AI/ML Training', 'On-device machine learning model optimization'], ['PCB Design', 'Multi-layer HDI PCB with impedance control'], ['EMC Testing', 'Electromagnetic compatibility chamber testing'], ['Thermal Analysis', 'CFD simulation and thermal management validation'], ['OTA Update', 'Over-the-air firmware update infrastructure']] : [['IC Design', 'Custom ASIC and firmware development'], ['SMT Assembly', 'Automated surface-mount placement and reflow'], ['QC & Testing', 'Automated optical and functional test stations'], ['Firmware Flash', 'Production firmware programming and calibration'], ['Certification', 'FCC/CE/UL/RoHS compliance testing']];
-    mainHtml = `
-      <main class="electronics-main" data-wr-page="about" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
-        <section data-wr-modern-about class="wr-modern-about-responsive wrap" style="padding:40px 24px 80px;">
-          <!-- Hero Section -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:48px;align-items:center;margin-bottom:60px;">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;">
-                ${esc(ui.about)}
-              </div>
-              <h1 style="font-size:clamp(2rem, 4vw, 3rem);font-weight:900;line-height:1.15;color:${theme.text};margin:0 0 16px;">
-                ${esc(headline)}
-              </h1>
-              ${storyParagraphs.map(p => `<p style="font-size:0.98rem;line-height:1.7;color:${theme.textMuted};margin:0 0 14px;">${esc(p)}</p>`).join('')}
-            </div>
-            <div style="border-radius:20px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.08);">
-              <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:400px;object-fit:cover;display:block;" loading="lazy">
-            </div>
-          </div>
-
-          <!-- Highlight Stats -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-bottom:60px;">
-            ${highlights.map(h => `
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;text-align:center;backdrop-filter:blur(10px);">
-                <div style="font-size:1.8rem;font-weight:900;color:${theme.primary};">${esc(h.value)}</div>
-                <div style="font-size:0.82rem;font-weight:700;color:${theme.text};margin:6px 0 4px;">${esc(h.label)}</div>
-                <div style="font-size:0.74rem;color:${theme.textSub};">${esc(h.desc)}</div>
-              </div>
-            `).join('')}
-          </div>
-
-          <!-- Pipeline -->
-          <div style="margin-bottom:60px;">
-            <h2 style="font-size:1.4rem;font-weight:900;color:${theme.text};text-align:center;margin:0 0 36px;">
-              ${isVideo ? 'Engineering & Quality Pipeline' : 'Craftsmanship Pipeline'}
-            </h2>
-            <div style="display:flex;align-items:flex-start;justify-content:center;gap:12px;flex-wrap:wrap;">
-              ${pipeline.map(([title, desc], i) => `
-                <div style="text-align:center;flex:1;min-width:140px;">
-                  <div style="width:44px;height:44px;border-radius:50%;background:${theme.pillBg};display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.1rem;font-weight:900;color:${theme.primary};">${i + 1}</div>
-                  <div style="font-size:0.82rem;font-weight:800;color:${theme.text};margin-bottom:4px;">${title}</div>
-                  <div style="font-size:0.76rem;color:${theme.textSub};line-height:1.5;">${desc}</div>
-                </div>
-                ${i < pipeline.length - 1 ? `<div style="width:40px;height:2px;background:${theme.cardBorder};flex-shrink:0;margin-top:22px;"></div>` : ''}
+                </article>
               `).join('')}
             </div>
           </div>
-
-          <!-- CTA -->
-          <div style="text-align:center;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:40px;backdrop-filter:blur(10px);">
-            <h2 style="font-size:1.3rem;font-weight:900;color:${theme.text};margin:0 0 12px;">Ready to Partner?</h2>
-            <p style="font-size:0.92rem;color:${theme.textMuted};margin:0 0 24px;">Contact our B2B team for wholesale pricing, OEM customization, and sample requests.</p>
-            <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;text-decoration:none;padding:14px 32px;border-radius:10px;background:${theme.btnGradient};color:#ffffff;font-size:0.96rem;font-weight:800;box-shadow:0 6px 20px ${theme.accentGlow};">
-              Start a Conversation ↗
-            </a>
-          </div>
-        </section>
-      </main>
-    `;
-  } else if (page === 'contact') {
-    const fields = isVideo ? [{ label: 'Smart Platform', options: 'Matter/Thread|Alexa|Google Home|HomeKit|Custom' }, { label: 'Battery Chemistry', options: 'Li-Po|LiFePO4|Li-Ion|Supercapacitor' }, { label: 'OEM/ODM Scope', options: 'Full Turnkey|Semi-CKD|Design Only|Certification Only' }] : [{ label: 'Product Type', options: 'Audio|Wearable|Charger|Lighting|Power|Accessory' }, { label: 'Certification', options: 'FCC|CE|UL|MFi|Qi|All' }, { label: 'Connectivity', options: 'Bluetooth|WiFi|USB-C|Lightning|Combo' }];
-    mainHtml = `
-      <main class="electronics-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding-top:40px;">
-        <section class="wrap" style="padding:40px 24px 80px;">
-          <header style="text-align:center;margin-bottom:50px;">
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">
-              ${esc(ui.contact)}
+        </main>
+      `;
+    } else {
+      // WHOLE-HOUSE SPATIAL IOT NODE MATRIX & AUTOMATION DECK
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="catalog" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 90px;">
+          <div class="wrap" style="padding:0 24px;">
+            <!-- Top IoT Mesh Console HUD Header Bar -->
+            <div style="background:#7c3aed;color:#ffffff;padding:10px 20px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.78rem;font-weight:700;flex-wrap:wrap;gap:10px;">
+              <span>[AIOT SPATIAL MESH: ACTIVE] // GATEWAY #01 · 254 NODES ONLINE · THREAD 1.3</span>
+              <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;">LATENCY: 8.4MS · ZERO-CLOUD LOCAL PING</span>
             </div>
-            <h1 style="font-size:clamp(2rem, 4vw, 2.8rem);font-weight:900;color:${theme.text};margin:0 0 12px;">Start Your B2B Sourcing Inquiry</h1>
-            <p style="font-size:1.02rem;color:${theme.textMuted};margin:0;">Submit your requirements and our team will respond within 24 hours with pricing and sample options.</p>
-          </header>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:40px;">
-            <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;box-shadow:0 8px 24px rgba(0,0,0,0.04);">
-              <h2 style="font-size:1.2rem;font-weight:900;color:${theme.text};margin:0 0 20px;">Inquiry Form</h2>
-              <form style="display:grid;gap:18px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">Company Name</label>
-                    <input type="text" disabled value="${esc(company.name)}" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
+            <!-- Protocol Filter Header Bar -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-top:none;border-radius:0 0 16px 16px;padding:28px 32px;margin-bottom:36px;box-shadow:0 8px 30px rgba(124,58,237,0.04);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;">
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:4px;background:#f3e8ff;color:#6d28d9;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">
+                    Matter 1.3 over Thread Ecosystem
                   </div>
-                  <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">Email</label>
-                    <input type="email" disabled value="${esc(company.email)}" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
+                  <h1 style="font-size:clamp(1.8rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};margin:0;letter-spacing:-0.03em;">
+                    Smart Living Subsystem &amp; Node Index
+                  </h1>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:monospace;font-size:0.75rem;font-weight:700;">
+                  <span style="padding:8px 14px;border-radius:6px;background:#7c3aed;color:#ffffff;border:1px solid #7c3aed;cursor:pointer;">[NODE-01: ALL SMART NODES (${products.length})]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#faf5ff;color:#6d28d9;border:1px solid ${theme.cardBorder};cursor:pointer;">[NODE-02: BORDER ROUTERS]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#faf5ff;color:#6d28d9;border:1px solid ${theme.cardBorder};cursor:pointer;">[NODE-03: SENSORS &amp; CLIMATE]</span>
+                  <span style="padding:8px 14px;border-radius:6px;background:#faf5ff;color:#6d28d9;border:1px solid ${theme.cardBorder};cursor:pointer;">[NODE-04: ROBOTIC APPLIANCES]</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bespoke IoT Node Cards Grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:28px;">
+              ${products.map((p, idx) => `
+                <article data-wr-product-id="${esc(p.id)}" style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(124,58,237,0.06);display:flex;flex-direction:column;transition:transform 0.2s ease, box-shadow 0.2s ease;">
+                  <!-- Top Node Status HUD -->
+                  <div style="background:#faf5ff;border-bottom:1px solid ${theme.cardBorder};padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-family:monospace;font-size:0.72rem;">
+                    <span style="color:#7c3aed;font-weight:800;">NODE-TH${idx + 1} // THREAD 1.3</span>
+                    <span style="background:#f3e8ff;color:#6d28d9;padding:2px 6px;border-radius:4px;font-weight:700;">RSSI: -42 DBM</span>
+                  </div>
+
+                  <!-- Optical CAD Viewport -->
+                  <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;background:linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);padding:20px;position:relative;border-bottom:1px solid ${theme.cardBorder};">
+                    <div style="aspect-ratio:1.2;position:relative;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#ffffff;border:1px dashed rgba(124,58,237,0.25);overflow:hidden;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" loading="lazy" style="width:82%;height:82%;object-fit:contain;display:block;">
+                      <span style="position:absolute;top:10px;left:10px;background:#7c3aed;color:#ffffff;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.badge)}</span>
+                      <span style="position:absolute;bottom:10px;right:10px;background:#f3e8ff;color:#6d28d9;font-size:0.68rem;font-weight:800;padding:3px 8px;border-radius:4px;font-family:monospace;">${esc(p.extra)}</span>
+                    </div>
+                  </a>
+
+                  <!-- Node Card Body -->
+                  <div style="padding:22px;flex:1;display:flex;flex-direction:column;">
+                    <div style="font-family:monospace;font-size:0.72rem;color:#0284c7;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
+                      TOPOLOGY LAYER // ${esc(p.categoryNameEn)}
+                    </div>
+                    <h3 style="font-size:1.18rem;font-weight:900;color:${theme.text};margin:0 0 10px;line-height:1.3;">
+                      <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;color:${theme.text};">${esc(p.name)}</a>
+                    </h3>
+                    <p style="font-size:0.85rem;color:${theme.textMuted};line-height:1.6;margin:0 0 18px;flex:1;">
+                      ${esc(p.desc)}
+                    </p>
+
+                    <!-- Dual IoT Telemetry Meters -->
+                    <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:8px;padding:12px;margin-bottom:18px;">
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:6px;">
+                        <span style="color:#64748b;font-weight:700;">Local Edge Latency:</span>
+                        <strong style="color:#7c3aed;font-family:monospace;">&lt; 12ms Peer-to-Peer</strong>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;">
+                        <span style="color:#64748b;font-weight:700;">Dynamic Mesh Capacity:</span>
+                        <strong style="color:#0891b2;font-family:monospace;">254 Self-Healing Nodes</strong>
+                      </div>
+                    </div>
+
+                    <!-- Node Parameter Specs Strip -->
+                    <div style="font-size:0.78rem;color:${theme.textSub};border-top:1px solid ${theme.cardBorder};padding-top:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+                      <span>Protocol: <strong style="color:${theme.text};">${esc(p.material.slice(0, 22))}</strong></span>
+                      <span>MOQ: <strong style="color:#7c3aed;">${esc(p.moq)}</strong></span>
+                    </div>
+
+                    <a href="${path('products/' + p.id + '/index.html')}" ${navAttrs('detail', p.id)} style="text-decoration:none;display:block;text-align:center;padding:12px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.85rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;box-shadow:0 4px 14px rgba(124,58,237,0.18);">
+                      INSPECT NODE SPECIFICATIONS ↗
+                    </a>
+                  </div>
+                </article>
+              `).join('')}
+            </div>
+          </div>
+        </main>
+      `;
+    }
+  } else if (page === 'detail') {
+    const p = products.find(item => item.id === ctx.options.productId) || heroProduct;
+    if (!isVideo) {
+      // CNC HARDWARE DETAIL: MULTI-PORT POWER SPLIT TABLE + 180-MESH SANDBLAST GALLERY
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:50px 0 80px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="margin-bottom:28px;">
+              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;font-size:0.88rem;font-weight:800;color:${theme.primary};display:inline-flex;align-items:center;gap:6px;">
+                ← Return to CNC Hardware Catalog
+              </a>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(320px, 1fr) minmax(360px, 1.2fr);gap:50px;align-items:start;margin-bottom:60px;">
+              <!-- Left Column: Hardware Macro Inspection & Gallery -->
+              <div>
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:32px;position:relative;box-shadow:0 12px 32px rgba(15,23,42,0.06);text-align:center;">
+                  <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" style="width:100%;max-height:460px;object-fit:contain;display:inline-block;" fetchpriority="high">
+                  <div style="position:absolute;top:16px;right:16px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;padding:4px 10px;border-radius:6px;font-family:monospace;">
+                    180-MESH SANDBLAST
+                  </div>
+                  <!-- Thumbnails -->
+                  <div class="wr-detail-thumbs" style="display:flex;justify-content:center;gap:12px;margin-top:24px;">
+                    <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid ${theme.primary};border-radius:8px;padding:4px;background:#fff;cursor:pointer;">
+                      <img src="${esc(p.img)}" alt="${esc(p.name)}" style="width:54px;height:54px;object-fit:cover;">
+                    </button>
                   </div>
                 </div>
-                ${fields.map(f => `
+
+                <!-- Hardware Performance Metrics -->
+                <div style="margin-top:24px;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:20px;display:flex;justify-content:space-around;text-align:center;font-size:0.78rem;">
                   <div>
-                    <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">${f.label}</label>
-                    <select disabled style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
-                      ${f.options.split('|').map(o => `<option>${o}</option>`).join('')}
-                    </select>
+                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">94.5%</div>
+                    <div style="color:${theme.textSub};">GaN III Efficiency</div>
                   </div>
-                `).join('')}
+                  <div style="width:1px;background:${theme.cardBorder};"></div>
+                  <div>
+                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">&lt; 48°C</div>
+                    <div style="color:${theme.textSub};">Full Load Temp</div>
+                  </div>
+                  <div style="width:1px;background:${theme.cardBorder};"></div>
+                  <div>
+                    <div style="font-weight:900;color:${theme.primary};font-size:1.1rem;">${esc(p.moq)}</div>
+                    <div style="color:${theme.textSub};">OEM MOQ</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Engineering Specs & Multi-Port Power Split -->
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
+                  ${esc(p.categoryNameEn)} · Commercial Hardware
+                </div>
+                <h1 style="font-size:clamp(1.9rem, 3vw, 2.7rem);font-weight:900;color:${theme.text};margin:0 0 14px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:1.05rem;color:${theme.textMuted};line-height:1.75;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <!-- Hardware Engineering Spec Grid -->
+                <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;margin-bottom:24px;">
+                  <h3 style="font-size:0.9rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:${theme.primary};margin:0 0 16px;">
+                    Hardware Engineering Specifications
+                  </h3>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.85rem;">
+                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Enclosure &amp; Silicon</span>
+                      <strong style="color:${theme.text};">${esc(p.material)}</strong>
+                    </div>
+                    <div style="border-bottom:1px solid ${theme.cardBorder};padding-bottom:10px;">
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Dimensions &amp; Weight</span>
+                      <strong style="color:${theme.text};">${esc(p.dimensions)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Fast Charging Protocols</span>
+                      <strong style="color:${theme.primary};">${esc(p.extra)}</strong>
+                    </div>
+                    <div>
+                      <span style="color:${theme.textSub};display:block;margin-bottom:2px;">Production MOQ</span>
+                      <strong style="color:${theme.text};">${esc(p.moq)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dynamic Multi-Port Power Split Table -->
+                <div style="background:#f1f5f9;border:1px solid ${theme.cardBorder};border-radius:14px;padding:20px;margin-bottom:28px;">
+                  <h4 style="font-size:0.85rem;font-weight:800;color:${theme.text};margin:0 0 10px;">Dynamic Power Distribution Split Matrix</h4>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;font-size:0.8rem;text-align:center;">
+                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                      <div style="color:${theme.textSub};">Single Port</div>
+                      <strong style="color:${theme.primary};font-size:0.95rem;">USB-C1: 140W</strong>
+                    </div>
+                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                      <div style="color:${theme.textSub};">Dual Port</div>
+                      <strong style="color:${theme.text};font-size:0.95rem;">100W + 40W</strong>
+                    </div>
+                    <div style="background:#fff;padding:10px;border-radius:8px;border:1px solid ${theme.cardBorder};">
+                      <div style="color:${theme.textSub};">Triple Port</div>
+                      <strong style="color:${theme.text};font-size:0.95rem;">65W + 45W + 22.5W</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;padding:14px 28px;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;box-shadow:0 4px 14px ${theme.accentGlow};">
+                    Request Hardware CAD &amp; RFQ ↗
+                  </a>
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:14px 24px;border-radius:8px;background:${theme.cardBg};color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.92rem;font-weight:700;">
+                    View All Hardware
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    } else {
+      // 3-TIER IOT NODE TELEMETRY WORKSTATION & MESH BENCHMARK
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="detail" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:40px 0 90px;">
+          <div class="wrap" style="padding:0 24px;">
+            <!-- Tier 1: Ecosystem Status & Badges -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:28px;">
+              <div style="display:flex;align-items:center;gap:8px;font-family:monospace;font-size:0.8rem;color:${theme.textSub};">
+                <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textSub};">IOT_ECOSYSTEM</a>
+                <span>//</span>
+                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textSub};">SPATIAL_AUTOMATION</a>
+                <span>//</span>
+                <span style="color:#7c3aed;font-weight:800;">${esc(p.id.toUpperCase())}</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="background:#f3e8ff;color:#6d28d9;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.72rem;font-weight:800;">MATTER 1.3 CERTIFIED</span>
+                <span style="background:#e0f2fe;color:#0369a1;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:0.72rem;font-weight:800;">THREAD GROUP TESTED &amp; VERIFIED</span>
+              </div>
+            </div>
+
+            <!-- Tier 2: Split Workstation -->
+            <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:start;margin-bottom:48px;">
+              <!-- Left Column: Viewport & Signal Telemetry -->
+              <div>
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;overflow:hidden;box-shadow:0 12px 36px rgba(124,58,237,0.06);position:relative;">
+                  <!-- Live Telemetry Status Bar -->
+                  <div style="background:#7c3aed;color:#ffffff;padding:8px 16px;display:flex;justify-content:space-between;font-family:monospace;font-size:0.75rem;font-weight:700;">
+                    <span>[LIVE RF TELEMETRY] TX: +20 DBM // FREQ: 2.405-2.480 GHZ</span>
+                    <span>MESH: PAIRED</span>
+                  </div>
+
+                  <div style="position:relative;background:#faf5ff;padding:28px;display:flex;align-items:center;justify-content:center;">
+                    <img id="wr-detail-main-img" src="${esc(p.img)}" alt="${esc(p.name)}" data-wr-material-image="product-main" data-wr-material-product="${esc(p.id)}" style="width:100%;height:440px;object-fit:contain;display:block;">
+                    <div style="position:absolute;top:20px;left:20px;background:#ffffff;border:1px solid ${theme.cardBorder};color:#7c3aed;padding:6px 12px;border-radius:6px;font-family:monospace;font-size:0.75rem;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                      ${esc(p.badge)}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Channel Switcher Thumbnails -->
+                <div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:16px;">
+                  <button type="button" class="wr-detail-thumb active" data-wr-material-thumb="" style="border:2px solid #7c3aed;border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(p.img)}" alt="Node Profile" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:#7c3aed;display:block;margin-top:4px;">CH-1: NODE PROFILE</span>
+                  </button>
+                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(products[1]?.img || p.img)}" alt="RF Antenna" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:${theme.textSub};display:block;margin-top:4px;">CH-2: RF ANTENNA</span>
+                  </button>
+                  <button type="button" class="wr-detail-thumb" data-wr-material-thumb="" style="border:1px solid ${theme.cardBorder};border-radius:8px;overflow:hidden;background:#fff;padding:6px;cursor:pointer;text-align:center;">
+                    <img src="${esc(products[2]?.img || p.img)}" alt="PCB Architecture" style="width:100%;aspect-ratio:1.2;object-fit:contain;display:block;">
+                    <span style="font-family:monospace;font-size:0.68rem;font-weight:800;color:${theme.textSub};display:block;margin-top:4px;">CH-3: PCB ARCH</span>
+                  </button>
+                </div>
+
+                <!-- Local Latency vs Multi-Hop Packet Delivery Matrix -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-top:20px;box-shadow:0 4px 16px rgba(124,58,237,0.04);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;">
+                      LOCAL LATENCY &amp; MULTI-HOP PACKET DELIVERY BENCHMARK
+                    </span>
+                    <span style="font-family:monospace;font-size:0.7rem;color:#0891b2;font-weight:700;">THREAD 1.3 MESH</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">8.2 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">1-Hop Direct</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">99.99% Reliability</div>
+                    </div>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">14.6 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">3-Hop Mesh</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">99.98% Local Rx</div>
+                    </div>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">18.5 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:${theme.text};margin-top:2px;">Border Router</div>
+                      <div style="font-size:0.68rem;color:${theme.textSub};margin-top:4px;">Zero Cloud Hop</div>
+                    </div>
+                    <div style="background:#f0fdf4;border-radius:8px;padding:12px 6px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#059669;">42.0 ms</div>
+                      <div style="font-size:0.7rem;font-weight:700;color:#059669;margin-top:2px;">TLS Fallback</div>
+                      <div style="font-size:0.68rem;color:#059669;margin-top:4px;">AES-128 Encrypted</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Architecture Matrix & Whole-Home Calculator -->
+              <div>
+                <div style="display:inline-block;padding:3px 10px;border-radius:4px;background:#f3e8ff;color:#6d28d9;font-size:0.75rem;font-weight:800;font-family:monospace;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;">
+                  SMART HARDWARE DOSSIER // MATTER 1.3
+                </div>
+                <h1 style="font-size:clamp(1.9rem, 3.2vw, 2.5rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;">
+                  ${esc(p.name)}
+                </h1>
+                <p style="font-size:0.95rem;color:${theme.textMuted};line-height:1.7;margin:0 0 24px;">
+                  ${esc(p.desc)}
+                </p>
+
+                <!-- 4-Cell AIoT Micro-Architecture Matrix -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">CORE COMPUTING</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">Dual-Core RISC-V + NPU</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">WIRELESS PROTOCOL</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">${esc(p.material)}</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">HARDWARE SECURITY</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">Secure Boot · AES-128</div>
+                  </div>
+                  <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:10px;padding:14px;">
+                    <div style="font-family:monospace;font-size:0.7rem;color:${theme.textSub};">ECOSYSTEM SUPPORT</div>
+                    <div style="font-size:0.92rem;font-weight:800;color:${theme.text};margin-top:2px;">Apple, Google, SmartThings</div>
+                  </div>
+                </div>
+
+                <!-- Whole-Home Deployment Logistics Calculator -->
+                <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:14px;padding:22px;margin-bottom:28px;box-shadow:0 4px 16px rgba(124,58,237,0.04);">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:12px;">
+                    WHOLE-HOME &amp; HOSPITALITY DEPLOYMENT TIERS
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;text-align:center;">
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">50 Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Apartment Pilot</div>
+                    </div>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">200 Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Hospitality Floor</div>
+                    </div>
+                    <div style="background:#faf5ff;border-radius:8px;padding:12px 8px;">
+                      <div style="font-size:1.15rem;font-weight:900;color:#7c3aed;">2,500+ Units</div>
+                      <div style="font-size:0.72rem;color:${theme.textSub};margin-top:2px;">Global Wholesale</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Terminal -->
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <a href="${path('contact/index.html')}?productId=${encodeURIComponent(p.id)}" ${navAttrs('contact')} style="text-decoration:none;flex:1;min-width:240px;padding:16px;text-align:center;border-radius:8px;background:${theme.btnGradient};color:#ffffff;font-size:0.92rem;font-weight:800;font-family:monospace;letter-spacing:0.03em;box-shadow:0 6px 20px ${theme.accentGlow};">
+                    REQUEST AIOT DFM &amp; SDK DOSSIER ↗
+                  </a>
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 24px;border-radius:8px;background:#ffffff;color:${theme.text};border:1px solid ${theme.cardBorder};font-size:0.9rem;font-weight:700;">
+                    Return to Subsystem Index
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tier 3: 4-Layer AIoT Spatial Automation Pipeline Ribbon -->
+            <div style="background:#ffffff;border:1px solid ${theme.cardBorder};border-radius:16px;padding:32px;box-shadow:0 8px 30px rgba(124,58,237,0.05);">
+              <div style="text-align:center;max-width:700px;margin:0 auto 28px;">
+                <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;letter-spacing:0.06em;text-transform:uppercase;">
+                  WHOLE-HOUSE DISTRIBUTED PIPELINE
+                </span>
+                <h3 style="font-size:1.5rem;font-weight:900;color:${theme.text};margin:6px 0 0;">
+                  4-Phase AIoT Spatial Automation Pathway
+                </h3>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:20px;">
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">PHASE 01 // SENSING</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Sensor Event Detect</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Sub-micron radar, PIR or climate transducer captures physical state change with microampere sleep currents.
+                  </p>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">PHASE 02 // PROPAGATION</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Thread Mesh Hop</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Encrypted IPv6 datagram travels across multi-hop peer-to-peer 802.15.4 routers with sub-15ms hop latency.
+                  </p>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">PHASE 03 // ARBITRATION</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Edge NPU Automation</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Local Matter Border Gateway arbitrates logic rules with zero cloud dependency and AES-128 secure execution.
+                  </p>
+                </div>
+                <div style="background:#faf5ff;border:1px solid ${theme.cardBorder};border-radius:12px;padding:20px;">
+                  <div style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#0891b2;margin-bottom:8px;">PHASE 04 // ACTUATION</div>
+                  <h4 style="font-size:0.95rem;font-weight:800;color:${theme.text};margin:0 0 8px;">Ecosystem Actuation</h4>
+                  <p style="font-size:0.8rem;color:${theme.textMuted};line-height:1.6;margin:0;">
+                    Synchronized relays, motors, lighting, and robotic appliances trigger simultaneously across all platform controllers.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      `;
+    }
+  } else if (page === 'about') {
+    const headline = getAboutHeadline(company, isVideo ? 'IoT Wireless Protocol Testing & Anechoic Chamber Lab' : 'Robotic SMT Surface Mount & 3D AOI Inspection Lines');
+    const paragraphs = getAboutStoryParagraphs(company);
+    const images = getAboutImages(ctx);
+    const highlights = parseAboutHighlights(company.aboutHighlights, isVideo ? [
+      { value: 'Matter 1.3', label: 'Protocol Certified', desc: 'Cross-platform native ecosystem interoperability' },
+      { value: '< 15 ms', label: 'Local Mesh Latency', desc: 'Zero-cloud Thread RF response benchmark' },
+      { value: '254 Nodes', label: 'Self-Healing Capacity', desc: 'Enterprise smart installation scaling' },
+    ] : [
+      { value: '94.5%', label: 'GaN III Efficiency', desc: 'Semiconductor power conversion benchmark' },
+      { value: '6063 CNC', label: 'Unibody Aluminum', desc: 'Aerospace grade precision machined enclosures' },
+      { value: '72 Hours', label: 'Burn-In Aging Test', desc: '100% full load thermal validation' },
+    ]);
+    const primaryImage = images.primary || (isVideo ? getIndustryPlaceholder('electronics', 1) : getIndustryPlaceholder('electronics', 0));
+
+    if (!isVideo) {
+      // ELECTRONICS GADGET BANNER: APPLE-STYLE HARDWARE BENTO GRID
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Top Hardware Dossier Header Bar -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:40px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#64748b;flex-wrap:wrap;gap:12px;box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#0284c7;"></span>
+                <strong style="color:#0f172a;">HARDWARE R&amp;D SPECIFICATION</strong>
+              </div>
+              <div style="display:flex;gap:20px;align-items:center;font-weight:600;">
+                <span>REV: 2026.4</span>
+                <span>GAN III SILICON</span>
+                <span>SMT ISO 9001:2015</span>
+              </div>
+            </div>
+
+            <!-- Main Title & Narrative Intro -->
+            <div style="margin-bottom:44px;max-width:880px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;">
+                Gallium Nitride &amp; Unibody CNC Architecture
+              </span>
+              <h1 style="font-size:clamp(2.2rem, 4vw, 3.4rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.15;letter-spacing:-0.03em;">
+                ${esc(headline)}
+              </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'Our laboratory pioneers high-density Gallium Nitride (GaN III) power conversion topologies and 5-axis unibody CNC aluminum thermal enclosures for tier-one commercial deployments.')}
+              </p>
+            </div>
+
+            <!-- Apple-Style Bento Grid -->
+            <div style="display:grid;grid-template-columns:repeat(12, 1fr);gap:24px;margin-bottom:32px;">
+              
+              <!-- Bento Card 1: Lead Narrative & Silicon Topologies (7 Cols) -->
+              <div style="grid-column:span 7;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;padding:36px;box-shadow:0 10px 30px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
                 <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">
-                    ${esc(ui.product)} (${esc(ui.optional)})
-                  </label>
-                  <select name="productId" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;box-sizing:border-box;">
-                    <option value="">— Select Product of Interest (Optional) —</option>
-                    ${products.map((p) => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#f0f9ff;color:#0284c7;font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:16px;">
+                    Integrated GaN Architecture
+                  </div>
+                  <h2 style="font-size:1.4rem;font-weight:800;color:#0f172a;margin:0 0 14px;line-height:1.3;">
+                    Synchronous Rectification &amp; Dynamic Power Allocation
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.7;color:#475569;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">Operating at 300kHz switching frequencies, our GaN III power stage slashes thermal energy loss by 42% compared to traditional silicon MOSFETs. Integrated planar transformers and copper shielding eliminate coil whine across 100-240V international grids.</p>
+                      <p style="margin:0;">Precision 5-axis CNC machining carves aerospace-grade 6063 aluminum billets with 0.05mm dimensional tolerances, delivering structural rigidity and passive heatsink dissipation.</p>
+                    `}
+                  </div>
+                </div>
+
+                <!-- Inline Silicon Metrics -->
+                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:20px;border-top:1px solid #f1f5f9;">
+                  <div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Switching Freq</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0284c7;margin-top:2px;">300 kHz</div>
+                  </div>
+                  <div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Enclosure Alloy</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin-top:2px;">6063 CNC</div>
+                  </div>
+                  <div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#64748b;text-transform:uppercase;">Drop Rating</div>
+                    <div style="font-size:1.15rem;font-weight:900;color:#0f172a;margin-top:2px;">1.5 m Steel</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bento Card 2: Hardware Primary Image (5 Cols) -->
+              <div style="grid-column:span 5;background:#ffffff;border:1px solid #e2e8f0;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,0.04);position:relative;display:flex;flex-direction:column;">
+                <div style="position:relative;flex:1;min-height:320px;">
+                  <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                  <div style="position:absolute;bottom:16px;left:16px;right:16px;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border:1px solid rgba(226,232,240,0.8);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+                    <div style="font-size:0.75rem;font-weight:800;color:#0f172a;">ANODIZED 180-MESH MATTE</div>
+                    <div style="font-family:ui-monospace,monospace;font-size:0.7rem;color:#0284c7;font-weight:700;">PASSIVATED</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Bento Second Row: Highlights Stat Cards -->
+            <div style="display:grid;grid-template-columns:repeat(12, 1fr);gap:24px;">
+              
+              ${highlights.map((h, idx) => `
+                <div style="grid-column:span 4;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:26px 28px;box-shadow:0 4px 16px rgba(15,23,42,0.02);display:flex;flex-direction:column;justify-content:space-between;">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                    <span style="font-family:ui-monospace,monospace;font-size:0.7rem;font-weight:700;color:#94a3b8;background:#f8fafc;padding:3px 8px;border-radius:6px;border:1px solid #f1f5f9;">PARAM #0${idx+1}</span>
+                    <span style="font-size:0.75rem;font-weight:800;color:#0284c7;">VERIFIED</span>
+                  </div>
+                  <div>
+                    <div style="font-size:2.2rem;font-weight:900;color:#0f172a;letter-spacing:-0.03em;line-height:1;margin-bottom:8px;">
+                      ${esc(h.value)}
+                    </div>
+                    <div style="font-size:0.95rem;font-weight:800;color:#334155;margin-bottom:4px;">
+                      ${esc(h.label)}
+                    </div>
+                    <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">
+                      ${esc(h.desc || 'Comprehensive hardware quality verification benchmark standard.')}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+
+              <!-- Production SMT Status Ribbon -->
+              <div style="grid-column:span 12;background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);border:1px solid #e2e8f0;border-radius:18px;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);"></span>
+                  <span style="font-size:0.85rem;font-weight:800;color:#0f172a;">Yamaha SMT Fleet Online</span>
+                  <span style="font-size:0.8rem;color:#64748b;">· 0201 Component Placement Accuracy · 3D AOI &amp; Solder Paste Inspection</span>
+                </div>
+                <div style="font-family:ui-monospace,monospace;font-size:0.75rem;color:#475569;font-weight:600;">
+                  72H BURN-IN CHAMBER: -20°C TO +70°C VALIDATED
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </main>
+      `;
+    } else {
+      // ELECTRONICS SMART VIDEO: IOT MESH NETWORK TOPOLOGY CONSOLE
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="about" data-wr-modern-about="" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 100px;">
+          <div class="wrap wr-modern-about-responsive" style="padding:0 24px;max-width:1200px;margin:0 auto;">
+            
+            <!-- Top IoT Telemetry Bar -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:#ffffff;border:1px solid #f3e8ff;border-radius:14px;margin-bottom:36px;font-family:ui-monospace,monospace;font-size:0.75rem;letter-spacing:0.04em;color:#6b21a8;box-shadow:0 4px 12px rgba(124,58,237,0.04);flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,0.2);"></span>
+                <strong style="color:#581c87;">TOPOLOGY CONSOLE: ONLINE</strong>
+              </div>
+              <div style="display:flex;gap:20px;align-items:center;font-weight:700;">
+                <span>THREAD MESH 802.15.4</span>
+                <span>CSA MATTER 1.3 CERTIFIED</span>
+                <span>LOCAL LATENCY: &lt; 15MS</span>
+              </div>
+            </div>
+
+            <!-- Header & Story Lead -->
+            <div style="max-width:880px;margin-bottom:40px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Unified Local Mesh &amp; Edge Intelligence Lab
+              </span>
+              <h1 style="font-size:clamp(2.1rem, 4vw, 3.2rem);font-weight:900;color:${theme.text};margin:0 0 16px;line-height:1.2;letter-spacing:-0.03em;">
+                ${esc(headline)}
+              </h1>
+              <p style="font-size:1.1rem;line-height:1.75;color:${theme.textMuted};margin:0;">
+                ${esc(paragraphs[0] || 'Our wireless engineering center specializes in multi-admin Matter fabrics, Thread border routing controllers, and zero-cloud local edge execution for commercial smart installations.')}
+              </p>
+            </div>
+
+            <!-- Central Mesh Network Topology Canvas Viewport -->
+            <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:24px;padding:36px;box-shadow:0 12px 36px rgba(124,58,237,0.06);margin-bottom:36px;position:relative;overflow:hidden;background-image:radial-gradient(#e9d5ff 1.2px, transparent 1.2px);background-size:24px 24px;">
+              
+              <div style="display:grid;grid-template-columns:minmax(280px, 1.2fr) minmax(320px, 1.4fr);gap:40px;align-items:center;">
+                
+                <!-- Left: Device Chassis Photo with Network Tags -->
+                <div style="position:relative;">
+                  <div style="border-radius:20px;overflow:hidden;border:2px solid #f3e8ff;box-shadow:0 12px 30px rgba(88,28,135,0.08);background:#ffffff;">
+                    <img src="${esc(primaryImage)}" alt="${esc(company.name)}" data-wr-material-image="about-primary-image" style="width:100%;height:380px;object-fit:cover;display:block;" loading="lazy">
+                  </div>
+                  <!-- Floating Node Badges -->
+                  <div style="position:absolute;top:-12px;left:16px;background:#ffffff;border:1px solid #e9d5ff;border-radius:20px;padding:6px 14px;font-size:0.75rem;font-weight:800;color:#6b21a8;box-shadow:0 4px 12px rgba(88,28,135,0.06);display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
+                    NODE #01: LIGHTING MESH
+                  </div>
+                  <div style="position:absolute;bottom:-12px;right:16px;background:#ffffff;border:1px solid #e9d5ff;border-radius:20px;padding:6px 14px;font-size:0.75rem;font-weight:800;color:#6b21a8;box-shadow:0 4px 12px rgba(88,28,135,0.06);display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#7c3aed;"></span>
+                    NODE #02: HVAC &amp; SENSORS
+                  </div>
+                </div>
+
+                <!-- Right: RF Anechoic Chamber Validation & Protocols -->
+                <div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:6px;background:#faf5ff;color:#7c3aed;font-size:0.75rem;font-weight:800;text-transform:uppercase;margin-bottom:12px;border:1px solid #e9d5ff;">
+                    3-Meter RF Anechoic Chamber
+                  </div>
+                  <h2 style="font-size:1.5rem;font-weight:900;color:#1e1b4b;margin:0 0 14px;line-height:1.3;">
+                    Zero-Cloud Local Intelligence &amp; Multi-Fabric Roaming
+                  </h2>
+                  <div style="font-size:0.95rem;line-height:1.75;color:#475569;margin-bottom:24px;">
+                    ${paragraphs.length > 1 ? paragraphs.slice(1).map(p => `<p style="margin:0 0 12px;">${esc(p)}</p>`).join('') : `
+                      <p style="margin:0 0 12px;">Operating across 2.4GHz IEEE 802.15.4 frequencies with AES-128 cryptographic key exchanges, our gateway hardware coordinates up to 254 active mesh end-devices with deterministic sub-15ms responsiveness.</p>
+                      <p style="margin:0;">Every firmware revision undergoes continuous OTA stress testing in our semi-anechoic RF chambers, ensuring full compliance with Apple HomeKit, Google Home, and Amazon Alexa Matter controllers.</p>
+                    `}
+                  </div>
+
+                  <!-- Protocol Feature Chips -->
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <span style="padding:6px 14px;border-radius:8px;background:#faf5ff;border:1px solid #e9d5ff;color:#6b21a8;font-size:0.78rem;font-weight:700;">Thread Border Router 1.3</span>
+                    <span style="padding:6px 14px;border-radius:8px;background:#faf5ff;border:1px solid #e9d5ff;color:#6b21a8;font-size:0.78rem;font-weight:700;">Zero-Cloud Edge Hub</span>
+                    <span style="padding:6px 14px;border-radius:8px;background:#faf5ff;border:1px solid #f3e8ff;color:#6b21a8;font-size:0.78rem;font-weight:700;">AES-128 Encryption</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Highlights Protocol Metrics -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:24px;">
+              ${highlights.map(h => `
+                <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:26px;box-shadow:0 4px 16px rgba(124,58,237,0.03);position:relative;">
+                  <div style="font-size:2.2rem;font-weight:900;color:#7c3aed;margin-bottom:6px;line-height:1;">${esc(h.value)}</div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">${esc(h.label)}</div>
+                  <div style="font-size:0.8rem;color:#64748b;line-height:1.5;">${esc(h.desc || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+
+          </div>
+        </main>
+      `;
+    }
+  } else if (page === 'contact') {
+    const selectedProd = ctx.options.productId || '';
+    if (!isVideo) {
+      // CNC HARDWARE ODM & RFQ PORTAL
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="max-width:760px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-block;padding:4px 12px;border-radius:4px;background:${theme.pillBg};color:${theme.pillText};font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;">
+                Hardware ODM &amp; Custom Anodization Portal
+              </span>
+              <h1 style="font-size:clamp(2rem, 3.6vw, 3rem);font-weight:900;color:${theme.text};margin:0 0 16px;">
+                Submit Hardware RFQ &amp; CAD Request
+              </h1>
+              <p style="font-size:1rem;color:${theme.textMuted};line-height:1.7;">
+                Request STEP/IGES 3D models, custom Pantone anodized aluminum samples, laser logo engraving, and certified packaging designs.
+              </p>
+            </div>
+
+            <div style="max-width:800px;margin:0 auto;background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:18px;padding:40px;box-shadow:0 12px 36px rgba(15,23,42,0.06);">
+              <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Hardware Engineer / Buyer</label>
+                    <input type="text" name="name" required placeholder="Senior Hardware Program Manager" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Corporate Email Address</label>
+                    <input type="email" name="email" required placeholder="engineering@client-hardware.com" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;">
+                  </div>
+                </div>
+
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Hardware Product</label>
+                  <select name="productId" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                    <option value="">General Hardware ODM Inquiries (All Models)</option>
+                    ${products.map(p => `
+                      <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} (${esc(p.moq)})</option>
+                    `).join('')}
                   </select>
                 </div>
-                <div>
-                  <label style="display:block;font-size:0.82rem;font-weight:700;color:${theme.text};margin-bottom:6px;">Requirements</label>
-                  <textarea disabled rows="4" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid ${theme.cardBorder};background:${theme.bg};color:${theme.text};font-size:0.88rem;resize:vertical;box-sizing:border-box;" placeholder="Describe your sourcing requirements, target quantity, and timeline..."></textarea>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Enclosure Surface Finish</label>
+                    <select name="finish" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                      <option>Space Grey 180-Mesh Anodized</option>
+                      <option>Silver Frost Ceramic Sandblast</option>
+                      <option>Matte Stealth Black Anodized</option>
+                      <option>Custom Pantone Anodized Color</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Target Regional Certification</label>
+                    <select name="compliance" style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;background:#fff;">
+                      <option>North America (UL / FCC / DOE VI)</option>
+                      <option>European Union (CE / RoHS / REACH)</option>
+                      <option>Japan / Korea (PSE / KC)</option>
+                      <option>Global Universal Safety Bundle</option>
+                    </select>
+                  </div>
                 </div>
-                <button type="submit" disabled style="padding:14px;border-radius:10px;background:${theme.btnGradient};color:#fff;font-size:0.96rem;font-weight:800;border:none;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
-                  Submit Inquiry ↗
+
+                <div>
+                  <label style="display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;">Technical Requirements &amp; Target Launch Timeline</label>
+                  <textarea name="message" rows="4" placeholder="Specify custom port split wattage requirements, thermal limits, or tooling timeline..." style="width:100%;padding:12px;border:1px solid ${theme.cardBorder};border-radius:8px;font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
+                </div>
+
+                <button type="submit" style="padding:16px;border-radius:8px;border:none;background:${theme.btnGradient};color:#fff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px ${theme.accentGlow};">
+                  Submit Hardware ODM Technical Request ↗
                 </button>
               </form>
             </div>
+          </div>
+        </main>
+      `;
+    } else {
+      // SMART LIVING OEM & FIRMWARE GATEWAY CONSULTATION TERMINAL
+      mainHtml = `
+        <main class="electronics-main" data-wr-page="contact" style="background:${theme.bg};color:${theme.text};min-height:80vh;padding:60px 0 90px;">
+          <div class="wrap" style="padding:0 24px;">
+            <div style="max-width:840px;margin:0 auto 48px;text-align:center;">
+              <span style="display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;background:#f3e8ff;color:#7c3aed;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;border:1px solid #e9d5ff;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#7c3aed;"></span>
+                Matter 1.3 OEM &amp; Firmware Gateway Consultation Terminal
+              </span>
+              <h1 style="font-size:clamp(2rem, 3.5vw, 2.8rem);font-weight:900;color:#0f172a;margin:0 0 16px;letter-spacing:-0.03em;">
+                Deploy Whole-House Spatial AIoT Infrastructure
+              </h1>
+              <p style="font-size:1.05rem;color:#64748b;line-height:1.7;max-width:680px;margin:0 auto;">
+                Connect directly with our senior embedded IoT architects for custom Matter commissioning credentials, border router firmware customization, and enterprise volume scheduling.
+              </p>
+            </div>
 
-            <div>
-              <div style="background:${theme.cardBg};border:1px solid ${theme.cardBorder};border-radius:20px;padding:32px;margin-bottom:24px;">
-                <h2 style="font-size:1.1rem;font-weight:900;color:${theme.text};margin:0 0 16px;">${esc(company.name)}</h2>
-                <div style="display:grid;gap:14px;font-size:0.88rem;color:${theme.textMuted};">
-                  <div>✉ ${esc(company.email)}</div>
-                  ${company.phone ? `<div>☎ ${esc(company.phone)}</div>` : ''}
-                  ${company.address ? `<div>📍 ${esc(company.address)}</div>` : ''}
-                  ${company.whatsapp ? `<div>💬 WhatsApp: ${esc(company.whatsapp)}</div>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:36px;max-width:1120px;margin:0 auto;align-items:start;">
+              <!-- Left Column: Technical Capabilities & Liaison -->
+              <div style="display:flex;flex-direction:column;gap:20px;">
+                <!-- Capabilities Card -->
+                <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:32px;box-shadow:0 10px 30px rgba(124,58,237,0.04);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#7c3aed;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [FACTORY ODM CAPABILITIES]
+                  </div>
+                  <h3 style="font-size:1.2rem;font-weight:800;color:#0f172a;margin:0 0 18px;">
+                    Smart Living Embedded Engineering
+                  </h3>
+                  <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Class 10,000 SMT &amp; RF Chamber Validation</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">2.4 GHz OTA TRP/TIS sensitivity tuning with certified anechoic chamber sweeps.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Matter VID/PID &amp; Commissioning Injection</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Secure pre-flashed DAC private keys, factory setup payloads, and QR labeling.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">White-Label Companion App SDK</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Ready-to-brand iOS/Android mobile SDKs with Bluetooth onboarding and cloud sync.</div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:flex-start;">
+                      <div style="width:24px;height:24px;border-radius:6px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:900;flex-shrink:0;">✓</div>
+                      <div>
+                        <div style="font-size:0.88rem;font-weight:800;color:#0f172a;">Global Wireless Compliance Guarantee</div>
+                        <div style="font-size:0.78rem;color:#64748b;line-height:1.5;">Pre-certified FCC Part 15C, CE RED, TELEC Japan, SRRC, and KC modular certifications.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Direct Liaison Card -->
+                <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:26px;box-shadow:0 6px 20px rgba(124,58,237,0.03);">
+                  <div style="font-size:0.72rem;font-family:monospace;color:#06b6d4;font-weight:800;letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;">
+                    [DIRECT LIAISON DESK]
+                  </div>
+                  <div style="font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:6px;">IoT Solutions Architecture Team</div>
+                  <div style="font-size:0.82rem;color:#64748b;margin-bottom:14px;line-height:1.6;">Dedicated hardware engineering response within 4 operational hours.</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;font-size:0.82rem;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Direct:</span>
+                      <a href="mailto:${esc(company.email || 'iot-architect@smartliving.com')}" style="color:#7c3aed;text-decoration:none;font-weight:700;">${esc(company.email || 'iot-architect@smartliving.com')}</a>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Location:</span>
+                      <span style="color:#64748b;">${esc(company.address || 'AIoT Hardware Innovation Park, Hi-Tech Zone')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="font-weight:700;color:#475569;min-width:60px;">Hours:</span>
+                      <span style="color:#64748b;">Mon - Fri, 08:30 - 20:30 CST (UTC+8)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div style="background:${theme.pillBg};border:1px solid ${theme.cardBorder};border-radius:16px;padding:24px;">
-                <h3 style="font-size:0.92rem;font-weight:800;color:${theme.primary};margin:0 0 10px;">Why Choose Us?</h3>
-                <ul style="margin:0;padding:0 0 0 18px;font-size:0.86rem;color:${theme.textMuted};line-height:1.8;">
-                  <li>Experienced export team with global logistics</li>
-                  <li>Flexible MOQ for trial orders</li>
-                  <li>OEM/ODM customization support</li>
-                  <li>Quality assurance & compliance certification</li>
-                </ul>
+
+              <!-- Right Column: Interactive Consultation RFQ Console -->
+              <div style="background:#ffffff;border:1px solid #f3e8ff;border-radius:20px;padding:36px;box-shadow:0 12px 36px rgba(124,58,237,0.06);position:relative;">
+                <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f3e8ff;padding-bottom:16px;margin-bottom:24px;">
+                  <div>
+                    <span style="font-family:monospace;font-size:0.75rem;font-weight:800;color:#7c3aed;letter-spacing:0.06em;">[TERMINAL // RFQ-GATEWAY-INIT]</span>
+                    <h2 style="font-size:1.3rem;font-weight:900;color:#0f172a;margin:4px 0 0;">Request Technical Sourcing Package</h2>
+                  </div>
+                  <span style="font-size:0.75rem;padding:4px 10px;border-radius:6px;background:#ecfdf5;color:#059669;font-weight:800;">ENCRYPTED TLS</span>
+                </div>
+
+                <form id="inquiry" action="/inquiry" method="post" style="display:flex;flex-direction:column;gap:18px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">System Architect / Lead</label>
+                      <input type="text" name="name" required placeholder="e.g. Alex Chen" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#faf5ff;">
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Corporate Email</label>
+                      <input type="email" name="email" required placeholder="name@enterprise-iot.com" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;background:#faf5ff;">
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Target Smart Living Node</label>
+                    <select name="productId" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#faf5ff;outline:none;color:#0f172a;">
+                      <option value="">General Smart Living Ecosystem Inquiries (All Nodes)</option>
+                      ${products.map(p => `
+                        <option value="${esc(p.id)}"${selectedProd === p.id ? ' selected' : ''}>${esc(p.name)} · ${esc(p.extra || p.moq)}</option>
+                      `).join('')}
+                    </select>
+                  </div>
+
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Planned Deployment Scale</label>
+                      <select name="volume" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#faf5ff;outline:none;color:#0f172a;">
+                        <option>Engineering Sample Kit (10 - 50 Units)</option>
+                        <option>Pilot Installation (200 - 1,000 Units)</option>
+                        <option>Volume Commercial Rollout (2,500+ Units)</option>
+                        <option>Global Enterprise Sourcing (10,000+ Units)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Primary Wireless Mesh</label>
+                      <select name="protocol" style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;background:#faf5ff;outline:none;color:#0f172a;">
+                        <option>Matter over Thread (Local Mesh)</option>
+                        <option>Matter over Wi-Fi 6 (High Throughput)</option>
+                        <option>BLE 5.3 Long-Range Mesh</option>
+                        <option>Zigbee 3.0 to Matter Bridge</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style="display:block;font-size:0.82rem;font-weight:800;color:#1e1b4b;margin-bottom:6px;">Hardware Specifications &amp; Firmware Customization Notes</label>
+                    <textarea name="message" rows="4" placeholder="Specify custom VID/PID requirements, target PCB form-factor, antenna gain, or companion app integration..." style="width:100%;padding:12px;border:1px solid #e9d5ff;border-radius:10px;font-size:0.88rem;box-sizing:border-box;resize:vertical;outline:none;background:#faf5ff;"></textarea>
+                  </div>
+
+                  <button type="submit" style="padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);color:#ffffff;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(124,58,237,0.25);transition:transform 0.2s ease;">
+                    Submit Smart Living OEM Inquiry ↗
+                  </button>
+                  <div style="font-size:0.75rem;color:#94a3b8;text-align:center;">
+                    Direct transmission to engineering. Strict NDA guaranteed upon payload submission.
+                  </div>
+                </form>
               </div>
             </div>
           </div>
-        </section>
-      </main>
-    `;
+        </main>
+      `;
+    }
   }
 
-  const footerHtml = `
-    <footer class="electronics-footer" style="background:${theme.cardBg};border-top:1px solid ${theme.cardBorder};padding:50px 0 30px;">
-      <div class="wrap" style="padding:0 24px;">
-        <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
-          <div>
-            <div style="font-size:1.2rem;font-weight:900;color:${theme.text};margin-bottom:8px;">${esc(brandName)}</div>
-            <p style="font-size:0.86rem;color:${theme.textMuted};max-width:380px;line-height:1.6;margin:0 0 16px;">
-              ${esc(company.description || (isVideo ? 'NeonPulse Smart Device Lab' : 'TechForge Electronics Lab'))}
-            </p>
+  // Distinct Footer for each variant
+  const footerHtml = isVideo ? `
+    <footer style="background:#ffffff;color:#0f172a;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid #f3e8ff;">
+      <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+        <div>
+          <div style="font-size:1.25rem;font-weight:900;color:#0f172a;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:#7c3aed;"></span>
+            ${esc(brandName)}
           </div>
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">Navigation</div>
-            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.88rem;">
-              <a href="${path('index.html')}" ${navAttrs('home')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.home)}</a>
-              <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.catalog)}</a>
-              <a href="${path('about/index.html')}" ${navAttrs('about')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.about)}</a>
-              <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="text-decoration:none;color:${theme.textMuted};">${esc(ui.contact)}</a>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:0.8rem;font-weight:800;letter-spacing:0.08em;color:${theme.primary};text-transform:uppercase;margin-bottom:14px;">Business Contact</div>
-            <div style="display:flex;flex-direction:column;gap:8px;font-size:0.85rem;color:${theme.textMuted};">
-              <div>${esc(company.email)}</div>
-              ${company.phone ? `<div>${esc(company.phone)}</div>` : ''}
-              ${company.address ? `<div>${esc(company.address)}</div>` : ''}
-            </div>
+          <p style="color:#64748b;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+            Matter over Thread smart living hardware and gateway systems. Local mesh networking, sub-15ms trigger latency, and zero-cloud dependency.
+          </p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="padding:4px 10px;border-radius:6px;background:#f3e8ff;color:#7c3aed;font-size:0.7rem;font-weight:800;">MATTER 1.3</span>
+            <span style="padding:4px 10px;border-radius:6px;background:#e0f2fe;color:#0284c7;font-size:0.7rem;font-weight:800;">THREAD MESH</span>
+            <span style="padding:4px 10px;border-radius:6px;background:#f8fafc;color:#475569;font-size:0.7rem;font-weight:800;border:1px solid #e2e8f0;">APPLE HOME</span>
           </div>
         </div>
-        <div style="border-top:1px solid ${theme.cardBorder};padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:${theme.textSub};">
-          <div>© ${new Date().getUTCFullYear()} ${esc(brandName)}. All rights reserved.</div>
-          <div>Quality Certified · ISO9001</div>
+        <div>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 16px;">Supported Ecosystems</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#64748b;font-size:0.82rem;line-height:2.1;">
+            <li>• Apple HomeKit (Siri Voice &amp; Home Hub)</li>
+            <li>• Google Home &amp; Nest Hub Ecosystem</li>
+            <li>• Samsung SmartThings Hub v3</li>
+            <li>• Home Assistant Local REST &amp; WebSocket</li>
+          </ul>
         </div>
+        <div>
+          <h4 style="color:#0f172a;font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 16px;">OEM Procurement</h4>
+          <p style="color:#64748b;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'iot-oem@matterlink.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="display:inline-block;padding:8px 16px;background:#f3e8ff;color:#7c3aed;text-decoration:none;font-weight:800;font-size:0.8rem;border-radius:8px;border:1px solid #e9d5ff;">Direct Sourcing Terminal →</a>
+        </div>
+      </div>
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #f3e8ff;padding-top:24px;display:flex;justify-content:space-between;color:#94a3b8;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+        <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
+        <span>Matter &amp; Thread Smart Living Protocol Division</span>
+      </div>
+    </footer>
+  ` : `
+    <footer style="background:#0f172a;color:#f8fafc;padding:60px 0 40px;font-size:0.88rem;border-top:1px solid rgba(255,255,255,0.08);">
+      <div class="wrap" style="padding:0 24px;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+        <div>
+          <div style="font-size:1.25rem;font-weight:900;color:#fff;margin-bottom:8px;">${esc(brandName)}</div>
+          <p style="color:#94a3b8;font-size:0.84rem;line-height:1.6;margin:0 0 16px;max-width:360px;">
+            Aerospace unibody 6063 aluminum hardware and Gallium Nitride III power electronics. High-speed automated SMT lines and 100% burn-in validation.
+          </p>
+          <div style="display:flex;gap:8px;">
+            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">GAN III</span>
+            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">PD 3.1 140W</span>
+            <span style="padding:3px 8px;border-radius:4px;background:#1e293b;color:#38bdf8;font-size:0.7rem;font-weight:700;">6063 CNC</span>
+          </div>
+        </div>
+        <div>
+          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Engineering Standards</h4>
+          <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.82rem;line-height:2;">
+            <li>GaN III 94.5% Power Conversion</li>
+            <li>180-Mesh Sandblasted Anodizing</li>
+            <li>72-Hour Full-Load Thermal Burn-In</li>
+            <li>Dynamic C1+C2 Multi-Port Split</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color:#fff;font-size:0.85rem;font-weight:800;text-transform:uppercase;margin:0 0 16px;">Hardware ODM Inquiries</h4>
+          <p style="color:#94a3b8;font-size:0.82rem;line-height:1.6;margin:0 0 12px;">${esc(company.email || 'odm@aeropower-hardware.com')}</p>
+          <a href="${path('contact/index.html')}" ${navAttrs('contact')} style="color:#38bdf8;text-decoration:none;font-weight:700;font-size:0.82rem;">Submit Technical CAD Inquiry →</a>
+        </div>
+      </div>
+      <div class="wrap" style="padding:0 24px;border-top:1px solid #1e293b;padding-top:24px;display:flex;justify-content:space-between;color:#64748b;font-size:0.75rem;flex-wrap:wrap;gap:12px;">
+        <span>© ${new Date().getFullYear()} ${esc(brandName)}. All rights reserved.</span>
+        <span>Precision CNC Hardware &amp; Gallium Nitride Engineering Division</span>
       </div>
     </footer>
   `;
 
-  return `
-    <div class="electronics-site-wrapper" style="min-height:100vh;display:flex;flex-direction:column;background:${theme.bg};">
-      ${headerHtml}
-      ${mainHtml}
-      ${footerHtml}
-    </div>
-  `;
+  return `${headerHtml}${mainHtml}${footerHtml}`;
 }

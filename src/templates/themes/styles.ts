@@ -1843,40 +1843,40 @@ body[data-template="drinkware-ceramic-banner"] {
   color: #1c1917;
 }
 body[data-template="drinkware-thermal-video"] {
-  background: #0c141d;
-  color: #f1f5f9;
+  background: #f0f9ff;
+  color: #0f172a;
 }
 body[data-template="beauty-skincare-banner"] {
-  background: #fffbfb;
+  background: #fffafb;
   color: #1c1917;
 }
 body[data-template="beauty-glow-video"] {
-  background: #0d0714;
-  color: #f8fafc;
+  background: #faf8ff;
+  color: #1e1b4b;
 }
 body[data-template="electronics-gadget-banner"] {
-  background: #09090b;
-  color: #fafafa;
+  background: #f8fafc;
+  color: #0f172a;
 }
 body[data-template="electronics-smart-video"] {
-  background: #030712;
-  color: #f9fafb;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 body[data-template="tools-precision-banner"] {
-  background: #f8fafc;
+  background: #f4f4f6;
   color: #0f172a;
 }
 body[data-template="tools-workshop-video"] {
-  background: #0c0a09;
-  color: #fafaf9;
+  background: #f5f5f4;
+  color: #1c1917;
 }
 body[data-template="sports-trail-banner"] {
-  background: #f8fafc;
-  color: #0f172a;
+  background: #f6f8f5;
+  color: #14532d;
 }
 body[data-template="sports-kinetic-video"] {
-  background: #050811;
-  color: #f8fafc;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 @keyframes wrPulse {
