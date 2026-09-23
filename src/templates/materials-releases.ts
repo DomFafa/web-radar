@@ -7,6 +7,7 @@ import { getMaterialsTemplate as frozenContract, renderSite as frozenRender } fr
 import { frozenMaterialsPreviewRuntime } from './releases/baseline-preview-20260922';
 import { getMaterialsTemplate as industryContract, renderSite as industryRender } from './releases/industry-20260922.mjs';
 import { frozenIndustryPreviewRuntime } from './releases/industry-preview-20260922';
+import { repairMaterialsDemo } from './releases/demo-20260923.mjs';
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
 export const industryRendererRevision = '2026-09-22.industry-bafe6c1';
@@ -14,6 +15,16 @@ export const executableMaterialsRevision = (id: string) => `2026-09-22.${id}-mat
 
 
 export const identityMaterialsRevision = (id: string) => `2026-09-22.${id}-materials.5`;
+export const demoMaterialsRevision = (id: string) => `2026-09-23.${id}-materials.6`;
+export const demoRendererRevision = '2026-09-23.demo-repair.1';
+
+export function demoMaterialsContract(id: string): MaterialsTemplateContract | undefined {
+  const contract = identityMaterialsContract(id);
+  if (!contract) return;
+  contract.contractRevision = demoMaterialsRevision(id);
+  contract.rendererRevision = demoRendererRevision;
+  return contract;
+}
 const templateProductFamilies: Record<string, ProductIdentity["family"][]> = {
   toys: ['toy'], plush: ['plush'], apparel: ['apparel'], footwear: ['footwear'], luggage: ['bags'],
   jewelry: ['jewelry'], homedecor: ['home'], furniture: ['furniture'], kitchen: ['kitchen', 'drinkware'],
@@ -65,7 +76,8 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));
   if (release) return structuredClone(release.contract);
-  if (!revision || revision === identityMaterialsRevision(id)) return identityMaterialsContract(id);
+  if (!revision || revision === demoMaterialsRevision(id)) return demoMaterialsContract(id);
+  if (revision === identityMaterialsRevision(id)) return identityMaterialsContract(id);
   if (revision === executableMaterialsRevision(id)) return executableMaterialsContract(id);
   const frozen = frozenContract(id, revision);
   if (frozen) return frozen;
@@ -77,6 +89,12 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
   if (!revision) return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release) return renderMaterialsTemplateRelease(release,draft,options);
+  // The repaired release renders demos, private projects and customer publications alike.
+  if (revision === demoMaterialsRevision(draft.template) && demoMaterialsContract(draft.template)) {
+    const previous = {...draft, materials: {...draft.materials!, contractRevision: identityMaterialsRevision(draft.template)}};
+    const html = renderReleasedMaterials(previous, options);
+    return html === undefined ? undefined : repairMaterialsDemo(html, draft, options);
+  }
   const original = frozenContract(draft.template, [executableMaterialsRevision(draft.template), identityMaterialsRevision(draft.template)].includes(revision) ? undefined : revision);
   if (!original) {
     const innerRevision = revision === identityMaterialsRevision(draft.template) ? executableMaterialsRevision(draft.template) : revision;
@@ -90,13 +108,20 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   const revision = draft.materials?.contractRevision;
+  const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
+  if (release?.contract.rendererRevision === demoRendererRevision) return frozenContract(release.rendererTemplateId) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
   if (revision && releasedMaterialsContract(draft.template, revision)) return frozenContract(draft.template) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
+}
+
+function materialsRendererContract(release: MaterialsTemplateRelease): MaterialsTemplateContract | undefined {
+  if (release.contract.rendererRevision === demoRendererRevision) return release.rendererContractRevision === demoMaterialsRevision(release.rendererTemplateId) ? demoMaterialsContract(release.rendererTemplateId) : undefined;
+  if (release.contract.rendererRevision === materialsRendererRevision) return frozenContract(release.rendererTemplateId,release.rendererContractRevision);
 }
 
 /** Explicit mappings let a new template choose stable slot names without Product Radar knowing them. */
 export function renderMaterialsTemplateRelease(release: MaterialsTemplateRelease, draft: Draft, options: RenderOptions): string {
-  const source = frozenContract(release.rendererTemplateId,release.rendererContractRevision);
-  if (validateMaterialsTemplateRelease(release).length || !source || release.contract.rendererRevision !== materialsRendererRevision || !draft.materials) throw Error('Unknown materials renderer release');
+  const source = materialsRendererContract(release);
+  if (validateMaterialsTemplateRelease(release).length || !source || !draft.materials) throw Error('Unknown materials renderer release');
   const map = <T extends {slotId:string}>(bindings:T[], mapping:Record<string,string>):T[] => bindings.map(binding => {
     const slotId = mapping[binding.slotId];
     if (!slotId) throw Error(`Unbound materials slot ${binding.slotId}`);
@@ -108,16 +133,18 @@ export function renderMaterialsTemplateRelease(release: MaterialsTemplateRelease
     const value = (slotId:string) => materials.textBindings.find(binding => binding.slotId === slotId && binding.locale === locale)?.text || '';
     copy[locale] = {headline:value('hero-headline'),subtitle:value('hero-subtitle'),cta:value('primary-cta'),about:value('company-about')};
   }
-  return frozenRender({...draft,template:release.rendererTemplateId as Draft['template'],copy,materials},options);
+  const mapped = {...draft,template:release.rendererTemplateId as Draft['template'],copy,materials};
+  return release.contract.rendererRevision === demoRendererRevision ? renderReleasedMaterials(mapped,options)! : frozenRender(mapped,options);
 }
 
 /** Alias releases may rename slots and narrow copy limits, but cannot claim layout capacity absent from their renderer. */
 export function validateMaterialsTemplateRelease(release:MaterialsTemplateRelease):string[] {
   const errors:string[]=[];
-  const source=frozenContract(release.rendererTemplateId,release.rendererContractRevision);
-  if(!source||release.contract.rendererRevision!==materialsRendererRevision)return ['renderer_release_unavailable'];
-  const expected=declareExecutionMetadata(source),contract=release.contract;
-  if(frozenContract(contract.templateId,contract.contractRevision)||([executableMaterialsRevision(contract.templateId),identityMaterialsRevision(contract.templateId)].includes(contract.contractRevision)&&frozenContract(contract.templateId)))errors.push('published_template_revision_collision');
+  const source=materialsRendererContract(release);
+  const contract=release.contract;
+  if(frozenContract(contract.templateId,contract.contractRevision)||industryContract(contract.templateId,contract.contractRevision)||([executableMaterialsRevision(contract.templateId),identityMaterialsRevision(contract.templateId),demoMaterialsRevision(contract.templateId)].includes(contract.contractRevision)&&identityMaterialsContract(contract.templateId)))errors.push('published_template_revision_collision');
+  if(!source)return [...errors,'renderer_release_unavailable'];
+  const expected=declareExecutionMetadata(source);
   if(contract.schemaVersion!=='wr-template-materials-v1'||!contract.materialsReady||contract.imagePolicy!==expected.imagePolicy||contract.contentPolicy!==expected.contentPolicy||JSON.stringify(contract.pages)!==JSON.stringify(expected.pages)||JSON.stringify(contract.selectionGroups)!==JSON.stringify(expected.selectionGroups)||JSON.stringify(contract.optionalSections.map(s=>s.id))!==JSON.stringify(expected.optionalSections.map(s=>s.id)))errors.push('renderer_contract_incompatible');
   const compare=(kind:'image'|'text')=>{
     const slots=kind==='image'?contract.imageSlots:contract.textSlots;

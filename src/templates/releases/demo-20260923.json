@@ -1,0 +1,255 @@
+{
+  "rendererRevision": "2026-09-23.demo-repair.1",
+  "snapshotSha256": "a5d5c6d46997a53343d88401d4f705c9b65ccffbac61006f9ba9f23ab645109b",
+  "authoringSource": "src/templates/materials-demo-repair.ts",
+  "dependencies": {
+    "baseline-20260922.mjs": "238022d8327292156063159ed8198522c526d2d93f25c215b542ab9b071b96bd",
+    "industry-20260922.mjs": "4c02e5f2a756e2d46ae1e33728152e1bcb7135938afd733c2be308adf0405836",
+    "baseline-preview-20260922.ts": "01825b0d43dd7d58572908a15e09375647665edd7fa45e9824bc7ad6456a462d",
+    "industry-preview-20260922.ts": "40fa6d4931299b99fc0272a7e2e1ace6cd7f21fc7628741e6cd64059cf0609a4",
+    "baseline-assets-20260922.json": "50071bc3bc8e2746349ce08046e22dc5bd3436f92b03879bd857bc391dad5484",
+    "industry-assets-20260922.json": "6e7f71b9b7144576222ce0e5e843cbe5b1a7947cbc8a596388f4aecd42cbfa78"
+  },
+  "contracts": {
+    "senseng-clean": {
+      "contractRevision": "2026-09-23.senseng-clean-materials.6",
+      "sha256": "44b73090d6c8f4019eef6abd02b60767335b30551a2bb0b6be94b9e2aff3444b",
+      "previousContractRevision": "2026-09-22.senseng-clean-materials.5",
+      "previousSha256": "456ba6c6d66fbf1ca185c8fe2ff01e164c8543bc632b381945bccedbebb48ac1"
+    },
+    "senseng-video": {
+      "contractRevision": "2026-09-23.senseng-video-materials.6",
+      "sha256": "c15df3f87fcee8bcc019112851783bbc955b790b9ebce97d2fe7b20030e1aa90",
+      "previousContractRevision": "2026-09-22.senseng-video-materials.5",
+      "previousSha256": "543537a276f93c88c4e875fde3b209e764af3e34d8b566898c9cdfded2d58eae"
+    },
+    "senseng-candy": {
+      "contractRevision": "2026-09-23.senseng-candy-materials.6",
+      "sha256": "a54e75234565b4855b39df3cdb4d5895bfe612e80bc2cce12f205a34f3ba0bdc",
+      "previousContractRevision": "2026-09-22.senseng-candy-materials.5",
+      "previousSha256": "d0663c5e9445d27e3f40f97ecd056afd9fc9a7b838cbf871d14acfe1b719b98a"
+    },
+    "senseng-wonder": {
+      "contractRevision": "2026-09-23.senseng-wonder-materials.6",
+      "sha256": "a770ecb89cd00d861b5a1c271c92395786ae1945d50d973897211d78e94c1690",
+      "previousContractRevision": "2026-09-22.senseng-wonder-materials.5",
+      "previousSha256": "92c0d34a8e7a8960c6449b44bb29831b54dbfef8eeb5221f710c97a333c94eb9"
+    },
+    "senseng-arcade": {
+      "contractRevision": "2026-09-23.senseng-arcade-materials.6",
+      "sha256": "9a4a3e9c9cb209b2b02b8fe7d0c13e41f066c5f50c76e56d397ba9ca8520993c",
+      "previousContractRevision": "2026-09-22.senseng-arcade-materials.5",
+      "previousSha256": "207a70ceed919c4d4dfe73563477e1a4ca39b1eb0a10662e2738e7be165d350c"
+    },
+    "senseng-nature": {
+      "contractRevision": "2026-09-23.senseng-nature-materials.6",
+      "sha256": "fc4597edeac57fe327eaa030161d7fad3bc44a9933827c627e9f2a4fabebb648",
+      "previousContractRevision": "2026-09-22.senseng-nature-materials.5",
+      "previousSha256": "6534a6669a1b835c76dab03b8ac5bfc8674df556b11065ab2b91a96535dfdeba"
+    },
+    "senseng-minimal": {
+      "contractRevision": "2026-09-23.senseng-minimal-materials.6",
+      "sha256": "b2a3d1055d7b88fc6b4ae236b5379e1f6a648625ef014a2651ebd25b03565c49",
+      "previousContractRevision": "2026-09-22.senseng-minimal-materials.5",
+      "previousSha256": "12f5a9f82d9cc7106a0fd36b7e071ecb0d8eeba6296fef7fbe95b38cf3951aea"
+    },
+    "universal-trade-banner": {
+      "contractRevision": "2026-09-23.universal-trade-banner-materials.6",
+      "sha256": "6a728409f90dba978ccd31cf304bb05dd08223c527da26aaec7fe08f90b4f11f",
+      "previousContractRevision": "2026-09-22.universal-trade-banner-materials.5",
+      "previousSha256": "7f0386715d12ffbcb67c0832fb482829f54f40549e78f8c49795d619025106bd"
+    },
+    "universal-showcase-video": {
+      "contractRevision": "2026-09-23.universal-showcase-video-materials.6",
+      "sha256": "9c99c17cfa55b183a3319759cac621d4ff855372bbcd156720b82439e58c7f3d",
+      "previousContractRevision": "2026-09-22.universal-showcase-video-materials.5",
+      "previousSha256": "707c8a057f47263ceea4918f9a4215de4893537d4e9149cd4109092fc07e6bca"
+    },
+    "toys-figure-banner": {
+      "contractRevision": "2026-09-23.toys-figure-banner-materials.6",
+      "sha256": "e8bbc38d84a70ec058d6b20e461445c8aba8b54baf4acad790108ad9123f449b",
+      "previousContractRevision": "2026-09-22.toys-figure-banner-materials.5",
+      "previousSha256": "c60b171252288ce173b98be96aeff11544672ae72962ae6cf6d36bf281641744"
+    },
+    "toys-interactive-video": {
+      "contractRevision": "2026-09-23.toys-interactive-video-materials.6",
+      "sha256": "d087cfb86f9b6625bbff353557e0541d14a13fdc8b68d7404b17bf27b45f05e3",
+      "previousContractRevision": "2026-09-22.toys-interactive-video-materials.5",
+      "previousSha256": "e24a3a913c950f9d6167e05389a3076c2b772582028b1d8ad455c484d9f1961e"
+    },
+    "plush-cushion-banner": {
+      "contractRevision": "2026-09-23.plush-cushion-banner-materials.6",
+      "sha256": "b103c5188a56ee6e72382eb7932895c311ef2554bcd55673c487a302abd3a5e6",
+      "previousContractRevision": "2026-09-22.plush-cushion-banner-materials.5",
+      "previousSha256": "3427251a2d25a326487f523ae056fd8f089f1546245a2062697220471ff6a9e4"
+    },
+    "plush-living-video": {
+      "contractRevision": "2026-09-23.plush-living-video-materials.6",
+      "sha256": "c6ec47c573ec4e6d77027bb09e4190f91e790c709c99de3bce244833cd0d8730",
+      "previousContractRevision": "2026-09-22.plush-living-video-materials.5",
+      "previousSha256": "313e213138017623284e7f833ad2d79ec8fd80c5fc1ed5babb580595bbad04bb"
+    },
+    "apparel-fabric-banner": {
+      "contractRevision": "2026-09-23.apparel-fabric-banner-materials.6",
+      "sha256": "0660298a2360a10a855e80ebe5a8053051bd5a86207885a559f5f2d69827e997",
+      "previousContractRevision": "2026-09-22.apparel-fabric-banner-materials.5",
+      "previousSha256": "8a346b37a577d0234225c215ce174a655892b6b3e68c02021f1f9db1a8adde58"
+    },
+    "apparel-runway-video": {
+      "contractRevision": "2026-09-23.apparel-runway-video-materials.6",
+      "sha256": "8e68ec4f202e3acf5f0d9678ba098b1437abb6db8b4423823e2c96c7fed08bb3",
+      "previousContractRevision": "2026-09-22.apparel-runway-video-materials.5",
+      "previousSha256": "e4403e032303dfc673efec8339da991fa53290dab96faecd8684247fbb72038e"
+    },
+    "footwear-craft-banner": {
+      "contractRevision": "2026-09-23.footwear-craft-banner-materials.6",
+      "sha256": "7da587b001aafbb859c5862f86a3b70f7a0ff9b6367be2a11967c7821c719005",
+      "previousContractRevision": "2026-09-22.footwear-craft-banner-materials.5",
+      "previousSha256": "ca9d2c611b7db1ae3b772d2c01e21b0ac44bb9833a6d9a6393f0e149933ac7f9"
+    },
+    "footwear-kinetic-video": {
+      "contractRevision": "2026-09-23.footwear-kinetic-video-materials.6",
+      "sha256": "ae6aa5f6aee2c46fa2a5da02187dfbbbf398e8a5aca5218f0dbe34afa0fe20f7",
+      "previousContractRevision": "2026-09-22.footwear-kinetic-video-materials.5",
+      "previousSha256": "5f61cbffc52fd22ec6de33ef21b2e99ce1225898222b15710ac33527d5895834"
+    },
+    "luggage-leather-banner": {
+      "contractRevision": "2026-09-23.luggage-leather-banner-materials.6",
+      "sha256": "c3eef060ca5b364c50339e72afd4a9f6e3a43c7498152e8b8e8969f2f71e9992",
+      "previousContractRevision": "2026-09-22.luggage-leather-banner-materials.5",
+      "previousSha256": "d1dc6845f9d1e904c46c83e82ca553f3b9ec8d156640d35eeca3d5572b703f4d"
+    },
+    "luggage-voyage-video": {
+      "contractRevision": "2026-09-23.luggage-voyage-video-materials.6",
+      "sha256": "f1190d8ab9bc08a3b8e3eebe1352903c9d48b9966dc683cd196f4f8fc6770d97",
+      "previousContractRevision": "2026-09-22.luggage-voyage-video-materials.5",
+      "previousSha256": "0ffd6c6b773ee67f8eb69fcb3b9b023331842e210032d4b8e6cb2ec96adae77b"
+    },
+    "jewelry-luxury-banner": {
+      "contractRevision": "2026-09-23.jewelry-luxury-banner-materials.6",
+      "sha256": "89c43c16dde50148785389b9a9b27bc71d630970ade6bf9228cafec543678ad7",
+      "previousContractRevision": "2026-09-22.jewelry-luxury-banner-materials.5",
+      "previousSha256": "abe18d4232a8f1ea37a7743b9a18b839a743184fa5e47446f8078d214373d5f6"
+    },
+    "jewelry-timeless-video": {
+      "contractRevision": "2026-09-23.jewelry-timeless-video-materials.6",
+      "sha256": "93f4b3faed5cec5f0948de05c9601fadf625157c1aff9dea35789f70bd73a74a",
+      "previousContractRevision": "2026-09-22.jewelry-timeless-video-materials.5",
+      "previousSha256": "8ece6c2501e3ea6cdef4c1b400ce28c5790bedd92891bd51dafc44af4e3bb30d"
+    },
+    "homedecor-aesthetic-banner": {
+      "contractRevision": "2026-09-23.homedecor-aesthetic-banner-materials.6",
+      "sha256": "b6d2eeb76954602d88c81e72adc8a0200cd52e38371209dda787b27e0abaf9bf",
+      "previousContractRevision": "2026-09-22.homedecor-aesthetic-banner-materials.5",
+      "previousSha256": "4743121b7d43c701aad19c2ea466d765e8ae8eac73637a41180c68b1d9105f1f"
+    },
+    "homedecor-living-video": {
+      "contractRevision": "2026-09-23.homedecor-living-video-materials.6",
+      "sha256": "f67c68dcce709375658edfbc69cd26b55f621fa8ca59acaccfa30f081ea97e06",
+      "previousContractRevision": "2026-09-22.homedecor-living-video-materials.5",
+      "previousSha256": "b47590309c565fc7c072dd12c1077aab9febe409eae43b0244218c57dba29414"
+    },
+    "furniture-minimal-banner": {
+      "contractRevision": "2026-09-23.furniture-minimal-banner-materials.6",
+      "sha256": "f15d32283a543f3a0cefdb7588a79e91f6206c1c80119da790f0f128f3667d66",
+      "previousContractRevision": "2026-09-22.furniture-minimal-banner-materials.5",
+      "previousSha256": "b4d92828e004ce19a51064017f2f2d580b0108eaa6367327aff20ebc6bd16efc"
+    },
+    "furniture-spatial-video": {
+      "contractRevision": "2026-09-23.furniture-spatial-video-materials.6",
+      "sha256": "607f85830c4ddf8a9047e2e8ef4050d02c67522088177908408d271e1a2ff1da",
+      "previousContractRevision": "2026-09-22.furniture-spatial-video-materials.5",
+      "previousSha256": "da03e487ceb3af810cd56be125470e943c45c101ef0265c9c4b07a7b40e6e32b"
+    },
+    "kitchen-culinary-banner": {
+      "contractRevision": "2026-09-23.kitchen-culinary-banner-materials.6",
+      "sha256": "31ffdbcc9c55d0407a33768b83af5bc323be93fa3b04411fc056af8db9720d49",
+      "previousContractRevision": "2026-09-22.kitchen-culinary-banner-materials.5",
+      "previousSha256": "c31156bfb349af93efc5976eae4950ddfaab03d6a3dbe5b92ac309f8bcd449bb"
+    },
+    "kitchen-gourmet-video": {
+      "contractRevision": "2026-09-23.kitchen-gourmet-video-materials.6",
+      "sha256": "074d23e1780b2e56c815e997954a2b3bb450c1e1ae15502cb5207a8c1555a62f",
+      "previousContractRevision": "2026-09-22.kitchen-gourmet-video-materials.5",
+      "previousSha256": "11aff83fb025ef0f7a62a67371d5d223adef4cc2e4698e2e1824ace95d2ecf55"
+    },
+    "drinkware-ceramic-banner": {
+      "contractRevision": "2026-09-23.drinkware-ceramic-banner-materials.6",
+      "sha256": "41fad0f2261669a2f0b22659c9dec968dbe98313b26b5c1cd78694e5ca110247",
+      "previousContractRevision": "2026-09-22.drinkware-ceramic-banner-materials.5",
+      "previousSha256": "2e25ff8f69bfff0d80cadf9521a0606afd8f34775531df7205ba713f13f107ca"
+    },
+    "drinkware-thermal-video": {
+      "contractRevision": "2026-09-23.drinkware-thermal-video-materials.6",
+      "sha256": "c118decf70c9302b6ab33ea0ca3a01df839778186d855489f1251a8e21a107ee",
+      "previousContractRevision": "2026-09-22.drinkware-thermal-video-materials.5",
+      "previousSha256": "82ac114ef8b632f61ed3a0850f537bece45e7bee165c802ae09c95fca61d1edb"
+    },
+    "beauty-skincare-banner": {
+      "contractRevision": "2026-09-23.beauty-skincare-banner-materials.6",
+      "sha256": "592dd58f94ded129408c22b08c10fa723a2540a8bc37d9b97df46e93cb1255e0",
+      "previousContractRevision": "2026-09-22.beauty-skincare-banner-materials.5",
+      "previousSha256": "9a78e37f56f40b67b0f28ddbbbc1e3b98b4f95887e083e935a107de410c5b124"
+    },
+    "beauty-glow-video": {
+      "contractRevision": "2026-09-23.beauty-glow-video-materials.6",
+      "sha256": "10aa31b1d0d7aeeaf6e5870d5d0498053abcd5dd924b1d3fba44ad55209d190c",
+      "previousContractRevision": "2026-09-22.beauty-glow-video-materials.5",
+      "previousSha256": "07ccdc64a9d4a201b79125b2da6538aa0713c856b91c6dae2fbcab7e10569d52"
+    },
+    "electronics-gadget-banner": {
+      "contractRevision": "2026-09-23.electronics-gadget-banner-materials.6",
+      "sha256": "2ed25abfba8ebd3235c365ce37c589b9db279ab8e4a78e4e79a805a7c444acfd",
+      "previousContractRevision": "2026-09-22.electronics-gadget-banner-materials.5",
+      "previousSha256": "2897eeac2790b10c91eea05234e4237d66d4b3fd3d67e49c5944cd637055c6cf"
+    },
+    "electronics-smart-video": {
+      "contractRevision": "2026-09-23.electronics-smart-video-materials.6",
+      "sha256": "234925a3fc824cc7af6ccde77570c5b7f7fe992e77101dc8f7676c12f5a7011b",
+      "previousContractRevision": "2026-09-22.electronics-smart-video-materials.5",
+      "previousSha256": "53fa21b0a56993fc31c708738c08793560eb6e421614d56e7d6283f2c04bb891"
+    },
+    "tools-precision-banner": {
+      "contractRevision": "2026-09-23.tools-precision-banner-materials.6",
+      "sha256": "3b3c4f988f45a1cc82501efa78fbcb3b64a79581213d14e9b78b0588ead3fd00",
+      "previousContractRevision": "2026-09-22.tools-precision-banner-materials.5",
+      "previousSha256": "5d33b3ccc258526447f7bc9d08f6b1896c3300aea1989f9a83573de258900ab0"
+    },
+    "tools-workshop-video": {
+      "contractRevision": "2026-09-23.tools-workshop-video-materials.6",
+      "sha256": "057d910d52ce21428420fbe67dd4211652803546c7a972e07a9c98769d990669",
+      "previousContractRevision": "2026-09-22.tools-workshop-video-materials.5",
+      "previousSha256": "f9a565bf4a13696c13d21eb4346aace658fe4f08022619eaff46feb4799b28e7"
+    },
+    "sports-trail-banner": {
+      "contractRevision": "2026-09-23.sports-trail-banner-materials.6",
+      "sha256": "422d3ad968a0e3448fe2896e4eb50aac1052d82179b909dc4438dc9a17cb9bc1",
+      "previousContractRevision": "2026-09-22.sports-trail-banner-materials.5",
+      "previousSha256": "a02305f14883760cea0f372a4600b61cab303db8019171781d9556dbc2893792"
+    },
+    "sports-kinetic-video": {
+      "contractRevision": "2026-09-23.sports-kinetic-video-materials.6",
+      "sha256": "4711988bd6d54a1e7b40d379e816c04f6a00f43beccf391e788f7b33265082d4",
+      "previousContractRevision": "2026-09-22.sports-kinetic-video-materials.5",
+      "previousSha256": "b2bbada95571c03c03103342783de8b1126d6090d87366ca3e541c7cd285b226"
+    },
+    "saas-automation": {
+      "contractRevision": "2026-09-23.saas-automation-materials.6",
+      "sha256": "1a00b0f84535024518aae4298b3f7adeb7e0fdeb1bdc13f18072130d71fd3635",
+      "previousContractRevision": "2026-09-22.saas-automation-materials.5",
+      "previousSha256": "91ca8a5101c567a966b26196ef3a887be926bf6cb19d0d56ac572ff4fe0f749f"
+    },
+    "corpox-ai-agency": {
+      "contractRevision": "2026-09-23.corpox-ai-agency-materials.6",
+      "sha256": "719f3a18ab2d1196ddc68e73a03cef879e5f464bf865786e97ebb6062ee8c21a",
+      "previousContractRevision": "2026-09-22.corpox-ai-agency-materials.5",
+      "previousSha256": "136508d74bb73b11d0b50be2697d1329e39b5887cefce8c59bc34944ad3461bc"
+    }
+  },
+  "assets": {
+    "/templates/releases/demo-20260923/corpox-noise.d1c5169bfca278bd.gif": "d1c5169bfca278bde80cfe123d5a200a44848df9ac2ab16962603119f0d4e37d"
+  },
+  "assetSources": {
+    "/templates/releases/demo-20260923/corpox-noise.d1c5169bfca278bd.gif": "https://html.inversweb.com/corpox/assets/images/icons/noise.gif"
+  }
+}

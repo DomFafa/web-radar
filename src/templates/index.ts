@@ -51,6 +51,8 @@ export interface RenderOptions {
   imageVariants?: (id: string, widths: number[], includeOriginal?: boolean) => {url: string; width: number; height: number}[] | undefined;
   inquiryUrl: string;
   preview?: boolean;
+  /** Canonical WR URL already supplied by renderSiteFiles during publication. */
+  publicBaseUrl?: string;
 }
 const esc = (value: unknown) =>
   String(value ?? '').replace(
