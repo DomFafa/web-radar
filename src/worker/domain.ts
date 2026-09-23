@@ -1,3 +1,4 @@
+import { ProductIdentitySchema } from "../shared/product-identity";
 import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
 import { normalizeCloneImages } from '../shared/clone';
@@ -87,6 +88,8 @@ const draftSchema = z.object({
         id,
         name: short,
         description: text,
+        productIdentity: ProductIdentitySchema.optional(),
+        identitySourceVersion: id.optional(),
         material: text,
         dimensions: short,
         imageAssetId: id.optional(),
@@ -407,7 +410,7 @@ export function editDraft(previous: Draft, input: unknown): Draft {
   // Provenance is written only through the authenticated source importer.
   next.products = next.products.map((p) => {
     const old = previous.products.find(product=>product.id === p.id);
-    return {...p,source:old?.source,...(old?.source?.factsOrigin === 'product-set' ? {
+    return {...p,source:old?.source,productIdentity:old?.productIdentity,identitySourceVersion:old?.identitySourceVersion,...(old?.source?.factsOrigin === 'product-set' ? {
       gallery:old.gallery,tagline:old.tagline,sellingPoints:old.sellingPoints,applications:old.applications,
     } : {})};
   });

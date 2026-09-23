@@ -1,3 +1,4 @@
+import { ProductIdentitySchema } from '../shared/product-identity';
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
 import type { ProjectServiceStatus, ProjectServicePreview } from '../shared/project-service';
@@ -1013,6 +1014,8 @@ export class DomainService {
           sellingPoints: snapshot.websiteCopy?.sellingPoints,
           applications: snapshot.websiteCopy?.applications,
           source: snapshot,
+          productIdentity: snapshot.conditions.productIdentity ? ProductIdentitySchema.parse(snapshot.conditions.productIdentity) : undefined,
+          identitySourceVersion: snapshot.version,
         });
       }
       p.draft.primaryProductId = p.draft.products[0]?.id ?? '';
@@ -1060,6 +1063,8 @@ export class DomainService {
           sellingPoints: snapshot.websiteCopy?.sellingPoints,
           applications: snapshot.websiteCopy?.applications,
           source: snapshot,
+          productIdentity: snapshot.conditions.productIdentity ? ProductIdentitySchema.parse(snapshot.conditions.productIdentity) : undefined,
+          identitySourceVersion: snapshot.version,
         };
         if (existing)
           draft.products = draft.products.map((p) => (p.id === existing.id ? product : p));

@@ -20,7 +20,7 @@ describe('versioned homepage hero inventory', () => {
   it.each(Object.keys(templateMediaRequirements))('%s requires one real homepage hero', id => {
     const contract = getMaterialsTemplate(id)!;
     expect(contract.imageSlots.filter(slot => slot.id.startsWith('hero-slide-')).map(slot => slot.id)).toEqual(['hero-slide-0']);
-    expect(contract.contractRevision).toBe(`2026-09-22.${id}-materials.4`);
+    expect(contract.contractRevision).toBe(`2026-09-22.${id}-materials.5`);
   });
 
   it.each(['2026-09-19.corpox-ai-agency-materials.1', '2026-09-20.corpox-ai-agency-materials.2', undefined])(

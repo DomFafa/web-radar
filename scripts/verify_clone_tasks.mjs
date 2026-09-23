@@ -452,7 +452,7 @@ try {
   await page.goto(origin+'/?project='+templateProject.id+'&tab=template');
   await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'经典工贸',exact:true})}).click();
   await page.locator('.template-media-guide').waitFor();
-  assert.equal(await page.locator('.template-media-card').count(), 29);
+  assert.equal(await page.locator('.template-media-card').count(), 39);
   assert.equal(await page.getByRole('button',{name:/切换为 AI/}).count(),0);
   await page.locator('.template-media-guide summary').click();
   assert.ok((await page.locator('.template-slot-sizes').innerText()).includes('1536 × 1024'));
@@ -500,7 +500,7 @@ try {
   await page.screenshot({path:'artifacts/task-review/url-publication-check.png'});
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: ten template media checklists match their layouts; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
+    'PASS: 39 template media checklists match their layouts; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];
