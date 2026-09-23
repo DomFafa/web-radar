@@ -7,19 +7,17 @@
   "routes": [
     {
       "pattern": "web-radar.net",
-      "custom_domain": true
-    }
+      "custom_domain": true,
+    },
   ],
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-09-11",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": true
+    "run_worker_first": true,
   },
   "vars": {
     "ENVIRONMENT": "production",
@@ -28,40 +26,38 @@
     "PRODUCT_RADAR_BASE_URL": "https://search-products.online",
     "PRODUCT_RADAR_PARENT_ORIGINS": "https://search-products.online",
     "IMAGE_MODEL": "gpt-image-2.5-sunburst",
-    "TEXT_MODEL": "gpt-5.5"
+    "TEXT_MODEL": "gpt-5.5",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "web-radar",
       "database_id": "cce8ea9d-cd9b-4a35-81bd-0097b12daf93",
-      "migrations_dir": "migrations"
-    }
+      "migrations_dir": "migrations",
+    },
   ],
   "r2_buckets": [
     {
       "binding": "MEDIA",
-      "bucket_name": "web-radar-private"
-    }
+      "bucket_name": "web-radar-private",
+    },
   ],
   "durable_objects": {
     "bindings": [
       {
         "name": "COORDINATOR",
-        "class_name": "Coordinator"
-      }
-    ]
+        "class_name": "Coordinator",
+      },
+    ],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": [
-        "Coordinator"
-      ]
-    }
+      "new_sqlite_classes": ["Coordinator"],
+    },
   ],
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "env": {
     "test": {
@@ -73,105 +69,109 @@
         "APP_ORIGIN": "http://127.0.0.1:8788",
         "PRODUCT_RADAR_PARENT_ORIGINS": "http://127.0.0.1:5173,http://127.0.0.1:4178",
         "IMAGE_MODEL": "gpt-image-2.5-sunburst",
-        "TEXT_MODEL": "gpt-5.5"
+        "TEXT_MODEL": "gpt-5.5",
       },
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "web-radar",
           "database_id": "00000000-0000-0000-0000-000000000000",
-          "migrations_dir": "migrations"
-        }
+          "migrations_dir": "migrations",
+        },
       ],
       "r2_buckets": [
         {
           "binding": "MEDIA",
-          "bucket_name": "web-radar-test-private"
-        }
+          "bucket_name": "web-radar-test-private",
+        },
       ],
       "durable_objects": {
         "bindings": [
           {
             "name": "COORDINATOR",
-            "class_name": "Coordinator"
-          }
-        ]
+            "class_name": "Coordinator",
+          },
+        ],
       },
       "assets": {
         "directory": "./dist",
         "binding": "ASSETS",
         "not_found_handling": "single-page-application",
-        "run_worker_first": true
+        "run_worker_first": true,
       },
       "queues": {
         "producers": [
           {
             "queue": "web-radar-edm-email",
-            "binding": "EDM_EMAIL_QUEUE"
+            "binding": "EDM_EMAIL_QUEUE",
           },
           {
             "queue": "web-radar-edm-sites",
-            "binding": "EDM_SITE_QUEUE"
-          }
+            "binding": "EDM_SITE_QUEUE",
+          },
         ],
         "consumers": [
           {
             "queue": "web-radar-edm-email",
             "max_batch_size": 10,
+            "max_batch_timeout": 1,
             "max_concurrency": 2,
             "max_retries": 3,
-            "dead_letter_queue": "web-radar-edm-email-dlq"
+            "dead_letter_queue": "web-radar-edm-email-dlq",
           },
           {
             "queue": "web-radar-edm-email-dlq",
             "max_batch_size": 10,
+            "max_batch_timeout": 1,
             "max_concurrency": 1,
-            "max_retries": 3
+            "max_retries": 3,
           },
           {
             "queue": "web-radar-edm-sites",
             "max_batch_size": 1,
             "max_concurrency": 1,
-            "max_retries": 8
-          }
-        ]
-      }
-    }
+            "max_retries": 8,
+          },
+        ],
+      },
+    },
   },
   "browser": {
-    "binding": "BROWSER"
+    "binding": "BROWSER",
   },
   "queues": {
     "producers": [
       {
         "queue": "web-radar-edm-email",
-        "binding": "EDM_EMAIL_QUEUE"
+        "binding": "EDM_EMAIL_QUEUE",
       },
       {
         "queue": "web-radar-edm-sites",
-        "binding": "EDM_SITE_QUEUE"
-      }
+        "binding": "EDM_SITE_QUEUE",
+      },
     ],
     "consumers": [
       {
         "queue": "web-radar-edm-email",
         "max_batch_size": 10,
+        "max_batch_timeout": 1,
         "max_concurrency": 2,
         "max_retries": 3,
-        "dead_letter_queue": "web-radar-edm-email-dlq"
+        "dead_letter_queue": "web-radar-edm-email-dlq",
       },
       {
         "queue": "web-radar-edm-email-dlq",
         "max_batch_size": 10,
+        "max_batch_timeout": 1,
         "max_concurrency": 1,
-        "max_retries": 3
+        "max_retries": 3,
       },
       {
         "queue": "web-radar-edm-sites",
         "max_batch_size": 1,
         "max_concurrency": 1,
-        "max_retries": 8
-      }
-    ]
-  }
+        "max_retries": 8,
+      },
+    ],
+  },
 }

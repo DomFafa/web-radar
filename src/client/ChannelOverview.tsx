@@ -120,6 +120,26 @@ export function Metric({
 }
 export function EmailSummary(props: SummaryProps<EmailOverview>) {
   const d = props.data;
+  const [syncing, setSyncing] = useState(false),
+    [syncError, setSyncError] = useState('');
+  const running = d?.resendSync?.some((s) => s.status === 'running');
+  useEffect(() => {
+    if (!running) return;
+    const timer = window.setInterval(props.onRefresh, 5000);
+    return () => window.clearInterval(timer);
+  }, [running, props.onRefresh]);
+  async function syncResend() {
+    setSyncing(true);
+    setSyncError('');
+    try {
+      await api('/api/outreach/campaigns/stats/resend-sync', { method: 'POST' });
+      props.onRefresh();
+    } catch (e) {
+      setSyncError(errorMessage(e));
+    } finally {
+      setSyncing(false);
+    }
+  }
   const metrics = [
     ['送达率', d?.deliveryRate, d?.totalDelivered, 'check'],
     ['打开率', d?.openRate, d?.totalOpened, 'eye'],
@@ -138,6 +158,33 @@ export function EmailSummary(props: SummaryProps<EmailOverview>) {
         <Metric label="订阅联系人" value={d?.subscribedContacts} icon="users" />
         <Metric label="已发送邮件" value={d?.totalSent} icon="mail" />
       </div>
+      {!!d?.resendSync?.length && (
+        <div className="channel-sync">
+          <div>
+            <strong>Resend 数据追踪</strong>
+            <p>新邮件通过回调自动更新；历史同步读取已发送邮件的最新状态，不会重新发送邮件。</p>
+            {d.resendSync.map((s) => (
+              <p key={s.providerName} role="status">
+                {s.providerName}：
+                {s.status === 'running'
+                  ? '同步中'
+                  : s.status === 'completed'
+                    ? '同步完成'
+                    : s.status === 'failed'
+                      ? '同步失败'
+                      : '尚未同步历史数据'}
+                {s.checked > 0 ? ` · 已检查 ${s.checked} 封` : ''}
+                {s.failed > 0 ? ` · ${s.failed} 封未能同步` : ''}
+                {s.error ? ` · ${s.error}` : ''}
+              </p>
+            ))}
+            {syncError && <p role="alert">{syncError}</p>}
+          </div>
+          <Button kind="secondary" onClick={() => void syncResend()} disabled={syncing}>
+            {syncing ? '正在启动…' : running ? '继续同步' : '同步 Resend 数据'}
+          </Button>
+        </div>
+      )}
       <h3 className="channel-subtitle">送达与互动效果</h3>
       <div className="channel-rates">
         {metrics.map(([label, value, total, icon]) => (

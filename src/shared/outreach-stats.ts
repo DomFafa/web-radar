@@ -1,4 +1,12 @@
 export interface EmailOverview {
+  resendSync?: {
+    providerName: string;
+    status: string;
+    checked: number;
+    failed: number;
+    error: string | null;
+    updatedAt: number | null;
+  }[];
   totalCampaigns: number;
   totalContacts: number;
   subscribedContacts: number;

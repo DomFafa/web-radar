@@ -1,3 +1,4 @@
+import { emailSendDelay, deferEmail, resendCooldown } from '../lib/email-pacing';
 import { resendRequest, ResendApiError } from '../lib/resend';
 import { createHash } from 'node:crypto';
 import { publicFetch as fetch } from "../lib/network";
@@ -772,9 +773,9 @@ export async function handleEmailQueue(
             msg.ack();
             return;
           }
-          const [campaignState] = await db.select({ status: campaigns.status }).from(campaigns).where(eq(campaigns.id, message.campaignId));
+          const [campaignState] = await db.select({ status: campaigns.status, sendRate: campaigns.sendRate }).from(campaigns).where(eq(campaigns.id, message.campaignId));
           if (!campaignState || (campaignState.status === "completed" && !recipient.errorMessage)) { msg.ack(); return; }
-          if (campaignState.status === "paused") { msg.retry({ delaySeconds: 300 }); return; }
+          if (campaignState.status === "paused") { await deferEmail(env, msg, 300000); return; }
           const attempt = await readAttempt(env.DB, message.recipientId);
           if (attempt?.result) {
             const saved = JSON.parse(attempt.result);
@@ -862,6 +863,8 @@ export async function handleEmailQueue(
             msg.ack(); return;
           }
 
+          const delay = await emailSendDelay(env.DB, message.recipientId, message.campaignId, campaignState.sendRate, provider.provider === 'resend');
+          if (delay > 0) { await deferEmail(env, msg, delay); return; }
           if (!await claimAttempt(env.DB, message.recipientId)) { msg.retry({ delaySeconds: 120 }); return; }
           dispatchStarted = true;
 
@@ -945,12 +948,14 @@ export async function handleEmailQueue(
 
           if (dispatchStarted && error instanceof ResendApiError && [401,403,429].includes(error.status)) {
             // These responses explicitly reject acceptance, so a retry is safe.
-            const throttled = error.status === 429;
+            const throttled = error.status === 429 && !error.quotaExceeded;
+            const delaySeconds = Math.max(1, error.retryAfter || 60);
+            if (error.status === 429) await resendCooldown(env.DB, delaySeconds);
             if (!throttled) await db.update(campaigns).set({status:'paused',updatedAt:new Date()}).where(eq(campaigns.id,message.campaignId));
-            await db.update(campaignRecipients).set({status:'queued',errorMessage:throttled?'Resend 限流，等待重试':'AUTH_REJECTED: Resend 密钥或权限无效；更新后恢复'})
+            await db.update(campaignRecipients).set({status:'queued',errorMessage:throttled?'Resend 限流，等待重试':error.quotaExceeded?'QUOTA_REJECTED: Resend 发送额度不足；额度恢复后继续':'AUTH_REJECTED: Resend 密钥或权限无效；更新后恢复'})
               .where(and(eq(campaignRecipients.id,message.recipientId),sql`${campaignRecipients.sentAt} IS NULL`));
             await env.DB.prepare('DELETE FROM edm_email_send_attempts WHERE recipient_id=? AND result IS NULL').bind(message.recipientId).run();
-            msg.retry({delaySeconds:throttled?60:300});return;
+            await deferEmail(env, msg, (throttled?delaySeconds:300)*1000);return;
           }
 
           if (dispatchStarted && /Mailchimp Transactional API Error \(401\):/.test(error.message || "") && /Invalid_Key/.test(error.message || "")) {

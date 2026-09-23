@@ -18,7 +18,7 @@ const stats=()=>sqlite.prepare("SELECT * FROM edm_campaigns WHERE id='c'").get()
 function signed(body:string){const time=String(Math.floor(Date.now()/1000)),id='msg_test';return {'svix-id':id,'svix-timestamp':time,'svix-signature':'v1,'+createHmac('sha256',Buffer.from(secret.slice(6),'base64')).update(`${id}.${time}.${body}`).digest('base64')};}
 const app=(role='admin',user='u')=>{const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:user,role});await next()});h.route('/providers',providersRoutes);return h;};
 beforeEach(async()=>{
- sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
+ sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
  env={DB:d1(sqlite),CREDENTIAL_KEY:'test-key',BETTER_AUTH_SECRET:'test-auth',BETTER_AUTH_URL:'https://app.example.com'};
  sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','Test','u@example.com',0,0),('other','Other','other@example.com',0,0);
  INSERT INTO edm_providers(id,user_id,provider,name,api_key,config,is_default,created_at,updated_at) VALUES ('p','u','resend','Test','unused','{}',1,0,0);
@@ -138,9 +138,63 @@ test('campaign submission selects the verified Resend account and blocks removed
  UPDATE edm_campaigns SET status='draft',template_id='t',sender_email='re@acfilter.net';
  INSERT INTO edm_providers(id,user_id,provider,name,api_key,config,is_default,created_at,updated_at) VALUES ('m','u','mailchimp','Mailchimp','unused','{}',1,0,0);`);
  sqlite.prepare("UPDATE edm_providers SET api_key=?,config=? WHERE id='m'").run(await seal('test-mailchimp','m',env),await seal(JSON.stringify({mailchimpDomains:[{domain:'oilsfilter.org',status:'verified'}]}),'m:config',env));
- vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'verified'}]})));
+ vi.stubGlobal('fetch',vi.fn(async(url:any)=>String(url).includes('/webhooks')?Response.json(String(url).includes('?')?{data:[]}:{id:'hook',signing_secret:secret}):Response.json({data:[{id:'domain',name:'acfilter.net',status:'verified',open_tracking:true,click_tracking:true}]})));
  const sendBatch=vi.fn();env.EMAIL_QUEUE={sendBatch};
  let response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(200);expect(sendBatch.mock.calls[0][0][0].body.providerId).toBe('p');
  sqlite.exec("UPDATE edm_campaigns SET status='draft'");sendBatch.mockClear();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'pending'}]})));
  response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(400);expect(sendBatch).not.toHaveBeenCalled();expect(stats().status).toBe('draft');
+});
+
+test('rate rejection honors Retry-After using delayed publication; daily quota pauses',async()=>{
+ const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:null,subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:null,variables:{}},ack:vi.fn(),retry:vi.fn()};
+ const send=vi.fn();env.EMAIL_QUEUE={send};
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({name:'rate_limit_exceeded'},{status:429,headers:{'retry-after':'37'}})));
+ await handleEmailQueue({messages:[msg]} as any,env);
+ expect(send).toHaveBeenLastCalledWith(msg.body,{delaySeconds:37});expect(msg.retry).not.toHaveBeenCalled();expect(row().status).toBe('queued');
+ sqlite.exec('UPDATE edm_email_clocks SET next_at=0; DELETE FROM edm_email_schedule');
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({name:'daily_quota_exceeded'},{status:429})));
+ await handleEmailQueue({messages:[msg]} as any,env);expect(stats().status).toBe('paused');expect(row().error_message).toContain('QUOTA_REJECTED');
+ expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()!.n).toBe(0);
+});
+
+test('Resend history sync is read-only, idempotent, workspace bound, and never re-sends unknown mail',async()=>{
+ const {startResendSync,handleResendSync}=await import('../../src/outreach/server/lib/resend-tracking');
+ const {emailOverview}=await import('../../src/outreach/server/lib/overview');
+ sqlite.exec("UPDATE edm_resend_deliveries SET email_id='email1'; UPDATE edm_campaign_recipients SET status='sent',sent_at=1,ses_message_id='email1'; UPDATE edm_campaigns SET total_sent=1");
+ const send=vi.fn();env.EMAIL_QUEUE={send};
+ await startResendSync(env,'p');const message=send.mock.calls[0][0];
+ const request=vi.fn(async(url:any,options:any)=>{expect(url).toBe('https://api.resend.com/emails/email1');expect(options.method || 'GET').toBe('GET');return Response.json({id:'email1',last_event:'clicked'})});vi.stubGlobal('fetch',request);
+ await handleResendSync(message,env);await handleResendSync(message,env);await handleResendSync(message,env);
+ expect(request).toHaveBeenCalledOnce();expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:1,total_clicked:1});
+ expect((await emailOverview(env.DB,'u')).resendSync).toMatchObject([{status:'completed',checked:1,failed:0}]);
+ expect((await emailOverview(env.DB,'other')).resendSync).toEqual([]);
+ expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()!.n).toBe(0);
+});
+
+test('sync limit cooldown does not discard a record; expired lease can be recovered',async()=>{
+ const {startResendSync,handleResendSync}=await import('../../src/outreach/server/lib/resend-tracking');
+ sqlite.exec("UPDATE edm_resend_deliveries SET email_id='email1'");
+ const send=vi.fn();env.EMAIL_QUEUE={send};await startResendSync(env,'p');const message=send.mock.calls[0][0];
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({name:'rate_limit_exceeded'},{status:429,headers:{'retry-after':'12'}})));
+ await handleResendSync(message,env);
+ expect(send).toHaveBeenLastCalledWith(message,{delaySeconds:12});expect(sqlite.prepare('SELECT checked_at FROM edm_resend_deliveries').get()!.checked_at).toBeNull();
+ sqlite.prepare('UPDATE edm_resend_sync_runs SET lease_until=?').run(Date.now()+60000);
+ expect(await handleResendSync(message,env)).toBeGreaterThan(0);
+ sqlite.exec('UPDATE edm_resend_sync_runs SET lease_until=0; UPDATE edm_email_clocks SET next_at=0');
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({id:'email1',last_event:'delivered'})));
+ await handleResendSync(message,env);expect(stats().total_delivered).toBe(1);
+});
+
+test('send preflight refuses dispatch when tracking configuration cannot be connected',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin'});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec("INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at) VALUES ('t','u','Template','Hello','<p>Hello</p>',0,0); UPDATE edm_campaigns SET status='draft',template_id='t'");
+ vi.stubGlobal('fetch',vi.fn(async(url:any)=>String(url).includes('/domains')?Response.json({data:[{name:'example.com',status:'verified'}]}):Response.json({message:'forbidden'},{status:403})));
+ env.EMAIL_QUEUE={sendBatch:vi.fn()};
+ const response=await h.request('/campaigns/c/send',{method:'POST'},env);
+ expect(response.status).toBe(400);expect((await response.json() as any).error).toContain('数据追踪未准备好');expect(env.EMAIL_QUEUE.sendBatch).not.toHaveBeenCalled();expect(stats().status).toBe('draft');
+ for(const method of ['POST','PUT']){
+ const invalid=await h.request(method==='POST'?'/campaigns':'/campaigns/c',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({sendRate:0})},env);
+ expect(invalid.status).toBe(400);
+ }
 });

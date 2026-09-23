@@ -1,3 +1,4 @@
+import {d1} from './sqlite';
 import { seal } from "../../src/outreach/server/lib/credentials";
 vi.mock("../../src/outreach/server/lib/network",()=>({publicFetch:(...args:any[])=>globalThis.fetch(args[0],args[1])}));
 import { test, vi } from "vitest";
@@ -9,6 +10,7 @@ import { handleEmailQueue, type EmailSendMessage } from "../../src/outreach/serv
 test("recovery skips sent mail, reconciles provider records, quarantines unknown outcomes, sends untouched only once", async () => {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(readFileSync("migrations/0007_outreach.sql", "utf8"));
+  for(const file of ['0008_resend_tracking.sql','0009_email_scheduling.sql']) sqlite.exec(readFileSync('migrations/'+file,'utf8'));
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','test','u@example.com',0,0);
     INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at) VALUES ('p','u','mailchimp','test','fake-key',1,0,0);
     INSERT INTO edm_campaigns(id,user_id,name,sender_email,sender_name,status,created_at,updated_at) VALUES ('campaign','u','test','from@example.com','test','sending',0,0);`);
@@ -20,13 +22,7 @@ test("recovery skips sent mail, reconciles provider records, quarantines unknown
     sqlite.prepare("INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,error_message,created_at) VALUES (?,'campaign',?,?,?,0)")
       .run(id, id, id === "sent" ? "sent" : "sending", ["found", "unknown"].includes(id) ? "Mailchimp response status=200" : null);
   }
-  const db = { prepare(sql: string) { const build = (params: any[] = []): any => ({
-    bind: (...values: any[]) => build(values),
-    async raw() { const stmt = sqlite.prepare(sql); stmt.setReturnArrays(true); return stmt.all(...params); },
-    async all() { return { results: sqlite.prepare(sql).all(...params) }; },
-    async first() { return sqlite.prepare(sql).get(...params) || null; },
-    async run() { return { meta: { changes: Number(sqlite.prepare(sql).run(...params).changes) } }; },
-  }); return build(); } };
+  const db = d1(sqlite);
   const oldFetch = globalThis.fetch;
   const sent: string[] = [];
   globalThis.fetch = async (url: any, init: any) => {
@@ -45,6 +41,7 @@ test("recovery skips sent mail, reconciles provider records, quarantines unknown
     assert.equal(sent.length, 1);
     sqlite.exec("UPDATE edm_campaigns SET status='sending'; INSERT INTO edm_contacts(id,user_id,email,created_at,updated_at) VALUES ('auth','u','auth@example.com',0,0); INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,created_at) VALUES ('auth','campaign','auth','sending',0)");
     globalThis.fetch = async () => Response.json({ name: "Invalid_Key", message: "Invalid API key" }, { status: 401 });
+    sqlite.exec('UPDATE edm_email_clocks SET next_at=0');
     let retries = 0;
     await handleEmailQueue({ messages: [{ body: { ...messages[3].body, recipientId: "auth", toEmail: "auth@example.com" }, ack() {}, retry() { retries++; } }], recovery: true }, { ...env, DB: db, BETTER_AUTH_URL: "https://example.com", BETTER_AUTH_SECRET: "test-secret" });
     assert.equal(retries, 1);

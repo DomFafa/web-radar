@@ -12,10 +12,13 @@ export class ResendApiError extends Error {
   constructor(
     message: string,
     public status: number,
+    public retryAfter = 60,
+    public code = '',
   ) {
     super(message);
     this.name = 'ResendApiError';
   }
+  get quotaExceeded() { return ['daily_quota_exceeded', 'monthly_quota_exceeded'].includes(this.code); }
 }
 export async function resendRequest(key: string, path: string, init: RequestInit = {}) {
   const response = await publicFetch('https://api.resend.com' + path, {
@@ -39,7 +42,7 @@ export async function resendRequest(key: string, path: string, init: RequestInit
         response.status,
       );
     if (response.status === 429)
-      throw new ResendApiError('Resend 请求频率或额度受限，请稍后重试', response.status);
+      throw new ResendApiError('Resend 请求频率或额度受限，请稍后重试', response.status, Math.max(1, Number(response.headers.get('retry-after')) || 60), String(data?.name || ''));
     throw new Error(
       `Resend 请求失败（${response.status}）：${String(data?.message || '请检查参数及帐号状态').slice(0, 300)}`,
     );

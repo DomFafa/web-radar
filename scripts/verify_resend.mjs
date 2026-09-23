@@ -24,6 +24,12 @@ try{
  await context.route('**/api/outreach/providers/sender-domains',route=>route.fulfill({json:failDomains?{data:[],errors:[{providerName:'Resend',message:'帐号权限不足'}]}:{data:[{domain:'acfilter.net',providerId:id,providerType:'resend'},{domain:'oilsfilter.org',providerId:'mailchimp',providerType:'mailchimp'}],errors:[]}}));
  await context.request.post(origin+'/api/outreach/contacts',{data:{email:'browser-test@example.com',name:'Test'}});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(origin+'/?view=edm');const tabs=page.getByRole('navigation',{name:'EDM 邮件功能'});
+ await page.getByText('尚未同步历史数据',{exact:false}).waitFor();
+ let synced=false;await context.route('**/api/outreach/campaigns/stats/resend-sync',async route=>{synced=true;await route.fulfill({json:{success:true,data:{accounts:1}}})});
+ await page.getByRole('button',{name:'同步 Resend 数据',exact:true}).click();assert.ok(synced);
+ await page.screenshot({path:artifacts+'/tracking-overview-desktop.png'});
+ await page.setViewportSize({width:390,height:1000});await page.screenshot({path:artifacts+'/tracking-overview-mobile.png'});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'tracking overview overflow');
+ await page.setViewportSize({width:1440,height:1000});
  await tabs.getByRole('button',{name:'服务商配置',exact:true}).click();await page.getByRole('button',{name:'连接 / 检测数据回调',exact:true}).click();assert.ok(webhook);
  await page.getByRole('button',{name:'+ 添加配置',exact:true}).click();const modal=page.locator('.outreach .modal');await modal.getByText('Resend',{exact:true}).click();await modal.getByText(/填写 Resend API Key/).waitFor();await page.screenshot({path:artifacts+'/provider-desktop.png'});await modal.getByRole('button',{name:'×',exact:true}).click();
  await tabs.getByRole('button',{name:'发信域名',exact:true}).click();const panel=page.getByRole('region',{name:'Resend 帐号 Resend 测试帐号'});await panel.getByText('example.com',{exact:true}).waitFor();await panel.getByRole('button',{name:'检测域名 / DNS',exact:true}).click();await panel.getByText('resend._domainkey',{exact:true}).waitFor();await panel.getByRole('button',{name:'开启打开与点击追踪',exact:true}).click();await panel.getByRole('button',{name:'打开与点击追踪已开启',exact:true}).waitFor();assert.ok(tracking);

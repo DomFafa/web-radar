@@ -1,14 +1,14 @@
+import { connectResendWebhook } from '../lib/resend-tracking';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { eq, and } from 'drizzle-orm';
 import { createDb } from '../../db';
 import { providers } from '../../db/schema';
 import type { Bindings, Variables } from '../../shared/types';
-import { decodeProvider, seal } from '../lib/credentials';
+import { decodeProvider } from '../lib/credentials';
 import {
   resendRequest,
   listResendDomains,
-  listResendResources,
   RESEND_EVENTS,
   verifyResendSignature,
   applyResendEvent,
@@ -74,44 +74,8 @@ export function registerResendRoutes(app: Hono<Env>) {
   });
   app.post('/:id/resend/webhook', async (c) => {
     try {
-      const p = await get(c),
-        config = JSON.parse(p.config || '{}');
-      const endpoint = new URL(
-        '/api/outreach/webhooks/resend/' + p.id,
-        c.env.BETTER_AUTH_URL,
-      ).toString();
-      if (!endpoint.startsWith('https://'))
-        return c.json({ error: '请在 HTTPS 生产环境连接 Resend 回调' }, 400);
-      // Recover a previously created endpoint after a database/network failure.
-      const list = await listResendResources(p.apiKey, 'webhooks');
-      const existing = list.find((w: any) => w.endpoint === endpoint);
-      let hook: any;
-      if (existing) {
-        await resendRequest(p.apiKey, '/webhooks/' + encodeURIComponent(existing.id), {
-          method: 'PATCH',
-          body: JSON.stringify({ events: RESEND_EVENTS, status: 'enabled' }),
-        });
-        hook = await resendRequest(p.apiKey, '/webhooks/' + encodeURIComponent(existing.id));
-      } else
-        hook = await resendRequest(p.apiKey, '/webhooks', {
-          method: 'POST',
-          body: JSON.stringify({ endpoint, events: RESEND_EVENTS }),
-        });
-      if (!hook.signing_secret) throw new Error('Resend 未返回回调签名密钥，请检查权限');
-      config.resendWebhookId = hook.id;
-      config.resendWebhookSecret = hook.signing_secret;
-      config.resendWebhookConnectedAt = new Date().toISOString();
-      await createDb(c.env.DB)
-        .update(providers)
-        .set({
-          config: await seal(JSON.stringify(config), p.id + ':config', c.env),
-          updatedAt: new Date(),
-        })
-        .where(eq(providers.id, p.id));
-      return c.json({
-        message: 'Resend 数据回调已连接；请确认发信域名已启用打开和点击追踪',
-        data: { endpoint, connected: true },
-      });
+      const data = await connectResendWebhook(c.env, await get(c));
+      return c.json({message:'Resend 数据回调已连接；请确认发信域名已启用打开和点击追踪', data});
     } catch (e: any) {
       return c.json({ error: e.message }, 400);
     }

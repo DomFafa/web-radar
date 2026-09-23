@@ -373,7 +373,8 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
             <div className="sender-rate-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="sender-rate">发送速率（封/分钟）</label>
-                <input id="sender-rate" className="form-input" type="number" min="1" max="200" value={form.sendRate} onChange={e=>setForm({...form,sendRate:Number(e.target.value)||50})} />
+                <input aria-describedby="sender-rate-help" id="sender-rate" className="form-input" type="number" min="1" max="200" value={form.sendRate} onChange={e=>setForm({...form,sendRate:Number(e.target.value)||50})} />
+                <p id="sender-rate-help" className="form-hint">Resend 等逐封发送通道按此上限排队；限流时自动延后。Mailchimp Marketing 由服务商调度。</p>
               </div>
               <p className="form-help">可设置 1–200 封/分钟，实际发送受服务商额度与限流影响。</p>
             </div>

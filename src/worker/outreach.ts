@@ -1,3 +1,4 @@
+import { handleResendSync, type ResendSyncMessage } from '../outreach/server/lib/resend-tracking';
 import { resendWebhookRoutes } from '../outreach/server/routes/resend.routes';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
@@ -53,12 +54,21 @@ export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<
   app.onError((error,c)=>{console.error('Outreach request failed',testMode(env)?error:error.name);return c.json({error:'操作失败，请检查输入或服务配置后重试。'},500)});
   return app.fetch(request,bindings,ctx);
 }
-export async function outreachQueue(batch:MessageBatch<EmailSendMessage|SiteMessageQueueMessage>,env:AppEnv) {
+export async function outreachQueue(batch:MessageBatch<EmailSendMessage|SiteMessageQueueMessage|ResendSyncMessage>,env:AppEnv) {
   const bindings=outreachBindings(env);
   if(testMode(env)) { for(const m of batch.messages)m.ack();return; }
   if(batch.queue.startsWith('web-radar-edm-email')) {
     const groups=new Map<string,Message<EmailSendMessage>[]>();
-    for(const message of batch.messages as Message<EmailSendMessage>[])groups.set(message.body.campaignId,[...(groups.get(message.body.campaignId)||[]),message]);
+    for (const message of batch.messages) {
+      if ('kind' in message.body && message.body.kind === 'resend-sync') {
+        const delay=await handleResendSync(message.body,bindings);
+        if(delay) await bindings.EMAIL_QUEUE.send(message.body,{delaySeconds:Math.min(86400,delay)});
+        message.ack();
+      } else {
+        const email = message as Message<EmailSendMessage>;
+        groups.set(email.body.campaignId,[...(groups.get(email.body.campaignId)||[]),email]);
+      }
+    }
     for(const messages of groups.values())await handleEmailQueue({messages,recovery:batch.queue.endsWith('-dlq')},bindings);
     return;
   }
