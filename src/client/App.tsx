@@ -28,6 +28,7 @@ import {
   dateTime,
 } from './components';
 const Editor = lazy(() => import('./Editor'));
+const Outreach = lazy(() => import('../outreach/client/App'));
 const Admin = lazy(() => import('./Admin'));
 import { ErrorBoundary } from './ErrorBoundary';
 import { nextDraftStep, projectStatus, workflowSteps } from './workflow';
@@ -103,10 +104,10 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'projects' | 'admin' | 'services'>(() => {
+  const [view, setView] = useState<'projects' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'admin' || v === 'services') return v;
+        if (v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
       } catch {}
       return 'projects';
     }),
@@ -351,6 +352,8 @@ export default function App() {
                 <Icon name="grid" />
                 网站项目
               </button>
+              <button className={view === 'edm' ? 'active' : ''} aria-current={view === 'edm' ? 'page' : undefined} onClick={() => setView('edm')}><Icon name="mail" />EDM 邮件</button>
+              <button className={view === 'site-messages' ? 'active' : ''} aria-current={view === 'site-messages' ? 'page' : undefined} onClick={() => setView('site-messages')}><Icon name="message" />站内信</button>
               <button
                 className={view === 'services' ? 'active' : ''}
                 aria-current={view === 'services' ? 'page' : undefined}
@@ -392,6 +395,10 @@ export default function App() {
             </header>
             {view === 'projects' ? (
               <Projects key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onOpen={setSelected} />
+            ) : view === 'edm' || view === 'site-messages' ? (
+              <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回网站项目。" onBack={()=>setView('projects')} backText="返回网站项目">
+                <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}`} principal={principal} section={view}/></Suspense>
+              </ErrorBoundary>
             ) : view === 'admin' ? (
               <ErrorBoundary
                 scope="section"

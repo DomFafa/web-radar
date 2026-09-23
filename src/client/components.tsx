@@ -54,6 +54,7 @@ export function Icon({ name, size = 18 }: { name: string; size?: number }) {
         <path d="m9 3-.7 2.6-2.6.7L3 9l1.9 2v2L3 15l2.7 2.7 2.6.7L9 21h6l.7-2.6 2.6-.7L21 15l-1.9-2v-2L21 9l-2.7-2.7-2.6-.7L15 3Z" />
       </>
     ),
+    message: <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2v-10.5a9.5 9.5 0 1 1 19 0Z" />,
     mail: (
       <>
         <rect x="3" y="5" width="18" height="14" rx="2" />

@@ -32,7 +32,7 @@ export interface Secrets {
   ASSET_SIGNING_KEY?: string;
   OPENAI_API_KEY?: string;
 }
-export type AppEnv = Secrets & Pick<Cloudflare.Env, 'DB' | 'MEDIA' | 'COORDINATOR' | 'ASSETS'>;
+export type AppEnv = Secrets & { EDM_EMAIL_QUEUE?: Queue; EDM_SITE_QUEUE?: Queue; BROWSER?: Fetcher } & Pick<Cloudflare.Env, 'DB' | 'MEDIA' | 'COORDINATOR' | 'ASSETS'>;
 export type HonoEnv = {
   Bindings: AppEnv;
   Variables: { principal: Principal; sessionHash: string };
