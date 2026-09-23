@@ -33,7 +33,6 @@ jobs:
       RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
       PRODUCT_RADAR_SHA: ${{ inputs.product_radar_sha }}
       PRODUCT_RADAR_ROOT: ${{ github.workspace }}/product-radar
-      RELEASE_ARTIFACT_DIR: ${{ runner.temp }}/wr-release-artifact
       GITHUB_TOKEN: ${{ github.token }}
       RADAR_READ_TOKEN: ${{ secrets.RADAR_READ_TOKEN }}
       WRANGLER_SEND_METRICS: 'false'
@@ -79,6 +78,8 @@ jobs:
         id: build
         run: node scripts/release-production.mjs build
         working-directory: web-radar
+        env:
+          RELEASE_ARTIFACT_DIR: ${{ runner.temp }}/wr-release-artifact
       - uses: actions/upload-artifact@v4
         id: upload
         with:
@@ -97,8 +98,6 @@ jobs:
       RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
       PRODUCT_RADAR_SHA: ${{ inputs.product_radar_sha }}
       PRODUCT_RADAR_ROOT: ${{ github.workspace }}/product-radar
-      RELEASE_ARTIFACT_DIR: ${{ runner.temp }}/wr-release-artifact
-      RELEASE_EVIDENCE_DIR: ${{ runner.temp }}/wr-release-evidence
       RELEASE_MANIFEST_DIGEST: ${{ needs.build.outputs.manifest_digest }}
       GITHUB_TOKEN: ${{ github.token }}
       RADAR_READ_TOKEN: ${{ secrets.RADAR_READ_TOKEN }}
@@ -133,6 +132,8 @@ jobs:
         run: node scripts/release-production.mjs deploy
         working-directory: web-radar
         env:
+          RELEASE_ARTIFACT_DIR: ${{ runner.temp }}/wr-release-artifact
+          RELEASE_EVIDENCE_DIR: ${{ runner.temp }}/wr-release-evidence
           PRODUCTION_RELEASE_ENABLED: ${{ vars.PRODUCTION_RELEASE_ENABLED }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       - name: Save public release evidence (no credentials, settings or raw logs)
