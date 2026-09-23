@@ -1,5 +1,5 @@
 import { publicFetch as fetch } from "../lib/network";
-import { seal, decodeProvider, loadProviders, redactConfig } from "../lib/credentials";
+import { seal, decodeProvider, loadProviders, redactConfig, restoreMaskedConfig } from "../lib/credentials";
 import { Hono } from "hono";
 import type { Bindings, Variables } from "../../shared/types";
 import { requireAuth, requireRole } from "../middleware/auth";
@@ -470,8 +470,7 @@ providersRoutes.put("/:id", async (c) => {
   if (config !== undefined) {
     const old=await decodeProvider(existing,c.env);
     const previous=JSON.parse(old.config || '{}');
-    const merged={...config};
-    for(const k of Object.keys(merged)) if(merged[k]==='********') merged[k]=previous[k];
+    const merged=restoreMaskedConfig(config,previous);
     updateData.config = config ? await seal(JSON.stringify(merged),id+':config',c.env) : null;
   }
   if (isDefault !== undefined) updateData.isDefault = !!isDefault;
