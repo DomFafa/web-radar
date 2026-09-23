@@ -1,0 +1,146 @@
+name: production-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full SHA of the approved Web Radar release branch tip
+        required: true
+        type: string
+      product_radar_sha:
+        description: Full SHA of the compatible Product Radar main tip
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+# Serializes this repository's controlled releases. It cannot lock out direct
+# Cloudflare credentials, other repositories or owner-bypassed workflows.
+concurrency:
+  group: web-radar-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      manifest_digest: ${{ steps.build.outputs.manifest_digest }}
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+    env:
+      RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
+      PRODUCT_RADAR_SHA: ${{ inputs.product_radar_sha }}
+      PRODUCT_RADAR_ROOT: ${{ github.workspace }}/product-radar
+      GITHUB_TOKEN: ${{ github.token }}
+      RADAR_READ_TOKEN: ${{ secrets.RADAR_READ_TOKEN }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Require the release workflow's exact branch tip
+        shell: bash
+        run: |
+          test "$GITHUB_REF" = 'refs/heads/codex/web-radar-v1'
+          test "$RELEASE_SOURCE_SHA" = "$GITHUB_SHA"
+          [[ "$RELEASE_SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$PRODUCT_RADAR_SHA" =~ ^[a-f0-9]{40}$ ]]
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: web-radar
+          fetch-depth: 0
+          # Read-only auth is retained only on this ephemeral runner so strict
+          # git ls-remote checks can read private upstreams; never in artifacts.
+          persist-credentials: true
+      - uses: actions/checkout@v4
+        with:
+          repository: DomFafa/product-radar
+          ref: ${{ inputs.product_radar_sha }}
+          path: product-radar
+          fetch-depth: 0
+          token: ${{ secrets.RADAR_READ_TOKEN || github.token }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web-radar/package-lock.json
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
+      - run: npm ci
+        working-directory: web-radar
+      - run: pnpm install --frozen-lockfile
+        working-directory: product-radar
+      - run: node --test scripts/verify-release-source.test.mjs scripts/release-production.test.mjs
+        working-directory: web-radar
+      - name: Verify source/checks, run the paired gate, and seal one build
+        id: build
+        run: node scripts/release-production.mjs build
+        working-directory: web-radar
+        env:
+          RELEASE_ARTIFACT_DIR: ${{ runner.temp }}/wr-release-artifact
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: web-radar-production-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/wr-release-artifact
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
+      PRODUCT_RADAR_SHA: ${{ inputs.product_radar_sha }}
+      PRODUCT_RADAR_ROOT: ${{ github.workspace }}/product-radar
+      RELEASE_MANIFEST_DIGEST: ${{ needs.build.outputs.manifest_digest }}
+      GITHUB_TOKEN: ${{ github.token }}
+      RADAR_READ_TOKEN: ${{ secrets.RADAR_READ_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: web-radar
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/checkout@v4
+        with:
+          repository: DomFafa/product-radar
+          ref: ${{ inputs.product_radar_sha }}
+          path: product-radar
+          fetch-depth: 0
+          token: ${{ secrets.RADAR_READ_TOKEN || github.token }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web-radar/package-lock.json
+      - run: npm ci
+        working-directory: web-radar
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/wr-release-artifact
+      - name: Deploy the verified artifact and compare live Worker/static bytes
+        run: node scripts/release-production.mjs deploy
+        working-directory: web-radar
+        env:
+          RELEASE_ARTIFACT_DIR: ${{ runner.temp }}/wr-release-artifact
+          RELEASE_EVIDENCE_DIR: ${{ runner.temp }}/wr-release-evidence
+          PRODUCTION_RELEASE_ENABLED: ${{ vars.PRODUCTION_RELEASE_ENABLED }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Save public release evidence (no credentials, settings or raw logs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-radar-production-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/wr-release-evidence/deployment.json
+          if-no-files-found: warn
+          retention-days: 90

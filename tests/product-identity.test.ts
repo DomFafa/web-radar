@@ -19,7 +19,7 @@ it('retains internal identity and source version through receipt, draft validati
 });
 it('publishes applicability in a new version and preserves the frozen prior contract',()=>{
  const current=getMaterialsTemplate('apparel-fabric-banner')!;
- expect(current.contractRevision).toContain('materials.5');
+ expect(current.contractRevision).toContain('materials.6');
  expect(current.productApplicability?.preferredFamilies).toEqual(['apparel']);
  expect(current.requiredCapabilities).toContain('product.identity.v1');
  const old=getMaterialsTemplate('apparel-fabric-banner','2026-09-22.apparel-fabric-banner-materials.4')!;
