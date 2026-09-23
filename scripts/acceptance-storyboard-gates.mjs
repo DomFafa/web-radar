@@ -65,7 +65,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 await mkdir('artifacts/storyboard-debug/browser', { recursive: true });
 try {
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await page.getByRole('button', { name: '项目创建者', exact: true }).click();
   await page.getByLabel('搜索网站').fill(project.name);
   await page.locator('.project-card').click();

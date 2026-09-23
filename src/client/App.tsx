@@ -28,6 +28,7 @@ import {
   dateTime,
 } from './components';
 const Editor = lazy(() => import('./Editor'));
+const Dashboard = lazy(() => import('./Dashboard'));
 const Outreach = lazy(() => import('../outreach/client/App'));
 const Admin = lazy(() => import('./Admin'));
 import { ErrorBoundary } from './ErrorBoundary';
@@ -104,12 +105,12 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'projects' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
+  const [view, setView] = useState<'dashboard' | 'projects' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
+        if (v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
       } catch {}
-      return 'projects';
+      return 'dashboard';
     }),
     [embedError, setEmbedError] = useState('');
   const [authBusy, setAuthBusy] = useState(false),
@@ -132,7 +133,7 @@ export default function App() {
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
-      if (view !== 'projects') {
+      if (view !== 'dashboard') {
         url.searchParams.set('view', view);
       } else {
         url.searchParams.delete('view');
@@ -337,13 +338,14 @@ export default function App() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                setView('projects');
+                setView('dashboard');
               }}
             >
               <Brand />
             </a>
-            <div className="workspace-label">网站管理</div>
+            <div className="workspace-label">工作台</div>
             <nav aria-label="工作台导航">
+              <button className={view === 'dashboard' ? 'active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><Icon name="chart" />控制台</button>
               <button
                 className={view === 'projects' ? 'active' : ''}
                 aria-current={view === 'projects' ? 'page' : undefined}
@@ -393,7 +395,11 @@ export default function App() {
                 )}
               </div>
             </header>
-            {view === 'projects' ? (
+            {view === 'dashboard' ? (
+              <ErrorBoundary scope="section" title="控制台加载异常" onBack={() => setView('projects')} backText="返回网站项目">
+                <Suspense fallback={<ChunkFallback />}><Dashboard key={`${principal.userId}:${principal.workspaceId}`} onNavigate={setView} onOpenProject={setSelected} /></Suspense>
+              </ErrorBoundary>
+            ) : view === 'projects' ? (
               <Projects key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onOpen={setSelected} />
             ) : view === 'edm' || view === 'site-messages' ? (
               <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回网站项目。" onBack={()=>setView('projects')} backText="返回网站项目">

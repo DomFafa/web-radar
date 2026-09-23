@@ -1,5 +1,6 @@
 /** @jsxImportSource react */
 import React, { useEffect, useMemo, useState } from "react";
+import { SiteOverviewPanel } from "../../../client/ChannelOverview";
 import { Icon } from "../../../client/components";
 import { siteMessagesApi } from "../lib/api";
 import { useToast } from "../App";
@@ -91,22 +92,7 @@ export function SiteMessagesPage() {
     return () => window.clearInterval(timer);
   }, [detail?.id, detail?.status]);
 
-  const overview = useMemo(() => jobs.reduce((summary, job) => {
-    const failedTotal = Number(job.totalFailed || 0) + Number(job.totalSkipped || 0);
-    const noContactTotal = Number(job.totalNoContact || 0);
-    const inaccessibleTotal = Number(job.totalInaccessible || 0);
-    return {
-      jobs: summary.jobs + 1,
-      targets: summary.targets + Number(job.totalTargets || 0),
-      submitted: summary.submitted + Number(job.totalSubmitted || 0),
-      failed: summary.failed + failedTotal,
-      noContact: summary.noContact + noContactTotal,
-      inaccessible: summary.inaccessible + inaccessibleTotal,
-      abnormal: summary.abnormal + noContactTotal + inaccessibleTotal,
-    };
-  }, { jobs: 0, targets: 0, submitted: 0, failed: 0, noContact: 0, inaccessible: 0, abnormal: 0 }), [jobs]);
-
-  const overviewSuccessRate = useMemo(() => formatSuccessRate(overview.submitted, overview.targets, overview.abnormal), [overview]);
+  const overviewRevision = JSON.stringify(jobs.map(job => [job.id, job.updatedAt, job.status, job.totalTargets, job.totalSubmitted, job.totalFailed, job.totalSkipped, job.totalNoContact, job.totalInaccessible]));
 
   const targetCount = useMemo(() => new Set(form.targets.split(/[\n,;]+/).map((item) => item.trim()).filter(Boolean)).size, [form.targets]);
 
@@ -260,17 +246,7 @@ export function SiteMessagesPage() {
           <div className="site-message-notice-icon"><Icon name="lock" size={18}/></div>
           <div><strong>保守执行规则</strong><p>同一任务内每个域名仅执行一次；检测到验证码、人机验证、文件上传或无法识别的必填字段时自动跳过，不尝试绕过网站保护。</p></div>
         </div>
-        <div className="stats-grid site-message-stats">
-          {[
-            ["任务数", overview.jobs, "folder"],
-            ["目标网站", overview.targets, "globe"],
-            ["已提交", overview.submitted, "check"],
-            ["失败", overview.failed, "close"],
-            ["无联系页", overview.noContact, "search"],
-            ["无法访问", overview.inaccessible, "alert"],
-            ["成功率", overviewSuccessRate, "chart"],
-          ].map(([label, value, icon]) => <div className="stat-card" key={String(label)}><div className="stat-icon"><Icon name={String(icon)} size={20}/></div><div className="stat-value">{value}</div><div className="stat-label">{label}</div></div>)}
-        </div>
+        <SiteOverviewPanel revision={overviewRevision}/>
 
         <div className="site-message-list">
           <div className="section-heading"><div><h3>执行任务</h3><p>查看每批网站的发现和提交结果</p></div></div>

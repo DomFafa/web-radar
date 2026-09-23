@@ -16,7 +16,7 @@ try {
   assert.equal((await context.request.post(origin+'/api/auth/test-login',{data:{identity:'owner'}})).status(),200);
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await page.getByRole('button',{name:'创建网站',exact:true}).click();
   const modal=page.getByRole('dialog');
   await modal.getByRole('radio',{name:/模板建站/}).check();

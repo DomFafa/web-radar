@@ -1,3 +1,4 @@
+import { emailOverview } from "../lib/overview";
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
 import { Hono } from "hono";
@@ -805,52 +806,5 @@ campaignRoutes.post("/:id/pause", requirePermission("campaigns:send"), async (c)
 // ====== 仪表盘统计 ======
 
 campaignRoutes.get("/stats/overview", requirePermission("campaigns:read"), async (c) => {
-  const db = createDb(c.env.DB);
-  const user = c.get("user")!;
-
-  // Overview must remain a fast local read. Provider report synchronization
-  // can take tens of seconds and is handled by the campaign detail flow.
-  const [[campaignStats], [contactCount], [recipientStats]] = await Promise.all([
-    db.select({
-      count: count(),
-      sent: sql<number>`COALESCE(SUM(${campaigns.totalSent}), 0)`,
-      delivered: sql<number>`COALESCE(SUM(${campaigns.totalDelivered}), 0)`,
-      opened: sql<number>`COALESCE(SUM(${campaigns.totalOpened}), 0)`,
-      clicked: sql<number>`COALESCE(SUM(${campaigns.totalClicked}), 0)`,
-      bounced: sql<number>`COALESCE(SUM(${campaigns.totalBounced}), 0)`,
-    }).from(campaigns).where(eq(campaigns.userId, user.id)),
-    db.select({ count: count() }).from(contacts).where(eq(contacts.userId, user.id)),
-    db.select({
-      delivered: sql<number>`COALESCE(SUM(CASE WHEN ${campaignRecipients.deliveredAt} IS NOT NULL OR ${campaignRecipients.status} IN ('delivered', 'opened', 'clicked') THEN 1 ELSE 0 END), 0)`,
-      opened: sql<number>`COALESCE(SUM(CASE WHEN ${campaignRecipients.openedAt} IS NOT NULL THEN 1 ELSE 0 END), 0)`,
-      clicked: sql<number>`COALESCE(SUM(CASE WHEN ${campaignRecipients.clickedAt} IS NOT NULL THEN 1 ELSE 0 END), 0)`,
-      bounced: sql<number>`COALESCE(SUM(CASE WHEN ${campaignRecipients.status} = 'bounced' THEN 1 ELSE 0 END), 0)`,
-    })
-      .from(campaignRecipients)
-      .innerJoin(campaigns, eq(campaignRecipients.campaignId, campaigns.id))
-      .where(eq(campaigns.userId, user.id)),
-  ]);
-
-  const totalSent = Number(campaignStats?.sent || 0);
-  const totalDelivered = Number(recipientStats?.delivered || 0) || Number(campaignStats?.delivered || 0);
-  const totalOpened = Number(recipientStats?.opened || 0) || Number(campaignStats?.opened || 0);
-  const totalClicked = Number(recipientStats?.clicked || 0) || Number(campaignStats?.clicked || 0);
-  const totalBounced = Number(recipientStats?.bounced || 0) || Number(campaignStats?.bounced || 0);
-
-  return c.json({
-    success: true,
-    data: {
-      totalCampaigns: campaignStats?.count || 0,
-      totalContacts: contactCount?.count || 0,
-      totalSent,
-      totalDelivered,
-      totalOpened,
-      totalClicked,
-      totalBounced,
-      deliveryRate: totalSent > 0 ? ((totalDelivered / totalSent) * 100).toFixed(1) : "0.0",
-      openRate: totalSent > 0 ? ((totalOpened / totalSent) * 100).toFixed(1) : "0.0",
-      clickRate: totalSent > 0 ? ((totalClicked / totalSent) * 100).toFixed(1) : "0.0",
-      bounceRate: totalSent > 0 ? ((totalBounced / totalSent) * 100).toFixed(1) : "0.0",
-    },
-  });
+  return c.json({success:true,data:await emailOverview(c.env.DB,c.get("user")!.id)});
 });

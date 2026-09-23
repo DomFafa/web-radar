@@ -1114,6 +1114,13 @@ textarea::placeholder {
   }
   .sidebar nav {
     flex-direction: row;
+    min-width: 0;
+    flex: 1;
+    overflow-x: auto;
+  }
+  .sidebar nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
   .workspace-main {
     margin: 0;
@@ -1205,6 +1212,7 @@ textarea::placeholder {
   }
   .sidebar nav {
     width: 100%;
+    flex-basis: 100%;
   }
   .sidebar nav button {
     font-size: 12px;

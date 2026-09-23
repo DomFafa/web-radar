@@ -13,7 +13,7 @@ page.on('console', (m) => {
 });
 await mkdir('artifacts/preview-browser', { recursive: true });
 try {
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await page.getByRole('button', { name: '项目创建者', exact: true }).click();
   await page
     .locator('.project-card')

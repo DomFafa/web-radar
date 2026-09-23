@@ -17,7 +17,7 @@ function record(step) {
   console.log(step);
 }
 try {
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await expect(page.getByText('本地测试环境', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'artifacts/browser/login.png', fullPage: true });
   await page.getByRole('button', { name: '项目创建者', exact: true }).click();

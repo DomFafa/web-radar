@@ -31,7 +31,7 @@ const errors = [],
 page.on('pageerror', (error) => errors.push(error.message));
 const shot = (name) => page.screenshot({ path: `${dir}/${name}.png`, fullPage: true });
 try {
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await page.getByRole('button', { name: '项目创建者', exact: true }).click();
   await page.getByRole('button', { name: '创建网站', exact: true }).click();
   await page.getByLabel('项目名称').fill('Static showcase acceptance ' + Date.now());

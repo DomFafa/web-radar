@@ -23,7 +23,7 @@ const capture = async (name) => {
 const noOverflow = async (target) =>
   assert.ok(await target.locator('html').evaluate((el) => el.scrollWidth <= innerWidth + 1));
 try {
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await capture('login');
   await page.getByRole('button', { name: '项目创建者', exact: true }).click();
   await expect(page.getByRole('heading', { name: '网站项目' })).toBeVisible();

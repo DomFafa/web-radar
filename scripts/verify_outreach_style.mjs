@@ -13,7 +13,7 @@ try {
  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH});
  const context=await browser.newContext({viewport:{width:1440,height:1050}});await context.request.post(origin+'/api/auth/test-login',{data:{identity:'admin'}});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(origin);await page.getByRole('heading',{name:'网站项目',exact:true}).waitFor();
+ await page.goto(origin+'/?view=projects');await page.getByRole('heading',{name:'网站项目',exact:true}).waitFor();
  const native=await page.evaluate(()=>{const style=getComputedStyle(document.querySelector('.page-heading h1'));return {font:style.fontFamily,size:style.fontSize,weight:style.fontWeight,color:style.color}});
  await page.screenshot({path:artifacts+'/projects.png'});
  const nav=page.getByRole('navigation',{name:'工作台导航'});await nav.getByRole('button',{name:'EDM 邮件',exact:true}).click();await page.getByRole('heading',{name:'EDM 邮件',exact:true}).waitFor();

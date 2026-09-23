@@ -465,7 +465,7 @@ try {
   await page.locator('.template-media-guide').screenshot({path:'artifacts/task-review/template-media-mobile.png'});
   await page.locator('.template-card').first().screenshot({path:'artifacts/task-review/template-media-card-mobile.png'});
   // Only a URL is entered; screenshots, pages and images are collected automatically.
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await page.getByRole('button',{name:'创建网站',exact:true}).click();
   const createDialog=page.getByRole('dialog');
   assert.equal(await createDialog.getByRole('radio').count(),2);

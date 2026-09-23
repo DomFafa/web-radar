@@ -1,3 +1,4 @@
+import { siteOverview } from "../lib/overview";
 import { Hono } from "hono";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { createDb } from "../../db";
@@ -109,45 +110,7 @@ siteMessageRoutes.get("/", requirePermission("site-messages:read"), async (c) =>
 });
 
 siteMessageRoutes.get("/stats/overview", requirePermission("site-messages:read"), async (c) => {
-  const db = createDb(c.env.DB);
-  const user = c.get("user")!;
-  const userJobs = await db.select({ id: siteMessageJobs.id, totalTargets: siteMessageJobs.totalTargets }).from(siteMessageJobs).where(eq(siteMessageJobs.userId, user.id));
-  const jobIds = userJobs.map((j) => j.id);
-
-  let totalTargets = userJobs.reduce((acc, j) => acc + (j.totalTargets || 0), 0);
-  let totalSubmitted = 0;
-  let totalFailed = 0;
-  let totalNoContact = 0;
-  let totalInaccessible = 0;
-
-  if (jobIds.length > 0) {
-    const targets = await db.select({
-      status: siteMessageTargets.status,
-      resultCode: siteMessageTargets.resultCode,
-      resultMessage: siteMessageTargets.resultMessage,
-    }).from(siteMessageTargets).where(inArray(siteMessageTargets.jobId, jobIds));
-
-    for (const t of targets) {
-      if (t.status === "submitted") totalSubmitted++;
-      else if (isNoContactTarget(t)) totalNoContact++;
-      else if (isInaccessibleTarget(t)) totalInaccessible++;
-      else if (["failed", "skipped"].includes(t.status)) totalFailed++;
-    }
-  }
-
-  return c.json({
-    success: true,
-    data: {
-      totalJobs: userJobs.length,
-      totalTargets,
-      totalSubmitted,
-      totalSkipped: 0,
-      totalFailed,
-      totalAbnormal: totalNoContact + totalInaccessible,
-      totalNoContact,
-      totalInaccessible,
-    },
-  });
+  return c.json({success:true,data:await siteOverview(c.env.DB,c.get("user")!.id)});
 });
 
 siteMessageRoutes.get("/:id/export", requirePermission("site-messages:read"), async (c) => {
