@@ -10,7 +10,7 @@ function repositoryIdentity(value) {
 
 // Candidate checks are offline. A release additionally checks the live upstream
 // tip, so a stale remote-tracking ref cannot authorize overwriting newer work.
-export function verifyReleaseSource({ cwd = process.cwd(), candidate = false } = {}) {
+export function verifyReleaseSource({ cwd = process.cwd(), candidate = false, expectedCommit } = {}) {
   const git = (args, allowFailure = false) => {
     const result = spawnSync('git', args, { cwd, encoding: 'utf8', timeout: 30_000 });
     if (result.status !== 0 && !allowFailure) throw new Error(`Git ${args[0]} failed; verify repository access and fetch its complete history.`);
@@ -30,6 +30,9 @@ export function verifyReleaseSource({ cwd = process.cwd(), candidate = false } =
     throw new Error('origin does not identify the approved upstream repository.');
   }
   const sourceCommit = readGit(['rev-parse', 'HEAD']);
+  if (expectedCommit !== undefined && (!/^[a-f0-9]{40}$/.test(expectedCommit) || sourceCommit !== expectedCommit)) {
+    throw new Error('Source HEAD does not match the requested full release SHA.');
+  }
   for (const baseline of policy.requiredAncestors) {
     if (git(['merge-base', '--is-ancestor', baseline, sourceCommit], true).status !== 0) {
       throw new Error(`Source does not contain required integration baseline ${baseline}; integrate the released fixes before continuing.`);

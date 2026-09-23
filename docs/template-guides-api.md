@@ -1,6 +1,28 @@
 # 内部模板使用规范 API（供其它 AI / 服务调用）
 
-10 套模板各有一份独立 JSON 文档，保存在 `src/worker/template-guides/documents/<templateId>.json`。文档只打包进 Worker，**不进入前台 JS、静态素材目录或用户页面**。Markdown 由同一 JSON 渲染，避免两份文档不一致。
+## Product Radar 轻量目录与按需合同（2026-09-23）
+
+建站资料使用 `/materials/catalog`，普通 Product Radar 账号可通过既有服务认证读取；下面旧规范接口的管理员限制不适用于这组资料路由。每次请求（包括条件请求）仍验证当前账号及工作区权限。
+
+目录保留 `schemaVersion: wr-template-materials-v1`，只返回摘要，不返回 `imageSlots`、`textSlots` 或完整规则：
+
+| 字段 | 含义 |
+| --- | --- |
+| `templateId`, `name`, `materialsReady`, `pages` | 模板身份和可用页面 |
+| `guideRevision`, `contractRevision`, `rendererRevision`, `contractSha256` | 精确合同与执行版本；哈希是合同 JSON 的 SHA-256 |
+| `requiredCapabilities`, `productApplicability` | 同一版本合同的能力与产品适用类别 |
+| `materialRequirements.requiresDetail` | 存在 `binding=supported`、`role=detail` 且 `required` 或 `min>0` 的图片槽位 |
+| `materialRequirements.requiresPackaging` | 存在 `binding=supported`、`role=packaging` 且 `required` 的图片槽位 |
+| `thumbnailUrl`, `thumbnailRevision`, `thumbnailWidth`, `thumbnailHeight` | 对应合同演示的真实截图、内容 SHA-256 和尺寸；无对应版本的封面时均为 `null`，由客户端显示占位，不借用其他模板封面 |
+| `requirementsPath`, `previewPath` | 带固定 `contractRevision` 的完整合同与演示地址 |
+
+顶层 `catalogRevision` 是 `JSON.stringify(templates)` 的 SHA-256，并作为带双引号的 `ETag`。客户端可按账号、工作区缓存已授权读取的摘要，最多短期复用，或带 `If-None-Match` 重新验证。未变化时返回 `304`；所有响应仍 `Cache-Control: no-store`，不允许浏览器/CDN公共缓存身份相关接口。账号撤权、工作区不匹配优先返回原有权限错误，不返回 `304`。
+
+只在选择模板时请求 `requirementsPath`，以 `templateId + contractRevision + contractSha256` 复用已经校验的合同，不在每次打开列表时读取所有合同。完整合同也支持 `ETag` / `If-None-Match`，并保留 `X-Template-Materials-Revision`、`X-Template-Materials-SHA256`。摘要约束必须与实际合同一致，失配时拒绝继续备料。同版本未变无需重新下载规则。旧草稿继续请求其保存的合同版本，不随目录默认版本升级。
+
+目录只注册通过执行映射验证的模板插件；新模板可由版本化清单接入，无需逐个修改 Product Radar。完整合同与执行能力仍由消费端按支持范围校验。演示在打开时单独请求，不在目录同步时批量生成或下载。封面生成/校验脚本及发布检查保证清单地址是对应图片，而非返回 `200` 的 HTML 页面。
+
+39 套模板各有一份独立 JSON 文档，保存在 `src/worker/template-guides/documents/<templateId>.json`。文档只打包进 Worker，**不进入前台 JS、静态素材目录或用户页面**。Markdown 由同一 JSON 渲染，避免两份文档不一致。
 
 这些接口只读取规范，不调用模型、不扣生成额度、不上传素材、不修改项目，也不发布网站。
 
@@ -20,7 +42,7 @@
 
 | 方法 | 路径 | 返回 |
 | --- | --- | --- |
-| GET | 根路径（不带尾斜杠） | 十套规范索引、版本、文档链接与数量摘要 |
+| GET | 根路径（不带尾斜杠） | 当前规范索引、版本、文档链接与数量摘要 |
 | GET | `/:templateId` | 完整 JSON 规范 |
 | GET | `/:templateId?format=markdown` | 完整 Markdown 文档 |
 | GET | `/schema` | 规范文档 JSON Schema（2020-12） |
@@ -30,7 +52,7 @@
 
 错误状态：无效凭据 401、普通用户 403、模板不存在 404、写入方法 405、非法 format 400。
 
-## 模板索引
+## 原有模板示例（完整列表以目录接口为准）
 
 | templateId | 名称 | 建议不同产品主图 | 默认内置视频 |
 | --- | --- | ---: | ---: |
@@ -114,6 +136,6 @@ const context = {
 }
 ```
 
-维护时同步修改对应 JSON、增加 revision，并运行 `npm run check`。测试覆盖十套槽位尺寸与渲染器一致性、文案/视频规则、只读权限、JSON/Markdown 等价性与输出协议。
+维护时同步修改对应 JSON、增加 revision，并运行 `npm run check`。测试覆盖模板槽位尺寸与渲染器一致性、文案/视频规则、只读权限、JSON/Markdown 等价性与输出协议。
 
 本地真实 Worker 验证：先 `npm run build`，再执行 `node scripts/verify_template_guides.mjs`。测试使用隔离的 D1 和测试密钥，不发起模型请求。

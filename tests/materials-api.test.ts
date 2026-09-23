@@ -17,7 +17,7 @@ describe('materials guide account boundary',()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
     expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(Object.keys(templateMediaRequirements).sort());
-    expect(entries.every((t:any)=>t.contractRevision===`2026-09-22.${t.templateId}-materials.5`&&t.guideRevision==='2026-09-20.1')).toBe(true);
+    expect(entries.every((t:any)=>t.contractRevision===`2026-09-23.${t.templateId}-materials.6`&&t.guideRevision==='2026-09-20.1')).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
     const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
   });
@@ -28,7 +28,7 @@ describe('materials guide account boundary',()=>{
   });
   it('serves the corrected Corpox hero while keeping frozen two-hero previews available',async()=>{
     const current=await get('materials/corpox-ai-agency'),profile=await current.json()as any;
-    expect(profile.contractRevision).toBe('2026-09-22.corpox-ai-agency-materials.5');
+    expect(profile.contractRevision).toBe('2026-09-23.corpox-ai-agency-materials.6');
     expect(profile.imageSlots.filter((slot:any)=>slot.id.startsWith('hero-slide-'))).toHaveLength(1);
     const revision='2026-09-20.corpox-ai-agency-materials.2';
     const old=await(await get(`materials/corpox-ai-agency?contractRevision=${revision}`)).json()as any;

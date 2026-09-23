@@ -16,14 +16,14 @@ const templates = ['drinkware-ceramic-banner', 'drinkware-thermal-video', 'beaut
 const digest = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 
 it.each(templates)('retains deployed revisions and gives %s a frozen identity release', async template => {
-  const current = getMaterialsTemplate(template)!;
+  const current = getMaterialsTemplate(template,`2026-09-22.${template}-materials.5`)!;
   expect(current.contractRevision).toBe(`2026-09-22.${template}-materials.5`);
   expect(current.rendererRevision).toBe('2026-09-22.industry-bafe6c1');
   expect(current.productApplicability?.preferredFamilies).toEqual([template.startsWith('sports-') ? 'outdoor' : template.split('-')[0]]);
   for (const revision of [`2026-09-19.${template}-materials.1`, `2026-09-20.${template}-materials.2`, `2026-09-22.${template}-materials.4`]) {
     expect(getMaterialsTemplate(template, revision)).toEqual(deployedContract(template, revision));
   }
-  const input = await typedMaterialsFixture(template, 1);
+  const input = await typedMaterialsFixture(template, 1, current.contractRevision);
   const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(media => [media.id, { id: media.id } as Asset])));
   for (const page of ['home', 'catalog', 'detail', 'about', 'contact']) {
     const options = { projectId: 'industry', lang: 'en' as const, page, assetUrl: (id: string) => `/media/${id}`, inquiryUrl: '/inquiry', preview: true };

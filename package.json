@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:browser": "node scripts/verify_clone_tasks.mjs",
+    "test:release": "node --test scripts/verify-release-source.test.mjs scripts/release-production.test.mjs",
+    "release:production": "node scripts/release-production.mjs",
     "types": "wrangler types",
     "check": "npm run typecheck && npm test && npm run build",
     "db:local": "wrangler d1 migrations apply web-radar --local"
