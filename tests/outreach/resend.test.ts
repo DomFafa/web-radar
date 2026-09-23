@@ -100,3 +100,9 @@ for(const callback of ['clicked','failed'])test(`queue sends once and preserves 
  await handleEmailQueue({messages:[msg]} as any,env);expect(msg.retry).not.toHaveBeenCalled();expect(row().status).toBe(callback);
  await handleEmailQueue({messages:[msg]} as any,env);expect(mock).toHaveBeenCalledTimes(1);expect(row().status).toBe(callback);
 });
+for(const code of [401,403,429])test(`Resend ${code} rejection is safely retryable without uncertain-send quarantine`,async()=>{
+ vi.stubGlobal('fetch',vi.fn(async()=>Response.json({message:'rejected'},{status:code})));
+ const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:null,subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:'Hello',variables:{}},ack:vi.fn(),retry:vi.fn()};
+ await handleEmailQueue({messages:[msg]} as any,env);expect(row().status).toBe('queued');expect(msg.retry).toHaveBeenCalledWith({delaySeconds:code===429?60:300});
+ expect(stats().status).toBe(code===429?'sending':'paused');expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()!.n).toBe(0);
+});

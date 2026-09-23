@@ -8,6 +8,15 @@ export const RESEND_EVENTS = [
   'email.complained',
   'email.failed',
 ];
+export class ResendApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+    this.name = 'ResendApiError';
+  }
+}
 export async function resendRequest(key: string, path: string, init: RequestInit = {}) {
   const response = await publicFetch('https://api.resend.com' + path, {
     ...init,
@@ -20,10 +29,17 @@ export async function resendRequest(key: string, path: string, init: RequestInit
   });
   const data: any = await response.json().catch(() => null);
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Resend API Key 无效或已撤销');
+    if (response.status === 401)
+      throw new ResendApiError('Resend API Key 无效或已撤销', response.status);
     if (response.status === 403)
-      throw new Error('Resend 权限不足：帐号、域名及回调管理需要 Full access API Key');
-    if (response.status === 429) throw new Error('Resend 请求频率或额度受限，请稍后重试');
+      throw new ResendApiError(
+        path === '/emails'
+          ? 'Resend 拒绝发信：请检查密钥权限及发信域名验证状态'
+          : 'Resend 权限不足：帐号、域名及回调管理需要 Full access API Key',
+        response.status,
+      );
+    if (response.status === 429)
+      throw new ResendApiError('Resend 请求频率或额度受限，请稍后重试', response.status);
     throw new Error(
       `Resend 请求失败（${response.status}）：${String(data?.message || '请检查参数及帐号状态').slice(0, 300)}`,
     );

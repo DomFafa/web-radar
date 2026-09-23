@@ -1,4 +1,4 @@
-import { resendRequest } from '../lib/resend';
+import { resendRequest, ResendApiError } from '../lib/resend';
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
 import { eq, and, sql, inArray } from "drizzle-orm";
@@ -1057,6 +1057,16 @@ export async function handleEmailQueue(
             `Failed to send email to ${message.toEmail}:`,
             error.message
           );
+
+          if (dispatchStarted && error instanceof ResendApiError && [401,403,429].includes(error.status)) {
+            // These responses explicitly reject acceptance, so a retry is safe.
+            const throttled = error.status === 429;
+            if (!throttled) await db.update(campaigns).set({status:'paused',updatedAt:new Date()}).where(eq(campaigns.id,message.campaignId));
+            await db.update(campaignRecipients).set({status:'queued',errorMessage:throttled?'Resend 限流，等待重试':'AUTH_REJECTED: Resend 密钥或权限无效；更新后恢复'})
+              .where(and(eq(campaignRecipients.id,message.recipientId),sql`${campaignRecipients.sentAt} IS NULL`));
+            await env.DB.prepare('DELETE FROM edm_email_send_attempts WHERE recipient_id=? AND result IS NULL').bind(message.recipientId).run();
+            msg.retry({delaySeconds:throttled?60:300});return;
+          }
 
           if (dispatchStarted && /Mailchimp Transactional API Error \(401\):/.test(error.message || "") && /Invalid_Key/.test(error.message || "")) {
             // A verified authentication rejection did not accept the email.
