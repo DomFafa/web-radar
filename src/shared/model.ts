@@ -70,6 +70,8 @@ export type TemplateId =
   | 'technology'
   | 'explorer';
 export interface Product {
+  productIdentity?: import("./product-identity").ProductIdentity;
+  identitySourceVersion?: string;
   id: string;
   name: string;
   description: string;

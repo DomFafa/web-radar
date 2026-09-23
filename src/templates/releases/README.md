@@ -53,3 +53,16 @@ The synthetic new-template fixture lives under `tests/fixtures`; production does
 not register it. `tests/helpers/register-materials-plugin-fixture.mjs` registers
 its exact ID into a marked isolated test copy, including the existing template
 type and validation enums. It does not bypass authentication or weaken validation.
+
+## Industry templates released 2026-09-22
+
+`industry-20260922.mjs` freezes the exact already-deployed colleague commit
+`bafe6c189044667a5f996c9a542481ec61b34103` (ten new templates). The source tree
+is unmodified. The generator keeps its old immutable baseline as an external
+relative module, records that dependency hash, and avoids embedding it twice.
+New materials.5 contracts for these templates use renderer revision
+`2026-09-22.industry-bafe6c1`; historical contracts and their output bytes remain
+identical to the deployed source. New snapshots must use new filenames.
+The industry preview/runtime and static dependency manifests are retained too.
+`tests/materials-industry-release.test.ts` checks contract compatibility, all five
+pages, independence from subsequent standalone changes, and dependency bytes.
