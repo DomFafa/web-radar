@@ -1,7 +1,7 @@
-import { test } from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { readAttempt, claimAttempt, saveAttempt } from "./email-attempt";
+import { readAttempt, claimAttempt, saveAttempt } from "../../src/outreach/server/lib/email-attempt";
 
 test("duplicate queue deliveries cannot claim the same send; saved results survive retry", async () => {
   const sqlite = new DatabaseSync(":memory:");

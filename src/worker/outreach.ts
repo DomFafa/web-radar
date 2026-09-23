@@ -41,6 +41,7 @@ export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<
   }
   const {principal}=await authenticate(request,env);
   if (/\/(send|start)$/.test(path) && request.method==='POST') {
+    if(testMode(env)) throw new ApiError(503,'outreach_test_mode','测试环境仅支持保存草稿，不执行真实发送。');
     if(!bindings.EMAIL_QUEUE || (path.includes('/site-messages/')&&(!bindings.SITE_MESSAGE_QUEUE||(!bindings.BROWSER&&!testMode(env))))) throw new ApiError(503,'outreach_not_configured','发送队列或浏览器服务尚未配置。');
   }
   await env.DB.prepare('INSERT INTO edm_users (id,name,email,role,created_at,updated_at) VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(principal.workspaceId,principal.workspaceName,principal.workspaceId+'@workspace.invalid','member',Math.floor(Date.now()/1000),Math.floor(Date.now()/1000)).run();

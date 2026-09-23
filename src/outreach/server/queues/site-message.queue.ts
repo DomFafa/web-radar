@@ -987,19 +987,21 @@ async function processTargetViaFetch(
 export async function runSiteMessageJob(jobId: string, env: Bindings) {
   const db = createDb(env.DB);
   const [job] = await db.select().from(siteMessageJobs).where(eq(siteMessageJobs.id, jobId));
-  if (!job || job.status === "paused") return;
+  if (!job || !["queued", "running"].includes(job.status)) return;
 
   // Reset orphaned targets that were left stuck in discovering/submitting from previous crashed invocations
   try {
-    const thresholdDate = new Date(Date.now() - 90 * 1000);
+    const thresholdDate = new Date(Date.now() - 5 * 60 * 1000);
+    // A crash after clicking Submit has an unknown outcome: never auto-resubmit it.
+    await db.update(siteMessageTargets).set({ status: "skipped", resultCode: "submission_uncertain", resultMessage: "上次提交结果无法确认，请人工核实后再决定是否重试", completedAt: new Date(), updatedAt: new Date() }).where(and(eq(siteMessageTargets.jobId, jobId), eq(siteMessageTargets.status, "submitting"), sql`updated_at < ${Math.floor(thresholdDate.getTime() / 1000)}`));
     await db
       .update(siteMessageTargets)
       .set({ status: "queued", progressStage: "queued", updatedAt: new Date() })
       .where(
         and(
           eq(siteMessageTargets.jobId, jobId),
-          inArray(siteMessageTargets.status, ["discovering", "submitting"]),
-          sql`updated_at < ${thresholdDate}`
+          eq(siteMessageTargets.status, "discovering"),
+          sql`updated_at < ${Math.floor(thresholdDate.getTime() / 1000)}`
         )
       );
   } catch (resetErr) {

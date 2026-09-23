@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
+import { describe, it } from "vitest";
 import assert from "node:assert/strict";
-import { findBlockedEmailTerms } from "./email-content-policy";
+import { findBlockedEmailTerms } from "../../src/outreach/shared/email-content-policy";
 
 describe("email content policy", () => {
   it("blocks the reported Guns sentence in subject, HTML and plain text", () => {

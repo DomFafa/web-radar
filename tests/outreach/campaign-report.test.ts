@@ -1,6 +1,6 @@
-import { test } from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
-import { buildCampaignReport, campaignReportResult, csvCell } from "./campaign-report";
+import { buildCampaignReport, campaignReportResult, csvCell } from "../../src/outreach/server/lib/campaign-report";
 
 const base = { email: "a@example.com", name: "测试", status: "sent", errorMessage: null, sesMessageId: null, sentAt: null, deliveredAt: null, openedAt: null, clickedAt: null };
 test("report distinguishes successful, failed, pending and ambiguous deliveries", () => {

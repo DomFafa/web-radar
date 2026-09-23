@@ -430,22 +430,14 @@ siteMessageRoutes.post("/:id/start", requirePermission("site-messages:send"), as
   const [job] = await db.select().from(siteMessageJobs).where(and(eq(siteMessageJobs.id, jobId), eq(siteMessageJobs.userId, user.id)));
   if (!job) return c.json({ success: false, error: "任务不存在" }, 404);
 
-  const retriableSkipCodes = new Set([
-    "contact_page_not_found",
-    "contact_form_not_found",
-    "submit_not_found",
-    "execution_error",
-    "validation_failed",
-    "unsupported_required_field",
-    "missing_profile_value",
-  ]);
+  if (["queued", "running"].includes(job.status)) return c.json({ error: "任务正在执行，请勿重复启动" }, 409);
   const jobTargets = await db
     .select({ id: siteMessageTargets.id, status: siteMessageTargets.status, resultCode: siteMessageTargets.resultCode, attempts: siteMessageTargets.attempts })
     .from(siteMessageTargets)
     .where(eq(siteMessageTargets.jobId, jobId));
 
   // Executable targets: All targets that are NOT yet successfully submitted (includes skipped, failed, queued, discovering, submitting, draft)
-  const executableTargets = jobTargets.filter((target) => target.status !== "submitted");
+  const executableTargets = jobTargets.filter((target) => !["submitted", "submitting", "discovering"].includes(target.status) && target.resultCode !== "submission_uncertain");
 
   if (!executableTargets.length) {
     const updatedTargets = await db.select({ status: siteMessageTargets.status }).from(siteMessageTargets).where(eq(siteMessageTargets.jobId, jobId));
@@ -460,7 +452,7 @@ siteMessageRoutes.post("/:id/start", requirePermission("site-messages:send"), as
       completedAt: new Date(),
       updatedAt: new Date(),
     }).where(eq(siteMessageJobs.id, jobId));
-    return c.json({ success: false, error: "该任务中的所有目标网站均已成功提交。如需再次全量发送，请使用重置功能。" }, 400);
+    return c.json({ success: false, error: "没有可重试的目标；已提交或提交结果待核实的网站不会自动重发。" }, 400);
   }
 
   for (const batch of chunkItems(executableTargets, MAX_TARGET_ID_BATCH_SIZE)) {
@@ -505,6 +497,9 @@ siteMessageRoutes.post("/:id/reset", requirePermission("site-messages:send"), as
   const [job] = await db.select().from(siteMessageJobs).where(and(eq(siteMessageJobs.id, jobId), eq(siteMessageJobs.userId, user.id)));
   if (!job) return c.json({ success: false, error: "任务不存在" }, 404);
 
+  if (["queued", "running"].includes(job.status)) return c.json({ error: "请先暂停任务再重置" }, 409);
+  const active = await db.select({ id: siteMessageTargets.id }).from(siteMessageTargets).where(and(eq(siteMessageTargets.jobId, jobId), inArray(siteMessageTargets.status, ["discovering", "submitting"])));
+  if (active.length) return c.json({ error: "当前网站仍在处理中，请等待处理结束再重置" }, 409);
   const jobTargets = await db
     .select({ id: siteMessageTargets.id })
     .from(siteMessageTargets)
@@ -559,44 +554,5 @@ siteMessageRoutes.delete("/:id", requirePermission("site-messages:delete"), asyn
 });
 
 siteMessageRoutes.post("/force-cleanup", requirePermission("site-messages:send"), async (c) => {
-  const db = createDb(c.env.DB);
-  const user = c.get("user")!;
-
-  const closedCount = 0;
-  const userJobs = await db.select({ id: siteMessageJobs.id }).from(siteMessageJobs).where(eq(siteMessageJobs.userId, user.id));
-  const jobIds = userJobs.map((j) => j.id);
-
-  if (jobIds.length) {
-    for (const batch of chunkItems(jobIds, MAX_D1_BATCH_SIZE)) {
-      await db.update(siteMessageTargets).set({
-        status: "queued",
-        resultCode: null,
-        resultMessage: null,
-        progressStage: "queued",
-        progressPercent: 0,
-        progressLogs: "[]",
-        completedAt: null,
-        updatedAt: new Date(),
-      }).where(inArray(siteMessageTargets.jobId, batch));
-
-      await db.update(siteMessageJobs).set({
-        status: "draft",
-        totalSubmitted: 0,
-        totalSkipped: 0,
-        totalFailed: 0,
-        startedAt: null,
-        completedAt: null,
-        updatedAt: new Date(),
-      }).where(inArray(siteMessageJobs.id, batch));
-    }
-  }
-
-  return c.json({
-    success: true,
-    data: {
-      closedSessions: closedCount,
-      resetJobs: jobIds.length,
-    },
-    message: "已重置当前工作空间任务；其他工作空间的浏览器不受影响。",
-  });
+  return c.json({ error: "请在单个任务中暂停后重置，以免重复向已完成的网站提交。" }, 409);
 });

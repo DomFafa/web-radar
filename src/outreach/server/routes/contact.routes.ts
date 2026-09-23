@@ -35,7 +35,7 @@ contactRoutes.get("/groups", requirePermission("contacts:read"), async (c) => {
   const user = c.get("user")!;
 
   const groups = await db
-    .select({ ...getTableColumns(contactGroups), contactCount: sql<number>`(SELECT COUNT(*) FROM edm_contacts c WHERE c.group_id = contact_groups.id AND c.user_id = ${user.id})` })
+    .select({ ...getTableColumns(contactGroups), contactCount: sql<number>`(SELECT COUNT(*) FROM edm_contacts c WHERE c.group_id = edm_contact_groups.id AND c.user_id = ${user.id})` })
     .from(contactGroups)
     .where(eq(contactGroups.userId, user.id))
     .orderBy(desc(contactGroups.createdAt));
