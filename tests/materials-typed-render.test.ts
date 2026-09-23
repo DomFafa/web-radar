@@ -3,6 +3,7 @@ import {parse} from 'parse5';
 import type {Draft,TemplateId} from '../src/shared/model';
 import {templateMediaRequirements} from '../src/shared/template-media';
 import {getTypedMaterialsTemplate,renderTypedMaterialsSite} from '../src/templates/materials-typed';
+import {getMaterialsTemplate} from '../src/templates/materials';
 import {renderSite} from '../src/templates';
 import {createHash} from 'node:crypto';
 import typedManifest from '../docs/materials-requirements/typed-2026-09-19.json';
@@ -115,7 +116,7 @@ describe('typed materials preserve template layouts with confirmed content',()=>
     expect(renderSite({...draft,materials:undefined},options)).toContain('© 2026 Swiss Atelier Customer Brand. SWISS ATELIER EDITION.');
   });
   it('preserves the published contract manifest through render-only corrections',()=>{
-    for(const [id,locked] of Object.entries(typedManifest.templates))expect(createHash('sha256').update(JSON.stringify(getTypedMaterialsTemplate(id))).digest('hex'),id).toBe(locked.sha256);
+    for(const [id,locked] of Object.entries(typedManifest.templates))expect(createHash('sha256').update(JSON.stringify(getMaterialsTemplate(id,locked.contractRevision))).digest('hex'),id).toBe(locked.sha256);
   });
   it('replaces Arcade demo metrics with supported company facts',()=>{
     const draft=fixture('senseng-arcade',2),contract=getTypedMaterialsTemplate(draft.template)!;
