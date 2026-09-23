@@ -405,3 +405,40 @@ describe('senseng toy templates (senseng-candy, senseng-wonder, senseng-arcade, 
   });
 });
 
+describe('8 new industry templates across 4 categories', () => {
+  const newTemplates = [
+    'pet-supplies-banner',
+    'pet-wellness-video',
+    'stationery-craft-banner',
+    'stationery-studio-video',
+    'poster-graphic-banner',
+    'poster-gallery-video',
+    'food-artisan-banner',
+    'food-harvest-video',
+  ] as const;
+
+  for (const template of newTemplates) {
+    it(`renders ${template} full website journey with zero Chinese in EN`, () => {
+      const d = draft();
+      d.template = template;
+      const pages = ['home', 'catalog', 'detail', 'about', 'contact'] as const;
+      for (const page of pages) {
+        const html = renderSite(d, { ...opts, page, productId: 'p-one', preview: true });
+        expect(html).toContain(`data-template="${template}"`);
+        expect(html).not.toMatch(/[\u4e00-\u9fa5]/);
+      }
+    });
+  }
+
+  it('renders unique styling and elements for each of the 8 new templates', () => {
+    const d = draft();
+    const renderedHomes = newTemplates.map((t) => {
+      d.template = t;
+      return renderSite(d, opts);
+    });
+    // All 8 homepages must be completely distinct
+    const uniqueSet = new Set(renderedHomes);
+    expect(uniqueSet.size).toBe(8);
+  });
+});
+

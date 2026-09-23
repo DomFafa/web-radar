@@ -38,6 +38,14 @@ import guideToolsBanner from './documents/tools-precision-banner.json';
 import guideToolsVideo from './documents/tools-workshop-video.json';
 import guideSportsBanner from './documents/sports-trail-banner.json';
 import guideSportsVideo from './documents/sports-kinetic-video.json';
+import guidePetBanner from './documents/pet-supplies-banner.json';
+import guidePetVideo from './documents/pet-wellness-video.json';
+import guideStationeryBanner from './documents/stationery-craft-banner.json';
+import guideStationeryVideo from './documents/stationery-studio-video.json';
+import guidePosterBanner from './documents/poster-graphic-banner.json';
+import guidePosterVideo from './documents/poster-gallery-video.json';
+import guideFoodBanner from './documents/food-artisan-banner.json';
+import guideFoodVideo from './documents/food-harvest-video.json';
 
 const documents = [
   guide0,
@@ -79,6 +87,14 @@ const documents = [
   guideToolsVideo,
   guideSportsBanner,
   guideSportsVideo,
+  guidePetBanner,
+  guidePetVideo,
+  guideStationeryBanner,
+  guideStationeryVideo,
+  guidePosterBanner,
+  guidePosterVideo,
+  guideFoodBanner,
+  guideFoodVideo,
 ].map((value) => guideSchema.parse(value));
 export const templateGuides: readonly TemplateGuide[] = guideIds.map((id) => {
   const matches = documents.filter((guide) => guide.templateId === id);

@@ -1878,6 +1878,42 @@ body[data-template="sports-kinetic-video"] {
   background: #f8fafc;
   color: #0f172a;
 }
+/* Pet Supplies — warm coral/sand palette */
+body[data-template="pet-supplies-banner"] {
+  background: #fef7f4;
+  color: #3b1f0e;
+}
+body[data-template="pet-wellness-video"] {
+  background: #f0fdfa;
+  color: #134e4a;
+}
+/* Stationery & Office — sage/cream palette */
+body[data-template="stationery-craft-banner"] {
+  background: #f8faf6;
+  color: #1a2e1a;
+}
+body[data-template="stationery-studio-video"] {
+  background: #f5f7fa;
+  color: #1e3a5f;
+}
+/* Posters, Stickers & Prints — pop/gallery palette */
+body[data-template="poster-graphic-banner"] {
+  background: #fefbff;
+  color: #2d1040;
+}
+body[data-template="poster-gallery-video"] {
+  background: #fffaf5;
+  color: #3b1a0a;
+}
+/* Food & Packaging — terracotta/olive palette */
+body[data-template="food-artisan-banner"] {
+  background: #fdf8f3;
+  color: #3b2712;
+}
+body[data-template="food-harvest-video"] {
+  background: #fafbf5;
+  color: #2a3517;
+}
 
 @keyframes wrPulse {
   0%, 100% {
