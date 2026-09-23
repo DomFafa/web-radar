@@ -3,13 +3,13 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {unstable_startWorker} from 'wrangler';
 import {chromium} from '@playwright/test';
-const artifacts='artifacts/outreach-review',origin='http://127.0.0.1:8796';
+const artifacts='artifacts/outreach-review',origin='http://127.0.0.1:8795';
 await mkdir(artifacts,{recursive:true});
 const state=artifacts+'/state-'+Date.now();
 execFileSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','migrations','apply','web-radar','--local','--env','test','--persist-to',state],{stdio:'pipe'});
 let worker,browser;
 try{
- worker=await unstable_startWorker({config:'wrangler.jsonc',env:'test',dev:{server:{hostname:'127.0.0.1',port:8796},persist:state,inspector:false,watch:false,logLevel:'error'}});await worker.ready;
+ worker=await unstable_startWorker({config:'wrangler.jsonc',env:'test',dev:{server:{hostname:'127.0.0.1',port:8795},persist:state,inspector:false,watch:false,logLevel:'error'}});await worker.ready;
  browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH});
  const owner=await browser.newContext({viewport:{width:1440,height:1100}}), outsider=await browser.newContext();
  assert.equal((await owner.request.post(origin+'/api/auth/test-login',{data:{identity:'admin'}})).status(),200);
@@ -29,17 +29,23 @@ try{
  await api('/campaigns','POST',{name:'Invalid cross workspace',senderName:'Test',senderEmail:'test@example.com',templateId:template.data.id},outsider,404);
  await api('/contacts','POST',{email:'foreign@example.com',groupId:group.data.id},outsider,404);
  assert.ok(!(await api('/providers','GET',undefined,outsider)).data.some(p=>p.id===provider.data.id));
- assert.equal((await browser.newContext()).request?true:false,true);
+ const member=await browser.newContext();await member.request.post(origin+'/api/auth/test-login',{data:{identity:'owner'}});
+ await api('/providers','POST',{provider:'sendgrid',name:'Blocked',apiKey:'not-real'},member,403);
+ await api(`/campaigns/${campaign.data.id}/send`,'POST',{},owner,503);
+ await api(`/site-messages/${job.data.id}/start`,'POST',{},owner,503);
+ const unsigned=Buffer.from(contact.data.id).toString('base64');assert.equal((await owner.request.get(origin+'/api/outreach/unsubscribe?token='+encodeURIComponent(unsigned))).status(),400);
  const anon=await browser.newContext();assert.equal((await anon.request.get(origin+'/api/outreach/contacts')).status(),401);
  const page=await owner.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400&&r.url().includes('/api/outreach/'))errors.push(r.status()+' '+r.url())});
  await page.goto(origin+'/?view=edm');
  const nav=page.getByRole('navigation',{name:'工作台导航'});await nav.getByRole('button',{name:'EDM 邮件',exact:true}).waitFor();
  const tabs=page.getByRole('navigation',{name:'EDM 邮件功能'});
  for(const label of ['联系人','邮件模板','营销活动','服务商配置','发信域名','发送中心']){await tabs.getByRole('button',{name:label,exact:true}).click();await page.waitForTimeout(700);assert.ok(!(await page.locator('.outreach').innerText()).includes('内部服务器错误'));}
+ await tabs.getByRole('button',{name:'邮件模板',exact:true}).click();
+ await page.getByRole('button',{name:'➕ 新建模板',exact:true}).click();await page.locator('.ql-editor').waitFor();await page.locator('.template-editor-modal').getByRole('button',{name:'✕',exact:true}).click();
  await page.screenshot({path:artifacts+'/edm.png'});
  await nav.getByRole('button',{name:'站内信',exact:true}).click();await page.getByText('Draft site message '+suffix,{exact:true}).waitFor();await page.reload();await page.getByText('Draft site message '+suffix,{exact:true}).waitFor();
  await page.screenshot({path:artifacts+'/site-messages.png'});
- await page.setViewportSize({width:390,height:1000});await page.screenshot({path:artifacts+'/mobile.png'});
+ await page.setViewportSize({width:390,height:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'mobile horizontal overflow');await page.screenshot({path:artifacts+'/mobile.png'});
  assert.deepEqual(errors,[]);
  // Tests create drafts only: no external emails or website form submissions.
  console.log('PASS: authenticated navigation, contacts/groups, templates, campaign recipients, provider secret redaction, site-message drafts, reload recovery and cross-workspace denial. No live messages sent.');

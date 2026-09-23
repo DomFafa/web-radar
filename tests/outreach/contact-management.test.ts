@@ -1,42 +1,19 @@
-import { test } from "node:test";
+import { d1 } from "./sqlite";
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { Hono } from "hono";
-import { contactRoutes } from "./contact.routes";
+import { contactRoutes } from "../../src/outreach/server/routes/contact.routes";
 
 test("import reports, retries, ownership, bulk selection and group deletion", async () => {
   const sqlite = new DatabaseSync(":memory:");
-  for (const file of ["0000_spicy_dracula.sql", "0001_redundant_zuras.sql", "0007_contact_import_reports.sql"]) {
-    sqlite.exec(readFileSync(`src/db/migrations/${file}`, "utf8"));
-  }
+  sqlite.exec(readFileSync("migrations/0007_outreach.sql","utf8"));
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES
     ('u','test','u@example.com',0,0), ('v','other','v@example.com',0,0);
     INSERT INTO edm_contact_groups(id,user_id,name,contact_count,created_at,updated_at) VALUES
     ('g','u','Group',999,0,0), ('other','v','Other',0,0,0), ('move','u','Move',0,0,0);`);
-  const db = {
-    prepare(sql: string) {
-      const build = (params: any[] = []): any => ({
-        sql, params,
-        bind: (...values: any[]) => build(values),
-        async raw() { const stmt = sqlite.prepare(sql); stmt.setReturnArrays(true); return stmt.all(...params); },
-        async all() { return { results: sqlite.prepare(sql).all(...params) }; },
-        async first() { return sqlite.prepare(sql).get(...params) || null; },
-        async run() { return { meta: { changes: Number(sqlite.prepare(sql).run(...params).changes) } }; },
-      });
-      return build();
-    },
-    async batch(statements: any[]) {
-      sqlite.exec("BEGIN");
-      try {
-        const result = statements.map(({ sql, params }) => /^\s*SELECT/i.test(sql)
-          ? { results: sqlite.prepare(sql).all(...params), meta: { changes: 0 } }
-          : { results: [], meta: { changes: Number(sqlite.prepare(sql).run(...params).changes) } });
-        sqlite.exec("COMMIT");
-        return result;
-      } catch (error) { sqlite.exec("ROLLBACK"); throw error; }
-    },
-  };
+  const db = d1(sqlite);
   const app = new Hono<any>();
   app.use("*", async (c, next) => {
     c.set("user", { id: c.req.header("x-test-user") || "u", role: "owner" });
@@ -86,7 +63,7 @@ test("import reports, retries, ownership, bulk selection and group deletion", as
     const groupResponse = await (await req("/groups")).json() as any;
     assert.equal(groupResponse.data.find((g: any) => g.id === "g").contactCount, 501);
     assert.equal((await req("/batch-delete", "POST", {})).status, 400);
-    assert.equal((await req("/batch-move", "POST", { all: true, groupId: "other" })).status, 400);
+    assert.equal((await req("/batch-move", "POST", { all: true, groupId: "other" })).status, 404);
     const one = sqlite.prepare("SELECT id FROM edm_contacts WHERE email='person0@example.com'").get()!.id;
     const moved = await req("/batch-move", "POST", { all: true, filters: { groupId: "g" }, excludedIds: [one], groupId: "move" });
     assert.equal(((await moved.json()) as any).data.moved, 500);

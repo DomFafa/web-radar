@@ -243,17 +243,6 @@ export function SiteMessagesPage() {
     }
   };
 
-  const forceCleanupAll = async () => {
-    if (!window.confirm("确定将当前工作空间的任务重置为初始状态（可能再次向已提交网站发送）？")) return;
-    try {
-      const response = await siteMessagesApi.forceCleanup();
-      addToast("success", response.message || "已重置当前工作空间任务");
-      setDetail(null);
-      loadJobs(true);
-    } catch (error: any) {
-      addToast("error", error.message || "强制清理失败");
-    }
-  };
 
   return (
     <>
@@ -261,7 +250,6 @@ export function SiteMessagesPage() {
         <div className="page-header-actions">
           <div><h2>站内信</h2><p>自动查找目标网站的联系页面，并提交合规的业务咨询</p></div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button className="btn btn-secondary" onClick={forceCleanupAll} title="重置当前工作空间任务">🧹 重置工作空间任务</button>
             <button className="btn btn-primary" onClick={openCreate}>＋ 新建任务</button>
           </div>
         </div>

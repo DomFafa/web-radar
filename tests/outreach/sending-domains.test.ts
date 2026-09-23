@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import test from "node:test";
-import { domainKey, filterDomains, upsertDomain } from "./sending-domains";
+import { test } from "vitest";
+import { domainKey, filterDomains, upsertDomain } from "../../src/outreach/client/lib/sending-domains";
 
 const domains = [
   { providerId: "first", domain: "example.com", verified: false },

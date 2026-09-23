@@ -1,16 +1,16 @@
 import { DatabaseSync } from "node:sqlite";
-import { test } from "node:test";
+import { test } from "vitest";
 import assert from "node:assert/strict";
-import { addCampaignRecipients } from "./campaign-recipient-batch";
+import { addCampaignRecipients } from "../../src/outreach/server/lib/campaign-recipient-batch";
 
 test("large recipient preparation is batched, idempotent, tenant and subscription scoped", async () => {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE edm_contacts (id TEXT PRIMARY KEY, user_id TEXT, subscription_status TEXT);
-    CREATE INDEX idx_contacts_user ON contacts(user_id);
-    CREATE INDEX idx_contacts_subscription ON contacts(subscription_status);
+    CREATE INDEX idx_contacts_user ON edm_contacts(user_id);
+    CREATE INDEX idx_contacts_subscription ON edm_contacts(subscription_status);
     CREATE TABLE edm_campaigns (id TEXT PRIMARY KEY, user_id TEXT, status TEXT, total_recipients INTEGER, updated_at INTEGER);
     CREATE TABLE edm_campaign_recipients (id TEXT PRIMARY KEY, campaign_id TEXT, contact_id TEXT, variables TEXT, status TEXT, created_at INTEGER);
-    CREATE INDEX recipients_campaign ON campaign_recipients(campaign_id);
+    CREATE INDEX recipients_campaign ON edm_campaign_recipients(campaign_id);
     INSERT INTO edm_campaigns VALUES ('campaign', 'user', 'draft', 0, 0);
     INSERT INTO edm_contacts VALUES ('foreign', 'other', 'subscribed'), ('optout', 'user', 'unsubscribed');`);
   let statementCount = 0;
@@ -23,7 +23,7 @@ test("large recipient preparation is batched, idempotent, tenant and subscriptio
         const results = statements.map(({ sql, params }) => {
           if (sql.startsWith("INSERT")) {
             const plan = db.prepare(`EXPLAIN QUERY PLAN ${sql}`).all(...params);
-            assert.ok(plan.some((row) => String(row.detail).includes("SEARCH c USING INDEX sqlite_autoindex_contacts_1 (id=?)")), JSON.stringify(plan));
+            assert.ok(plan.some((row) => String(row.detail).includes("SEARCH c USING INDEX sqlite_autoindex_edm_contacts_1 (id=?)")), JSON.stringify(plan));
           }
           return { meta: { changes: Number(db.prepare(sql).run(...params).changes) } };
         });
