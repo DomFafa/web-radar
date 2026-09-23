@@ -23,9 +23,17 @@ export async function decodeProvider<T extends {id:string;apiKey:string;config:s
 export async function loadProviders(db:ReturnType<typeof createDb>,env:Bindings,workspaceId:string) {
   return Promise.all((await db.select().from(providers).where(eq(providers.userId,workspaceId))).map(row=>decodeProvider(row,env)));
 }
+function redactValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactValue);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([name,item]) => [name, /secret|password|token|key/i.test(name) ? '********' : redactValue(item)]));
+}
 export function redactConfig(config:string|null) {
-  if (!config) return null;
-  const value=JSON.parse(config);
-  for(const k of Object.keys(value)) if(/secret|password|token|key/i.test(k)) value[k]='********';
-  return JSON.stringify(value);
+  return config ? JSON.stringify(redactValue(JSON.parse(config))) : null;
+}
+export function restoreMaskedConfig(value: unknown, previous: any): unknown {
+  if (value === '********') return previous;
+  if (Array.isArray(value)) return value.map((item,index) => restoreMaskedConfig(item,previous?.[index]));
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([name,item]) => [name,restoreMaskedConfig(item,previous?.[name])]));
 }
