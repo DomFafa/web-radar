@@ -337,21 +337,47 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
             <div style={{ position: "relative", minWidth: 0 }}><button type="button" className="form-select" style={{ width: "100%", textAlign: "left", background: "var(--color-bg-card)", cursor: "pointer" }} onClick={() => setTemplateOpen(!templateOpen)}>{selectedTemplate ? `${selectedTemplate.name} · ${selectedTemplate.subject}` : "请选择模板"}<span style={{ float: "right" }}>⌄</span></button>{templateOpen && <div style={{ position: "absolute", zIndex: 5, width: "100%", marginTop: 4, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: 6, boxShadow: "var(--shadow-lg)", maxHeight: 250, overflowY: "auto" }}>{templates.map((template) => <button type="button" key={template.id} onMouseEnter={() => setHoveredTemplateId(template.id)} onClick={() => { setForm({ ...form, templateId: template.id }); setTemplateOpen(false); setHoveredTemplateId(null); }} style={{ display: "block", width: "100%", padding: "10px 12px", textAlign: "left", border: 0, background: hoveredTemplateId === template.id ? "var(--color-accent-subtle)" : "transparent", color: "var(--color-text-primary)", cursor: "pointer" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong>{template.name}</strong><span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: template.isBuiltIn ? "var(--color-bg-subtle)" : "var(--color-accent-soft)", color: template.isBuiltIn ? "var(--color-text-muted)" : "var(--color-accent)" }}>{template.isBuiltIn ? "内置" : "我的"}</span></div><span style={{ display: "block", fontSize: 12, color: "var(--color-text-secondary)", marginTop: 3 }}>{template.subject}</span></button>)}</div>}</div>
             <EmailPreview html={templates.find((template) => template.id === (templateOpen ? hoveredTemplateId || form.templateId : form.templateId))?.bodyHtml || "<p>请选择邮件模板</p>"} />
           </div></div>
-          <div className="sender-fields">
-            <div className="form-group">
-              <label className="form-label" htmlFor="sender-domain">已验证发信域名 *</label>
-              <select id="sender-domain" className="form-select" disabled={senderDomainLoading||!verifiedSenderDomains.length} value={verifiedSenderDomains.includes(form.senderEmail.split('@').pop()?.toLowerCase()||'')?form.senderEmail.split('@').pop()?.toLowerCase():''} onChange={e=>changeSenderDomain(e.target.value)}>
-                <option value="">{senderDomainLoading?'正在读取域名…':verifiedSenderDomains.length?'请选择发信域名':'暂无已验证域名'}</option>
-                {verifiedSenderDomains.map(domain=><option key={domain} value={domain}>@{domain}</option>)}
-              </select>
-              <button className="btn btn-secondary btn-sm" type="button" disabled={senderDomainLoading} onClick={()=>void refreshSenderDomains()}>刷新发信域名</button>
-              {senderDomainError&&<div className="form-help" role="alert">{senderDomainError}</div>}
-              {!senderDomainLoading&&!verifiedSenderDomains.length&&<div className="form-help">请在「发信域名」完成验证；Resend 读取域名需要 Full access API Key。</div>}
+          <section className="sender-section" aria-labelledby="sender-heading">
+            <h4 id="sender-heading">发件人信息</h4>
+            <div className="sender-fields">
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-domain">已验证发信域名 *</label>
+                <div className="sender-domain-control">
+                  <select id="sender-domain" className="form-select" disabled={senderDomainLoading||!verifiedSenderDomains.length} value={verifiedSenderDomains.includes(form.senderEmail.split('@').pop()?.toLowerCase()||'')?form.senderEmail.split('@').pop()?.toLowerCase():''} onChange={e=>changeSenderDomain(e.target.value)}>
+                    <option value="">{senderDomainLoading?'正在读取域名…':verifiedSenderDomains.length?'请选择发信域名':'暂无已验证域名'}</option>
+                    {verifiedSenderDomains.map(domain=><option key={domain} value={domain}>@{domain}</option>)}
+                  </select>
+                  <button className="btn btn-secondary" type="button" aria-label="刷新发信域名" disabled={senderDomainLoading} onClick={()=>void refreshSenderDomains()}>{senderDomainLoading?'读取中…':'刷新域名'}</button>
+                </div>
+                {senderDomainError&&<div className="form-help sender-domain-error" role="alert">{senderDomainError}</div>}
+                {!senderDomainLoading&&!verifiedSenderDomains.length&&<div className="form-help">请在「发信域名」完成验证；Resend 读取域名需要 Full access API Key。</div>}
+                {!!verifiedSenderDomains.length&&<div className="form-help form-help-success">已认证：{verifiedSenderDomains.map(domain=>`@${domain}`).join('、')}</div>}
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-email">发件人邮箱 *</label>
+                <input id="sender-email" className="form-input" type="email" value={form.senderEmail} onChange={e=>setForm({...form,senderEmail:e.target.value})} placeholder="name@yourdomain.com" />
+                <div className="form-help">可修改 @ 前的邮箱名称，切换域名时会保留。</div>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-name">发件人名称 *</label>
+                <input id="sender-name" className="form-input" value={form.senderName} placeholder="Your Company" onChange={e=>setForm({...form,senderName:e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-reply">回复地址</label>
+                <input id="sender-reply" className="form-input" type="email" value={form.replyTo} placeholder="reply@yourdomain.com" onChange={e=>setForm({...form,replyTo:e.target.value})} />
+              </div>
             </div>
-            <div className="form-group"><label className="form-label" htmlFor="sender-email">发件人邮箱 *</label><input id="sender-email" className="form-input" type="email" value={form.senderEmail} onChange={e=>setForm({...form,senderEmail:e.target.value})} placeholder="name@yourdomain.com" /><div className="form-help">可修改 @ 前的邮箱名称；选择域名会保留已填写的名称。</div>{!!verifiedSenderDomains.length&&<div className="form-help form-help-success">✓ 可使用已认证域名：{verifiedSenderDomains.map(domain=>`@${domain}`).join('、')}</div>}</div>
-            <div className="form-group"><label className="form-label" htmlFor="sender-name">发件人名称 *</label><input id="sender-name" className="form-input" value={form.senderName} placeholder="Your Company" onChange={e=>setForm({...form,senderName:e.target.value})} /></div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><div className="form-group"><label className="form-label">回复地址</label><input className="form-input" type="email" value={form.replyTo} placeholder="reply@yourdomain.com" onChange={(e) => setForm({ ...form, replyTo: e.target.value })} /></div><div className="form-group"><label className="form-label">发送速率（封/分钟）</label><input className="form-input" type="number" min="1" max="200" value={form.sendRate} onChange={(e) => setForm({ ...form, sendRate: Number(e.target.value) || 50 })} /></div></div>
+          </section>
+          <section className="sender-section sender-settings" aria-labelledby="sender-settings-heading">
+            <h4 id="sender-settings-heading">发送设置</h4>
+            <div className="sender-rate-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-rate">发送速率（封/分钟）</label>
+                <input id="sender-rate" className="form-input" type="number" min="1" max="200" value={form.sendRate} onChange={e=>setForm({...form,sendRate:Number(e.target.value)||50})} />
+              </div>
+              <p className="form-help">可设置 1–200 封/分钟，实际发送受服务商额度与限流影响。</p>
+            </div>
+          </section>
         </div>}
 
         {step === 2 && <div>

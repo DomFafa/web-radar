@@ -174,7 +174,19 @@
 .outreach .resend-domains table { min-width:550px; table-layout:fixed; }
 .outreach .resend-domains th, .outreach .resend-domains td { overflow-wrap:anywhere; white-space:normal; }
 
-.outreach .sender-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.outreach .sender-fields .form-help { overflow-wrap:anywhere; }
-.outreach .sender-fields .btn { margin-top:8px; }
-@media(max-width:640px){.outreach .sender-fields { grid-template-columns:1fr; }}
+.outreach .sender-section { margin-top:24px; padding-top:24px; border-top:1px solid var(--line); }
+.outreach .sender-section h4 { margin:0 0 16px; font-size:15px; font-weight:650; color:var(--ink); }
+.outreach .sender-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 24px; align-items:start; }
+.outreach .sender-section .form-group { margin:0; min-width:0; }
+.outreach .sender-section .form-help { overflow-wrap:anywhere; margin:8px 0 0; line-height:1.6; }
+.outreach .sender-domain-control { display:flex; align-items:stretch; gap:8px; }
+.outreach .sender-domain-control .form-select { flex:1; min-width:0; width:0; }
+.outreach .sender-domain-control .btn { flex-shrink:0; margin:0; white-space:nowrap; }
+.outreach .sender-domain-error { color:var(--red); }
+.outreach .sender-rate-row { display:grid; grid-template-columns:minmax(160px,240px) 1fr; align-items:end; gap:12px 24px; }
+.outreach .sender-rate-row > .form-help { margin:0; padding-bottom:10px; }
+@media(max-width:640px){
+  .outreach .sender-fields,.outreach .sender-rate-row { grid-template-columns:1fr; gap:16px; }
+  .outreach .sender-section { margin-top:20px; padding-top:20px; }
+  .outreach .sender-rate-row > .form-help { padding:0; margin-top:-8px; }
+}
