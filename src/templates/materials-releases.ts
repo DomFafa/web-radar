@@ -7,6 +7,8 @@ import { getMaterialsTemplate as frozenContract, renderSite as frozenRender } fr
 import { frozenMaterialsPreviewRuntime } from './releases/baseline-preview-20260922';
 import { getMaterialsTemplate as industryContract, renderSite as industryRender } from './releases/industry-20260922.mjs';
 import { frozenIndustryPreviewRuntime } from './releases/industry-preview-20260922';
+import { getMaterialsTemplate as outreachContract, renderSite as outreachRender } from './releases/outreach-20260923.mjs';
+import { getOutreachDemoContract, repairOutreachMaterials } from './releases/outreach-demo-20260923.mjs';
 import { repairMaterialsDemo } from './releases/demo-20260923.mjs';
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
@@ -17,8 +19,11 @@ export const executableMaterialsRevision = (id: string) => `2026-09-22.${id}-mat
 export const identityMaterialsRevision = (id: string) => `2026-09-22.${id}-materials.5`;
 export const demoMaterialsRevision = (id: string) => `2026-09-23.${id}-materials.6`;
 export const demoRendererRevision = '2026-09-23.demo-repair.1';
+export const outreachDemoRendererRevision = '2026-09-23.outreach-demo-repair.1';
 
 export function demoMaterialsContract(id: string): MaterialsTemplateContract | undefined {
+  const outreach = getOutreachDemoContract(id);
+  if (outreach) return outreach;
   const contract = identityMaterialsContract(id);
   if (!contract) return;
   contract.contractRevision = demoMaterialsRevision(id);
@@ -30,8 +35,11 @@ const templateProductFamilies: Record<string, ProductIdentity["family"][]> = {
   jewelry: ['jewelry'], homedecor: ['home'], furniture: ['furniture'], kitchen: ['kitchen', 'drinkware'],
   juno: ['toy', 'plush'], senseng: ['toy', 'plush'],
   drinkware: ['drinkware'], beauty: ['beauty'], electronics: ['electronics'], tools: ['tools'], sports: ['outdoor'],
+  pet: ['pet'], stationery: ['stationery'], poster: ['flat', 'home'], food: ['food'],
 };
 export function identityMaterialsContract(id: string): MaterialsTemplateContract | undefined {
+  const outreach = outreachContract(id, identityMaterialsRevision(id));
+  if (outreach) return outreach;
   const contract = executableMaterialsContract(id);
   if (!contract) return;
   contract.contractRevision = identityMaterialsRevision(id);
@@ -44,6 +52,8 @@ export function identityMaterialsContract(id: string): MaterialsTemplateContract
 
 /** Execution metadata is published only in a new revision. Historical documents stay byte-for-byte unchanged. */
 export function executableMaterialsContract(id: string): MaterialsTemplateContract | undefined {
+  const outreach = outreachContract(id, executableMaterialsRevision(id));
+  if (outreach) return outreach;
   const contract = frozenContract(id) ?? industryContract(id, executableMaterialsRevision(id));
   if (!contract) return;
   contract.contractRevision = executableMaterialsRevision(id);
@@ -81,7 +91,7 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
   if (revision === executableMaterialsRevision(id)) return executableMaterialsContract(id);
   const frozen = frozenContract(id, revision);
   if (frozen) return frozen;
-  return industryContract(id, revision);
+  return industryContract(id, revision) ?? outreachContract(id, revision);
 }
 
 export function renderReleasedMaterials(draft: Draft, options: RenderOptions): string | undefined {
@@ -93,8 +103,10 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
   if (revision === demoMaterialsRevision(draft.template) && demoMaterialsContract(draft.template)) {
     const previous = {...draft, materials: {...draft.materials!, contractRevision: identityMaterialsRevision(draft.template)}};
     const html = renderReleasedMaterials(previous, options);
-    return html === undefined ? undefined : repairMaterialsDemo(html, draft, options);
+    if (html === undefined) return;
+    return getOutreachDemoContract(draft.template) ? repairOutreachMaterials(html, draft, options) : repairMaterialsDemo(html, draft, options);
   }
+  if (outreachContract(draft.template, revision)) return outreachRender(draft, options);
   const original = frozenContract(draft.template, [executableMaterialsRevision(draft.template), identityMaterialsRevision(draft.template)].includes(revision) ? undefined : revision);
   if (!original) {
     const innerRevision = revision === identityMaterialsRevision(draft.template) ? executableMaterialsRevision(draft.template) : revision;
@@ -109,12 +121,15 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   const revision = draft.materials?.contractRevision;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
-  if (release?.contract.rendererRevision === demoRendererRevision) return frozenContract(release.rendererTemplateId) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
+  if (release && [demoRendererRevision, outreachDemoRendererRevision].includes(release.contract.rendererRevision || '')) return frozenContract(release.rendererTemplateId) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
   if (revision && releasedMaterialsContract(draft.template, revision)) return frozenContract(draft.template) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
 }
 
 function materialsRendererContract(release: MaterialsTemplateRelease): MaterialsTemplateContract | undefined {
-  if (release.contract.rendererRevision === demoRendererRevision) return release.rendererContractRevision === demoMaterialsRevision(release.rendererTemplateId) ? demoMaterialsContract(release.rendererTemplateId) : undefined;
+  if ([demoRendererRevision, outreachDemoRendererRevision].includes(release.contract.rendererRevision || '')) {
+    const source = release.rendererContractRevision === demoMaterialsRevision(release.rendererTemplateId) ? demoMaterialsContract(release.rendererTemplateId) : undefined;
+    return source?.rendererRevision === release.contract.rendererRevision ? source : undefined;
+  }
   if (release.contract.rendererRevision === materialsRendererRevision) return frozenContract(release.rendererTemplateId,release.rendererContractRevision);
 }
 
@@ -134,7 +149,7 @@ export function renderMaterialsTemplateRelease(release: MaterialsTemplateRelease
     copy[locale] = {headline:value('hero-headline'),subtitle:value('hero-subtitle'),cta:value('primary-cta'),about:value('company-about')};
   }
   const mapped = {...draft,template:release.rendererTemplateId as Draft['template'],copy,materials};
-  return release.contract.rendererRevision === demoRendererRevision ? renderReleasedMaterials(mapped,options)! : frozenRender(mapped,options);
+  return [demoRendererRevision, outreachDemoRendererRevision].includes(release.contract.rendererRevision || '') ? renderReleasedMaterials(mapped,options)! : frozenRender(mapped,options);
 }
 
 /** Alias releases may rename slots and narrow copy limits, but cannot claim layout capacity absent from their renderer. */
@@ -142,7 +157,7 @@ export function validateMaterialsTemplateRelease(release:MaterialsTemplateReleas
   const errors:string[]=[];
   const source=materialsRendererContract(release);
   const contract=release.contract;
-  if(frozenContract(contract.templateId,contract.contractRevision)||industryContract(contract.templateId,contract.contractRevision)||([executableMaterialsRevision(contract.templateId),identityMaterialsRevision(contract.templateId),demoMaterialsRevision(contract.templateId)].includes(contract.contractRevision)&&identityMaterialsContract(contract.templateId)))errors.push('published_template_revision_collision');
+  if(frozenContract(contract.templateId,contract.contractRevision)||industryContract(contract.templateId,contract.contractRevision)||outreachContract(contract.templateId,contract.contractRevision)||([executableMaterialsRevision(contract.templateId),identityMaterialsRevision(contract.templateId),demoMaterialsRevision(contract.templateId)].includes(contract.contractRevision)&&identityMaterialsContract(contract.templateId)))errors.push('published_template_revision_collision');
   if(!source)return [...errors,'renderer_release_unavailable'];
   const expected=declareExecutionMetadata(source);
   if(contract.schemaVersion!=='wr-template-materials-v1'||!contract.materialsReady||contract.imagePolicy!==expected.imagePolicy||contract.contentPolicy!==expected.contentPolicy||JSON.stringify(contract.pages)!==JSON.stringify(expected.pages)||JSON.stringify(contract.selectionGroups)!==JSON.stringify(expected.selectionGroups)||JSON.stringify(contract.optionalSections.map(s=>s.id))!==JSON.stringify(expected.optionalSections.map(s=>s.id)))errors.push('renderer_contract_incompatible');

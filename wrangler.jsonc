@@ -102,7 +102,76 @@
         "binding": "ASSETS",
         "not_found_handling": "single-page-application",
         "run_worker_first": true
+      },
+      "queues": {
+        "producers": [
+          {
+            "queue": "web-radar-edm-email",
+            "binding": "EDM_EMAIL_QUEUE"
+          },
+          {
+            "queue": "web-radar-edm-sites",
+            "binding": "EDM_SITE_QUEUE"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "web-radar-edm-email",
+            "max_batch_size": 10,
+            "max_concurrency": 2,
+            "max_retries": 3,
+            "dead_letter_queue": "web-radar-edm-email-dlq"
+          },
+          {
+            "queue": "web-radar-edm-email-dlq",
+            "max_batch_size": 10,
+            "max_concurrency": 1,
+            "max_retries": 3
+          },
+          {
+            "queue": "web-radar-edm-sites",
+            "max_batch_size": 1,
+            "max_concurrency": 1,
+            "max_retries": 8
+          }
+        ]
       }
     }
+  },
+  "browser": {
+    "binding": "BROWSER"
+  },
+  "queues": {
+    "producers": [
+      {
+        "queue": "web-radar-edm-email",
+        "binding": "EDM_EMAIL_QUEUE"
+      },
+      {
+        "queue": "web-radar-edm-sites",
+        "binding": "EDM_SITE_QUEUE"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "web-radar-edm-email",
+        "max_batch_size": 10,
+        "max_concurrency": 2,
+        "max_retries": 3,
+        "dead_letter_queue": "web-radar-edm-email-dlq"
+      },
+      {
+        "queue": "web-radar-edm-email-dlq",
+        "max_batch_size": 10,
+        "max_concurrency": 1,
+        "max_retries": 3
+      },
+      {
+        "queue": "web-radar-edm-sites",
+        "max_batch_size": 1,
+        "max_concurrency": 1,
+        "max_retries": 8
+      }
+    ]
   }
 }

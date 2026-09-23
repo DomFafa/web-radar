@@ -271,5 +271,61 @@
     "width": 1440,
     "height": 1000,
     "contractRevision": "2026-09-23.universal-trade-banner-materials.6"
+  },
+  "food-artisan-banner": {
+    "url": "/templates/previews/food-artisan-banner.aa06716cc401d85b.jpg",
+    "sha256": "aa06716cc401d85b6b10f0ad1b1f298bb8637efeb3edfd99f1b3999858476a3c",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.food-artisan-banner-materials.6"
+  },
+  "food-harvest-video": {
+    "url": "/templates/previews/food-harvest-video.6d65f800f9fcc453.jpg",
+    "sha256": "6d65f800f9fcc453d45f1ee0882fb85859d07c517aef3f9feebd1aebc86133d3",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.food-harvest-video-materials.6"
+  },
+  "pet-supplies-banner": {
+    "url": "/templates/previews/pet-supplies-banner.0eabd2a4f84cdade.jpg",
+    "sha256": "0eabd2a4f84cdade063f1bd0adec5d7ba3d1940bcfed20f9eaf830a921e3c9a7",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.pet-supplies-banner-materials.6"
+  },
+  "pet-wellness-video": {
+    "url": "/templates/previews/pet-wellness-video.ef86253248b05e1b.jpg",
+    "sha256": "ef86253248b05e1ba5ccdec2f9fbd721f92fbec04cb98cbf58992353d63de8fe",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.pet-wellness-video-materials.6"
+  },
+  "poster-gallery-video": {
+    "url": "/templates/previews/poster-gallery-video.429d29eb47fbc201.jpg",
+    "sha256": "429d29eb47fbc201373bccc07dfc6eda83bdad23ccd6bd4b7ad5001223dd55c6",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.poster-gallery-video-materials.6"
+  },
+  "poster-graphic-banner": {
+    "url": "/templates/previews/poster-graphic-banner.5ba7534913583775.jpg",
+    "sha256": "5ba753491358377511728f388094de09c40af01737c495216e1c3a4517e44ba1",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.poster-graphic-banner-materials.6"
+  },
+  "stationery-craft-banner": {
+    "url": "/templates/previews/stationery-craft-banner.b29762c28e3b22fd.jpg",
+    "sha256": "b29762c28e3b22fd100d0b178e09ae48ab81eaa7b352f842c486fc8f6886ea47",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.stationery-craft-banner-materials.6"
+  },
+  "stationery-studio-video": {
+    "url": "/templates/previews/stationery-studio-video.f88f3eb2eb09d231.jpg",
+    "sha256": "f88f3eb2eb09d2315ceff77bf82f86749511dfae7c64e3b2cfc766a703f06c35",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-23.stationery-studio-video-materials.6"
   }
 }

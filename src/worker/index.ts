@@ -1,3 +1,4 @@
+import { outreachFetch, outreachQueue } from './outreach';
 import { withStoredEmailStatus } from './provider-settings';
 import { Hono } from 'hono';
 import type { HonoEnv } from './env';
@@ -85,6 +86,7 @@ app.all('/api/public/*', async (c) => {
   headers.delete('X-WR-Principal');
   return c.env.COORDINATOR.getByName('global').fetch(new Request(c.req.raw, { headers }));
 });
+app.all('/api/outreach/*',c=>outreachFetch(c.req.raw,c.env,c.executionCtx));
 app.all('/api/*', async (c) => {
   const { principal } = await authenticate(c.req.raw, c.env);
   const headers = new Headers(c.req.raw.headers);
@@ -93,4 +95,4 @@ app.all('/api/*', async (c) => {
   return c.env.COORDINATOR.getByName('global').fetch(new Request(c.req.raw, { headers }));
 });
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
-export default app;
+export default Object.assign(app,{queue:outreachQueue});

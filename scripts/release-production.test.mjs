@@ -7,6 +7,7 @@ import {
   assertWorkflowRun, assertDispatch, createManifest, verifyArtifact,
   deploymentArguments, verifyRequiredChecks, artifactConfig,
 } from './release-production.mjs';
+import * as release from './release-production.mjs';
 
 const sha = 'a'.repeat(40), other = 'b'.repeat(40);
 const policy = { repository: 'git@github.com:DomFafa/web-radar.git', releaseBranch: 'codex/web-radar-v1' };
@@ -104,4 +105,29 @@ test('artifact configuration retains production settings and refuses a second bu
   assert.equal(artifact.env, undefined);
   assert.equal(artifact.no_bundle, true);
   assert.throws(() => artifactConfig({ ...original, build: { command: 'rebuild' } }), /Custom builds/);
+});
+
+test('release preflight refuses to remove existing non-secret production bindings', () => {
+  const settings = { bindings: [
+    { name: 'DB', type: 'd1' }, { name: 'MEDIA', type: 'r2_bucket' },
+    { name: 'COORDINATOR', type: 'durable_object_namespace' },
+    { name: 'EDM_EMAIL_QUEUE', type: 'queue' }, { name: 'BROWSER', type: 'browser' },
+    { name: 'ASSETS', type: 'assets' }, { name: 'API_KEY', type: 'secret_text' },
+    { name: 'ENVIRONMENT', type: 'plain_text' },
+  ] };
+  const config = { d1_databases: [{ binding: 'DB' }], r2_buckets: [{ binding: 'MEDIA' }],
+    durable_objects: { bindings: [{ name: 'COORDINATOR' }] },
+    queues: { producers: [{ binding: 'EDM_EMAIL_QUEUE' }] }, browser: { binding: 'BROWSER' } };
+  assert.equal(typeof release.assertProductionBindingsPreserved, 'function');
+  assert.doesNotThrow(() => release.assertProductionBindingsPreserved(settings, config));
+  assert.throws(() => release.assertProductionBindingsPreserved(settings, { ...config, queues: undefined }), /EDM_EMAIL_QUEUE/);
+  assert.throws(() => release.assertProductionBindingsPreserved(settings, { ...config, browser: undefined }), /BROWSER/);
+});
+
+test('failed Wrangler diagnostics expose numeric API codes without raw logs or credentials', () => {
+  assert.equal(typeof release.releaseCommandFailure, 'function');
+  const message = release.releaseCommandFailure('Node/Wrangler', 'Authorization: Bearer private-token\n [ERROR] API denied [code: 10000]\naccount secret-value [code: 10000]');
+  assert.match(message, /10000/);
+  assert.doesNotMatch(message, /private-token|secret-value|Authorization/);
+  assert.match(release.releaseCommandFailure('Node/Wrangler', 'private-token'), /no automatic deployment retry/);
 });

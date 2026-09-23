@@ -22,13 +22,13 @@ try {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(origin);
+  await page.goto(origin+'/?view=projects');
   await page.getByRole('button', { name: '创建网站', exact: true }).waitFor();
   assert.equal(await page.evaluate(() => sessionStorage.getItem('wr_session')), null);
   await page.reload();
   await page.getByRole('button', { name: '创建网站', exact: true }).waitFor();
   const second = await context.newPage();
-  await second.goto(origin);
+  await second.goto(origin+'/?view=projects');
   await second.getByRole('button', { name: '创建网站', exact: true }).waitFor();
   await second.close();
   results.push(

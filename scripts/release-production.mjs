@@ -95,7 +95,15 @@ export function deploymentArguments(artifact, sourceCommit, digest) {
 function run(command, args, cwd, { env = process.env, log } = {}) {
   const result = spawnSync(command, args, { cwd, env, stdio: log ? ['ignore', 'pipe', 'pipe'] : 'inherit', maxBuffer: 20 * 1024 * 1024 });
   if (log) writeFileSync(log, Buffer.concat([result.stdout ?? Buffer.alloc(0), result.stderr ?? Buffer.alloc(0)]), { mode: 0o600 });
-  requireValue(result.status === 0, `${command === process.execPath ? 'Node/Wrangler' : command} failed; no automatic deployment retry or rollback.`);
+  requireValue(result.status === 0, releaseCommandFailure(command === process.execPath ? 'Node/Wrangler' : command,
+    log ? Buffer.concat([result.stdout ?? Buffer.alloc(0), result.stderr ?? Buffer.alloc(0)]).toString() : ''));
+}
+
+export function releaseCommandFailure(command, output) {
+  // Numeric Cloudflare codes are safe to retain; raw Wrangler output may contain
+  // configuration or credentials and stays in the runner's private log.
+  const codes = [...new Set([...output.matchAll(/\[code:\s*(\d{3,6})\]/g)].map(match => match[1]))];
+  return `${command} failed${codes.length ? ` (Cloudflare codes: ${codes.join(', ')})` : ''}; no automatic deployment retry or rollback.`;
 }
 
 function githubRequest(policy, token) {
@@ -173,6 +181,22 @@ function settingsFingerprint(settings) {
   })));
 }
 
+export function assertProductionBindingsPreserved(settings, config) {
+  const names = new Set([
+    ...(config.d1_databases || []).map(binding => binding.binding),
+    ...(config.r2_buckets || []).map(binding => binding.binding),
+    ...(config.durable_objects?.bindings || []).map(binding => binding.name),
+    ...(config.queues?.producers || []).map(binding => binding.binding),
+    config.browser?.binding,
+  ].filter(Boolean));
+  // Text variables are retained by --keep-vars and secrets by the Workers API;
+  // assets are replaced by the sealed artifact. All other live bindings must
+  // still be configured before any upload is attempted.
+  const missing = settings.bindings.filter(binding =>
+    !['plain_text', 'secret_text', 'assets'].includes(binding.type) && !names.has(binding.name));
+  requireValue(!missing.length, `Release would remove production bindings: ${missing.map(binding => binding.name).join(', ')}.`);
+}
+
 async function deploy(root, pr, policy, artifact, sourceCommit, productRadarCommit, digest) {
   requireValue(process.env.PRODUCTION_RELEASE_ENABLED === 'true', 'Production environment is not enabled by the repository owner.');
   requireValue(process.env.CLOUDFLARE_API_TOKEN, 'Production environment Cloudflare credential is missing.');
@@ -189,7 +213,9 @@ async function deploy(root, pr, policy, artifact, sourceCommit, productRadarComm
   };
   const cfJson = async path => { const data = await (await cf(path)).json(); requireValue(data.success, 'Cloudflare verification rejected.'); return data.result; };
   const latest = async () => (await cfJson('/deployments')).deployments.toSorted((a, b) => b.created_on.localeCompare(a.created_on))[0];
-  const before = await latest(), beforeSettings = settingsFingerprint(await cfJson('/settings'));
+  const before = await latest(), liveSettings = await cfJson('/settings');
+  assertProductionBindingsPreserved(liveSettings, config);
+  const beforeSettings = settingsFingerprint(liveSettings);
   const evidence = resolve(process.env.RELEASE_EVIDENCE_DIR || join(dirname(artifact), 'release-result'));
   requireValue(!existsSync(evidence), 'Use a fresh deployment evidence directory.'); mkdirSync(evidence, { recursive: true });
   const report = { sourceCommit, productRadarCommit, manifestDigest: digest, previousDeploymentId: before.id, verified: false };

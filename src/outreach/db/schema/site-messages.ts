@@ -1,0 +1,63 @@
+import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { users } from "./users";
+
+export const siteMessageJobs = sqliteTable(
+  "edm_site_message_jobs",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    senderName: text("sender_name").notNull(),
+    senderEmail: text("sender_email").notNull(),
+    senderPhone: text("sender_phone"),
+    company: text("company"),
+    address: text("address"),
+    country: text("country"),
+    city: text("city"),
+    subject: text("subject"),
+    message: text("message").notNull(),
+    status: text("status", { enum: ["draft", "queued", "running", "completed", "paused", "failed"] }).notNull().default("draft"),
+    totalTargets: integer("total_targets").notNull().default(0),
+    totalSubmitted: integer("total_submitted").notNull().default(0),
+    totalSkipped: integer("total_skipped").notNull().default(0),
+    totalFailed: integer("total_failed").notNull().default(0),
+    totalAbnormal: integer("total_abnormal").notNull().default(0),
+    totalNoContact: integer("total_no_contact").notNull().default(0),
+    totalInaccessible: integer("total_inaccessible").notNull().default(0),
+    startedAt: integer("started_at", { mode: "timestamp" }),
+    completedAt: integer("completed_at", { mode: "timestamp" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  },
+  (table) => [index("idx_site_message_jobs_user").on(table.userId), index("idx_site_message_jobs_status").on(table.status)],
+);
+
+export const siteMessageTargets = sqliteTable(
+  "edm_site_message_targets",
+  {
+    id: text("id").primaryKey(),
+    jobId: text("job_id").notNull().references(() => siteMessageJobs.id, { onDelete: "cascade" }),
+    position: integer("position").notNull().default(0),
+    websiteUrl: text("website_url").notNull(),
+    normalizedHost: text("normalized_host").notNull(),
+    contactPageUrl: text("contact_page_url"),
+    status: text("status", { enum: ["queued", "discovering", "submitting", "submitted", "skipped", "failed"] }).notNull().default("queued"),
+    resultCode: text("result_code"),
+    resultMessage: text("result_message"),
+    detectedFields: text("detected_fields"),
+    progressStage: text("progress_stage").notNull().default("queued"),
+    progressPercent: integer("progress_percent").notNull().default(0),
+    progressLogs: text("progress_logs").notNull().default("[]"),
+    attempts: integer("attempts").notNull().default(0),
+    startedAt: integer("started_at", { mode: "timestamp" }),
+    completedAt: integer("completed_at", { mode: "timestamp" }),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  },
+  (table) => [
+    index("idx_site_message_targets_job").on(table.jobId),
+    index("idx_site_message_targets_job_position").on(table.jobId, table.position),
+    index("idx_site_message_targets_status").on(table.status),
+    index("idx_site_message_targets_host").on(table.normalizedHost),
+  ],
+);

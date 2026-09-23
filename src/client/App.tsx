@@ -28,6 +28,8 @@ import {
   dateTime,
 } from './components';
 const Editor = lazy(() => import('./Editor'));
+const Dashboard = lazy(() => import('./Dashboard'));
+const Outreach = lazy(() => import('../outreach/client/App'));
 const Admin = lazy(() => import('./Admin'));
 import { ErrorBoundary } from './ErrorBoundary';
 import { nextDraftStep, projectStatus, workflowSteps } from './workflow';
@@ -86,6 +88,14 @@ const TEMPLATE_PREVIEWS: Record<string, string> = {
   'tools-workshop-video': '/templates/previews/senseng-video.jpg',
   'sports-trail-banner': '/templates/previews/senseng-arcade.jpg',
   'sports-kinetic-video': '/templates/previews/senseng-video.jpg',
+  'pet-supplies-banner': '/templates/previews/senseng-candy.jpg',
+  'pet-wellness-video': '/templates/previews/senseng-video.jpg',
+  'stationery-craft-banner': '/templates/previews/senseng-nature.jpg',
+  'stationery-studio-video': '/templates/previews/senseng-video.jpg',
+  'poster-graphic-banner': '/templates/previews/senseng-wonder.jpg',
+  'poster-gallery-video': '/templates/previews/senseng-video.jpg',
+  'food-artisan-banner': '/templates/previews/senseng-arcade.jpg',
+  'food-harvest-video': '/templates/previews/senseng-video.jpg',
   natural: '/templates/previews/senseng-clean.jpg',
   technology: '/templates/previews/saas-automation.jpg',
   explorer: '/templates/previews/crafto-corporate.jpg',
@@ -103,12 +113,12 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'projects' | 'admin' | 'services'>(() => {
+  const [view, setView] = useState<'dashboard' | 'projects' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'admin' || v === 'services') return v;
+        if (v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
       } catch {}
-      return 'projects';
+      return 'dashboard';
     }),
     [embedError, setEmbedError] = useState('');
   const [authBusy, setAuthBusy] = useState(false),
@@ -131,7 +141,7 @@ export default function App() {
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
-      if (view !== 'projects') {
+      if (view !== 'dashboard') {
         url.searchParams.set('view', view);
       } else {
         url.searchParams.delete('view');
@@ -336,13 +346,14 @@ export default function App() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                setView('projects');
+                setView('dashboard');
               }}
             >
               <Brand />
             </a>
-            <div className="workspace-label">网站管理</div>
+            <div className="workspace-label">工作台</div>
             <nav aria-label="工作台导航">
+              <button className={view === 'dashboard' ? 'active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><Icon name="chart" />控制台</button>
               <button
                 className={view === 'projects' ? 'active' : ''}
                 aria-current={view === 'projects' ? 'page' : undefined}
@@ -351,6 +362,8 @@ export default function App() {
                 <Icon name="grid" />
                 网站项目
               </button>
+              <button className={view === 'edm' ? 'active' : ''} aria-current={view === 'edm' ? 'page' : undefined} onClick={() => setView('edm')}><Icon name="mail" />EDM 邮件</button>
+              <button className={view === 'site-messages' ? 'active' : ''} aria-current={view === 'site-messages' ? 'page' : undefined} onClick={() => setView('site-messages')}><Icon name="message" />站内信</button>
               <button
                 className={view === 'services' ? 'active' : ''}
                 aria-current={view === 'services' ? 'page' : undefined}
@@ -390,8 +403,16 @@ export default function App() {
                 )}
               </div>
             </header>
-            {view === 'projects' ? (
+            {view === 'dashboard' ? (
+              <ErrorBoundary scope="section" title="控制台加载异常" onBack={() => setView('projects')} backText="返回网站项目">
+                <Suspense fallback={<ChunkFallback />}><Dashboard key={`${principal.userId}:${principal.workspaceId}`} onNavigate={setView} onOpenProject={setSelected} /></Suspense>
+              </ErrorBoundary>
+            ) : view === 'projects' ? (
               <Projects key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onOpen={setSelected} />
+            ) : view === 'edm' || view === 'site-messages' ? (
+              <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回网站项目。" onBack={()=>setView('projects')} backText="返回网站项目">
+                <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}`} principal={principal} section={view}/></Suspense>
+              </ErrorBoundary>
             ) : view === 'admin' ? (
               <ErrorBoundary
                 scope="section"
@@ -965,6 +986,14 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                           'tools-workshop-video': '工业锻造火花与动力机械动效',
                           'sports-trail-banner': '高山巅峰探险与轻量化行装',
                           'sports-kinetic-video': '破风竞速骑行与动力学动效',
+                          'pet-supplies-banner': '温暖萌宠乐园与工匠宠物用品',
+                          'pet-wellness-video': '薄荷青绿宠物健康与机能护理',
+                          'stationery-craft-banner': '鼠尾草绿极简纸品与文具工坊',
+                          'stationery-studio-video': '深海藏青与轻奢雅致办公美学',
+                          'poster-graphic-banner': '孟菲斯波普霓虹艺术与潮玩贴纸',
+                          'poster-gallery-video': '日落画廊与艺术微喷展厅',
+                          'food-artisan-banner': '赤陶橄榄自然农庄与匠心食品',
+                          'food-harvest-video': '金秋丰收晨光与庄园食品盛宴',
                         } as Record<TemplateId, string>)[project.template] || '专业模版'
                       }
                     </span>
