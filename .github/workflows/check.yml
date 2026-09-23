@@ -15,6 +15,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: npm run test:release
       - run: npx wrangler deploy --dry-run
 
   browser:
@@ -32,11 +33,36 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run build
       - run: npm run test:browser
+      - run: node scripts/verify_outreach.mjs
+      - run: node scripts/verify_dashboard.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: browser-regression-screenshots
           path: artifacts/task-review/*.png
+
+  template-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/verify_template_covers.mjs
+      - run: node scripts/verify-materials-demo-release.mjs
+        env:
+          DEMO_ALL_PAGES: '1'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: template-demo-regression
+          path: artifacts/materials-demo-release/
 
   render-quality:
     runs-on: ubuntu-latest

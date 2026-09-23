@@ -2,11 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { getMaterialsTemplate } from '../src/templates/materials';
 import { templateGuides } from '../src/worker/template-guides/catalog';
 
+const outreachTemplates = new Set([
+  'pet-supplies-banner', 'pet-wellness-video',
+  'stationery-craft-banner', 'stationery-studio-video',
+  'poster-graphic-banner', 'poster-gallery-video',
+  'food-artisan-banner', 'food-harvest-video',
+]);
+
 describe('executable template materials contracts', () => {
   it.each(templateGuides)('$templateId declares executable source, scope, reuse and copy capabilities', ({ templateId }) => {
     const contract = getMaterialsTemplate(templateId)!;
-    expect(contract.contractRevision).toBe(`2026-09-22.${templateId}-materials.5`);
-    expect(contract.rendererRevision).toBe(/^(drinkware|beauty|electronics|tools|sports)-/.test(templateId) ? '2026-09-22.industry-bafe6c1' : '2026-09-22.baseline-09fb979');
+    expect(contract.contractRevision).toBe(`2026-09-23.${templateId}-materials.6`);
+    expect(contract.rendererRevision).toBe(outreachTemplates.has(templateId) ? '2026-09-23.outreach-demo-repair.1' : '2026-09-23.demo-repair.1');
     expect(contract.requiredCapabilities).toContain('image.product-primary.v1');
     for (const slot of contract.imageSlots) {
       expect(['product-primary', 'product-gallery', 'slot-image']).toContain(slot.materialSource);
@@ -67,7 +74,7 @@ it('renders an authored template with arbitrary slot identities using its explic
   rename(custom.materials!.imageBindings,release.imageSlotMap);rename(custom.materials!.textBindings,release.textSlotMap);
   const options={projectId:'plugin',lang:'en' as const,page:'home',assetUrl:(id:string)=>`/media/${id}`,inquiryUrl:'/inquiry',preview:true};
   const actual=renderMaterialsTemplateRelease(release,custom,options);
-  expect(actual).toBe(renderSite(draft,options));
+  expect(actual).toBe(renderSite({...draft,materials:{...draft.materials!,contractRevision:release.rendererContractRevision}},options));
   expect(actual).toContain('data-wr-material-image="hero-slide-0"');
   expect(actual).not.toContain('__WR_');
 });

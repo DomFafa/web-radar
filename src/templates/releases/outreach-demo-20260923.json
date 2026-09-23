@@ -1,0 +1,46 @@
+{
+  "rendererRevision": "2026-09-23.outreach-demo-repair.1",
+  "authoringSource": "src/templates/materials-outreach-demo-repair.ts",
+  "authoringSha256": "6a890bb555520cf062ad79baa2dd30c91f85f4172b5123f3fe21289d438cca1a",
+  "snapshotSha256": "7a57be41119191df90a94b9fbd8a974f79ccbc40276c692ecbae164be833fdef",
+  "dependencies": {
+    "demo-20260923.mjs": "a5d5c6d46997a53343d88401d4f705c9b65ccffbac61006f9ba9f23ab645109b",
+    "outreach-20260923.mjs": "2ee0a84daa9c1e6cb92beb6c4279aa3a191d0d20695639d38bfb5c40230011da",
+    "industry-preview-20260922.ts": "40fa6d4931299b99fc0272a7e2e1ace6cd7f21fc7628741e6cd64059cf0609a4",
+    "outreach-assets-20260923.json": "12580b0befcb23d0a4f56e769e779b1024b2b41b601c5589268f83590b9da96f"
+  },
+  "contracts": {
+    "pet-supplies-banner": {
+      "contractRevision": "2026-09-23.pet-supplies-banner-materials.6",
+      "sha256": "1d0ad386ef1aa00c102e81c9eab38d99b664c9ebd1db930c3e84f07faecf56fa"
+    },
+    "pet-wellness-video": {
+      "contractRevision": "2026-09-23.pet-wellness-video-materials.6",
+      "sha256": "1ca9437aab1d55cc02a4af871b72fc52fe1796a51193a84257b3d14069c7c562"
+    },
+    "stationery-craft-banner": {
+      "contractRevision": "2026-09-23.stationery-craft-banner-materials.6",
+      "sha256": "a22b1b0ac7168c280dde881ef8655f2b99f55b2993861d2a5ea3f4e1fc8e0e97"
+    },
+    "stationery-studio-video": {
+      "contractRevision": "2026-09-23.stationery-studio-video-materials.6",
+      "sha256": "11818a3d985a512a018ac71311cc427b46d101374e33b9a12861238ad930beae"
+    },
+    "poster-graphic-banner": {
+      "contractRevision": "2026-09-23.poster-graphic-banner-materials.6",
+      "sha256": "773d01a089c5fd7ac9517fc8268766e0cdf716d28166cec4332b7114dbb8d3fc"
+    },
+    "poster-gallery-video": {
+      "contractRevision": "2026-09-23.poster-gallery-video-materials.6",
+      "sha256": "9bef679462781f8b1532719bdb3b921a47d393832d92e5c9c8367bbdf2c20b62"
+    },
+    "food-artisan-banner": {
+      "contractRevision": "2026-09-23.food-artisan-banner-materials.6",
+      "sha256": "77fc1638666e155b7271284f313ddf867cc1c0c5fa5dc5008cf8e4d6e8e716d1"
+    },
+    "food-harvest-video": {
+      "contractRevision": "2026-09-23.food-harvest-video-materials.6",
+      "sha256": "dd07eac67786ade7ee0403d6d18057642d59e43ed5e919115334bf255741025b"
+    }
+  }
+}

@@ -1,0 +1,608 @@
+{
+  "revision": "2026-09-23.samples.1",
+  "templates": {
+    "corpox-ai-agency": "corpox",
+    "saas-automation": "saas",
+    "senseng-clean": "senseng",
+    "senseng-video": "senseng",
+    "senseng-candy": "senseng",
+    "senseng-wonder": "senseng",
+    "senseng-arcade": "senseng",
+    "senseng-nature": "senseng",
+    "senseng-minimal": "senseng",
+    "universal-trade-banner": "universal",
+    "universal-showcase-video": "universal",
+    "toys-figure-banner": "toys",
+    "toys-interactive-video": "toys",
+    "plush-cushion-banner": "plush",
+    "plush-living-video": "plush",
+    "apparel-fabric-banner": "apparel",
+    "apparel-runway-video": "apparel",
+    "footwear-craft-banner": "footwear",
+    "footwear-kinetic-video": "footwear",
+    "luggage-leather-banner": "luggage",
+    "luggage-voyage-video": "luggage",
+    "jewelry-luxury-banner": "jewelry",
+    "jewelry-timeless-video": "jewelry",
+    "homedecor-aesthetic-banner": "homedecor",
+    "homedecor-living-video": "homedecor",
+    "furniture-minimal-banner": "furniture",
+    "furniture-spatial-video": "furniture",
+    "kitchen-culinary-banner": "kitchen",
+    "kitchen-gourmet-video": "kitchen",
+    "drinkware-ceramic-banner": "drinkware",
+    "drinkware-thermal-video": "drinkware",
+    "beauty-skincare-banner": "beauty",
+    "beauty-glow-video": "beauty",
+    "electronics-gadget-banner": "electronics",
+    "electronics-smart-video": "electronics",
+    "tools-precision-banner": "tools",
+    "tools-workshop-video": "tools",
+    "sports-trail-banner": "sports",
+    "sports-kinetic-video": "sports"
+  },
+  "families": {
+    "tools": {
+      "label": "Tools and equipment",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Wrench illustration",
+          "url": "/templates/materials-demo-20260923/tools-1.f6f850ed5cadf161.svg",
+          "sha256": "f6f850ed5cadf16150b865828670a3fbb24b1594a478040315b4bc5300102de0"
+        },
+        {
+          "name": "Hand saw illustration",
+          "url": "/templates/materials-demo-20260923/tools-2.7987b3969da2b952.svg",
+          "sha256": "7987b3969da2b952edd7a0aeaaf1156cc51acb94708183d20908be0cd3787ac5"
+        },
+        {
+          "name": "Fastener illustration",
+          "url": "/templates/materials-demo-20260923/tools-3.7c646094ceef2397.svg",
+          "sha256": "7c646094ceef2397bcfbc5ae47739610eee4dff79bb1c7325d3e882a1ee8c5a9"
+        },
+        {
+          "name": "Measuring tool illustration",
+          "url": "/templates/materials-demo-20260923/tools-4.c8835670f4766309.svg",
+          "sha256": "c8835670f47663094e665692af6a4883fdf47405fa9c9b595973c777fa17c62d"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/tools-collection.16e2158811fad78c.svg",
+        "sha256": "16e2158811fad78cf8a9df8a9fabb55d98b41857c0f95c2efb74a166b6fdbc12"
+      }
+    },
+    "sports": {
+      "label": "Sports and outdoor",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Outdoor equipment concept illustration",
+          "url": "/templates/materials-demo-20260923/sports-1.e630697ceabffd20.svg",
+          "sha256": "e630697ceabffd2078bee883be56525a9a7f15eb9cbf7a4c18ddf7e51587d3f5"
+        },
+        {
+          "name": "Backpack illustration",
+          "url": "/templates/materials-demo-20260923/sports-2.702f80737e23130e.svg",
+          "sha256": "702f80737e23130ed2c0437e542612144f74472daf867e61c2235eb4a5b2ee50"
+        },
+        {
+          "name": "Tent illustration",
+          "url": "/templates/materials-demo-20260923/sports-3.4cfa98e7539d2aa2.svg",
+          "sha256": "4cfa98e7539d2aa20d4914b3296e6f4dc9453fb13ba0fe7987a9751a8e9b29df"
+        },
+        {
+          "name": "Climbing concept illustration",
+          "url": "/templates/materials-demo-20260923/sports-4.5c9c0f0b70d382bc.svg",
+          "sha256": "5c9c0f0b70d382bcce77c33b4882c9abbf3b0d762b9c4ce1b287dd83b58da99f"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/sports-collection.8165885c27bdc809.svg",
+        "sha256": "8165885c27bdc809051993a023fb22ae24e3e1387713daa6d8e995da8fc6648d"
+      }
+    },
+    "electronics": {
+      "label": "Electronics",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Headphones illustration",
+          "url": "/templates/materials-demo-20260923/electronics-1.3ce7aa52fd3da5f5.svg",
+          "sha256": "3ce7aa52fd3da5f5a03457838830fe64987c06bf2ca6ebb7613a6c31e27b3625"
+        },
+        {
+          "name": "Watch illustration",
+          "url": "/templates/materials-demo-20260923/electronics-2.42ecacfdb52c2094.svg",
+          "sha256": "42ecacfdb52c2094fa73235377989d53d5cbc98ed2a6df30fa8f14412934e2c4"
+        },
+        {
+          "name": "Power connection illustration",
+          "url": "/templates/materials-demo-20260923/electronics-3.3b9cc6023f552cc7.svg",
+          "sha256": "3b9cc6023f552cc7a3367dcf22f3c6213966e8921528722ac6f17e56b920bc39"
+        },
+        {
+          "name": "Lighting illustration",
+          "url": "/templates/materials-demo-20260923/electronics-4.7e7f8779116fb066.svg",
+          "sha256": "7e7f8779116fb066a7c172a74892e2202d4abe8ce16a89767c7c271509de6ef8"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/electronics-collection.01d10a469c181a52.svg",
+        "sha256": "01d10a469c181a52b201d6c777f02b056f8f8e5f2d8103e4fe291ee100b092cb"
+      }
+    },
+    "beauty": {
+      "label": "Beauty and personal care",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Skin care concept illustration",
+          "url": "/templates/materials-demo-20260923/beauty-1.4f49af3b8b09ef64.svg",
+          "sha256": "4f49af3b8b09ef6422148723f939c308879c731938386fd8260c29b8d6819082"
+        },
+        {
+          "name": "Skin care bottle illustration",
+          "url": "/templates/materials-demo-20260923/beauty-2.01554844f2eb2443.svg",
+          "sha256": "01554844f2eb244330e89ec6c09d0c71ffd7b648e6cd858d4adeede525dba8ec"
+        },
+        {
+          "name": "Lip color illustration",
+          "url": "/templates/materials-demo-20260923/beauty-3.819aeefdc0a80fa3.svg",
+          "sha256": "819aeefdc0a80fa31df3c4522ad6ac2425ca24d24bf4ac0ddaeb271a19e0c1cf"
+        },
+        {
+          "name": "Beauty mirror illustration",
+          "url": "/templates/materials-demo-20260923/beauty-4.ce98c36520007311.svg",
+          "sha256": "ce98c36520007311bfb51bf8173b3e9c00465a551357f000066dab230b02a489"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/beauty-collection.6afe582d2dcf1b0b.svg",
+        "sha256": "6afe582d2dcf1b0bc47471e6d87ff84b1bdd2574b65bd15ad258c3003cdf880e"
+      }
+    },
+    "drinkware": {
+      "label": "Drinkware",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Mug illustration",
+          "url": "/templates/materials-demo-20260923/drinkware-1.6be94a166b8f19a4.svg",
+          "sha256": "6be94a166b8f19a4a7e0178e88918dbee09a97a8eb3a792c899133b8752ccf0d"
+        },
+        {
+          "name": "Teapot illustration",
+          "url": "/templates/materials-demo-20260923/drinkware-2.6644575b2444b8df.svg",
+          "sha256": "6644575b2444b8df4cb6e5208bcec7625e7c133d19c18e6bf5ea8ce69b850156"
+        },
+        {
+          "name": "Drink cup illustration",
+          "url": "/templates/materials-demo-20260923/drinkware-3.ac1c876b9cbffa01.svg",
+          "sha256": "ac1c876b9cbffa01597e6a0a757ecbb1f5c487cd095591672f24ec6540822eca"
+        },
+        {
+          "name": "Tea cup illustration",
+          "url": "/templates/materials-demo-20260923/drinkware-4.207f26d457c4d96f.svg",
+          "sha256": "207f26d457c4d96f4d5310c3caef242c84b02ffafa1bd93598b1c1c43a936f08"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/drinkware-collection.6f7cd0ce20d23545.svg",
+        "sha256": "6f7cd0ce20d23545bc7e51720f88851d2f0ccb22db0de454e4c6221811c07df8"
+      }
+    },
+    "toys": {
+      "label": "Toy figures",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Robot concept illustration",
+          "url": "/templates/materials-demo-20260923/toys-1.63531cb4eb387a9c.svg",
+          "sha256": "63531cb4eb387a9cdacc2170f024c028732b8848b060438deb421c24a297e5e4"
+        },
+        {
+          "name": "Dinosaur concept illustration",
+          "url": "/templates/materials-demo-20260923/toys-2.9007c7ff857a6e0f.svg",
+          "sha256": "9007c7ff857a6e0f1016cd68255cc27fb38563815ae3cdfbf4db84399e0a0959"
+        },
+        {
+          "name": "Adventure figure concept illustration",
+          "url": "/templates/materials-demo-20260923/toys-3.a98e4f46f2d31555.svg",
+          "sha256": "a98e4f46f2d3155544beac5fed0f3a4c3e355aba7e2815ef17c8f5dc2002585d"
+        },
+        {
+          "name": "Space concept illustration",
+          "url": "/templates/materials-demo-20260923/toys-4.336e11c79585cf1d.svg",
+          "sha256": "336e11c79585cf1d9cff988409658a9e9f4f4948c28ee645b306bbe5cdb9f604"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/toys-collection.7bf95ad24cce0d13.svg",
+        "sha256": "7bf95ad24cce0d13e116f217e3f76b694ab2b0f857c4092a03bc975619585176"
+      }
+    },
+    "plush": {
+      "label": "Plush and cushions",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Bear illustration",
+          "url": "/templates/materials-demo-20260923/plush-1.bb74c2ab2d92782c.svg",
+          "sha256": "bb74c2ab2d92782c157ef73936580113f20e1b52e5e00b7f642370516f6a26aa"
+        },
+        {
+          "name": "Cushion concept illustration",
+          "url": "/templates/materials-demo-20260923/plush-2.dc6b4085c04ae4f3.svg",
+          "sha256": "dc6b4085c04ae4f3900a350d670a8e28e6e395b2938a606eb1f7d1bd5ba866e4"
+        },
+        {
+          "name": "Sloth concept illustration",
+          "url": "/templates/materials-demo-20260923/plush-3.55db8ca4852ddc3b.svg",
+          "sha256": "55db8ca4852ddc3bef051c290b9913a1a9d5f90d0f6fd4e9b9bdd5dd1411ffbe"
+        },
+        {
+          "name": "Soft furnishing concept illustration",
+          "url": "/templates/materials-demo-20260923/plush-4.eb749033944486a4.svg",
+          "sha256": "eb749033944486a4209c7f8157eebccbc71273e562d5ab7772c710cdd2ce510c"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/plush-collection.cbae3edeb732591c.svg",
+        "sha256": "cbae3edeb732591c9738b9e81f167ce0d16e034eab07b9f863c121aa827a87c1"
+      }
+    },
+    "apparel": {
+      "label": "Apparel and textiles",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Outerwear illustration",
+          "url": "/templates/materials-demo-20260923/apparel-1.166b97e58a13fd65.svg",
+          "sha256": "166b97e58a13fd657a7ebc93df6a837c284a52585654819331c19d2fa708f5b9"
+        },
+        {
+          "name": "Knitwear concept illustration",
+          "url": "/templates/materials-demo-20260923/apparel-2.671c33d19d57a28c.svg",
+          "sha256": "671c33d19d57a28cb2b7aafa9f09a9ccf718c47795cd745185dd3da04ae437c0"
+        },
+        {
+          "name": "Fashion concept illustration",
+          "url": "/templates/materials-demo-20260923/apparel-3.be8f8b2b9a7caaa6.svg",
+          "sha256": "be8f8b2b9a7caaa681e470bed64d8f380935bdaf4c6e6736ad6122641d667b39"
+        },
+        {
+          "name": "Casual wear illustration",
+          "url": "/templates/materials-demo-20260923/apparel-4.fb04fb973d17edd0.svg",
+          "sha256": "fb04fb973d17edd0d727e3f6d7b5a8482f9c2c8902261d15ee40b5fd143f69d6"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/apparel-collection.b583ab8836388d8e.svg",
+        "sha256": "b583ab8836388d8ea7a63ff97a5e94057e6dbdbfcd7ce9a02db02d6173003755"
+      }
+    },
+    "footwear": {
+      "label": "Footwear",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Sneaker illustration",
+          "url": "/templates/materials-demo-20260923/footwear-1.14dbad03bc4dcbf2.svg",
+          "sha256": "14dbad03bc4dcbf2f24420742afdb0beea01579ae68eb5a2cbbac44636e38ee7"
+        },
+        {
+          "name": "Boot illustration",
+          "url": "/templates/materials-demo-20260923/footwear-2.8742490476c230da.svg",
+          "sha256": "8742490476c230da611a185c15a757800d9d62ff60d868a33292f79af8d2f43f"
+        },
+        {
+          "name": "Formal shoe illustration",
+          "url": "/templates/materials-demo-20260923/footwear-3.cbac69c9d50c45aa.svg",
+          "sha256": "cbac69c9d50c45aaff926fa5d008ce3d9bc9be600c7338b74b8f284371a1e67c"
+        },
+        {
+          "name": "Footwear concept illustration",
+          "url": "/templates/materials-demo-20260923/footwear-4.9e5ebec1bce2e4ed.svg",
+          "sha256": "9e5ebec1bce2e4eda9407f26f168d26a5f5f162419acac4daaf9f354bbe38cc2"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/footwear-collection.26c74c0e98ce9437.svg",
+        "sha256": "26c74c0e98ce94375b3a107a8c135f84595e76486bb6510040d03194fdca130f"
+      }
+    },
+    "universal": {
+      "label": "General trade",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Power concept illustration",
+          "url": "/templates/materials-demo-20260923/universal-1.154199e90f0d3c4f.svg",
+          "sha256": "154199e90f0d3c4f1cdf76ab4885d2cf2c235422def5209dc86007ef35e00e49"
+        },
+        {
+          "name": "Carry-on case illustration",
+          "url": "/templates/materials-demo-20260923/universal-2.3eada8b9e1060d12.svg",
+          "sha256": "3eada8b9e1060d125cf7daa92fbe5f7a552fd205dfc6322ddf4dfde17033bbfe"
+        },
+        {
+          "name": "Kitchen knife illustration",
+          "url": "/templates/materials-demo-20260923/universal-3.1e60174bf95763ac.svg",
+          "sha256": "1e60174bf95763acb0ae1e5d6b7ba51dd3363fc2d5df805db3ed730f74098072"
+        },
+        {
+          "name": "Drinkware illustration",
+          "url": "/templates/materials-demo-20260923/universal-4.acf6b73015701f6e.svg",
+          "sha256": "acf6b73015701f6e256dc332f88fadbe834e7b6c76ef902036be484452708f7c"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/universal-collection.56d855f177171c42.svg",
+        "sha256": "56d855f177171c425a140aa9018e5efdd58ecec69180a86b383287c9be652a24"
+      }
+    },
+    "luggage": {
+      "label": "Bags and luggage",
+      "status": "unavailable",
+      "limitation": "Product and packaging photos have not been supplied. This example demonstrates the template layout only.",
+      "products": [
+        {
+          "name": "Bags and luggage example 1",
+          "url": "/templates/materials-demo-20260923/luggage-unavailable.069d6ee6e08dc157.svg",
+          "sha256": "069d6ee6e08dc157b8eed89d7f7771218ec4d624b25823a9f1399df4f397e43d"
+        },
+        {
+          "name": "Bags and luggage example 2",
+          "url": "/templates/materials-demo-20260923/luggage-unavailable.069d6ee6e08dc157.svg",
+          "sha256": "069d6ee6e08dc157b8eed89d7f7771218ec4d624b25823a9f1399df4f397e43d"
+        },
+        {
+          "name": "Bags and luggage example 3",
+          "url": "/templates/materials-demo-20260923/luggage-unavailable.069d6ee6e08dc157.svg",
+          "sha256": "069d6ee6e08dc157b8eed89d7f7771218ec4d624b25823a9f1399df4f397e43d"
+        },
+        {
+          "name": "Bags and luggage example 4",
+          "url": "/templates/materials-demo-20260923/luggage-unavailable.069d6ee6e08dc157.svg",
+          "sha256": "069d6ee6e08dc157b8eed89d7f7771218ec4d624b25823a9f1399df4f397e43d"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/luggage-collection.9af22ff9dbfce4ad.svg",
+        "sha256": "9af22ff9dbfce4ad23ebd7166470dc43b182cdecbb8d67d6130748ffb28e6f07"
+      }
+    },
+    "jewelry": {
+      "label": "Jewelry and watches",
+      "status": "unavailable",
+      "limitation": "Product and packaging photos have not been supplied. This example demonstrates the template layout only.",
+      "products": [
+        {
+          "name": "Jewelry and watches example 1",
+          "url": "/templates/materials-demo-20260923/jewelry-unavailable.0e1f41df1c570eb1.svg",
+          "sha256": "0e1f41df1c570eb105f156aba0e09640f1475e2a9008e1e90ef62980bf9094ca"
+        },
+        {
+          "name": "Jewelry and watches example 2",
+          "url": "/templates/materials-demo-20260923/jewelry-unavailable.0e1f41df1c570eb1.svg",
+          "sha256": "0e1f41df1c570eb105f156aba0e09640f1475e2a9008e1e90ef62980bf9094ca"
+        },
+        {
+          "name": "Jewelry and watches example 3",
+          "url": "/templates/materials-demo-20260923/jewelry-unavailable.0e1f41df1c570eb1.svg",
+          "sha256": "0e1f41df1c570eb105f156aba0e09640f1475e2a9008e1e90ef62980bf9094ca"
+        },
+        {
+          "name": "Jewelry and watches example 4",
+          "url": "/templates/materials-demo-20260923/jewelry-unavailable.0e1f41df1c570eb1.svg",
+          "sha256": "0e1f41df1c570eb105f156aba0e09640f1475e2a9008e1e90ef62980bf9094ca"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/jewelry-collection.aa559e31bad5bdf6.svg",
+        "sha256": "aa559e31bad5bdf604b0c09c73bff17f1941ffe20594945e4af8bebd8aaa0951"
+      }
+    },
+    "homedecor": {
+      "label": "Home decor",
+      "status": "unavailable",
+      "limitation": "Product and packaging photos have not been supplied. This example demonstrates the template layout only.",
+      "products": [
+        {
+          "name": "Home decor example 1",
+          "url": "/templates/materials-demo-20260923/homedecor-unavailable.df96ee73d8a10aaa.svg",
+          "sha256": "df96ee73d8a10aaaa53f6b2a5af5e7ab15bb4c377be8832b6c587ee9b284f7a1"
+        },
+        {
+          "name": "Home decor example 2",
+          "url": "/templates/materials-demo-20260923/homedecor-unavailable.df96ee73d8a10aaa.svg",
+          "sha256": "df96ee73d8a10aaaa53f6b2a5af5e7ab15bb4c377be8832b6c587ee9b284f7a1"
+        },
+        {
+          "name": "Home decor example 3",
+          "url": "/templates/materials-demo-20260923/homedecor-unavailable.df96ee73d8a10aaa.svg",
+          "sha256": "df96ee73d8a10aaaa53f6b2a5af5e7ab15bb4c377be8832b6c587ee9b284f7a1"
+        },
+        {
+          "name": "Home decor example 4",
+          "url": "/templates/materials-demo-20260923/homedecor-unavailable.df96ee73d8a10aaa.svg",
+          "sha256": "df96ee73d8a10aaaa53f6b2a5af5e7ab15bb4c377be8832b6c587ee9b284f7a1"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/homedecor-collection.55fe753278749602.svg",
+        "sha256": "55fe753278749602db552972a4ba02a85a301d58868a5b59047271875d6f79fe"
+      }
+    },
+    "furniture": {
+      "label": "Furniture and storage",
+      "status": "unavailable",
+      "limitation": "Product and packaging photos have not been supplied. This example demonstrates the template layout only.",
+      "products": [
+        {
+          "name": "Furniture and storage example 1",
+          "url": "/templates/materials-demo-20260923/furniture-unavailable.9a0db5aed0a8ab67.svg",
+          "sha256": "9a0db5aed0a8ab678865f79fc761b655c2db0439ae7d4c84be44261fab8b3919"
+        },
+        {
+          "name": "Furniture and storage example 2",
+          "url": "/templates/materials-demo-20260923/furniture-unavailable.9a0db5aed0a8ab67.svg",
+          "sha256": "9a0db5aed0a8ab678865f79fc761b655c2db0439ae7d4c84be44261fab8b3919"
+        },
+        {
+          "name": "Furniture and storage example 3",
+          "url": "/templates/materials-demo-20260923/furniture-unavailable.9a0db5aed0a8ab67.svg",
+          "sha256": "9a0db5aed0a8ab678865f79fc761b655c2db0439ae7d4c84be44261fab8b3919"
+        },
+        {
+          "name": "Furniture and storage example 4",
+          "url": "/templates/materials-demo-20260923/furniture-unavailable.9a0db5aed0a8ab67.svg",
+          "sha256": "9a0db5aed0a8ab678865f79fc761b655c2db0439ae7d4c84be44261fab8b3919"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/furniture-collection.873c273aa16b4f9b.svg",
+        "sha256": "873c273aa16b4f9b5dfdde7af2d29fa9a0d2f57028845f6d2c8e979065f3edde"
+      }
+    },
+    "kitchen": {
+      "label": "Kitchen and dining",
+      "status": "unavailable",
+      "limitation": "Product and packaging photos have not been supplied. This example demonstrates the template layout only.",
+      "products": [
+        {
+          "name": "Kitchen and dining example 1",
+          "url": "/templates/materials-demo-20260923/kitchen-unavailable.9e1b8b698f2c7ca1.svg",
+          "sha256": "9e1b8b698f2c7ca12b4b3042e2dbd22fef8ba817475a6eaca150a0d54f3a77be"
+        },
+        {
+          "name": "Kitchen and dining example 2",
+          "url": "/templates/materials-demo-20260923/kitchen-unavailable.9e1b8b698f2c7ca1.svg",
+          "sha256": "9e1b8b698f2c7ca12b4b3042e2dbd22fef8ba817475a6eaca150a0d54f3a77be"
+        },
+        {
+          "name": "Kitchen and dining example 3",
+          "url": "/templates/materials-demo-20260923/kitchen-unavailable.9e1b8b698f2c7ca1.svg",
+          "sha256": "9e1b8b698f2c7ca12b4b3042e2dbd22fef8ba817475a6eaca150a0d54f3a77be"
+        },
+        {
+          "name": "Kitchen and dining example 4",
+          "url": "/templates/materials-demo-20260923/kitchen-unavailable.9e1b8b698f2c7ca1.svg",
+          "sha256": "9e1b8b698f2c7ca12b4b3042e2dbd22fef8ba817475a6eaca150a0d54f3a77be"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/kitchen-collection.2f11e9b74c462b3c.svg",
+        "sha256": "2f11e9b74c462b3c494cbe441841fade1f736b17a97831be61bf2dcb770eefc1"
+      }
+    },
+    "senseng": {
+      "label": "Sensory toys",
+      "status": "product-image",
+      "limitation": "Bundled product examples only. Confirm your own product details and packaging before publication.",
+      "products": [
+        {
+          "name": "Star cat example",
+          "url": "/templates/materials-demo-20260923/senseng-1.01cd49f64db81bb3.jpg",
+          "sha256": "01cd49f64db81bb3eef68f32583ec07f4db0c6be4b3446397965af7624663d36"
+        },
+        {
+          "name": "Heart cat example",
+          "url": "/templates/materials-demo-20260923/senseng-2.890950120abaf950.jpg",
+          "sha256": "890950120abaf950535b898ed0fbb0b4452ddd436b8cb9be9a4dbaa9b86ce4bd"
+        },
+        {
+          "name": "Desk cat example",
+          "url": "/templates/materials-demo-20260923/senseng-3.f5d744acf1abb5ce.jpg",
+          "sha256": "f5d744acf1abb5ce88721e9d98eb449acfcc787b6ab1cdf10db80618bf1f074a"
+        },
+        {
+          "name": "Penguin example",
+          "url": "/templates/materials-demo-20260923/senseng-4.757c079338c73df2.jpg",
+          "sha256": "757c079338c73df2769ad91203e11a53ecb13ef221efb73e5a9cc14ce9c37b22"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/senseng-collection.4226840cc4459531.svg",
+        "sha256": "4226840cc445953161e2f5aa807aca3daee359f77a478ccbe409f467286aa569"
+      }
+    },
+    "corpox": {
+      "label": "AI services",
+      "status": "illustration",
+      "limitation": "Bundled concept illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Assistant concept",
+          "url": "/templates/materials-demo-20260923/corpox-1.31f0e5e41c43920a.webp",
+          "sha256": "31f0e5e41c43920a240b0677ad9d5f95325354f9b32a229ea90e8ec861669f0c"
+        },
+        {
+          "name": "Commerce assistant concept",
+          "url": "/templates/materials-demo-20260923/corpox-2.0c653e809fb50732.webp",
+          "sha256": "0c653e809fb507320ef9c63e03c6299546cab2bdb71c4e997489c141b8028f38"
+        },
+        {
+          "name": "Chat assistant concept",
+          "url": "/templates/materials-demo-20260923/corpox-3.a2ba74c63b26c05a.webp",
+          "sha256": "a2ba74c63b26c05a7599fc5af087d2499789e3626c6a3cf5b804e29f76a57d01"
+        },
+        {
+          "name": "Workplace assistant concept",
+          "url": "/templates/materials-demo-20260923/corpox-4.5caac153d54c89d9.webp",
+          "sha256": "5caac153d54c89d98da3d87a18f4504ed1550043ed15e2ca63f653152cb25995"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/corpox-collection.3352e18aa689226a.svg",
+        "sha256": "3352e18aa689226ac368849f7aadf39ef610ce3ddc110f8f14f96b35a16b5cef"
+      }
+    },
+    "saas": {
+      "label": "Workflow software",
+      "status": "illustration",
+      "limitation": "Bundled concept illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Task list example",
+          "url": "/templates/materials-demo-20260923/saas-1.ecf842861fc62234.png",
+          "sha256": "ecf842861fc62234e32fb914f68b1f15ba73c53364be67053859eb05c2b66372"
+        },
+        {
+          "name": "Activity chart example",
+          "url": "/templates/materials-demo-20260923/saas-2.a09b0afb330111ca.png",
+          "sha256": "a09b0afb330111cacaf6b51919e64cea6a783de6d4b2b4d9cd20e6aa4336473c"
+        },
+        {
+          "name": "Notification example",
+          "url": "/templates/materials-demo-20260923/saas-3.f7c464bb44ed8c85.svg",
+          "sha256": "f7c464bb44ed8c8543d1e36069d7ac019cb86a786f7b84d3a822e2bf365e83eb"
+        },
+        {
+          "name": "Workflow overview example",
+          "url": "/templates/materials-demo-20260923/saas-4.ecf842861fc62234.png",
+          "sha256": "ecf842861fc62234e32fb914f68b1f15ba73c53364be67053859eb05c2b66372"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-20260923/saas-collection.c4f91b78431753ca.svg",
+        "sha256": "c4f91b78431753ca9e1181be594fdcfbb806920cddf143e25e9f35b9b0c4eff4"
+      }
+    }
+  },
+  "packaging": {
+    "url": "/templates/materials-demo-20260923/packaging-unavailable.3b162a67cd86ade6.svg",
+    "sha256": "3b162a67cd86ade60c72e8117ef0bd452b80359e68aea62c284e9002e3624758"
+  }
+}

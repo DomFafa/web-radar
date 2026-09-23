@@ -75,3 +75,11 @@ test('a fork cannot pass as the approved upstream repository', () => {
   f.git('remote', 'set-url', 'origin', join(f.cwd, 'other.git'));
   assert.throws(() => verifyReleaseSource({ cwd: f.cwd, candidate: true }), /approved upstream repository/);
 });
+
+test('a requested release SHA must be complete and equal the checkout HEAD', () => {
+  const f = fixture();
+  const head = f.git('rev-parse', 'HEAD');
+  assert.equal(verifyReleaseSource({ cwd: f.cwd, expectedCommit: head }).sourceCommit, head);
+  assert.throws(() => verifyReleaseSource({ cwd: f.cwd, expectedCommit: head.slice(0, 7) }), /requested full release SHA/);
+  assert.throws(() => verifyReleaseSource({ cwd: f.cwd, expectedCommit: f.baseline }), /requested full release SHA/);
+});

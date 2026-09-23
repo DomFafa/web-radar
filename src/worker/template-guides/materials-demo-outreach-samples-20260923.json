@@ -1,0 +1,139 @@
+{
+  "revision": "2026-09-23.outreach-samples.1",
+  "templates": {
+    "pet-supplies-banner": "pet",
+    "pet-wellness-video": "pet",
+    "stationery-craft-banner": "stationery",
+    "stationery-studio-video": "stationery",
+    "poster-graphic-banner": "poster",
+    "poster-gallery-video": "poster",
+    "food-artisan-banner": "food",
+    "food-harvest-video": "food"
+  },
+  "families": {
+    "pet": {
+      "label": "Pet supplies",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Pet bowl illustration",
+          "url": "/templates/materials-demo-outreach-20260923/pet-1.8af1f62eeca46d2a.svg",
+          "sha256": "8af1f62eeca46d2a1afddf33900eec9efc9871686ccaa992b853fa74361d3ed7"
+        },
+        {
+          "name": "Pet collar illustration",
+          "url": "/templates/materials-demo-outreach-20260923/pet-2.45db407e8f589ec8.svg",
+          "sha256": "45db407e8f589ec8c61188a2326c856a037d1a111edd7ce0e37f6d85823b3f0f"
+        },
+        {
+          "name": "Pet carrier illustration",
+          "url": "/templates/materials-demo-outreach-20260923/pet-3.11b21842aa46a42f.svg",
+          "sha256": "11b21842aa46a42f213cedbc0440e3d62bcedb25dae7e140ab402d9b8fe29038"
+        },
+        {
+          "name": "Grooming brush illustration",
+          "url": "/templates/materials-demo-outreach-20260923/pet-4.f1a4802be7bb70bf.svg",
+          "sha256": "f1a4802be7bb70bf87bcf57af818ca0ccef1042e7c8087f8c723f6dde9d6675c"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-outreach-20260923/pet-collection.ab8386e02ba6c002.svg",
+        "sha256": "ab8386e02ba6c00251f692e7691b38c62099c7d4676dcd5251d5d4f9f0c59cbb"
+      }
+    },
+    "stationery": {
+      "label": "Stationery and office",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Notebook illustration",
+          "url": "/templates/materials-demo-outreach-20260923/stationery-1.28fed82ce395f29b.svg",
+          "sha256": "28fed82ce395f29b9622d4f2674bed965c6b763cb907ab2be57867466915a2ab"
+        },
+        {
+          "name": "Pencil illustration",
+          "url": "/templates/materials-demo-outreach-20260923/stationery-2.c2c83aa424ea8245.svg",
+          "sha256": "c2c83aa424ea82452f10b830e43afac9f69d0d2c19cab5efa2f9be6ae02a3f13"
+        },
+        {
+          "name": "Desk organizer illustration",
+          "url": "/templates/materials-demo-outreach-20260923/stationery-3.14464f102527ed0a.svg",
+          "sha256": "14464f102527ed0a8531750a432afacfb584c4f87393fdaf7fdee7426950d04f"
+        },
+        {
+          "name": "Binder clips illustration",
+          "url": "/templates/materials-demo-outreach-20260923/stationery-4.d8477acd7906b900.svg",
+          "sha256": "d8477acd7906b9006f7b7a6288d22ab6274c42e722b6427a2b7808fd994f5f12"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-outreach-20260923/stationery-collection.384e384def3c9928.svg",
+        "sha256": "384e384def3c992865b24837816caff28249ab93b6c011b324eec63927009a4c"
+      }
+    },
+    "poster": {
+      "label": "Poster and print art",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Geometric print illustration",
+          "url": "/templates/materials-demo-outreach-20260923/poster-1.f9a6f8b4b5918e2d.svg",
+          "sha256": "f9a6f8b4b5918e2da83b1573412fcd4e5fec9f511a660d9c363ce6a124fd945f"
+        },
+        {
+          "name": "Botanical print illustration",
+          "url": "/templates/materials-demo-outreach-20260923/poster-2.bfaa4d2a487d159e.svg",
+          "sha256": "bfaa4d2a487d159eb65757e0e48ba6d800674a9cf546ac24eb0a9b057b1e4693"
+        },
+        {
+          "name": "Landscape print illustration",
+          "url": "/templates/materials-demo-outreach-20260923/poster-3.a43255759c898cf7.svg",
+          "sha256": "a43255759c898cf7c7e54a62bedfa894815f4454ed2d743d26cbcef376220ac1"
+        },
+        {
+          "name": "Abstract print illustration",
+          "url": "/templates/materials-demo-outreach-20260923/poster-4.94a8aa4abda88556.svg",
+          "sha256": "94a8aa4abda8855649d003718bfd8fda44b5e35d0f9b399c549665b21c1b0e70"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-outreach-20260923/poster-collection.921bd47402a03071.svg",
+        "sha256": "921bd47402a03071c7948205deaae513cb848b8203da05bbfb79207969c85f43"
+      }
+    },
+    "food": {
+      "label": "Food and packaging",
+      "status": "illustration",
+      "limitation": "Category illustrations only. Product and packaging photos have not been supplied.",
+      "products": [
+        {
+          "name": "Stand-up pouch illustration",
+          "url": "/templates/materials-demo-outreach-20260923/food-1.d9e241666c339b60.svg",
+          "sha256": "d9e241666c339b60529279b66b17f68f467802bad457010a8f5207aab0190375"
+        },
+        {
+          "name": "Glass jar illustration",
+          "url": "/templates/materials-demo-outreach-20260923/food-2.5ed045a33e40bde8.svg",
+          "sha256": "5ed045a33e40bde82ea3902db6badb3765edfafbbffb066682baa533dcc8c323"
+        },
+        {
+          "name": "Food carton illustration",
+          "url": "/templates/materials-demo-outreach-20260923/food-3.0a69f76c56cb038f.svg",
+          "sha256": "0a69f76c56cb038f0cdc9fc59072d471f26f12fc5afbc185f833c3dcd8d71c5b"
+        },
+        {
+          "name": "Paper food bag illustration",
+          "url": "/templates/materials-demo-outreach-20260923/food-4.1597aeb16dc2dc51.svg",
+          "sha256": "1597aeb16dc2dc51f4872b626a51ddf0dd4cd0764a89b17bf9270891d65bcf3c"
+        }
+      ],
+      "collection": {
+        "url": "/templates/materials-demo-outreach-20260923/food-collection.999e7168442d94d9.svg",
+        "sha256": "999e7168442d94d93ab30e05bbdf621b108b01e9246fbddaf58f16d3f706ff62"
+      }
+    }
+  }
+}

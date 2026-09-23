@@ -1,5 +1,16 @@
 {
   "repository": "git@github.com:DomFafa/web-radar.git",
   "releaseBranch": "codex/web-radar-v1",
-  "requiredAncestors": ["09fb979aae69319c750d19fd14fcc664282a60ff"]
+  "requiredAncestors": ["09fb979aae69319c750d19fd14fcc664282a60ff", "0633b8554e0c080f133237b5d4db36cfcec286f8"],
+  "requiredWorkflows": [
+    { "file": "check.yml", "jobs": ["local", "browser", "template-browser", "render-quality"] },
+    { "file": "radar-integration.yml", "jobs": ["web-radar-integration"] }
+  ],
+  "productRadar": {
+    "repository": "git@github.com:DomFafa/product-radar.git",
+    "releaseBranch": "main",
+    "requiredWorkflows": [
+      { "file": "radar-integration.yml", "jobs": ["product-radar-integration"] }
+    ]
+  }
 }
