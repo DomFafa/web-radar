@@ -1,3 +1,5 @@
+import { emailSendDelay, deferEmail, resendCooldown } from '../lib/email-pacing';
+import { resendRequest, ResendApiError } from '../lib/resend';
 import { createHash } from 'node:crypto';
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
@@ -39,7 +41,7 @@ export interface EmailSendMessage {
   variables: Record<string, string>;
 }
 
-const EMAIL_PROVIDER_TYPES = ["amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
+const EMAIL_PROVIDER_TYPES = ["resend", "amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
 const MAILCHIMP_MARKETING_KEY_SUFFIX = /-[a-z]{2}\d+$/i;
 
 function getMailchimpApiType(apiKey: string, configStr: string | null): "marketing" | "transactional" {
@@ -765,19 +767,23 @@ export async function handleEmailQueue(
           }
 
           if (recipient.sentAt || recipient.sesMessageId || ["sent", "delivered", "opened", "clicked", "replied", "bounced", "complained", "unsubscribed"].includes(recipient.status)) {
-            if (recipient.status === "failed" || recipient.status === "sending") {
-              await db.update(campaignRecipients).set({ status: "sent", errorMessage: null }).where(eq(campaignRecipients.id, recipient.id));
+            if ((recipient.status === "failed" && recipient.errorMessage !== "Resend: email.failed") || recipient.status === "sending") {
+              await db.update(campaignRecipients).set({ status: "sent", errorMessage: null }).where(and(eq(campaignRecipients.id, recipient.id), inArray(campaignRecipients.status, ['failed','sending']), sql`COALESCE(${campaignRecipients.errorMessage}, '') != 'Resend: email.failed'`));
             }
             msg.ack();
             return;
           }
-          const [campaignState] = await db.select({ status: campaigns.status }).from(campaigns).where(eq(campaigns.id, message.campaignId));
+          const [campaignState] = await db.select({ status: campaigns.status, sendRate: campaigns.sendRate }).from(campaigns).where(eq(campaigns.id, message.campaignId));
           if (!campaignState || (campaignState.status === "completed" && !recipient.errorMessage)) { msg.ack(); return; }
-          if (campaignState.status === "paused") { msg.retry({ delaySeconds: 300 }); return; }
+          if (campaignState.status === "paused") { await deferEmail(env, msg, 300000); return; }
           const attempt = await readAttempt(env.DB, message.recipientId);
           if (attempt?.result) {
             const saved = JSON.parse(attempt.result);
-            await db.update(campaignRecipients).set({ status: "sent", sesMessageId: saved.messageId, sentAt: new Date(saved.sentAt), errorMessage: null }).where(eq(campaignRecipients.id, recipient.id));
+            await db.update(campaignRecipients).set({
+              status: sql`CASE WHEN ${campaignRecipients.status} IN ('delivered','opened','clicked','bounced','complained','unsubscribed') OR ${campaignRecipients.errorMessage} = 'Resend: email.failed' THEN ${campaignRecipients.status} ELSE 'sent' END`,
+              sesMessageId: saved.messageId, sentAt: sql`COALESCE(${campaignRecipients.sentAt}, ${Math.floor(new Date(saved.sentAt).getTime()/1000)})`,
+              errorMessage: sql`CASE WHEN ${campaignRecipients.errorMessage} = 'Resend: email.failed' THEN ${campaignRecipients.errorMessage} ELSE NULL END`,
+            }).where(eq(campaignRecipients.id, recipient.id));
             msg.ack(); return;
           }
           if (attempt && Date.now() - attempt.started_at < 120000) { msg.retry({ delaySeconds: 120 }); return; }
@@ -857,6 +863,8 @@ export async function handleEmailQueue(
             msg.ack(); return;
           }
 
+          const delay = await emailSendDelay(env.DB, message.recipientId, message.campaignId, campaignState.sendRate, provider.provider === 'resend');
+          if (delay > 0) { await deferEmail(env, msg, delay); return; }
           if (!await claimAttempt(env.DB, message.recipientId)) { msg.retry({ delaySeconds: 120 }); return; }
           dispatchStarted = true;
 
@@ -891,6 +899,19 @@ export async function handleEmailQueue(
               env.BETTER_AUTH_SECRET,
               reportProgress
             );
+          } else if (provider.provider === "resend") {
+            await env.DB.prepare('INSERT OR IGNORE INTO edm_resend_deliveries (recipient_id,provider_id,created_at) VALUES (?,?,?)').bind(message.recipientId,provider.id,Math.floor(Date.now()/1000)).run();
+            const html = appendComplianceFooter(replaceVariables(message.bodyHtml,message.variables),betterAuthUrl,message.unsubscribeToken!,message.campaignId,message.fromName);
+            const response = await resendRequest(provider.apiKey,'/emails',{method:'POST',headers:{'Idempotency-Key':`wr-${message.recipientId}`},body:JSON.stringify({
+              from:`${message.fromName.replace(/[\r\n"<>]/g,'')} <${message.fromEmail}>`,to:[message.toEmail],subject:replaceVariables(message.subject,message.variables),html,
+              ...(message.bodyText?{text:replaceVariables(message.bodyText,message.variables)}:{}),...(message.replyTo?{reply_to:message.replyTo}:{}),
+              headers:{'List-Unsubscribe':`<${betterAuthUrl}/api/outreach/unsubscribe?token=${encodeURIComponent(message.unsubscribeToken!)}>`},
+              tags:[{name:'wr_recipient_id',value:message.recipientId}]
+            })});
+            if(typeof response.id!=='string'||!response.id)throw new Error('Resend 未返回邮件 ID');
+            result={messageId:response.id};providerResult=result;
+            await saveAttempt(env.DB,message.recipientId,response.id);
+            await env.DB.prepare('UPDATE edm_resend_deliveries SET email_id=? WHERE recipient_id=? AND provider_id=?').bind(response.id,message.recipientId,provider.id).run();
           } else if (provider.provider === "amazon_ses") {
             result = await sendViaSES(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl);
           } else if (provider.provider === "sendgrid") {
@@ -911,10 +932,10 @@ export async function handleEmailQueue(
           await db
             .update(campaignRecipients)
             .set({
-              status: "sent",
+              status: sql`CASE WHEN ${campaignRecipients.status} IN ('delivered','opened','clicked','bounced','complained','unsubscribed') OR ${campaignRecipients.errorMessage} = 'Resend: email.failed' THEN ${campaignRecipients.status} ELSE 'sent' END`,
               sesMessageId: result.messageId,
-              sentAt: new Date(),
-              errorMessage: null,
+              sentAt: sql`COALESCE(${campaignRecipients.sentAt}, ${Math.floor(Date.now()/1000)})`,
+              errorMessage: sql`CASE WHEN ${campaignRecipients.errorMessage} = 'Resend: email.failed' THEN ${campaignRecipients.errorMessage} ELSE NULL END`,
             })
             .where(eq(campaignRecipients.id, message.recipientId));
 
@@ -924,6 +945,18 @@ export async function handleEmailQueue(
             `Failed to send email to ${message.toEmail}:`,
             error.message
           );
+
+          if (dispatchStarted && error instanceof ResendApiError && [401,403,429].includes(error.status)) {
+            // These responses explicitly reject acceptance, so a retry is safe.
+            const throttled = error.status === 429 && !error.quotaExceeded;
+            const delaySeconds = Math.max(1, error.retryAfter || 60);
+            if (error.status === 429) await resendCooldown(env.DB, delaySeconds);
+            if (!throttled) await db.update(campaigns).set({status:'paused',updatedAt:new Date()}).where(eq(campaigns.id,message.campaignId));
+            await db.update(campaignRecipients).set({status:'queued',errorMessage:throttled?'Resend 限流，等待重试':error.quotaExceeded?'QUOTA_REJECTED: Resend 发送额度不足；额度恢复后继续':'AUTH_REJECTED: Resend 密钥或权限无效；更新后恢复'})
+              .where(and(eq(campaignRecipients.id,message.recipientId),sql`${campaignRecipients.sentAt} IS NULL`));
+            await env.DB.prepare('DELETE FROM edm_email_send_attempts WHERE recipient_id=? AND result IS NULL').bind(message.recipientId).run();
+            await deferEmail(env, msg, (throttled?delaySeconds:300)*1000);return;
+          }
 
           if (dispatchStarted && /Mailchimp Transactional API Error \(401\):/.test(error.message || "") && /Invalid_Key/.test(error.message || "")) {
             // A verified authentication rejection did not accept the email.
@@ -948,7 +981,7 @@ export async function handleEmailQueue(
               status: "failed",
               errorMessage: clipMessage(`待核实：发送请求结果未确认，禁止自动重发。${error.message || "Unknown error"}`),
             })
-            .where(eq(campaignRecipients.id, message.recipientId));
+            .where(and(eq(campaignRecipients.id, message.recipientId), sql`${campaignRecipients.sentAt} IS NULL`));
 
           // Retry reconciliation, not the send: the durable attempt prevents a second request.
           msg.retry({ delaySeconds: 180 });

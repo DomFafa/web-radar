@@ -156,3 +156,37 @@
 .outreach .stat-card .stat-value { font-weight: 650; }
 .outreach .contact-import-progress-percentage { font-weight: 650; }
 .outreach .contact-import-progress-bar { background: var(--forest); }
+
+.outreach .resend-domains { margin-bottom:24px; }
+.outreach .resend-note { margin:12px 0; color:var(--muted); font-size:12px; line-height:1.7; }
+.outreach .resend-error { padding:12px; margin:12px 0; background:#fff8f8; color:var(--red); border:1px solid #f0c9c9; border-radius:6px; }
+.outreach .resend-domain { padding:18px 0; border-top:1px solid var(--line); }
+.outreach .resend-domain-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.outreach .resend-domain-heading strong { margin-right:12px; overflow-wrap:anywhere; }
+.outreach .resend-domain-heading p { margin-top:6px; color:var(--muted); font-size:12px; }
+.outreach .resend-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.outreach .resend-domains .table-container { margin-top:16px; }
+.outreach .resend-dns-value { max-width:360px; overflow-wrap:anywhere; white-space:normal; }
+.outreach .resend-domains { min-width:0; max-width:100%; }
+.outreach .resend-domains .section-heading { display:flex; flex-wrap:wrap; gap:12px; padding:0 0 18px; align-items:flex-start; }
+.outreach .resend-domains .section-heading > div { min-width:0; flex:1 1 220px; }
+.outreach .resend-domains .table-container { overflow-x:auto; }
+.outreach .resend-domains table { min-width:550px; table-layout:fixed; }
+.outreach .resend-domains th, .outreach .resend-domains td { overflow-wrap:anywhere; white-space:normal; }
+
+.outreach .sender-section { margin-top:24px; padding-top:24px; border-top:1px solid var(--line); }
+.outreach .sender-section h4 { margin:0 0 16px; font-size:15px; font-weight:650; color:var(--ink); }
+.outreach .sender-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 24px; align-items:start; }
+.outreach .sender-section .form-group { margin:0; min-width:0; }
+.outreach .sender-section .form-help { overflow-wrap:anywhere; margin:8px 0 0; line-height:1.6; }
+.outreach .sender-domain-control { display:flex; align-items:stretch; gap:8px; }
+.outreach .sender-domain-control .form-select { flex:1; min-width:0; width:0; }
+.outreach .sender-domain-control .btn { flex-shrink:0; margin:0; white-space:nowrap; }
+.outreach .sender-domain-error { color:var(--red); }
+.outreach .sender-rate-row { display:grid; grid-template-columns:minmax(160px,240px) 1fr; align-items:end; gap:12px 24px; }
+.outreach .sender-rate-row > .form-help { margin:0; padding-bottom:10px; }
+@media(max-width:640px){
+  .outreach .sender-fields,.outreach .sender-rate-row { grid-template-columns:1fr; gap:16px; }
+  .outreach .sender-section { margin-top:20px; padding-top:20px; }
+  .outreach .sender-rate-row > .form-help { padding:0; margin-top:-8px; }
+}

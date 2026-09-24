@@ -1,3 +1,6 @@
+import { validSendRate } from '../lib/email-pacing';
+import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
+import {resolveSenderDomains} from '../lib/sender-domains';
 import { emailOverview } from "../lib/overview";
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
@@ -26,7 +29,7 @@ export const campaignRoutes = new Hono<Env>();
 campaignRoutes.use("/*", requireAuth);
 
 const MAILCHIMP_MARKETING_KEY_SUFFIX = /-[a-z]{2}\d+$/i;
-const EMAIL_PROVIDER_TYPES = ["amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
+const EMAIL_PROVIDER_TYPES = ["resend", "amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
 
 function getMailchimpApiType(provider: any): "marketing" | "transactional" {
   let config: any = {};
@@ -81,7 +84,7 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
     .select({ recipientId: campaignRecipients.id, campaignId: campaignRecipients.campaignId, messageId: campaignRecipients.sesMessageId, openedAt: campaignRecipients.openedAt, clickedAt: campaignRecipients.clickedAt, status: campaignRecipients.status, senderEmail: campaigns.senderEmail })
     .from(campaignRecipients)
     .innerJoin(campaigns, eq(campaignRecipients.campaignId, campaigns.id))
-    .where(and(eq(campaigns.userId, userId), sql`${campaignRecipients.sesMessageId} IS NOT NULL`));
+    .where(and(eq(campaigns.userId, userId), sql`${campaignRecipients.sesMessageId} IS NOT NULL`, sql`NOT EXISTS (SELECT 1 FROM edm_resend_deliveries d WHERE d.recipient_id=${campaignRecipients.id})`));
 
   const campaignStats = new Map<string, { sent: number; delivered: number; opened: number; clicked: number; bounced: number }>();
 
@@ -147,9 +150,11 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
   ));
 }
 
-async function syncMailchimpStats(db: any, userId: string, env: Bindings) {
+async function syncProviderStats(db: any, userId: string, env: Bindings) {
   await syncMailchimpMarketingReports(db, userId, env);
   await syncMailchimpTransactionalMessages(db, userId, env);
+  const resend = (await loadProviders(db,env,userId)).filter(p=>p.provider==='resend' && p.status==='active');
+  for (const p of resend) await startResendSync(env,p.id);
 }
 
 // 获取活动列表
@@ -264,7 +269,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
   const user = c.get("user")!;
   const campaignId = c.req.param("id");
 
-  if (c.req.query("sync") === "1") await syncMailchimpStats(db, user.id, c.env);
+  if (c.req.query("sync") === "1") await syncProviderStats(db, user.id, c.env);
 
   const [campaign] = await db
     .select()
@@ -322,6 +327,7 @@ campaignRoutes.post("/", requirePermission("campaigns:write"), async (c) => {
     scheduledAt?: string;
   }>();
 
+  if (body.sendRate !== undefined && !validSendRate(body.sendRate)) return c.json({error:'发送速率须为 1–200 封/分钟的整数'},400);
   if (!body.name?.trim() || !body.senderEmail?.trim() || !body.senderName?.trim()) {
     return c.json(
       { success: false, error: "活动名称、发件人邮箱和发件人名称不能为空" },
@@ -378,6 +384,7 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
     );
   }
 
+  if (body.sendRate !== undefined && !validSendRate(body.sendRate)) return c.json({error:'发送速率须为 1–200 封/分钟的整数'},400);
   const updateData: Record<string, any> = { updatedAt: new Date() };
   const allowedFields = [
     "name", "templateId", "senderEmail", "senderName",
@@ -688,9 +695,18 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   }
 
   const emailProviders = (await loadProviders(db,c.env,user.id)).filter(p=>p.status==="active" && (EMAIL_PROVIDER_TYPES as readonly string[]).includes(p.provider));
-  const selectedProvider = selectEmailProviderForSender(emailProviders, user.id, campaign.senderEmail).provider;
+  const senderAccounts = await resolveSenderDomains(emailProviders);
+  const senderSelection = selectEmailProviderForSender(senderAccounts.providers, user.id, campaign.senderEmail);
+  // An unavailable Resend account must not silently fall back to another provider.
+  const requiresDomainMatch = emailProviders.some(provider=>provider.provider==='resend');
+  const selectedProvider = requiresDomainMatch && !senderSelection.matchedDomain ? undefined : senderSelection.provider;
   if (!selectedProvider) {
-    return c.json({ success: false, error: "没有可用的邮件发信服务商，请先在服务商配置中添加并启用账号" }, 400);
+    return c.json({ success: false, error: senderAccounts.errors.length ? "无法验证发信帐号域名，请在发信域名页面检查帐号权限后重试" : "没有与发件人域名匹配的可用发信帐号，请检查域名验证状态" }, 400);
+  }
+
+  if (selectedProvider.provider === 'resend') {
+    try { await prepareResendTracking(c.env, selectedProvider, campaign.senderEmail); }
+    catch (error) { return c.json({error:'Resend 数据追踪未准备好：'+(error as Error).message},400); }
   }
 
   // 更新活动状态为发送中
@@ -807,4 +823,14 @@ campaignRoutes.post("/:id/pause", requirePermission("campaigns:send"), async (c)
 
 campaignRoutes.get("/stats/overview", requirePermission("campaigns:read"), async (c) => {
   return c.json({success:true,data:await emailOverview(c.env.DB,c.get("user")!.id)});
+});
+
+// Reconcile only known accepted emails, scoped to the caller's workspace.
+campaignRoutes.post('/stats/resend-sync', requirePermission('campaigns:read'), async (c) => {
+  const configured = (await loadProviders(createDb(c.env.DB),c.env,c.get('user')!.id))
+    .filter(p=>p.provider==='resend' && p.status==='active');
+  try {
+    for (const p of configured) await startResendSync(c.env,p.id);
+    return c.json({success:true,data:{accounts:configured.length}});
+  } catch (error) { return c.json({error:(error as Error).message},503); }
 });

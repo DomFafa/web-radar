@@ -134,6 +134,12 @@ export function ProvidersPage() {
     }
   };
 
+  const connectResendTracking = async (id:string) => {
+    setTestingId(id);
+    try { const result=await providersApi.resendWebhook(id);addToast('success',result.message);await fetchProviders(); }
+    catch(e:any){addToast('error',e.message||'连接回调失败')}
+    finally{setTestingId(null)}
+  };
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除此配置吗？如果删除了默认发信配置可能导致发信失败！")) return;
     try {
@@ -146,6 +152,7 @@ export function ProvidersPage() {
   };
 
   const providerLabels: Record<string, string> = {
+    resend: "Resend",
     amazon_ses: "Amazon SES",
     sendgrid: "SendGrid",
     mailchimp: "Mailchimp Marketing / Transactional",
@@ -193,7 +200,9 @@ export function ProvidersPage() {
                   状态: {p.status === "active" ? "✅ 正常" : "❌ 异常"} <br/>
                   密钥: {p.maskedApiKey ? `${p.maskedApiKey} (已配置)` : "未配置"}
                 </div>
+                {p.provider==='resend'&&<p className="resend-note">数据回调：{JSON.parse(p.config||'{}').resendWebhookConnectedAt?'已配置':'尚未连接'}。打开与点击追踪还需在「发信域名」开启。</p>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                  {p.provider==='resend'&&<button className="btn btn-secondary btn-sm" disabled={testingId===p.id} onClick={()=>connectResendTracking(p.id)}>{testingId===p.id?'处理中…':'连接 / 检测数据回调'}</button>}
                   <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(p)}>
                     编辑配置
                   </button>
@@ -237,6 +246,7 @@ export function ProvidersPage() {
                   <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 8 }}>邮件发信服务</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8, marginBottom: 16 }}>
                     {[
+                      { id: 'resend', name: 'Resend', icon: '✉️' },
                       { id: 'amazon_ses', name: 'Amazon SES', icon: '☁️' },
                       { id: 'sendgrid', name: 'SendGrid', icon: '📧' },
                       { id: 'mailchimp', name: 'Mailchimp', icon: '📨' },
@@ -349,6 +359,7 @@ export function ProvidersPage() {
                 </div>
 
                 {/* 动态配置区域 */}
+                {form.provider === 'resend' && <div className="resend-note">填写 Resend API Key；帐号检测、域名读取和自动连接数据回调需要 Full access 权限。保存后点击「连接 / 检测数据回调」，再到「发信域名」开启打开与点击追踪。统计从配置完成后的发送开始，邮件客户端的隐私保护可能影响打开数据。</div>}
                 {form.provider === "amazon_ses" && (
                   <>
                     <div className="form-group">

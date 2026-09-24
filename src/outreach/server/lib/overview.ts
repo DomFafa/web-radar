@@ -32,7 +32,11 @@ export async function emailOverview(db: D1Database, workspaceId: string): Promis
       .bind(workspaceId)
       .first<any>(),
   ]);
-  const data = { ...totals, ...contacts };
+  const sync = await db.prepare(`SELECT p.name AS providerName,COALESCE(s.status,'idle') AS status,
+    COALESCE(s.checked,0) AS checked,COALESCE(s.failed,0) AS failed,s.error,s.updated_at AS updatedAt
+    FROM edm_providers p LEFT JOIN edm_resend_sync_runs s ON s.provider_id=p.id
+    WHERE p.user_id=? AND p.provider='resend' AND p.status='active'`).bind(workspaceId).all();
+  const data = { ...totals, ...contacts, resendSync:sync.results };
   return {
     ...data,
     deliveryRate: percentage(data.totalDelivered, data.totalSent),

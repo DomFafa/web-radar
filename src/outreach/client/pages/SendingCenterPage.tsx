@@ -9,8 +9,6 @@ import { CampaignProgress } from "../components/CampaignProgress";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 
 const steps = ["选择收件人", "选择邮件", "确认发送"];
-const VERIFIED_SENDER_EMAIL = "uh@wuyueer.com";
-const FALLBACK_SENDER_DOMAIN = "wuyueer.com";
 
 const defaultTaskName = () => {
   const now = new Date();
@@ -27,7 +25,9 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
   const [tags, setTags] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
-  const [verifiedSenderDomains, setVerifiedSenderDomains] = useState<string[]>([FALLBACK_SENDER_DOMAIN]);
+  const [verifiedSenderDomains, setVerifiedSenderDomains] = useState<string[]>([]);
+  const [senderDomainLoading,setSenderDomainLoading]=useState(true);
+  const [senderDomainError,setSenderDomainError]=useState('');
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [selectedContactRecords, setSelectedContactRecords] = useState<any[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
@@ -68,11 +68,30 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
   const [form, setForm] = useState({
     name: defaultTaskName(),
     templateId: "",
-    senderEmail: VERIFIED_SENDER_EMAIL,
+    senderEmail: "",
     senderName: "wuyueer",
-    replyTo: VERIFIED_SENDER_EMAIL,
+    replyTo: "",
     sendRate: 50,
   });
+
+  const refreshSenderDomains = async (active:()=>boolean=()=>true) => {
+    setSenderDomainLoading(true);setSenderDomainError('');
+    try {
+      const result=await providersApi.senderDomains();if(!active())return;
+      const domains=Array.from(new Set(result.data.map(d=>d.domain)));
+      setVerifiedSenderDomains(domains);
+      setSenderDomainError(result.errors.map(e=>`${e.providerName}：${e.message}`).join('；'));
+      setForm(current=>current.senderEmail||!domains.length?current:{...current,senderEmail:`sales@${domains[0]}`,replyTo:current.replyTo||`sales@${domains[0]}`});
+    }catch(error:any){if(active()){setVerifiedSenderDomains([]);setSenderDomainError(error.message||'无法读取发信域名，请重试');}}
+    finally{if(active())setSenderDomainLoading(false);}
+  };
+  const changeSenderDomain = (domain:string) => {
+    if(!domain)return;
+    setForm(current=>{
+      const local=current.senderEmail.split('@')[0].trim()||'sales';const email=`${local}@${domain}`;
+      return {...current,senderEmail:email,replyTo:!current.replyTo||current.replyTo===current.senderEmail?email:current.replyTo};
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -101,32 +120,7 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
       });
       setTemplates(sorted);
     }).catch(reportError);
-    providersApi.list().catch(() => ({ data: [] })).then((providerRes) => {
-      if (!active) return;
-      const domains = (providerRes.data || [])
-        .filter((provider: any) => provider.provider === "mailchimp")
-        .sort((a: any, b: any) => Number(b.isDefault) - Number(a.isDefault))
-        .flatMap((provider: any) => {
-          try {
-            const items = JSON.parse(provider.config || "{}").mailchimpDomains;
-            return Array.isArray(items) ? items : [];
-          } catch {
-            return [];
-          }
-        })
-        .filter((item: any) => item?.status === "verified" || item?.validSigning)
-        .map((item: any) => String(item.domain || "").trim().toLowerCase())
-        .filter(Boolean);
-      const uniqueDomains = Array.from(new Set<string>(domains));
-      const availableDomains = uniqueDomains.length ? uniqueDomains : [FALLBACK_SENDER_DOMAIN];
-      setVerifiedSenderDomains(availableDomains);
-      setForm((current) => {
-        const currentDomain = current.senderEmail.split("@").pop()?.toLowerCase();
-        return currentDomain && availableDomains.includes(currentDomain)
-          ? current
-          : { ...current, senderEmail: `uh@${availableDomains[0]}`, replyTo: `uh@${availableDomains[0]}` };
-      });
-    }).catch(reportError);
+    void refreshSenderDomains(()=>active);
     return () => { active = false; };
   }, []);
 
@@ -214,9 +208,11 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
       addToast("error", "请填写活动名称、邮件模板和发件人信息");
       return;
     }
+    if(step===1 && senderDomainLoading){addToast('error','正在读取已验证发信域名，请稍候');return;}
+    if(step===1 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.senderEmail.trim())){addToast('error','请填写有效的发件人邮箱');return;}
     const senderDomain = form.senderEmail.trim().toLowerCase().split("@").pop() || "";
     if (step === 1 && !verifiedSenderDomains.includes(senderDomain)) {
-      addToast("error", `发件人邮箱必须使用已验证域名：${verifiedSenderDomains.map((domain) => `@${domain}`).join("、")}`);
+      addToast("error", verifiedSenderDomains.length ? `发件人邮箱必须使用已验证域名：${verifiedSenderDomains.map((domain) => `@${domain}`).join("、")}` : "暂无可用的已验证发信域名，请检查帐号权限和域名验证状态后刷新");
       return;
     }
     if (step === 1 && selectedTemplate) {
@@ -341,14 +337,54 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
             <div style={{ position: "relative", minWidth: 0 }}><button type="button" className="form-select" style={{ width: "100%", textAlign: "left", background: "var(--color-bg-card)", cursor: "pointer" }} onClick={() => setTemplateOpen(!templateOpen)}>{selectedTemplate ? `${selectedTemplate.name} · ${selectedTemplate.subject}` : "请选择模板"}<span style={{ float: "right" }}>⌄</span></button>{templateOpen && <div style={{ position: "absolute", zIndex: 5, width: "100%", marginTop: 4, background: "var(--color-bg-card)", border: "1px solid var(--color-border)", borderRadius: 6, boxShadow: "var(--shadow-lg)", maxHeight: 250, overflowY: "auto" }}>{templates.map((template) => <button type="button" key={template.id} onMouseEnter={() => setHoveredTemplateId(template.id)} onClick={() => { setForm({ ...form, templateId: template.id }); setTemplateOpen(false); setHoveredTemplateId(null); }} style={{ display: "block", width: "100%", padding: "10px 12px", textAlign: "left", border: 0, background: hoveredTemplateId === template.id ? "var(--color-accent-subtle)" : "transparent", color: "var(--color-text-primary)", cursor: "pointer" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong>{template.name}</strong><span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 4, background: template.isBuiltIn ? "var(--color-bg-subtle)" : "var(--color-accent-soft)", color: template.isBuiltIn ? "var(--color-text-muted)" : "var(--color-accent)" }}>{template.isBuiltIn ? "内置" : "我的"}</span></div><span style={{ display: "block", fontSize: 12, color: "var(--color-text-secondary)", marginTop: 3 }}>{template.subject}</span></button>)}</div>}</div>
             <EmailPreview html={templates.find((template) => template.id === (templateOpen ? hoveredTemplateId || form.templateId : form.templateId))?.bodyHtml || "<p>请选择邮件模板</p>"} />
           </div></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><div className="form-group"><label className="form-label">发件人邮箱 *</label><input className="form-input" type="email" list="verified-sender-addresses" value={form.senderEmail} onChange={(e) => setForm({ ...form, senderEmail: e.target.value })} placeholder={`name@${verifiedSenderDomains[0] || FALLBACK_SENDER_DOMAIN}`} /><datalist id="verified-sender-addresses">{verifiedSenderDomains.map((domain) => <option key={domain} value={`uh@${domain}`} />)}</datalist><div className="form-help form-help-success">✓ 可使用已认证域名：{verifiedSenderDomains.map((domain) => `@${domain}`).join("、")}</div></div><div className="form-group"><label className="form-label">发件人名称 *</label><input className="form-input" value={form.senderName} placeholder="Your Company" onChange={(e) => setForm({ ...form, senderName: e.target.value })} /></div></div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><div className="form-group"><label className="form-label">回复地址</label><input className="form-input" type="email" value={form.replyTo} placeholder="reply@yourdomain.com" onChange={(e) => setForm({ ...form, replyTo: e.target.value })} /></div><div className="form-group"><label className="form-label">发送速率（封/分钟）</label><input className="form-input" type="number" min="1" max="200" value={form.sendRate} onChange={(e) => setForm({ ...form, sendRate: Number(e.target.value) || 50 })} /></div></div>
+          <section className="sender-section" aria-labelledby="sender-heading">
+            <h4 id="sender-heading">发件人信息</h4>
+            <div className="sender-fields">
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-domain">已验证发信域名 *</label>
+                <div className="sender-domain-control">
+                  <select id="sender-domain" className="form-select" disabled={senderDomainLoading||!verifiedSenderDomains.length} value={verifiedSenderDomains.includes(form.senderEmail.split('@').pop()?.toLowerCase()||'')?form.senderEmail.split('@').pop()?.toLowerCase():''} onChange={e=>changeSenderDomain(e.target.value)}>
+                    <option value="">{senderDomainLoading?'正在读取域名…':verifiedSenderDomains.length?'请选择发信域名':'暂无已验证域名'}</option>
+                    {verifiedSenderDomains.map(domain=><option key={domain} value={domain}>@{domain}</option>)}
+                  </select>
+                  <button className="btn btn-secondary" type="button" aria-label="刷新发信域名" disabled={senderDomainLoading} onClick={()=>void refreshSenderDomains()}>{senderDomainLoading?'读取中…':'刷新域名'}</button>
+                </div>
+                {senderDomainError&&<div className="form-help sender-domain-error" role="alert">{senderDomainError}</div>}
+                {!senderDomainLoading&&!verifiedSenderDomains.length&&<div className="form-help">请在「发信域名」完成验证；Resend 读取域名需要 Full access API Key。</div>}
+                {!!verifiedSenderDomains.length&&<div className="form-help form-help-success">已认证：{verifiedSenderDomains.map(domain=>`@${domain}`).join('、')}</div>}
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-email">发件人邮箱 *</label>
+                <input id="sender-email" className="form-input" type="email" value={form.senderEmail} onChange={e=>setForm({...form,senderEmail:e.target.value})} placeholder="name@yourdomain.com" />
+                <div className="form-help">可修改 @ 前的邮箱名称，切换域名时会保留。</div>
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-name">发件人名称 *</label>
+                <input id="sender-name" className="form-input" value={form.senderName} placeholder="Your Company" onChange={e=>setForm({...form,senderName:e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-reply">回复地址</label>
+                <input id="sender-reply" className="form-input" type="email" value={form.replyTo} placeholder="reply@yourdomain.com" onChange={e=>setForm({...form,replyTo:e.target.value})} />
+              </div>
+            </div>
+          </section>
+          <section className="sender-section sender-settings" aria-labelledby="sender-settings-heading">
+            <h4 id="sender-settings-heading">发送设置</h4>
+            <div className="sender-rate-row">
+              <div className="form-group">
+                <label className="form-label" htmlFor="sender-rate">发送速率（封/分钟）</label>
+                <input aria-describedby="sender-rate-help" id="sender-rate" className="form-input" type="number" min="1" max="200" value={form.sendRate} onChange={e=>setForm({...form,sendRate:Number(e.target.value)||50})} />
+                <p id="sender-rate-help" className="form-hint">Resend 等逐封发送通道按此上限排队；限流时自动延后。Mailchimp Marketing 由服务商调度。</p>
+              </div>
+              <p className="form-help">可设置 1–200 封/分钟，实际发送受服务商额度与限流影响。</p>
+            </div>
+          </section>
         </div>}
 
         {step === 2 && <div>
           <h3>确认发送</h3>
           <div className="sending-review">
-            <dl><div><dt>发送任务</dt><dd>{form.name}</dd></div><div><dt>邮件主题</dt><dd>{selectedTemplate?.subject || "-"}</dd></div><div><dt>发件人</dt><dd>{form.senderName} &lt;{form.senderEmail}&gt;</dd></div><div><dt>收件人</dt><dd>{audienceSelectionLabel}，预计 {estimatedRecipientCount} 位</dd></div><div><dt>统计</dt><dd>已启用打开、点击和退信统计</dd></div></dl>
+            <dl><div><dt>发送任务</dt><dd>{form.name}</dd></div><div><dt>邮件主题</dt><dd>{selectedTemplate?.subject || "-"}</dd></div><div><dt>发件人</dt><dd>{form.senderName} &lt;{form.senderEmail}&gt;</dd></div><div><dt>收件人</dt><dd>{audienceSelectionLabel}，预计 {estimatedRecipientCount} 位</dd></div><div><dt>统计</dt><dd>统计取决于所选发信帐号的回调及域名追踪设置</dd></div></dl>
           </div>
           <p className="sending-review-note">确认后邮件会进入发送队列，发送结果和统计数据可在“营销活动”中查看。</p>
         </div>}

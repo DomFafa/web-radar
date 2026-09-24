@@ -1,3 +1,5 @@
+import { handleResendSync, type ResendSyncMessage } from '../outreach/server/lib/resend-tracking';
+import { resendWebhookRoutes } from '../outreach/server/routes/resend.routes';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { AppEnv } from './env';
@@ -35,6 +37,7 @@ privateApi.notFound(c=>c.json({error:'接口不存在'},404));
 export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<typeof privateApi.fetch>[2]) {
   const path=new URL(request.url).pathname;
   const bindings=outreachBindings(env);
+  if(request.method==='POST' && /^\/api\/outreach\/webhooks\/resend\/[a-f0-9-]+$/.test(path)) return resendWebhookRoutes.fetch(request,bindings,ctx);
   if(request.method==='GET' && /^\/api\/outreach\/(unsubscribe|preferences|tracking\/(open|click))$/.test(path)) return publicRoutes.fetch(request,bindings,ctx);
   if(request.method==='GET' && /^\/api\/outreach\/images\/[a-f0-9-]+\.(png|jpg|jpeg|webp|gif)$/.test(path)) {
     const app=new Hono<{Bindings:Bindings}>();app.route('/api/outreach/images',imagesRoutes);return app.fetch(request,bindings,ctx);
@@ -51,12 +54,21 @@ export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<
   app.onError((error,c)=>{console.error('Outreach request failed',testMode(env)?error:error.name);return c.json({error:'操作失败，请检查输入或服务配置后重试。'},500)});
   return app.fetch(request,bindings,ctx);
 }
-export async function outreachQueue(batch:MessageBatch<EmailSendMessage|SiteMessageQueueMessage>,env:AppEnv) {
+export async function outreachQueue(batch:MessageBatch<EmailSendMessage|SiteMessageQueueMessage|ResendSyncMessage>,env:AppEnv) {
   const bindings=outreachBindings(env);
   if(testMode(env)) { for(const m of batch.messages)m.ack();return; }
   if(batch.queue.startsWith('web-radar-edm-email')) {
     const groups=new Map<string,Message<EmailSendMessage>[]>();
-    for(const message of batch.messages as Message<EmailSendMessage>[])groups.set(message.body.campaignId,[...(groups.get(message.body.campaignId)||[]),message]);
+    for (const message of batch.messages) {
+      if ('kind' in message.body && message.body.kind === 'resend-sync') {
+        const delay=await handleResendSync(message.body,bindings);
+        if(delay) await bindings.EMAIL_QUEUE.send(message.body,{delaySeconds:Math.min(86400,delay)});
+        message.ack();
+      } else {
+        const email = message as Message<EmailSendMessage>;
+        groups.set(email.body.campaignId,[...(groups.get(email.body.campaignId)||[]),email]);
+      }
+    }
     for(const messages of groups.values())await handleEmailQueue({messages,recovery:batch.queue.endsWith('-dlq')},bindings);
     return;
   }

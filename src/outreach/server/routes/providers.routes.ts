@@ -1,3 +1,6 @@
+import {resolveSenderDomains} from '../lib/sender-domains';
+import { registerResendRoutes } from './resend.routes';
+import { resendRequest } from '../lib/resend';
 import { publicFetch as fetch } from "../lib/network";
 import { seal, decodeProvider, loadProviders, redactConfig, restoreMaskedConfig } from "../lib/credentials";
 import { Hono } from "hono";
@@ -5,7 +8,10 @@ import type { Bindings, Variables } from "../../shared/types";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { createDb } from "../../db";
 import { providers } from "../../db/schema";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, inArray } from "drizzle-orm";
+
+const emailTypes: (typeof providers.$inferSelect.provider)[] = ["resend", "amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"];
+const defaultGroup = (type: typeof providers.$inferSelect.provider) => emailTypes.includes(type) ? inArray(providers.provider, emailTypes) : eq(providers.provider, type);
 
 type Env = { Bindings: Bindings; Variables: Variables };
 export const providersRoutes = new Hono<Env>();
@@ -15,11 +21,16 @@ providersRoutes.use("/*", requireAuth);
 providersRoutes.use("/*", async (c,next) => {
   if(c.req.method !== 'GET' && !['owner','admin'].includes(c.get('user')!.role)) return c.json({error:'仅工作空间管理员可配置服务商'},403);
   const id=c.req.path.split('/providers/')[1]?.split('/')[0];
-  if(id && id !== 'test') {
+  if(id && !['test','sender-domains'].includes(id)) {
     const row=await createDb(c.env.DB).select().from(providers).where(and(eq(providers.id,id),eq(providers.userId,c.get('user')!.id))).get();
     if(!row) return c.json({error:'服务商配置不存在'},404);
   }
   await next();
+});
+
+providersRoutes.get('/sender-domains',async c=>{
+  const result=await resolveSenderDomains(await loadProviders(createDb(c.env.DB),c.env,c.get('user')!.id));
+  return c.json({data:result.domains,errors:result.errors});
 });
 
 // 掩码函数
@@ -423,7 +434,7 @@ providersRoutes.post("/", async (c) => {
   if (isDefault) {
     await db.update(providers)
       .set({ isDefault: false })
-      .where(and(eq(providers.userId, user.id), eq(providers.provider, provider)))
+      .where(and(eq(providers.userId, user.id), defaultGroup(provider)))
       .execute();
   }
 
@@ -459,7 +470,7 @@ providersRoutes.put("/:id", async (c) => {
   if (isDefault) {
     await db.update(providers)
       .set({ isDefault: false })
-      .where(and(eq(providers.userId, existing.userId || user.id), eq(providers.provider, provider || existing.provider)))
+      .where(and(eq(providers.userId, existing.userId || user.id), defaultGroup(provider || existing.provider)))
       .execute();
   }
 
@@ -523,7 +534,10 @@ providersRoutes.post("/test", async (c) => {
   }
 
   try {
-    if (body.provider === "mailchimp") {
+    if (body.provider === "resend") {
+      const result = await resendRequest(apiKey, '/domains?limit=1');
+      return c.json({success:true,message:'Resend 帐号连接正常，域名读取权限已通过（未发送测试邮件）',data:{domainDetected:result.data?.length>0}});
+    } else if (body.provider === "mailchimp") {
       let configuredType: "marketing" | "transactional" = /-[a-z]{2}\d+$/i.test(apiKey.trim()) ? "marketing" : "transactional";
       if (config?.apiType === "marketing" || config?.apiType === "transactional") configuredType = config.apiType;
       if (configuredType === "marketing") {
@@ -598,3 +612,5 @@ providersRoutes.post("/test", async (c) => {
     return c.json({ success: false, error: err.message || "测试连通性异常" }, 500);
   }
 });
+
+registerResendRoutes(providersRoutes);
