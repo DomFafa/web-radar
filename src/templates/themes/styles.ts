@@ -1915,6 +1915,94 @@ body[data-template="food-harvest-video"] {
   color: #2a3517;
 }
 
+/* Single Product Showcase Templates */
+body[data-template="single-device-showcase"],
+body[data-template="single-artisan-craft"],
+body[data-template="single-wellness-nordic"] {
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+body[data-template="single-device-showcase"] *,
+body[data-template="single-device-showcase"] *::before,
+body[data-template="single-device-showcase"] *::after,
+body[data-template="single-artisan-craft"] *,
+body[data-template="single-artisan-craft"] *::before,
+body[data-template="single-artisan-craft"] *::after,
+body[data-template="single-wellness-nordic"] *,
+body[data-template="single-wellness-nordic"] *::before,
+body[data-template="single-wellness-nordic"] *::after {
+  box-sizing: border-box;
+}
+
+body[data-template="single-device-showcase"] img,
+body[data-template="single-artisan-craft"] img,
+body[data-template="single-wellness-nordic"] img {
+  max-width: 100%;
+  height: auto;
+}
+
+body[data-template="single-device-showcase"] {
+  background: #08090e;
+  color: #ffffff;
+}
+body[data-template="single-artisan-craft"] {
+  background: #faf7f2;
+  color: #2a221b;
+}
+body[data-template="single-wellness-nordic"] {
+  background: #f7faf8;
+  color: #1e2d24;
+}
+
+@media (max-width: 992px) {
+  .sa-stages-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sd-header-inner,
+  .sa-header-inner,
+  .sw-header-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+  .sd-nav,
+  .sa-nav,
+  .sw-nav {
+    flex-wrap: wrap !important;
+    gap: 10px 16px !important;
+  }
+  .sd-footer-grid,
+  .sa-footer-grid,
+  .sw-footer-grid,
+  .sd-hero-grid,
+  .sd-hero-stats,
+  .sd-bento-top,
+  .sd-bento-row,
+  .sd-bento-row2,
+  .sd-layers-grid,
+  .sd-spec-grid,
+  .sd-detail-main-grid,
+  .sd-detail-subspecs,
+  .sd-detail-specs,
+  .sa-hero-grid,
+  .sa-stages-grid,
+  .sa-provenance-grid,
+  .sa-detail-grid,
+  .sw-footer-grid,
+  .sw-hero-grid,
+  .sw-rhythm-grid,
+  .sw-clinical-grid,
+  .sw-provenance-grid,
+  .sw-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
 @keyframes wrPulse {
   0%, 100% {
     opacity: 1;
