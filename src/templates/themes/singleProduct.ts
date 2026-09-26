@@ -23,7 +23,7 @@ const designs = {
     theme: 'hardware',
     brand: 'KEYNOTE // LABS',
     name: 'Precision Hardware Terminal',
-    eyebrow: 'FLAGSHIP SINGLE-PRODUCT KEYNOTE',
+    eyebrow: 'FLAGSHIP HARDWARE KEYNOTE',
     description:
       'Engineered from aerospace-grade alloy with dedicated neural DSP architecture, ultra-low latency telemetry, and all-weather precision sealing.',
     story: 'Engineered from the atomic micron inside out.',
@@ -87,7 +87,124 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
       ? `<img class="${cls}" ${cls === 'wr-detail-main-img' ? 'id="wr-detail-main-img"' : ''} src="${esc(url)}" alt="${esc(alt)}" ${eager ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} decoding="async">`
       : `<div class="sp-no-photo">${esc(ui.product)}</div>`;
 
-  const header = `<a class="skip" href="#main">${esc(ui.skip)}</a><header class="sp-header"><a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>${draft.company.logoAssetId ? ctx.brandLogo : esc(brand)}</a><nav aria-label="${esc(ui.menu)}">${navLink('home', ui.home)}${navLink('catalog', ui.product)}${navLink('about', ui.about)}${navLink('contact', ui.contact)}</nav><div class="sp-languages">${ctx.languageLinks}</div></header>`;
+  // ── Radically Differentiated Headers ──
+  let header = '';
+  if (design.theme === 'hardware') {
+    header = `
+      <a class="skip" href="#main">${esc(ui.skip)}</a>
+      <div class="sp-hw-telemetry-bar">
+        <span><span class="sp-hw-dot">●</span> SYS.STATUS // ONLINE</span>
+        <span>DSP CO-PROCESSOR // 384kHz / 32-bit</span>
+        <span class="sp-hw-telemetry-right">LATENCY // 0.18ms</span>
+      </div>
+      <header class="sp-hw-header">
+        <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>
+          <span class="sp-brand-bracket">[ // ]</span> ${draft.company.logoAssetId ? ctx.brandLogo : esc(brand)}
+        </a>
+        <nav aria-label="${esc(ui.menu)}">
+          ${navLink('home', '01 / ' + ui.home)}
+          ${navLink('catalog', '02 / ' + ui.product)}
+          ${navLink('about', '03 / ' + ui.about)}
+          ${navLink('contact', '04 / ' + ui.contact)}
+        </nav>
+        <div class="sp-languages">${ctx.languageLinks}</div>
+      </header>
+    `;
+  } else if (design.theme === 'artisan') {
+    header = `
+      <a class="skip" href="#main">${esc(ui.skip)}</a>
+      <header class="sp-artisan-header">
+        <div class="sp-artisan-tagline">
+          <span>MANUFACTURE D'HORLOGERIE SUISSE · FONDÉE EN 1892</span>
+        </div>
+        <div class="sp-artisan-brand-row">
+          <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>
+            ${draft.company.logoAssetId ? ctx.brandLogo : esc(brand)}
+          </a>
+        </div>
+        <div class="sp-artisan-nav-row">
+          <nav aria-label="${esc(ui.menu)}">
+            ${navLink('home', 'I. ' + ui.home)}
+            ${navLink('catalog', 'II. ' + ui.product)}
+            ${navLink('about', 'III. ' + ui.about)}
+            ${navLink('contact', 'IV. ' + ui.contact)}
+          </nav>
+          <div class="sp-languages">${ctx.languageLinks}</div>
+        </div>
+      </header>
+    `;
+  } else {
+    header = `
+      <a class="skip" href="#main">${esc(ui.skip)}</a>
+      <header class="sp-nordic-header">
+        <div class="sp-nordic-pill-bar">
+          <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>
+            <span class="sp-nordic-symbol">🌿</span> ${draft.company.logoAssetId ? ctx.brandLogo : esc(brand)}
+          </a>
+          <nav aria-label="${esc(ui.menu)}">
+            ${navLink('home', ui.home)}
+            ${navLink('catalog', ui.product)}
+            ${navLink('about', ui.about)}
+            ${navLink('contact', ui.contact)}
+          </nav>
+          <div class="sp-languages">${ctx.languageLinks}</div>
+        </div>
+      </header>
+    `;
+  }
+
+  // ── Radically Differentiated Footers ──
+  let footer = '';
+  if (design.theme === 'hardware') {
+    footer = `
+      <footer class="sp-hw-footer">
+        <div class="sp-hw-footer-main">
+          <div>
+            <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>
+              <span class="sp-brand-bracket">[ // ]</span> ${esc(brand)}
+            </a>
+            <p style="font-size:12px;font-family:monospace;margin-top:8px;color:var(--sp-muted);">
+              HARDWARE TELEMETRY &amp; ARCHITECTURAL LABS · ALL RIGHTS RESERVED
+            </p>
+          </div>
+          <div>${ctx.socials}</div>
+        </div>
+        <div class="sp-hw-footer-sub">
+          <span>CERT // FCC PART 15 · CE · ROHS COMPLIANT</span>
+          <span>FIRMWARE BUILD // v4.2.1-PROD</span>
+          <small>© ${new Date().getUTCFullYear()} ${esc(brand)}</small>
+        </div>
+      </footer>
+    `;
+  } else if (design.theme === 'artisan') {
+    footer = `
+      <footer class="sp-artisan-footer">
+        <div class="sp-artisan-footer-crest">⚜️</div>
+        <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>${esc(brand)}</a>
+        <div class="sp-artisan-footer-motto">HAUTE HORLOGERIE SUISSE · TRADITION &amp; MÉTIERS D'ART</div>
+        <div>${ctx.socials}</div>
+        <small>© MMXXVI ${esc(brand)} · ALL RIGHTS RESERVED</small>
+      </footer>
+    `;
+  } else {
+    footer = `
+      <footer class="sp-nordic-footer">
+        <div class="sp-nordic-footer-inner">
+          <div>
+            <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>
+              <span class="sp-nordic-symbol">🌿</span> ${esc(brand)}
+            </a>
+            <p style="margin-top:6px;font-size:13px;">Mindful living architecture for modern restorative spaces.</p>
+          </div>
+          <div>${ctx.socials}</div>
+        </div>
+        <div class="sp-nordic-footer-bottom">
+          <span>FSC-CERTIFIED BIRCHWOOD · 100% RECYCLABLE UNBOXING</span>
+          <small>© ${new Date().getUTCFullYear()} ${esc(brand)}</small>
+        </div>
+      </footer>
+    `;
+  }
 
   const headline = page === 'home' ? copy?.headline || name : name;
   const title = `<span class="sp-kicker">${esc(demo ? design.eyebrow : brand)}</span><h1>${esc(headline)}</h1>${description ? `<p class="sp-lead">${esc(description)}</p>` : ''}`;
@@ -95,11 +212,11 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
   let content = '';
 
   if (page === 'home') {
-    let hero = '';
-
     if (design.theme === 'hardware') {
-      // 1. VIDEO BACKGROUND BANNER (Hardware Keynote Stage)
-      hero = `
+      // ═══════════════════════════════════════════════════════════════
+      // 1. HARDWARE KEYNOTE STAGE (Video Hero, Telemetry HUD, Bento)
+      // ═══════════════════════════════════════════════════════════════
+      const hero = `
         <section class="sp-hero sp-video-hero" data-wr-hero data-sp-hero="video">
           <div class="sp-video-scene">
             <img class="sp-poster" src="${mediaRoot}hardware.jpg" alt="" fetchpriority="high">
@@ -120,63 +237,53 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
           </div>
         </section>
       `;
-    } else if (design.theme === 'artisan') {
-      // 2. PURE IMAGE BANNER (Swiss Horological Atelier)
-      // Must contain ONLY image inside data-sp-hero="image" (no h1, p, a, button)
-      hero = `
-        <section class="sp-hero sp-pure-image" data-wr-hero data-sp-hero="image">
-          ${photo(imageUrl, name, '', true)}
-        </section>
-        <section class="sp-artisan-intro" data-sp-hero-copy>
-          <span class="sp-kicker">${esc(demo ? design.eyebrow : brand)}</span>
-          <div>
-            <h1>${esc(headline)}</h1>
-            ${description ? `<p class="sp-lead">${esc(description)}</p>` : ''}
-            <div class="sp-actions">
-              ${link(demo ? design.cta : ui.details)}
-              <a class="sp-text-link" href="#product">${esc(ui.details)} ↓</a>
-            </div>
+
+      const telemetryHud = `
+        <div class="sp-hw-hud-matrix">
+          <div class="sp-hw-hud-card">
+            <div class="sp-hw-hud-val">128 dB</div>
+            <div class="sp-hw-hud-lbl">Signal-to-Noise Ratio</div>
           </div>
-          <span class="sp-edition" aria-hidden="true">01</span>
-        </section>
-      `;
-    } else {
-      // 3. IMAGE + TEXT SPLIT BANNER (Nordic Daylight Sanctuary)
-      const circadianDial = `
-        <div class="sp-circadian-bar">
-          <div class="sp-circadian-scale">
-            <span>Dawn 2700K</span>
-            <span style="color:var(--sp-accent);">● Noon Peak 5500K</span>
-            <span>Dusk 2200K</span>
+          <div class="sp-hw-hud-card">
+            <div class="sp-hw-hud-val">384 kHz</div>
+            <div class="sp-hw-hud-lbl">Lossless DSP Sampling</div>
           </div>
-          <div class="sp-circadian-track">
-            <div class="sp-circadian-thumb"></div>
+          <div class="sp-hw-hud-card">
+            <div class="sp-hw-hud-val">0.18ms</div>
+            <div class="sp-hw-hud-lbl">Sub-Millisecond Telemetry</div>
+          </div>
+          <div class="sp-hw-hud-card">
+            <div class="sp-hw-hud-val">Grade-5</div>
+            <div class="sp-hw-hud-lbl">Titanium Machined Unibody</div>
           </div>
         </div>
       `;
-      hero = `
-        <section class="sp-hero sp-nordic-hero" data-wr-hero data-sp-hero="image-text">
-          <div class="sp-nordic-copy">
-            ${title}
-            ${circadianDial}
-            <div class="sp-actions">
-              ${link(demo ? design.cta : ui.details)}
-              <a class="sp-text-link" href="#product">${esc(ui.product)} ↓</a>
-            </div>
-            <div class="sp-small-note">${esc(demo ? 'A considered object for your everyday space.' : product?.tagline || '')}</div>
+
+      const overview = `
+        <section class="sp-section" id="product">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">01 / ${esc(ui.product)}</span>
+            <h2>${esc(demo ? design.section : name)}</h2>
           </div>
-          <figure>
-            ${photo(imageUrl, name, '', true)}
-            <figcaption>${esc(demo ? 'THE EVERYDAY, IN A NEW LIGHT' : name)}</figcaption>
-          </figure>
+          <div class="sp-hw-workbench-split" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:36px;">
+            <div class="sp-hw-viewport">
+              ${photo(imageUrl, name)}
+              <div class="sp-hw-cad-badge">FOV 45° // SCALE 1:1 // CNC BILLET</div>
+              <figcaption style="margin-top:12px;font-family:monospace;font-size:12px;color:var(--sp-muted);">${esc(name)}</figcaption>
+            </div>
+            <div>
+              <span class="sp-kicker">${esc(demo ? design.note : ui.details)}</span>
+              <h3>${esc(product?.tagline || (demo ? design.story : name))}</h3>
+              ${description ? `<p>${esc(description)}</p>` : ''}
+              ${facts(product, ui)}
+              ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
+              ${link(demo ? design.cta : ui.details)}
+            </div>
+          </div>
         </section>
       `;
-    }
 
-    // ── Distinctive Modular Architecture Sections below Hero ──
-    let customSections = '';
-    if (design.theme === 'hardware') {
-      customSections = `
+      const bento = `
         <section class="sp-section">
           <div class="sp-section-heading">
             <span class="sp-kicker">02 / ARCHITECTURE</span>
@@ -212,7 +319,9 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             </div>
           </div>
         </section>
+      `;
 
+      const unboxing = `
         <section class="sp-section">
           <div class="sp-section-heading">
             <span class="sp-kicker">03 / IN-BOX MANIFEST</span>
@@ -242,8 +351,64 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
           </div>
         </section>
       `;
+
+      const galleryHtml = gallery.length
+        ? `<section class="sp-section"><div class="sp-section-heading"><span class="sp-kicker">04 / CAD STUDIO</span><h2>${esc(name)}</h2></div><div class="sp-hw-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption style="font-family:monospace;font-size:12px;color:var(--sp-muted);margin-top:12px;">${esc(item.caption)}</figcaption></figure>`).join('')}</div></section>`
+        : '';
+
+      const closing = `
+        <section class="sp-section">
+          <div class="sp-hw-closing">
+            <span class="sp-kicker">DISPATCH TERMINAL // BATCH 04</span>
+            <h2>${esc(demo ? 'Reserve Your Production Allocation' : name)}</h2>
+            <p>${esc(ui.contactIntro)}</p>
+            ${contact}
+          </div>
+        </section>
+      `;
+
+      content = hero + `<div class="sp-section" style="padding-top:24px;padding-bottom:0;">${telemetryHud}</div>` + overview + bento + unboxing + galleryHtml + closing;
     } else if (design.theme === 'artisan') {
-      customSections = `
+      // ═══════════════════════════════════════════════════════════════
+      // 2. ARTISAN CRAFT THEME (Pure Image Hero, Editorial Diptych)
+      // ═══════════════════════════════════════════════════════════════
+      const hero = `
+        <section class="sp-hero sp-pure-image" data-wr-hero data-sp-hero="image">
+          ${photo(imageUrl, name, '', true)}
+        </section>
+        <section class="sp-artisan-intro" data-sp-hero-copy>
+          <span class="sp-kicker">${esc(demo ? design.eyebrow : brand)}</span>
+          <div>
+            <h1>${esc(headline)}</h1>
+            ${description ? `<p class="sp-lead">${esc(description)}</p>` : ''}
+            <div class="sp-actions">
+              ${link(demo ? design.cta : ui.details)}
+              <a class="sp-text-link" href="#product">${esc(ui.details)} ↓</a>
+            </div>
+          </div>
+          <span class="sp-edition" aria-hidden="true">№ 01</span>
+        </section>
+      `;
+
+      const diptych = `
+        <section class="sp-artisan-diptych" id="product">
+          <figure class="sp-artisan-plate">
+            ${photo(imageUrl, name)}
+            <figcaption>PLANCHE ARCHIVALE // ${esc(name)}</figcaption>
+          </figure>
+          <div class="sp-artisan-manifesto">
+            <span class="sp-kicker">01 / ${esc(ui.product)}</span>
+            <h2>${esc(demo ? design.section : name)}</h2>
+            <h3>${esc(product?.tagline || (demo ? design.story : name))}</h3>
+            ${description ? `<p>${esc(description)}</p>` : ''}
+            ${facts(product, ui)}
+            ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
+            <div style="margin-top:24px;">${link(demo ? design.cta : ui.details)}</div>
+          </div>
+        </section>
+      `;
+
+      const stages = `
         <section class="sp-section">
           <div class="sp-section-heading">
             <span class="sp-kicker">02 / MÉTIERS D'ART</span>
@@ -263,7 +428,7 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             <div class="sp-stage-card">
               <div class="sp-stage-num">STAGE III</div>
               <h4>Flame Bluing</h4>
-              <p>Thermal oxidization of hands to a deep, resonant royal blue.</p>
+              <p>Thermal oxidization of hands to a deep, resonant royal blue at 295°C.</p>
             </div>
             <div class="sp-stage-card">
               <div class="sp-stage-num">STAGE IV</div>
@@ -277,7 +442,9 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             </div>
           </div>
         </section>
+      `;
 
+      const ledger = `
         <section class="sp-section">
           <div class="sp-section-heading">
             <span class="sp-kicker">03 / ARCHIVAL PROVENANCE</span>
@@ -287,7 +454,7 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             <tbody>
               <tr>
                 <td style="color:var(--sp-muted);width:220px;font-style:italic;">Case Architecture</td>
-                <td><strong>Forged Swiss Damascus Steel & Double Sapphire Crystal</strong></td>
+                <td><strong>Forged Swiss Damascus Steel &amp; Double Sapphire Crystal</strong></td>
               </tr>
               <tr>
                 <td style="color:var(--sp-muted);font-style:italic;">Calibre Movement</td>
@@ -305,11 +472,62 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
           </table>
         </section>
       `;
+
+      const galleryHtml = gallery.length
+        ? `<section class="sp-section"><div class="sp-section-heading"><span class="sp-kicker">04 / CURATORIAL PLATES</span><h2>${esc(name)}</h2></div><div class="sp-artisan-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption>${esc(item.caption)}</figcaption></figure>`).join('')}</div></section>`
+        : '';
+
+      const closing = `
+        <section class="sp-section">
+          <div class="sp-artisan-invitation">
+            <span class="sp-kicker">SALON PRIVÉ // BY APPOINTMENT</span>
+            <h2>${esc(demo ? 'Commission Your Numbered Masterwork' : name)}</h2>
+            <p>${esc(ui.contactIntro)}</p>
+            ${contact}
+          </div>
+        </section>
+      `;
+
+      content = hero + diptych + stages + ledger + galleryHtml + closing;
     } else {
-      customSections = `
+      // ═══════════════════════════════════════════════════════════════
+      // 3. NORDIC WELLNESS THEME (Arched Image Hero, Circadian Dial)
+      // ═══════════════════════════════════════════════════════════════
+      const circadianDial = `
+        <div class="sp-circadian-bar">
+          <div class="sp-circadian-scale">
+            <span>Dawn 2700K</span>
+            <span style="color:var(--sp-accent);">● Noon Peak 5500K</span>
+            <span>Dusk 2200K</span>
+          </div>
+          <div class="sp-circadian-track">
+            <div class="sp-circadian-thumb"></div>
+          </div>
+        </div>
+      `;
+
+      const hero = `
+        <section class="sp-hero sp-nordic-hero" data-wr-hero data-sp-hero="image-text">
+          <div class="sp-nordic-copy">
+            ${title}
+            ${circadianDial}
+            <div class="sp-actions">
+              ${link(demo ? design.cta : ui.details)}
+              <a class="sp-text-link" href="#product">${esc(ui.product)} ↓</a>
+            </div>
+            <div class="sp-small-note" style="margin-top:24px;font-size:12px;color:var(--sp-muted);">${esc(demo ? 'A considered object for your everyday space.' : product?.tagline || '')}</div>
+          </div>
+          <figure>
+            ${photo(imageUrl, name, '', true)}
+            <figcaption style="text-align:center;font-size:12px;color:var(--sp-muted);margin-top:14px;">${esc(demo ? 'THE EVERYDAY, IN A NEW LIGHT' : name)}</figcaption>
+          </figure>
+        </section>
+      `;
+
+      const journey = `
         <section class="sp-section">
           <div class="sp-section-heading">
-            <span class="sp-kicker">02 / NATURAL RHYTHMS</span>
+            <span class="sp-kicker">01 / NATURAL RHYTHMS</span>
             <h2>The 24h Circadian Cycle</h2>
           </div>
           <div class="sp-rhythm-grid">
@@ -339,7 +557,45 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             </div>
           </div>
         </section>
+      `;
 
+      const pod = `
+        <section class="sp-section" id="product">
+          <div class="sp-nordic-pod">
+            <div class="sp-nordic-pod-split">
+              <figure>
+                ${photo(imageUrl, name)}
+                <figcaption style="text-align:center;font-size:12px;color:var(--sp-muted);margin-top:12px;">SCANDINAVIAN LIVING ESSENTIAL // ${esc(name)}</figcaption>
+              </figure>
+              <div>
+                <span class="sp-kicker">02 / ${esc(ui.product)}</span>
+                <h2>${esc(demo ? design.section : name)}</h2>
+                <h3 style="margin-top:8px;">${esc(product?.tagline || (demo ? design.story : name))}</h3>
+                ${description ? `<p>${esc(description)}</p>` : ''}
+                <div class="sp-swatches">
+                  <div class="sp-swatch">
+                    <strong>Solid Birch</strong>
+                    <span>FSC certified</span>
+                  </div>
+                  <div class="sp-swatch">
+                    <strong>Mineral Stone</strong>
+                    <span>Cast unbleached</span>
+                  </div>
+                  <div class="sp-swatch">
+                    <strong>Silent Flow</strong>
+                    <span>0 dB passive</span>
+                  </div>
+                </div>
+                ${facts(product, ui)}
+                ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
+                ${link(demo ? design.cta : ui.details)}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+
+      const clinical = `
         <section class="sp-section">
           <div class="sp-section-heading">
             <span class="sp-kicker">03 / CLINICAL EVIDENCE</span>
@@ -364,102 +620,171 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
           </div>
         </section>
       `;
+
+      const galleryHtml = gallery.length
+        ? `<section class="sp-section"><div class="sp-section-heading"><span class="sp-kicker">04 / SERENE LIVING</span><h2>${esc(name)}</h2></div><div class="sp-nordic-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption style="font-size:12px;color:var(--sp-muted);margin-top:12px;">${esc(item.caption)}</figcaption></figure>`).join('')}</div></section>`
+        : '';
+
+      const closing = `
+        <section class="sp-section">
+          <div class="sp-nordic-closing">
+            <span class="sp-kicker">60-NIGHT TRANQUIL TRIAL</span>
+            <h2>${esc(demo ? 'Bring Calming Daylight into Your Space' : name)}</h2>
+            <p>${esc(ui.contactIntro)}</p>
+            ${contact}
+          </div>
+        </section>
+      `;
+
+      content = hero + journey + pod + clinical + galleryHtml + closing;
     }
-
-    const overview = `
-      <section class="sp-section sp-overview">
-        <div class="sp-section-heading">
-          <span class="sp-kicker">01 / ${esc(ui.product)}</span>
-          <h2>${esc(demo ? design.section : name)}</h2>
-        </div>
-        <div class="sp-split">
-          <figure class="sp-product-photo">
-            ${photo(imageUrl, name)}
-            <figcaption>${esc(name)}</figcaption>
-          </figure>
-          <div class="sp-copy">
-            <span class="sp-kicker">${esc(demo ? design.note : ui.details)}</span>
-            <h3>${esc(product?.tagline || (demo ? design.story : name))}</h3>
-            ${description ? `<p>${esc(description)}</p>` : ''}
-            ${facts(product, ui)}
-            ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
-            ${link(demo ? design.cta : ui.details)}
-          </div>
-        </div>
-      </section>
-    `;
-
-    const galleryHtml = gallery.length
-      ? `<section class="sp-section"><div class="sp-section-heading"><span class="sp-kicker">04 / ${esc(ui.details)}</span><h2>${esc(name)}</h2></div><div class="sp-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption>${esc(item.caption)}</figcaption></figure>`).join('')}</div></section>`
-      : '';
-
-    const closing = `
-      <section class="sp-closing">
-        <span class="sp-kicker">${esc(brand)}</span>
-        <h2>${esc(demo ? 'Reserve Your Production Allocation' : name)}</h2>
-        <p>${esc(ui.contactIntro)}</p>
-        ${contact}
-      </section>
-    `;
-
-    content = hero + `<div id="product">${overview}</div>` + customSections + galleryHtml + closing;
   } else if (page === 'catalog' || page === 'detail') {
-    // ── Dedicated Single Product Deep Dive / Editions Page ──
-    const galleryHtml = gallery.length
-      ? `<section class="sp-section"><div class="sp-section-heading"><span class="sp-kicker">02 / ${esc(ui.details)}</span><h2>${esc(name)}</h2></div><div class="sp-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption>${esc(item.caption)}</figcaption></figure>`).join('')}</div></section>`
-      : '';
+    // ═══════════════════════════════════════════════════════════════
+    // DEDICATED DETAIL / CATALOG PAGES (Different Architecture per Template)
+    // ═══════════════════════════════════════════════════════════════
+    if (design.theme === 'hardware') {
+      const galleryHtml = gallery.length
+        ? `<div class="sp-hw-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption style="font-family:monospace;font-size:12px;color:var(--sp-muted);margin-top:8px;">${esc(item.caption)}</figcaption></figure>`).join('')}</div>`
+        : '';
 
-    const detailBento = `
-      <section class="sp-section">
-        <div class="sp-section-heading">
-          <span class="sp-kicker">SPECIFICATIONS</span>
-          <h2>Technical Architecture &amp; Delivery</h2>
-        </div>
-        <div class="sp-hardware-bento">
-          <div class="sp-bento-card">
-            <span class="sp-kicker">PRODUCTION ALLOCATION</span>
-            <h3>Direct Factory Dispatch</h3>
-            <p>Every piece is individually tested, serialized, and packed in reinforced protective shipping vaults with insured express worldwide transit.</p>
+      content = `
+        <section class="sp-section">
+          <div class="sp-hw-workbench" data-wr-product-id="${esc(product?.id || '')}">
+            <div class="sp-hw-workbench-top">
+              <span>SYS.BENCHMARK // HARDWARE ARCHITECTURE VERIFICATION</span>
+              <span>SERIAL // ${esc(product?.id || 'PROD-01')}</span>
+            </div>
+            <div class="sp-hw-workbench-split">
+              <div class="sp-hw-viewport">
+                ${photo(imageUrl, name, 'wr-detail-main-img', true)}
+                <div class="sp-hw-cad-badge">AXIS X: 142mm // Y: 68mm // Z: 18mm</div>
+                <div style="margin-top:8px;font-family:monospace;font-size:11px;color:#10b981;">● LAB INSPECTION PASSED</div>
+              </div>
+              <div>
+                ${title}
+                ${facts(product, ui)}
+                ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
+                ${contact}
+              </div>
+            </div>
           </div>
-          <div class="sp-bento-card">
-            <span class="sp-kicker">CONFIDENCE GUARANTEE</span>
-            <h3>30-Day Risk-Free Trial</h3>
-            <p>Experience the piece in your daily creative workspace. Full refund if it does not exceed your exacting standards.</p>
+          ${galleryHtml}
+          ${product?.applications?.length ? `<div class="sp-hw-hud-card" style="margin-top:32px;"><h4>${esc(ui.details)}</h4><ul class="sp-points">${product.applications.map((text) => `<li>${esc(text)}</li>`).join('')}</ul></div>` : ''}
+          <div class="sp-hardware-bento">
+            <div class="sp-bento-card">
+              <span class="sp-kicker">PRODUCTION ALLOCATION</span>
+              <h3>Direct Factory Dispatch</h3>
+              <p>Every piece is individually tested, serialized, and packed in reinforced protective shipping vaults with insured express worldwide transit.</p>
+            </div>
+            <div class="sp-bento-card">
+              <span class="sp-kicker">CONFIDENCE GUARANTEE</span>
+              <h3>30-Day Risk-Free Trial</h3>
+              <p>Experience the piece in your daily creative workspace. Full refund if it does not exceed your exacting standards.</p>
+            </div>
           </div>
-        </div>
-      </section>
-    `;
+          <div class="sp-hw-closing">
+            <span class="sp-kicker">${esc(brand)}</span>
+            <h2>${esc(demo ? 'Configure Your Dedicated Piece' : name)}</h2>
+            <p>${esc(ui.contactIntro)}</p>
+            ${contact}
+          </div>
+        </section>
+      `;
+    } else if (design.theme === 'artisan') {
+      const galleryHtml = gallery.length
+        ? `<div class="sp-artisan-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption>${esc(item.caption)}</figcaption></figure>`).join('')}</div>`
+        : '';
 
-    const closing = `
-      <section class="sp-closing">
-        <span class="sp-kicker">${esc(brand)}</span>
-        <h2>${esc(demo ? 'Configure Your Dedicated Piece' : name)}</h2>
-        <p>${esc(ui.contactIntro)}</p>
-        ${contact}
-      </section>
-    `;
-
-    content = `
-      <section class="sp-section sp-detail" data-wr-product-id="${esc(product?.id || '')}">
-        <div class="sp-split">
-          <figure class="sp-product-photo">
+      content = `
+        <section class="sp-artisan-diptych" data-wr-product-id="${esc(product?.id || '')}">
+          <figure class="sp-artisan-plate">
             ${photo(imageUrl, name, 'wr-detail-main-img', true)}
+            <figcaption>CHEF-D'ŒUVRE // ${esc(name)}</figcaption>
           </figure>
-          <div class="sp-copy">
+          <div class="sp-artisan-manifesto">
             ${title}
             ${facts(product, ui)}
             ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
+            <div style="margin-top:24px;">${contact}</div>
+          </div>
+        </section>
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">ARCHIVAL SPECIFICATIONS</span>
+            <h2>Haute Horlogerie Calibre Register</h2>
+          </div>
+          <table class="sp-ledger-table">
+            <tbody>
+              <tr>
+                <td style="color:var(--sp-muted);width:220px;font-style:italic;">Regulation Standard</td>
+                <td><strong>5-Position Chronometric Timing · 300 Hours Testing</strong></td>
+              </tr>
+              <tr>
+                <td style="color:var(--sp-muted);font-style:italic;">Movement Assembly</td>
+                <td><strong>100% Hand-Assembled &amp; Hand-Finished Single Craftsman Protocol</strong></td>
+              </tr>
+              <tr>
+                <td style="color:var(--sp-muted);font-style:italic;">Provenance Inscription</td>
+                <td><strong>Numbered Commissions with Certificate of Authenticity Ledger</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          ${galleryHtml}
+          ${product?.applications?.length ? `<div style="background:#ffffff;border:1px solid #e8e2d8;padding:32px;margin-top:32px;"><h3>${esc(ui.details)}</h3><ul class="sp-points">${product.applications.map((text) => `<li>${esc(text)}</li>`).join('')}</ul></div>` : ''}
+          <div class="sp-artisan-invitation">
+            <span class="sp-kicker">${esc(brand)}</span>
+            <h2>${esc(demo ? 'Arrange Private Commission' : name)}</h2>
+            <p>${esc(ui.contactIntro)}</p>
             ${contact}
           </div>
-        </div>
-      </section>
-      ${galleryHtml}
-      ${product?.applications?.length ? `<section class="sp-section"><h2>${esc(ui.details)}</h2><ul class="sp-points">${product.applications.map((text) => `<li>${esc(text)}</li>`).join('')}</ul></section>` : ''}
-      ${detailBento}
-      ${closing}
-    `;
+        </section>
+      `;
+    } else {
+      const galleryHtml = gallery.length
+        ? `<div class="sp-nordic-gallery">${gallery.map((item) => `<figure>${photo(item.url, item.caption)}<figcaption>${esc(item.caption)}</figcaption></figure>`).join('')}</div>`
+        : '';
+
+      content = `
+        <section class="sp-section" data-wr-product-id="${esc(product?.id || '')}">
+          <div class="sp-nordic-pod">
+            <div class="sp-nordic-pod-split">
+              <figure>
+                ${photo(imageUrl, name, 'wr-detail-main-img', true)}
+                <figcaption style="text-align:center;font-size:12px;color:var(--sp-muted);margin-top:12px;">DAYLIGHT LIVING OBJECT // ${esc(name)}</figcaption>
+              </figure>
+              <div>
+                ${title}
+                <div class="sp-swatches">
+                  <div class="sp-swatch">
+                    <strong>Solid Birch</strong>
+                    <span>FSC certified</span>
+                  </div>
+                  <div class="sp-swatch">
+                    <strong>Mineral Stone</strong>
+                    <span>Cast unbleached</span>
+                  </div>
+                </div>
+                ${facts(product, ui)}
+                ${product?.sellingPoints?.length ? `<ul class="sp-points">${product.sellingPoints.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>` : ''}
+                ${contact}
+              </div>
+            </div>
+          </div>
+          ${galleryHtml}
+          ${product?.applications?.length ? `<div class="sp-clinical-card" style="text-align:left;margin-top:32px;"><h3>${esc(ui.details)}</h3><ul class="sp-points">${product.applications.map((text) => `<li>${esc(text)}</li>`).join('')}</ul></div>` : ''}
+          <div class="sp-nordic-closing">
+            <span class="sp-kicker">60-NIGHT RESTORATIVE SLEEP GUARANTEE</span>
+            <h2>${esc(demo ? 'Experience In Your Daily Ritual' : name)}</h2>
+            <p>${esc(ui.contactIntro)}</p>
+            ${contact}
+          </div>
+        </section>
+      `;
+    }
   } else if (page === 'about') {
-    // ── Dedicated Origin Story Page for the Single Product (Different for each template) ──
+    // ═══════════════════════════════════════════════════════════════
+    // RADICALLY DIFFERENT ABOUT PAGES PER TEMPLATE
+    // ═══════════════════════════════════════════════════════════════
     const story = draft.company.aboutStory || copy?.about || draft.company.description;
     const storyParagraphs = story
       ? story.split(/\n+/).map((text) => `<p>${esc(text)}</p>`).join('')
@@ -469,20 +794,25 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
 
     if (design.theme === 'hardware') {
       customAboutHtml = `
-        <section class="sp-section sp-about">
-          <span class="sp-kicker">KEYNOTE LABS // R&D NETWORK</span>
-          <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
-          <div class="sp-split">
-            <figure class="sp-product-photo">
-              ${photo(imageUrl, name, '', true)}
-              <figcaption>HARDWARE LAB ARCHITECTURE // 01</figcaption>
-            </figure>
-            <div class="sp-copy">
-              <span class="sp-kicker">ENGINEERING MANIFESTO</span>
-              <h2>${esc(demo ? design.story : name)}</h2>
-              ${storyParagraphs || '<p>We dedicated three years of focused laboratory engineering to perfecting a single acoustic hardware terminal.</p>'}
-              ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
-              ${contact}
+        <section class="sp-section">
+          <div class="sp-hw-workbench">
+            <div class="sp-hw-workbench-top">
+              <span>KEYNOTE LABS // R&amp;D NETWORK</span>
+              <span>DOC // LAB-R&amp;D-2026-REV4</span>
+            </div>
+            <div class="sp-hw-workbench-split">
+              <div class="sp-hw-viewport">
+                ${photo(imageUrl, name, '', true)}
+                <div class="sp-hw-cad-badge">HARDWARE LAB ARCHITECTURE // 01</div>
+              </div>
+              <div>
+                <span class="sp-kicker">ENGINEERING MANIFESTO</span>
+                <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
+                <h2>${esc(demo ? design.story : name)}</h2>
+                ${storyParagraphs || '<p>We build precision hardware instruments that bridge the gap between physics, acoustic DSP mathematics, and micro-machined metallurgy.</p>'}
+                ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
+                ${contact}
+              </div>
             </div>
           </div>
         </section>
@@ -541,34 +871,31 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             </div>
             <div class="sp-timeline-card">
               <div class="sp-timeline-year">PHASE 02 // 2024</div>
-              <h4>Titanium Unibody Cold Forging</h4>
-              <p>Milling 120 iterative chassis test models to eliminate acoustic resonance and optimize thermal sink.</p>
+              <h4>Titanium Unibody Tooling</h4>
+              <p>Developing 5-axis simultaneous CNC toolpaths for acoustic damping resonance absorption.</p>
             </div>
             <div class="sp-timeline-card">
               <div class="sp-timeline-year">PHASE 03 // 2025</div>
-              <h4>Direct Factory Calibration</h4>
-              <p>Final production release with individual serialization, zero-leak acoustic sealing, and global dispatch.</p>
+              <h4>Factory Precision Calibration</h4>
+              <p>Automated laser interferometry verification for every production unit before dispatch.</p>
             </div>
           </div>
         </section>
       `;
     } else if (design.theme === 'artisan') {
       customAboutHtml = `
-        <section class="sp-section sp-about">
-          <span class="sp-kicker">HERITAGE DEPUIS 1892 · SWISS GUILD</span>
-          <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
-          <div class="sp-split">
-            <figure class="sp-product-photo">
-              ${photo(imageUrl, name, '', true)}
-              <figcaption>MASTER CRAFTSMAN BENCHWORK</figcaption>
-            </figure>
-            <div class="sp-copy">
-              <span class="sp-kicker">PHILOSOPHY OF TIME</span>
-              <h2>${esc(demo ? design.story : name)}</h2>
-              ${storyParagraphs || '<p>In an era of fleeting digital appliances, we dedicate 220 consecutive bench hours to creating a singular mechanical object that outlasts generations.</p>'}
-              ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
-              ${contact}
-            </div>
+        <section class="sp-artisan-diptych">
+          <figure class="sp-artisan-plate">
+            ${photo(imageUrl, name, '', true)}
+            <figcaption>MANUFACTURE D'HORLOGERIE // DEPUIS 1892</figcaption>
+          </figure>
+          <div class="sp-artisan-manifesto">
+            <span class="sp-kicker">MANUFACTURE D'HORLOGERIE · DEPUIS 1892</span>
+            <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
+            <h2>${esc(demo ? design.story : name)}</h2>
+            ${storyParagraphs || '<p>In an era of fleeting digital appliances, we dedicate 220 consecutive bench hours to creating a singular mechanical object that outlasts generations.</p>'}
+            ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
+            <div style="margin-top:24px;">${contact}</div>
           </div>
         </section>
 
@@ -624,20 +951,21 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
       `;
     } else {
       customAboutHtml = `
-        <section class="sp-section sp-about">
-          <span class="sp-kicker">MINDFUL LIVING ARCHITECTURE · COPENHAGEN</span>
-          <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
-          <div class="sp-split">
-            <figure class="sp-product-photo">
-              ${photo(imageUrl, name, '', true)}
-              <figcaption>SCANDINAVIAN DAYLIGHT LIVING</figcaption>
-            </figure>
-            <div class="sp-copy">
-              <span class="sp-kicker">BIOPHILIC PHILOSOPHY</span>
-              <h2>${esc(demo ? design.story : name)}</h2>
-              ${storyParagraphs || '<p>Humans evolved beneath the rhythm of the natural sun. We create lighting companions that bring restorative circadian tranquility back into indoor living.</p>'}
-              ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
-              ${contact}
+        <section class="sp-section">
+          <div class="sp-nordic-pod">
+            <div class="sp-nordic-pod-split">
+              <figure>
+                ${photo(imageUrl, name, '', true)}
+                <figcaption style="text-align:center;font-size:12px;color:var(--sp-muted);margin-top:12px;">SCANDINAVIAN DAYLIGHT LIVING</figcaption>
+              </figure>
+              <div>
+                <span class="sp-kicker">MINDFUL LIVING ARCHITECTURE · COPENHAGEN</span>
+                <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
+                <h2>${esc(demo ? design.story : name)}</h2>
+                ${storyParagraphs || '<p>Humans evolved beneath the rhythm of the natural sun. We create lighting companions that bring restorative circadian tranquility back into indoor living.</p>'}
+                ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
+                ${contact}
+              </div>
             </div>
           </div>
         </section>
@@ -678,34 +1006,32 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
             <span class="sp-kicker">ENVIRONMENTAL PLEDGE</span>
             <h2>Sustainable Forests &amp; Circular Lifecycle</h2>
           </div>
-          <div class="sp-hardware-bento">
-            <div class="sp-bento-card">
+          <div class="sp-clinical-grid">
+            <div class="sp-clinical-card">
               <span class="sp-kicker">RESPONSIBLE FORESTRY</span>
               <h3>FSC-Certified Nordic Birch</h3>
               <p>Harvested exclusively from sustainably managed northern European woodlands with continuous reforestation oversight.</p>
             </div>
-            <div class="sp-bento-card">
+            <div class="sp-clinical-card">
               <span class="sp-kicker">PLASTIC-FREE PLEDGE</span>
               <h3>100% Recyclable Unboxing Kit</h3>
               <p>Shipped in raw unbleached molded pulp packaging printed with non-toxic vegetable inks.</p>
+            </div>
+            <div class="sp-clinical-card">
+              <span class="sp-kicker">CARBON OFFSET</span>
+              <h3>Climate Positive Craft</h3>
+              <p>Every harvested birch sapling is replaced with three native saplings in protected Nordic forest reserves.</p>
             </div>
           </div>
         </section>
       `;
     }
 
-    const closing = `
-      <section class="sp-closing">
-        <span class="sp-kicker">${esc(brand)}</span>
-        <h2>${esc(demo ? 'Connect With Our Design Team' : name)}</h2>
-        <p>${esc(ui.contactIntro)}</p>
-        ${contact}
-      </section>
-    `;
-
-    content = customAboutHtml + closing;
-  } else {
-    // ── Dedicated Contact & Concierge Page (Different for each template) ──
+    content = customAboutHtml;
+  } else if (page === 'contact') {
+    // ═══════════════════════════════════════════════════════════════
+    // RADICALLY DIFFERENT CONTACT PAGES PER TEMPLATE
+    // ═══════════════════════════════════════════════════════════════
     let customContactHtml = '';
 
     if (design.theme === 'hardware') {
@@ -858,10 +1184,10 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
                   <div>
                     <span class="sp-hub-badge">STOCKHOLM SHOWROOM · [OPEN]</span>
                     <h4>Södermalm Biophilic Studio</h4>
-                    <p>Consultations for architects and homeowners looking to incorporate natural light rhythms.</p>
+                    <p>Private residential lighting architectural design desk and bespoke timber consultations.</p>
                   </div>
                   <div style="font-size:13px;color:var(--sp-muted);margin-top:8px;">
-                    Götgatan 38 · 118 26 Stockholm
+                    Åsögatan 112 · 116 24 Stockholm
                   </div>
                 </div>
 
@@ -903,11 +1229,7 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
     <div class="sp-site sp-${design.theme}">
       ${header}
       <main id="main">${content}</main>
-      <footer class="sp-footer">
-        <a class="sp-brand" href="${path('index.html')}" ${navAttrs('home')}>${esc(brand)}</a>
-        <div>${ctx.socials}</div>
-        <small>© ${new Date().getUTCFullYear()} ${esc(brand)}</small>
-      </footer>
+      ${footer}
     </div>
   `;
 }
