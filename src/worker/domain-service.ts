@@ -3478,7 +3478,13 @@ export class DomainService {
         job.kind === 'publish' &&
         error instanceof ProviderError &&
         error.code === 'pages_deployment_pending';
-      if (pagesPending && job.attempts < 120) {
+      // Pages retries first look up the existing release marker, so a temporary
+      // API failure can resume the same deployment without creating a new job.
+      const transientPagesError = job.kind === 'publish' && error instanceof ProviderError &&
+        /^pages_http_(500|502|503|504)$/.test(error.code);
+      if (transientPagesError) job.input.pagesFailures = Number(current?.input.pagesFailures ?? 0) + 1;
+      const transientPagesRetry = transientPagesError && Number(job.input.pagesFailures) < 3 && job.attempts < 120;
+      if ((pagesPending && job.attempts < 120) || transientPagesRetry) {
         job.status = 'queued';
         job.input.retryAt = Date.now() + (testMode(this.env) ? 0 : 15000);
       }
