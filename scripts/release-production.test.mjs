@@ -1,6 +1,6 @@
 import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -105,6 +105,15 @@ test('artifact configuration retains production settings and refuses a second bu
   assert.equal(artifact.env, undefined);
   assert.equal(artifact.no_bundle, true);
   assert.throws(() => artifactConfig({ ...original, build: { command: 'rebuild' } }), /Custom builds/);
+});
+
+test('the checked-in production configuration can be sealed by the release packager', () => {
+  const config = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
+  const artifact = artifactConfig(config);
+  assert.equal(artifact.name, 'web-radar');
+  assert.equal(artifact.vars.APP_ORIGIN, 'https://web-radar.net');
+  assert.equal(artifact.browser.binding, 'BROWSER');
+  assert.deepEqual(artifact.queues, config.queues);
 });
 
 test('release preflight refuses to remove existing non-secret production bindings', () => {
