@@ -459,8 +459,241 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
       ${closing}
     `;
   } else if (page === 'about') {
-    // ── Dedicated Origin Story Page for the Single Product ──
+    // ── Dedicated Origin Story Page for the Single Product (Different for each template) ──
     const story = draft.company.aboutStory || copy?.about || draft.company.description;
+    const storyParagraphs = story
+      ? story.split(/\n+/).map((text) => `<p>${esc(text)}</p>`).join('')
+      : '';
+
+    let customAboutHtml = '';
+
+    if (design.theme === 'hardware') {
+      customAboutHtml = `
+        <section class="sp-section sp-about">
+          <span class="sp-kicker">KEYNOTE LABS // R&D NETWORK</span>
+          <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
+          <div class="sp-split">
+            <figure class="sp-product-photo">
+              ${photo(imageUrl, name, '', true)}
+              <figcaption>HARDWARE LAB ARCHITECTURE // 01</figcaption>
+            </figure>
+            <div class="sp-copy">
+              <span class="sp-kicker">ENGINEERING MANIFESTO</span>
+              <h2>${esc(demo ? design.story : name)}</h2>
+              ${storyParagraphs || '<p>We dedicated three years of focused laboratory engineering to perfecting a single acoustic hardware terminal.</p>'}
+              ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
+              ${contact}
+            </div>
+          </div>
+        </section>
+
+        <!-- 3 GLOBAL RESEARCH NODES (Image & Text Integration) -->
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">GLOBAL R&amp;D NODES</span>
+            <h2>Three Specialized Engineering Centers</h2>
+          </div>
+          <div class="sp-hub-grid">
+            <div class="sp-hub-card">
+              <div>
+                <span class="sp-hub-badge">MUNICH ACOUSTICS</span>
+                <h3>Acoustic Dynamics Center</h3>
+                <p>Anechoic chamber acoustic calibration, continuous harmonic distortion analysis, and micro-transducer frequency response tuning.</p>
+              </div>
+              <div style="font-size:12px;font-family:monospace;color:var(--sp-accent);margin-top:16px;">
+                FACILITY // ANECHOIC CHAMBER 04
+              </div>
+            </div>
+            <div class="sp-hub-card">
+              <div>
+                <span class="sp-hub-badge">TOKYO METALLURGY</span>
+                <h3>Advanced Materials Foundry</h3>
+                <p>Aerospace titanium unibody metallurgy, laser ablation precision, and diamond tool CNC micro-milling with sub-micron tolerances.</p>
+              </div>
+              <div style="font-size:12px;font-family:monospace;color:var(--sp-accent);margin-top:16px;">
+                TOLERANCE // ±0.002 MM
+              </div>
+            </div>
+            <div class="sp-hub-card">
+              <div>
+                <span class="sp-hub-badge">SAN FRANCISCO AI</span>
+                <h3>Neural Signal Laboratory</h3>
+                <p>On-device computational DSP algorithms, sub-millimeter gesture processing, and low-latency acoustic mesh firmware.</p>
+              </div>
+              <div style="font-size:12px;font-family:monospace;color:var(--sp-accent);margin-top:16px;">
+                DSP ARCHITECTURE // 9.8 TFLOPS
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ENGINEERING TIMELINE (Image & Text Integration) -->
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">CHRONOLOGY</span>
+            <h2>From First Breadboard to Final Production</h2>
+          </div>
+          <div class="sp-timeline-grid">
+            <div class="sp-timeline-card">
+              <div class="sp-timeline-year">PHASE 01 // 2023</div>
+              <h4>Silicon &amp; DSP Validation</h4>
+              <p>Prototyping the dedicated quad-core neural audio processor on discrete validation boards.</p>
+            </div>
+            <div class="sp-timeline-card">
+              <div class="sp-timeline-year">PHASE 02 // 2024</div>
+              <h4>Titanium Unibody Cold Forging</h4>
+              <p>Milling 120 iterative chassis test models to eliminate acoustic resonance and optimize thermal sink.</p>
+            </div>
+            <div class="sp-timeline-card">
+              <div class="sp-timeline-year">PHASE 03 // 2025</div>
+              <h4>Direct Factory Calibration</h4>
+              <p>Final production release with individual serialization, zero-leak acoustic sealing, and global dispatch.</p>
+            </div>
+          </div>
+        </section>
+      `;
+    } else if (design.theme === 'artisan') {
+      customAboutHtml = `
+        <section class="sp-section sp-about">
+          <span class="sp-kicker">HERITAGE DEPUIS 1892 · SWISS GUILD</span>
+          <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
+          <div class="sp-split">
+            <figure class="sp-product-photo">
+              ${photo(imageUrl, name, '', true)}
+              <figcaption>MASTER CRAFTSMAN BENCHWORK</figcaption>
+            </figure>
+            <div class="sp-copy">
+              <span class="sp-kicker">PHILOSOPHY OF TIME</span>
+              <h2>${esc(demo ? design.story : name)}</h2>
+              ${storyParagraphs || '<p>In an era of fleeting digital appliances, we dedicate 220 consecutive bench hours to creating a singular mechanical object that outlasts generations.</p>'}
+              ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
+              ${contact}
+            </div>
+          </div>
+        </section>
+
+        <!-- 4 GUILD MÉTIERS D'ART (Image & Text Integration) -->
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">THE CRAFTSMAN DISCIPLINES</span>
+            <h2>Four Pillars of Haute Horlogerie</h2>
+          </div>
+          <div class="sp-metiers-grid">
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">⚙️</div>
+              <h4>Hand Guilloché</h4>
+              <p>Dial turnery executed on antique 19th-century rose engines without automated CNC assistance.</p>
+            </div>
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">🪵</div>
+              <h4>Gentian Wood Anglage</h4>
+              <p>Internal angles bevelled by hand using wild alpine gentian wood pegs for an optical black mirror shine.</p>
+            </div>
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">🔥</div>
+              <h4>Flame Oxidization</h4>
+              <p>Steel hands heated over an open hearth to exactly 295°C until an indelible cornflower blue emerges.</p>
+            </div>
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">⚜️</div>
+              <h4>Master Seal Hallmark</h4>
+              <p>Individual maker signature engraved into the baseplate upon passing chronometric regulation.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- LIFETIME RESTORATION COVENANT (Image & Text Integration) -->
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">ARCHIVAL PROMISE</span>
+            <h2>A Lifetime Restoration Covenant</h2>
+          </div>
+          <div class="sp-hardware-bento">
+            <div class="sp-bento-card">
+              <span class="sp-kicker">HERITAGE PRESERVATION</span>
+              <h3>Indefinite Guild Servicing</h3>
+              <p>Every piece is accompanied by a leather-bound archival ledger. Our guild maintains spare hand-finished components to guarantee servicing for decades to come.</p>
+            </div>
+            <div class="sp-bento-card">
+              <span class="sp-kicker">DIRECT GUILD CONTACT</span>
+              <h3>Personal Watchmaker Access</h3>
+              <p>Owners are invited to consult directly with the master craftsman responsible for assembling and regulating their specific piece.</p>
+            </div>
+          </div>
+        </section>
+      `;
+    } else {
+      customAboutHtml = `
+        <section class="sp-section sp-about">
+          <span class="sp-kicker">MINDFUL LIVING ARCHITECTURE · COPENHAGEN</span>
+          <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
+          <div class="sp-split">
+            <figure class="sp-product-photo">
+              ${photo(imageUrl, name, '', true)}
+              <figcaption>SCANDINAVIAN DAYLIGHT LIVING</figcaption>
+            </figure>
+            <div class="sp-copy">
+              <span class="sp-kicker">BIOPHILIC PHILOSOPHY</span>
+              <h2>${esc(demo ? design.story : name)}</h2>
+              ${storyParagraphs || '<p>Humans evolved beneath the rhythm of the natural sun. We create lighting companions that bring restorative circadian tranquility back into indoor living.</p>'}
+              ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
+              ${contact}
+            </div>
+          </div>
+        </section>
+
+        <!-- 4 BIOPHILIC DESIGN PRINCIPLES (Image & Text Integration) -->
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">DESIGN ETHOS</span>
+            <h2>Four Principles of Biophilic Living</h2>
+          </div>
+          <div class="sp-metiers-grid">
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">☀️</div>
+              <h4>Pure Natural Spectrum</h4>
+              <p>Calibrated illumination curves that align with human biology to foster morning vigor and nocturnal calm.</p>
+            </div>
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">🌱</div>
+              <h4>Zero Synthetic Plastics</h4>
+              <p>Only cast natural mineral stone and certified sustainable Scandinavian birchwood touch the living environment.</p>
+            </div>
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">🕊️</div>
+              <h4>Silent Engineering</h4>
+              <p>Passive convection cooling eliminates all mechanical fan noise and electrical coil hum.</p>
+            </div>
+            <div class="sp-metier-card">
+              <div style="font-size:1.8rem;margin-bottom:8px;">☕</div>
+              <h4>Slow Everyday Rituals</h4>
+              <p>Designed to be touched and adjusted as a mindful pause during morning reading or evening unwinding.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SUSTAINABILITY & CIRCULARITY (Image & Text Integration) -->
+        <section class="sp-section">
+          <div class="sp-section-heading">
+            <span class="sp-kicker">ENVIRONMENTAL PLEDGE</span>
+            <h2>Sustainable Forests &amp; Circular Lifecycle</h2>
+          </div>
+          <div class="sp-hardware-bento">
+            <div class="sp-bento-card">
+              <span class="sp-kicker">RESPONSIBLE FORESTRY</span>
+              <h3>FSC-Certified Nordic Birch</h3>
+              <p>Harvested exclusively from sustainably managed northern European woodlands with continuous reforestation oversight.</p>
+            </div>
+            <div class="sp-bento-card">
+              <span class="sp-kicker">PLASTIC-FREE PLEDGE</span>
+              <h3>100% Recyclable Unboxing Kit</h3>
+              <p>Shipped in raw unbleached molded pulp packaging printed with non-toxic vegetable inks.</p>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
     const closing = `
       <section class="sp-closing">
         <span class="sp-kicker">${esc(brand)}</span>
@@ -470,67 +703,200 @@ export function renderSingleProductPage(ctx: ThemeContext, template: string): st
       </section>
     `;
 
-    content = `
-      <section class="sp-section sp-about">
-        <span class="sp-kicker">${esc(ui.about)}</span>
-        <h1>${esc(draft.company.aboutHeadline || brand)}</h1>
-        <div class="sp-split">
-          <figure class="sp-product-photo">
-            ${photo(imageUrl, name, '', true)}
-          </figure>
-          <div class="sp-copy">
-            <h2>${esc(demo ? design.story : name)}</h2>
-            ${
-              story
-                ? story
-                    .split(/\n+/)
-                    .map((text) => `<p>${esc(text)}</p>`)
-                    .join('')
-                : ''
-            }
-            ${draft.company.capabilities ? `<p>${esc(draft.company.capabilities)}</p>` : ''}
-            ${contact}
-          </div>
-        </div>
-      </section>
-      <section class="sp-section">
-        <div class="sp-section-heading">
-          <span class="sp-kicker">THE PHILOSOPHY</span>
-          <h2>Why We Made Just One Object</h2>
-        </div>
-        <div class="sp-bento-grid3">
-          <div class="sp-bento-card">
-            <h4>Singular Focus</h4>
-            <p>Instead of dividing engineering attention across dozens of variants, every resource is concentrated on perfecting one flagship design.</p>
-          </div>
-          <div class="sp-bento-card">
-            <h4>Authentic Longevity</h4>
-            <p>Built with serviceable, premium materials to eliminate obsolescence and ensure decades of reliable everyday use.</p>
-          </div>
-          <div class="sp-bento-card">
-            <h4>Direct Concierge</h4>
-            <p>Every owner has direct access to the designers and technicians responsible for crafting their unit.</p>
-          </div>
-        </div>
-      </section>
-      ${closing}
-    `;
+    content = customAboutHtml + closing;
   } else {
-    // ── Contact & Concierge Page ──
-    content = `
-      <section class="sp-section sp-contact">
-        <div>
-          <span class="sp-kicker">${esc(brand)}</span>
-          <h1>${esc(ui.contact)}</h1>
-          <p class="sp-lead">${esc(ui.contactIntro)}</p>
-          ${draft.company.email ? `<p><a class="sp-text-link" href="mailto:${esc(draft.company.email)}">${esc(draft.company.email)}</a></p>` : ''}
-          ${draft.company.address ? `<p>${esc(draft.company.address)}</p>` : ''}
-        </div>
-        <div class="sp-form">
-          ${ctx.inquiryFormHtml}
-        </div>
-      </section>
-    `;
+    // ── Dedicated Contact & Concierge Page (Different for each template) ──
+    let customContactHtml = '';
+
+    if (design.theme === 'hardware') {
+      customContactHtml = `
+        <section class="sp-section">
+          <div class="sp-contact-custom">
+            <div>
+              <span class="sp-kicker">GLOBAL HARDWARE OPERATIONS // 24/7 SUPPORT</span>
+              <h1>${esc(ui.contact)}</h1>
+              <p class="sp-lead">Direct access to hardware engineering technicians, developer SDK support, and expedited warranty dispatch.</p>
+              
+              <!-- 3 Service Hubs (Image & Text Integration) -->
+              <div class="sp-contact-hubs">
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">TOKYO SERVICE HUB · [ONLINE]</span>
+                    <h4>Akihabara Technical Depot</h4>
+                    <p>Direct lab inspection, hardware diagnostics, and Asia-Pacific expedited dispatch.</p>
+                  </div>
+                  <div style="font-size:12px;font-family:monospace;color:var(--sp-muted);margin-top:10px;">
+                    DESK // LAB-DESK-TYO@${esc(brand.toLowerCase().replace(/[^a-z0-9]/g, ''))}.NET
+                  </div>
+                </div>
+
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">FRANKFURT LOGISTICS · [ONLINE]</span>
+                    <h4>Gateway West Technical Center</h4>
+                    <p>European express replacement depot and hardware certification archive.</p>
+                  </div>
+                  <div style="font-size:12px;font-family:monospace;color:var(--sp-muted);margin-top:10px;">
+                    SLA // &lt; 4H RESPONSE TIME FOR ACTIVE SERIALS
+                  </div>
+                </div>
+
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">SAN JOSE DEV LAB · [ONLINE]</span>
+                    <h4>Silicon Valley Developer Hub</h4>
+                    <p>Python SDK integration, DSP firmware support, and enterprise API inquiries.</p>
+                  </div>
+                  <div style="font-size:12px;font-family:monospace;color:var(--sp-muted);margin-top:10px;">
+                    DEV DESK // FIRMWARE-API-SUPPORT
+                  </div>
+                </div>
+              </div>
+
+              ${draft.company.email ? `<p style="margin-top:24px;"><a class="sp-text-link" href="mailto:${esc(draft.company.email)}">${esc(draft.company.email)}</a></p>` : ''}
+              ${draft.company.address ? `<p style="font-size:13px;color:var(--sp-muted);">${esc(draft.company.address)}</p>` : ''}
+            </div>
+
+            <div>
+              <div class="sp-form">
+                <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--sp-line);">
+                  <span class="sp-kicker">ENGINEERING DISPATCH CONSOLE</span>
+                  <h3 style="margin-top:4px;">Submit Technical Inquiry</h3>
+                  <p style="font-size:13px;margin:6px 0 0;">Dedicated response desk for registered single-device owners and procurement partners.</p>
+                </div>
+                ${ctx.inquiryFormHtml}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    } else if (design.theme === 'artisan') {
+      customContactHtml = `
+        <section class="sp-section">
+          <div class="sp-contact-custom">
+            <div>
+              <span class="sp-kicker">PRIVATE CLIENTELE CONCIERGE</span>
+              <h1>${esc(ui.contact)}</h1>
+              <p class="sp-lead">Arrange a private salon viewing or commission an individually numbered bespoke piece with our master watchmakers.</p>
+              
+              <!-- 3 Private Viewing Salons (Image & Text Integration) -->
+              <div class="sp-contact-hubs">
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">SWISS SALON // BY APPOINTMENT</span>
+                    <h4>Historic Rue du Rhône Salon</h4>
+                    <p>Personal consultation with our guild director, movement regulation demonstration, and private vault viewing.</p>
+                  </div>
+                  <div style="font-size:13px;color:var(--sp-muted);font-style:italic;margin-top:8px;">
+                    Rue du Rhône 42 · 1204 Genève
+                  </div>
+                </div>
+
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">PARIS SALON // PRIVATE SUITE</span>
+                    <h4>Place Vendôme Collector Studio</h4>
+                    <p>White-glove bespoke habillage selection, Tuscan strap fitting, and numbered commission delivery.</p>
+                  </div>
+                  <div style="font-size:13px;color:var(--sp-muted);font-style:italic;margin-top:8px;">
+                    Place Vendôme 18 · 75001 Paris
+                  </div>
+                </div>
+
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">TOKYO GINZA // RESIDENT ARTISAN</span>
+                    <h4>Ginza Private Horological Studio</h4>
+                    <p>Annual master watchmaker resident sessions and private collector reception.</p>
+                  </div>
+                  <div style="font-size:13px;color:var(--sp-muted);font-style:italic;margin-top:8px;">
+                    Ginza 6-Chome · Chuo-ku, Tokyo
+                  </div>
+                </div>
+              </div>
+
+              ${draft.company.email ? `<p style="margin-top:24px;"><a class="sp-text-link" href="mailto:${esc(draft.company.email)}">${esc(draft.company.email)}</a></p>` : ''}
+              ${draft.company.address ? `<p style="font-size:13px;color:var(--sp-muted);">${esc(draft.company.address)}</p>` : ''}
+            </div>
+
+            <div>
+              <div class="sp-form">
+                <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--sp-line);">
+                  <span class="sp-kicker">ARCHIVAL PROTOCOL</span>
+                  <h3 style="margin-top:4px;">Request Private Commission</h3>
+                  <p style="font-size:13px;margin:6px 0 0;">Strictly confidential consultation for collectors and personal commissions.</p>
+                </div>
+                ${ctx.inquiryFormHtml}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    } else {
+      customContactHtml = `
+        <section class="sp-section">
+          <div class="sp-contact-custom">
+            <div>
+              <span class="sp-kicker">HOLISTIC WELLNESS CONCIERGE</span>
+              <h1>${esc(ui.contact)}</h1>
+              <p class="sp-lead">Schedule a 1-on-1 circadian lighting consultation for your home sanctuary, architectural studio, or spa retreat.</p>
+              
+              <!-- 3 Nordic Sanctuaries (Image & Text Integration) -->
+              <div class="sp-contact-hubs">
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">COPENHAGEN STUDIO · [OPEN]</span>
+                    <h4>Bredgade Daylight Experience Lounge</h4>
+                    <p>Experience the 24h circadian transition live in our sensory timber-lined daylight studio.</p>
+                  </div>
+                  <div style="font-size:13px;color:var(--sp-muted);margin-top:8px;">
+                    Bredgade 24 · 1260 Copenhagen K
+                  </div>
+                </div>
+
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">STOCKHOLM SHOWROOM · [OPEN]</span>
+                    <h4>Södermalm Biophilic Studio</h4>
+                    <p>Consultations for architects and homeowners looking to incorporate natural light rhythms.</p>
+                  </div>
+                  <div style="font-size:13px;color:var(--sp-muted);margin-top:8px;">
+                    Götgatan 38 · 118 26 Stockholm
+                  </div>
+                </div>
+
+                <div class="sp-hub-card">
+                  <div>
+                    <span class="sp-hub-badge">OSLO RETREAT DESK · [OPEN]</span>
+                    <h4>Fjord Sleep Consultation Suite</h4>
+                    <p>Dedicated hospitality partnership desk for Nordic wellness hotels and fjordside spas.</p>
+                  </div>
+                  <div style="font-size:13px;color:var(--sp-muted);margin-top:8px;">
+                    Aker Brygge · 0250 Oslo
+                  </div>
+                </div>
+              </div>
+
+              ${draft.company.email ? `<p style="margin-top:24px;"><a class="sp-text-link" href="mailto:${esc(draft.company.email)}">${esc(draft.company.email)}</a></p>` : ''}
+              ${draft.company.address ? `<p style="font-size:13px;color:var(--sp-muted);">${esc(draft.company.address)}</p>` : ''}
+            </div>
+
+            <div>
+              <div class="sp-form">
+                <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--sp-line);">
+                  <span class="sp-kicker">MINDFUL INQUIRY</span>
+                  <h3 style="margin-top:4px;">Request Circadian Consultation</h3>
+                  <p style="font-size:13px;margin:6px 0 0;">Includes a personalized daylight recommendations guide for your bedroom or workspace.</p>
+                </div>
+                ${ctx.inquiryFormHtml}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    content = customContactHtml;
   }
 
   return `

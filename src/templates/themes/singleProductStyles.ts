@@ -468,10 +468,101 @@ export const singleProductStyles = `
   box-shadow: 0 6px 18px rgba(58,83,66,0.03);
 }
 
+/* Hubs & Salons Grid (Contact & About) */
+.sp-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin: 32px 0;
+}
+.sp-hub-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.sp-hub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sp-accent);
+  margin-bottom: 12px;
+}
+.sp-hub-badge::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Métiers d'Art & Biophilic Principles (About) */
+.sp-metiers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 32px;
+}
+.sp-metier-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+}
+
+/* Timeline Flow (About) */
+.sp-timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+.sp-timeline-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 16px;
+  padding: 28px;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+}
+.sp-timeline-year {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sp-accent);
+  margin-bottom: 8px;
+}
+
+/* Contact Custom Layout */
+.sp-contact-custom {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 60px;
+  align-items: start;
+}
+.sp-contact-hubs {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 28px;
+}
+
 /* Responsive Rules */
 @media (max-width: 992px) {
-  .sp-hardware-bento, .sp-split, .sp-nordic-hero, .sp-contact { grid-template-columns: 1fr; gap: 40px; }
-  .sp-artisan-stages { grid-template-columns: repeat(2, 1fr); }
+  .sp-hardware-bento, .sp-split, .sp-nordic-hero, .sp-contact, .sp-contact-custom { grid-template-columns: 1fr; gap: 40px; }
+  .sp-artisan-stages, .sp-hub-grid, .sp-timeline-grid { grid-template-columns: repeat(2, 1fr); }
+  .sp-metiers-grid { grid-template-columns: repeat(2, 1fr); }
   .sp-rhythm-grid, .sp-unboxing-grid { grid-template-columns: repeat(2, 1fr); }
   .sp-clinical-grid, .sp-bento-grid3 { grid-template-columns: 1fr; }
   .sp-artisan-intro { grid-template-columns: 1fr; gap: 24px; }
