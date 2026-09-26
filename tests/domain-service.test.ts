@@ -1361,6 +1361,20 @@ describe('publications, delivery and scheduler boundaries', () => {
     expect(detail.releases).toHaveLength(1);
     expect(detail.releases[0].status).toBe('pending');
   });
+  it('does not count normal Pages polling against the transient error retry limit', async () => {
+    const p = await publishable();
+    const original = providers.publish;
+    const publish = vi.fn()
+      .mockRejectedValueOnce(new ProviderError('pages_deployment_pending', 'Pending', true))
+      .mockRejectedValueOnce(new ProviderError('pages_deployment_pending', 'Pending', true))
+      .mockRejectedValueOnce(new ProviderError('pages_http_500', 'Temporary Pages error', true))
+      .mockImplementation(original);
+    providers.publish = publish;
+    const result = await request(`/api/projects/${p.id}/publish`, { expectedVersion: p.version, requestId: 'polling-before-transient' });
+    for (let i = 0; i < 4; i++) await service.tick();
+    expect((await get(p)).jobs.find((j: Job) => j.id === result.data.job.id).status).toBe('succeeded');
+    expect(new Set(publish.mock.calls.map(call => call[1])).size).toBe(1);
+  });
   it('offline blocks every public page, approved asset and inquiry while retaining private project', async () => {
     let p = await publishable();
     p = await publishNow(p);
