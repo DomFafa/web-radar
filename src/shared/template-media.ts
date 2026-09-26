@@ -642,6 +642,48 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       },
     ],
   },
+  'single-device-showcase': {
+    productCount: 1,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 dark keynote cyber hardware showcase）',
+    bannerNote: '单一主商品；电路微距视频背景。建议另备同一商品的细节与场景图，不需要多个商品。',
+    videos: 1,
+    slots: [
+      {
+        count: 1,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'single-artisan-craft': {
+    productCount: 1,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '2560 × 1440（16:9 纯图摄影 Banner）',
+    bannerNote: '单一主商品；整幅纯图 Banner，图片内不叠加文字；标题与按钮在图片下方。',
+    videos: 0,
+    slots: [
+      {
+        count: 1,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
+  'single-wellness-nordic': {
+    productCount: 1,
+    productSize: '1200 × 1200（1:1）',
+    bannerSize: '1600 × 2000（4:5 图文首屏右侧配图）',
+    bannerNote: '单一主商品；左文右图，手机上下排列。保留图片主体，文字独立可编辑。',
+    videos: 0,
+    slots: [
+      {
+        count: 1,
+        width: 1200,
+        height: 1200,
+      },
+    ],
+  },
   'saas-automation': {
     productCount: 12,
     productSize: '1200 × 1200（1:1），主体四周留白',

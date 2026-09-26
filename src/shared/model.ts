@@ -1,4 +1,5 @@
 export interface Principal {
+  appRole?: import('./access').AppRole;
   userId: string;
   authSubject: string;
   email: string;
@@ -58,6 +59,9 @@ export type TemplateId =
   | 'poster-gallery-video'
   | 'food-artisan-banner'
   | 'food-harvest-video'
+  | 'single-device-showcase'
+  | 'single-artisan-craft'
+  | 'single-wellness-nordic'
   | 'juno-toys'
   | 'saas-automation'
   | 'fintech-platform'
