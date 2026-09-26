@@ -1,3 +1,6 @@
+import { templateCoverUrl } from '../shared/template-covers';
+import type { Member } from './UserManagement';
+import { manageUsers, viewTeamData, writeBusiness } from '../shared/access';
 import { PendingWebsiteCreation } from './website-creation';
 import type { ProjectSummary, ProjectList } from '../shared/model';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
@@ -30,6 +33,8 @@ import {
 const Editor = lazy(() => import('./Editor'));
 const Dashboard = lazy(() => import('./Dashboard'));
 const Outreach = lazy(() => import('../outreach/client/App'));
+const CustomerInbox = lazy(() => import('./CustomerInbox'));
+const UserManagement = lazy(() => import('./UserManagement'));
 const Admin = lazy(() => import('./Admin'));
 import { ErrorBoundary } from './ErrorBoundary';
 import { nextDraftStep, projectStatus, workflowSteps } from './workflow';
@@ -42,64 +47,6 @@ type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: st
 const embedded = window.location.pathname === '/embed/product-radar';
 const embedOrigin = parentOrigin(new URLSearchParams(window.location.search).get('parentOrigin'));
 
-const TEMPLATE_PREVIEWS: Record<string, string> = {
-  'senseng-clean': '/templates/previews/senseng-clean.jpg',
-  'senseng-video': '/templates/previews/senseng-video.jpg',
-  'saas-automation': '/templates/previews/saas-automation.jpg',
-  'fintech-platform': '/templates/previews/fintech-platform.jpg',
-  'digital-marketing': '/templates/previews/digital-marketing.jpg',
-  'porto-accounting': '/templates/previews/porto-accounting.jpg',
-  'crafto-corporate': '/templates/previews/crafto-corporate.jpg',
-  'juno-toys': '/templates/previews/juno-toys.jpg',
-  'corpox-ai-agency': '/templates/previews/corpox-ai-agency.jpg',
-  'corpox-consulting': '/templates/previews/corpox-consulting.jpg',
-  'senseng-candy': '/templates/previews/senseng-candy.jpg',
-  'senseng-wonder': '/templates/previews/senseng-wonder.jpg',
-  'senseng-arcade': '/templates/previews/senseng-arcade.jpg',
-  'senseng-nature': '/templates/previews/senseng-nature.jpg',
-  'senseng-minimal': '/templates/previews/senseng-minimal.jpg',
-  'universal-trade-banner': '/templates/previews/senseng-clean.jpg',
-  'universal-showcase-video': '/templates/previews/senseng-video.jpg',
-  'toys-figure-banner': '/templates/previews/senseng-arcade.jpg',
-  'toys-interactive-video': '/templates/previews/senseng-video.jpg',
-  'plush-cushion-banner': '/templates/previews/senseng-candy.jpg',
-  'plush-living-video': '/templates/previews/senseng-nature.jpg',
-  'apparel-fabric-banner': '/templates/previews/senseng-minimal.jpg',
-  'apparel-runway-video': '/templates/previews/senseng-video.jpg',
-  'footwear-craft-banner': '/templates/previews/senseng-arcade.jpg',
-  'footwear-kinetic-video': '/templates/previews/senseng-video.jpg',
-  'luggage-leather-banner': '/templates/previews/senseng-minimal.jpg',
-  'luggage-voyage-video': '/templates/previews/senseng-video.jpg',
-  'jewelry-luxury-banner': '/templates/previews/senseng-minimal.jpg',
-  'jewelry-timeless-video': '/templates/previews/senseng-video.jpg',
-  'homedecor-aesthetic-banner': '/templates/previews/senseng-nature.jpg',
-  'homedecor-living-video': '/templates/previews/senseng-video.jpg',
-  'furniture-minimal-banner': '/templates/previews/senseng-minimal.jpg',
-  'furniture-spatial-video': '/templates/previews/senseng-video.jpg',
-  'kitchen-culinary-banner': '/templates/previews/senseng-arcade.jpg',
-  'kitchen-gourmet-video': '/templates/previews/senseng-video.jpg',
-  'drinkware-ceramic-banner': '/templates/previews/senseng-arcade.jpg',
-  'drinkware-thermal-video': '/templates/previews/senseng-video.jpg',
-  'beauty-skincare-banner': '/templates/previews/senseng-arcade.jpg',
-  'beauty-glow-video': '/templates/previews/senseng-video.jpg',
-  'electronics-gadget-banner': '/templates/previews/senseng-arcade.jpg',
-  'electronics-smart-video': '/templates/previews/senseng-video.jpg',
-  'tools-precision-banner': '/templates/previews/senseng-arcade.jpg',
-  'tools-workshop-video': '/templates/previews/senseng-video.jpg',
-  'sports-trail-banner': '/templates/previews/senseng-arcade.jpg',
-  'sports-kinetic-video': '/templates/previews/senseng-video.jpg',
-  'pet-supplies-banner': '/templates/previews/senseng-candy.jpg',
-  'pet-wellness-video': '/templates/previews/senseng-video.jpg',
-  'stationery-craft-banner': '/templates/previews/senseng-nature.jpg',
-  'stationery-studio-video': '/templates/previews/senseng-video.jpg',
-  'poster-graphic-banner': '/templates/previews/senseng-wonder.jpg',
-  'poster-gallery-video': '/templates/previews/senseng-video.jpg',
-  'food-artisan-banner': '/templates/previews/senseng-arcade.jpg',
-  'food-harvest-video': '/templates/previews/senseng-video.jpg',
-  natural: '/templates/previews/senseng-clean.jpg',
-  technology: '/templates/previews/saas-automation.jpg',
-  explorer: '/templates/previews/crafto-corporate.jpg',
-};
 
 export default function App() {
   const [config, setConfig] = useState<Config | null>(null),
@@ -113,14 +60,15 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'dashboard' | 'projects' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
+  const [view, setView] = useState<'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
+        if (v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
       } catch {}
       return 'dashboard';
     }),
     [embedError, setEmbedError] = useState('');
+  const [businessMember,setBusinessMember]=useState<Member|null>(null);
   const [authBusy, setAuthBusy] = useState(false),
     [sessionMessage, setSessionMessage] = useState('');
   const selectedRef = useRef(selected);
@@ -372,6 +320,9 @@ export default function App() {
                 <Icon name="globe" />
                 服务状态
               </button>
+              <button className={view === 'inbox' ? 'active' : ''} onClick={() => setView('inbox')}><Icon name="mail"/>客户收件箱</button>
+              {manageUsers(principal) && <button className={view === 'users' ? 'active' : ''} onClick={() => setView('users')}><Icon name="users"/>用户管理</button>}
+              {viewTeamData(principal) && <button className={view === 'business' ? 'active' : ''} onClick={() => {setBusinessMember(null);setView('business')}}><Icon name="chart"/>业务数据</button>}
               {principal.systemRole === 'super_admin' && (
                 <button
                   className={view === 'admin' ? 'active' : ''}
@@ -413,6 +364,10 @@ export default function App() {
               <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回网站项目。" onBack={()=>setView('projects')} backText="返回网站项目">
                 <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}`} principal={principal} section={view}/></Suspense>
               </ErrorBoundary>
+            ) : view === 'inbox' ? (
+              <Suspense fallback={<ChunkFallback/>}><CustomerInbox key={principal.userId+':'+principal.workspaceId} principal={principal}/></Suspense>
+            ) : view === 'users' || view === 'business' ? (
+              (view==='users'?manageUsers(principal):viewTeamData(principal)) ? <Suspense fallback={<ChunkFallback/>}><UserManagement key={`${view}:${businessMember?.workspace_id}:${businessMember?.user_id}`} principal={principal} section={view} initialMember={view==='business'?businessMember:null} onViewData={member=>{setBusinessMember(member);setView('business')}}/></Suspense> : <Notice tone="error">当前角色没有此功能的访问权限。</Notice>
             ) : view === 'admin' ? (
               <ErrorBoundary
                 scope="section"
@@ -731,7 +686,9 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
           </Button>
           <Button
             kind="primary"
+            disabled={!writeBusiness(principal)}
             onClick={() => {
+              if (!writeBusiness(principal)) return;
               setName(creation.pending?.name || '');
               setCreateOpen(true);
             }}
@@ -841,6 +798,7 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                   </Button>
                   <Button
                     kind="danger"
+                    disabled={!writeBusiness(principal)}
                     onClick={() => setBatchDeleteOpen(true)}
                     busy={deleting}
                     style={{
@@ -894,12 +852,13 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                     className="project-card-delete-overlay"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setDeleteTarget(project);
+                      if (writeBusiness(principal)) setDeleteTarget(project);
                     }}
                   >
                     <button
                       type="button"
                       className="project-card-delete-btn"
+                      disabled={!writeBusiness(principal)}
                       title={`删除「${project.name}」`}
                       aria-label={`删除「${project.name}」`}
                     >
@@ -907,20 +866,15 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                     </button>
                   </div>
 
-                  {project.coverAssetId ? (
-                    <AssetView projectId={project.id} assetId={project.coverAssetId} alt={project.name} />
-                  ) : TEMPLATE_PREVIEWS[project.template] ? (
-                    <img
-                      src={TEMPLATE_PREVIEWS[project.template]}
-                      alt={project.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div className="project-cover-art">
-                      <div className="cover-orbit" />
-                      <span>{project.companyName || '尚未添加产品图片'}</span>
-                    </div>
-                  )}
+                  <AssetView
+                    key={`${project.id}:${project.coverAssetId || project.template}`}
+                    projectId={project.id}
+                    assetId={project.coverAssetId}
+                    alt={`${project.name} · 首页设计图`}
+                    variant="preview"
+                    lazy
+                    fallback={<img src={templateCoverUrl(project.template)} alt={`${project.name} · 模板首页`} loading="lazy" decoding="async" />}
+                  />
                   <span
                     className={`pill ${project.publishedReleaseId && !project.offline ? 'green' : 'light'}`}
                   >
@@ -994,6 +948,9 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                           'poster-gallery-video': '日落画廊与艺术微喷展厅',
                           'food-artisan-banner': '赤陶橄榄自然农庄与匠心食品',
                           'food-harvest-video': '金秋丰收晨光与庄园食品盛宴',
+                          'single-device-showcase': '极客硬件展台 · 单品旗舰',
+                          'single-artisan-craft': '典藏工坊腕表 · 单品奢作',
+                          'single-wellness-nordic': '北欧轻愈生活 · 单品纯净',
                         } as Record<TemplateId, string>)[project.template] || '专业模版'
                       }
                     </span>

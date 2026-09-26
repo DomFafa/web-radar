@@ -442,3 +442,60 @@ describe('8 new industry templates across 4 categories', () => {
   });
 });
 
+describe('3 single-product showcase templates', () => {
+  const singleTemplates = [
+    'single-device-showcase',
+    'single-artisan-craft',
+    'single-wellness-nordic',
+  ] as const;
+
+  for (const template of singleTemplates) {
+    it(`renders ${template} full website journey with zero Chinese in EN`, () => {
+      const d = draft();
+      d.template = template;
+      const pages = ['home', 'catalog', 'detail', 'about', 'contact'] as const;
+      for (const page of pages) {
+        const html = renderSite(d, { ...opts, page, productId: 'p-one', preview: true });
+        expect(html).toContain(`data-template="${template}"`);
+        expect(html).not.toMatch(/[\u4e00-\u9fa5]/);
+      }
+    });
+  }
+
+  it('gives each single-product homepage a different hero format', () => {
+    const d = draft();
+    for (const [template, kind] of [['single-device-showcase','video'],['single-artisan-craft','image'],['single-wellness-nordic','image-text']] as const) {
+      const html = renderSite({...d, template}, opts);
+      expect(html).toContain(`data-sp-hero="${kind}"`);
+      expect(html).not.toMatch(/0\.12ms|IP68|Double-Blind|Geneva Atelier|500 Numbered/);
+      expect(html).toContain('Oak form');
+      if(kind === 'image') {
+        const hero = html.match(/<section[^>]*data-sp-hero="image"[\s\S]*?<\/section>/)![0];
+        expect(hero).toContain('<img');
+        expect(hero).not.toMatch(/<h1|<p|<a|<button/);
+      }
+    }
+  });
+  it.each(singleTemplates)('keeps the selected product across all pages and exports for %s', template => {
+    const d = draft();d.template=template;
+    d.products.push({...d.products[0],id:'selected',name:'Selected lamp',imageAssetId:'lamp'});
+    d.primaryProductId='selected';
+    for(const page of ['home','catalog','detail','about','contact']){
+      const html=renderSite(d,{...opts,page,productId:'p-one'});
+      expect(html).not.toContain('Oak form');
+      expect(html).not.toContain('value="p-one"');
+      expect(html).not.toContain('products/p-one');
+      if(page==='detail') expect(html).toContain('Selected lamp');
+    }
+    const files=renderSiteFiles(d,{...opts,preview:false,publicBaseUrl:'https://example.com'});
+    expect(files['en/products/selected/index.html']).toContain('Selected lamp');
+    expect(files['en/products/p-one/index.html']).toBeUndefined();
+    expect(d.products).toHaveLength(2);
+  });
+  it.each(singleTemplates)('does not substitute stock product photos for a missing customer image: %s', template => {
+    const d=draft();d.template=template;d.products[0].imageAssetId=undefined;
+    const html=renderSite(d,{...opts,page:'detail'});
+    expect(html).not.toMatch(/single-product\/(artisan|nordic|hardware)\.jpg/);
+    expect(html).toContain('sp-no-photo');
+  });
+});

@@ -5,10 +5,12 @@ export const siteMessageJobs = sqliteTable(
   "edm_site_message_jobs",
   {
     id: text("id").primaryKey(),
+    createdBy: text("created_by"),
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     senderName: text("sender_name").notNull(),
     senderEmail: text("sender_email").notNull(),
+    replyTracking: integer("reply_tracking", { mode: "boolean" }).notNull().default(false),
     senderPhone: text("sender_phone"),
     company: text("company"),
     address: text("address"),
