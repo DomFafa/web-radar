@@ -50,6 +50,22 @@ describe('durable confirmed materials receiver',()=>{
   const deferred=()=>{let resolve!:(response:Response)=>void;const promise=new Promise<Response>(r=>{resolve=r;});return{promise,resolve};};
   const progress=()=>service.status(fixture.principal,fixture.submissionId);
   const finish=async()=>{for(let i=0;i<5;i++){await service.tick();const receipt=await service.status(fixture.principal,fixture.submissionId);if(receipt.state!=='receiving')return receipt;}throw Error('did not finish');};
+  it('accepts Product Radar code-unit hashes for product identities and still rejects changed content',async()=>{
+    const identity={version:1 as const,family:'toy' as const,composition:'single' as const,packCount:1,packagingBox:'present' as const,subjectVisible:true,geometry:'concept' as const,parts:[],shape:'round hamster',colors:['orange'],features:['acorn']};
+    fixture.materials.products[0].productIdentity=identity;
+    // The wire contract uses JSON keys in code-unit order, not locale collation.
+    const wire=JSON.stringify({source:fixture.source,materials:fixture.materials},(_key,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,value[key]])):value);
+    fixture.confirmation.contentSha256=await sha256(wire);
+    expect(fixture.confirmation.contentSha256).not.toBe(await sha256(canonical({source:fixture.source,materials:fixture.materials})));
+    const tampered=structuredClone(fixture);tampered.materials.products[0].productIdentity!.packagingBox='absent';
+    await expect(service.submit(fixture.principal,tampered)).rejects.toMatchObject({status:409,code:'content_hash_conflict'});
+    expect(objects.size).toBe(0);expect(websiteCalls).toHaveLength(0);
+    expect(await service.submit(fixture.principal,fixture)).toMatchObject({state:'receiving'});
+    const receipt=await finish();expect(receipt.state).toBe('accepted');
+    expect((await store.one<Project>('projects',receipt.projectId!))?.draft.products[0].productIdentity).toEqual(identity);
+    expect((await service.submit(fixture.principal,fixture)).projectId).toBe(receipt.projectId);
+    expect(websiteCalls.filter(call=>call==='reserve')).toHaveLength(1);
+  });
   it('accepts only after all copied assets and snapshot are durable, without generation or publication',async()=>{
     const first=await service.submit(fixture.principal,fixture);expect(first.state).toBe('receiving');expect((await store.list<Project>('projects'))).toHaveLength(0);
     const receipt=await finish();expect(receipt.state).toBe('accepted');expect(receipt.receivedMedia).toBe(2);expect(receipt.autoPublish).toBe(false);
