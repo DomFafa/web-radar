@@ -407,59 +407,71 @@ function renderSingleDevicePage(ctx: ThemeContext): string {
   if (page === 'home') {
     mainHtml = `
       <main style="background:#f8fafc;color:#0f172a;overflow:hidden;">
-        <!-- HERO KEYNOTE STAGE -->
-        <section style="position:relative;padding:80px 24px 90px;min-height:90vh;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #e2e8f0;background-image:radial-gradient(rgba(148,163,184,0.18) 1px, transparent 1px);background-size:32px 32px;">
-          <div style="position:absolute;top:25%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;border-radius:50%;background:radial-gradient(circle, rgba(2,132,199,0.09) 0%, rgba(99,102,241,0.03) 50%, transparent 70%);pointer-events:none;filter:blur(50px);"></div>
+        <!-- HERO KEYNOTE STAGE WITH DYNAMIC VIDEO BACKGROUND -->
+        <section class="sd-hero-video-container" style="position:relative;overflow:hidden;min-height:92vh;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+          <!-- Kinetic Hardware Video Background Loop -->
+          <video autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80" class="sd-hero-video-bg" style="position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);object-fit:cover;z-index:1;opacity:0.22;filter:saturate(1.2) contrast(1.1);pointer-events:none;">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4" />
+          </video>
+          <!-- Luminous Frost Glass Overlay to preserve 100% light theme while revealing kinetic video motion -->
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(248, 250, 252, 0.86) 0%, rgba(248, 250, 252, 0.94) 100%);backdrop-filter:blur(8px);z-index:2;pointer-events:none;"></div>
+          <div style="position:absolute;top:25%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;border-radius:50%;background:radial-gradient(circle, rgba(2,132,199,0.12) 0%, rgba(99,102,241,0.04) 50%, transparent 70%);pointer-events:none;filter:blur(50px);z-index:2;"></div>
 
-          <div class="sd-hero-grid" style="max-width:1320px;width:100%;margin:0 auto;display:grid;grid-template-columns:1.05fr 0.95fr;gap:60px;align-items:center;position:relative;">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:#f0f9ff;border:1px solid #bae6fd;color:#0284c7;font-size:0.76rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;font-family:monospace;margin-bottom:24px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:#0284c7;box-shadow:0 0 8px #0284c7;"></span>
-                Flagship Single-Product Keynote
-              </div>
-              <h1 style="font-size:clamp(2.4rem, 5vw, 3.8rem);font-weight:900;line-height:1.08;letter-spacing:-0.03em;margin:0 0 20px;color:#0f172a;">
-                ${esc(draft.copy[ctx.lang]?.headline || primary.name)}
-              </h1>
-              <p style="font-size:1.15rem;line-height:1.65;color:#475569;margin:0 0 32px;max-width:540px;">
-                ${esc(draft.copy[ctx.lang]?.subtitle || primary.description)}
-              </p>
-              <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:48px;">
-                <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:8px;background:linear-gradient(135deg, #0284c7, #2563eb);color:#ffffff;font-size:0.95rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 6px 20px rgba(2,132,199,0.3);">
-                  Configure & Order ↗
-                </a>
-                <a href="#architecture" style="text-decoration:none;padding:15px 28px;border-radius:8px;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-size:0.95rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                  Explore Architecture ↓
-                </a>
-              </div>
-              <!-- Telemetry indicators -->
-              <div class="sd-hero-stats" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid #e2e8f0;">
-                <div>
-                  <div style="font-size:1.45rem;font-weight:900;color:#0284c7;font-family:monospace;">0.12ms</div>
-                  <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-top:2px;">Ultra-Low Latency</div>
+          <div class="sd-hero-content" style="position:relative;z-index:3;width:100%;padding:80px 24px 90px;">
+            <div class="sd-hero-grid" style="max-width:1320px;width:100%;margin:0 auto;display:grid;grid-template-columns:1.05fr 0.95fr;gap:60px;align-items:center;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:10px;padding:6px 16px;border-radius:999px;background:#f0f9ff;border:1px solid #bae6fd;color:#0284c7;font-size:0.76rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;font-family:monospace;margin-bottom:24px;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:#0284c7;box-shadow:0 0 8px #0284c7;animation:wrPulse 2s infinite;"></span>
+                  <span>SYSTEM // ONLINE</span>
+                  <span style="color:#cbd5e1;">|</span>
+                  <span>Flagship Single-Product Keynote</span>
+                  <span style="color:#cbd5e1;">|</span>
+                  <span style="color:#0369a1;">[LIVE STAGE 60FPS]</span>
                 </div>
-                <div>
-                  <div style="font-size:1.45rem;font-weight:900;color:#0f172a;font-family:monospace;">Titanium</div>
-                  <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-top:2px;">Aerospace Unibody</div>
+                <h1 style="font-size:clamp(2.4rem, 5vw, 3.8rem);font-weight:900;line-height:1.08;letter-spacing:-0.03em;margin:0 0 20px;color:#0f172a;">
+                  ${esc(draft.copy[ctx.lang]?.headline || primary.name)}
+                </h1>
+                <p style="font-size:1.15rem;line-height:1.65;color:#475569;margin:0 0 32px;max-width:540px;">
+                  ${esc(draft.copy[ctx.lang]?.subtitle || primary.description)}
+                </p>
+                <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:48px;">
+                  <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:15px 32px;border-radius:8px;background:linear-gradient(135deg, #0284c7, #2563eb);color:#ffffff;font-size:0.95rem;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 6px 20px rgba(2,132,199,0.3);">
+                    Configure & Order ↗
+                  </a>
+                  <a href="#architecture" style="text-decoration:none;padding:15px 28px;border-radius:8px;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-size:0.95rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    EXPLODED ANATOMY ↓
+                  </a>
                 </div>
-                <div>
-                  <div style="font-size:1.45rem;font-weight:900;color:#0284c7;font-family:monospace;">48 Hrs</div>
-                  <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-top:2px;">Continuous Power</div>
+                <!-- Telemetry indicators -->
+                <div class="sd-hero-stats" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;padding-top:24px;border-top:1px solid #e2e8f0;">
+                  <div>
+                    <div style="font-size:1.45rem;font-weight:900;color:#0284c7;font-family:monospace;">0.12ms</div>
+                    <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-top:2px;">Ultra-Low Latency</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.45rem;font-weight:900;color:#0f172a;font-family:monospace;">Titanium</div>
+                    <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-top:2px;">Aerospace Unibody</div>
+                  </div>
+                  <div>
+                    <div style="font-size:1.45rem;font-weight:900;color:#0284c7;font-family:monospace;">48 Hrs</div>
+                    <div style="font-size:0.75rem;color:#64748b;text-transform:uppercase;font-weight:600;margin-top:2px;">Continuous Power</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Pedestal Visual Stage -->
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-              <div style="position:absolute;width:440px;height:440px;border-radius:50%;border:1px dashed rgba(2,132,199,0.25);animation:wrSpin 30s linear infinite;"></div>
-              <div style="position:absolute;width:520px;height:520px;border-radius:50%;border:1px solid rgba(226,232,240,0.8);"></div>
-              <div style="position:relative;background:#ffffff;padding:40px;border-radius:28px;border:1px solid #e2e8f0;box-shadow:0 25px 60px -15px rgba(15,23,42,0.1), 0 0 30px rgba(2,132,199,0.06);width:100%;max-width:440px;">
-                <img src="${esc(mainImg)}" alt="${esc(primary.name)}" style="width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 15px 30px rgba(15,23,42,0.1));">
+              <!-- Pedestal Visual Stage -->
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+                <div style="position:absolute;width:440px;height:440px;border-radius:50%;border:1px dashed rgba(2,132,199,0.25);animation:wrSpin 30s linear infinite;"></div>
+                <div style="position:absolute;width:520px;height:520px;border-radius:50%;border:1px solid rgba(226,232,240,0.8);"></div>
+                <div style="position:relative;background:#ffffff;padding:40px;border-radius:28px;border:1px solid #e2e8f0;box-shadow:0 25px 60px -15px rgba(15,23,42,0.1), 0 0 30px rgba(2,132,199,0.06);width:100%;max-width:440px;">
+                  <img src="${esc(mainImg)}" alt="${esc(primary.name)}" style="width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 15px 30px rgba(15,23,42,0.1));">
 
-                <div style="position:absolute;top:20px;left:-20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border:1px solid #bae6fd;border-radius:8px;padding:8px 14px;font-family:monospace;font-size:0.74rem;font-weight:700;color:#0284c7;box-shadow:0 6px 20px rgba(15,23,42,0.08);">
-                  CORE // 9.8 TFLOPS DSP
-                </div>
-                <div style="position:absolute;bottom:30px;right:-20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border:1px solid #c7d2fe;border-radius:8px;padding:8px 14px;font-family:monospace;font-size:0.74rem;font-weight:700;color:#4f46e5;box-shadow:0 6px 20px rgba(15,23,42,0.08);">
-                  IP68 // 50M SUBMERSIBLE
+                  <div style="position:absolute;top:20px;left:-20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border:1px solid #bae6fd;border-radius:8px;padding:8px 14px;font-family:monospace;font-size:0.74rem;font-weight:700;color:#0284c7;box-shadow:0 6px 20px rgba(15,23,42,0.08);">
+                    CORE // 9.8 TFLOPS DSP
+                  </div>
+                  <div style="position:absolute;bottom:30px;right:-20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border:1px solid #c7d2fe;border-radius:8px;padding:8px 14px;font-family:monospace;font-size:0.74rem;font-weight:700;color:#4f46e5;box-shadow:0 6px 20px rgba(15,23,42,0.08);">
+                    IP68 // 50M SUBMERSIBLE
+                  </div>
                 </div>
               </div>
             </div>
@@ -1149,15 +1161,41 @@ function renderSingleArtisanPage(ctx: ThemeContext): string {
   if (page === 'home') {
     mainHtml = `
       <main style="background:#fdfbf7;color:#1e1915;">
+        <!-- PURE IMAGE MASTERPIECE HERO BANNER -->
+        <section class="sa-hero-pure-image-banner" style="position:relative;width:100%;height:82vh;min-height:560px;max-height:760px;overflow:hidden;background:#f4eee3;border-bottom:1px solid #d4af37;">
+          <img src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=2400&q=85" alt="Haute Horlogerie Atelier Workshop" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(253,251,247,0.12) 0%, rgba(30,25,21,0.25) 50%, rgba(30,25,21,0.7) 100%);pointer-events:none;"></div>
+
+          <!-- Pure Image Gallery Plaque (Unobtrusive museum-grade plaque, zero text covering the artwork) -->
+          <div class="sa-hero-pure-image-plaque" style="position:absolute;bottom:36px;left:36px;right:36px;display:flex;justify-content:space-between;align-items:flex-end;z-index:3;">
+            <div class="sa-hero-plaque-card" style="background:rgba(253,251,247,0.96);backdrop-filter:blur(16px);border:1px solid #d4af37;padding:20px 28px;box-shadow:0 14px 40px rgba(44,36,32,0.18);max-width:560px;">
+              <div style="font-size:0.72rem;letter-spacing:0.25em;color:#b8924b;text-transform:uppercase;font-weight:700;margin-bottom:8px;">
+                THE ATELIER PROTOCOL · PIÈCE UNIQUE · NO. 001/500
+              </div>
+              <div style="font-family:Georgia,serif;font-size:1.35rem;font-weight:400;color:#1e1915;line-height:1.3;margin-bottom:8px;">
+                ${esc(draft.copy[ctx.lang]?.headline || primary.name)}
+              </div>
+              <div style="font-family:Georgia,serif;font-size:0.88rem;color:#786b61;font-style:italic;">
+                Certificate of Material Provenance · Geneva Atelier Stamp Certified
+              </div>
+            </div>
+
+            <a href="#protocol" style="text-decoration:none;display:flex;align-items:center;gap:12px;background:rgba(253,251,247,0.96);backdrop-filter:blur(16px);border:1px solid #d4af37;padding:16px 28px;color:#1e1915;font-size:0.82rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;box-shadow:0 14px 40px rgba(44,36,32,0.18);">
+              <span>The 5 Stages of Timeless Execution</span>
+              <span style="color:#b8924b;font-size:1.1rem;">↓</span>
+            </a>
+          </div>
+        </section>
+
         <!-- EDITORIAL ASYMMETRIC SPREAD -->
-        <section class="sa-hero-grid" style="padding:90px 32px 110px;max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
+        <section id="protocol" class="sa-hero-grid" style="padding:90px 32px 100px;max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
           <div>
             <div style="font-size:0.75rem;letter-spacing:0.25em;color:#b8924b;text-transform:uppercase;font-weight:700;margin-bottom:16px;">
               ISSUE NO. VII · CALIBRE ROYAL
             </div>
-            <h1 style="font-family:Georgia,serif;font-size:clamp(2.4rem, 4.6vw, 3.8rem);font-weight:400;line-height:1.12;color:#1e1915;margin:0 0 24px;">
+            <h2 style="font-family:Georgia,serif;font-size:clamp(2.4rem, 4.6vw, 3.8rem);font-weight:400;line-height:1.12;color:#1e1915;margin:0 0 24px;">
               ${esc(draft.copy[ctx.lang]?.headline || primary.name)}
-            </h1>
+            </h2>
             <p style="font-family:Georgia,serif;font-size:1.15rem;line-height:1.75;color:#4a3f35;margin:0 0 36px;font-style:italic;">
               "${esc(draft.copy[ctx.lang]?.subtitle || primary.description)}"
             </p>
@@ -1662,19 +1700,32 @@ function renderSingleWellnessPage(ctx: ThemeContext): string {
   if (page === 'home') {
     mainHtml = `
       <main style="background:#f8faf7;color:#1e2d21;">
-        <!-- SUNLIT BIOPHILIC HERO -->
-        <section class="sw-hero-grid" style="padding:90px 28px 100px;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.1fr 0.9fr;gap:60px;align-items:center;">
+        <!-- ASYMMETRICAL NORDIC SUNLIGHT SANCTUARY (IMAGE + TEXT SPLIT BANNER) -->
+        <section class="sw-hero-split-grid" style="padding:90px 32px 100px;max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1.05fr 0.95fr;gap:60px;align-items:center;">
           <div>
             <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:#e3ebd9;color:#3a5342;font-size:0.78rem;font-weight:700;margin-bottom:24px;">
               <span>🌱</span> 100% Natural Materials · Clinically Formulated
             </div>
-            <h1 style="font-size:clamp(2.4rem, 4.8vw, 3.6rem);font-weight:900;line-height:1.1;color:#1e2d21;margin:0 0 20px;letter-spacing:-0.03em;">
+            <h1 style="font-size:clamp(2.4rem, 4.8vw, 3.8rem);font-weight:900;line-height:1.08;color:#1e2d21;margin:0 0 20px;letter-spacing:-0.03em;">
               ${esc(draft.copy[ctx.lang]?.headline || primary.name)}
             </h1>
-            <p style="font-size:1.12rem;line-height:1.65;color:#4c6251;margin:0 0 36px;max-width:520px;">
-              ${esc(draft.copy[ctx.lang]?.subtitle || primary.description)}
+            <p style="font-size:1.15rem;line-height:1.68;color:#4c6251;margin:0 0 32px;max-width:540px;">
+              Scientifically Tested in Double-Blind Trials to restore human circadian rhythms, elevating daytime focus and nocturnal deep sleep.
             </p>
-            <div style="display:flex;gap:16px;margin-bottom:44px;">
+
+            <!-- Daylight Spectrum Dial Bar -->
+            <div style="background:#ffffff;border:1px solid #dce4d7;border-radius:16px;padding:18px 24px;margin-bottom:36px;box-shadow:0 4px 16px rgba(58,83,66,0.04);max-width:540px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.76rem;font-weight:800;letter-spacing:0.06em;color:#4a6755;text-transform:uppercase;margin-bottom:10px;">
+                <span>Sunrise 2700K</span>
+                <span style="color:#c47355;">● Active Peak 5500K</span>
+                <span>Sunset 2200K</span>
+              </div>
+              <div style="height:8px;border-radius:999px;background:linear-gradient(to right, #fde68a, #93c5fd, #fde68a, #f97316);position:relative;">
+                <div style="position:absolute;top:-4px;left:54%;width:16px;height:16px;border-radius:50%;background:#ffffff;border:3px solid #3a5342;box-shadow:0 2px 6px rgba(0,0,0,0.15);"></div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:44px;">
               <a href="${path('catalog/index.html')}" ${navAttrs('catalog')} style="text-decoration:none;padding:16px 36px;border-radius:999px;background:#3a5342;color:#ffffff;font-size:0.96rem;font-weight:700;box-shadow:0 6px 20px rgba(58,83,66,0.25);">
                 Begin Your Daily Ritual ↗
               </a>
@@ -1684,7 +1735,7 @@ function renderSingleWellnessPage(ctx: ThemeContext): string {
             </div>
 
             <!-- Eco & Health Badges -->
-            <div style="display:flex;gap:24px;padding-top:24px;border-top:1px solid #dce4d7;">
+            <div style="display:flex;flex-wrap:wrap;gap:24px;padding-top:24px;border-top:1px solid #dce4d7;">
               <div style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:1.4rem;">🍃</span>
                 <span style="font-size:0.86rem;font-weight:700;color:#3a5342;">Zero Synthetic VOCs</span>
@@ -1696,10 +1747,13 @@ function renderSingleWellnessPage(ctx: ThemeContext): string {
             </div>
           </div>
 
-          <!-- Studio Showcase Frame -->
-          <div style="position:relative;background:linear-gradient(145deg, #ffffff 0%, #edf3eb 100%);border-radius:36px;padding:48px;box-shadow:0 20px 50px rgba(58,83,66,0.08);border:1px solid #dbe3d6;text-align:center;">
+          <!-- Studio Showcase Frame (Pebble Curved Daylight Window) -->
+          <div style="position:relative;background:linear-gradient(145deg, #ffffff 0%, #edf3eb 100%);border-radius:42px 42px 32px 32px;padding:48px 40px;box-shadow:0 20px 50px rgba(58,83,66,0.08);border:1px solid #dbe3d6;text-align:center;">
+            <div style="position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border:1px solid #dce4d7;padding:6px 14px;border-radius:999px;font-size:0.75rem;font-weight:700;color:#3a5342;">
+              ☀️ 4,800K Calibrated Spectrum
+            </div>
             <img src="${esc(mainImg)}" alt="${esc(primary.name)}" style="width:100%;max-height:440px;object-fit:contain;filter:drop-shadow(0 16px 32px rgba(58,83,66,0.12));">
-            <div style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:8px 16px;background:#ffffff;border-radius:999px;font-size:0.8rem;font-weight:700;color:#3a5342;box-shadow:0 4px 12px rgba(0,0,0,0.05);border:1px solid #dce4d7;">
+            <div style="display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:8px 18px;background:#ffffff;border-radius:999px;font-size:0.82rem;font-weight:700;color:#3a5342;box-shadow:0 4px 12px rgba(0,0,0,0.05);border:1px solid #dce4d7;">
               <span>✨</span> Pure Mineral Cast Stone & Solid Birch
             </div>
           </div>
