@@ -1,3 +1,4 @@
+import { singleProductRuntime } from '../templates/themes/singleProduct';
 import { bannerRuntime } from '../shared/banner-runtime';
 import { materialsRuntime } from '../shared/materials-runtime';
 import { productImageViewerRuntime } from '../shared/product-image-viewer';
@@ -187,6 +188,7 @@ export function SitePreview({
           if (!status) { status = document.createElement('p'); status.setAttribute('role','status'); form.append(status); }
           status.textContent = 'Preview: form validation passed. No message was sent.';
         });
+        ${singleProductRuntime}
         const video = document.getElementById('hero-video');
         const toggle = document.getElementById('video-toggle');
         const motion = matchMedia('(prefers-reduced-motion: reduce)');
