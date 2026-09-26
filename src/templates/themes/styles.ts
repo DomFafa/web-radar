@@ -1943,16 +1943,16 @@ body[data-template="single-wellness-nordic"] img {
 }
 
 body[data-template="single-device-showcase"] {
-  background: #08090e;
-  color: #ffffff;
+  background: #f8fafc;
+  color: #0f172a;
 }
 body[data-template="single-artisan-craft"] {
-  background: #faf7f2;
-  color: #2a221b;
+  background: #fdfbf7;
+  color: #1e1915;
 }
 body[data-template="single-wellness-nordic"] {
-  background: #f7faf8;
-  color: #1e2d24;
+  background: #f8faf7;
+  color: #1e2d21;
 }
 
 @media (max-width: 992px) {
