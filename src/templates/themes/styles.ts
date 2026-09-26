@@ -2003,6 +2003,30 @@ body[data-template="single-wellness-nordic"] {
   }
 }
 
+/* Shared responsive layout for the single-product editorial sections. */
+.wr-single-content-grid > *,
+.wr-single-thumbnails > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.wr-single-table-scroll {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+.wr-single-table-scroll table {
+  min-width: 640px;
+}
+@media (max-width: 768px) {
+  .wr-single-content-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 24px !important;
+  }
+  .wr-single-thumbnails {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+}
+
 @keyframes wrPulse {
   0%, 100% {
     opacity: 1;
