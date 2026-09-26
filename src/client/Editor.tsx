@@ -746,15 +746,15 @@ export default function Editor({
   if (!writeBusiness(principal)) return (
     <div className="editor-shell">
       <header className="editor-topbar"><div className="editor-brand">
-        <Button onClick={() => requestLeave()}><Icon name="back"/>返回网站列表</Button>
-        <a className="editor-home-link" href="?view=dashboard" aria-label="Web Radar · 返回控制台首页" onClick={event=>{event.preventDefault();requestLeave('home')}}><Brand/></a>
+        <Button onClick={onBack}><Icon name="back"/>返回网站列表</Button>
+        <a className="editor-home-link" href="?view=dashboard" aria-label="Web Radar · 返回控制台首页"><Brand/></a>
       </div></header>
       <main className="panel" style={{margin:'32px'}}><h1>{project.name}</h1><Notice>当前角色仅可查看项目，不能修改、生成或发布。</Notice>
         <p>创建者：{project.ownerId} · 创建时间：{dateTime(project.createdAt)}</p>
         <p>产品数量：{project.draft.products.length} · 草稿版本：V{project.version}</p>
-        <Button onClick={()=>showPreview()}><Icon name="eye"/>打开私有整站预览</Button>
+        <Button onClick={()=>setPreviewOpen(true)}><Icon name="eye"/>打开私有整站预览</Button>
       </main>
-      {previewOpen&&<SitePreview project={project} onClose={closePreview}/>}
+      {previewOpen&&<SitePreview project={project} onClose={()=>setPreviewOpen(false)}/>}
     </div>
   );
   const draft = project.draft;
