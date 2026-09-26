@@ -1,3 +1,4 @@
+import { applyUserAccess } from './user-access';
 import { z } from 'zod';
 import type { Principal, ProductSnapshot } from '../shared/model';
 import type { AppEnv } from './env';
@@ -159,7 +160,7 @@ export async function prService<T = unknown>(
   return parsed.data as T;
 }
 export async function currentPrincipal(env: AppEnv, principal: Principal): Promise<Principal> {
-  return (await prService<{ principal: Principal }>(env, principal, 'context')).principal;
+  return applyUserAccess(env,(await prService<{ principal: Principal }>(env, principal, 'context')).principal);
 }
 export async function prImage(
   env: AppEnv,
