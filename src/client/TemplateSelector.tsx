@@ -614,7 +614,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0284c7',
     badge: '单产品发布 · 硬件旗舰',
     hasVideo: true,
-    previewImg: '/templates/previews/single-device-showcase.jpg',
+    previewImg: '/templates/previews/single-device-showcase.697237dfd3045a9e.jpg',
   },
   {
     id: 'single-artisan-craft',
@@ -626,7 +626,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['暖调亚麻白金奢华画报', '瑞士非对称双联排版', '五道传世工序时光轴', '材料血统鉴证书与工匠名录'],
     accentColor: '#c5a880',
     badge: '单产品奢华 · 工匠典藏',
-    previewImg: '/templates/previews/single-artisan-craft.jpg',
+    previewImg: '/templates/previews/single-artisan-craft.3f2791c6dff7bd3c.jpg',
   },
   {
     id: 'single-wellness-nordic',
@@ -639,7 +639,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#4a7c59',
     badge: '单产品治愈 · 北欧晨雾',
     hasVideo: true,
-    previewImg: '/templates/previews/single-wellness-nordic.jpg',
+    previewImg: '/templates/previews/single-wellness-nordic.edc0e83ae3315a82.jpg',
   },
 ];
 
@@ -696,7 +696,7 @@ export default function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 19
+            共提供 {TEMPLATES.length}
             套精心设计的高保真行业旗舰模版（涵盖通用商品、玩具与公仔、毛绒与靠垫、服装与纺织品、鞋靴及科技出海等多品类，包含宽幅展台与沉浸视频型）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>
