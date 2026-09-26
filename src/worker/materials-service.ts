@@ -1,8 +1,9 @@
+import { writeBusiness } from '../shared/access';
 import {availableMaterialsTemplateReleases} from '../templates/materials-releases';
 import type { Asset, Draft, Principal, Project } from '../shared/model';
 import { retainedProductDisplayGroups } from '../shared/product-display';
 import type { MaterialsReceipt, MaterialsSubmission } from '../shared/materials';
-import { materialsSubmissionSchema } from '../shared/materials';
+import { canonicalMaterials, materialsSubmissionSchema } from '../shared/materials';
 import { validateMaterialsPositions } from '../templates/materials';
 import type { AppEnv } from './env';
 import { ApiError, canonical, sha256 } from './http';
@@ -77,7 +78,7 @@ export class MaterialsService {
     if(!parsed.success)throw new ApiError(400,'invalid_materials','已确认资料格式有误。');
     const input=parsed.data;
     if(input.principal.userId!==principal.userId||input.principal.workspaceId!==principal.workspaceId)throw new ApiError(403,'principal_mismatch','账号或工作区不匹配。');
-    const digest=await sha256(canonical({source:input.source,materials:input.materials}));
+    const digest=await sha256(canonicalMaterials({source:input.source,materials:input.materials}));
     if(digest!==input.confirmation.contentSha256)throw new ApiError(409,'content_hash_conflict','资料内容与确认指纹不一致。');
     const scope=await scopeFor(principal),fingerprint=await sha256(canonical({contentSha256:digest,target:input.target,parentOrigin:input.parentOrigin}));
     const existing=await this.read(scope,input.submissionId);
@@ -140,6 +141,7 @@ export class MaterialsService {
     const deadline=Date.now()+receiveTickMs;
     try{
       const principal=await currentMaterialsPrincipal(this.env,operation.principal);
+      if(!writeBusiness(principal))throw new ApiError(403,'read_only_role','当前角色不能接收或修改项目资料。');
       const source=await this.env.MEDIA.get(operation.snapshotKey);
       if(!source)throw new ApiError(409,'materials_snapshot_missing','已确认资料快照不存在。');
       const input=materialsSubmissionSchema.parse(JSON.parse(await source.text()));
@@ -173,6 +175,7 @@ export class MaterialsService {
       }
       if(operation.receipt.receivedMedia===operation.receipt.totalMedia){
         const current=await currentMaterialsPrincipal(this.env,principal);
+      if(!writeBusiness(current))throw new ApiError(403,'read_only_role','当前角色不能接收或修改项目资料。');
         await this.hooks.lock(async()=>{
           const target=await this.target(current,input);
           const previousAssets=target?.draft.productDisplayGroups?.length?await this.store.list<Asset>('assets','project_id=?',[target.id]):[];

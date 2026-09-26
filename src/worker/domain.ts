@@ -1,3 +1,4 @@
+import { viewTeamData } from '../shared/access';
 import { ProductIdentitySchema } from "../shared/product-identity";
 import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
@@ -163,6 +164,9 @@ const draftSchema = z.object({
     'poster-gallery-video',
     'food-artisan-banner',
     'food-harvest-video',
+    'single-device-showcase',
+    'single-artisan-craft',
+    'single-wellness-nordic',
   ]),
   brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   copy: z.partialRecord(language, copy),
@@ -388,7 +392,7 @@ export function canManage(project: Project, principal: Principal): boolean {
   return (
     principal.systemRole === 'super_admin' ||
     (principal.workspaceId === project.workspaceId &&
-      (project.ownerId === principal.userId || principal.workspaceRole === 'admin'))
+      (project.ownerId === principal.userId || viewTeamData(principal)))
   );
 }
 export function videoInputKey(d: Draft): string {

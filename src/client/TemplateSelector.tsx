@@ -8,7 +8,7 @@ export interface TemplateDefinition {
   name: string;
   englishName: string;
   tagline: string;
-  category: 'consumer' | 'tech' | 'enterprise' | 'creative';
+  category: 'consumer' | 'tech' | 'enterprise' | 'creative' | 'single';
   industries: string[];
   features: string[];
   accentColor: string;
@@ -603,6 +603,43 @@ export const TEMPLATES: TemplateDefinition[] = [
     hasVideo: true,
     previewImg: '/templates/previews/senseng-video.jpg',
   },
+  {
+    id: 'single-device-showcase',
+    name: '极客硬件展台 · 单品旗舰',
+    englishName: 'Single Device Keynote & Hardware Stage',
+    tagline: '单款科技硬件的沉浸式发布页；电路微距视频背景、深色舞台、主商品特写与真实参数',
+    category: 'single',
+    industries: ['声学硬件', '智能穿戴', '极客数码', '单品旗舰发布', '高科技众筹'],
+    features: ['电路微距视频背景 · 可暂停', '深色硬件发布舞台', '聚焦一个主商品与真实参数', '同一商品细节图集与询盘'],
+    accentColor: '#0284c7',
+    badge: '单产品发布 · 硬件旗舰',
+    hasVideo: true,
+    previewImg: '/templates/previews/single-device-showcase.b636c180e1d4dfcd.jpg',
+  },
+  {
+    id: 'single-artisan-craft',
+    name: '典藏工坊腕表 · 单品奢作',
+    englishName: 'Single Artisan Heritage & Atelier Spread',
+    tagline: '单款腕表或手作品的摄影画册；纯图 Banner、图片下方独立标题与按钮、暖调纸感和衬线排版',
+    category: 'single',
+    industries: ['高级制表', '手工皮具', '珠宝孤品', '单品艺术收藏', '奢侈品定制'],
+    features: ['整幅纯图 Banner · 无叠字', '暖调纸感与衬线画册', '围绕一件作品展示材质与细节', '作品详情、品牌故事与询盘'],
+    accentColor: '#c5a880',
+    badge: '单产品奢华 · 工匠典藏',
+    previewImg: '/templates/previews/single-artisan-craft.cfd2241d68d14f55.jpg',
+  },
+  {
+    id: 'single-wellness-nordic',
+    name: '北欧轻愈生活 · 单品纯净',
+    englishName: 'Single Nordic Serene & Circadian Studio',
+    tagline: '单款家居器物的北欧生活页面；鼠尾草绿与燕麦白、左文右图首屏、柔和拱形摄影与日常场景',
+    category: 'single',
+    industries: ['芳疗香氛', '纯净护肤', '智能健康', '单品家居美学', '自然疗愈独立站'],
+    features: ['图文分栏首屏 · 手机上下排列', '鼠尾草绿与燕麦白', '一个主商品与日常使用场景', '独立商品详情与咨询页面'],
+    accentColor: '#4a7c59',
+    badge: '单产品治愈 · 北欧晨雾',
+    previewImg: '/templates/previews/single-wellness-nordic.7034a49e9eccbc00.jpg',
+  },
 ];
 
 const PRESET_COLORS = [
@@ -619,6 +656,7 @@ const PRESET_COLORS = [
 
 const CATEGORIES = [
   { id: 'all', label: `全部模版 (${TEMPLATES.length})` },
+  { id: 'single', label: `单品独立站与专品 (${TEMPLATES.filter((t) => t.category === 'single').length})` },
   { id: 'consumer', label: `品类与消费出海 (${TEMPLATES.filter((t) => t.category === 'consumer').length})` },
   { id: 'tech', label: `科技与 SaaS (${TEMPLATES.filter((t) => t.category === 'tech').length})` },
   { id: 'enterprise', label: `商贸与通用商品 (${TEMPLATES.filter((t) => t.category === 'enterprise').length})` },
@@ -657,7 +695,7 @@ export default function TemplateSelector({
           <span className="step-tag">极速建站分支 · 第 2 步 / 共 3 步</span>
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
-            共提供 19
+            共提供 {TEMPLATES.length}
             套精心设计的高保真行业旗舰模版（涵盖通用商品、玩具与公仔、毛绒与靠垫、服装与纺织品、鞋靴及科技出海等多品类，包含宽幅展台与沉浸视频型）。选中后将自动灌注你的公司与产品数据。
           </p>
         </div>

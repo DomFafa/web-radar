@@ -1,3 +1,5 @@
+import inbox from './inbox/api';
+import { userManagement } from './user-management';
 import { outreachFetch, outreachQueue } from './outreach';
 import { withStoredEmailStatus } from './provider-settings';
 import { Hono } from 'hono';
@@ -73,6 +75,8 @@ app.get('/api/config', async (c) => {
   });
 });
 app.route('/api/auth', createAuthApp());
+app.route('/api/inbox', inbox);
+app.route('/api/management', userManagement);
 app.route('/api/internal/template-guides', createTemplateGuidesApp());
 app.route('/api/integrations/product-radar', createIntegrationApp());
 app.route('/public/sites', createPublicApp());

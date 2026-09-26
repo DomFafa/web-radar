@@ -278,3 +278,14 @@ Worker 回退使用上面记录的旧版本。复刻服务更新可回退 `curre
 - 从上次生产隔离源复制候选，只变更一个渲染文件及两个测试文件。先复现回归失败，修复后 12 项针对性测试、40 文件 / 469 项全套测试、类型检查和 Worker dry-run 通过。666 个静态文件及 30 项非 assets 绑定不变。
 - 生产项目 `8dfb78b5-ec6c-48b7-9533-79d039bc7b67` 重新打开私有预览，桌面与手机均无五处残留区块，功能条与产品区外边界间隔为 0，正常产品区内边距保留。仍为未发布 V1、5 个产品，无失败图片；没有重新生成、导入或发布客户网站。
 - 冻结候选、源码与打包差异、健康/合同检查、原生桌面和手机截图保存在 `artifacts/materials-gap-20260918/`。未提交或推送 Git。
+
+## 2026-09-24 单产品旗舰/工坊/北欧三大独立站模版及多端适配上线
+
+- 18:00:48（Asia/Shanghai）部署 Worker 版本 `414a5725-868c-457e-854b-d8d3acbbe091`，100% 流量；上一版本 `1b0b75a2-f1b9-4490-bc0f-370c4b040be9`。
+- 上线 3 套全新单产品展示/销售独立站模版：`single-device-showcase`（极客硬件展台）、`single-artisan-craft`（典藏工坊腕表）、`single-wellness-nordic`（北欧轻愈生活），模版库扩充至 50 套。
+- 静态资源与封面：重新生成全量 50 套模版的高保真预览缩略图，更新 `covers.json` 并增量上传 54 项静态资源（前端构建包 `index-D-Us07r7.js` / `index-Cp0vp8Pb.css`）。
+- 全响应式与端到端适配：修复移动端（390px Viewport）水平溢出与排版错位问题，通过 `node scripts/verify-materials-demo-release.mjs`（116 组全页面测试 0 失败）及 `node scripts/verify_template_covers.mjs`。
+- 全量自动化质量门禁：`npm run check`（TypeScript 零错误、86 个测试套件 / 1,945 项测试 100% 通过、Vite 生产构建通过）。
+- GitHub 状态：代码已提交并推送到远端 `fork/codex/10-industry-templates`（Commit `6ec9f85`）。
+- 生产环境健康检查：自定义域名 `https://web-radar.net` HTTP/2 200，新物料与封面资源均正常返回。
+
