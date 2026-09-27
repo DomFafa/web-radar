@@ -7,7 +7,13 @@ import { materialsFixture } from './fixtures/materials';
 import { validateDraft } from '../src/worker/domain';
 
 const identity = {version:1 as const,family:'toy' as const,composition:'single' as const,packCount:1,packagingBox:'present' as const,subjectVisible:true,geometry:'concept' as const,parts:[],shape:'round hamster',colors:['orange'],features:['acorn']};
-it('retains internal identity and source version through receipt, draft validation and reopening',async()=>{
+const multipackIdentity = { ...identity, composition: 'set' as const, packCount: 80,
+ assortment: { distinctCount: 2, variants: [
+  { name: 'Fox', quantity: 40, shape: 'seated fox', colors: ['orange', 'cream'], features: ['pointed ears'] },
+  { name: 'Bear', quantity: 40, shape: 'round bear', colors: ['brown'], features: ['round ears'] },
+ ] },
+};
+it.each([['legacy', identity], ['mixed multipack', multipackIdentity]] as const)('retains %s identity and source version through receipt, draft validation and reopening',async(_name, identity)=>{
  const submission=await materialsFixture();submission.materials.products[0].productIdentity=identity;
  const parsed=confirmedMaterialsSchema.parse(submission.materials);
  expect(parsed.products[0].productIdentity).toEqual(identity);
@@ -26,4 +32,15 @@ it('publishes applicability in a new version and preserves the frozen prior cont
  expect(old.productApplicability).toBeUndefined();
  expect(old.requiredCapabilities).not.toContain('product.identity.v1');
  expect(ProductIdentitySchema.safeParse({...identity,packCount:5}).success).toBe(false);
+});
+
+it('validates the sender assortment contract without inferring legacy design counts',async()=>{
+ expect(ProductIdentitySchema.parse(multipackIdentity)).toEqual(multipackIdentity);
+ expect(ProductIdentitySchema.safeParse({...multipackIdentity,packCount:79}).success).toBe(false);
+ expect(ProductIdentitySchema.safeParse({...multipackIdentity,assortment:{...multipackIdentity.assortment,distinctCount:3}}).success).toBe(false);
+ expect(ProductIdentitySchema.parse({...identity,assortment:null}).assortment).toBeNull();
+ expect(ProductIdentitySchema.parse(identity)).not.toHaveProperty('assortment');
+ const submission=await materialsFixture();
+ submission.materials.products[0].productIdentity={...multipackIdentity,packCount:79};
+ expect(confirmedMaterialsSchema.safeParse(submission.materials).success).toBe(false);
 });

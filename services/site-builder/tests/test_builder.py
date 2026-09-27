@@ -84,7 +84,7 @@ def test_visual_review_runs_once_per_page_with_actual_render_feedback(payload, p
             return final_pages[self.page]
     monkeypatch.setattr(builder, "create_agent", lambda *args: ModelBoundary(next(page_names)))
     result = asyncio.run(builder.build_site(payload))
-    assert calls == {"home": 2, "catalog": 2, "detail": 2, "about": 2, "contact": 2}
+    assert calls == {"home": 2, "catalog": 1, "detail": 1, "about": 1, "contact": 1}
     assert "en/index.html" in result
     feedback = repair_messages[0][-1]["content"]
     assert "hidden" in feedback[0]["text"].lower()
@@ -177,6 +177,6 @@ def test_builder_iterates_the_exact_guided_page_plan(guided_payload, pages, monk
     monkeypatch.setattr(builder, "create_agent", lambda *args: ModelBoundary(next(page_names)))
     monkeypatch.setattr(builder, "assess_page", lambda *args: asyncio.sleep(0, result=RenderResult()))
     result = asyncio.run(builder.build_site(guided_payload))
-    assert requested[:2] == ['home', 'home']
-    assert sorted(requested) == sorted(page for page in ("home", "catalog", "detail", "about", "contact", "extra-care-guide") for _ in range(2))
+    assert requested[0] == 'home'
+    assert sorted(requested) == sorted(("home", "catalog", "detail", "about", "contact", "extra-care-guide"))
     assert "de/extra-care-guide/index.html" in result

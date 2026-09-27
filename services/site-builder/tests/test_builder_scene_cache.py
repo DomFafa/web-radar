@@ -52,7 +52,7 @@ def test_accepted_scene_survives_html_failure_and_new_job_reuses_it(prepared, mo
     assert next_payload['_visualPlans']['home']['crops'][1]['box'] == [300, 100, 600, 400]
     directory = tmp_path / 'evidence/next-job/assets/home-0'
     status = json.loads((directory / 'status.json').read_text())
-    assert status['reused'] and status['fidelityAccepted'] and status['sourceJobId'] == payload['id']
+    assert status['reused'] and status['deliveryPolicy'] == 'customer-choice' and status['sourceJobId'] == payload['id']
     assert status['assetSha256'] == record['scenes'][0]['sha256']
     assert (directory / 'generated.webp').read_bytes() == base64.b64decode(assets['home-1'].split(',')[1])
     assert not (directory / 'attempt-v1').exists()

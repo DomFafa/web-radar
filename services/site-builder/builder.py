@@ -481,19 +481,17 @@ async def build_page(payload: dict[str, Any], page: str, home_html: str | None =
     assessment = await assess_page(page, html, payload)
     assessment.issues.extend(check_visual_plan(plan, assessment.metrics))
     save_evidence(payload, page, 'initial', html, assessment, plan)
-    initial_html, initial_assessment = html, assessment
-    html = await asyncio.wait_for(agent.run(model, repair_messages(original, html, assessment)), timeout=PAGE_TIMEOUT)
-    if home_html and page != 'home':
-        html = reuse_home_chrome(home_html, html)
-    assessment = await assess_page(page, html, payload)
-    assessment.issues.extend(check_visual_plan(plan, assessment.metrics))
-    save_evidence(payload, page, 'reviewed', html, assessment, plan)
-    selection = {'candidate': 'reviewed', 'reason': 'Reviewed candidate passed every render and visual-plan check.'}
+    selection = {'candidate': 'initial', 'reason': 'Initial candidate passed every render and visual-plan check.'}
     if assessment.issues:
-        if initial_assessment.issues:
+        html = await asyncio.wait_for(agent.run(model, repair_messages(original, html, assessment)), timeout=PAGE_TIMEOUT)
+        if home_html and page != 'home':
+            html = reuse_home_chrome(home_html, html)
+        assessment = await assess_page(page, html, payload)
+        assessment.issues.extend(check_visual_plan(plan, assessment.metrics))
+        save_evidence(payload, page, 'reviewed', html, assessment, plan)
+        if assessment.issues:
             raise OutputValidationError(f'{page} failed render checks after one visual review/repair: ' + '; '.join(assessment.issues[:6]))
-        html, assessment = initial_html, initial_assessment
-        selection = {'candidate': 'initial', 'reason': 'Review introduced failed checks; the initial candidate passed every render and visual-plan check.'}
+        selection = {'candidate': 'reviewed', 'reason': 'Repaired candidate passed every render and visual-plan check.'}
     save_evidence(payload, page, 'selected', html, assessment, plan, selection=selection)
     if image_size(payload['designImages'][page])[0] >= 640:
         from page_cache import save_page_cache
@@ -514,7 +512,7 @@ def save_reused_scene_evidence(payload: dict[str, Any], cached: dict[str, Any], 
             os.chmod(private_directory, 0o700)
         _atomic_write(directory / 'generated.webp', base64.b64decode(source.split(',', 1)[1], validate=True))
         _atomic_write(directory / 'status.json', json.dumps({
-            'state': 'completed', 'fidelityAccepted': True, 'reused': True,
+            'state': 'completed', 'deliveryPolicy': 'customer-choice', 'reused': True,
             'sourceJobId': cached['sourceJobId'], 'cacheKey': cached['key'],
             'assetSha256': scene['sha256'],
         }, sort_keys=True).encode())

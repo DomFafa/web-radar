@@ -58,7 +58,7 @@ def test_invalid_cached_page_never_falls_back_to_paid_generation(recovery, monke
         assert 'failed current' in json.loads(reused.read_text())['selection']['reason']
 
 
-def test_reviewed_success_is_saved_before_a_later_build_can_fail(recovery, monkeypatch):
+def test_valid_success_is_saved_before_a_later_build_can_fail(recovery, monkeypatch):
     payload, html, plan, renders, directory = recovery
     calls = []
     class Model:
@@ -69,10 +69,10 @@ def test_reviewed_success_is_saved_before_a_later_build_can_fail(recovery, monke
     assert asyncio.run(builder.build_page(payload, 'detail')) == html
     record = load_page_cache(payload, 'detail')
     assert record is not None and record['html'] == html
-    assert len(calls) == 2 and len(renders) == 2
+    assert len(calls) == 1 and len(renders) == 1
     monkeypatch.setattr(builder, 'create_agent', lambda *args: pytest.fail('Accepted result must survive another job'))
     assert asyncio.run(builder.build_page({**payload, 'id': 'new-build'}, 'detail')) == html
-    assert len(renders) == 3
+    assert len(renders) == 2
 
 
 def test_failed_candidates_are_never_cached(recovery, monkeypatch):
