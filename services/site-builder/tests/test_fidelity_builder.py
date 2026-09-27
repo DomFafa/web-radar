@@ -13,7 +13,7 @@ def metrics(counts):
             'collectionLayouts': [{'columns': count, 'rows': 1, 'descriptionCount': 0} for count in counts], 'forms': 0, 'formLayouts': []}
 
 
-def test_structurally_passing_pages_still_receive_visual_review(payload, pages, monkeypatch):
+def test_structurally_passing_pages_skip_paid_visual_repair(payload, pages, monkeypatch):
     import builder
     from renderer import RenderResult
     monkeypatch.setenv('OPENAI_API_KEY', 'test-only')
@@ -28,10 +28,10 @@ def test_structurally_passing_pages_still_receive_visual_review(payload, pages, 
             return pages[self.page]
     monkeypatch.setattr(builder, 'create_agent', lambda *args: Model(next(page_names)))
     asyncio.run(builder.build_site(payload))
-    assert len(calls) == 10
+    assert len(calls) == 5
     for page in pages:
         page_calls = [messages for name, messages in calls if name == page]
-        assert len(page_calls) == 2 and 'actual-render' in str(page_calls[1][-1])
+        assert len(page_calls) == 1
 
 
 def test_shared_home_chrome_is_reused_without_replacing_page_content():
@@ -214,7 +214,7 @@ def test_prepared_scene_reaches_model_and_both_sanitized_reviews(payload, pages,
         return RenderResult()
     monkeypatch.setattr(builder, 'assess_page', review)
     asyncio.run(builder.build_page(payload, 'home'))
-    assert len(generations) == 1 and len(reviewed) == 2
+    assert len(generations) == 1 and len(reviewed) == 1
     assert all(scene in output['en/index.html'] for output in reviewed)
     assert 'data-wr-scene="home-0"' in str(messages_seen[0]) and scene in str(messages_seen[0])
 

@@ -76,9 +76,7 @@ def test_three_product_audit_has_no_conflicting_example_count(scene, monkeypatch
     source = image_bytes()
     photos = [data_url(raw, mime) for _, raw, mime in originals]
     observed = asyncio.run(module()._inspect_composition(source, originals, photos))
-    result = asyncio.run(module()._review_scene(source, source, photos, observed))
-    assert observed['physicalProductCount'] == result['physicalProductCount'] == 3
-    assert result['accepted'] is True
+    assert observed['physicalProductCount'] == 3
     assert all('four real bottles' not in text.lower() and 'four primary_product' not in text.lower() for text in instructions)
 
 
@@ -477,40 +475,6 @@ def test_two_pages_generate_independently_under_global_builder_concurrency(scene
         assert status['state'] == 'completed'
 
 
-def test_three_bottle_scene_rejects_one_bottle_and_corrects_once_with_visual_feedback(scene, monkeypatch, tmp_path):
-    payload, plan = scene
-    calls, audits = [], []
-    verdicts = [composition(3), review(1, layout=False, issues=['Two physical bottles are missing.']), review(3)]
-    async def vision(stage, instructions, images, schema):
-        audits.append((stage, instructions, images))
-        return verdicts.pop(0)
-    monkeypatch.setattr(module(), '_vision_json', vision, raising=False)
-    def handler(request):
-        calls.append(request)
-        facts = prompt_facts(request)
-        assert facts['sceneComposition']['physicalProductCount'] == 3
-        assert b'exactly 3 physical primary products' in request.read()
-        if len(calls) == 2:
-            correction = facts['visualCorrection']
-            assert correction['expectedPhysicalProductCount'] == 3
-            assert correction['matchesComposition'] is False
-            assert 'Two physical bottles are missing.' in correction['issues']
-            assert set(correction) == {'expectedPhysicalProductCount', 'matchesIdentity', 'matchesComposition', 'completeProducts', 'hasWebsiteText', 'issues'}
-            assert request.read().count(b'name="image[]"') == 4
-        return success_response(image_bytes((1500, 900) if len(calls) == 1 else (900, 1500)))
-    fake_http(monkeypatch, handler)
-    result = asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert len(calls) == 2 and [row[0] for row in audits] == ['composition', 'review', 'review']
-    with Image.open(io.BytesIO(base64.b64decode(result['home-0'].split(',')[1]))) as image:
-        assert image.height > image.width
-    directory = tmp_path / 'evidence/test-job-1/assets/home-0'
-    state = json.loads((directory / 'status.json').read_text())
-    assert state['state'] == 'completed' and state['fidelityAccepted'] is True and state['acceptedAttempt'] == 2
-    assert json.loads((directory / 'attempt-v1/review.json').read_text())['accepted'] is False
-    assert json.loads((directory / 'attempt-v2/review.json').read_text())['accepted'] is True
-    for attempt in ('attempt-v1', 'attempt-v2'):
-        assert (directory / attempt / 'generated.webp').is_file()
-        assert (directory / attempt / 'prompt.txt').is_file()
 
 
 def test_correct_scene_passes_one_image_attempt_and_cache_skips_all_audits(scene, monkeypatch, tmp_path):
@@ -522,11 +486,11 @@ def test_correct_scene_passes_one_image_attempt_and_cache_skips_all_audits(scene
     monkeypatch.setattr(module(), '_vision_json', vision, raising=False)
     fake_http(monkeypatch, lambda request: requests.append(request) or success_response())
     result = asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert audits == ['composition', 'review'] and len(requests) == 1
+    assert audits == ['composition'] and len(requests) == 1
     monkeypatch.delenv('IMAGE_API_KEY')
     monkeypatch.delenv('OPENAI_API_KEY', raising=False)
     assert asyncio.run(module().generate_scene_assets(payload, 'home', plan)) == result
-    assert audits == ['composition', 'review'] and len(requests) == 1
+    assert audits == ['composition'] and len(requests) == 1
 
 
 def test_uncertain_image_never_triggers_semantic_correction(scene, monkeypatch):
@@ -545,36 +509,8 @@ def test_uncertain_image_never_triggers_semantic_correction(scene, monkeypatch):
     assert audits == ['composition'] and len(requests) == 1
 
 
-def test_two_semantically_wrong_images_fail_without_cached_acceptance_or_third_attempt(scene, monkeypatch, tmp_path):
-    payload, plan = scene
-    requests, audits = [], []
-    async def vision(stage, instructions, images, schema):
-        audits.append(stage)
-        return composition(3) if stage == 'composition' else review(1)
-    monkeypatch.setattr(module(), '_vision_json', vision, raising=False)
-    fake_http(monkeypatch, lambda request: requests.append(request) or success_response())
-    with pytest.raises(module().GeneratedAssetError, match='fidelity'):
-        asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    directory = tmp_path / 'evidence/test-job-1/assets/home-0'
-    assert len(requests) == 2 and audits == ['composition', 'review', 'review']
-    assert not (directory / 'generated.webp').exists()
-    assert json.loads((directory / 'status.json').read_text())['state'] == 'rejected'
-    with pytest.raises(module().GeneratedAssetError):
-        asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert len(requests) == 2
 
 
-@pytest.mark.parametrize('problem', [{'identity': False}, {'layout': False}, {'complete': False}, {'ui': True}])
-def test_correct_count_cannot_hide_identity_layout_clipping_or_ui_defects(scene, monkeypatch, problem):
-    payload, plan = scene
-    requests = []
-    async def vision(stage, instructions, images, schema):
-        return composition(3) if stage == 'composition' else review(3, **problem)
-    monkeypatch.setattr(module(), '_vision_json', vision, raising=False)
-    fake_http(monkeypatch, lambda request: requests.append(request) or success_response())
-    with pytest.raises(module().GeneratedAssetError, match='fidelity'):
-        asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert len(requests) == 2
 
 
 def test_product_shot_layout_is_scoped_without_losing_exact_conditions(scene, monkeypatch):
@@ -603,18 +539,6 @@ def test_invalid_composition_audit_stops_before_image_spend(scene, monkeypatch):
         asyncio.run(module().generate_scene_assets(payload, 'home', plan))
 
 
-def test_uncertain_review_does_not_authorize_another_image_request(scene, monkeypatch):
-    payload, plan = scene
-    requests = []
-    async def vision(stage, instructions, images, schema):
-        if stage == 'composition':
-            return composition(3)
-        raise module().GeneratedAssetError('Scene visual audit was incomplete.')
-    monkeypatch.setattr(module(), '_vision_json', vision, raising=False)
-    fake_http(monkeypatch, lambda request: requests.append(request) or success_response())
-    with pytest.raises(module().GeneratedAssetError):
-        asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert len(requests) == 1
 
 
 def test_vision_boundary_uses_builder_responses_config_and_dedicated_text_key(monkeypatch):
@@ -670,24 +594,6 @@ def test_audit_cannot_use_image_or_other_text_key_when_builder_key_is_missing(mo
         asyncio.run(module()._vision_json('composition', 'Inspect.', [data_url()], module().COMPOSITION_SCHEMA))
 
 
-def test_uncertain_second_image_attempt_cannot_be_repeated(scene, monkeypatch, tmp_path):
-    payload, plan = scene
-    requests = []
-    async def vision(stage, instructions, images, schema):
-        return composition(3) if stage == 'composition' else review(1)
-    monkeypatch.setattr(module(), '_vision_json', vision)
-    def handler(request):
-        requests.append(request)
-        if len(requests) == 1:
-            return success_response()
-        raise httpx.ReadTimeout('private second request')
-    fake_http(monkeypatch, handler)
-    for _ in range(2):
-        with pytest.raises(module().GeneratedAssetError):
-            asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert len(requests) == 2
-    status = json.loads((tmp_path / 'evidence/test-job-1/assets/home-0/status.json').read_text())
-    assert status['state'] == 'uncertain'
 
 
 def test_catalog_real_four_bottles_box_and_print_cannot_become_five_products(scene, monkeypatch, tmp_path):
@@ -722,10 +628,11 @@ def test_catalog_real_four_bottles_box_and_print_cannot_become_five_products(sce
         return success_response()
     fake_http(monkeypatch, handler)
     assert 'home-0' in asyncio.run(module().generate_scene_assets(payload, 'home', plan))
-    assert audits == ['composition', 'review'] and len(requests) == 1
+    assert audits == ['composition'] and len(requests) == 1
     directory = tmp_path / 'evidence/test-job-1/assets/home-0'
-    saved_review = json.loads((directory / 'attempt-v1/review.json').read_text())
-    assert saved_review['physicalProductCount'] == 4 and saved_review['accepted'] is True
+    saved_plan = json.loads((directory / 'composition.json').read_text())
+    assert saved_plan['physicalProductCount'] == 4
+    assert not (directory / 'attempt-v1/review.json').exists()
 
 
 @pytest.mark.parametrize('kind', ['bottle', '', None])
@@ -768,92 +675,55 @@ def test_scene_prompt_preserves_blank_background_and_source_packaging_edge(scene
     assert 'home-0' in asyncio.run(module().generate_scene_assets(payload, 'home', plan))
 
 
-def test_first_scene_prompt_reserves_exact_serialized_correction_budget(scene):
+
+
+
+
+
+
+
+
+
+
+def test_valid_scene_delivers_without_paid_visual_review_or_redraw(scene, monkeypatch):
     payload, plan = scene
-    assets = module()
-    originals = assets._originals(payload)
-    observed = {**composition(4), 'physicalProductCount': 4}
-    # Repeated text must stay lossless; the dictionary must not change when
-    # correction text happens to contain fragments from the approved facts.
-    payload['draft']['products'][0]['source'] = {'conditions': {'keep': 'Exact accepted label wording must remain unchanged.\n' * 1800}}
-    originals = assets._originals(payload)
-    first = assets._prompt('catalog', plan, (757, 357), originals, payload['draft'], scene_composition=observed)
-    correction = {'expectedPhysicalProductCount': 4, **{name: False for name in ('matchesIdentity', 'matchesComposition', 'completeProducts', 'hasWebsiteText')}, 'issues': ['Exact accepted label wording must remain unchanged.\n' + 'x' * 348] * 6}
-    second = assets._prompt('catalog', plan, (757, 357), originals, payload['draft'], scene_composition=observed, correction=correction)
-    assert len(first.encode('utf-16-le')) // 2 <= 25200
-    assert len(second.encode('utf-16-le')) // 2 <= 28000
-    before = json.loads(first.split('Approved factual data (JSON):\n')[1])
-    after = json.loads(second.split('Approved factual data (JSON):\n')[1])
-    assert before['encoding'] == after['encoding'] == 'repeated-text-v1'
-    assert after['value'].pop('visualCorrection') == correction
-    assert after == before
-
-
-def test_prompt_refuses_insufficient_correction_reserve_before_image(scene, monkeypatch):
-    payload, plan = scene
-    assets = module()
-    observed = {**composition(1), 'physicalProductCount': 1}
-    payload['draft']['products'][0]['description'] = 'z' * 24000
-    originals = assets._originals(payload)
-    # The source facts alone are below 28k, but a complete visual correction
-    # would not fit; no paid image may be submitted under that condition.
-    assert len(assets._prompt('home', plan, (500, 300), originals, payload['draft']).encode('utf-16-le')) // 2 <= 28000
-    with pytest.raises(assets.GeneratedAssetError, match='correction reserve'):
-        assets._prompt('home', plan, (500, 300), originals, payload['draft'], scene_composition=observed)
-
-
-def test_maximum_encoded_correction_fits_exact_reserved_space(scene):
-    payload, plan = scene
-    assets = module()
-    originals = assets._originals(payload)
-    observed = {**composition(4), 'physicalProductCount': 4}
-    correction = {'expectedPhysicalProductCount': 4, **{name: False for name in ('matchesIdentity', 'matchesComposition', 'completeProducts', 'hasWebsiteText')}, 'issues': ['x' * 400] * 6}
-    serialized = ',"visualCorrection":' + json.dumps(correction, ensure_ascii=False, separators=(',', ':'))
-    extra = 2800 - len(serialized.encode('utf-16-le')) // 2
-    assert 0 < extra < 400
-    correction['issues'][0] = '\\' * extra + 'x' * (400 - extra)
-    first = assets._prompt('catalog', plan, (757, 357), originals, payload['draft'], scene_composition=observed)
-    second = assets._prompt('catalog', plan, (757, 357), originals, payload['draft'], scene_composition=observed, correction=correction)
-    assert (len(second.encode('utf-16-le')) - len(first.encode('utf-16-le'))) // 2 == 2800
-    correction['issues'][0] = '\\' * (extra + 1) + 'x' * (399 - extra)
-    with pytest.raises(assets.GeneratedAssetError, match='correction feedback.*budget'):
-        assets._prompt('catalog', plan, (757, 357), originals, payload['draft'], scene_composition=observed, correction=correction)
-
-
-@pytest.mark.parametrize('issue', ['🧴' * 400, '\u0000' * 400], ids=['utf16-emoji', 'json-escaping'])
-def test_correction_feedback_over_encoded_budget_is_rejected_without_truncation(scene, monkeypatch, tmp_path, issue):
-    payload, plan = scene
-    requests = []
-    async def vision(stage, *args, **kwargs):
-        return composition(4) if stage == 'composition' else review(1, layout=False, issues=[issue] * 6)
+    audits, requests = [], []
+    async def vision(stage, *args):
+        audits.append(stage)
+        assert stage == 'composition', 'Generated pixels belong to customer judgement'
+        return composition(3)
     monkeypatch.setattr(module(), '_vision_json', vision)
     fake_http(monkeypatch, lambda request: requests.append(request) or success_response())
-    with pytest.raises(module().GeneratedAssetError, match='correction feedback.*budget'):
-        asyncio.run(module().generate_scene_assets(payload, 'home', plan))
+    result = asyncio.run(module().generate_scene_assets(payload, 'home', plan))
+    assert 'home-0' in result and len(requests) == 1
+    assert audits == ['composition']
+    assert asyncio.run(module().generate_scene_assets(payload, 'home', plan)) == result
     assert len(requests) == 1
-    saved = json.loads((tmp_path / 'evidence/test-job-1/assets/home-0/attempt-v1/review.json').read_text())
-    assert saved['issues'] == [issue] * 6
 
 
-@pytest.mark.parametrize('source_size,generated_size,expected_canvas', [((757, 357), (1536, 720), (1536, 736)), ((357, 757), (720, 1536), (736, 1536)), ((100, 100), (80, 160), (1536, 1536))])
-def test_review_normalizes_both_images_without_distortion_or_crop(scene, monkeypatch, source_size, generated_size, expected_canvas):
-    originals = [data_url()]
-    async def vision(stage, instructions, images, schema):
-        assert stage == 'review' and schema == module().REVIEW_SCHEMA
-        assert images[2:] == originals
-        assert 'letterbox' in instructions and 'review-only' in instructions
-        for raw_url, size in zip(images[:2], (source_size, generated_size)):
-            image = module()._inline_image(raw_url)[2]
-            assert image.size == expected_canvas
-            # Uniform colored source reaches every intended content edge;
-            # its whole aspect ratio survives contain, with only white bars.
-            from PIL import ImageChops
-            bounds = ImageChops.difference(image, Image.new('RGB', image.size, 'white')).convert('L').point([255 if value > 35 else 0 for value in range(256)]).getbbox()
-            assert bounds is not None
-            width, height = bounds[2] - bounds[0], bounds[3] - bounds[1]
-            assert abs(width / height - size[0] / size[1]) < 0.01
-            assert max(width / expected_canvas[0], height / expected_canvas[1]) > 0.995
-        return review(1)
-    monkeypatch.setattr(module(), '_vision_json', vision)
-    result = asyncio.run(module()._review_scene(image_bytes(source_size), image_bytes(generated_size), originals, {**composition(1), 'physicalProductCount': 1}))
-    assert result['accepted'] is True
+@pytest.mark.parametrize('corrupt', [False, True])
+@pytest.mark.parametrize('later_failed', [False, True])
+def test_historical_rejected_scene_recovers_verified_bytes_without_generation(scene, monkeypatch, tmp_path, corrupt, later_failed):
+    payload, plan = scene
+    fake_http(monkeypatch, lambda request: success_response())
+    original = asyncio.run(module().generate_scene_assets(payload, 'home', plan))
+    directory = tmp_path / 'evidence/test-job-1/assets/home-0'
+    status = json.loads((directory / 'status.json').read_text())
+    status.update(state='rejected', fidelityAccepted=False)
+    (directory / 'status.json').write_text(json.dumps(status))
+    (directory / 'generated.webp').unlink()
+    if later_failed:
+        status['state'] = 'failed'
+        (directory / 'status.json').write_text(json.dumps(status))
+        later = directory / 'attempt-v2'
+        later.mkdir()
+        (later / 'status.json').write_text(json.dumps({'fingerprint': status['fingerprint'], 'state': 'failed'}))
+    if corrupt:
+        (directory / 'attempt-v1/generated.webp').write_bytes(b'corrupt')
+    fake_http(monkeypatch, lambda request: pytest.fail('A saved image must never be regenerated automatically'))
+    if corrupt:
+        with pytest.raises(module().GeneratedAssetError):
+            asyncio.run(module().generate_scene_assets(payload, 'home', plan))
+    else:
+        assert asyncio.run(module().generate_scene_assets(payload, 'home', plan)) == original
+        assert json.loads((directory / 'status.json').read_text())['deliveryPolicy'] == 'customer-choice'
