@@ -2,13 +2,13 @@ export type IndustryPlaceholderKey = 'toys' | 'footwear' | 'apparel' | 'plush' |
 
 const INDUSTRY_IMAGES: Record<IndustryPlaceholderKey, string[]> = {
   toys: [
-    'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80&auto=format',  // action figures
+    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&q=80&auto=format',  // action figures
     'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&q=80&auto=format',  // collectible toys
     'https://images.unsplash.com/photo-1608889175123-8ee362201f81?w=800&q=80&auto=format',  // robot toy
     'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80&auto=format',  // toy figurines
-    'https://images.unsplash.com/photo-1587654780291-39c9404d7dd0?w=800&q=80&auto=format',  // vinyl toy
+    'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&q=80&auto=format',  // action toy
     'https://images.unsplash.com/photo-1559715541-5daf8a0296d0?w=800&q=80&auto=format',  // designer toy
-    'https://images.unsplash.com/photo-1581235707960-15e92f0a3120?w=800&q=80&auto=format',  // toy collection
+    'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80&auto=format',  // toy collection
     'https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=800&q=80&auto=format',  // colorful toys
   ],
   footwear: [
@@ -29,16 +29,16 @@ const INDUSTRY_IMAGES: Record<IndustryPlaceholderKey, string[]> = {
     'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format',  // elegant dress
     'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=800&q=80&auto=format',  // t-shirt collection
     'https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=800&q=80&auto=format',  // luxury fabric
-    'https://images.unsplash.com/photo-1434389677669-e08b4cda3a35?w=800&q=80&auto=format',  // designer clothing
+    'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&q=80&auto=format',  // apparel studio
   ],
   plush: [
     'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&q=80&auto=format',  // teddy bear
-    'https://images.unsplash.com/photo-1585155770913-5f0b578dcc4f?w=800&q=80&auto=format',  // soft plush toy
-    'https://images.unsplash.com/photo-1617073397926-90bf7b649943?w=800&q=80&auto=format',  // plush bunny
-    'https://images.unsplash.com/photo-1563901935883-cb61f6b2c77f?w=800&q=80&auto=format',  // cushion pillows
+    'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&q=80&auto=format',  // art plush
+    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80&auto=format',  // soft living cushion
+    'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&q=80&auto=format',  // cushion pillows
     'https://images.unsplash.com/photo-1582845512747-e42001c95638?w=800&q=80&auto=format',  // stuffed animal
     'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=80&auto=format',  // cute plushie
-    'https://images.unsplash.com/photo-1602734846297-9299fc2d4f38?w=800&q=80&auto=format',  // throw pillow
+    'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80&auto=format',  // warm cushion
     'https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?w=800&q=80&auto=format',  // plush collection
   ],
   universal: [
@@ -56,9 +56,9 @@ const INDUSTRY_IMAGES: Record<IndustryPlaceholderKey, string[]> = {
     'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&q=80&auto=format',  // pottery collection
     'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=800&q=80&auto=format',  // artisan ceramic
     'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&q=80&auto=format',  // handmade cup
-    'https://images.unsplash.com/photo-1605478952203-28e1a63efb27?w=800&q=80&auto=format',  // stoneware bowls
-    'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80&auto=format',  // ceramic set
-    'https://images.unsplash.com/photo-1576697020913-37b3bcfab84c?w=800&q=80&auto=format',  // tea set
+    'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=800&q=80&auto=format',  // ceramic cups
+    'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&q=80&auto=format',  // stoneware craft
+    'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&q=80&auto=format',  // tea set
     'https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?w=800&q=80&auto=format',  // handcraft pottery
   ],
   beauty: [
@@ -83,22 +83,22 @@ const INDUSTRY_IMAGES: Record<IndustryPlaceholderKey, string[]> = {
   ],
   tools: [
     'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80&auto=format',  // precision tools
-    'https://images.unsplash.com/photo-1530124566582-a45a7e3f4b02?w=800&q=80&auto=format',  // industrial hardware
+    'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80&auto=format',  // industrial hardware
     'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=800&q=80&auto=format',  // metal workshop
     'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800&q=80&auto=format',  // CNC machine
-    'https://images.unsplash.com/photo-1513467535987-fd81bc500d7d?w=800&q=80&auto=format',  // power tools
-    'https://images.unsplash.com/photo-1580901368919-7738efb0f228?w=800&q=80&auto=format',  // workshop tools
-    'https://images.unsplash.com/photo-1597424216809-3ba4c7db5015?w=800&q=80&auto=format',  // hardware parts
+    'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=800&q=80&auto=format',  // power tools
+    'https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=800&q=80&auto=format',  // workshop tools
+    'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&q=80&auto=format',  // hardware parts
     'https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=800&q=80&auto=format',  // tool collection
   ],
   sports: [
     'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80&auto=format',  // hiking gear
-    'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50c?w=800&q=80&auto=format',  // outdoor equipment
+    'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80&auto=format',  // outdoor equipment
     'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80&auto=format',  // cycling
     'https://images.unsplash.com/photo-1483721310020-03333e577078?w=800&q=80&auto=format',  // climbing gear
     'https://images.unsplash.com/photo-1596357395217-80de13130e92?w=800&q=80&auto=format',  // trail running
     'https://images.unsplash.com/photo-1533681904393-9ab6eee7e408?w=800&q=80&auto=format',  // backpack
-    'https://images.unsplash.com/photo-1560073743-0cda89bb5953?w=800&q=80&auto=format',  // camping equipment
+    'https://images.unsplash.com/photo-1483721310020-03333e577078?w=800&q=80&auto=format',  // camping equipment
     'https://images.unsplash.com/photo-1530143584546-02191bc84eb5?w=800&q=80&auto=format',  // sports gear
   ],
 };

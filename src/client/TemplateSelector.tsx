@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Draft, TemplateId } from '../shared/model';
 import { Button, Icon } from './components';
 import { templateMediaRequirements } from '../shared/template-media';
+import { templateCoverUrl } from '../shared/template-covers';
 
 export interface TemplateDefinition {
   id: TemplateId;
@@ -28,7 +29,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['按设计图重建', '左文右图 Hero 展位', '8宫格品类橱窗', '快速询盘表单'],
     accentColor: '#089ced',
     badge: '参考设计图 · 首选模版',
-    previewImg: '/templates/previews/senseng-clean.d86d69d4b0bc5f3d.jpg',
+    previewImg: '/templates/previews/senseng-clean.189f3d67ea15a630.jpg',
   },
   {
     id: 'senseng-video',
@@ -41,7 +42,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0284c7',
     badge: '首屏动态视频 · 沉浸震撼',
     hasVideo: true,
-    previewImg: '/templates/previews/senseng-video.d86d69d4b0bc5f3d.jpg',
+    previewImg: '/templates/previews/senseng-video.e34176ef503d3488.jpg',
   },
   {
     id: 'senseng-candy',
@@ -53,7 +54,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['马卡龙糖果配色', '左右分栏萌趣舞台', '4大感官魔力标签', '立体糖果展台网格'],
     accentColor: '#ff6b8b',
     badge: '童趣感官玩具 · 爆款首选',
-    previewImg: '/templates/previews/senseng-candy.3010e53e810e182a.jpg',
+    previewImg: '/templates/previews/senseng-candy.9b0f0d6425301df8.jpg',
   },
   {
     id: 'senseng-wonder',
@@ -65,7 +66,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['全屏画卷轮播', '北欧便当盒画廊', '波浪有机曲线分割', '材质工艺与FAQ'],
     accentColor: '#f77f00',
     badge: '北欧温润绘本 · 精品独立站',
-    previewImg: '/templates/previews/senseng-wonder.45a70f9af89ead48.jpg',
+    previewImg: '/templates/previews/senseng-wonder.91574a9e2f66acd1.jpg',
   },
   {
     id: 'senseng-arcade',
@@ -77,7 +78,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['赛博HUD仪表台', '物理参数动态进度条', '实时跑数计数器', '街机芯片卡片'],
     accentColor: '#00f5d4',
     badge: '机能赛博潮玩 · 动态跑数',
-    previewImg: '/templates/previews/senseng-arcade.f31477bededd7835.jpg',
+    previewImg: '/templates/previews/senseng-arcade.ac9fe5134399cde9.jpg',
   },
   {
     id: 'senseng-nature',
@@ -89,7 +90,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['柔和波浪弧线', '生态减碳进度条', '晨雾滑入动效', '植物标本瀑布流'],
     accentColor: '#4a7c59',
     badge: '零塑环保自然 · 动态减碳条',
-    previewImg: '/templates/previews/senseng-nature.3327ac2caaf01fe9.jpg',
+    previewImg: '/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg',
   },
   {
     id: 'senseng-minimal',
@@ -101,7 +102,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['艺术馆聚光灯展台', '精密材料学阻尼刻度', '编号典藏展签', '奢品级单品解构'],
     accentColor: '#c59b27',
     badge: '瑞士极简画廊 · 奢品级解构',
-    previewImg: '/templates/previews/senseng-minimal.f5f5a7e533ed935e.jpg',
+    previewImg: '/templates/previews/senseng-minimal.188e54942d194362.jpg',
   },
   {
     id: 'saas-automation',
@@ -114,7 +115,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#bef264',
     badge: '原版动态视频 · 清透浅色',
     hasVideo: true,
-    previewImg: '/templates/previews/saas-automation.5515fc79f75f0729.jpg',
+    previewImg: '/templates/previews/saas-automation.ba8deb76d962c949.jpg',
   },
   {
     id: 'corpox-ai-agency',
@@ -126,7 +127,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['浅粉同心拱形', '珊瑚红强调色', '居中大字排版', '自动绑定产品图片'],
     accentColor: '#ef6464',
     badge: '浅粉珊瑚 · AI 创意',
-    previewImg: '/templates/previews/corpox-ai-agency.1cd6dc2fc58369a3.jpg',
+    previewImg: '/templates/previews/corpox-ai-agency.537cf0ea423af783.jpg',
   },
   {
     id: 'universal-trade-banner',
@@ -138,7 +139,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['全品类旗舰展台', 'Apple 液态玻璃', '动态品类筛选魔盒', '全套多语言富内页'],
     accentColor: '#1e3a8a',
     badge: '通用商品 · 旗舰展台',
-    previewImg: '/templates/previews/universal-trade-banner.2866dd81833026b3.jpg',
+    previewImg: '/templates/previews/universal-trade-banner.f12610b8057ce93c.jpg',
   },
   {
     id: 'universal-showcase-video',
@@ -151,7 +152,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0284c7',
     badge: '通用商品 · 沉浸视频',
     hasVideo: true,
-    previewImg: '/templates/previews/universal-showcase-video.2866dd81833026b3.jpg',
+    previewImg: '/templates/previews/universal-showcase-video.3ba0bfbbaa8b29a8.jpg',
   },
   {
     id: 'toys-figure-banner',
@@ -163,7 +164,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['赛博亚克力展台', '盲盒编号展签', '模具精度解构', '全套手办定制内页'],
     accentColor: '#8b5cf6',
     badge: '玩具公仔 · 潮玩展台',
-    previewImg: '/templates/previews/toys-figure-banner.30eb7772f8410c61.jpg',
+    previewImg: '/templates/previews/toys-figure-banner.14853f648ac6dafe.jpg',
   },
   {
     id: 'toys-interactive-video',
@@ -176,7 +177,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#f59e0b',
     badge: '玩具公仔 · 动感视界',
     hasVideo: true,
-    previewImg: '/templates/previews/toys-interactive-video.30eb7772f8410c61.jpg',
+    previewImg: '/templates/previews/toys-interactive-video.b3e65d09320229a9.jpg',
   },
   {
     id: 'plush-cushion-banner',
@@ -188,7 +189,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['奶油风云朵美学', '亲肤触感微交互', '母婴级环保认证', '全套治愈系内页'],
     accentColor: '#e07a5f',
     badge: '毛绒靠垫 · 云绒治愈',
-    previewImg: '/templates/previews/plush-cushion-banner.900d757c2936e1c1.jpg',
+    previewImg: '/templates/previews/plush-cushion-banner.b7294ea427d7519d.jpg',
   },
   {
     id: 'plush-living-video',
@@ -201,7 +202,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#797d62',
     badge: '毛绒靠垫 · 慢调视界',
     hasVideo: true,
-    previewImg: '/templates/previews/plush-living-video.900d757c2936e1c1.jpg',
+    previewImg: '/templates/previews/plush-living-video.8328935545cfb311.jpg',
   },
   {
     id: 'apparel-fabric-banner',
@@ -213,7 +214,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['时装画册留白排版', '经纬面料微距光影', '液态玻璃质感挂牌', 'CLO 3D 快速出样内页'],
     accentColor: '#27272a',
     badge: '服装纺织 · 奢品工坊',
-    previewImg: '/templates/previews/apparel-fabric-banner.8fd260ee00150c4a.jpg',
+    previewImg: '/templates/previews/apparel-fabric-banner.df947c4631fa5c92.jpg',
   },
   {
     id: 'apparel-runway-video',
@@ -226,7 +227,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#b45309',
     badge: '服装纺织 · 秀场风尚',
     hasVideo: true,
-    previewImg: '/templates/previews/apparel-runway-video.8fd260ee00150c4a.jpg',
+    previewImg: '/templates/previews/apparel-runway-video.58ab74b1fb1c0e6f.jpg',
   },
   {
     id: 'footwear-craft-banner',
@@ -238,7 +239,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['鞋底气垫工程透视', '分层解构悬浮标牌', '力学生物工效学', '全套鞋履定制内页'],
     accentColor: '#d97706',
     badge: '鞋靴制造 · 先锋工匠',
-    previewImg: '/templates/previews/footwear-craft-banner.d05618e0b61b9898.jpg',
+    previewImg: '/templates/previews/footwear-craft-banner.f93f78d706f1056c.jpg',
   },
   {
     id: 'footwear-kinetic-video',
@@ -251,7 +252,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#10b981',
     badge: '鞋靴制造 · 破风动效',
     hasVideo: true,
-    previewImg: '/templates/previews/footwear-kinetic-video.d05618e0b61b9898.jpg',
+    previewImg: '/templates/previews/footwear-kinetic-video.140fa53fecd21904.jpg',
   },
   {
     id: 'luggage-leather-banner',
@@ -263,7 +264,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['岁月包浆三重蜕变', '植鞣皮革行会背书', '马鞍双针纯铜五金', '传世手作全套内页'],
     accentColor: '#96562c',
     badge: '箱包 · 托斯卡纳植鞣',
-    previewImg: '/templates/previews/luggage-leather-banner.6182cba8969f5c80.jpg',
+    previewImg: '/templates/previews/luggage-leather-banner.aa9c44f19f7b5979.jpg',
   },
   {
     id: 'luggage-voyage-video',
@@ -276,7 +277,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0284c7',
     badge: '箱包 · 航空工程动效',
     hasVideo: true,
-    previewImg: '/templates/previews/luggage-voyage-video.e7c00f06c24720a4.jpg',
+    previewImg: '/templates/previews/luggage-voyage-video.814f86febfbac27c.jpg',
   },
   {
     id: 'jewelry-luxury-banner',
@@ -288,7 +289,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['GIA 4C显微晶相矩阵', '巴黎沙龙微镶工艺', '金伯利道德溯源背书', '私享定制全套内页'],
     accentColor: '#c59b27',
     badge: '珠宝 · 旺多姆高定',
-    previewImg: '/templates/previews/jewelry-luxury-banner.cb576a2cefc5fe57.jpg',
+    previewImg: '/templates/previews/jewelry-luxury-banner.28a767d715539c04.jpg',
   },
   {
     id: 'jewelry-timeless-video',
@@ -301,7 +302,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#2563eb',
     badge: '腕表 · 瑞士机械动效',
     hasVideo: true,
-    previewImg: '/templates/previews/jewelry-timeless-video.54b7c7c6a5f5432e.jpg',
+    previewImg: '/templates/previews/jewelry-timeless-video.a7dad50a41760441.jpg',
   },
   {
     id: 'homedecor-aesthetic-banner',
@@ -313,7 +314,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['1300°C柴窑结晶完全玻化', '罗马天然原生孔隙洞石', '草木灰矿物调色洗染', '美学软装全套内页'],
     accentColor: '#b45309',
     badge: '家居 · 地中海陶艺',
-    previewImg: '/templates/previews/homedecor-aesthetic-banner.3e6aeab67b1c0f4b.jpg',
+    previewImg: '/templates/previews/homedecor-aesthetic-banner.cf05c6846abb93e5.jpg',
   },
   {
     id: 'homedecor-living-video',
@@ -326,7 +327,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#d97706',
     badge: '家居 · 侘寂光影动效',
     hasVideo: true,
-    previewImg: '/templates/previews/homedecor-living-video.bc097cf645765ddc.jpg',
+    previewImg: '/templates/previews/homedecor-living-video.86e159e882f4fe81.jpg',
   },
   {
     id: 'furniture-minimal-banner',
@@ -338,7 +339,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['双重抱头榫卯结构拆解', '北美FAS纯实木大板直拼', '德国欧诗木植物木蜡油', '建筑级木作全套内页'],
     accentColor: '#a16207',
     badge: '家具 · 包豪斯实木',
-    previewImg: '/templates/previews/furniture-minimal-banner.1f453e950f7bdbec.jpg',
+    previewImg: '/templates/previews/furniture-minimal-banner.30d66e522a724083.jpg',
   },
   {
     id: 'furniture-spatial-video',
@@ -351,7 +352,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#ea580c',
     badge: '家具 · 空间折叠动效',
     hasVideo: true,
-    previewImg: '/templates/previews/furniture-spatial-video.e85fbfce7bd0181c.jpg',
+    previewImg: '/templates/previews/furniture-spatial-video.78a9c71f61ed67ce.jpg',
   },
   {
     id: 'kitchen-culinary-banner',
@@ -363,7 +364,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['67层折叠羽毛锻打花纹', '-196°C深冷液氮金相处理', '双面15°水磨镜面锋刃', '米其林后厨全套内页'],
     accentColor: '#b91c1c',
     badge: '厨具 · 大马士革极刃',
-    previewImg: '/templates/previews/kitchen-culinary-banner.2dcf664963a7cbbc.jpg',
+    previewImg: '/templates/previews/kitchen-culinary-banner.2982dd75fcfa7552.jpg',
   },
   {
     id: 'kitchen-gourmet-video',
@@ -376,7 +377,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#c2410c',
     badge: '厨具 · 法式炊具动效',
     hasVideo: true,
-    previewImg: '/templates/previews/kitchen-gourmet-video.cf564642b62d26e7.jpg',
+    previewImg: '/templates/previews/kitchen-gourmet-video.8c938ccf8d484d6c.jpg',
   },
   {
     id: 'drinkware-ceramic-banner',
@@ -388,7 +389,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['1280°C柴烧原矿草木灰釉', '天然双重微孔自然透气', '极简液态玻璃冷凝拟真卡片', '手作窑坊专属全套内页'],
     accentColor: '#8c5936',
     badge: '杯壶 · 柴烧陶艺',
-    previewImg: '/templates/previews/drinkware-ceramic-banner.25bad5889283bac0.jpg',
+    previewImg: '/templates/previews/drinkware-ceramic-banner.577fd6d420a3e6b3.jpg',
   },
   {
     id: 'drinkware-thermal-video',
@@ -401,7 +402,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0284c7',
     badge: '杯壶 · 锁温实验室动效',
     hasVideo: true,
-    previewImg: '/templates/previews/drinkware-thermal-video.d655388459d1bf0f.jpg',
+    previewImg: '/templates/previews/drinkware-thermal-video.0909afde7e0069ed.jpg',
   },
   {
     id: 'beauty-skincare-banner',
@@ -413,7 +414,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['超临界超低温微囊锁鲜萃取', '水光液态玻璃流体拟态质感', '分子透皮微水滴悬浮微动效', '植愈护肤全套定制内页'],
     accentColor: '#db2777',
     badge: '美妆 · 植萃灵光',
-    previewImg: '/templates/previews/beauty-skincare-banner.dfcad6214147f825.jpg',
+    previewImg: '/templates/previews/beauty-skincare-banner.31f033f70018b501.jpg',
   },
   {
     id: 'beauty-glow-video',
@@ -426,7 +427,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#9333ea',
     badge: '美妆 · 焕颜光感动效',
     hasVideo: true,
-    previewImg: '/templates/previews/beauty-glow-video.936d7390c037df65.jpg',
+    previewImg: '/templates/previews/beauty-glow-video.0a5e1148bc938352.jpg',
   },
   {
     id: 'electronics-gadget-banner',
@@ -438,7 +439,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['定制镀铍超宽频声学动圈', '电路微痕暗黑科技液态玻璃', '全频声学阻抗测量曲率看板', '旗舰数码全套专属内页'],
     accentColor: '#2563eb',
     badge: '电子 · 声学旗舰',
-    previewImg: '/templates/previews/electronics-gadget-banner.d35e08787b97a16a.jpg',
+    previewImg: '/templates/previews/electronics-gadget-banner.1ac2bf96fecae118.jpg',
   },
   {
     id: 'electronics-smart-video',
@@ -451,7 +452,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#06b6d4',
     badge: '家电 · 智控生态动效',
     hasVideo: true,
-    previewImg: '/templates/previews/electronics-smart-video.e7a5adac6c64ac9e.jpg',
+    previewImg: '/templates/previews/electronics-smart-video.f0d5fc72166d9254.jpg',
   },
   {
     id: 'tools-precision-banner',
@@ -463,7 +464,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['±0.002mm微米级机械精度', '工业工程蓝图坐标网格视效', '液态防油污强化玻璃卡片', '精密五金全套定制内页'],
     accentColor: '#ea580c',
     badge: '工具 · 蓝图精工',
-    previewImg: '/templates/previews/tools-precision-banner.8449fc587482b203.jpg',
+    previewImg: '/templates/previews/tools-precision-banner.1c50f2e9ef00d04d.jpg',
   },
   {
     id: 'tools-workshop-video',
@@ -476,7 +477,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#d97706',
     badge: '设备 · 熔炼锻造动效',
     hasVideo: true,
-    previewImg: '/templates/previews/tools-workshop-video.11a16258bb4b71d5.jpg',
+    previewImg: '/templates/previews/tools-workshop-video.028b18bab7406044.jpg',
   },
   {
     id: 'sports-trail-banner',
@@ -488,7 +489,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['Dyneema晶须超轻防撕裂科技', '高海拔地理等高线视差微层', '极寒暴风雨阻水液态流光面板', '高山徒步全套定制内页'],
     accentColor: '#059669',
     badge: '户外 · 巅峰探险',
-    previewImg: '/templates/previews/sports-trail-banner.b5c46e7fbda57d38.jpg',
+    previewImg: '/templates/previews/sports-trail-banner.9048397d8b204e63.jpg',
   },
   {
     id: 'sports-kinetic-video',
@@ -501,7 +502,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#e11d48',
     badge: '运动 · 极速破风动效',
     hasVideo: true,
-    previewImg: '/templates/previews/sports-kinetic-video.181574037e5080ef.jpg',
+    previewImg: '/templates/previews/sports-kinetic-video.907de8219b7dfd88.jpg',
   },
   {
     id: 'pet-supplies-banner',
@@ -513,7 +514,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['温暖珊瑚粉活力萌宠视觉', '漂浮爪印微交互动画', '兽医权威认证材质解析', '萌宠用品全套专属内页'],
     accentColor: '#e85d5d',
     badge: '宠物 · 萌宠工匠',
-    previewImg: '/templates/previews/pet-supplies-banner.af53bb00b8641a70.jpg',
+    previewImg: '/templates/previews/pet-supplies-banner.b4d572c2f1bc2793.jpg',
   },
   {
     id: 'pet-wellness-video',
@@ -526,7 +527,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0d9488',
     badge: '宠物 · 健康护理动效',
     hasVideo: true,
-    previewImg: '/templates/previews/pet-wellness-video.ae463af90295aa5d.jpg',
+    previewImg: '/templates/previews/pet-wellness-video.c751706602789dad.jpg',
   },
   {
     id: 'stationery-craft-banner',
@@ -538,7 +539,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['鼠尾草绿自然纸品美学', '笔记本格线精妙边框与铅笔排版', 'FSC环保与无酸纸实验看板', '纸品文具全套专属内页'],
     accentColor: '#6b8f71',
     badge: '文具 · 纸品工坊',
-    previewImg: '/templates/previews/stationery-craft-banner.3d6e51effc13af37.jpg',
+    previewImg: '/templates/previews/stationery-craft-banner.fbb73d925971347b.jpg',
   },
   {
     id: 'stationery-studio-video',
@@ -551,7 +552,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#1e3a5f',
     badge: '文具 · 轻奢办公动效',
     hasVideo: true,
-    previewImg: '/templates/previews/stationery-studio-video.b6f6bbc08ec37772.jpg',
+    previewImg: '/templates/previews/stationery-studio-video.c500399d006f5c0d.jpg',
   },
   {
     id: 'poster-graphic-banner',
@@ -563,7 +564,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['孟菲斯波普几何前卫构图', '复古半色调网点与撞色高光', 'UV耐晒与防水背胶材料解析', '潮流海报全套专属内页'],
     accentColor: '#e91e8c',
     badge: '文创 · 波普潮贴',
-    previewImg: '/templates/previews/poster-graphic-banner.f70edb3e3d067cec.jpg',
+    previewImg: '/templates/previews/poster-graphic-banner.c7f8b5cba7073601.jpg',
   },
   {
     id: 'poster-gallery-video',
@@ -576,7 +577,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#ff6b35',
     badge: '文创 · 画廊展厅动效',
     hasVideo: true,
-    previewImg: '/templates/previews/poster-gallery-video.371e21bc7ac16157.jpg',
+    previewImg: '/templates/previews/poster-gallery-video.a8a13c490a5a9335.jpg',
   },
   {
     id: 'food-artisan-banner',
@@ -588,7 +589,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['赤陶橄榄自然田园风味美学', '有机牛皮纸原浆手作质感', '欧盟有机与无菌冷灌装车间解析', '匠心食品全套专属内页'],
     accentColor: '#c2703e',
     badge: '食品 · 田园匠心',
-    previewImg: '/templates/previews/food-artisan-banner.ed62baa11bc2dbbf.jpg',
+    previewImg: '/templates/previews/food-artisan-banner.73f89867e47cb4e2.jpg',
   },
   {
     id: 'food-harvest-video',
@@ -601,7 +602,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#d4a843',
     badge: '食品 · 丰收晨光动效',
     hasVideo: true,
-    previewImg: '/templates/previews/food-harvest-video.d217b793ee6934b7.jpg',
+    previewImg: '/templates/previews/food-harvest-video.69d936b77af1f5da.jpg',
   },
   {
     id: 'single-device-showcase',
@@ -614,7 +615,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#0284c7',
     badge: '单产品发布 · 硬件旗舰',
     hasVideo: true,
-    previewImg: '/templates/previews/single-device-showcase.b636c180e1d4dfcd.jpg',
+    previewImg: '/templates/previews/single-device-showcase.14075a12611ae10c.jpg',
   },
   {
     id: 'single-artisan-craft',
@@ -626,7 +627,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['整幅纯图 Banner · 无叠字', '暖调纸感与衬线画册', '围绕一件作品展示材质与细节', '作品详情、品牌故事与询盘'],
     accentColor: '#c5a880',
     badge: '单产品奢华 · 工匠典藏',
-    previewImg: '/templates/previews/single-artisan-craft.cfd2241d68d14f55.jpg',
+    previewImg: '/templates/previews/single-artisan-craft.4e9373cdcb2da07b.jpg',
   },
   {
     id: 'single-wellness-nordic',
@@ -638,7 +639,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['图文分栏首屏 · 手机上下排列', '鼠尾草绿与燕麦白', '一个主商品与日常使用场景', '独立商品详情与咨询页面'],
     accentColor: '#4a7c59',
     badge: '单产品治愈 · 北欧晨雾',
-    previewImg: '/templates/previews/single-wellness-nordic.7034a49e9eccbc00.jpg',
+    previewImg: '/templates/previews/single-wellness-nordic.a53f6eba681202f0.jpg',
   },
 ];
 
@@ -886,7 +887,7 @@ export default function TemplateSelector({
                 }}
               >
                 <img
-                  src={tmpl.previewImg}
+                  src={tmpl.previewImg || templateCoverUrl(tmpl.id)}
                   alt={tmpl.name}
                   loading="lazy"
                   style={{

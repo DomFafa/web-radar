@@ -106,7 +106,12 @@ function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const html=rendered.replace(/<a\b[^>]*\bdata-wr-lang="([a-z]{2})"[^>]*>/g,(tag,lang:string)=>draft.languages.includes(lang as Language)?tag.replace(/\bhref="[^"]*"/,`href="${esc(`${depth}../${lang}/${target}`)}"`):tag);
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
-  return draft.materials?html.replace('<script>', '<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`):html;
+  const normalized = html.includes('<script>') && !html.includes('var __name')
+    ? html.replace('<script>', '<script>var __name=(value)=>value;')
+    : html;
+  return draft.materials
+    ? normalized.replace('</body>', `<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`)
+    : normalized;
 }
 function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
