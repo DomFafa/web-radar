@@ -1,6 +1,6 @@
 # Web Radar 受控生产发布
 
-生产入口是 `.github/workflows/production-release.yml` 的手动 dispatch。普通 push、PR 或本地 `npm run release:production` 不会部署。此工作流发布 Web Radar 主 Worker 和对应静态文件，不部署 Product Radar、建站服务或客户网站，不执行 D1 迁移。
+默认生产入口是 `.github/workflows/production-release.yml` 的手动 dispatch。普通 push、PR 或未显式启用本机模式的 `npm run release:production` 不会部署。拥有者授权的本机发布使用下述同一入口。两种方式均只发布 Web Radar 主 Worker 和对应静态文件，不部署 Product Radar、建站服务或客户网站，不执行 D1 迁移。
 
 ## 发布前提和执行过程
 
@@ -12,6 +12,20 @@
 6. Wrangler 使用 `--no-bundle --keep-vars --strict` 部署封存的 Worker 和静态文件。它不会在部署阶段重新编译。部署 message 写入完整源码 SHA 与清单摘要，tag 写入短 SHA。再次读取生产 Worker 字节、部署 ID/100% 流量、配置/非静态绑定摘要、健康接口和全部静态文件，核对通过后才记录 `verified:true`。
 
 工作流以 `web-radar-production` concurrency 串行运行。发布后验证失败会使 job 失败并保留安全摘要，**不会自动重试部署或自动回滚**。Wrangler 失败时仅保留数字 Cloudflare 错误码；原始日志留在临时 runner，不公开其中的配置或凭据。静态文件比对覆盖本次上传的文件，不能替代登录后的浏览器交互或模板视觉验收。保留每次 release artifact 和成功结果；部署结果只含 SHA、状态、摘要和公开文件路径，不上传凭证、配置内容或 Wrangler 原始日志。
+
+## 显式本机发布
+
+设置 `RELEASE_EXECUTION=local`、`PRODUCTION_RELEASE_ENABLED=true` 和 `RELEASE_CHECKS_FILE` 才能使用本机入口。`GITHUB_ACTIONS=true` 时拒绝本机模式；不得伪造 Actions 的 dispatch 环境变量。默认工作流模式仍直接查询 GitHub API，不读取本机记录来代替检查。
+
+操作员必须在构建和部署前，从可信 GitHub connector 实时核验两仓官方分支精确 SHA 的**最新 push run 及最新 attempt**，逐项确认政策中的工作流和 jobs 成功，再将实际查询结果记录到两仓源码目录之外的绝对路径。该 JSON 是操作员提供的检查记录，**没有数字签名，脚本不能证明其来源，也不能代替实时查询；禁止自行填写通过状态或选择更早的绿色 run**。新 run、重跑、失败或 pending 都必须反映在记录中并阻止发布；不能仅刷新时间戳沿用旧结果。
+
+两仓使用相同格式 `radar-local-checks-v1`：顶层仅有 `format`、ISO `observedAt` 和 `repositories`；每仓仅有 `repository`（如 `DomFafa/web-radar`）、`branch`、40 位 `sha` 和 `workflows`。每个 workflow 记录 `file`、正整数 `runId` / `attempt`、`event:'push'`、`status:'completed'`、`conclusion:'success'` 和 `jobs`；每个 job 记录正整数 `id`、`name`、精确 `headSHA`、`status:'completed'`、`conclusion:'success'`。必须包含两仓及其全部必需工作流/jobs；仓库、工作流文件和 job 名称不得在所属范围重复，run/job ID 不得重复。不得夹带未知字段。
+
+记录必须不在未来且不超过 30 分钟。每次 source preflight 都重新读取文件；符号链接也按真实路径检查，不能指向任一源码目录。检查结果及记录的时间、SHA-256 写入 artifact 的 `evidence/checks.json`。记录过期或源分支推进时停止，重新查询后再决定下一步。
+
+在两个干净、精确的官方 SHA checkout 中准备锁定依赖。设置 `RELEASE_SOURCE_SHA`、`PRODUCT_RADAR_SHA`、`PRODUCT_RADAR_ROOT` 和源码目录外新建的 `RELEASE_ARTIFACT_DIR`；从 Web Radar 应用 checkout 作为当前目录运行 `node /absolute/reviewed-controller/scripts/release-production.mjs build`。入口可以来自单独评审的发布脚本 checkout，而应用源码仍来自当前目录指定的已通过 CI 的官方 SHA；不能把入口分支伪装成应用源码版本。Manifest 和部署结果分别记录 `controllerSHA256` 与两个应用 source SHA，build 和 deploy 必须使用完全相同的入口字节。
+
+保存 build 输出中的 `manifestDigest`，部署前将其作为独立输入 `RELEASE_MANIFEST_DIGEST`，不要从待部署目录自报值取信。再从可信 connector 核验最新 CI 记录，并将已有 Cloudflare 凭证仅注入部署子进程，使用同一入口执行 `deploy`。不打印或把凭证写入检查记录/产物。封存文件清单与摘要、实时官方 Git tip、clean tree、两仓真实 gate、live config/bindings、`--no-bundle --keep-vars --strict`、线上 Worker 和全部静态文件字节比对均保持不变。本机运行不享有 GitHub concurrency 锁，操作员应串行部署；原有上传前后生产状态竞态检查仍执行。
 
 ## 仓库拥有者仍需配置的边界
 

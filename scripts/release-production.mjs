@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-// The production workflow is the supported caller. Local development cannot
-// turn a candidate check into authorization to deploy.
+// The production workflow is the default caller. Explicit local releases keep
+// the same source/artifact gates and require freshly verified check receipts.
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { verifyReleaseSource } from './verify-release-source.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
+const controllerSHA256 = hash(readFileSync(new URL(import.meta.url)));
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
 const writeJson = (file, value) => writeFileSync(file, JSON.stringify(value, null, 2) + '\n');
 const fullSha = value => typeof value === 'string' && /^[a-f0-9]{40}$/.test(value);
@@ -18,6 +19,13 @@ function requireValue(condition, message) { if (!condition) throw new Error(mess
 export function assertDispatch(env, policy, sourceCommit) {
   const repository = repositoryName(policy), ref = `refs/heads/${policy.releaseBranch}`;
   requireValue(fullSha(sourceCommit), 'Supply the full source SHA, not a branch or abbreviated SHA.');
+  requireValue(!env.RELEASE_EXECUTION || env.RELEASE_EXECUTION === 'local', 'Unknown release execution mode.');
+  if (env.RELEASE_EXECUTION === 'local') {
+    requireValue(env.GITHUB_ACTIONS !== 'true', 'Local release mode cannot run inside GitHub Actions.');
+    requireValue(env.PRODUCTION_RELEASE_ENABLED === 'true', 'Local production release must be explicitly enabled by the operator.');
+    requireValue(typeof env.RELEASE_CHECKS_FILE === 'string' && isAbsolute(env.RELEASE_CHECKS_FILE), 'Local release requires an absolute RELEASE_CHECKS_FILE.');
+    return;
+  }
   requireValue(env.GITHUB_ACTIONS === 'true' && env.GITHUB_EVENT_NAME === 'workflow_dispatch' &&
     env.GITHUB_REPOSITORY === repository && env.GITHUB_REF === ref && env.GITHUB_SHA === sourceCommit &&
     env.GITHUB_WORKFLOW_REF === `${repository}/.github/workflows/production-release.yml@${ref}`,
@@ -56,6 +64,66 @@ export async function verifyRequiredChecks(policy, sourceCommit, request) {
   return evidence;
 }
 
+export function readLocalChecks(file, targets, now = Date.now()) {
+  requireValue(typeof file === 'string' && isAbsolute(file), 'Local checks receipt must use an absolute path.');
+  const location = realpathSync(file);
+  for (const { root } of targets) {
+    const path = relative(realpathSync(root), location);
+    requireValue(path === '..' || path.startsWith('..' + sep) || isAbsolute(path), 'Local checks receipt must be outside both source trees.');
+  }
+  const bytes = readFileSync(location), receipt = JSON.parse(bytes.toString('utf8'));
+  const record = (value, keys, name) => requireValue(value && typeof value === 'object' && !Array.isArray(value) &&
+    Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key)), `Invalid local checks ${name} schema.`);
+  const unique = (values, name) => requireValue(new Set(values).size === values.length, `Duplicate local checks ${name}.`);
+  const positive = value => Number.isSafeInteger(value) && value > 0;
+  record(receipt, ['format', 'observedAt', 'repositories'], 'receipt');
+  requireValue(receipt.format === 'radar-local-checks-v1', 'Unsupported local checks receipt format.');
+  const observed = Date.parse(receipt.observedAt);
+  requireValue(typeof receipt.observedAt === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(receipt.observedAt) &&
+    Number.isFinite(observed) && observed <= now && now - observed <= 30 * 60 * 1000,
+  'Local checks observation must be an ISO timestamp from the last 30 minutes, never in the future.');
+  requireValue(Array.isArray(receipt.repositories) && receipt.repositories.length === targets.length, 'Local checks must include exactly the required source repositories.');
+  for (const repository of receipt.repositories) {
+    record(repository, ['repository', 'branch', 'sha', 'workflows'], 'repository');
+    requireValue(typeof repository.repository === 'string' && /^[\w.-]+\/[\w.-]+$/.test(repository.repository) &&
+      typeof repository.branch === 'string' && repository.branch && fullSha(repository.sha) && Array.isArray(repository.workflows) && repository.workflows.length,
+    'Invalid local checks repository identity or workflows.');
+    for (const workflow of repository.workflows) {
+      record(workflow, ['file', 'runId', 'attempt', 'event', 'status', 'conclusion', 'jobs'], 'workflow');
+      requireValue(typeof workflow.file === 'string' && /^[a-z0-9-]+\.yml$/.test(workflow.file) && positive(workflow.runId) && positive(workflow.attempt) &&
+        workflow.event === 'push' && workflow.status === 'completed' && workflow.conclusion === 'success' && Array.isArray(workflow.jobs) && workflow.jobs.length,
+      'Local checks workflow must be a successful completed push run with positive run/attempt IDs.');
+      for (const job of workflow.jobs) {
+        record(job, ['id', 'name', 'headSHA', 'status', 'conclusion'], 'job');
+        requireValue(positive(job.id) && typeof job.name === 'string' && job.name.trim() && job.headSHA === repository.sha &&
+          job.status === 'completed' && job.conclusion === 'success', 'Local checks job must succeed for the exact source SHA.');
+      }
+      unique(workflow.jobs.map(job => job.name), 'job names');
+      unique(workflow.jobs.map(job => job.id), 'job IDs');
+    }
+    unique(repository.workflows.map(workflow => workflow.file), 'workflow files');
+    unique(repository.workflows.map(workflow => workflow.runId), 'workflow run IDs');
+  }
+  unique(receipt.repositories.map(repository => repository.repository), 'repositories');
+  unique(receipt.repositories.flatMap(repository => repository.workflows.flatMap(workflow => workflow.jobs.map(job => job.id))), 'job IDs');
+  unique(receipt.repositories.flatMap(repository => repository.workflows.map(workflow => workflow.runId)), 'workflow run IDs');
+  const checks = targets.map(({ policy, sourceCommit }) => {
+    const repository = receipt.repositories.find(entry => entry.repository === repositoryName(policy));
+    requireValue(repository && repository.branch === policy.releaseBranch && repository.sha === sourceCommit, 'Local checks source repository, branch or SHA does not match this release.');
+    requireValue(Array.isArray(policy.requiredWorkflows) && policy.requiredWorkflows.length, 'Missing required workflow policy.');
+    return policy.requiredWorkflows.map(required => {
+      requireValue(/^[a-z0-9-]+\.yml$/.test(required.file) && required.jobs?.length > 0, 'Invalid required workflow policy.');
+      const workflow = repository.workflows.find(entry => entry.file === required.file);
+      requireValue(workflow, `Missing required workflow ${required.file} in local checks receipt.`);
+      assertWorkflowRun({ head_sha: repository.sha, head_branch: repository.branch, head_repository: { full_name: repository.repository },
+        event: workflow.event, path: `.github/workflows/${workflow.file}`, status: workflow.status, conclusion: workflow.conclusion },
+      workflow.jobs.map(job => ({ ...job, head_sha: job.headSHA })), required, policy, sourceCommit);
+      return { workflow: required.file, runId: workflow.runId, attempt: workflow.attempt, sourceCommit, jobs: required.jobs };
+    });
+  });
+  return { checks, observedAt: receipt.observedAt, digest: hash(bytes) };
+}
+
 function fileInventory(root, prefix = '') {
   const files = {};
   for (const entry of readdirSync(join(root, prefix), { withFileTypes: true }).toSorted((a, b) => a.name.localeCompare(b.name))) {
@@ -71,7 +139,7 @@ function fileInventory(root, prefix = '') {
 }
 
 export function createManifest(root, metadata) {
-  const manifest = { format: 'wr-production-artifact-v1', ...metadata, files: fileInventory(root) };
+  const manifest = { format: 'wr-production-artifact-v1', ...metadata, controllerSHA256, files: fileInventory(root) };
   writeJson(join(root, 'manifest.json'), manifest);
   return { manifest, digest: hash(readFileSync(join(root, 'manifest.json'))) };
 }
@@ -82,6 +150,7 @@ export function verifyArtifact(root, expectedDigest, sourceCommit, productRadarC
   const manifest = readJson(join(root, 'manifest.json'));
   requireValue(manifest.format === 'wr-production-artifact-v1' && manifest.sourceCommit === sourceCommit &&
     manifest.productRadarCommit === productRadarCommit, 'Artifact source pair does not match this release.');
+  requireValue(manifest.controllerSHA256 === controllerSHA256, 'Artifact was sealed by a different release controller.');
   requireValue(JSON.stringify(fileInventory(root)) === JSON.stringify(manifest.files), 'Artifact content changed, disappeared or gained extra files.');
   requireValue(manifest.files['worker/index.js'] && manifest.files['assets/index.html'] && manifest.files['wrangler.json'], 'Incomplete production artifact.');
   return manifest;
@@ -123,6 +192,13 @@ async function verifySources(root, pr, policy, sourceCommit, productRadarCommit)
   const prSource = verifyReleaseSource({ cwd: pr, expectedCommit: productRadarCommit });
   requireValue(repositoryName(prSource) === repositoryName(policy.productRadar) && prSource.releaseBranch === policy.productRadar.releaseBranch,
     'Product Radar source is not the approved repository/branch.');
+  if (process.env.RELEASE_EXECUTION === 'local') {
+    const receipt = readLocalChecks(process.env.RELEASE_CHECKS_FILE, [
+      { root, policy, sourceCommit }, { root: pr, policy: policy.productRadar, sourceCommit: productRadarCommit },
+    ]);
+    const [wrChecks, prChecks] = receipt.checks;
+    return { wrSource, prSource, wrChecks, prChecks, checksReceipt: { format: 'radar-local-checks-v1', observedAt: receipt.observedAt, digest: receipt.digest } };
+  }
   const wrChecks = await verifyRequiredChecks(policy, sourceCommit, githubRequest(policy, process.env.GITHUB_TOKEN));
   const prChecks = await verifyRequiredChecks(policy.productRadar, productRadarCommit,
     githubRequest(policy.productRadar, process.env.RADAR_READ_TOKEN || process.env.GITHUB_TOKEN));
@@ -164,7 +240,7 @@ async function build(root, pr, policy, artifact, sourceCommit, productRadarCommi
   const result = createManifest(artifact, { sourceCommit, productRadarCommit });
   verifyArtifact(artifact, result.digest, sourceCommit, productRadarCommit);
   if (process.env.GITHUB_OUTPUT) writeFileSync(process.env.GITHUB_OUTPUT, `manifest_digest=${result.digest}\n`, { flag: 'a' });
-  console.log(JSON.stringify({ sourceCommit, productRadarCommit, manifestDigest: result.digest, files: Object.keys(result.manifest.files).length }));
+  console.log(JSON.stringify({ sourceCommit, productRadarCommit, controllerSHA256, manifestDigest: result.digest, files: Object.keys(result.manifest.files).length }));
 }
 
 function stable(value) {
@@ -218,7 +294,7 @@ async function deploy(root, pr, policy, artifact, sourceCommit, productRadarComm
   const beforeSettings = settingsFingerprint(liveSettings);
   const evidence = resolve(process.env.RELEASE_EVIDENCE_DIR || join(dirname(artifact), 'release-result'));
   requireValue(!existsSync(evidence), 'Use a fresh deployment evidence directory.'); mkdirSync(evidence, { recursive: true });
-  const report = { sourceCommit, productRadarCommit, manifestDigest: digest, previousDeploymentId: before.id, verified: false };
+  const report = { sourceCommit, productRadarCommit, controllerSHA256, manifestDigest: digest, previousDeploymentId: before.id, verified: false };
   try {
     await verifySources(root, pr, policy, sourceCommit, productRadarCommit);
     requireValue((await latest()).id === before.id && settingsFingerprint(await cfJson('/settings')) === beforeSettings,
@@ -269,7 +345,7 @@ async function deploy(root, pr, policy, artifact, sourceCommit, productRadarComm
 async function main() {
   const [command, ...extra] = process.argv.slice(2), root = process.cwd();
   requireValue(['build', 'deploy', 'verify-artifact'].includes(command) && !extra.length,
-    'Usage: release-production.mjs build|deploy|verify-artifact (use production-release.yml; no local deploy).');
+    'Usage: release-production.mjs build|deploy|verify-artifact (approved workflow or explicit local release).');
   const { RELEASE_SOURCE_SHA: sourceCommit, PRODUCT_RADAR_SHA: productRadarCommit, RELEASE_MANIFEST_DIGEST: digest } = process.env;
   requireValue(process.env.RELEASE_ARTIFACT_DIR, 'RELEASE_ARTIFACT_DIR is required.');
   const artifact = resolve(process.env.RELEASE_ARTIFACT_DIR);

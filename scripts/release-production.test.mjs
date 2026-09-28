@@ -1,5 +1,6 @@
 import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -139,4 +140,96 @@ test('failed Wrangler diagnostics expose numeric API codes without raw logs or c
   assert.match(message, /10000/);
   assert.doesNotMatch(message, /private-token|secret-value|Authorization/);
   assert.match(release.releaseCommandFailure('Node/Wrangler', 'private-token'), /no automatic deployment retry/);
+});
+
+const observedAt = '2026-09-28T10:00:00.000Z';
+const observedTime = Date.parse(observedAt);
+const pairedPolicy = { repository: 'git@github.com:DomFafa/product-radar.git', releaseBranch: 'main', requiredWorkflows: [{file:'radar-integration.yml',jobs:['product-radar-integration']}] };
+function localChecksFixture() {
+  const directory=mkdtempSync(join(tmpdir(),'wr-local-checks-')); roots.push(directory);
+  const wrRoot=join(directory,'web-radar'),prRoot=join(directory,'product-radar');
+  mkdirSync(wrRoot);mkdirSync(prRoot);
+  const targets=[{root:wrRoot,policy:{...policy,requiredWorkflows:[required]},sourceCommit:sha},{root:prRoot,policy:pairedPolicy,sourceCommit:other}];
+  const receipt={format:'radar-local-checks-v1',observedAt,repositories:targets.map((target,index)=>({
+    repository:target.policy.repository.replace('git@github.com:','').replace('.git',''),branch:target.policy.releaseBranch,sha:target.sourceCommit,
+    workflows:target.policy.requiredWorkflows.map((workflow,workflowIndex)=>({file:workflow.file,runId:index+100,attempt:1,event:'push',status:'completed',conclusion:'success',
+      jobs:workflow.jobs.map((name,jobIndex)=>({id:1000+index*100+workflowIndex*10+jobIndex,name,headSHA:target.sourceCommit,status:'completed',conclusion:'success'}))})),
+  }))};
+  const file=join(directory,'checks.json');
+  const save=()=>writeFileSync(file,JSON.stringify(receipt));save();
+  return {directory,wrRoot,prRoot,targets,receipt,file,save};
+}
+
+test('local release is explicit, cannot run in Actions and still requires owner enablement',()=>{
+  const env={RELEASE_EXECUTION:'local',RELEASE_CHECKS_FILE:'/outside/checks.json',PRODUCTION_RELEASE_ENABLED:'true'};
+  assert.doesNotThrow(()=>assertDispatch(env,policy,sha));
+  for(const change of [{RELEASE_EXECUTION:undefined},{RELEASE_EXECUTION:'unexpected'},{RELEASE_CHECKS_FILE:undefined},{RELEASE_CHECKS_FILE:'checks.json'},{PRODUCTION_RELEASE_ENABLED:undefined},{GITHUB_ACTIONS:'true'}])
+    assert.throws(()=>assertDispatch({...env,...change},policy,sha));
+  assert.throws(()=>assertDispatch(env,policy,sha.slice(0,7)));
+});
+
+test('local receipt verifies both exact source pairs and is reread on every validation',()=>{
+  const f=localChecksFixture();
+  assert.equal(typeof release.readLocalChecks,'function');
+  const result=release.readLocalChecks(f.file,f.targets,observedTime);
+  assert.equal(result.observedAt,observedAt);
+  assert.equal(result.checks[0][0].sourceCommit,sha);
+  assert.equal(result.checks[1][0].sourceCommit,other);
+  assert.match(result.digest,/^[a-f0-9]{64}$/);
+  f.receipt.repositories[0].workflows[0].jobs[0].conclusion='failure';f.save();
+  assert.throws(()=>release.readLocalChecks(f.file,f.targets,observedTime),/job|successful/);
+});
+
+test('local receipt refuses expired, future, malformed or ambiguous observations',()=>{
+  const mutations=[
+    r=>{r.format='other';},r=>{r.extra=true;},r=>{r.observedAt='not-a-date';},r=>{r.observedAt='2026-09-28';},
+    r=>{r.observedAt=new Date(observedTime+1).toISOString();},r=>{r.observedAt=new Date(observedTime-30*60*1000-1).toISOString();},
+    r=>{r.repositories.push(structuredClone(r.repositories[0]));},r=>{r.repositories[1].repository=r.repositories[0].repository;},
+    r=>{r.repositories.pop();},r=>{r.repositories[0].branch='feature';},r=>{r.repositories[0].sha=other;},
+    r=>{r.repositories[0].workflows.push(structuredClone(r.repositories[0].workflows[0]));},
+    r=>{r.repositories[0].workflows[0].jobs.push(structuredClone(r.repositories[0].workflows[0].jobs[0]));},
+    r=>{r.repositories[0].workflows[0].jobs[1].id=r.repositories[0].workflows[0].jobs[0].id;},
+    r=>{r.repositories[0].workflows[0].jobs[1].name=r.repositories[0].workflows[0].jobs[0].name;},
+    r=>{r.repositories[0].workflows[0].jobs[0].headSHA=other;},
+    r=>{r.repositories[0].workflows[0].runId=0;},r=>{r.repositories[0].workflows[0].attempt=1.5;},
+    r=>{r.repositories[0].workflows[0].event='pull_request';},r=>{r.repositories[0].workflows[0].status='in_progress';},
+    r=>{r.repositories[0].workflows[0].conclusion='failure';},r=>{r.repositories[0].workflows[0].jobs[0].conclusion='skipped';},
+    r=>{r.repositories[0].workflows[0].jobs[0].status='queued';},r=>{r.repositories[0].workflows[0].jobs.shift();},
+    r=>{r.repositories[0].workflows[0].file='other.yml';},r=>{r.repositories[0].workflows[0].jobs[0].unknown=true;},
+  ];
+  for(const mutate of mutations){const f=localChecksFixture();mutate(f.receipt);f.save();assert.throws(()=>release.readLocalChecks(f.file,f.targets,observedTime));}
+  const boundary=localChecksFixture();boundary.receipt.observedAt=new Date(observedTime-30*60*1000).toISOString();boundary.save();
+  assert.doesNotThrow(()=>release.readLocalChecks(boundary.file,boundary.targets,observedTime));
+});
+
+test('local receipt must be an absolute file outside both source trees, including symlink targets',()=>{
+  const f=localChecksFixture();
+  assert.throws(()=>release.readLocalChecks('checks.json',f.targets,observedTime),/absolute/);
+  for(const root of [f.wrRoot,f.prRoot]){
+    const inside=join(root,'checks.json');writeFileSync(inside,JSON.stringify(f.receipt));
+    assert.throws(()=>release.readLocalChecks(inside,f.targets,observedTime),/outside/);
+    const link=join(f.directory,root===f.wrRoot?'wr-link.json':'pr-link.json');symlinkSync(inside,link);
+    assert.throws(()=>release.readLocalChecks(link,f.targets,observedTime),/outside/);
+  }
+});
+
+test('local receipt cannot omit a required workflow or reuse a job from another repository',()=>{
+  const f=localChecksFixture();
+  f.targets[0].policy.requiredWorkflows.push({file:'radar-integration.yml',jobs:['web-radar-integration']});
+  assert.throws(()=>release.readLocalChecks(f.file,f.targets,observedTime),/Missing required workflow/);
+  f.targets[0].policy.requiredWorkflows.pop();
+  f.receipt.repositories[1].workflows[0].jobs[0].id=f.receipt.repositories[0].workflows[0].jobs[0].id;f.save();
+  assert.throws(()=>release.readLocalChecks(f.file,f.targets,observedTime),/Duplicate.*job/);
+});
+
+test('artifact records the executing controller independently of application SHAs and rejects another controller',()=>{
+  const root=fixture();
+  const controllerDigest=createHash('sha256').update(readFileSync(new URL('./release-production.mjs',import.meta.url))).digest('hex');
+  const {manifest,digest}=createManifest(root,{sourceCommit:sha,productRadarCommit:other,controllerSHA256:'0'.repeat(64)});
+  assert.equal(manifest.controllerSHA256,controllerDigest);
+  assert.equal(verifyArtifact(root,digest,sha,other).controllerSHA256,controllerDigest);
+  manifest.controllerSHA256='0'.repeat(64);
+  writeFileSync(join(root,'manifest.json'),JSON.stringify(manifest));
+  const alteredDigest=createHash('sha256').update(readFileSync(join(root,'manifest.json'))).digest('hex');
+  assert.throws(()=>verifyArtifact(root,alteredDigest,sha,other),/different release controller/);
 });
