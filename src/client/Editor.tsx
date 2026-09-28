@@ -1630,6 +1630,7 @@ export default function Editor({
                     生成状态只表示代码已保存，不代表视觉还原已通过验收。请打开私有整站预览，对照设计图检查桌面、手机、产品图片与联系方式后再发布。
                   </p>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {detail.websitePoints && hasCloneOutput(draft.cloneConfig) && <Button onClick={() => setPreviewOpen(true)} disabled={!!busy}>查看已生成页面</Button>}
                     <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
                       <Icon name="eye" />
                       {detail.websitePoints ? `制作并预览网站 · ${detail.websiteResultVersion ? detail.websitePoints : draft.products.length > 10 ? 300 : 200} 点` : '立即预览全真网站'}
