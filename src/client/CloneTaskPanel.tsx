@@ -244,6 +244,7 @@ export function CloneTaskPanel({
           发布已提交，无法暂停或撤回；刷新后可继续查看结果。
         </p>
       )}
+      {progress.publicationNotice && <Notice>{progress.publicationNotice}</Notice>}
       {error && <Button onClick={() => setRevision(value => value + 1)}>重新同步</Button>}
       {(error || job.error || state.publication?.error) && (
         <Notice tone="error">{error || state.publication?.error || job.error}</Notice>

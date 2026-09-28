@@ -271,8 +271,11 @@ async function request(path: string, body?: unknown, principal = owner, method?:
   return { status: r.status, data: (await r.json()) as Record<string, any> };
 }
 async function create(name = 'Site') {
-  return (await request('/api/projects', { name, requestId: crypto.randomUUID() })).data
-    .project as Project;
+  const project = (await request('/api/projects', { name, requestId: crypto.randomUUID() })).data.project as Project;
+  // These downstream workflow scenarios use legacy websites; the new creation/paid
+  // preview lifecycle, including publication gating, is covered by website-quota.test.ts.
+  await env.DB.prepare("DELETE FROM idempotency WHERE scope LIKE 'website-quota:%' AND json_extract(result,'$.projectId')=?").bind(project.id).run();
+  return project;
 }
 async function brandedClone() {
  const p=await create();p.draft.company.name='Preview Brand';p.draft.company.email='sales@example.com';
@@ -2412,6 +2415,23 @@ describe('persistent clone tasks', () => {
     expect((await request(`/api/projects/${p.id}/jobs/${taskId}/retry`,{})).status).toBe(409);
     expect((await request(`/api/projects/${p.id}/clone/resume`,{taskId:'foreign'})).status).toBe(409);
     expect((await request(`/api/projects/${p.id}/clone/stop`,{taskId},{...owner,userId:'stranger'})).status).toBe(404);
+  });
+  it('retains a newly generated clone and directs the owner to priced preview before first publication', async () => {
+    let p=(await request('/api/projects',{name:'New paid website',requestId:crypto.randomUUID()})).data.project as Project;
+    p.draft.company.name='New Company';p.draft.company.email='owner@example.com';p.draft.company.description='A supplier of wooden products.';
+    const image=await uploadAsset(p);
+    p.draft.country='US';
+    p.draft.products=[{id:'one',name:'One product',description:'Provided facts',material:'Wood',dimensions:'10 cm',imageAssetId:image.id}];p.draft.primaryProductId='one';
+    p=(await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project;
+    expect((await start(p,true)).status).toBe(202);await service.tick();
+    const result=await state(p),detail=await get(p);
+    expect(result.job.status).toBe('succeeded');expect(result.publication).toBeUndefined();
+    expect(result.job.cloneProgress.publicationNotice).toContain('制作并预览网站');
+    expect(detail.project.draft.cloneConfig.artifact).toBeTruthy();expect(detail.project.draft.cloneConfig.status).toBe('ready');
+    expect((await request(`/api/projects/${p.id}/preview`)).status).toBe(200);
+    expect((await request(`/api/projects/${p.id}/prepare-website-preview`,{expectedVersion:detail.project.version,acceptedPoints:200})).status).toBe(200);
+    const published=await request(`/api/projects/${p.id}/publish`,{requestId:crypto.randomUUID(),expectedVersion:detail.project.version});
+    expect(published.status).toBe(200);
   });
   it('does not permit draft saves to clobber active task state and auto-publishes with no client follow-up', async () => {
     const p=await brandedClone();const created=await start(p,true);

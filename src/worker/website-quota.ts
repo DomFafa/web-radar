@@ -13,6 +13,10 @@ export interface WebsiteCreation {
   userId: string;
   workspaceId: string;
   reservationId?: string;
+  productCount?: number;
+  resultVersion?: number;
+  resultKey?: string;
+  deferred?: boolean;
   state: State;
 }
 type Receipt = { projectId: string; reservationId: string; status: 'reserved' | 'charged' | 'released' };
@@ -25,10 +29,10 @@ export class WebsiteQuota {
     const row = await this.env.DB.prepare('SELECT result FROM idempotency WHERE scope=? AND request_id=?').bind(prefix + scope, id).first<{ result: string }>();
     return row ? JSON.parse(row.result) : undefined;
   }
-  async intent(principal: Principal, scope: string, id: string, fingerprint: string): Promise<WebsiteCreation> {
+  async intent(principal: Principal, scope: string, id: string, fingerprint: string, pricing: {productCount?: number; deferred?: boolean} = {}): Promise<WebsiteCreation> {
     const existing = await this.store.idempotent<WebsiteCreation>(prefix + scope, id, fingerprint);
     if (existing) return existing;
-    const claim: WebsiteCreation = { sourceScope: scope, requestId: id, projectId: crypto.randomUUID(), userId: principal.userId, workspaceId: principal.workspaceId, state: 'new' };
+    const claim: WebsiteCreation = { sourceScope: scope, requestId: id, projectId: crypto.randomUUID(), userId: principal.userId, workspaceId: principal.workspaceId, ...pricing, state: 'new' };
     try { await this.store.remember(prefix + scope, id, fingerprint, claim).run(); }
     catch (error) {
       const durable = await this.store.idempotent<WebsiteCreation>(prefix + scope, id, fingerprint);
@@ -36,6 +40,10 @@ export class WebsiteQuota {
       throw error;
     }
     return claim;
+  }
+  async forProject(projectId: string): Promise<WebsiteCreation | undefined> {
+    const row = await this.env.DB.prepare("SELECT result FROM idempotency WHERE scope LIKE 'website-quota:%' AND json_extract(result,'$.projectId')=? LIMIT 1").bind(projectId).first<{result: string}>();
+    return row ? JSON.parse(row.result) : undefined;
   }
   statement(claim: WebsiteCreation, state: State = claim.state): D1PreparedStatement {
     return this.env.DB.prepare('UPDATE idempotency SET result=? WHERE scope=? AND request_id=?')
@@ -53,7 +61,9 @@ export class WebsiteQuota {
       response = await fetch(origin + '/api/web-radar/service/website-quota/' + action, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Web-Radar-Secret': secret },
         body: JSON.stringify({ userId: claim.userId, workspaceId: claim.workspaceId, projectId: claim.projectId,
-          ...(['commit', 'release'].includes(action) ? { reservationId: claim.reservationId } : {}) }),
+          ...(['commit', 'release'].includes(action) ? { reservationId: claim.reservationId } : {}),
+          ...(['reserve', 'commit'].includes(action) && claim.productCount !== undefined ? {productCount: claim.productCount} : {}),
+          ...(action === 'commit' && claim.resultVersion !== undefined ? {resultVersion: claim.resultVersion} : {}) }),
         redirect: 'manual', signal: AbortSignal.timeout(15000),
       });
     } catch { throw new ApiError(503, 'website_quota_unavailable', '网站额度服务暂时不可用，请重试原创建请求。'); }
@@ -94,6 +104,7 @@ export class WebsiteQuota {
   }
   async commit(claim: WebsiteCreation): Promise<void> {
     if (claim.state === 'charged') return;
+    if (claim.deferred && !claim.resultKey) return; // An empty editor is not a delivered website.
     // The atomic commit marker proves creation even if the user has since deleted the website.
     if (claim.state !== 'commit' && !await this.store.one<Project>('projects', claim.projectId)) throw new ApiError(503, 'website_creation_pending', '网站创建尚未完成，请重试原请求。');
     await this.schedule(Date.now() + 1000);
@@ -110,7 +121,7 @@ export class WebsiteQuota {
   async release(claim: WebsiteCreation): Promise<void> {
     if (claim.state === 'charged' || claim.state === 'released' || claim.state === 'new') return;
     // Never compensate a successful D1 commit or refund an already-created website.
-    if (claim.state === 'commit' || await this.store.one<Project>('projects', claim.projectId)) return this.commit(claim);
+    if (claim.state === 'commit' || (!claim.deferred && await this.store.one<Project>('projects', claim.projectId))) return this.commit(claim);
     await this.schedule(Date.now() + 1000);
     if (!claim.reservationId) {
       const receipt = await this.api('status', claim);
@@ -133,7 +144,7 @@ export class WebsiteQuota {
         const claim = await this.find(saved.sourceScope, saved.requestId);
         if (!claim || ['new', 'charged', 'released'].includes(claim.state)) return;
         try {
-          if (claim.state === 'commit' || await this.store.one<Project>('projects', claim.projectId)) await this.commit(claim);
+          if (claim.state === 'commit' || (!claim.deferred && await this.store.one<Project>('projects', claim.projectId))) await this.commit(claim);
           else {
             if (claim.sourceScope.startsWith('materials:') && !['commit', 'release'].includes(claim.state)) {
               const receipt = await this.env.DB.prepare('SELECT result FROM idempotency WHERE scope=? AND request_id=?').bind(claim.sourceScope, claim.requestId).first<{ result: string }>();
