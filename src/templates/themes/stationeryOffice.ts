@@ -23,7 +23,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: '160 gsm FSC-certified acid-free ivory paper + linen cover',
     dimensions: 'A5 (148 × 210 mm) · 192 pages · 5 mm dot grid',
     tagline: 'Fountain-Pen Friendly Lay-Flat Thread Binding',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=800&q=80&auto=format',
   },
   {
     id: 'sta-2',
@@ -33,7 +33,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: 'Polycarbonate barrel + tungsten carbide ball tip',
     dimensions: '142 mm length · 0.5 mm tip · 800 m ink life per refill',
     tagline: 'Quick-Dry Smudge-Free Ultra-Smooth Gel Ink Flow',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800&q=80&auto=format',
   },
   {
     id: 'sta-3',
@@ -43,7 +43,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: '100% sustainable Moso bamboo + felt lining',
     dimensions: '280 × 180 × 120 mm · 6 compartments + 1 drawer',
     tagline: 'Handcrafted Sustainable Bamboo with Felt-Lined Drawer',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&q=80&auto=format',
   },
   {
     id: 'sta-4',
@@ -53,7 +53,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: 'Full-grain vegetable-tanned Tuscan cowhide + brass hardware',
     dimensions: 'A5 compatible · 30 mm ring diameter · 2 card slots',
     tagline: 'Tuscan Full-Grain Leather That Ages Beautifully',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?w=800&q=80&auto=format',
   },
   {
     id: 'sta-5',
@@ -63,7 +63,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: 'Japanese rice paper + natural rubber adhesive',
     dimensions: '15 mm × 10 m per roll · 12 assorted designs',
     tagline: 'Repositionable Archival-Safe Japanese Rice Paper',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=800&q=80&auto=format',
   },
   {
     id: 'sta-6',
@@ -73,7 +73,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: 'Cold-rolled steel body + chrome-plated mechanism',
     dimensions: '190 × 55 × 95 mm · accepts standard 23/6 to 23/13 staples',
     tagline: 'Flat-Clinch 100-Sheet Industrial-Grade Chrome Finish',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=800&q=80&auto=format',
   },
   {
     id: 'sta-7',
@@ -83,7 +83,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: 'Lacquered steel whiteboard + anodized aluminum frame',
     dimensions: '600 × 450 mm · magnetic surface · includes accessories',
     tagline: 'Magnetic Dry-Erase Surface with Aluminum Frame',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1589556264800-08ae9e129a8c?w=800&q=80&auto=format',
   },
   {
     id: 'sta-8',
@@ -93,7 +93,7 @@ export const STATIONERY_DEFAULT_PRODUCTS: ThemedStationeryItem[] = [
     material: 'Natural Portuguese cork + recycled kraft paper + pine frame',
     dimensions: '450 × 300 mm · 8 mm cork thickness · 20 pins included',
     tagline: 'Natural Portuguese Cork with Rose-Gold Push Pins',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800&q=80&auto=format',
   },
 ];
 

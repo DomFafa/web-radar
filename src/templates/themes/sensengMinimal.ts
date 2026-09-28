@@ -18,7 +18,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Quiet Architecture for Hands',
     category: 'gallery',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80&auto=format',
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 
@@ -106,7 +106,7 @@ export function renderMinimalHome(ctx: ThemeContext): string {
             <div style="position:absolute;top:16px;left:16px;font-size:0.72rem;letter-spacing:0.1em;color:#9ca3af;text-transform:uppercase;">
               EXHIBIT // № 01
             </div>
-            <img src="${esc(heroProduct.img || '/templates/senseng/products-3.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:340px;height:auto;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,0.08));">
+            <img src="${esc(heroProduct.img || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80&auto=format')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:340px;height:auto;object-fit:contain;filter:drop-shadow(0 20px 30px rgba(0,0,0,0.08));">
             <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:14px;display:flex;justify-content:space-between;font-size:0.78rem;color:#6b7280;letter-spacing:0.05em;">
               <span>${esc(heroProduct.name)}</span>
               <span>100% NON-TOXIC SILICONE</span>
@@ -318,7 +318,7 @@ export function renderMinimalDetail(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Quiet Architecture for Hands',
     category: 'gallery',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80&auto=format',
   };
   const related = products.filter((item) => item.id !== p.id).slice(0, 3);
   const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');

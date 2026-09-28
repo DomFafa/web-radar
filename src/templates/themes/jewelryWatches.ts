@@ -33,7 +33,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Hand-burnished 4-prong claw with 36 micro-pavé melee diamonds',
     moq: '10 Pcs Bespoke Batch',
     tagline: 'Eternal Radiance Cut to Flawless Optical Precision',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&q=80&auto=format',
   },
   {
     id: 'jew-2',
@@ -48,7 +48,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Anglage hand-bevelling, perlage circular graining, 100m water resist',
     moq: '30 Pcs per Batch',
     tagline: 'Mastering the Cadence of Gravity and Time',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80&auto=format',
   },
   {
     id: 'jew-3',
@@ -63,7 +63,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Articulated platinum lattice drop with hidden safety french clips',
     moq: '5 Pairs Bespoke',
     tagline: 'Velvety Green Fire from Legendary Ancient Mines',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=800&q=80&auto=format',
   },
   {
     id: 'jew-4',
@@ -78,7 +78,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Engraved 22K gold oscillating rotor with astronomical night sky',
     moq: '25 Pcs Run',
     tagline: 'The Celestial Heavens Encapsulated upon Your Wrist',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80&auto=format',
   },
   {
     id: 'jew-5',
@@ -93,7 +93,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Double-safety integrated box clasp with tension spring lock',
     moq: '15 Pcs Order',
     tagline: 'Passionate Crimson Fire in Hypnotic Cadence',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80&auto=format',
   },
   {
     id: 'jew-6',
@@ -108,7 +108,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Super-LumiNova BGW9 blue emission on hands and indices',
     moq: '50 Pcs Production',
     tagline: 'Synchronized Precision Across Global Meridian Zones',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80&auto=format',
   },
   {
     id: 'jew-7',
@@ -123,7 +123,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Adjustable 18K wheat chain with silicon sliding bead stopper',
     moq: '20 Pcs Run',
     tagline: 'Solar Warmth Forged in Pristine Oceanic Depths',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=800&q=80&auto=format',
   },
   {
     id: 'jew-8',
@@ -138,7 +138,7 @@ export const JEWELRY_DEFAULT_PRODUCTS: ThemedJewelryItem[] = [
     craftsmanshipDetail: 'Breguet blued steel hands with hand-sewn Mississippiensis strap',
     moq: '30 Pcs Order',
     tagline: 'The Pinnacle of Subdued Architectural Sophistication',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80&auto=format',
   },
 ];
 

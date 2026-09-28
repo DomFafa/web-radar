@@ -18,7 +18,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Born from Nature',
     category: 'eco',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80&auto=format',
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 
@@ -109,7 +109,7 @@ export function renderNatureHome(ctx: ThemeContext): string {
         <!-- Right Visual Showcase -->
         <div class="wr-nature-hero-right" style="position:relative;text-align:center;" data-reveal="fade-up">
           <div class="wr-nature-frame wr-hero-float wr-card-hover" style="background:#ffffff;border:1px solid #d5cec0;border-radius:32px;padding:40px;box-shadow:0 16px 36px rgba(45,74,34,0.08);position:relative;max-width:480px;margin:0 auto;">
-            <img src="${esc(heroProduct.img || '/templates/senseng/products-2.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;transition:transform 0.4s ease;">
+            <img src="${esc(heroProduct.img || 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80&auto=format')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;transition:transform 0.4s ease;">
             <div style="margin-top:20px;display:flex;justify-content:center;gap:12px;font-size:0.82rem;font-weight:800;color:#2d4a22;">
               <span>🌱 0 Phthalates</span>
               <span>·</span>
@@ -324,7 +324,7 @@ export function renderNatureDetail(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Born from Nature',
     category: 'eco',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80&auto=format',
   };
   const related = products.filter((item) => item.id !== p.id).slice(0, 3);
   const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');

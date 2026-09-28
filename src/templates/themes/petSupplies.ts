@@ -23,7 +23,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: 'Military-grade 900D nylon + anodized aluminum hardware',
     dimensions: 'S/M/L/XL adjustable · 2.5 cm width · 100 kg tensile strength',
     tagline: 'Night-Visible Safety with Reflective Triple Stitching',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800&q=80&auto=format',
   },
   {
     id: 'pet-2',
@@ -33,7 +33,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: 'CertiPUR-US certified memory foam + OEKO-TEX micro-suede',
     dimensions: '90 × 70 × 22 cm · supports up to 45 kg',
     tagline: 'Joint-Relief Comfort Endorsed by Veterinary Orthopedists',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?w=800&q=80&auto=format',
   },
   {
     id: 'pet-3',
@@ -43,7 +43,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: '100% natural rubber · FDA-compliant food-safe dyes',
     dimensions: 'Diameter 10 cm · 3 difficulty levels · dishwasher safe',
     tagline: 'Slow-Feeding Cognitive Stimulation for Active Minds',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1535294435445-d7249524ef2e?w=800&q=80&auto=format',
   },
   {
     id: 'pet-4',
@@ -53,7 +53,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: '304 stainless steel bowls + sustainable Moso bamboo frame',
     dimensions: '38 × 18 × 12 cm · 2 × 400 ml capacity',
     tagline: 'Posture-Perfect Elevated Dining for Healthier Digestion',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=800&q=80&auto=format',
   },
   {
     id: 'pet-5',
@@ -63,7 +63,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: 'Water-resistant Oxford fabric + breathable mesh panels',
     dimensions: '45 × 28 × 28 cm (expandable to 60 cm) · up to 9 kg',
     tagline: 'IATA-Compliant Ventilated Travel Freedom',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80&auto=format',
   },
   {
     id: 'pet-6',
@@ -73,7 +73,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: 'Flexible SS304 pins + TPR anti-fatigue handle',
     dimensions: '19 × 8 × 5 cm · 140 fine pins · all coat types',
     tagline: 'One-Button Self-Cleaning for Effortless Daily Grooming',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800&q=80&auto=format',
   },
   {
     id: 'pet-7',
@@ -83,7 +83,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: 'ABS impact-resistant casing + nylon reinforced tape',
     dimensions: '5 m retractable length · supports up to 50 kg · rechargeable LED',
     tagline: 'One-Handed Control with Built-in LED Illumination',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800&q=80&auto=format',
   },
   {
     id: 'pet-8',
@@ -93,7 +93,7 @@ export const PET_DEFAULT_PRODUCTS: ThemedPetItem[] = [
     material: 'PU-coated ripstop fabric + 3M Scotchlite reflective strips',
     dimensions: 'XS to XXL · waterproof rating 10,000 mm H2O',
     tagline: 'Sealed-Seam Storm Protection with 3M Reflective Visibility',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800&q=80&auto=format',
   },
 ];
 
