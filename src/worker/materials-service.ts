@@ -13,6 +13,7 @@ import { prRequest } from './product-radar';
 import { canManage, defaultDraft, expectedVersion, validateDraft } from './domain';
 import { DomainStore } from './domain-store';
 import { WebsiteQuota } from './website-quota';
+import { renderWebsiteResult, saveWebsiteResult } from './website-results';
 
 interface Operation {
   receipt:MaterialsReceipt;principal:Principal;projectId:string;snapshotKey:string;
@@ -100,7 +101,7 @@ export class MaterialsService {
     const issues=validateMaterialsPositions(input.materials);
     if(issues.length)throw new ApiError(issues.some(i=>i.code==='contract_revision_conflict')?409:422,issues[0].code,issues[0].message);
     const target=await this.target(principal,input);
-    const claim=target?undefined:await this.websiteQuota.intent(principal,scope,input.submissionId,fingerprint);
+    const claim=target?undefined:await this.websiteQuota.intent(principal,scope,input.submissionId,fingerprint,{productCount:input.materials.products.length});
     if(claim)await this.websiteQuota.reserve(claim);
     const projectId=target?.id||claim!.projectId;
     const snapshotKey=`materials/${scope.slice(10)}/${input.submissionId}/confirmed.json`;
@@ -183,6 +184,11 @@ export class MaterialsService {
           const project:Project={...(target||{id:operation.projectId,ownerId:current.userId,workspaceId:current.workspaceId,name:input.target.mode==='create'?input.target.name:'',version:0,createdAt:operation.createdAt,offline:false}),draft,version:(target?.version||0)+1,updatedAt:time(),materials:{submissionId:input.submissionId,source:input.source,contentSha256:operation.receipt.contentSha256,snapshotKey:operation.snapshotKey,acceptedAt:time()}};
           operation.receipt={...operation.receipt,state:'accepted',projectId:project.id,projectVersion:project.version,nextAction:'open-web-radar',entry:'prepared-materials'};
           const claim=target?undefined:await this.websiteQuota.find(scope,input.submissionId);
+          if(claim?.productCount){
+            const pages=await renderWebsiteResult(project);
+            claim.resultKey=await saveWebsiteResult(this.env,project,pages,Object.values(operation.assets));
+            claim.resultVersion=project.version;
+          }
           await this.store.batch([target?this.store.update('projects',project):this.store.insert('projects',project),...Object.values(operation.assets).map(a=>this.store.insert('assets',a)),this.update(scope,operation),...(claim?[this.websiteQuota.statement(claim,'commit')]:[])]);
           if(claim)await this.websiteQuota.commit(claim);
         });

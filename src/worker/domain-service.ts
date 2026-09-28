@@ -53,6 +53,7 @@ import { renderSite, renderSiteFiles } from '../templates';
 import { prImage, prService } from './product-radar';
 import { DomainStore } from './domain-store';
 import { WebsiteQuota } from './website-quota';
+import { loadWebsiteResult, renderWebsiteResult, saveWebsiteResult } from './website-results';
 import { publicationErrorDetails } from './publication-diagnostics';
 import {
   designPageIds,
@@ -682,6 +683,49 @@ export class DomainService {
       await this.store.update('projects', next).run();
       return json({ project: next });
     }
+    if (command === 'prepare-website-preview' && method === 'POST') {
+      const body = await this.body(request);
+      expectedVersion(project, body.expectedVersion);
+      const claim = await this.websiteQuota.forProject(project.id);
+      requireCondition(project.ownerId === principal.userId, 403, 'read_only_role', '仅网站所有者可以确认制作费用。');
+      if (!claim?.deferred || claim.state === 'charged') return json({project});
+      const count = claim.resultKey ? claim.productCount! : project.draft.products.length;
+      requireCondition(count >= 1 && count <= 20, 400, 'invalid_products', '请选择 1–20 个产品后制作网站。');
+      requireCondition(body.acceptedPoints === (count <= 10 ? 200 : 300), 409, 'website_price_changed', '制作费用已变化，请重新确认当前产品数量与点数。');
+      if (!claim.resultKey) {
+        const draft = project.draft;
+        assertSiteIntakeReady(draft);
+        requireCondition(draft.company.description.trim(), 400, 'company_incomplete', '请填写公司 / 品牌简介。');
+        if (buildMode(draft) === 'clone') {
+          requireCondition(draft.cloneConfig?.status === 'ready' && hasCloneOutput(draft.cloneConfig), 409, 'clone_not_ready', '请先完成当前设计的页面生成，已保存的资料会保留。');
+          requireCondition(testMode(this.env) || draft.cloneConfig?.generation?.mode !== 'fixture', 400, 'clone_fixture_only', '演示页面不能作为付费网站，请使用真实设计生成。');
+        } else if (buildMode(draft) === 'custom') {
+          requireCondition(draft.siteDesign && staticSiteReady(draft), 409, 'site_not_built', '请先确认设计稿并生成当前版本的网站，已保存的资料会保留。');
+          assertSiteContentReady(draft);
+        } else assertPublishable({...draft,buildBranch:'template'});
+        const assets = await this.store.list<Asset>('assets', 'project_id=?', [project.id]);
+        await this.validateAssets(project.id, draft, new Map(assets.map(asset=>[asset.id,asset])));
+        const pages = await renderWebsiteResult(project, options => this.renderPage(draft, options));
+        claim.resultKey = await saveWebsiteResult(this.env, project, pages, assets);
+        claim.resultVersion = project.version;
+        claim.productCount = count;
+        // Freeze the approved result before an uncertain reserve can outlive this request.
+        await this.websiteQuota.statement(claim).run();
+      }
+      if (claim.state !== 'commit') {
+        await this.websiteQuota.reserve(claim);
+        try {
+          await this.websiteQuota.statement(claim, 'commit').run();
+          claim.state = 'commit';
+        } catch (error) {
+          const durable = await this.websiteQuota.find(claim.sourceScope, claim.requestId);
+          if (durable?.state === 'commit') Object.assign(claim, durable);
+          else {await this.websiteQuota.release(claim).catch(() => {}); throw error;}
+        }
+      }
+      await this.websiteQuota.commit(claim);
+      return json({project, resultVersion: claim.resultVersion});
+    }
     if (command === 'preview' && (method === 'GET' || method === 'POST')) {
       let draft=project.draft;
       if(method==='POST'){
@@ -757,18 +801,23 @@ export class DomainService {
   private async productRadarProject(request: Request, identity: Principal, path: string[]): Promise<Response> {
     const principal = await currentMaterialsPrincipal(this.env, identity);
     // This handler has just refreshed the principal at the durable boundary.
-    const project = await this.store.one<Project>('projects', path[0]);
-    requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
     const action = path[1], url = new URL(request.url);
+    const archived = request.method === 'GET' && ['preview','assets','status'].includes(action) && url.searchParams.has('expectedVersion')
+      ? await loadWebsiteResult(this.env, path[0], Number(url.searchParams.get('expectedVersion'))) : undefined;
+    const project = archived?.project || await this.store.one<Project>('projects', path[0]);
+    requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
     if (action === 'refresh-publication' && request.method === 'POST') {
       const job = await this.publish(project, principal, await this.body(request), false, true);
       return json(await this.projectServiceStatus(project, job.id));
     }
-    requireCondition(project.materials && project.draft.materials, 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
-    if (action === 'assets' && path[2] && request.method === 'GET')
-      return this.assetResponse(request, await this.projectAsset(project.id, path[2]));
+    requireCondition(archived || (project.materials && project.draft.materials), 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
+    if (url.searchParams.has('expectedVersion')) expectedVersion(project, Number(url.searchParams.get('expectedVersion')));
+    if (action === 'assets' && path[2] && request.method === 'GET') {
+      const asset = archived ? archived.assets.find(item => item.id === path[2]) : await this.projectAsset(project.id, path[2]);
+      requireCondition(asset, 404, 'asset_not_found', '素材不存在。');
+      return this.assetResponse(request, asset);
+    }
     if (action === 'preview' && request.method === 'GET') {
-      if (url.searchParams.has('expectedVersion')) expectedVersion(project, Number(url.searchParams.get('expectedVersion')));
       const draft = project.draft, lang = (url.searchParams.get('lang') || draft.languages[0]) as Language;
       const page = (url.searchParams.get('page') || 'home') as DesignPage;
       const productId = url.searchParams.get('productId') || draft.primaryProductId;
@@ -777,7 +826,7 @@ export class DomainService {
       requireCondition(draft.products.some(p => p.id === productId), 400, 'invalid_product', '没有配置这个产品。');
       const proxyBasePath = url.searchParams.get('proxyBasePath') || `/api/web-radar/projects/${project.id}`;
       const renderStarted = performance.now();
-      const html = await this.renderPage(draft, { projectId: project.id, page, lang, productId,
+      const html = archived ? archived.pages[siteFilePath(lang, page, productId)] : await this.renderPage(draft, { projectId: project.id, page, lang, productId,
         assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
       const htmlStarted = performance.now();
       const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
@@ -792,15 +841,15 @@ export class DomainService {
       return json(await this.projectServiceStatus(project, job.id));
     }
     if (['status', 'publication-status'].includes(action) && request.method === 'GET')
-      return json(await this.projectServiceStatus(project, url.searchParams.get('jobId') || undefined));
+      return json(await this.projectServiceStatus(project, url.searchParams.get('jobId') || undefined, Boolean(archived)));
     throw new DomainError(404, 'not_found', '接口不存在。');
   }
-  private async projectServiceStatus(project: Project, jobId?: string): Promise<ProjectServiceStatus> {
-    const job = jobId ? await this.store.one<Job>('jobs', jobId)
+  private async projectServiceStatus(project: Project, jobId?: string, archived = false): Promise<ProjectServiceStatus> {
+    const job = archived ? undefined : jobId ? await this.store.one<Job>('jobs', jobId)
       : (await this.store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC'))[0];
     if (jobId) requireCondition(job?.projectId === project.id && job.kind === 'publish', 404, 'job_not_found', '发布任务不存在。');
     const release = job?.input.releaseId ? await this.store.one<Release>('releases', String(job.input.releaseId)) : undefined;
-    const activeRelease = project.publishedReleaseId === release?.id ? release
+    const activeRelease = archived ? undefined : project.publishedReleaseId === release?.id ? release
       : project.publishedReleaseId ? await this.store.one<Release>('releases', project.publishedReleaseId) : undefined;
     const published = activeRelease?.status === 'succeeded' ? activeRelease : undefined;
     let completed = 0, total = 0;
@@ -847,7 +896,9 @@ export class DomainService {
     ]);
     const jobs = [...new Map([...recentJobs, ...activeJobs].map(job => [job.id, job])).values()].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
     if (activeRelease && !releases.some(release => release.id === activeRelease.id)) releases.push(activeRelease);
-    return { project, assets, jobs: jobs.map(job => this.publicHistoryJob(job)), releases: releases.map(release => ({ ...release, draft: release.id === project.publishedReleaseId ? release.draft : undefined, error: release.status === 'succeeded' ? undefined : release.error })), quota, history: { ...totals, limit: 20 } };
+    const creation = await this.websiteQuota.forProject(project.id);
+    const websitePoints = creation?.deferred && creation.state !== 'charged' ? ((creation.resultKey ? creation.productCount! : project.draft.products.length) > 10 ? 300 : 200) : undefined;
+    return { project, assets, websitePoints, websiteResultVersion: creation?.resultVersion, jobs: jobs.map(job => this.publicHistoryJob(job)), releases: releases.map(release => ({ ...release, draft: release.id === project.publishedReleaseId ? release.draft : undefined, error: release.status === 'succeeded' ? undefined : release.error })), quota, history: { ...totals, limit: 20 } };
   }
   private async history(project: Project, url: URL) {
     const kind = url.searchParams.get('kind'), page = Number(url.searchParams.get('page') ?? 1);
@@ -990,8 +1041,8 @@ export class DomainService {
         status: 'idle',
       };
     }
-    const claim = await this.websiteQuota.intent(principal, scope, rid, hash);
-    await this.websiteQuota.reserve(claim);
+    const claim = await this.websiteQuota.intent(principal, scope, rid, hash, {deferred: true});
+    if (!claim.deferred) await this.websiteQuota.reserve(claim);
     let p: Project = {
       id: claim.projectId,
       ownerId: principal.userId,
@@ -1028,7 +1079,7 @@ export class DomainService {
         this.store.insert('projects', p),
         ...assets.map((a) => this.store.insert('assets', a)),
         this.store.remember(scope, rid, hash, { id: p.id }),
-        this.websiteQuota.statement(claim, 'commit'),
+        this.websiteQuota.statement(claim, claim.deferred ? 'new' : 'commit'),
       ]);
     } catch (e) {
       // A rejected D1 response does not prove the atomic transaction was rolled back.
@@ -1906,6 +1957,8 @@ export class DomainService {
       hash = await fingerprint({ body, restore, ...(refresh ? { refresh: true } : {}) }),
       prior = await this.store.idempotent<{ id: string }>(scope, rid, hash);
     if (prior) return (await this.store.one<Job>('jobs', prior.id))!;
+    const creation = await this.websiteQuota.forProject(project.id);
+    requireCondition(!creation?.deferred || creation.state === 'charged', 409, 'website_preview_required', '请先在预览与发布页面点击“制作并预览网站”，确认点数后再发布。已生成的页面会保留。');
     let draft: Draft, draftVersion: number, restored: Release | undefined, refreshed: Release | undefined;
     if (refresh) {
       expectedVersion(project, body.expectedVersion);

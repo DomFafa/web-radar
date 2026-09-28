@@ -16,6 +16,7 @@ const preview = base.extend({
 });
 const publish = base.extend({ requestId: z.string().min(4).max(120).regex(/^[\w-]+$/), expectedVersion: version });
 const refresh = publish.extend({ expectedPublishedReleaseId: z.uuid() });
+const versionedRead = base.extend({expectedVersion: version.optional()});
 const publication = base.extend({ jobId: z.uuid().optional() });
 
 export function registerProjectIntegration(app: Hono<HonoEnv>) {
@@ -26,7 +27,7 @@ export function registerProjectIntegration(app: Hono<HonoEnv>) {
       const assetId = c.req.param('assetId');
       if (!z.uuid().safeParse(projectId).success || (assetId && !/^[A-Za-z0-9_-]{1,200}$/.test(assetId)))
         throw new ApiError(400, 'invalid_project_service', '项目或素材标识无效。');
-      const schema = action === 'preview' ? preview : action === 'publish' ? publish : action === 'refresh-publication' ? refresh : action === 'publication-status' ? publication : base;
+      const schema = action === 'preview' ? preview : action === 'publish' ? publish : action === 'refresh-publication' ? refresh : action === 'publication-status' ? publication : assetId || action === 'status' ? versionedRead : base;
       const parsed = schema.safeParse(await jsonBody(c.req.raw, 4096));
       if (!parsed.success) throw new ApiError(400, 'invalid_project_service', '项目服务参数无效。');
       const { principal: identity, ...options } = parsed.data;

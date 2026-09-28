@@ -4,6 +4,7 @@ import{testDb}from'./helpers/db';
 import{MaterialsService}from'../src/worker/materials-service';
 import{DomainStore}from'../src/worker/domain-store';
 import{materialsFixture,materialsPng}from'./fixtures/materials';
+import * as templates from '../src/templates';
 import{ApiError,canonical,sha256}from'../src/worker/http';
 import type{AppEnv}from'../src/worker/env';
 import type{Project}from'../src/shared/model';
@@ -14,6 +15,7 @@ describe('durable confirmed materials receiver',()=>{
   const schedule=vi.fn(async(_time:number)=>{});
   let quotaExhausted=false,quotaCommitUnavailable=false;
   const websiteCalls:string[]=[];
+  const websiteBodies:Array<{action:string;body:Record<string,unknown>}>=[];
   const websiteClaims=new Map<string,{projectId:string;reservationId:string;status:string}>();
   const objects=new Map<string,{bytes:Uint8Array;options:any}>();
   beforeEach(async()=>{
@@ -22,10 +24,10 @@ describe('durable confirmed materials receiver',()=>{
     const bucket={async put(key:string,value:any,options:any){const bytes=typeof value==='string'?new TextEncoder().encode(value):new Uint8Array(value);objects.set(key,{bytes,options});},async get(key:string){const o=objects.get(key);return o?{size:o.bytes.length,httpMetadata:o.options?.httpMetadata,customMetadata:o.options?.customMetadata,arrayBuffer:async()=>o.bytes.buffer.slice(o.bytes.byteOffset,o.bytes.byteOffset+o.bytes.length),text:async()=>new TextDecoder().decode(o.bytes)}:null;},async head(key:string){return this.get(key);},async delete(key:string|string[]){for(const k of typeof key==='string'?[key]:key)objects.delete(k);}};
     env={DB:db,MEDIA:bucket,PRODUCT_RADAR_BASE_URL:'https://product.example.com',PRODUCT_RADAR_INTEGRATION_SECRET:'s'.repeat(40)}as unknown as AppEnv;
     store=new DomainStore(db);service=createService();
-    websiteClaims.clear();websiteCalls.length=0;quotaExhausted=false;quotaCommitUnavailable=false;
+    websiteClaims.clear();websiteCalls.length=0;websiteBodies.length=0;quotaExhausted=false;quotaCommitUnavailable=false;
     vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL,init?:RequestInit)=>{
       if(String(input).includes('/website-quota/')){
-        const body=JSON.parse(String(init?.body)),action=String(input).split('/').pop()!;websiteCalls.push(action);let row=websiteClaims.get(body.projectId);
+        const body=JSON.parse(String(init?.body)),action=String(input).split('/').pop()!;websiteCalls.push(action);websiteBodies.push({action,body});let row=websiteClaims.get(body.projectId);
         if(action==='reserve'&&quotaExhausted)return Response.json({message:'本月建站额度不足。'},{status:429});
         if(action==='commit'&&quotaCommitUnavailable)return Response.json({message:'暂时不可用。'},{status:503});
         if(action==='status'&&!row)return Response.json({message:'Missing'},{status:404});
@@ -76,6 +78,28 @@ describe('durable confirmed materials receiver',()=>{
     const replay=await service.submit(fixture.principal,fixture);expect(replay.projectId).toBe(p?.id);expect(fetches).toBe(2);
   });
 
+  it('reserves actual product count and commits the immutable rendered version',async()=>{
+    await service.submit(fixture.principal,fixture);const receipt=await finish();
+    expect(websiteBodies.find(call=>call.action==='reserve')?.body).toMatchObject({productCount:2});
+    expect(websiteBodies.find(call=>call.action==='commit')?.body).toMatchObject({productCount:2,resultVersion:1});
+    const object=objects.get(`website-results/${receipt.projectId}/1/result.json`)!;
+    const result=JSON.parse(new TextDecoder().decode(object.bytes));
+    expect(result.project.version).toBe(1);expect(result.pages['en/index.html']).toContain('<html');
+    expect(result.assets.every((asset:any)=>asset.key.startsWith('website-results/'))).toBe(true);
+    const project=(await store.one<Project>('projects',receipt.projectId!))!;
+    project.version++;project.draft.company.name='Changed later';await store.update('projects',project).run();
+    service=createService();await service.submit(fixture.principal,fixture);
+    expect(websiteBodies.filter(call=>call.action==='commit')).toHaveLength(1);
+    expect(JSON.parse(new TextDecoder().decode(objects.get(`website-results/${receipt.projectId}/1/result.json`)!.bytes)).project.draft.company.name).not.toBe('Changed later');
+  });
+  it('does not accept or charge materials until every preview page renders successfully',async()=>{
+    const renderer=vi.spyOn(templates,'renderSite').mockImplementationOnce(()=>{throw Error('Renderer failed');});
+    await service.submit(fixture.principal,fixture);await service.tick();
+    expect((await progress()).state).toBe('failed');expect(websiteCalls).not.toContain('commit');
+    expect(await store.list('projects')).toHaveLength(0);
+    renderer.mockRestore();await service.submit(fixture.principal,fixture);expect((await finish()).state).toBe('accepted');
+    expect(websiteCalls.filter(call=>call==='commit')).toHaveLength(1);
+  });
   it('rejects exhausted creation before saving a materials snapshot or copying any media',async()=>{
     quotaExhausted=true;await expect(service.submit(fixture.principal,fixture)).rejects.toMatchObject({status:429,message:'本月网站创建额度已用完，请联系管理员调整账号或工作区额度。'});
     expect(objects.size).toBe(0);expect(fetches).toBe(0);expect(await store.list('projects')).toHaveLength(0);
