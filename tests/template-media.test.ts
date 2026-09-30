@@ -6,8 +6,8 @@ import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 
 describe('template media checklist stays aligned with the renderer', () => {
   it('covers the selectable templates and preserves retired requirements', () => {
-    expect(TEMPLATES.map(t => t.id)).toEqual(['pawfect-groom', 'senseng-candy', 'senseng-video', 'senseng-nature', 'quantum-saas']);
-    for (const template of TEMPLATES.filter(t => t.id !== 'quantum-saas')) expect(templateMediaRequirements).toHaveProperty(template.id);
+    expect(TEMPLATES.map(t => t.id)).toEqual(['lumi-business', 'pawfect-groom', 'senseng-candy', 'senseng-video', 'senseng-nature', 'papernote']);
+    for (const template of TEMPLATES) expect(templateMediaRequirements).toHaveProperty(template.id);
   });
   it.each(['fintech-platform', 'digital-marketing', 'porto-accounting', 'crafto-corporate', 'juno-toys', 'corpox-consulting'])(
     '%s remains readable for existing sites but is absent from the new-site selector', (id) => {

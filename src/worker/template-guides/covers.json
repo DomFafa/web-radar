@@ -355,5 +355,12 @@
     "width": 1440,
     "height": 1000,
     "contractRevision": "2026-09-20.pawfect-groom-materials.2"
+  },
+  "lumi-business": {
+    "url": "/templates/previews/lumi-business.db0d249082becfa2.jpg",
+    "sha256": "db0d249082becfa2a48e0fed409dff8f9cc3f018f550fa881032dc5497346b0c",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-30.lumi-business-materials.1"
   }
 }

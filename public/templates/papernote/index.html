@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PaperNote - Portfolio Website Template</title>
+  <meta name="description" content="Explore PaperNote, a versatile portfolio website template perfect for designers. It includes a CMS-driven portfolio, a contact form, an FAQ section, and more.">
+  
+  <link rel="icon" href="/templates/papernote/w9h1iHd8rd7NHDGLPAZ2J9SpjSo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pn-yellow: #ffe68c;
+      --pn-pink: #ffc9f0;
+      --pn-blue: #9ddcff;
+      --pn-ink: #0e0e0e;
+      --pn-text-muted: rgba(14, 14, 14, 0.6);
+      --pn-border: #000000;
+      --pn-divider: rgba(14, 14, 14, 0.16);
+      --pn-brand: #ffe68c;
+      --pn-bg-paper: #ffffff;
+      --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+    }
+
+    body {
+      background-color: #fff;
+      background-image: url('/templates/papernote/c0EZxtMucSR6UOSZk2TBnWsqr4.svg');
+      background-repeat: repeat;
+      background-position: center;
+      background-size: 24px auto;
+      color: var(--pn-ink);
+      font-family: var(--font-outfit);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Floating Pill Navigation */
+    .pn-nav-wrapper {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1136px, calc(100vw - 32px));
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .pn-nav-bar {
+      pointer-events: auto;
+      background: #ffffff;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 9999px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .pn-logo-badge {
+      background: var(--pn-pink);
+      border: 1.5px solid var(--pn-border);
+      border-radius: 4px;
+      padding: 4px 14px;
+      font-weight: 800;
+      font-size: 16px;
+      color: #000;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      transition: transform 0.15s ease;
+    }
+    .pn-logo-badge:hover {
+      transform: translateY(-1px);
+    }
+
+    .pn-nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .pn-nav-link {
+      font-size: 15px;
+      font-weight: 500;
+      color: #000;
+      transition: opacity 0.2s ease;
+    }
+    .pn-nav-link:hover {
+      opacity: 0.75;
+    }
+
+    .pn-social-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 4px;
+    }
+    .pn-social-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease;
+    }
+    .pn-social-icon:hover {
+      transform: scale(1.15);
+    }
+
+    .pn-btn-hire {
+      background: #000000;
+      color: #ffffff !important;
+      border: 1.5px solid #000000;
+      border-radius: 9999px;
+      padding: 8px 20px;
+      font-weight: 700;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .pn-btn-hire:hover {
+      background: #222222;
+      transform: translateY(-1px);
+    }
+
+    /* Layout Containers */
+    .pn-container {
+      width: min(1136px, calc(100vw - 40px));
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Highlighter styles */
+    .pn-hl-yellow {
+      background: var(--pn-yellow);
+      padding: 2px 10px;
+      border-radius: 4px;
+      display: inline-block;
+      line-height: 1.15;
+    }
+    .pn-hl-pink {
+      background: var(--pn-pink);
+      padding: 2px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .pn-hl-blue {
+      background: var(--pn-blue);
+      padding: 2px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* Section Heading Component */
+    .pn-section-header {
+      margin-bottom: 32px;
+      display: inline-block;
+    }
+    .pn-section-header h2 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .pn-section-header .pn-arrow-wrap {
+      margin-top: 8px;
+      padding-left: 20px;
+    }
+
+    /* HERO SECTION */
+    .pn-hero {
+      padding-top: 140px;
+      padding-bottom: 90px;
+    }
+    .pn-hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .pn-hero-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .pn-pill-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 13.5px;
+      font-weight: 600;
+      background: #fff;
+    }
+    .pn-hero h1 {
+      font-size: clamp(40px, 5.5vw, 64px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin: 4px 0;
+    }
+    .pn-hero-sub {
+      font-size: 18px;
+      line-height: 1.5;
+      color: #0e0e0e;
+      max-width: 440px;
+      font-weight: 400;
+    }
+    .pn-hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .pn-btn-primary {
+      background: #000;
+      color: #fff !important;
+      border: 1.5px solid #000;
+      border-radius: 9999px;
+      padding: 12px 24px;
+      font-weight: 700;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      transition: transform 0.2s ease;
+    }
+    .pn-btn-primary:hover {
+      transform: translateY(-2px);
+    }
+    .pn-btn-outline {
+      background: #fff;
+      color: #000 !important;
+      border: 1.5px solid #000;
+      border-radius: 9999px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .pn-btn-outline:hover {
+      background: #f4f4f4;
+      transform: translateY(-2px);
+    }
+    .pn-hero-location {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 500;
+      margin-top: 8px;
+      color: #0e0e0e;
+    }
+
+    /* Hero Photo Frame */
+    .pn-photo-frame-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .pn-photo-frame {
+      background: var(--pn-pink);
+      border: 1.5px solid var(--pn-border);
+      border-radius: 16px;
+      padding: 14px;
+      transform: rotate(2deg);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+    .pn-photo-frame:hover {
+      transform: rotate(0deg) scale(1.01);
+    }
+    .pn-photo-img {
+      width: 100%;
+      aspect-ratio: 4 / 3.6;
+      object-fit: cover;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 10px;
+      display: block;
+      background: #f0f0f0;
+    }
+
+    /* Sparkles placement */
+    .pn-sparkle-pos-tl {
+      position: absolute;
+      top: -16px;
+      left: -16px;
+      width: 44px;
+      height: 44px;
+      z-index: 2;
+    }
+    .pn-sparkle-pos-tr {
+      position: absolute;
+      top: 140px;
+      right: -24px;
+      width: 44px;
+      height: 44px;
+      z-index: 2;
+    }
+    .pn-sparkle-pos-bl {
+      position: absolute;
+      bottom: -16px;
+      left: 30px;
+      width: 44px;
+      height: 44px;
+      z-index: 2;
+    }
+
+    /* FEATURED PROJECTS */
+    .pn-projects-section {
+      padding: 50px 0 80px;
+    }
+    .pn-projects-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-top: 8px;
+      margin-bottom: 40px;
+    }
+    .pn-card-polaroid {
+      border: 1.5px solid var(--pn-border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+      cursor: pointer;
+    }
+    .pn-card-polaroid:hover {
+      transform: translateY(-8px) scale(1.02) !important;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+    }
+    .pn-card-img-box {
+      border: 1.5px solid var(--pn-border);
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 16 / 10.5;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pn-card-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .pn-card-title {
+      font-size: 19px;
+      font-weight: 700;
+      text-align: center;
+      margin: 14px 0 10px;
+      letter-spacing: -0.01em;
+    }
+    .pn-card-btn {
+      background: #ffffff;
+      color: #000000;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 9999px;
+      padding: 6px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-align: center;
+      margin: 0 auto 6px;
+      width: fit-content;
+      transition: background 0.15s ease;
+    }
+    .pn-card-polaroid:hover .pn-card-btn {
+      background: #000000;
+      color: #ffffff;
+      border-color: #000000;
+    }
+
+    .pn-btn-center-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 32px 0;
+    }
+
+    /* Hole Punch Circle */
+    .pn-hole-punch {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid var(--pn-border);
+      background: #ffffff;
+    }
+
+    /* SERVICES SECTION */
+    .pn-services-section {
+      padding: 60px 0;
+    }
+    .pn-services-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .pn-service-card {
+      border: 1.5px solid var(--pn-border);
+      border-radius: 14px;
+      padding: 44px 24px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease;
+    }
+    .pn-service-card:hover {
+      transform: translateY(-3px);
+    }
+
+    /* EXPERIENCE SECTION */
+    .pn-experience-section {
+      padding: 60px 0;
+      position: relative;
+    }
+    .pn-experience-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .pn-exp-card {
+      border: 1.5px solid var(--pn-border);
+      border-radius: 14px;
+      padding: 24px 28px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease;
+    }
+    .pn-exp-card:hover {
+      transform: translateY(-2px);
+    }
+    .pn-exp-period {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(14, 14, 14, 0.8);
+      margin-bottom: 6px;
+    }
+    .pn-exp-role {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+    .pn-exp-divider {
+      border: 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.2);
+      margin: 12px 0 14px;
+    }
+    .pn-exp-desc {
+      font-size: 15px;
+      line-height: 1.55;
+      color: #1a1a1a;
+    }
+
+    /* FAQ SECTION */
+    .pn-faq-section {
+      padding: 60px 0 100px;
+    }
+    .pn-faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .pn-faq-item {
+      border: 1.5px solid var(--pn-border);
+      border-radius: 14px;
+      background: var(--pn-blue);
+      overflow: hidden;
+      transition: background 0.25s ease, box-shadow 0.2s ease;
+    }
+    .pn-faq-item.is-open {
+      background: var(--pn-yellow);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+    .pn-faq-trigger {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--pn-ink);
+      cursor: pointer;
+    }
+    .pn-faq-icon {
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 400;
+      transition: transform 0.2s ease;
+    }
+    .pn-faq-item.is-open .pn-faq-icon {
+      transform: rotate(45deg);
+    }
+    .pn-faq-content {
+      display: none;
+      padding: 0 24px 20px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #222;
+    }
+    .pn-faq-item.is-open .pn-faq-content {
+      display: block;
+    }
+
+    /* FOOTER */
+    .pn-footer {
+      background: #000000;
+      color: #ffffff;
+      border-radius: 28px 28px 0 0;
+      padding: 60px 48px 36px;
+      margin-top: auto;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .pn-footer-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 40px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .pn-footer-nav {
+      display: flex;
+      gap: 24px;
+    }
+    .pn-footer-nav a {
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 500;
+      transition: opacity 0.2s ease;
+    }
+    .pn-footer-nav a:hover {
+      opacity: 0.75;
+    }
+    .pn-footer-socials {
+      display: flex;
+      gap: 16px;
+    }
+    .pn-footer-socials a {
+      display: inline-flex;
+      transition: transform 0.15s ease;
+    }
+    .pn-footer-socials a:hover {
+      transform: scale(1.15);
+    }
+
+    .pn-footer-body {
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+    .pn-footer-body h3 {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .pn-footer-body p {
+      font-size: 16px;
+      color: #999;
+      max-width: 500px;
+      margin: 0 auto 28px;
+      line-height: 1.55;
+    }
+    .pn-footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 28px;
+      font-size: 14px;
+      color: #777;
+    }
+
+    /* SUBPAGE: PORTFOLIO / CATALOG */
+    .pn-subpage-hero {
+      padding-top: 140px;
+      padding-bottom: 40px;
+    }
+    .pn-subpage-hero h1 {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    .pn-subpage-hero p {
+      font-size: 17px;
+      color: #222;
+      max-width: 540px;
+      line-height: 1.5;
+    }
+
+    /* SUBPAGE: PROJECT DETAIL */
+    .pn-detail-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 48px;
+      margin-bottom: 40px;
+      align-items: start;
+    }
+    .pn-meta-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .pn-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px dashed rgba(0,0,0,0.15);
+    }
+    .pn-meta-label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .pn-meta-val {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .pn-detail-banner-card {
+      background: #0047ff;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin: 32px 0 60px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .pn-detail-banner-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* SUBPAGE: CONTACT */
+    .pn-contact-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin: 40px 0;
+    }
+    .pn-contact-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .pn-contact-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .pn-inquiry-box {
+      background: #ffffff;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 680px;
+      margin: 20px 0 60px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .pn-form-group {
+      margin-bottom: 18px;
+    }
+    .pn-form-label {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .pn-form-input, .pn-form-select, .pn-form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--pn-border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .pn-form-input:focus, .pn-form-textarea:focus {
+      border-color: #000;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .pn-hero-grid, .pn-detail-grid, .pn-contact-info-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+      .pn-projects-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .pn-services-grid {
+        grid-template-columns: 1fr;
+      }
+      .pn-social-group {
+        display: none;
+      }
+      .pn-footer-top {
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Navigation -->
+  <div class="pn-nav-wrapper">
+    <header class="pn-nav-bar">
+      <a href="index.html" data-wr-page="home" class="pn-logo-badge">
+        Monica
+      </a>
+
+      <nav class="pn-nav-menu">
+        <a class="pn-nav-link  " href="catalog/index.html" data-wr-page="catalog" >Portfolio</a>
+        <a class="pn-nav-link" href="#faq">FAQ</a>
+        <a class="pn-nav-link  " href="about/index.html" data-wr-page="about" >Resume</a>
+
+        <div class="pn-social-group">
+          <a class="pn-social-icon" href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path fill="#000" d="M18.326 1.904H21.7l-7.37 8.423L23 21.79h-6.789l-5.317-6.952L4.81 21.79H1.434l7.883-9.01L1 1.904h6.961l4.806 6.354zM17.142 19.77h1.87L6.945 3.817H4.94l12.203 15.954z"/></svg></a>
+          <a class="pn-social-icon" href="https://dribbble.com" target="_blank" rel="noopener" aria-label="Dribbble"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path fill="#000" fill-rule="evenodd" d="M12 0C5.375 0 0 5.375 0 12s5.375 12 12 12c6.612 0 12-5.375 12-12S18.612 0 12 0m7.926 5.531a10.2 10.2 0 0 1 2.317 6.378c-.338-.065-3.722-.755-7.132-.325-.079-.17-.144-.352-.222-.534a31 31 0 0 0 5.037-5.519M12 2.148c2.408 0 4.608.847 6.34 2.261a29 29 0 0 1-4.708 5.163C11.597 5.767 9.387 2.778 9.206 2.53A9.8 9.8 0 0 1 12 2.148M7.28 3.518c.184.254 2.327 3.167 4.316 6.843A45 45 0 0 1 2.57 12.39a9.9 9.9 0 0 1 4.71-8.872M2.148 12c0-.142.006-.282.016-.421a43 43 0 0 0 9.23-1.954c.162.339.317.68.463 1.021-3.693 1.082-7.067 3.237-7.25 3.355A9.9 9.9 0 0 1 2.148 12m9.852 9.852c-2.315 0-4.442-.78-6.143-2.09.18-.112 3.295-2.115 6.943-3.187 1.083 2.802 1.583 5.074 1.625 5.267a10 10 0 0 1-2.425.01m4.38-1.503a27 27 0 0 0-1.543-5.012c3.163-.448 6.012.27 6.27.338a9.9 9.9 0 0 1-4.727 4.674"/></svg></a>
+          <a class="pn-social-icon" href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path fill="#000" d="M12 2.16c3.206 0 3.586.015 4.847.071 1.172.052 1.805.249 2.226.413a3.7 3.7 0 0 1 1.379.895c.421.422.68.82.895 1.378.164.422.36 1.06.412 2.227.057 1.265.07 1.645.07 4.847 0 3.206-.013 3.586-.07 4.847-.052 1.172-.249 1.805-.413 2.226a3.7 3.7 0 0 1-.895 1.379c-.422.421-.82.68-1.378.895-.422.164-1.06.36-2.227.412-1.265.057-1.645.07-4.847.07-3.206 0-3.586-.013-4.847-.07-1.172-.052-1.805-.249-2.226-.413a3.7 3.7 0 0 1-1.379-.895c-.421-.422-.68-.82-.895-1.378-.164-.422-.36-1.06-.412-2.227-.057-1.265-.07-1.645-.07-4.847 0-3.206.013-3.586.07-4.847.052-1.172.249-1.805.413-2.226a3.7 3.7 0 0 1 .895-1.379c.422-.421.82-.68 1.378-.895.422-.164 1.06-.36 2.227-.412 1.265-.057 1.645-.07 4.847-.07m0-2.16C8.736 0 8.327.014 7.043.072 5.76.13 4.887.333 4.126.629a5.9 5.9 0 0 0-2.127 1.386A5.9 5.9 0 0 0 .613 4.142C.317 4.903.114 5.776.056 7.059.006 8.343 0 8.752 0 12.016s.014 3.673.072 4.957c.058 1.283.261 2.156.557 2.917a5.9 5.9 0 0 0 1.386 2.127 5.9 5.9 0 0 0 2.127 1.386c.761.296 1.634.499 2.917.557 1.284.058 1.693.072 4.957.072s3.673-.014 4.957-.072c1.283-.058 2.156-.261 2.917-.557a5.9 5.9 0 0 0 2.127-1.386 5.9 5.9 0 0 0 1.386-2.127c.296-.761.499-1.634.557-2.917.058-1.284.072-1.693.072-4.957s-.014-3.673-.072-4.957c-.058-1.283-.261-2.156-.557-2.917a5.9 5.9 0 0 0-1.386-2.127 5.9 5.9 0 0 0-2.127-1.386c-.761-.296-1.634-.499-2.917-.557C15.689.014 15.28 0 12.016 0z"/><path fill="#000" d="M12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324m0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8m7.846-10.405a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0"/></svg></a>
+        </div>
+
+        <a class="pn-btn-hire" href="contact/index.html" data-wr-page="contact">
+          Hire Me!
+        </a>
+      </nav>
+    </header>
+  </div>
+
+  <main>
+    
+  <!-- HERO SECTION -->
+  <section class="pn-hero">
+    <div class="pn-container">
+      <div class="pn-hero-grid">
+        <div class="pn-hero-left">
+          <div class="pn-pill-status">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M21 10H3m13-8v4M8 2v4m1 10 2 2 4.5-4.5M7.8 22h8.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C21 19.72 21 18.88 21 17.2V8.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C18.72 4 17.88 4 16.2 4H7.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C3 6.28 3 7.12 3 8.8v8.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C5.28 22 6.12 22 7.8 22Z" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+            <span>Available for hire</span>
+          </div>
+
+          <h1>Hi, I'm <span class="pn-hl-yellow">Monica</span></h1>
+
+          <p class="pn-hero-sub">
+            A Graphic Designer with 3+ years of experience, building awesome logos and brand identity for cool companies :)
+          </p>
+
+          <div class="pn-hero-actions">
+            <a class="pn-btn-primary" href="contact/index.html" data-wr-page="contact">
+              Hire Me!
+            </a>
+            <a class="pn-btn-outline" href="catalog/index.html" data-wr-page="catalog">
+              See my Portfolio
+            </a>
+          </div>
+
+          <div class="pn-hero-location">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+  <path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 22c4-4 8-7.582 8-12a8 8 0 1 0-16 0c0 4.418 4 8 8 12Z" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+            <span>Los Angeles, California</span>
+          </div>
+        </div>
+
+        <div class="pn-hero-right">
+          <div class="pn-photo-frame-wrap">
+            <div class="pn-sparkle-pos-tl"><svg class="pn-sparkle-svg" viewBox="0 0 50 50" aria-hidden="true">
+  <g transform="translate(0 -0.076)">
+    <path d="M 20.797 9.783 C 20.657 8.992 20.552 8.195 20.482 7.394 C 20.379 6.205 20.443 5.006 20.406 3.816 C 20.39 3.311 20.327 1.995 20.353 1.806 C 20.582 0.156 21.967 -0.096 22.373 -0.142 C 22.569 -0.169 24.58 -0.385 25.014 1.76 C 25.542 4.342 25.716 6.984 25.528 9.613 C 25.973 11.824 26.707 13.967 27.713 15.985 C 31.664 23.873 39.192 24.639 47.348 24.567 C 48.603 24.549 49.644 25.495 49.71 26.694 C 49.775 27.902 48.841 28.948 47.592 29.057 C 43.033 29.479 34.945 32.995 32.148 36.655 C 31.564 37.422 31.224 39.27 30.774 41.081 C 30.145 43.596 29.398 46.084 28.561 47.13 C 28.435 47.292 26.908 48.951 26.453 49.194 C 25.357 49.772 24.48 49.437 23.982 49.131 C 23.485 48.825 22.922 48.221 22.696 47.22 C 22.461 46.175 22.66 44.029 22.624 43.57 C 22.49 41.902 22.143 38.629 21.435 35.817 C 21.054 34.302 20.647 32.905 19.975 32.211 C 17.482 29.642 13.498 30.021 10.142 30.444 C 9.757 30.489 9.372 30.543 8.987 30.588 C 7.563 30.99 6.109 31.274 4.638 31.436 C 2.325 31.697 1.942 29.651 1.923 29.516 C 1.879 29.219 1.719 27.686 3.464 27.073 C 3.654 27.01 5.059 26.713 5.599 26.595 C 6.355 26.437 7.116 26.302 7.88 26.189 C 15.782 23.827 20.075 17.193 20.797 9.783 Z" fill="#ffc9f0"/>
+  </g>
+</svg></div>
+            <div class="pn-sparkle-pos-tr"><svg class="pn-sparkle-svg" viewBox="0 0 50 50" aria-hidden="true">
+  <g transform="translate(0 -0.118)">
+    <path d="M 20.797 9.826 C 20.657 9.034 20.552 8.237 20.482 7.437 C 20.379 6.247 20.443 5.048 20.406 3.858 C 20.39 3.353 20.327 2.038 20.353 1.848 C 20.582 0.198 21.967 -0.054 22.373 -0.1 C 22.569 -0.126 24.58 -0.343 25.014 1.802 C 25.542 4.384 25.716 7.026 25.528 9.655 C 25.973 11.866 26.707 14.009 27.713 16.028 C 31.664 23.915 39.192 24.682 47.348 24.609 C 48.603 24.591 49.644 25.538 49.71 26.737 C 49.775 27.944 48.841 28.991 47.592 29.099 C 43.033 29.522 34.945 33.038 32.148 36.697 C 31.564 37.464 31.224 39.312 30.774 41.124 C 30.145 43.639 29.398 46.127 28.561 47.173 C 28.435 47.335 26.908 48.993 26.453 49.237 C 25.357 49.814 24.48 49.48 23.982 49.174 C 23.485 48.867 22.922 48.263 22.696 47.262 C 22.461 46.217 22.66 44.072 22.624 43.612 C 22.49 41.944 22.143 38.672 21.435 35.859 C 21.054 34.344 20.647 32.947 19.975 32.253 C 17.482 29.685 13.498 30.063 10.142 30.487 C 9.757 30.532 9.372 30.586 8.987 30.631 C 7.563 31.033 6.109 31.316 4.638 31.479 C 2.325 31.74 1.942 29.693 1.923 29.558 C 1.879 29.261 1.719 27.729 3.464 27.115 C 3.654 27.052 5.059 26.755 5.599 26.638 C 6.355 26.48 7.116 26.344 7.88 26.232 C 15.782 23.87 20.075 17.236 20.797 9.826 Z" fill="#9ddcff"/>
+  </g>
+</svg></div>
+            <div class="pn-sparkle-pos-bl"><svg class="pn-sparkle-svg" viewBox="0 0 50 50" aria-hidden="true">
+  <g transform="translate(0 -0.076)">
+    <path d="M 20.797 9.783 C 20.657 8.992 20.552 8.195 20.482 7.394 C 20.379 6.205 20.443 5.006 20.406 3.816 C 20.39 3.311 20.327 1.995 20.353 1.806 C 20.582 0.156 21.967 -0.096 22.373 -0.142 C 22.569 -0.169 24.58 -0.385 25.014 1.76 C 25.542 4.342 25.716 6.984 25.528 9.613 C 25.973 11.824 26.707 13.967 27.713 15.985 C 31.664 23.873 39.192 24.639 47.348 24.567 C 48.603 24.549 49.644 25.495 49.71 26.694 C 49.775 27.902 48.841 28.948 47.592 29.057 C 43.033 29.479 34.945 32.995 32.148 36.655 C 31.564 37.422 31.224 39.27 30.774 41.081 C 30.145 43.596 29.398 46.084 28.561 47.13 C 28.435 47.292 26.908 48.951 26.453 49.194 C 25.357 49.772 24.48 49.437 23.982 49.131 C 23.485 48.825 22.922 48.221 22.696 47.22 C 22.461 46.175 22.66 44.029 22.624 43.57 C 22.49 41.902 22.143 38.629 21.435 35.817 C 21.054 34.302 20.647 32.905 19.975 32.211 C 17.482 29.642 13.498 30.021 10.142 30.444 C 9.757 30.489 9.372 30.543 8.987 30.588 C 7.563 30.99 6.109 31.274 4.638 31.436 C 2.325 31.697 1.942 29.651 1.923 29.516 C 1.879 29.219 1.719 27.686 3.464 27.073 C 3.654 27.01 5.059 26.713 5.599 26.595 C 6.355 26.437 7.116 26.302 7.88 26.189 C 15.782 23.827 20.075 17.193 20.797 9.783 Z" fill="#ffe68c"/>
+  </g>
+</svg></div>
+
+            <div class="pn-photo-frame">
+              <img class="pn-photo-img" src="/templates/papernote/4IckPhU7adDdKpZgaXHSQbDfIGs.jpg" alt="Monica" loading="eager">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PROJECTS -->
+  <section class="pn-projects-section" id="portfolio">
+    <div class="pn-container">
+      <div class="pn-section-header">
+        <h2><span class="pn-hl-yellow">Featured Projects</span></h2>
+        <div class="pn-arrow-wrap"><svg class="pn-arrow-svg" width="50" height="60" viewBox="0 0 50 60" fill="none" aria-hidden="true">
+  <path d="M46.306 49.667a1.5 1.5 0 0 0 .32-2.983l-.32 2.983ZM3.512 10.243a1.5 1.5 0 0 0-2.953.53l2.953-.53ZM35.71 55.22a1.5 1.5 0 0 0 1.696 2.474L35.71 55.22ZM45.981 50l.849 1.237L45.983 50Zm.967-3.839-1.333.688v.001l1.333-.689Zm-3.973-10.974a1.5 1.5 0 1 0-2.666 1.375l2.666-1.375Zm3.492 12.989.16-1.492h-.007a13.866 13.866 0 0 0-.18-.022 50.383 50.383 0 0 1-2.79-.455c-1.88-.36-4.509-.96-7.48-1.914-5.968-1.916-13.19-5.221-18.57-10.77l-2.154 2.087c5.866 6.051 13.615 9.551 19.807 11.54a67.403 67.403 0 0 0 7.834 2.004c.988.19 1.785.317 2.338.397a33.21 33.21 0 0 0 .875.116h.005l.162-1.491ZM17.6 33.522C6.568 22.14 3.934 12.599 3.51 10.244l-2.952.53c.525 2.932 3.432 13.02 14.887 24.838l2.155-2.088Zm19.806 24.172 9.423-6.457-1.696-2.474-9.423 6.457 1.696 2.474Zm9.424-6.457a4.49 4.49 0 0 0 1.45-5.765l-2.666 1.378a1.49 1.49 0 0 1-.482 1.913l1.698 2.474Zm1.45-5.763-5.306-10.287-2.666 1.375 5.306 10.287 2.666-1.375Z" fill="#000"/>
+</svg></div>
+      </div>
+
+      <div class="pn-projects-grid">
+        
+          <a class="pn-card-polaroid" href="products/dry-sun/index.html" data-wr-page="detail" data-wr-product-id="dry-sun" style="background:#9ddcff; transform:rotate(-2deg);">
+            <div class="pn-card-img-box">
+              <img src="/templates/papernote/c4RlFMPpkQEnOaEKxb8WZAUcIE.png" alt="Dry Sun" loading="lazy">
+            </div>
+            <div class="pn-card-title">Dry Sun Logo</div>
+            <div class="pn-card-btn">See Project</div>
+          </a>
+        
+          <a class="pn-card-polaroid" href="products/green-strike/index.html" data-wr-page="detail" data-wr-product-id="green-strike" style="background:#ffe68c; transform:rotate(1deg);">
+            <div class="pn-card-img-box">
+              <img src="/templates/papernote/G9h3TPR4kRjysyLcUeTWzhBNw.png" alt="Green Strike" loading="lazy">
+            </div>
+            <div class="pn-card-title">Green Strike Logo</div>
+            <div class="pn-card-btn">See Project</div>
+          </a>
+        
+          <a class="pn-card-polaroid" href="products/clean-ocean/index.html" data-wr-page="detail" data-wr-product-id="clean-ocean" style="background:#ffc9f0; transform:rotate(2.5deg);">
+            <div class="pn-card-img-box">
+              <img src="/templates/papernote/dktOvuMg77JU2AXkvDLYsqClz3k.png" alt="Clean Ocean" loading="lazy">
+            </div>
+            <div class="pn-card-title">Clean Ocean Logo</div>
+            <div class="pn-card-btn">See Project</div>
+          </a>
+        
+      </div>
+
+      <div class="pn-btn-center-wrap">
+        <a class="pn-btn-outline" href="catalog/index.html" data-wr-page="catalog">
+          Check my Portfolio
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY SERVICES -->
+  <section class="pn-services-section">
+    <div class="pn-container">
+      <div class="pn-section-header">
+        <h2><span class="pn-hl-yellow">My Services</span></h2>
+        <div class="pn-arrow-wrap"><svg class="pn-arrow-svg" width="50" height="60" viewBox="0 0 50 60" fill="none" aria-hidden="true">
+  <path d="M46.306 49.667a1.5 1.5 0 0 0 .32-2.983l-.32 2.983ZM3.512 10.243a1.5 1.5 0 0 0-2.953.53l2.953-.53ZM35.71 55.22a1.5 1.5 0 0 0 1.696 2.474L35.71 55.22ZM45.981 50l.849 1.237L45.983 50Zm.967-3.839-1.333.688v.001l1.333-.689Zm-3.973-10.974a1.5 1.5 0 1 0-2.666 1.375l2.666-1.375Zm3.492 12.989.16-1.492h-.007a13.866 13.866 0 0 0-.18-.022 50.383 50.383 0 0 1-2.79-.455c-1.88-.36-4.509-.96-7.48-1.914-5.968-1.916-13.19-5.221-18.57-10.77l-2.154 2.087c5.866 6.051 13.615 9.551 19.807 11.54a67.403 67.403 0 0 0 7.834 2.004c.988.19 1.785.317 2.338.397a33.21 33.21 0 0 0 .875.116h.005l.162-1.491ZM17.6 33.522C6.568 22.14 3.934 12.599 3.51 10.244l-2.952.53c.525 2.932 3.432 13.02 14.887 24.838l2.155-2.088Zm19.806 24.172 9.423-6.457-1.696-2.474-9.423 6.457 1.696 2.474Zm9.424-6.457a4.49 4.49 0 0 0 1.45-5.765l-2.666 1.378a1.49 1.49 0 0 1-.482 1.913l1.698 2.474Zm1.45-5.763-5.306-10.287-2.666 1.375 5.306 10.287 2.666-1.375Z" fill="#000"/>
+</svg></div>
+      </div>
+
+      <div class="pn-services-grid">
+        
+          <div class="pn-service-card" style="background:#ffc9f0;">
+            <span class="pn-hole-punch"></span>
+            <span>Branding and Identity</span>
+          </div>
+        
+          <div class="pn-service-card" style="background:#ffe68c;">
+            <span class="pn-hole-punch"></span>
+            <span>Print Design</span>
+          </div>
+        
+          <div class="pn-service-card" style="background:#9ddcff;">
+            <span class="pn-hole-punch"></span>
+            <span>Packaging Design</span>
+          </div>
+        
+          <div class="pn-service-card" style="background:#ffc9f0;">
+            <span class="pn-hole-punch"></span>
+            <span>Illustration and Art</span>
+          </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- MY EXPERIENCE -->
+  <section class="pn-experience-section" id="resume">
+    <div class="pn-container">
+      <div class="pn-section-header">
+        <h2><span class="pn-hl-yellow">My Experience</span></h2>
+        <div class="pn-arrow-wrap"><svg class="pn-arrow-svg" width="50" height="60" viewBox="0 0 50 60" fill="none" aria-hidden="true">
+  <path d="M46.306 49.667a1.5 1.5 0 0 0 .32-2.983l-.32 2.983ZM3.512 10.243a1.5 1.5 0 0 0-2.953.53l2.953-.53ZM35.71 55.22a1.5 1.5 0 0 0 1.696 2.474L35.71 55.22ZM45.981 50l.849 1.237L45.983 50Zm.967-3.839-1.333.688v.001l1.333-.689Zm-3.973-10.974a1.5 1.5 0 1 0-2.666 1.375l2.666-1.375Zm3.492 12.989.16-1.492h-.007a13.866 13.866 0 0 0-.18-.022 50.383 50.383 0 0 1-2.79-.455c-1.88-.36-4.509-.96-7.48-1.914-5.968-1.916-13.19-5.221-18.57-10.77l-2.154 2.087c5.866 6.051 13.615 9.551 19.807 11.54a67.403 67.403 0 0 0 7.834 2.004c.988.19 1.785.317 2.338.397a33.21 33.21 0 0 0 .875.116h.005l.162-1.491ZM17.6 33.522C6.568 22.14 3.934 12.599 3.51 10.244l-2.952.53c.525 2.932 3.432 13.02 14.887 24.838l2.155-2.088Zm19.806 24.172 9.423-6.457-1.696-2.474-9.423 6.457 1.696 2.474Zm9.424-6.457a4.49 4.49 0 0 0 1.45-5.765l-2.666 1.378a1.49 1.49 0 0 1-.482 1.913l1.698 2.474Zm1.45-5.763-5.306-10.287-2.666 1.375 5.306 10.287 2.666-1.375Z" fill="#000"/>
+</svg></div>
+      </div>
+
+      <div class="pn-experience-stack">
+        
+          <div class="pn-exp-card" style="background:#9ddcff;">
+            <span class="pn-hole-punch"></span>
+            <div class="pn-exp-period">2021 - Present</div>
+            <div class="pn-exp-role">Graphic Designer at Creative Solutions</div>
+            <hr class="pn-exp-divider">
+            <div class="pn-exp-desc">My work includes developing innovative website designs, crafting unique branding materials, and producing high-quality promotional content that consistently exceeds client expectations.</div>
+          </div>
+        
+          <div class="pn-exp-card" style="background:#ffe68c;">
+            <span class="pn-hole-punch"></span>
+            <div class="pn-exp-period">2019 - 2021</div>
+            <div class="pn-exp-role">Junior Graphic Designer at Branding Inc.</div>
+            <hr class="pn-exp-divider">
+            <div class="pn-exp-desc">I assisted in the design and execution of branding packages for new businesses, focusing on logo creation, brand identity, and the development of marketing materials.</div>
+          </div>
+        
+          <div class="pn-exp-card" style="background:#ffc9f0;">
+            <span class="pn-hole-punch"></span>
+            <div class="pn-exp-period">Summer 2018</div>
+            <div class="pn-exp-role">Design Intern at Digital Arts Studio</div>
+            <hr class="pn-exp-divider">
+            <div class="pn-exp-desc">As an intern at Digital Arts Studio, I supported the design team in various branding projects, contributed to creative brainstorming sessions, and developed marketing collateral for clients.</div>
+          </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section class="pn-faq-section" id="faq">
+    <div class="pn-container">
+      <div class="pn-section-header">
+        <h2><span class="pn-hl-yellow">FAQ</span></h2>
+        <div class="pn-arrow-wrap"><svg class="pn-arrow-svg" width="50" height="60" viewBox="0 0 50 60" fill="none" aria-hidden="true">
+  <path d="M46.306 49.667a1.5 1.5 0 0 0 .32-2.983l-.32 2.983ZM3.512 10.243a1.5 1.5 0 0 0-2.953.53l2.953-.53ZM35.71 55.22a1.5 1.5 0 0 0 1.696 2.474L35.71 55.22ZM45.981 50l.849 1.237L45.983 50Zm.967-3.839-1.333.688v.001l1.333-.689Zm-3.973-10.974a1.5 1.5 0 1 0-2.666 1.375l2.666-1.375Zm3.492 12.989.16-1.492h-.007a13.866 13.866 0 0 0-.18-.022 50.383 50.383 0 0 1-2.79-.455c-1.88-.36-4.509-.96-7.48-1.914-5.968-1.916-13.19-5.221-18.57-10.77l-2.154 2.087c5.866 6.051 13.615 9.551 19.807 11.54a67.403 67.403 0 0 0 7.834 2.004c.988.19 1.785.317 2.338.397a33.21 33.21 0 0 0 .875.116h.005l.162-1.491ZM17.6 33.522C6.568 22.14 3.934 12.599 3.51 10.244l-2.952.53c.525 2.932 3.432 13.02 14.887 24.838l2.155-2.088Zm19.806 24.172 9.423-6.457-1.696-2.474-9.423 6.457 1.696 2.474Zm9.424-6.457a4.49 4.49 0 0 0 1.45-5.765l-2.666 1.378a1.49 1.49 0 0 1-.482 1.913l1.698 2.474Zm1.45-5.763-5.306-10.287-2.666 1.375 5.306 10.287 2.666-1.375Z" fill="#000"/>
+</svg></div>
+      </div>
+
+      <div class="pn-faq-list">
+        
+          <div class="pn-faq-item is-open">
+            <button class="pn-faq-trigger" type="button">
+              <span>What services do you offer?</span>
+              <span class="pn-faq-icon">+</span>
+            </button>
+            <div class="pn-faq-content">
+              I specialize in branding, digital and print design, user experience consultation, and more. Whether you’re looking to launch a new brand or spruce up your existing designs, I have the skills to bring your ideas to life.
+            </div>
+          </div>
+        
+          <div class="pn-faq-item ">
+            <button class="pn-faq-trigger" type="button">
+              <span>How do I start a project with you?</span>
+              <span class="pn-faq-icon">+</span>
+            </button>
+            <div class="pn-faq-content">
+              Starting a project is simple! Reach out via the contact form or email with details about your vision, goals, and timeline. I’ll get back to you within 24-48 hours to schedule an initial discovery call.
+            </div>
+          </div>
+        
+          <div class="pn-faq-item ">
+            <button class="pn-faq-trigger" type="button">
+              <span>How long does a typical project take?</span>
+              <span class="pn-faq-icon">+</span>
+            </button>
+            <div class="pn-faq-content">
+              Project timelines vary depending on scope and complexity. A brand identity package usually takes 2-4 weeks, while comprehensive web and digital designs may take 4-6 weeks.
+            </div>
+          </div>
+        
+          <div class="pn-faq-item ">
+            <button class="pn-faq-trigger" type="button">
+              <span>Can you work within my budget?</span>
+              <span class="pn-faq-icon">+</span>
+            </button>
+            <div class="pn-faq-content">
+              Yes, I offer flexible packages tailored to fit a range of budgets. Let’s discuss your requirements and find a creative solution that works best for your needs.
+            </div>
+          </div>
+        
+      </div>
+    </div>
+  </section>
+  
+  </main>
+
+  <!-- Dark Rounded Footer -->
+  <footer class="pn-footer">
+    <div class="pn-container">
+      <div class="pn-footer-top">
+        <div class="pn-footer-nav">
+          <a href="catalog/index.html" data-wr-page="catalog">Portfolio</a>
+          <a href="#faq">FAQ</a>
+          <a href="about/index.html" data-wr-page="about">Resume</a>
+        </div>
+        <div class="pn-footer-socials">
+          <a href="https://x.com" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M18.326 1.904H21.7l-7.37 8.423L23 21.79h-6.789l-5.317-6.952L4.81 21.79H1.434l7.883-9.01L1 1.904h6.961l4.806 6.354zM17.142 19.77h1.87L6.945 3.817H4.94z"/></svg></a>
+          <a href="https://dribbble.com" target="_blank" rel="noopener" aria-label="Dribbble"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path fill="#fff" fill-rule="evenodd" d="M12 0C5.375 0 0 5.375 0 12s5.375 12 12 12c6.612 0 12-5.375 12-12S18.612 0 12 0m7.926 5.531a10.2 10.2 0 0 1 2.317 6.378c-.338-.065-3.722-.755-7.132-.325-.079-.17-.144-.352-.222-.534a31 31 0 0 0 5.037-5.519M12 2.148c2.408 0 4.608.847 6.34 2.261a29 29 0 0 1-4.708 5.163C11.597 5.767 9.387 2.778 9.206 2.53A9.8 9.8 0 0 1 12 2.148M7.28 3.518c.184.254 2.327 3.167 4.316 6.843A45 45 0 0 1 2.57 12.39a9.9 9.9 0 0 1 4.71-8.872M2.148 12c0-.142.006-.282.016-.421a43 43 0 0 0 9.23-1.954c.162.339.317.68.463 1.021-3.693 1.082-7.067 3.237-7.25 3.355A9.9 9.9 0 0 1 2.148 12m9.852 9.852c-2.315 0-4.442-.78-6.143-2.09.18-.112 3.295-2.115 6.943-3.187 1.083 2.802 1.583 5.074 1.625 5.267a10 10 0 0 1-2.425.01m4.38-1.503a27 27 0 0 0-1.543-5.012c3.163-.448 6.012.27 6.27.338a9.9 9.9 0 0 1-4.727 4.674"/></svg></a>
+          <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path fill="#fff" d="M12 2.16c3.206 0 3.586.015 4.847.071 1.172.052 1.805.249 2.226.413a3.7 3.7 0 0 1 1.379.895c.421.422.68.82.895 1.378.164.422.36 1.06.412 2.227.057 1.265.07 1.645.07 4.847 0 3.206-.013 3.586-.07 4.847-.052 1.172-.249 1.805-.413 2.226a3.7 3.7 0 0 1-.895 1.379c-.422.421-.82.68-1.378.895-.422.164-1.06.36-2.227.412-1.265.057-1.645.07-4.847.07-3.206 0-3.586-.013-4.847-.07-1.172-.052-1.805-.249-2.226-.413a3.7 3.7 0 0 1-1.379-.895c-.421-.422-.68-.82-.895-1.378-.164-.422-.36-1.06-.412-2.227-.057-1.265-.07-1.645-.07-4.847 0-3.206.013-3.586.07-4.847.052-1.172.249-1.805.413-2.226a3.7 3.7 0 0 1 .895-1.379c.422-.421.82-.68 1.378-.895.422-.164 1.06-.36 2.227-.412 1.265-.057 1.645-.07 4.847-.07m0-2.16C8.736 0 8.327.014 7.043.072 5.76.13 4.887.333 4.126.629a5.9 5.9 0 0 0-2.127 1.386A5.9 5.9 0 0 0 .613 4.142C.317 4.903.114 5.776.056 7.059.006 8.343 0 8.752 0 12.016s.014 3.673.072 4.957c.058 1.283.261 2.156.557 2.917a5.9 5.9 0 0 0 1.386 2.127 5.9 5.9 0 0 0 2.127 1.386c.761.296 1.634.499 2.917.557 1.284.058 1.693.072 4.957.072s3.673-.014 4.957-.072c1.283-.058 2.156-.261 2.917-.557a5.9 5.9 0 0 0 2.127-1.386 5.9 5.9 0 0 0 1.386-2.127c.296-.761.499-1.634.557-2.917.058-1.284.072-1.693.072-4.957s-.014-3.673-.072-4.957c-.058-1.283-.261-2.156-.557-2.917a5.9 5.9 0 0 0-1.386-2.127 5.9 5.9 0 0 0-2.127-1.386c-.761-.296-1.634-.499-2.917-.557C15.689.014 15.28 0 12.016 0z"/><path fill="#fff" d="M12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324m0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8m7.846-10.405a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0"/></svg></a>
+        </div>
+      </div>
+
+      <div class="pn-footer-body">
+        <h3>Ready to Bring Your Vision to Life?</h3>
+        <p>Let’s make something incredible together! Reach out to discuss your project, and let’s create designs that resonate and inspire.</p>
+        <a class="pn-btn-primary" style="background:#ffffff; color:#000000 !important; font-weight:800;" href="contact/index.html" data-wr-page="contact">
+          Hire Me!
+        </a>
+      </div>
+
+      <div class="pn-footer-bottom">
+        <div>Monica &copy; all rights reserved</div>
+        <div>Get this Template</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>var __name=(value)=>value;
+    (() => {
+      // FAQ Accordion interaction
+      document.querySelectorAll('.pn-faq-trigger').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const item = btn.closest('.pn-faq-item');
+          if (!item) return;
+          const wasOpen = item.classList.contains('is-open');
+          document.querySelectorAll('.pn-faq-item').forEach((i) => i.classList.remove('is-open'));
+          if (!wasOpen) {
+            item.classList.add('is-open');
+          }
+        });
+      });
+
+      // Smooth scroll for anchors
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', (e) => {
+          const target = document.querySelector(anchor.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

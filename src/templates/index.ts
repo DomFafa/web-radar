@@ -1,4 +1,7 @@
+import { renderLumiSite } from './themes/lumiBusiness';
+import { lumiPages } from '../shared/lumi-pages';
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
+import { renderPaperNoteSite } from './themes/papernote';
 import { renderReleasedMaterials } from './materials-releases';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
@@ -8,7 +11,6 @@ import { styles } from './styles';
 import { themeStyles } from './themes/styles';
 import { buildThemeContext } from './themes/types';
 import { renderSensengHome, renderSensengPage } from './themes/senseng';
-import { renderQuantumSite } from './themes/quantumSaas';
 import { isReferenceTemplate, renderReferencePage } from './themes/reference';
 import { renderSaasHome } from './themes/saasAutomation';
 import { renderFintechHome } from './themes/fintechPlatform';
@@ -99,6 +101,7 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
   // Several standalone headers build their own language links and used catalog
@@ -116,6 +119,7 @@ function renderSiteContent(draft: Draft, options: RenderOptions): string {
     : normalized;
 }
 function renderSiteHtml(draft: Draft, options: RenderOptions): string {
+  if (draft.template === 'lumi-business') return renderLumiSite(draft, options);
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
   const ui = labels[lang];
   const template = draft.template || 'senseng-clean';
@@ -359,10 +363,11 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;
   }
-  if (template === 'quantum-saas') {
+  if (template === 'papernote') {
     const ctx = buildThemeContext(draft, options);
-    return renderQuantumSite(ctx);
+    return renderPaperNoteSite(ctx);
   }
+
   if (template === 'senseng-candy') {
     const ctx = buildThemeContext(draft, options);
     const bodyHtml = renderCandyPage(ctx);
@@ -499,7 +504,7 @@ export function renderSiteFiles(
   draft = singleProductDraft(draft);
   const files: Record<string, string> = {};
   for (const lang of draft.languages) {
-    for (const page of ['home', 'catalog', 'about', 'contact'])
+    for (const page of (draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
       files[`${lang}/${page === 'home' ? 'index.html' : `${page}/index.html`}`] = renderSite(
         draft,
         { ...options, lang, page },
@@ -516,9 +521,9 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template) || draft.template === 'pawfect-groom') {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'papernote') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom)\//g, `$1${mediaOrigin}/templates/$2/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom|papernote|lumi)\//g, `$1${mediaOrigin}/templates/$2/`);
   }
   return files;
 }

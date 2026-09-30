@@ -1,3 +1,4 @@
+import { lumiPages, lumiPageLabels } from './lumi-pages';
 import { designCompany } from './site-contacts';
 import { z } from 'zod';
 import type { DesignPage, Draft, SiteBrief } from './model';
@@ -119,10 +120,12 @@ export function parseSiteBrief(input: unknown, draft: Draft): SiteBrief {
   return result;
 }
 export function plannedPages(draft: Draft): DesignPage[] {
+  if (draft.template === 'lumi-business' && !['clone','custom'].includes(draft.buildBranch||'')) return [...lumiPages];
   if (draft.buildBranch === 'template') return [...basePages];
   return draft.consultation?.brief?.pages.map((p) => p.id) ?? [...basePages];
 }
 export function pageLabel(draft: Draft, page: DesignPage): string {
+  if (draft.template === 'lumi-business') return lumiPageLabels[page] || page;
   return (
     draft.consultation?.brief?.pages.find((p) => p.id === page)?.label ??
     (

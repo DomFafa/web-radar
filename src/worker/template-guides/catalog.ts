@@ -1,3 +1,4 @@
+import lumiGuide from './documents/lumi-business.json';
 import { guideSchema, guideIds, type TemplateGuide } from './schema';
 import pawfectGuide from './documents/pawfect-groom.json';
 import guide0 from './documents/corpox-ai-agency.json';
@@ -52,6 +53,7 @@ import guideSingleArtisan from './documents/single-artisan-craft.json';
 import guideSingleWellness from './documents/single-wellness-nordic.json';
 
 const documents = [
+  lumiGuide,
   pawfectGuide,
   guide0,
   guide7,

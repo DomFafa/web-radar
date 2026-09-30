@@ -1,3 +1,4 @@
+import { getLumiMaterialsTemplate } from './themes/lumi/materials';
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
 import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
@@ -86,6 +87,7 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (id === 'lumi-business') return getLumiMaterialsTemplate(revision);
   if (id === 'pawfect-groom') return getModernMaterialsTemplate(id, revision);
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));
   if (release) return structuredClone(release.contract);
@@ -123,6 +125,7 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   const revision = draft.materials?.contractRevision;
+  if (draft.template === 'lumi-business') return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release && [demoRendererRevision, outreachDemoRendererRevision].includes(release.contract.rendererRevision || '')) return frozenContract(release.rendererTemplateId) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
   if (revision && releasedMaterialsContract(draft.template, revision)) return frozenContract(draft.template) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;

@@ -9,6 +9,7 @@ import { typedMaterialsDemoDraft } from './materials-typed-demo';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(profile.templateId==='lumi-business'){const draft=defaultDraft();draft.template='lumi-business';draft.company.name='Lumi';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#48a7ff';return draft;}
   if(profile.imagePolicy==='typed-regions-v1')return typedMaterialsDemoDraft(profile,lang);
   const draft=defaultDraft();draft.template=profile.templateId as typeof draft.template;draft.buildBranch='template';draft.templateConfirmed=true;
   draft.languages=lang==='en'?['en']:['en',lang];draft.company.name='Example Brand';

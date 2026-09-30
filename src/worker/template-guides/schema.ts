@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const guideIds = [
+  'lumi-business',
   'pawfect-groom',
   'senseng-clean',
   'senseng-video',

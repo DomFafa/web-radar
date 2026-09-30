@@ -1,3 +1,4 @@
+import { designPageSchema } from '../shared/site-brief';
 import type { Hono } from 'hono';
 import { z } from 'zod';
 import type { HonoEnv } from './env';
@@ -8,7 +9,7 @@ const identity = z.object({ userId: z.string().min(1).max(200), workspaceId: z.s
 const base = z.strictObject({ principal: identity });
 const version = z.number().int().positive();
 const preview = base.extend({
-  page: z.enum(['home', 'catalog', 'detail', 'about', 'contact']).optional(),
+  page: designPageSchema.optional(),
   lang: z.string().min(2).max(10).optional(),
   productId: z.string().min(1).max(200).optional(),
   expectedVersion: version.optional(),

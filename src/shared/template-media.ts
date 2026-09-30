@@ -12,6 +12,18 @@ export interface TemplateMediaRequirements {
 // Original slot geometry mirrors referenceLayouts; keep the large HTML bundle out of the editor.
 // Product counts are recommendations for avoiding repeated images, never upload minimums.
 export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMediaRequirements>> = {
+  'lumi-business': { productCount: 6, productSize: '1200 × 1200（1:1，服务或产品展示）', bannerSize: '2560 × 1440（16:9，会议或协作场景）', bannerNote: '原站渐变、插画、字体和首屏视频已内置；可提供真实团队、办公场景、服务插画及文章封面。视频建议 MP4 / H.264，另附同尺寸封面。', videos: 1, slots: [{ count: 1, width: 2560, height: 1440 }, { count: 3, width: 880, height: 1040 }, { count: 3, width: 1240, height: 795 }, { count: 1, width: 1240, height: 1300 }] },
+  'papernote': {
+    productCount: 6,
+    productSize: '1200 × 1200（1:1，设计作品与标志）',
+    bannerSize: '1200 × 1400（6:7，个人肖像摄影）',
+    bannerNote: '首屏肖像大图、波点网格与折叠问答已内置；作品集最多展示 6 个精选项目，默认无需视频。',
+    videos: 0,
+    slots: [
+      { count: 1, width: 1200, height: 1400 },
+      { count: 6, width: 1200, height: 1200 },
+    ],
+  },
   'pawfect-groom': {productCount: 6, productSize: '1200 × 1200（1:1，服务照片）', bannerSize: '1200 × 1400（6:7，狗狗肖像）', bannerNote: '首屏金毛肖像、护理图库和字体已内置；关于页建议两张 1200 × 1000 沙龙实拍。图库最多展示 5 张服务照片，不需要视频。', videos: 0, slots: [{count: 1, width: 1200, height: 1400}, {count: 2, width: 1200, height: 1000}, {count: 5, width: 640, height: 800}]},
   'senseng-clean': {
     productCount: 8,

@@ -109,7 +109,8 @@ const draftSchema = z.object({
   country: short,
   languages: z.array(language).min(1).max(2),
   template: z.enum([
-    'quantum-saas',
+    'lumi-business',
+    'papernote',
     'pawfect-groom',
     'natural',
     'technology',

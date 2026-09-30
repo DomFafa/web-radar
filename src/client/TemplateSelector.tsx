@@ -21,6 +21,14 @@ export interface TemplateDefinition {
 
 export const TEMPLATES: TemplateDefinition[] = [
   {
+    id: 'lumi-business', name: 'Lumi 智慧商业', englishName: 'Lumi Business & Strategy',
+    tagline: '还原 Lumi 的浅蓝渐变、Satoshi 字体、衬线斜体标题与视频首屏；完整企业服务网站。',
+    category: 'enterprise', industries: ['企业咨询', '数字服务', '营销工作室', '商务服务', '软件服务'],
+    features: ['参考原站桌面与移动布局', '视频首屏与服务轮播', '价格、博客、文章与招聘页面', '服务详情与现有询盘表单'],
+    accentColor: '#48a7ff', badge: 'Lumi · 企业服务', hasVideo: true,
+    previewImg: '/templates/previews/lumi-business.db0d249082becfa2.jpg',
+  },
+  {
     id: 'pawfect-groom', name: '暖心宠物美容', englishName: 'Pawfect Groom',
     tagline: '暖白、青绿与琥珀色的宠物美容沙龙；有机轮廓首屏、服务菜单与预约咨询。',
     category: 'consumer', industries: ['宠物美容', '犬只护理', '本地服务', '宠物沙龙'],
@@ -65,17 +73,16 @@ export const TEMPLATES: TemplateDefinition[] = [
     previewImg: '/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg',
   },
   {
-    id: 'quantum-saas',
-    name: '量子智能录屏',
-    englishName: 'Quantum² Screen Intelligence',
-    tagline: '专为 AI 录屏知识库与协作 SaaS 定制；黑胶囊导航、亮青色动态视频光带与固定几何交互卡片',
-    category: 'tech',
-    industries: ['AI SaaS', '智能录屏', '知识协同', '出海软件', '数字化办公'],
-    features: ['黑胶囊一体化导航', '全宽青碧动态视频光带', '固定几何交互数据卡片', 'Figtree 变量字体微排版'],
-    accentColor: '#38c6ec',
-    badge: 'Quantum² · AI SaaS 旗舰',
-    hasVideo: true,
-    previewImg: '/templates/previews/quantum-saas.jpg',
+    id: 'papernote',
+    name: '便签创意作品集',
+    englishName: 'PaperNote',
+    tagline: '专为设计师与创意工作室定制；波点网格信纸、彩色荧光笔手绘涂鸦与微倾斜拍立得卡片',
+    category: 'creative',
+    industries: ['创意设计', '作品集展示', '个人主页', '品牌视觉', '插画设计'],
+    features: ['波点网格纸纹背景', '荧光笔高亮手绘涂鸦', '拍立得斜角卡片网格', '折叠问答与交互履历'],
+    accentColor: '#ffe68c',
+    badge: '创意作品集 · 纸韵拼贴',
+    previewImg: '/templates/previews/papernote.jpg',
   },
 ];
 

@@ -11,9 +11,9 @@ const selector = (draft = defaultDraft()) => renderToStaticMarkup(createElement(
 describe('reduced template library', () => {
   it('defaults new projects to Candy and lists only the three retained styles', () => {
     expect(defaultDraft()).toMatchObject({ template: 'senseng-candy', brandColor: '#ff6b8b' });
-    expect(TEMPLATES.map(t => t.englishName)).toEqual(['Pawfect Groom', 'Candy Pop & Play', 'Immersive Video', 'Botanical & Forest', 'Quantum² Screen Intelligence']);
+    expect(TEMPLATES.map(t => t.englishName)).toEqual(['Lumi Business & Strategy', 'Pawfect Groom', 'Candy Pop & Play', 'Immersive Video', 'Botanical & Forest', 'PaperNote']);
     const html = selector();
-    expect((html.match(/class="template-card /g) || [])).toHaveLength(5);
+    expect((html.match(/class="template-card /g) || [])).toHaveLength(6);
     expect(html).not.toContain('模板分类');
     expect(html).not.toContain('Single Device');
     expect(html).not.toContain('模板已下架');

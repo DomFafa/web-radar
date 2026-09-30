@@ -1,3 +1,4 @@
+import { lumiRuntime } from '../templates/themes/lumi/runtime';
 import { isSingleProductTemplate, singleProductRuntime } from '../templates/themes/singleProduct';
 import { parse, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
@@ -27,6 +28,7 @@ export function projectPreviewHtml(html: string, base: string, origin: string, s
       if (node.tagName === 'form') { set('action', '#'); set('data-wr-preview-disabled', 'true'); }
     }
     if ('childNodes' in node) for (const child of node.childNodes) visit(child);
+    if ('tagName' in node && node.tagName === 'template' && 'content' in node) visit(node.content);
   };
   visit(document);
   return serialize(document);
@@ -47,5 +49,6 @@ export const projectPreviewRuntime = `(()=>{
 
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
   const runtime = releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;
+  if (draft.template === 'lumi-business') return runtime + '\n;(' + lumiRuntime.toString() + ')();';
   return isSingleProductTemplate(draft.template) ? runtime + '\n' + singleProductRuntime : runtime;
 }
