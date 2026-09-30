@@ -88,7 +88,7 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
   if (id === 'lumi-business') return getLumiMaterialsTemplate(revision);
-  if (['good-boy-pals', 'mello-coffee', 'papernote', 'pawfect-groom'].includes(id)) {
+  if (['toorun-early-learning', 'good-boy-pals', 'mello-coffee', 'papernote', 'pawfect-groom'].includes(id)) {
     const contract = getModernMaterialsTemplate(id, revision);
     if (!contract) return;
     declareExecutionMetadata(contract);

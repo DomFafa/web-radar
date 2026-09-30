@@ -383,5 +383,12 @@
     "width": 1440,
     "height": 1000,
     "contractRevision": "2026-09-20.papernote-materials.2"
+  },
+  "toorun-early-learning": {
+    "url": "/templates/previews/toorun-early-learning.dfb78be0504ef868.jpg",
+    "sha256": "dfb78be0504ef868e86fdb8bc56389f3e6fe3a5322412a03e94e0725db764697",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-20.toorun-early-learning-materials.2"
   }
 }

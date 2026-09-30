@@ -1,6 +1,7 @@
 import { goodBoyExampleProducts } from '../../templates/themes/goodBoyPals';
 import { PAPERNOTE_DEFAULT_PROJECTS } from '../../templates/themes/papernote';
 import { melloExampleProducts } from '../../templates/themes/melloCoffee';
+import { toorunExamplePrograms } from '../../templates/themes/toorunEarlyLearning';
 import type { Language } from '../../shared/model';
 import type { MaterialsTemplateContract } from '../../shared/materials';
 import { referenceLayouts } from '../../templates/themes/referenceLayouts';
@@ -12,6 +13,9 @@ import { typedMaterialsDemoDraft } from './materials-typed-demo';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(profile.templateId==='toorun-early-learning') {
+    const draft=defaultDraft();draft.template='toorun-early-learning';draft.company.name='Toorun Early Learning';draft.company.email='demo@example.invalid';draft.company.description='A welcoming example of play-based early learning for children and families.';draft.languages=lang==='en'?['en']:['en',lang];draft.products=toorunExamplePrograms();draft.primaryProductId=draft.products[0].id;draft.brandColor='#3f6b52';draft.copy.en={headline:'Building Strong Foundations For Lifelong Learning',subtitle:'Thoughtful early learning experiences that help children build confidence, curiosity and everyday skills.',cta:'Explore programs',about:draft.company.description};return draft;
+  }
   if(profile.templateId==='good-boy-pals') {
     const draft=defaultDraft();draft.template='good-boy-pals';draft.company.name='Good Boy Supply Co.';draft.company.email='demo@example.invalid';draft.languages=lang==='en'?['en']:['en',lang];draft.products=goodBoyExampleProducts();draft.primaryProductId=draft.products[0].id;draft.brandColor='#ffcd1e';return draft;
   }

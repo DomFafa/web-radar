@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const guideIds = [
+  'toorun-early-learning',
   'lumi-business',
   'pawfect-groom',
   'good-boy-pals',

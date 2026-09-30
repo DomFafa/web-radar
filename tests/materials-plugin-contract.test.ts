@@ -12,8 +12,8 @@ const outreachTemplates = new Set([
 describe('executable template materials contracts', () => {
   it.each(templateGuides)('$templateId declares executable source, scope, reuse and copy capabilities', ({ templateId }) => {
     const contract = getMaterialsTemplate(templateId)!;
-    expect(contract.contractRevision).toBe(['good-boy-pals','mello-coffee','papernote'].includes(templateId)?`2026-09-20.${templateId}-materials.2`:`2026-09-23.${templateId}-materials.6`);
-    expect(contract.rendererRevision).toBe(['good-boy-pals','mello-coffee','papernote'].includes(templateId)?`2026-09-30.${templateId}-native.1`:outreachTemplates.has(templateId) ? '2026-09-23.outreach-demo-repair.1' : '2026-09-23.demo-repair.1');
+    expect(contract.contractRevision).toBe(['toorun-early-learning','good-boy-pals','mello-coffee','papernote'].includes(templateId)?`2026-09-20.${templateId}-materials.2`:`2026-09-23.${templateId}-materials.6`);
+    expect(contract.rendererRevision).toBe(['toorun-early-learning','good-boy-pals','mello-coffee','papernote'].includes(templateId)?`2026-09-30.${templateId}-native.1`:outreachTemplates.has(templateId) ? '2026-09-23.outreach-demo-repair.1' : '2026-09-23.demo-repair.1');
     expect(contract.requiredCapabilities).toContain('image.product-primary.v1');
     for (const slot of contract.imageSlots) {
       expect(['product-primary', 'product-gallery', 'slot-image']).toContain(slot.materialSource);

@@ -12,6 +12,7 @@ export interface TemplateMediaRequirements {
 // Original slot geometry mirrors referenceLayouts; keep the large HTML bundle out of the editor.
 // Product counts are recommendations for avoiding repeated images, never upload minimums.
 export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMediaRequirements>> = {
+  'toorun-early-learning': { productCount: 6, productSize: '1200 × 1200（1:1，课程与活动场景）', bannerSize: '568 × 688（71:86，首屏儿童活动肖像）', bannerNote: '内置云朵背景、4 张首屏儿童肖像、5 张活动图库和 6 个课程图标。建议提供 4 张不同儿童活动肖像用于首屏，另为每个课程准备 1 张真实课堂或活动照片；无需视频。', videos: 0, slots: [{count: 4, width: 568, height: 688}, {count: 6, width: 1200, height: 1200}, {count: 2, width: 1200, height: 1260}] },
   'lumi-business': { productCount: 6, productSize: '1200 × 1200（1:1，服务或产品展示）', bannerSize: '2560 × 1440（16:9，会议或协作场景）', bannerNote: '原站渐变、插画、字体和首屏视频已内置；可提供真实团队、办公场景、服务插画及文章封面。视频建议 MP4 / H.264，另附同尺寸封面。', videos: 1, slots: [{ count: 1, width: 2560, height: 1440 }, { count: 3, width: 880, height: 1040 }, { count: 3, width: 1240, height: 795 }, { count: 1, width: 1240, height: 1300 }] },
   'papernote': {
     productCount: 6,
@@ -783,4 +784,3 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
     ],
   },
 };
-

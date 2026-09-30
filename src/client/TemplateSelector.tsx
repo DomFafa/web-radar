@@ -21,6 +21,14 @@ export interface TemplateDefinition {
 
 export const TEMPLATES: TemplateDefinition[] = [
   {
+    id: 'toorun-early-learning', name: '童趣早教中心', englishName: 'Toorun Early Learning',
+    tagline: '还原 Toorun 的云朵渐变、倾斜儿童照片、草绿与紫色圆角体系；适合早教、托育和儿童课程机构。',
+    category: 'consumer', industries: ['早教中心', '托育机构', '幼儿园', '儿童课程', '亲子活动'],
+    features: ['云朵渐变与四图拼贴首屏', '课程列表与独立课程详情', '关于、联系与常见问题页面', '移动菜单与现有询盘表单'],
+    accentColor: '#3f6b52', badge: 'Toorun · 幼儿早教',
+    previewImg: '/templates/previews/toorun-early-learning.dfb78be0504ef868.jpg',
+  },
+  {
     id: 'lumi-business', name: 'Lumi 智慧商业', englishName: 'Lumi Business & Strategy',
     tagline: '还原 Lumi 的浅蓝渐变、Satoshi 字体、衬线斜体标题与视频首屏；完整企业服务网站。',
     category: 'enterprise', industries: ['企业咨询', '数字服务', '营销工作室', '商务服务', '软件服务'],

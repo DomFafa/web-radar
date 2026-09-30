@@ -242,7 +242,7 @@ function modernInventory(id:string,revision=modernMaterialsRevision(id)):Invento
   const cached=modernInventories.get(revision);if(cached)return cached;
   const previous=inventory(id,revision===aiAgencyHeroRevision);if(!previous)return;
   const result=structuredClone(previous),contract=result.contract;
-  contract.guideRevision=['pawfect-groom','good-boy-pals','mello-coffee','papernote'].includes(id)?'2026-09-30.1':id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
+  contract.guideRevision=['toorun-early-learning','pawfect-groom','good-boy-pals','mello-coffee','papernote'].includes(id)?'2026-09-30.1':id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
   contract.imageSlots=contract.imageSlots.filter(s=>s.page!=='about');
   // Juno's legacy copy map also contains shared chrome used on other pages.
   contract.textSlots=contract.textSlots.filter(s=>s.page!=='about'||s.id==='company-about'||s.id.includes('-seo-')||!!result.legacyText?.[s.id]);

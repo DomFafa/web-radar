@@ -9,11 +9,11 @@ const selector = (draft = defaultDraft()) => renderToStaticMarkup(createElement(
   draft, onUpdateDraft() {}, onProceedToPublish() {}, onBackToBasics() {}, onPreview() {},
 }));
 describe('reduced template library', () => {
-  it('defaults new projects to Candy and lists only the three retained styles', () => {
+  it('defaults new projects to Candy and lists the active template catalog', () => {
     expect(defaultDraft()).toMatchObject({ template: 'senseng-candy', brandColor: '#ff6b8b' });
-    expect(TEMPLATES.map(t => t.englishName)).toEqual(['Lumi Business & Strategy', 'Pawfect Groom', 'Good Boy Supply Co.', 'Mello Coffee & Bakery', 'Candy Pop & Play', 'Immersive Video', 'Botanical & Forest', 'PaperNote']);
+    expect(TEMPLATES.map(t => t.englishName)).toEqual(['Toorun Early Learning', 'Lumi Business & Strategy', 'Pawfect Groom', 'Good Boy Supply Co.', 'Mello Coffee & Bakery', 'Candy Pop & Play', 'Immersive Video', 'Botanical & Forest', 'PaperNote']);
     const html = selector();
-    expect((html.match(/class="template-card /g) || [])).toHaveLength(8);
+    expect((html.match(/class="template-card /g) || [])).toHaveLength(9);
     expect(html).not.toContain('模板分类');
     expect(html).not.toContain('Single Device');
     expect(html).not.toContain('模板已下架');

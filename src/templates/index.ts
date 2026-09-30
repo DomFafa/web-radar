@@ -4,6 +4,8 @@ import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodB
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
 import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee';
 import { renderPaperNoteSite } from './themes/papernote';
+import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
+import { toorunStyles } from './themes/toorunStyles';
 import { renderReleasedMaterials } from './materials-releases';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
@@ -365,6 +367,13 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     const title = page === 'home' ? (company.name || 'Good Boy Supply Co.') : `${page === 'detail' ? ctx.translateProduct(draft.products.find(p => p.id === options.productId) ?? ({ name: 'Product', description: '' } as Product)).name : ui[page as 'catalog' | 'about' | 'contact']} · ${company.name || 'Good Boy Supply Co.'}`;
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Discover pet supplies, thoughtful everyday essentials and a friendly independent shop.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${goodBoyStyles}</style></head><body class="good-boy-pals" data-template="good-boy-pals"${color !== '#ffcd1e' && options.projectId !== 'preview' ? ` style="--primary:${color}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderGoodBoyPage(ctx)}<script>${script};(${goodBoyRuntime.toString()})();</script></body></html>`;
   }
+  if (template === 'toorun-early-learning') {
+    const ctx = buildThemeContext(draft, options);
+    const current = draft.products.find((p) => p.id === options.productId);
+    const sectionTitle = page === 'detail' ? ctx.translateProduct(current ?? ({ name: 'Program', description: '' } as Product)).name : ({ catalog: 'Programs', about: 'About us', contact: 'Contact' } as Record<string, string>)[page] || company.name;
+    const title = page === 'home' ? company.name || 'Toorun Early Learning' : `${sectionTitle} · ${company.name || 'Toorun Early Learning'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore play-based early learning programs, a caring approach and a welcoming path for families.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<link rel="icon" href="/templates/toorun-early-learning/favicon.png"><style>${toorunStyles}</style></head><body class="toorun-early-learning" data-template="toorun-early-learning"${color !== '#3f6b52' && options.projectId !== 'preview' ? ` style="--tr-green:${color}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderToorunEarlyLearning(ctx)}<script>${script}</script></body></html>`;
+  }
   if (template === 'pawfect-groom') {
     const ctx = buildThemeContext(draft, options);
     const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
@@ -533,9 +542,9 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template) || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee') {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee' || draft.template === 'toorun-early-learning') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee)\//g, `$1${mediaOrigin}/templates/$2/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee|toorun-early-learning)\//g, `$1${mediaOrigin}/templates/$2/`);
   }
   return files;
 }

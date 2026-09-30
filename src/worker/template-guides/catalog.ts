@@ -1,3 +1,4 @@
+import toorunGuide from './documents/toorun-early-learning.json';
 import goodBoyGuide from './documents/good-boy-pals.json';
 import melloGuide from './documents/mello-coffee.json';
 import papernoteGuide from './documents/papernote.json';
@@ -56,6 +57,7 @@ import guideSingleArtisan from './documents/single-artisan-craft.json';
 import guideSingleWellness from './documents/single-wellness-nordic.json';
 
 const documents = [
+  toorunGuide,
   lumiGuide,
   pawfectGuide,
   goodBoyGuide,
