@@ -519,11 +519,13 @@ export function renderMelloPage(ctx: ThemeContext): string {
       <section class="hero" data-wr-hero>
         <div class="w-layout-blockcontainer container w-container">
           <div class="hero-content">
-            <div class="hero-text">
+            <div class="hero-text wr-confirmed-hero-copy">
+              <span class="eyebrow" style="display:none"></span>
               <h1 class="h1 hero-h1">${copy?.headline || c.slogan ? esc(copy?.headline || c.slogan).replace(/\n/g, '<br/>') : 'A brighter kind<br/>of coffee break'}</h1>
+              <p class="hero-p"${copy?.subtitle ? '' : ' style="display:none"'}>${copy?.subtitle ? esc(copy.subtitle) : ''}</p>
               <div class="buttons-wrapper">
                 ${anchor('menu', '<div class="button-border"></div><div class="button-background"></div><div class="emphasis-l top-index">' + esc(copy?.cta || 'Explore the menu') + '</div>', 'button w-inline-block')}
-                <a href="https://google.com/maps" target="_blank" class="button w-variant-c95095ce-7382-225f-41af-d39d3577dbad w-inline-block">
+                <a href="${esc(path('contact/index.html'))}" class="button w-variant-c95095ce-7382-225f-41af-d39d3577dbad w-inline-block">
                   <div class="button-border w-variant-c95095ce-7382-225f-41af-d39d3577dbad"></div>
                   <div class="button-background w-variant-c95095ce-7382-225f-41af-d39d3577dbad"></div>
                   <div class="emphasis-l top-index">Get directions</div>
@@ -1080,7 +1082,7 @@ export function renderMelloPage(ctx: ThemeContext): string {
             <a href="${path('index.html')}" ${navAttrs('home')} class="logo w-inline-block ${page === 'home' ? 'w--current' : ''}">
               ${logoContent}
             </a>
-            <div class="menu-links">
+            <div class="menu-links" data-wr-mobile-menu>
               ${page === 'home' ? `
                 <a href="#menu" class="menu-link w-inline-block"><div class="emphasis-l">Menu</div><div class="link-background"></div></a>
                 <a href="#place" class="menu-link w-inline-block"><div class="emphasis-l">Place</div><div class="link-background"></div></a>
