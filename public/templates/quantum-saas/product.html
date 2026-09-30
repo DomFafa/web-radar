@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Product — Quantum² Screen Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@100..900&display=block" rel="stylesheet">
+  <style>
+    :root {
+      --font-sans: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --fs-display : 55.7px;
+      --fs-title   : calc(var(--dp) * 20);
+      --fs-heading : calc(var(--dp) * 17);
+      --fs-body    : 16.1px;
+      --fs-eyebrow : calc(var(--dp) * 15.8);
+      --fs-ui      : 15px;
+      --fs-meta    : calc(var(--dp) * 14.3);
+      --fs-item    : calc(var(--dp) * 12.9);
+      --fs-caption : calc(var(--dp) * 12.2);
+      --fs-tab     : calc(var(--dp) * 12.1);
+      --fs-sup     : 11.4px;
+      --fs-wordmark: 17.1px;
+
+      --fw-light    : 388;
+      --fw-regular  : 470;
+      --fw-medium   : 500;
+      --fw-semibold : 511;
+      --fw-bold     : 577;
+      --fw-black    : 783;
+
+      --tr-display : -0.0572em;
+      --tr-title   : -0.0570em;
+      --tr-heading : -0.0200em;
+      --tr-body    : -0.0475em;
+      --tr-eyebrow : -0.0293em;
+      --tr-ui      : -0.0080em;
+      --tr-cta     : -0.0200em;
+      --tr-meta    : -0.0447em;
+      --tr-item    : -0.0287em;
+      --tr-caption : -0.0295em;
+      --tr-tab     : -0.0398em;
+      --tr-wordmark: -0.0075em;
+
+      --lh-display : 61px;
+      --lh-body    : 20px;
+      --lh-flat    : 1;
+
+      --c-ink      : #000000;
+      --c-ink-soft : #2e2e2e;
+      --c-muted    : #888888;
+      --c-on-dark  : #ffffff;
+      --c-on-light : #000000;
+      --c-surface-nav   : #000000;
+      --c-surface-card  : #f6f7f9;
+      --c-surface-panel : #ffffff;
+      --c-border-row    : #ededed;
+      --c-accent        : #38c6ec;
+
+      --u  : 548px;
+      --dp : calc(var(--u) / 548);
+      --page-margin : clamp(16px, 3.4vw, 34px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: #ffffff; color: var(--c-ink);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: geometricPrecision;
+      overflow-x: hidden;
+    }
+
+    /* Subpage Header Wrapper matching desktop Fit JS scale */
+    .subpage-header-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+      padding-top: calc(43px * var(--nav-scale, 1));
+      padding-bottom: 12px;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      transition: padding-top .15s ease;
+    }
+
+    .nav {
+      pointer-events: auto;
+      position: relative;
+      width: 880px;
+      height: 52px;
+      background: var(--c-surface-nav);
+      border-radius: 26px;
+      transform: scale(var(--nav-scale, 1));
+      transform-origin: top center;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+      user-select: none;
+    }
+
+    .nav .logo {
+      position: absolute; left: 9px; top: 13px;
+      width: 26px; height: 25px;
+    }
+
+    .wordmark {
+      position: absolute; left: 40px; top: 2px; height: 52px;
+      display: flex; align-items: center;
+      font-size: var(--fs-wordmark); font-weight: var(--fw-black); letter-spacing: var(--tr-wordmark);
+      color: var(--c-on-dark); white-space: nowrap; text-decoration: none;
+    }
+    .wordmark sup {
+      font-size: var(--fs-sup); font-weight: var(--fw-black);
+      position: relative; top: -5px; left: 1px;
+    }
+
+    .nav a.link {
+      position: absolute; top: 0; height: 52px;
+      display: flex; align-items: center; transform: translateX(-50%);
+      font-size: var(--fs-ui); font-weight: var(--fw-medium); letter-spacing: var(--tr-ui);
+      color: var(--c-on-dark); text-decoration: none; white-space: nowrap;
+      transition: color .2s ease;
+    }
+    .nav a.link:hover { color: var(--c-accent); }
+    .nav a.link.is-active {
+      color: var(--c-accent);
+      font-weight: var(--fw-semibold);
+    }
+    .link.l1 { left: 279px; }
+    .link.l2 { left: 386.5px; }
+    .link.l3 { left: 483px; }
+    .link.l4 { left: 571px; }
+
+    .btn {
+      position: absolute; border: 0; border-radius: 17px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: inherit; font-size: var(--fs-ui); letter-spacing: var(--tr-cta);
+      line-height: var(--lh-flat); white-space: nowrap; cursor: pointer; text-decoration: none;
+    }
+    .btn--nav {
+      left: 718px; top: 9px; width: 153px;
+      background: var(--c-on-dark); color: var(--c-on-light); font-weight: var(--fw-bold);
+      transition: transform .2s ease, background-color .2s ease;
+    }
+    .btn--nav:hover { transform: translateY(-1px); background: #f0f0f0; }
+
+    .burger { display: none; }
+    .navmenu { display: none; }
+
+    /* Main Container */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+    }
+
+    .hero-sec {
+      text-align: center;
+      padding: 30px 0 60px;
+    }
+    .badge-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #edfaff;
+      border: 1px solid rgba(56, 198, 236, 0.4);
+      color: #0284c7;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13.5px;
+      font-weight: var(--fw-semibold);
+      letter-spacing: -0.01em;
+      margin-bottom: 20px;
+    }
+    .badge-eyebrow span.dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #38c6ec;
+    }
+    .page-title {
+      font-size: clamp(34px, 4.2vw, 54px);
+      font-weight: var(--fw-regular);
+      letter-spacing: var(--tr-display);
+      line-height: 1.15;
+      margin: 0 auto 20px;
+      max-width: 900px;
+    }
+    .page-lead {
+      font-size: 18px;
+      line-height: 1.5;
+      color: #555;
+      max-width: 680px;
+      margin: 0 auto 36px;
+      letter-spacing: -0.02em;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: #000;
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 24px;
+      font-weight: var(--fw-semibold);
+      font-size: 15px;
+      text-decoration: none;
+      transition: transform .2s ease, opacity .2s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); opacity: .9; }
+    .btn-secondary {
+      background: #fff;
+      color: #000;
+      border: 1px solid #d4d4d4;
+      padding: 14px 28px;
+      border-radius: 24px;
+      font-weight: var(--fw-medium);
+      font-size: 15px;
+      text-decoration: none;
+      transition: background-color .2s ease;
+    }
+    .btn-secondary:hover { background: #f7f7f7; }
+
+    /* Interactive Showcase Band */
+    .showcase-band {
+      background: linear-gradient(135deg, #09131d 0%, #0d2938 100%);
+      border-radius: 24px;
+      padding: 48px;
+      color: #fff;
+      margin: 20px 0 80px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .showcase-band::after {
+      content: '';
+      position: absolute;
+      right: -10%;
+      top: -20%;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56,198,236,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .showcase-title {
+      font-size: clamp(24px, 2.5vw, 32px);
+      font-weight: var(--fw-semibold);
+      line-height: 1.25;
+      margin: 0 0 16px;
+      color: #ffffff;
+    }
+    .showcase-desc {
+      color: #94a3b8;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .mock-timeline {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-time {
+      font-size: 12px;
+      font-weight: 700;
+      color: #38c6ec;
+      background: rgba(56,198,236,0.15);
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .timeline-content { font-size: 14px; color: #e2e8f0; }
+    .timeline-tag { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+    /* Features 3-Column Grid */
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: var(--fw-semibold);
+      letter-spacing: -0.03em;
+      margin: 0 0 12px;
+    }
+    .section-sub {
+      text-align: center;
+      color: #666;
+      font-size: 16px;
+      margin: 0 auto 50px;
+      max-width: 600px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-bottom: 80px;
+    }
+    .feature-card {
+      background: #fbfbfb;
+      border: 1px solid #ededed;
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+      border-color: #38c6ec;
+    }
+    .feature-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: #000;
+      color: #38c6ec;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .feature-card h3 {
+      font-size: 20px;
+      font-weight: var(--fw-semibold);
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+    }
+    .feature-card p {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* Workflow Step Row */
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin: 40px 0 80px;
+    }
+    .step-box {
+      border: 1px solid #eee;
+      border-radius: 16px;
+      padding: 24px;
+      background: #fff;
+    }
+    .step-num {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #38c6ec;
+      background: #eefbff;
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .step-box h4 { margin: 0 0 8px; font-size: 17px; font-weight: var(--fw-semibold); }
+    .step-box p { margin: 0; font-size: 14px; color: #666; line-height: 1.5; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid #ededed;
+      padding: 48px 24px;
+      text-align: center;
+      color: #777;
+      font-size: 14px;
+      background: #fafafa;
+    }
+    .footer-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-logo {
+      font-size: 16px;
+      font-weight: var(--fw-black);
+      color: #000;
+      text-decoration: none;
+    }
+
+    /* Responsive Compact Styles */
+    @media (max-width: 939.98px) {
+      .subpage-header-wrap {
+        padding-top: clamp(20px, 3.4vw, 43px);
+      }
+      .nav {
+        position: relative;
+        left: auto; top: auto;
+        transform: none !important;
+        height: 52px;
+        width: min(calc(100% - 2 * var(--page-margin)), 820px);
+        margin: 0 auto;
+        display: flex; align-items: center; z-index: 20;
+      }
+      .nav a.link, .btn--nav { display: none !important; }
+      .nav .logo { position: static; margin-left: 9px; flex: none; }
+      .wordmark { position: static; height: auto; margin-left: 6px; }
+
+      .burger {
+        display: flex; flex-direction: column; justify-content: center; gap: 5px;
+        margin-left: auto; margin-right: 9px; width: 34px; height: 34px; padding: 0 7px;
+        background: none; border: 0; border-radius: 17px; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .burger__bar {
+        display: block; height: 2px; width: 100%; background: #fff; border-radius: 1px;
+        transition: transform .22s ease, opacity .22s ease;
+      }
+      .burger:focus-visible { outline: 2px solid #38c6ec; outline-offset: 2px; }
+      .nav.is-open .burger__bar:nth-child(1) { transform: translateY(3.5px) rotate(45deg); }
+      .nav.is-open .burger__bar:nth-child(2) { transform: translateY(-3.5px) rotate(-45deg); }
+
+      .navmenu {
+        display: flex; flex-direction: column;
+        position: absolute; top: calc(100% + 8px); right: 0;
+        min-width: 216px; padding: 10px; background: #000; border-radius: 20px;
+        opacity: 0; transform: translateY(-6px);
+        transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+      }
+      .navmenu[hidden] { display: flex; }
+      .nav.is-open .navmenu { opacity: 1; transform: none; pointer-events: auto; }
+      .navmenu__link {
+        padding: 11px 14px; border-radius: 12px;
+        font-size: var(--fs-ui); font-weight: var(--fw-medium); letter-spacing: var(--tr-ui);
+        color: var(--c-on-dark); text-decoration: none;
+      }
+      .navmenu__link:hover, .navmenu__link:focus { background: rgba(255,255,255,.1); }
+      .navmenu__cta {
+        margin-top: 6px; padding: 11px 14px; background: #fff; border-radius: 17px;
+        text-align: center; font-size: var(--fs-ui); font-weight: var(--fw-bold);
+        color: var(--c-on-light); text-decoration: none;
+      }
+
+      .showcase-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Synchronized Navigation Header -->
+  <header class="subpage-header-wrap">
+    <nav class="nav" id="mainNav">
+      <svg class="logo" viewBox="0 0 26 25" fill="none" aria-label="Quantum squared">
+        <path fill-rule="evenodd" d="M9.45 24.95 L7.07 24.09 L5.56 23.30 L3.33 21.03 L2.31 19.44 L0.74 16.05 L0.27 13.91 L0.29 11.25 L0.80 8.75 L1.95 6.20 L3.26 4.50 L5.15 2.67 L7.77 1.02 L9.91 0.18 L12.16 -0.20 L15.22 -0.16 L17.61 0.35 L19.30 1.06 L20.88 2.06 L22.23 3.37 L24.01 5.48 L24.76 6.58 L25.70 8.63 L26.00 10.35 L26.02 11.35 L25.54 12.12 L24.96 12.32 L22.35 12.36 L21.46 12.18 L20.78 11.85 L20.32 11.37 L19.45 9.56 L17.88 7.58 L16.59 6.60 L14.59 5.84 L13.24 5.69 L11.54 5.93 L10.47 6.44 L9.12 7.35 L7.92 8.50 L6.70 10.55 L6.26 12.65 L6.41 14.36 L7.14 15.86 L8.63 17.79 L12.57 20.70 L12.96 21.60 L13.13 22.82 L12.93 24.36 L12.65 24.86 L12.03 25.35 L11.27 25.42 L9.45 24.95 Z M24.55 25.53 L22.49 24.77 L19.56 23.18 L18.15 22.07 L16.63 20.48 L16.14 19.79 L15.63 18.71 L14.66 15.66 L14.59 14.50 L14.75 13.92 L15.12 13.45 L15.85 13.10 L16.91 12.88 L18.90 12.85 L19.49 13.04 L19.94 13.38 L20.25 13.88 L20.86 15.66 L21.97 17.30 L23.05 18.22 L25.00 19.43 L26.05 20.27 L26.34 20.66 L26.63 21.86 L26.51 23.68 L25.79 25.10 L25.35 25.42 L24.55 25.53 Z" fill="#38c6ec"/>
+      </svg>
+      <a class="wordmark" href="index.html">
+        Quantum<sup>2</sup>
+      </a>
+
+      <a class="link l1 is-active" href="product.html">Product</a>
+      <a class="link l2" href="pricing.html">Pricing</a>
+      <a class="link l3" href="blog.html">Blog</a>
+      <a class="link l4" href="faq.html">FAQ</a>
+
+      <a class="btn btn--nav" href="pricing.html">Download Now</a>
+
+      <button class="burger" id="burgerBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+        <span class="burger__bar"></span>
+        <span class="burger__bar"></span>
+      </button>
+
+      <div class="navmenu" id="nav-menu" hidden>
+        <a class="navmenu__link" href="product.html" style="color:var(--c-accent)">Product</a>
+        <a class="navmenu__link" href="pricing.html">Pricing</a>
+        <a class="navmenu__link" href="blog.html">Blog</a>
+        <a class="navmenu__link" href="faq.html">FAQ</a>
+        <a class="navmenu__cta" href="pricing.html">Download Now</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero-sec">
+      <div class="badge-eyebrow">
+        <span class="dot"></span>
+        # Autonomous Screen Intelligence Engine 3.0
+      </div>
+      <h1 class="page-title">
+        Turn hours of video recordings into structured, searchable knowledge.
+      </h1>
+      <p class="page-lead">
+        Quantum² decodes screen changes, spoken discussions, code commits, and Figma boards with frame-accurate multi-modal intelligence. Stop taking manual notes.
+      </p>
+      <div class="hero-actions">
+        <a href="pricing.html" class="btn-primary">Start 14-Day Free Trial</a>
+        <a href="faq.html" class="btn-secondary">Explore Architecture Docs</a>
+      </div>
+    </section>
+
+    <!-- Interactive Showcase Band -->
+    <section class="showcase-band">
+      <div class="showcase-grid">
+        <div>
+          <span style="color:#38c6ec;font-weight:700;font-size:13px;letter-spacing:0.05em;text-transform:uppercase;">Live Telemetry</span>
+          <h2 class="showcase-title">Frame-by-frame visual indexing and sync</h2>
+          <p class="showcase-desc">
+            As your video streams, our proprietary neural OCR reconstructs every UI state, extracts text directly from code editors, terminals, and design canvases, and ties them to active audio speakers.
+          </p>
+          <div style="display:flex;gap:24px;margin-top:20px;">
+            <div>
+              <div style="font-size:28px;font-weight:800;color:#38c6ec;">60 fps</div>
+              <div style="font-size:13px;color:#94a3b8;">Real-time OCR Tracking</div>
+            </div>
+            <div>
+              <div style="font-size:28px;font-weight:800;color:#fff;">99.4%</div>
+              <div style="font-size:13px;color:#94a3b8;">Speaker Attribution</div>
+            </div>
+            <div>
+              <div style="font-size:28px;font-weight:800;color:#38c6ec;">0 ms</div>
+              <div style="font-size:13px;color:#94a3b8;">Local Cache Latency</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-timeline">
+          <div style="font-size:12px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:14px;letter-spacing:0.05em;">Autonomous Meeting Stream</div>
+          <div class="timeline-item">
+            <span class="timeline-time">04:12</span>
+            <div>
+              <div class="timeline-content">Agreed on success metrics for Q3 launch</div>
+              <div class="timeline-tag">Decision verified • Owner: Product Lead</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-time">18:45</span>
+            <div>
+              <div class="timeline-content">Refined product positioning strategy pending final approval</div>
+              <div class="timeline-tag">Action Item flagged • Owner: Marketing Manager</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-time">32:10</span>
+            <div>
+              <div class="timeline-content">Database migration timeline confirmed for Thursday night</div>
+              <div class="timeline-tag">Risk assessment • Owner: Tech Lead</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Features -->
+    <h2 class="section-title">Engineered for asynchronous velocity</h2>
+    <p class="section-sub">Everything you need to replace synchronous meeting marathons with instant visual insight.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-box">⚡</div>
+        <h3>Instant Search Across Any Screen</h3>
+        <p>Query anything that was ever displayed on your display: code, spreadsheets, Figma mockups, terminal errors, or browser tabs.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-box">🎯</div>
+        <h3>Automated Decision Summaries</h3>
+        <p>Quantum AI identifies consensus points, action items, assignees, and deadlines, formatting them into structured tickets.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-box">🔒</div>
+        <h3>Private On-Device Inference</h3>
+        <p>Your confidential video data never trains third-party public models. Pro and Enterprise support 100% on-device local processing.</p>
+      </div>
+    </div>
+
+    <!-- 3 Step Workflow -->
+    <h2 class="section-title">How Quantum² works</h2>
+    <p class="section-sub">From screen capture to shared organizational brain in under 60 seconds.</p>
+
+    <div class="steps-row">
+      <div class="step-box">
+        <span class="step-num">STEP 01</span>
+        <h4>Record or Import</h4>
+        <p>Use our native lightweight macOS/Windows app, or drag and drop any MP4/MOV recording from Loom, Zoom, or OBS.</p>
+      </div>
+      <div class="step-box">
+        <span class="step-num">STEP 02</span>
+        <h4>Quantum Analysis</h4>
+        <p>Multi-modal visual models transcribe, track cursor coordinates, parse code diffs, and structure discussion outlines.</p>
+      </div>
+      <div class="step-box">
+        <span class="step-num">STEP 03</span>
+        <h4>Sync to Workspaces</h4>
+        <p>Push action items and outcome summaries directly into Notion, Linear, Slack, GitHub issues, or export as Markdown.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <a class="footer-logo" href="index.html">Quantum<sup>2</sup></a>
+      <span>Convert screen recording into clear, intelligent insights.</span>
+      <span>© 2026 Quantum Inc. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    // Desktop Fit JS Scale Synchronization: guarantees the menu bar matches index.html exactly
+    const DH = 860;
+    const MINW = 960;
+    function updateNavScale() {
+      if (window.innerWidth < 940) {
+        document.documentElement.style.removeProperty('--nav-scale');
+        return;
+      }
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const s = Math.min(vh / DH, vw / MINW);
+      document.documentElement.style.setProperty('--nav-scale', s.toString());
+    }
+    window.addEventListener('resize', updateNavScale);
+    window.addEventListener('orientationchange', updateNavScale);
+    updateNavScale();
+
+    // Mobile Burger Toggle
+    const burger = document.getElementById('burgerBtn');
+    const menu = document.getElementById('nav-menu');
+    const nav = document.getElementById('mainNav');
+
+    burger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = nav.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      if (open) {
+        menu.removeAttribute('hidden');
+      } else {
+        menu.setAttribute('hidden', '');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!nav.contains(e.target) && nav.classList.contains('is-open')) {
+        nav.classList.remove('is-open');
+        burger.setAttribute('aria-expanded', 'false');
+        burger.setAttribute('aria-label', 'Open menu');
+        menu.setAttribute('hidden', '');
+      }
+    });
+  </script>
+</body>
+</html>

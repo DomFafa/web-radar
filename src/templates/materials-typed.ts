@@ -119,7 +119,7 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
     const sensengHero=page==='home'&&(newSenseng.test(id)?cls.split(/\s+/).includes(`wr-${id.slice(8)}-hero`):id==='senseng-video'&&cls.split(/\s+/).includes('senseng-hero-video-full'));
     // A later product section is not another hero when the template already supplied one.
     // Keep the old heuristic only for contracts that froze its two-slot inventory.
-    const genericHero=page==='home'&&((firstContentSection&&(!preferExplicitHero||heroIndex===0)&&!/senseng|crafto|juno|consulting/.test(id))||(id==='corpox-ai-agency'&&cls.split(/\s+/).includes('ai-agency-demo-banner')));
+    const genericHero=id!=='pawfect-groom'&&page==='home'&&((firstContentSection&&(!preferExplicitHero||heroIndex===0)&&!/senseng|crafto|juno|consulting/.test(id))||(id==='corpox-ai-agency'&&cls.split(/\s+/).includes('ai-agency-demo-banner')));
     if(slide||sensengHero||genericHero){
       const single=id.startsWith('single-');
       const slot=imageSlot(`hero-slide-${heroIndex++}`,'home',single?'scene':'collection',bw,bh,single?'Homepage hero showing only the selected primary product':'Homepage collection banner; every selected product in a distinct composition');
@@ -127,6 +127,12 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
         const media=elements(n).find(child=>child.tagName==='video')||elements(n).find(child=>child.tagName==='img');
         if(media)visit(media,slot.id,slot,[...parents,n],media.tagName==='video'?'video':'image');
       }else visit(n,slot.id,slot,parents,'background');
+    }
+    if(id==='pawfect-groom'&&n.tagName==='img'&&src.includes('/templates/pawfect-groom/')) {
+      const hero=cls.split(/\s+/).includes('pg-portrait');
+      const slot=imageSlot(hero?'hero-portrait':`${page}-photo-${slug(src.split('/').at(-1) || '')}`,page,'facility',hero?1200:1200,hero?1400:1000,hero?'Friendly dog portrait with crop-safe face and ears; illustrative, not a customer result':'Approved salon photography or clearly illustrative dog-care scene');
+      slot.fit='cover';slot.composition='Warm white, teal and amber dog-care photography. No embedded text, fake staff identity or fabricated customer result.';
+      visit(n,slot.id,slot,parents,'image');
     }
     if(n.tagName==='img'&&slotIndex!==''&&layout){
       const raw=layout.slots[Number(slotIndex)];
@@ -226,12 +232,12 @@ function modernInventory(id:string,revision=modernMaterialsRevision(id)):Invento
   const cached=modernInventories.get(revision);if(cached)return cached;
   const previous=inventory(id,revision===aiAgencyHeroRevision);if(!previous)return;
   const result=structuredClone(previous),contract=result.contract;
-  contract.guideRevision=id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
+  contract.guideRevision=id==='pawfect-groom'?'2026-09-30.1':id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
   contract.imageSlots=contract.imageSlots.filter(s=>s.page!=='about');
   // Juno's legacy copy map also contains shared chrome used on other pages.
   contract.textSlots=contract.textSlots.filter(s=>s.page!=='about'||s.id==='company-about'||s.id.includes('-seo-')||!!result.legacyText?.[s.id]);
   contract.imageSlots.push({...imageSlot('about-primary-image','about','facility',1536,1024,'About lead editorial image representing the approved business, without implying an owned factory'),fit:'cover'});
-  if(id==='senseng-clean'||id==='senseng-video')contract.imageSlots.push({...imageSlot('about-secondary-image','about','facility',1536,1024,'About supporting process illustration; a distinct composition from the lead image'),fit:'cover'});
+  if(id==='senseng-clean'||id==='senseng-video'||id==='pawfect-groom')contract.imageSlots.push({...imageSlot('about-secondary-image','about','facility',1536,1024,'About supporting process illustration; a distinct composition from the lead image'),fit:'cover'});
   contract.textSlots.push(textSlot('about-headline','about','About page headline from saved brand and product facts',160),textSlot('about-story','about','About company story, one to six paragraphs using saved facts only',2500),{...textSlot('about-highlights','about','One to four lines, each: value | label | description. Use ✓ as value when no verified numeric metric exists. Never copy template sample statistics.',1000),maxLines:4});
   result.text.about={};result.media.about={};
   const draft=demo(id as TemplateId);

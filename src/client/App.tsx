@@ -909,6 +909,8 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                           'senseng-wonder': '北欧温润工坊',
                           'senseng-arcade': '霓虹赛博潮玩',
                           'senseng-nature': '森林原野工坊',
+                          'quantum-saas': '量子智能录屏',
+                          'pawfect-groom': '暖心宠物美容',
                           'senseng-minimal': '瑞士极简生活馆',
                           'universal-trade-banner': '全品类精选展台',
                           'universal-showcase-video': '全景商贸视界',

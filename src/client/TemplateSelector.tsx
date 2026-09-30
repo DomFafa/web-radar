@@ -21,6 +21,13 @@ export interface TemplateDefinition {
 
 export const TEMPLATES: TemplateDefinition[] = [
   {
+    id: 'pawfect-groom', name: '暖心宠物美容', englishName: 'Pawfect Groom',
+    tagline: '暖白、青绿与琥珀色的宠物美容沙龙；有机轮廓首屏、服务菜单与预约咨询。',
+    category: 'consumer', industries: ['宠物美容', '犬只护理', '本地服务', '宠物沙龙'],
+    features: ['金毛肖像与有机浮动首屏', '服务列表与独立详情页', '图库、关于我们与常见问题', '预约咨询接入现有询盘'],
+    accentColor: '#38929a', badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.ef266445c18ecf37.jpg',
+  },
+  {
     id: 'senseng-candy',
     name: '缤纷糖果乐园',
     englishName: 'Candy Pop & Play',
@@ -56,6 +63,19 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#4a7c59',
     badge: '零塑环保自然 · 动态减碳条',
     previewImg: '/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg',
+  },
+  {
+    id: 'quantum-saas',
+    name: '量子智能录屏',
+    englishName: 'Quantum² Screen Intelligence',
+    tagline: '专为 AI 录屏知识库与协作 SaaS 定制；黑胶囊导航、亮青色动态视频光带与固定几何交互卡片',
+    category: 'tech',
+    industries: ['AI SaaS', '智能录屏', '知识协同', '出海软件', '数字化办公'],
+    features: ['黑胶囊一体化导航', '全宽青碧动态视频光带', '固定几何交互数据卡片', 'Figtree 变量字体微排版'],
+    accentColor: '#38c6ec',
+    badge: 'Quantum² · AI SaaS 旗舰',
+    hasVideo: true,
+    previewImg: '/templates/previews/quantum-saas.jpg',
   },
 ];
 
@@ -100,7 +120,7 @@ export default function TemplateSelector({
           <h2>选择网站模版与品牌调色</h2>
           <p className="step-subtitle">
             共提供 {TEMPLATES.length}
-            套模版：糖果趣玩、沉浸视频、森林自然。选择风格后，填入你的公司与产品资料。
+            套模版。选择适合行业的风格，填入品牌、产品或服务资料。
           </p>
         </div>
 

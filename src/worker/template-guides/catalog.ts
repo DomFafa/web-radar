@@ -1,4 +1,5 @@
 import { guideSchema, guideIds, type TemplateGuide } from './schema';
+import pawfectGuide from './documents/pawfect-groom.json';
 import guide0 from './documents/corpox-ai-agency.json';
 import guide7 from './documents/saas-automation.json';
 import guide8 from './documents/senseng-clean.json';
@@ -51,6 +52,7 @@ import guideSingleArtisan from './documents/single-artisan-craft.json';
 import guideSingleWellness from './documents/single-wellness-nordic.json';
 
 const documents = [
+  pawfectGuide,
   guide0,
   guide7,
   guide8,

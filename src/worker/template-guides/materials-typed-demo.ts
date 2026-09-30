@@ -1,3 +1,4 @@
+import { pawfectDemoDraft } from './pawfect-demo';
 import type {Language} from '../../shared/model';
 import type {MaterialsTemplateContract,AppliedMaterials} from '../../shared/materials';
 import {defaultDraft} from '../domain';
@@ -5,6 +6,7 @@ import {getMaterialsDemoSamples,unavailablePackagingSample} from './materials-de
 
 /** Deliberately labelled public examples, never a source of customer facts. */
 export function typedMaterialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(profile.templateId==='pawfect-groom')return pawfectDemoDraft(profile,lang);
   const single = ({
     'single-device-showcase': { image: 'hardware.jpg', name: 'The connected core.', brand: 'FORM / 01', text: 'A closer look at the circuitry behind the object. Explore its design, details and possibilities.', palette: ['#d4ed9b','#192023','#101416','#192023','#edf1ea','#acb6b5'] },
     'single-artisan-craft': { image: 'artisan.jpg', name: 'Time, beautifully considered.', brand: 'ATELIER / ONE', text: 'A quiet study in texture, proportion and the passage of time. One timepiece, seen in a different light.', palette: ['#59422e','#e9e2d5','#f5f1e9','#e9e2d5','#332c24','#766a5c'] },

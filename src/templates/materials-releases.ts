@@ -86,6 +86,7 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (id === 'pawfect-groom') return getModernMaterialsTemplate(id, revision);
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));
   if (release) return structuredClone(release.contract);
   if (!revision || revision === demoMaterialsRevision(id)) return demoMaterialsContract(id);

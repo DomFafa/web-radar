@@ -1,3 +1,4 @@
+import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
 import { renderReleasedMaterials } from './materials-releases';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
@@ -7,6 +8,7 @@ import { styles } from './styles';
 import { themeStyles } from './themes/styles';
 import { buildThemeContext } from './themes/types';
 import { renderSensengHome, renderSensengPage } from './themes/senseng';
+import { renderQuantumSite } from './themes/quantumSaas';
 import { isReferenceTemplate, renderReferencePage } from './themes/reference';
 import { renderSaasHome } from './themes/saasAutomation';
 import { renderFintechHome } from './themes/fintechPlatform';
@@ -352,6 +354,15 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     }
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
   }
+  if (template === 'pawfect-groom') {
+    const ctx = buildThemeContext(draft, options);
+    const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;
+  }
+  if (template === 'quantum-saas') {
+    const ctx = buildThemeContext(draft, options);
+    return renderQuantumSite(ctx);
+  }
   if (template === 'senseng-candy') {
     const ctx = buildThemeContext(draft, options);
     const bodyHtml = renderCandyPage(ctx);
@@ -505,9 +516,9 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template)) {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'pawfect-groom') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/single-product\//g, `$1${mediaOrigin}/templates/single-product/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom)\//g, `$1${mediaOrigin}/templates/$2/`);
   }
   return files;
 }

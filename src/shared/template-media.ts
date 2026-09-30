@@ -12,6 +12,7 @@ export interface TemplateMediaRequirements {
 // Original slot geometry mirrors referenceLayouts; keep the large HTML bundle out of the editor.
 // Product counts are recommendations for avoiding repeated images, never upload minimums.
 export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMediaRequirements>> = {
+  'pawfect-groom': {productCount: 6, productSize: '1200 × 1200（1:1，服务照片）', bannerSize: '1200 × 1400（6:7，狗狗肖像）', bannerNote: '首屏金毛肖像、护理图库和字体已内置；关于页建议两张 1200 × 1000 沙龙实拍。图库最多展示 5 张服务照片，不需要视频。', videos: 0, slots: [{count: 1, width: 1200, height: 1400}, {count: 2, width: 1200, height: 1000}, {count: 5, width: 640, height: 800}]},
   'senseng-clean': {
     productCount: 8,
     productSize: '1536 × 1024（3:2）',
