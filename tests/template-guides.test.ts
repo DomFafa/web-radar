@@ -39,7 +39,8 @@ beforeEach(() => {
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
     expect(templateGuides.map((g) => g.templateId)).toEqual([...guideIds]);
-    expect([...guideIds].sort()).toEqual(TEMPLATES.map((template) => template.id).sort());
+    expect(TEMPLATES.map(template => template.id).sort()).toEqual(['senseng-candy', 'senseng-nature', 'senseng-video']);
+    for (const template of TEMPLATES) expect(guideIds).toContain(template.id);
     expect([...guideIds].sort()).toEqual(Object.keys(templateMediaRequirements).sort());
     expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(50);
     expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(50);
@@ -119,13 +120,14 @@ describe('versioned internal template documents', () => {
   );
 });
 describe('read-only guide API', () => {
-  it('lists all 29 selectable documents and returns matching JSON, Markdown and schema', async () => {
+  it('lists only the three selectable documents and returns matching JSON, Markdown and schema', async () => {
     const list = await get();
     expect(list.status).toBe(200);
     expect(list.headers.get('cache-control')).toBe('no-store');
     expect(list.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const catalog = (await list.json()) as any;
-    expect(catalog.total).toBe(50);
+    expect(catalog.total).toBe(3);
+    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['senseng-candy', 'senseng-nature', 'senseng-video']);
     for (const item of catalog.templates) {
       const res = await get('/' + item.templateId);
       expect(res.status).toBe(200);

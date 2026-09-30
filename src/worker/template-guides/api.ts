@@ -1,3 +1,4 @@
+import { isActiveTemplate } from '../../shared/template-availability';
 import { Hono } from 'hono';
 import type { HonoEnv } from '../env';
 import { authenticate } from '../auth';
@@ -58,11 +59,12 @@ export function createTemplateGuidesApp() {
       throw new ApiError(405, 'read_only', '模板规范接口只支持读取。');
     await next();
   });
+  const selectableGuides = templateGuides.filter(guide => isActiveTemplate(guide.templateId));
   app.get('/', (c) =>
     c.json({
       schemaVersion: '1.0',
-      total: templateGuides.length,
-      templates: templateGuides.map((guide) => ({
+      total: selectableGuides.length,
+      templates: selectableGuides.map((guide) => ({
         templateId: guide.templateId,
         name: guide.name,
         revision: guide.revision,

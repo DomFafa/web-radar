@@ -1,3 +1,4 @@
+import { DEFAULT_TEMPLATE } from '../shared/template-availability';
 import { viewTeamData } from '../shared/access';
 import { ProductIdentitySchema } from "../shared/product-identity";
 import type { BannerTarget } from '../shared/model';
@@ -313,8 +314,8 @@ export function defaultDraft(): Draft {
     category: 'general',
     country: '',
     languages: ['en'],
-    template: 'natural',
-    brandColor: '#416851',
+    template: DEFAULT_TEMPLATE,
+    brandColor: '#ff6b8b',
     copy: {},
     duration: 8,
     direction: '',

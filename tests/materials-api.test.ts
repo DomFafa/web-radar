@@ -17,7 +17,7 @@ describe('materials guide account boundary',()=>{
   it('allows an ordinary Product Radar account without a Web Radar login and returns a non-publishing demo',async()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
-    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(Object.keys(templateMediaRequirements).sort());
+    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['senseng-candy', 'senseng-nature', 'senseng-video']);
     expect(entries.every((t:any)=>t.contractRevision===`2026-09-23.${t.templateId}-materials.6`&&t.guideRevision===(t.templateId.startsWith('single-')?'2026-09-26.1':'2026-09-20.1'))).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
     const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
