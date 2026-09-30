@@ -203,6 +203,7 @@ export interface CloneScrapedData {
   sampleText?: string;
 }
 export interface CloneTaskProgress {
+  publicationNotice?: string;
   autoPublish?: boolean;
   phase: 'queued' | 'capturing' | 'reading' | 'model' | 'validating' | 'publishing' | 'done';
   imagesRead: number;
@@ -426,6 +427,8 @@ export interface Inquiry {
   emailError?: string;
 }
 export interface ProjectDetail {
+  websitePoints?: number;
+  websiteResultVersion?: number;
   project: Project;
   assets: Asset[];
   jobs: Job[];

@@ -395,13 +395,16 @@ export class CloneTasks {
             (quality?.status === 'unavailable' && !!this.env.SITE_BUILDER_URL);
           if (holdPublication) job.cloneProgress!.autoPublish = false;
           if (job.input.autoPublish && !holdPublication) {
-            const publication = await this.hooks.publish(
-              project,
-              job.input.principal as Principal,
-              job.id,
-            );
-            job.cloneProgress!.publishJobId = publication.id;
-            job.cloneProgress!.phase = 'publishing';
+            try {
+              const publication = await this.hooks.publish(project, job.input.principal as Principal, job.id);
+              job.cloneProgress!.publishJobId = publication.id;
+              job.cloneProgress!.phase = 'publishing';
+            } catch (error) {
+              if (!(error instanceof Error && 'code' in error && error.code === 'website_preview_required')) throw error;
+              job.cloneProgress!.autoPublish = false;
+              job.cloneProgress!.phase = 'done';
+              job.cloneProgress!.publicationNotice = error.message;
+            }
           } else job.cloneProgress!.phase = 'done';
           job.status = 'succeeded';
           this.stopClock(job);

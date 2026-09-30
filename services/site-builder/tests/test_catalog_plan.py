@@ -291,7 +291,7 @@ def test_scene_review_can_split_original_scene_and_adjust_backdrop_margins(monke
     assert result == validate_visual_plan('home', design_image(), reviewed)
 
 
-def test_builder_hands_canonical_groups_to_generation_and_repair(payload, single_row_catalog, monkeypatch):
+def test_builder_hands_canonical_groups_to_generation_without_unneeded_repair(payload, single_row_catalog, monkeypatch):
     import builder
     from renderer import RenderResult
     asyncio.run(builder.initialize_vendor())
@@ -313,7 +313,7 @@ def test_builder_hands_canonical_groups_to_generation_and_repair(payload, single
                'collectionLayouts': [{'columns': count, 'descriptionCount': 0} for count in [2, 2, 4]], 'forms': 0, 'formLayouts': []}
     monkeypatch.setattr(builder, 'assess_page', lambda *args: asyncio.sleep(0, result=RenderResult(metrics=[metrics])))
     asyncio.run(builder.build_page(payload, 'catalog'))
-    assert len(calls) == 1 and len(messages) == 2
+    assert len(calls) == 1 and len(messages) == 1
     assert payload == before
     for prompt in messages:
         text = json.dumps(prompt)

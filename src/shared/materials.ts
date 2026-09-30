@@ -1,6 +1,13 @@
 import { ProductIdentitySchema } from "./product-identity";
 import { z } from 'zod';
 
+/** PR → WR confirmation hashes use locale-independent JSON key order. */
+export function canonicalMaterials(value:unknown):string{
+  if(Array.isArray(value))return `[${value.map(canonicalMaterials).join(',')}]`;
+  if(value&&typeof value==='object')return `{${Object.entries(value).filter(([,v])=>v!==undefined).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,v])=>`${JSON.stringify(k)}:${canonicalMaterials(v)}`).join(',')}}`;
+  return JSON.stringify(value)??'null';
+}
+
 export const materialsLocales = ['en', 'de', 'fr', 'es', 'pt', 'it'] as const;
 export const materialsPages = ['home', 'catalog', 'detail', 'about', 'contact'] as const;
 const id = z.string().min(1).max(200);

@@ -44,10 +44,10 @@ def candidates(payload, pages, monkeypatch, tmp_path):
     ([], ['390px: page content extends outside the viewport'], [], 'initial'),
     (['Hidden product image'], ['390px: page content extends outside the viewport'], [], None),
     (['Hidden product image'], [], [], 'reviewed'),
-    ([], [], [], 'reviewed'),
+    ([], [], [], 'initial'),
     ([], ['390px: page content extends outside the viewport'], ['Mobile collection requires 1 to 2 columns'], None),
 ], ids=['clean-to-bad-review', 'both-invalid', 'corrected-valid', 'both-valid', 'initial-plan-invalid'])
-def test_selects_only_a_fully_valid_candidate_after_exactly_one_review(candidates, initial_issues, reviewed_issues, initial_plan_issues, selected):
+def test_selects_only_a_fully_valid_candidate_with_repair_only_for_concrete_errors(candidates, initial_issues, reviewed_issues, initial_plan_issues, selected):
     payload, state, evidence = candidates
     state['renderIssues'] = [initial_issues, reviewed_issues]
     state['planIssues'][0] = initial_plan_issues
@@ -64,17 +64,22 @@ def test_selects_only_a_fully_valid_candidate_after_exactly_one_review(candidate
         assert provenance['selection']['reason']
         assert provenance['issues'] == []
         assert (evidence / 'detail-selected.html').read_text() == html
-    assert len(state['modelCalls']) == len(state['renderCalls']) == len(state['planCalls']) == 2
+    expected_calls = 2 if initial_issues or initial_plan_issues else 1
+    assert len(state['modelCalls']) == len(state['renderCalls']) == len(state['planCalls']) == expected_calls
     assert json.loads((evidence / 'detail-initial.json').read_text())['issues'] == [*initial_issues, *initial_plan_issues]
-    assert json.loads((evidence / 'detail-reviewed.json').read_text())['issues'] == reviewed_issues
-    feedback = state['modelCalls'][1][-1]['content']
-    assert len([part for part in feedback if part['type'] == 'image_url']) == 2
+    if expected_calls == 2:
+        assert json.loads((evidence / 'detail-reviewed.json').read_text())['issues'] == reviewed_issues
+        feedback = state['modelCalls'][1][-1]['content']
+        assert len([part for part in feedback if part['type'] == 'image_url']) == 2
+    else:
+        assert not (evidence / 'detail-reviewed.json').exists()
 
 
 @pytest.mark.parametrize('boundary,error', [('modelError', TimeoutError('provider uncertain')), ('modelError', RuntimeError('unknown provider failure')), ('renderError', RuntimeError('unknown renderer failure'))], ids=['timeout', 'provider-error', 'renderer-error'])
 def test_uncertain_or_unknown_errors_never_select_initial(candidates, boundary, error):
     payload, state, evidence = candidates
     state[boundary] = error
+    state['renderIssues'][0] = ['Hidden product image']
     with pytest.raises(type(error), match=str(error)):
         asyncio.run(builder.build_page(payload, 'detail'))
     assert len(state['modelCalls']) == 2
@@ -98,6 +103,14 @@ def test_reviewed_visual_plan_failure_also_preserves_clean_initial(candidates):
     payload, state, evidence = candidates
     state['planIssues'][1] = ['Mobile collection requires 1 to 2 columns; rendered 8']
     assert asyncio.run(builder.build_page(payload, 'detail')) == state['html'][0]
-    assert json.loads((evidence / 'detail-reviewed.json').read_text())['issues'] == state['planIssues'][1]
+    assert not (evidence / 'detail-reviewed.json').exists()
     assert json.loads((evidence / 'detail-selected.json').read_text())['selection']['candidate'] == 'initial'
-    assert len(state['modelCalls']) == len(state['planCalls']) == 2
+    assert len(state['modelCalls']) == len(state['planCalls']) == 1
+
+
+def test_clean_html_delivers_without_paid_second_generation(candidates):
+    payload, state, evidence = candidates
+    html = asyncio.run(builder.build_page(payload, 'detail'))
+    assert html == state['html'][0]
+    assert len(state['modelCalls']) == len(state['renderCalls']) == 1
+    assert json.loads((evidence / 'detail-selected.json').read_text())['selection']['candidate'] == 'initial'

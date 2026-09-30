@@ -656,7 +656,11 @@ export default function Editor({
   }
   async function openPreview() {
     await action('preview', async () => {
-      await save();
+      const saved = await save();
+      if (detail?.websitePoints) {
+        await post(`${endpoint}/prepare-website-preview`, {expectedVersion: saved.version, acceptedPoints: detail.websiteResultVersion ? detail.websitePoints : saved.draft.products.length > 10 ? 300 : 200});
+        await refresh();
+      }
       setPreviewOpen(true);
     });
   }
@@ -833,7 +837,7 @@ export default function Editor({
           </Button>
           <Button onClick={openPreview} busy={busy === 'preview'} disabled={!!busy || !siteReady}>
             <Icon name="eye" />
-            整站预览
+            {detail.websitePoints ? `制作并预览 · ${detail.websiteResultVersion ? detail.websitePoints : draft.products.length > 10 ? 300 : 200} 点` : '整站预览'}
           </Button>
         </div>
       </header>
@@ -1604,7 +1608,7 @@ export default function Editor({
                   busy={busy === 'preview'}
                 >
                   <Icon name="eye" />
-                  打开私有整站预览
+                  {detail.websitePoints ? `制作并预览网站 · ${detail.websiteResultVersion ? detail.websitePoints : draft.products.length > 10 ? 300 : 200} 点` : '打开私有整站预览'}
                 </Button>
               </section>
 
@@ -1626,9 +1630,10 @@ export default function Editor({
                     生成状态只表示代码已保存，不代表视觉还原已通过验收。请打开私有整站预览，对照设计图检查桌面、手机、产品图片与联系方式后再发布。
                   </p>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {detail.websitePoints && hasCloneOutput(draft.cloneConfig) && <Button onClick={() => setPreviewOpen(true)} disabled={!!busy}>查看已生成页面</Button>}
                     <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
                       <Icon name="eye" />
-                      立即预览全真网站
+                      {detail.websitePoints ? `制作并预览网站 · ${detail.websiteResultVersion ? detail.websitePoints : draft.products.length > 10 ? 300 : 200} 点` : '立即预览全真网站'}
                     </Button>
                     <Button kind="quiet" onClick={() => setTab('clone-generate')}>
                       <Icon name="spark" />
@@ -1649,7 +1654,7 @@ export default function Editor({
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <Button kind="primary" onClick={openPreview} busy={busy === 'preview'} disabled={!!busy}>
                       <Icon name="eye" />
-                      立即预览电脑与手机效果
+                      {detail.websitePoints ? `制作并预览网站 · ${detail.websiteResultVersion ? detail.websitePoints : draft.products.length > 10 ? 300 : 200} 点` : '立即预览电脑与手机效果'}
                     </Button>
                     <Button kind="quiet" onClick={() => setTab('template')}>
                       <Icon name="palette" />

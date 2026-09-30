@@ -271,8 +271,11 @@ async function request(path: string, body?: unknown, principal = owner, method?:
   return { status: r.status, data: (await r.json()) as Record<string, any> };
 }
 async function create(name = 'Site') {
-  return (await request('/api/projects', { name, requestId: crypto.randomUUID() })).data
-    .project as Project;
+  const project = (await request('/api/projects', { name, requestId: crypto.randomUUID() })).data.project as Project;
+  // These downstream workflow scenarios use legacy websites; the new creation/paid
+  // preview lifecycle, including publication gating, is covered by website-quota.test.ts.
+  await env.DB.prepare("DELETE FROM idempotency WHERE scope LIKE 'website-quota:%' AND json_extract(result,'$.projectId')=?").bind(project.id).run();
+  return project;
 }
 async function brandedClone() {
  const p=await create();p.draft.company.name='Preview Brand';p.draft.company.email='sales@example.com';
@@ -1334,6 +1337,47 @@ describe('publications, delivery and scheduler boundaries', () => {
       'succeeded',
     );
   });
+  it.each([500, 502, 503, 504])('recovers a transient Pages HTTP %i with the same release', async status => {
+    const p = await publishable();
+    const original = providers.publish;
+    const publish = vi.fn().mockRejectedValueOnce(new ProviderError(`pages_http_${status}`, 'Temporary Pages error', true)).mockImplementation(original);
+    providers.publish = publish;
+    const result = await request(`/api/projects/${p.id}/publish`, { expectedVersion: p.version, requestId: 'transient-pages' });
+    await service.tick();
+    expect((await get(p)).jobs.find((j: Job) => j.id === result.data.job.id).status).toBe('queued');
+    await service.tick();
+    const detail = await get(p);
+    expect(detail.jobs.find((j: Job) => j.id === result.data.job.id).status).toBe('succeeded');
+    expect(detail.releases).toHaveLength(1);
+    expect(publish).toHaveBeenCalledTimes(2);
+    expect(publish.mock.calls[1][1]).toBe(publish.mock.calls[0][1]);
+  });
+  it('bounds transient Pages retries and retains an unresolved deployment for manual recovery', async () => {
+    const p = await publishable();
+    const publish = vi.fn().mockRejectedValue(new ProviderError('pages_http_500', 'Temporary Pages error', true));
+    providers.publish = publish;
+    const result = await request(`/api/projects/${p.id}/publish`, { expectedVersion: p.version, requestId: 'repeated-pages-error' });
+    for (let i = 0; i < 4; i++) await service.tick();
+    const detail = await get(p);
+    expect(publish).toHaveBeenCalledTimes(3);
+    expect(detail.jobs.find((j: Job) => j.id === result.data.job.id).status).toBe('unknown');
+    expect(detail.releases).toHaveLength(1);
+    expect(detail.releases[0].status).toBe('pending');
+  });
+  it('does not count normal Pages polling against the transient error retry limit', async () => {
+    const p = await publishable();
+    const original = providers.publish;
+    const publish = vi.fn()
+      .mockRejectedValueOnce(new ProviderError('pages_deployment_pending', 'Pending', true))
+      .mockRejectedValueOnce(new ProviderError('pages_deployment_pending', 'Pending', true))
+      .mockRejectedValueOnce(new ProviderError('pages_http_500', 'Temporary Pages error', true))
+      .mockImplementation(original);
+    providers.publish = publish;
+    const result = await request(`/api/projects/${p.id}/publish`, { expectedVersion: p.version, requestId: 'polling-before-transient' });
+    for (let i = 0; i < 4; i++) await service.tick();
+    expect((await get(p)).jobs.find((j: Job) => j.id === result.data.job.id).status).toBe('succeeded');
+    expect(new Set(publish.mock.calls.map(call => call[1])).size).toBe(1);
+  });
   it('offline blocks every public page, approved asset and inquiry while retaining private project', async () => {
     let p = await publishable();
     p = await publishNow(p);
@@ -2371,6 +2415,23 @@ describe('persistent clone tasks', () => {
     expect((await request(`/api/projects/${p.id}/jobs/${taskId}/retry`,{})).status).toBe(409);
     expect((await request(`/api/projects/${p.id}/clone/resume`,{taskId:'foreign'})).status).toBe(409);
     expect((await request(`/api/projects/${p.id}/clone/stop`,{taskId},{...owner,userId:'stranger'})).status).toBe(404);
+  });
+  it('retains a newly generated clone and directs the owner to priced preview before first publication', async () => {
+    let p=(await request('/api/projects',{name:'New paid website',requestId:crypto.randomUUID()})).data.project as Project;
+    p.draft.company.name='New Company';p.draft.company.email='owner@example.com';p.draft.company.description='A supplier of wooden products.';
+    const image=await uploadAsset(p);
+    p.draft.country='US';
+    p.draft.products=[{id:'one',name:'One product',description:'Provided facts',material:'Wood',dimensions:'10 cm',imageAssetId:image.id}];p.draft.primaryProductId='one';
+    p=(await request(`/api/projects/${p.id}`,{expectedVersion:p.version,draft:p.draft},owner,'PUT')).data.project;
+    expect((await start(p,true)).status).toBe(202);await service.tick();
+    const result=await state(p),detail=await get(p);
+    expect(result.job.status).toBe('succeeded');expect(result.publication).toBeUndefined();
+    expect(result.job.cloneProgress.publicationNotice).toContain('制作并预览网站');
+    expect(detail.project.draft.cloneConfig.artifact).toBeTruthy();expect(detail.project.draft.cloneConfig.status).toBe('ready');
+    expect((await request(`/api/projects/${p.id}/preview`)).status).toBe(200);
+    expect((await request(`/api/projects/${p.id}/prepare-website-preview`,{expectedVersion:detail.project.version,acceptedPoints:200})).status).toBe(200);
+    const published=await request(`/api/projects/${p.id}/publish`,{requestId:crypto.randomUUID(),expectedVersion:detail.project.version});
+    expect(published.status).toBe(200);
   });
   it('does not permit draft saves to clobber active task state and auto-publishes with no client follow-up', async () => {
     const p=await brandedClone();const created=await start(p,true);

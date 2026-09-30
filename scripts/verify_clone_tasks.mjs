@@ -149,6 +149,11 @@ try {
   await page.getByLabel('联系邮箱',{exact:true}).fill('sales@example.test');
   await page.getByLabel('业务类型',{exact:true}).selectOption('factory');
   await page.getByLabel('公司简介（选填）',{exact:true}).fill('Real products for wholesale buyers.');
+  await page.getByLabel('销售国家 / 市场',{exact:true}).fill('United States');
+  await page.getByRole('button',{name:'手动添加产品',exact:true}).click();
+  await page.getByLabel('产品英文名称',{exact:true}).fill('Browser regression product');
+  await page.locator('.product-edit-card input[type=file]').setInputFiles('public/templates/senseng/products-1.jpg');
+  await page.locator('.product-edit-card img').waitFor();
   await page.locator('.company-strengths summary').click();
   await page.getByLabel('经营背景（选填）',{exact:true}).fill('Established in 2012');
   await page.getByLabel('资质与合规说明（选填）',{exact:true}).fill('Certification applies to the supplied product only.');
@@ -195,7 +200,12 @@ try {
   await panel.screenshot({ path: 'artifacts/task-review/paused-after-reload.png' });
   const callsBefore = calls;
   await panel.getByRole('button', { name: '继续', exact: true }).click();
-  await panel.getByRole('link', { name: '打开网站 ↗' }).waitFor({ timeout: 45000 });
+  await panel.getByRole('heading', { name: '页面代码已生成，待预览与发布', exact: true }).waitFor({ timeout: 45000 });
+  await panel.getByText(/确认点数后再发布/).waitFor();
+  assert.equal(await panel.getByRole('link', { name: '打开网站 ↗' }).count(),0);
+  const awaitingPrice = await (await context.request.get(origin+'/api/projects/'+project.id)).json();
+  assert.equal(awaitingPrice.releases.length,0);
+  assert.equal(awaitingPrice.websitePoints,200);
   assert.equal(calls, callsBefore);
   await panel.screenshot({ path: 'artifacts/task-review/completed.png' });
   await new Promise(resolve => setTimeout(resolve, 2500));
@@ -203,7 +213,25 @@ try {
   await new Promise(resolve => setTimeout(resolve, 8000));
   assert.equal(statusRequests, atCompletion, 'completed task and project must stop polling');
   await panel.getByRole('button', {name:'预览与发布管理'}).click();
+  const preparationResponse=page.waitForResponse(response=>response.request().method()==='POST'&&new URL(response.url()).pathname===`/api/projects/${project.id}/prepare-website-preview`);
+  await page.getByRole('button',{name:'制作并预览 · 200 点',exact:true}).click();
+  const preparationResult=await preparationResponse;
+  assert.equal(preparationResult.status(),200,await preparationResult.text());
+  await page.frameLocator('iframe[title$="私有预览"]').getByRole('heading',{name:'Persistent task test',exact:true}).waitFor();
+  await page.getByRole('button',{name:'关闭预览',exact:true}).click();
+  const prepared = await (await context.request.get(origin+'/api/projects/'+project.id)).json();
+  assert.equal(prepared.websitePoints,undefined);
+  assert.equal(prepared.releases.length,0,'paid preparation creates a private result, not a public release');
+  assert.equal(calls,callsBefore,'confirming an already generated website must not repeat the model call');
   await page.getByRole('button',{name:'发布检查',exact:true}).click();
+  await page.getByRole('button',{name:'发布网站',exact:true}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'确认发布',exact:true}).click();
+  await page.getByRole('button',{name:'当前内容已上线',exact:true}).waitFor({timeout:45000});
+  const published = await (await context.request.get(origin+'/api/projects/'+project.id)).json();
+  const publishedLink=page.locator('.publication-hero').getByRole('link',{name:published.project.siteUrl,exact:true});
+  await publishedLink.waitFor({timeout:45000});
+  assert.equal(await publishedLink.getAttribute('href'),published.project.siteUrl);
+  await page.screenshot({path:'artifacts/task-review/published-after-points-confirmation.png'});
   assert.equal(await page.getByRole('button',{name:'当前内容已上线',exact:true}).isDisabled(), true);
   await page.getByRole('button',{name:'内容与预览',exact:true}).click();
   let inquiryRequests=0;
@@ -372,10 +400,14 @@ try {
   assert.equal(await mediaFrame.locator('[data-wr-banner-status]').innerText(),'2 / 3');
   await mediaFrame.getByRole('button',{name:'Previous banner',exact:true}).click();
   assert.equal(await mediaFrame.locator('[data-wr-banner-status]').innerText(),'1 / 3');
+  const beforeContact=await page.locator('iframe[title$="私有预览"]').getAttribute('srcdoc');
   await page.getByLabel('预览页面',{exact:true}).selectOption('contact');
+  await page.waitForFunction(previous=>{const html=document.querySelector('iframe[title$="私有预览"]')?.getAttribute('srcdoc');return !!html&&html!==previous;},beforeContact);
   await mediaFrame.getByRole('button',{name:'Next banner',exact:true}).waitFor();
   assert.equal(await mediaFrame.locator('[data-wr-slide]').count(),3);
+  const beforeCatalog=await page.locator('iframe[title$="私有预览"]').getAttribute('srcdoc');
   await page.getByLabel('预览页面',{exact:true}).selectOption('catalog');
+  await page.waitForFunction(previous=>{const html=document.querySelector('iframe[title$="私有预览"]')?.getAttribute('srcdoc');return !!html&&html!==previous;},beforeCatalog);
   await mediaFrame.locator('h1').waitFor();
   assert.equal(await mediaFrame.locator('[data-wr-banner=custom]').count(),0);
   await page.getByRole('button',{name:'关闭预览',exact:true}).click();
@@ -452,7 +484,7 @@ try {
   await page.goto(origin+'/?project='+templateProject.id+'&tab=template');
   await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'经典工贸',exact:true})}).click();
   await page.locator('.template-media-guide').waitFor();
-  assert.equal(await page.locator('.template-media-card').count(), 47);
+  assert.equal(await page.locator('.template-media-card').count(), 50);
   assert.equal(await page.getByRole('button',{name:/切换为 AI/}).count(),0);
   await page.locator('.template-media-guide summary').click();
   assert.ok((await page.locator('.template-slot-sizes').innerText()).includes('1536 × 1024'));
@@ -489,10 +521,16 @@ try {
   await page.reload();
   await page.getByText(/已自动采集/).waitFor();
   await panel.getByRole('button',{name:'预览与发布管理'}).click();
-  await page.getByRole('button',{name:'打开私有整站预览',exact:true}).click();
+  let previewCharges=0;
+  page.on('request',request=>{if(request.method()==='POST'&&new URL(request.url()).pathname.endsWith('/prepare-website-preview'))previewCharges++;});
+  await page.getByRole('button',{name:'查看已生成页面',exact:true}).click();
   const referenceFrame=page.frameLocator('iframe[title$="私有预览"]');
   await referenceFrame.getByAltText('Imported reference hero').waitFor();
   assert.equal(await referenceFrame.getByAltText('Imported reference hero').evaluate(i=>i.complete&&i.naturalWidth>0),true);
+  assert.equal(previewCharges,0,'reading saved clone output must not confirm a paid preparation');
+  urlProject=await(await context.request.get(origin+'/api/projects/'+urlProjectId)).json();
+  assert.equal(urlProject.websitePoints,200);
+  assert.equal(urlProject.releases.length,0);
   await page.screenshot({path:'artifacts/task-review/url-preview.png'});
   await page.getByRole('button',{name:'关闭预览',exact:true}).click();
   await page.getByRole('button',{name:'发布检查',exact:true}).click();
@@ -500,7 +538,7 @@ try {
   await page.screenshot({path:'artifacts/task-review/url-publication-check.png'});
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: 47 template media checklists match their layouts; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; server-owned auto-publication; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
+    'PASS: 47 template media checklists match their layouts; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; explicit 200-point confirmation creates a private preview before manual publication; saved clone output remains readable without a preparation charge; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];
