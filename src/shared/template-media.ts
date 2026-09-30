@@ -24,6 +24,8 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
       { count: 6, width: 1200, height: 1200 },
     ],
   },
+  'good-boy-pals': { productCount: 4, productSize: '1200 × 1600（3:4，独立商品图片）', bannerSize: '1024 × 1152（8:9，宠物肖像）', bannerNote: '内置首屏金毛肖像、4 张宠物分类透明图、自助洗护与宠物故事照片、商品示例及本地字体。分类图建议 1024 × 1024 透明 PNG；护理与故事图建议 1024 × 1024；无需视频。', videos: 0, slots: [{count: 1, width: 1024, height: 1152}, {count: 4, width: 1024, height: 1024}, {count: 4, width: 1200, height: 1600}, {count: 2, width: 1024, height: 1024}] },
+  'mello-coffee': { productCount: 4, productSize: '1200 × 1200（1:1，单品/饮品烘焙）', bannerSize: '1200 × 1000（冷萃/抹茶首屏特写）', bannerNote: '首屏抹茶特写、菜单图库、心情轮盘插图与店内空间照片已完整内置；支持自定义咖啡、饮品和烘焙小点，无需视频。', videos: 0, slots: [{count: 1, width: 1200, height: 1000}, {count: 4, width: 1200, height: 1200}] },
   'pawfect-groom': {productCount: 6, productSize: '1200 × 1200（1:1，服务照片）', bannerSize: '1200 × 1400（6:7，狗狗肖像）', bannerNote: '首屏金毛肖像、护理图库和字体已内置；关于页建议两张 1200 × 1000 沙龙实拍。图库最多展示 5 张服务照片，不需要视频。', videos: 0, slots: [{count: 1, width: 1200, height: 1400}, {count: 2, width: 1200, height: 1000}, {count: 5, width: 640, height: 800}]},
   'senseng-clean': {
     productCount: 8,

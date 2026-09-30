@@ -1,3 +1,4 @@
+import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
 import { lumiRuntime } from '../templates/themes/lumi/runtime';
 import { singleProductRuntime } from '../templates/themes/singleProduct';
 import { bannerRuntime } from '../shared/banner-runtime';
@@ -191,6 +192,7 @@ export function SitePreview({
         });
         ${singleProductRuntime}
         (${lumiRuntime.toString()})();
+        (${goodBoyRuntime.toString()})();
         const video = document.getElementById('hero-video');
         const toggle = document.getElementById('video-toggle');
         const motion = matchMedia('(prefers-reduced-motion: reduce)');

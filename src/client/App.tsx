@@ -909,6 +909,8 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                           'senseng-wonder': '北欧温润工坊',
                           'senseng-arcade': '霓虹赛博潮玩',
                           'senseng-nature': '森林原野工坊',
+                          'good-boy-pals': 'Good Boy 宠物好物',
+                          'mello-coffee': 'Mello 治愈咖啡烘焙',
                           'pawfect-groom': '暖心宠物美容',
                           'lumi-business': 'Lumi 智慧商业',
                           'papernote': '便签创意作品集',

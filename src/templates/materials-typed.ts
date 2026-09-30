@@ -119,7 +119,7 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
     const sensengHero=page==='home'&&(newSenseng.test(id)?cls.split(/\s+/).includes(`wr-${id.slice(8)}-hero`):id==='senseng-video'&&cls.split(/\s+/).includes('senseng-hero-video-full'));
     // A later product section is not another hero when the template already supplied one.
     // Keep the old heuristic only for contracts that froze its two-slot inventory.
-    const genericHero=id!=='pawfect-groom'&&page==='home'&&((firstContentSection&&(!preferExplicitHero||heroIndex===0)&&!/senseng|crafto|juno|consulting/.test(id))||(id==='corpox-ai-agency'&&cls.split(/\s+/).includes('ai-agency-demo-banner')));
+    const genericHero=!['pawfect-groom','good-boy-pals','mello-coffee','papernote'].includes(id)&&page==='home'&&((firstContentSection&&(!preferExplicitHero||heroIndex===0)&&!/senseng|crafto|juno|consulting/.test(id))||(id==='corpox-ai-agency'&&cls.split(/\s+/).includes('ai-agency-demo-banner')));
     if(slide||sensengHero||genericHero){
       const single=id.startsWith('single-');
       const slot=imageSlot(`hero-slide-${heroIndex++}`,'home',single?'scene':'collection',bw,bh,single?'Homepage hero showing only the selected primary product':'Homepage collection banner; every selected product in a distinct composition');
@@ -127,6 +127,16 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
         const media=elements(n).find(child=>child.tagName==='video')||elements(n).find(child=>child.tagName==='img');
         if(media)visit(media,slot.id,slot,[...parents,n],media.tagName==='video'?'video':'image');
       }else visit(n,slot.id,slot,parents,'background');
+    }
+    if(['mello-coffee','papernote'].includes(id)&&n.tagName==='img'&&src.includes(`/templates/${id}/`)&&!/\.svg(?:$|[?#])/.test(src)) {
+      const hero=page==='home'&&(id==='papernote'?cls.split(/\s+/).includes('pn-photo-img'):cls.split(/\s+/).includes('hero-image'));
+      const slot=imageSlot(hero?'hero-portrait':`${page}-photo-${hash(src)}`,page,'facility',hero?1200:id==='papernote'?1920:1200,hero?(id==='papernote'?1400:1000):id==='papernote'?1080:900,hero?'Authorized portrait or drink editorial photograph in the native split hero':'Approved project artwork or cafe photography; never imply unverified customer facts');
+      slot.fit='cover';visit(n,slot.id,slot,parents,'image');
+    }
+    if(id==='good-boy-pals'&&n.tagName==='img'&&src.includes('/templates/good-boy-pals/')) {
+      const hero=cls.split(/\s+/).includes('gb-portrait');
+      const slot=imageSlot(hero?'hero-portrait':`${page}-photo-${slug(src.split('/').at(-1) || '')}`,page,'facility',1024,hero?1152:1024,hero?'Pet portrait in yellow light; preserve eyes and ears, no embedded lettering':'Illustrative pet photography or transparent category portrait; not a claim of a customer or owned shop');
+      slot.fit=hero?'cover':'contain';visit(n,slot.id,slot,parents,'image');
     }
     if(id==='pawfect-groom'&&n.tagName==='img'&&src.includes('/templates/pawfect-groom/')) {
       const hero=cls.split(/\s+/).includes('pg-portrait');
@@ -232,7 +242,7 @@ function modernInventory(id:string,revision=modernMaterialsRevision(id)):Invento
   const cached=modernInventories.get(revision);if(cached)return cached;
   const previous=inventory(id,revision===aiAgencyHeroRevision);if(!previous)return;
   const result=structuredClone(previous),contract=result.contract;
-  contract.guideRevision=id==='pawfect-groom'?'2026-09-30.1':id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
+  contract.guideRevision=['pawfect-groom','good-boy-pals','mello-coffee','papernote'].includes(id)?'2026-09-30.1':id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
   contract.imageSlots=contract.imageSlots.filter(s=>s.page!=='about');
   // Juno's legacy copy map also contains shared chrome used on other pages.
   contract.textSlots=contract.textSlots.filter(s=>s.page!=='about'||s.id==='company-about'||s.id.includes('-seo-')||!!result.legacyText?.[s.id]);

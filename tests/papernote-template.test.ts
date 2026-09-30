@@ -16,7 +16,7 @@ describe('papernote template integration', () => {
     expect(templateDef?.englishName).toBe('PaperNote');
     expect(templateDef?.badge).toBe('创意作品集 · 纸韵拼贴');
     expect(templateDef?.accentColor).toBe('#ffe68c');
-    expect(templateDef?.previewImg).toBe('/templates/previews/papernote.jpg');
+    expect(templateDef?.previewImg).toMatch(/^\/templates\/previews\/papernote\.[a-f0-9]{16}\.jpg$/);
   });
 
   it('has media checklist configured in templateMediaRequirements', () => {

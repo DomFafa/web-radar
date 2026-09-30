@@ -1,0 +1,64 @@
+{
+  "reference": "https://good-boy-pals.lovable.app/",
+  "retrieved": "2026-09-30",
+  "assets": [
+    {
+      "file": "hero-dog-DxsknfB3.jpg",
+      "url": "https://good-boy-pals.lovable.app/assets/hero-dog-DxsknfB3.jpg"
+    },
+    {
+      "file": "pet-dog-Ho6FpIwO.webp",
+      "url": "https://good-boy-pals.lovable.app/assets/pet-dog-Ho6FpIwO.png",
+      "conversion": "Lossless WebP; alpha and all visible RGB pixels verified identical to source PNG."
+    },
+    {
+      "file": "pet-cat-CslHSdxt.webp",
+      "url": "https://good-boy-pals.lovable.app/assets/pet-cat-CslHSdxt.png",
+      "conversion": "Lossless WebP; alpha and all visible RGB pixels verified identical to source PNG."
+    },
+    {
+      "file": "pet-rabbit-Dlw5Evb1.webp",
+      "url": "https://good-boy-pals.lovable.app/assets/pet-rabbit-Dlw5Evb1.png",
+      "conversion": "Lossless WebP; alpha and all visible RGB pixels verified identical to source PNG."
+    },
+    {
+      "file": "pet-bird-BQ-aNO3w.webp",
+      "url": "https://good-boy-pals.lovable.app/assets/pet-bird-BQ-aNO3w.png",
+      "conversion": "Lossless WebP; alpha and all visible RGB pixels verified identical to source PNG."
+    },
+    {
+      "file": "self-wash-9Lu7hH-1.jpg",
+      "url": "https://good-boy-pals.lovable.app/assets/self-wash-9Lu7hH-1.jpg"
+    },
+    {
+      "file": "biscuit-D6v5sNq3.jpg",
+      "url": "https://good-boy-pals.lovable.app/assets/biscuit-D6v5sNq3.jpg"
+    },
+    {
+      "file": "products-ySaSl_zq.webp",
+      "url": "https://good-boy-pals.lovable.app/assets/products-ySaSl_zq.png",
+      "conversion": "Lossless WebP; alpha and all visible RGB pixels verified identical to source PNG."
+    },
+    {
+      "file": "src/templates/themes/goodBoyStyles.ts",
+      "url": "https://good-boy-pals.lovable.app/assets/styles-DCBRIbJz.css",
+      "note": "Reviewed reference utilities plus locally hosted fonts."
+    },
+    {
+      "file": "font-0.woff2",
+      "url": "https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGGInHWVyNJtvI.woff2"
+    },
+    {
+      "file": "font-1.woff2",
+      "url": "https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGIInHWVyNJ.woff2"
+    },
+    {
+      "file": "font-2.woff2",
+      "url": "https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofIO-aBTMnFcQIG.woff2"
+    },
+    {
+      "file": "font-3.woff2",
+      "url": "https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaBTMnFcQ.woff2"
+    }
+  ]
+}

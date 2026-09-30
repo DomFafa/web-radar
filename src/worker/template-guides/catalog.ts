@@ -1,3 +1,6 @@
+import goodBoyGuide from './documents/good-boy-pals.json';
+import melloGuide from './documents/mello-coffee.json';
+import papernoteGuide from './documents/papernote.json';
 import lumiGuide from './documents/lumi-business.json';
 import { guideSchema, guideIds, type TemplateGuide } from './schema';
 import pawfectGuide from './documents/pawfect-groom.json';
@@ -55,6 +58,9 @@ import guideSingleWellness from './documents/single-wellness-nordic.json';
 const documents = [
   lumiGuide,
   pawfectGuide,
+  goodBoyGuide,
+  melloGuide,
+  papernoteGuide,
   guide0,
   guide7,
   guide8,

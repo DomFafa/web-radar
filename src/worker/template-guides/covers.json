@@ -362,5 +362,26 @@
     "width": 1440,
     "height": 1000,
     "contractRevision": "2026-09-30.lumi-business-materials.1"
+  },
+  "good-boy-pals": {
+    "url": "/templates/previews/good-boy-pals.9ca28f1bd61b642f.jpg",
+    "sha256": "9ca28f1bd61b642f63e253962b2978ee720a35882b4e89d89e26c6da9996729e",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-20.good-boy-pals-materials.2"
+  },
+  "mello-coffee": {
+    "url": "/templates/previews/mello-coffee.51f52b407d5cc69f.jpg",
+    "sha256": "51f52b407d5cc69f49bfba8be1cc3887032d654b259f21e36afae43594594252",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-20.mello-coffee-materials.2"
+  },
+  "papernote": {
+    "url": "/templates/previews/papernote.405e0639a2e3eaa7.jpg",
+    "sha256": "405e0639a2e3eaa751f77e7ac91a35d6f3b53ac450284c6acc46106b0f82ef3e",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-09-20.papernote-materials.2"
   }
 }

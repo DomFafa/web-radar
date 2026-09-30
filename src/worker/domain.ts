@@ -112,6 +112,8 @@ const draftSchema = z.object({
     'lumi-business',
     'papernote',
     'pawfect-groom',
+    'good-boy-pals',
+    'mello-coffee',
     'natural',
     'technology',
     'explorer',

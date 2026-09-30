@@ -1,6 +1,8 @@
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
+import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
+import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee';
 import { renderPaperNoteSite } from './themes/papernote';
 import { renderReleasedMaterials } from './materials-releases';
 import { withBanner } from '../shared/banner';
@@ -358,10 +360,20 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     }
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
   }
+  if (template === 'good-boy-pals') {
+    const ctx = buildThemeContext(draft, options);
+    const title = page === 'home' ? (company.name || 'Good Boy Supply Co.') : `${page === 'detail' ? ctx.translateProduct(draft.products.find(p => p.id === options.productId) ?? ({ name: 'Product', description: '' } as Product)).name : ui[page as 'catalog' | 'about' | 'contact']} · ${company.name || 'Good Boy Supply Co.'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Discover pet supplies, thoughtful everyday essentials and a friendly independent shop.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${goodBoyStyles}</style></head><body class="good-boy-pals" data-template="good-boy-pals"${color !== '#ffcd1e' && options.projectId !== 'preview' ? ` style="--primary:${color}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderGoodBoyPage(ctx)}<script>${script};(${goodBoyRuntime.toString()})();</script></body></html>`;
+  }
   if (template === 'pawfect-groom') {
     const ctx = buildThemeContext(draft, options);
     const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;
+  }
+  if (template === 'mello-coffee') {
+    const ctx = buildThemeContext(draft, options);
+    const title = page === 'home' ? (company.name || 'Mello') : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Menu Item',description:''} as Product)).name : ({catalog:'Menu',about:'About us',contact:'Visit & Contact'} as Record<string,string>)[page] || 'Mello'} · ${company.name || 'Mello'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Visit Mello in Brooklyn, NY for a brighter coffee break. Enjoy our specialty espresso, refreshing cold matcha, and freshly baked pastries.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${melloStyles}</style></head><body class="mello-coffee" data-template="mello-coffee"${color !== '#78bf30' && options.projectId !== 'preview' ? ` style="--accent:${color}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderMelloPage(ctx)}<script>${script};(${melloRuntime.toString()})();</script></body></html>`;
   }
   if (template === 'papernote') {
     const ctx = buildThemeContext(draft, options);
@@ -521,9 +533,9 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template) || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'papernote') {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom|papernote|lumi)\//g, `$1${mediaOrigin}/templates/$2/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee)\//g, `$1${mediaOrigin}/templates/$2/`);
   }
   return files;
 }

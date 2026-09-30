@@ -17,6 +17,8 @@ export type TemplateId =
   | 'lumi-business'
   | 'papernote'
   | 'pawfect-groom'
+  | 'good-boy-pals'
+  | 'mello-coffee'
   | 'senseng-clean'
   | 'senseng-video'
   | 'senseng-candy'

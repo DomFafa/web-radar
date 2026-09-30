@@ -1482,7 +1482,7 @@ function renderContactView(
             <textarea class="pn-form-textarea" id="contact-message" name="message" rows="4" placeholder="Tell me about your project, timeline and goals..." required></textarea>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
-            <button class="pn-btn-primary" type="submit">
+            <button class="pn-btn-primary" type="submit"${ctx.options.preview ? ' disabled' : ''}>
               Send Message &rarr;
             </button>
             <span role="status" style="font-size:14px;color:#666;"></span>
