@@ -1,3 +1,4 @@
+import { melloLayoutStyles } from './melloLayout';
 // Mello Coffee 1:1 Replicated Webflow CSS Stylesheet
 export const melloStyles = `
 html {
@@ -6247,4 +6248,5 @@ img {
   }
 }
 
+${melloLayoutStyles}
 `;

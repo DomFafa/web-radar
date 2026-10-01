@@ -57,7 +57,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer', industries: ['咖啡烘焙', '精品茶饮', '轻食甜品', '街角咖啡', '餐饮零售'],
     features: ['1:1 还原 Webflow 原站全套桌面与移动布局', '互动心情罗盘与时间轴日程选项卡', '手绘小票卡片与座位热点交互', '完整 6 大品类咖啡烘焙价目单与详情页'],
     accentColor: '#78bf30', badge: 'Mello · 治愈咖啡烘焙',
-    previewImg: '/templates/previews/mello-coffee.51f52b407d5cc69f.jpg',
+    previewImg: '/templates/previews/mello-coffee.f251cb4d1c141730.jpg',
   },
 
   {
