@@ -150,7 +150,7 @@ try {
           } else if (await frame.locator('[data-auravell-menu]').count()) {
             const toggle = frame.locator('[data-auravell-menu]');
             await toggle.click();
-            mobileMenuWorks = await frame.locator('[data-auravell-nav] a[data-wr-page="catalog"]').isVisible();
+            mobileMenuWorks = await frame.locator('[data-auravell-nav] .rt-nav-link[data-wr-page="catalog"]').isVisible();
             await toggle.click();
           } else {
             const toggle = frame.locator('[data-lumi-menu-toggle]');

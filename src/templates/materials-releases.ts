@@ -1,3 +1,4 @@
+import { renderAuravellSite as legacyAuravell, renderCareflowSite as legacyCareflow } from './releases/native-20261001.mjs';
 import { getCareflowMaterialsTemplate } from './themes/careflow/materials';
 import { getLumiMaterialsTemplate } from './themes/lumi/materials';
 import { getAuravellMaterialsTemplate } from './themes/auravell/materials';
@@ -112,6 +113,8 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
 export function renderReleasedMaterials(draft: Draft, options: RenderOptions): string | undefined {
   const revision = draft.materials?.contractRevision;
   if (!revision) return;
+  if (draft.template === 'auravell' && revision === '2026-10-01.auravell-materials.1') return legacyAuravell(draft, options);
+  if (draft.template === 'careflow-healthcare' && revision === '2026-10-01.careflow-healthcare-materials.1') return legacyCareflow(draft, options);
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release) return renderMaterialsTemplateRelease(release,draft,options);
   // The repaired release renders demos, private projects and customer publications alike.
@@ -135,7 +138,7 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   const revision = draft.materials?.contractRevision;
-  if (draft.template === 'lumi-business' || draft.template === 'careflow-healthcare') return;
+  if (draft.template === 'lumi-business' || draft.template === 'careflow-healthcare' || draft.template === 'auravell') return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release && [demoRendererRevision, outreachDemoRendererRevision].includes(release.contract.rendererRevision || '')) return frozenContract(release.rendererTemplateId) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
   if (revision && releasedMaterialsContract(draft.template, revision)) return frozenContract(draft.template) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;

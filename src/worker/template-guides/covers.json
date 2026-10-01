@@ -392,17 +392,17 @@
     "contractRevision": "2026-09-20.toorun-early-learning-materials.2"
   },
   "careflow-healthcare": {
-    "url": "/templates/previews/careflow-healthcare.2bedb32ffe2637d9.jpg",
-    "sha256": "2bedb32ffe2637d9c42ddb865557cfe24143159eb6dbaf19a9aa9b476e707e62",
+    "url": "/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg",
+    "sha256": "0ffe9b22bce61216e5c3e6fc4ec6c9bb82cc425c086be7955f2c0b4cc5c36c78",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.careflow-healthcare-materials.1"
+    "contractRevision": "2026-10-01.careflow-healthcare-materials.2"
   },
   "auravell": {
-    "url": "/templates/previews/auravell.ef136315db6fe813.jpg",
-    "sha256": "ef136315db6fe813e917881d8be6159e6b9f8ce341833e6bfa3f9a36c9a13f65",
+    "url": "/templates/previews/auravell.2eaa361e7dfe8f0c.jpg",
+    "sha256": "2eaa361e7dfe8f0c59c0227c203322a05a1e08538b6201e0071a74ab472e8e36",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.auravell-materials.1"
+    "contractRevision": "2026-10-01.auravell-materials.2"
   }
 }

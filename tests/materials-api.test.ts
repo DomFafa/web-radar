@@ -20,8 +20,8 @@ describe('materials guide account boundary',()=>{
     expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     expect(entries.every((t:any)=>{
       if(['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(t.templateId))return t.contractRevision===`2026-09-20.${t.templateId}-materials.2`&&t.guideRevision==='2026-09-30.1';
-      if(t.templateId==='auravell')return t.contractRevision==='2026-10-01.auravell-materials.1'&&t.guideRevision==='2026-10-01.1';
-      if(t.templateId==='careflow-healthcare')return t.contractRevision==='2026-10-01.careflow-healthcare-materials.1'&&t.guideRevision==='2026-10-01.1';
+      if(t.templateId==='auravell')return t.contractRevision==='2026-10-01.auravell-materials.2'&&t.guideRevision==='2026-10-01.2';
+      if(t.templateId==='careflow-healthcare')return t.contractRevision==='2026-10-01.careflow-healthcare-materials.2'&&t.guideRevision==='2026-10-01.2';
       if(t.templateId==='lumi-business')return t.contractRevision==='2026-09-30.lumi-business-materials.1'&&t.guideRevision==='2026-09-30.1';
       return t.contractRevision===`2026-09-23.${t.templateId}-materials.6`&&t.guideRevision===(t.templateId.startsWith('single-')?'2026-09-26.1':'2026-09-20.1');
     })).toBe(true);

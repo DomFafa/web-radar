@@ -6,6 +6,8 @@ import { careflowSnapshots } from './careflow/snapshots';
 import { careflowReferenceStyles } from './careflow/styles';
 import { careflowOverrides } from './careflow/overrides';
 import { careflowTexts, careflowExampleServices } from './careflow/inventory';
+import { referenceMotionRuntime } from './reference-motion';
+import { referenceMotionStyles } from './reference-motion-styles';
 import { careflowRuntime } from './careflow/runtime';
 export { careflowRuntime, careflowExampleServices };
 const region = (html: string, key: string, content: string) =>
@@ -265,5 +267,5 @@ export function renderCareflowSite(input: Draft, options: RenderOptions): string
   const palette = primary
     ? `.careflow-healthcare .primary-button{background:${primary};color:${ink(primary)}}.careflow-healthcare .primary-button *{color:inherit}.careflow-healthcare .cf-thumbs button[aria-pressed=true]{border-color:${primary}}`
     : '';
-  return `<!doctype html><html lang="${esc(options.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${careflowReferenceStyles}\n${careflowOverrides}\n${palette}</style></head><body class="careflow-healthcare${draft.materials ? ' wr-materials-site' : ''}" data-template="careflow-healthcare">${options.preview ? '<div class="cf-preview-bar">Private preview · inquiry sending is disabled</div>' : ''}${body}<script>var __name=(value)=>value;(${careflowRuntime.toString()})();(${materialsRuntime.toString()})();</script></body></html>`;
+  return `<!doctype html><html lang="${esc(options.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${careflowReferenceStyles}\n${careflowOverrides}${referenceMotionStyles}\n${palette}</style></head><body class="careflow-healthcare${draft.materials ? ' wr-materials-site' : ''}" data-template="careflow-healthcare">${options.preview ? '<div class="cf-preview-bar">Private preview · inquiry sending is disabled</div>' : ''}${body}<script>var __name=(value)=>value;(${referenceMotionRuntime.toString()})();(${careflowRuntime.toString()})();(${materialsRuntime.toString()})();</script></body></html>`;
 }

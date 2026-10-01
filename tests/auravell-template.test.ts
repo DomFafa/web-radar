@@ -4,6 +4,7 @@ import { renderSite, renderSiteFiles } from '../src/templates';
 import { TEMPLATES } from '../src/client/TemplateSelector';
 import { getMaterialsTemplate } from '../src/templates/materials';
 import { templateMediaRequirements } from '../src/shared/template-media';
+import covers from '../src/worker/template-guides/covers.json';
 import { auravellMaterialsRevision } from '../src/templates/themes/auravell/materials';
 
 describe('Auravell Yoga & Mindful Living Template', () => {
@@ -30,7 +31,7 @@ describe('Auravell Yoga & Mindful Living Template', () => {
     expect(item).toBeDefined();
     expect(item!.englishName).toBe('Auravell Yoga & Mindful Living');
     expect(item!.badge).toContain('Auravell');
-    expect(item!.previewImg).toBe('/templates/previews/auravell.ef136315db6fe813.jpg');
+    expect(item!.previewImg).toBe(covers.auravell.url);
     expect(item!.accentColor).toBe('#99582a');
   });
 
@@ -38,7 +39,7 @@ describe('Auravell Yoga & Mindful Living Template', () => {
     const contract = getMaterialsTemplate('auravell');
     expect(contract).toBeDefined();
     expect(contract!.templateId).toBe('auravell');
-    expect(contract!.guideRevision).toBe('2026-10-01.1');
+    expect(contract!.guideRevision).toBe('2026-10-01.2');
     expect(contract!.contractRevision).toBe(auravellMaterialsRevision);
     expect(contract!.imagePolicy).toBe('typed-regions-v1');
     expect(contract!.materialsReady).toBe(true);
@@ -46,7 +47,7 @@ describe('Auravell Yoga & Mindful Living Template', () => {
     const mediaReq = templateMediaRequirements['auravell'];
     expect(mediaReq).toBeDefined();
     expect(mediaReq!.bannerSize).toContain('3456 × 1800');
-    expect(mediaReq!.videos).toBe(0);
+    expect(mediaReq!.videos).toBe(3);
   });
 
   it('renders home page with authentic layout, transparent text backgrounds and hero layering', () => {
@@ -70,17 +71,18 @@ describe('Auravell Yoga & Mindful Living Template', () => {
       preview: true,
     });
 
-    // Sanitization: Transparent text background rules
-    expect(html).toContain('background-color: transparent !important');
-    // Sanitization: No Webflow visibility/opacity hidden blocks
-    expect(html).toContain('opacity: 1 !important');
-    expect(html).toContain('visibility: visible !important');
+    // Native motion and videos survive rendering; no hosted animation runtime is required.
+    expect(html).toContain('referenceMotionRuntime');
+    expect(html.match(/<video\b/g)).toHaveLength(2);
+    expect(html).toContain('video-section');
+    expect(html).not.toMatch(/<script[^>]+src=/);
+    expect(html).not.toContain('transform: none !important');
 
     // Hero structure
     expect(html).toContain('class="rt-hero"');
     expect(html).toContain('class="rt-hero-gradient-v1"');
     expect(html).toContain('Prana Light Yoga');
-    expect(html).toContain('Morning Stillness');
+    expect(html).toContain('Morning stillness');
 
     // Navigation and footer
     expect(html).toContain('rt-navbar');
@@ -106,12 +108,10 @@ describe('Auravell Yoga & Mindful Living Template', () => {
       inquiryUrl: '/inquiry',
     });
 
-    expect(html).toContain('Our Mindful');
-    expect(html).toContain('data-auravell-tab="all"');
-    expect(html).toContain('data-auravell-tab="meditation"');
-    expect(html).toContain('data-auravell-tab="yoga"');
-    expect(html).toContain('data-wr-product-card');
-    expect(html).toContain('Gentle Vinyasa Flow');
+    expect(html).toContain('w-tab-link');
+    expect(html).toContain('w-tab-pane');
+    expect(html).toContain('Beginner');
+    expect(html).toContain('Advanced');
   });
 
   it('renders about page with philosophy and sanctuary details', () => {
@@ -133,10 +133,9 @@ describe('Auravell Yoga & Mindful Living Template', () => {
       inquiryUrl: '/inquiry',
     });
 
-    expect(html).toContain('Rooted in nature, guided by');
+    expect(html).toContain('data-wr-material-image="about-hero"');
     expect(html).toContain('Founded in 2020 as a tranquil space for mindful movement.');
-    expect(html).toContain('Organic Atmosphere');
-    expect(html).toContain('Practice Guidance');
+    expect(html).toContain('rt-faq-item');
   });
 
   it('renders plans page with membership tiers and passes', () => {
@@ -153,13 +152,11 @@ describe('Auravell Yoga & Mindful Living Template', () => {
       inquiryUrl: '/inquiry',
     });
 
-    expect(html).toContain('Memberships & <span class="rt-italic-text" style="color:#99582a;">Passes</span>');
-    expect(html).toContain('Single Session Pass');
-    expect(html).toContain('$28');
-    expect(html).toContain('Monthly Sanctuary');
-    expect(html).toContain('$160');
-    expect(html).toContain('Unlimited Annual');
-    expect(html).toContain('$1,500');
+    expect(html).toContain('w-tabs');
+    expect(html).toContain('rt-pricingtable-grid-v1');
+    expect(html).toContain('Essential');
+    expect(html).toContain('Balance');
+    expect(html).toContain('Harmony');
   });
 
   it('renders contact page with studio details and inquiry booking form', () => {
@@ -241,8 +238,8 @@ describe('Auravell Yoga & Mindful Living Template', () => {
       inquiryUrl: '/inquiry',
     });
 
-    expect(html).toContain('--_colors---accent-color--accent-100: #2b580c');
-    expect(html).toContain('background-color: #2b580c !important');
+    expect(html).toContain('--_colors---accent-color--accent-100:#2b580c');
+    expect(html).not.toContain('background-color: #2b580c !important');
   });
 });
 
@@ -251,7 +248,7 @@ it('publishes every Auravell navigation route and binds the supplied hero asset'
   const draft = {...defaultDraft(), template: 'auravell' as const};
   const options = {projectId:'customer-auravell',lang:'en' as const,page:'home',assetUrl:(id:string)=>'/media/'+id,inquiryUrl:'/inquiry',publicBaseUrl:'https://builder.example'};
   const files = renderSiteFiles(draft,options);
-  expect(files['en/extra-plans/index.html']).toContain('Memberships');
+  expect(files['en/extra-plans/index.html']).toContain('Find the right plan');
   expect(files['en/index.html']).toContain('href="extra-plans/index.html"');
   expect(files['en/catalog/index.html']).not.toContain('data-wr-product-card');
   expect(files['en/contact/index.html']).not.toContain('info@auravell.com');

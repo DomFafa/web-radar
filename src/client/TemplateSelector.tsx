@@ -26,14 +26,14 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer', industries: ['瑜伽馆', '冥想中心', '身心疗愈', '颂钵调息', '高端美学生活'],
     features: ['1:1 还原静修首屏大图与浮动课程卡', '课程分类网格、时长与预约详情', '关于理念、导师团队与环境展示', '会员计划、折叠答疑与预约咨询表单'],
     accentColor: '#99582a', badge: 'Auravell · 瑜伽身心',
-    previewImg: '/templates/previews/auravell.ef136315db6fe813.jpg',
+    previewImg: '/templates/previews/auravell.2eaa361e7dfe8f0c.jpg',
   },
   {
     id: 'careflow-healthcare', name: 'Careflow 医疗健康', englishName: 'Careflow Healthcare',
     tagline: '还原 Careflow Home V1 的蓝白医疗视觉、宽幅走廊大图与柔光卡片；完整服务与预约咨询网站。',
     category: 'enterprise', industries: ['医疗机构', '健康服务', '诊所', '康复中心', '专业咨询'],
     features: ['原站响应式布局与本地字体', '设施介绍、团队轮播与折叠问答', '服务目录、详情、关于和联系页', '主副图切换与预约咨询表单'],
-    accentColor: '#6197de', badge: 'Careflow · 医疗健康', previewImg: '/templates/previews/careflow-healthcare.2bedb32ffe2637d9.jpg',
+    accentColor: '#6197de', badge: 'Careflow · 医疗健康', previewImg: '/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg',
   },
   {
     id: 'toorun-early-learning', name: '童趣早教中心', englishName: 'Toorun Early Learning',

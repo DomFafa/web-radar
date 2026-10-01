@@ -1,7 +1,8 @@
+import { getCareflowMaterialsTemplate as legacyContract } from '../../releases/native-20261001.mjs';
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
 import { careflowImages, careflowTexts } from './inventory';
-export const careflowMaterialsRevision = '2026-10-01.careflow-healthcare-materials.1';
+export const careflowMaterialsRevision = '2026-10-01.careflow-healthcare-materials.2';
 const base = {
   min: 0,
   max: 1,
@@ -14,11 +15,12 @@ const factualPolicy =
 export function getCareflowMaterialsTemplate(
   revision?: string,
 ): MaterialsTemplateContract | undefined {
+  if (revision === '2026-10-01.careflow-healthcare-materials.1') return legacyContract(revision);
   if (revision && revision !== careflowMaterialsRevision) return;
   return {
     schemaVersion: 'wr-template-materials-v1',
     templateId: 'careflow-healthcare',
-    guideRevision: '2026-10-01.1',
+    guideRevision: '2026-10-01.2',
     contractRevision: careflowMaterialsRevision,
     rendererRevision: careflowMaterialsRevision,
     materialsReady: true,

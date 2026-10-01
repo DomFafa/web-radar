@@ -1,3 +1,5 @@
+import { auravellRuntime as legacyAuravellRuntime, careflowRuntime as legacyCareflowRuntime } from '../templates/releases/native-20261001.mjs';
+import { referenceMotionRuntime } from '../templates/themes/reference-motion';
 import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
 import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
@@ -38,7 +40,7 @@ export function projectPreviewHtml(html: string, base: string, origin: string, s
 }
 
 /** Built exclusively from reviewed source. Keep customer values out of executable code. */
-export const projectPreviewRuntime = `(()=>{
+export const projectPreviewRuntime = `var __name=(value)=>value;(()=>{
   const __name=(value)=>value;
   (${referenceInteractions.toString()})();
   (${materialsRuntime.toString()})();
@@ -51,10 +53,12 @@ export const projectPreviewRuntime = `(()=>{
 })();`;
 
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
+  if (draft.template === 'auravell' && draft.materials?.contractRevision === '2026-10-01.auravell-materials.1') return projectPreviewRuntime + '\n;(' + legacyAuravellRuntime.toString() + ')();';
+  if (draft.template === 'careflow-healthcare' && draft.materials?.contractRevision === '2026-10-01.careflow-healthcare-materials.1') return projectPreviewRuntime + '\n;(' + legacyCareflowRuntime.toString() + ')();';
   const runtime = releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;
-  if (draft.template === 'auravell') return runtime + '\n;(' + auravellRuntime.toString() + ')();';
+  if (draft.template === 'auravell') return runtime + '\n;(' + referenceMotionRuntime.toString() + ')();\n;(' + auravellRuntime.toString() + ')();';
   if (draft.template === 'good-boy-pals') return runtime + '\n;(' + goodBoyRuntime.toString() + ')();';
-  if (draft.template === 'careflow-healthcare') return runtime + '\n;(' + careflowRuntime.toString() + ')();';
+  if (draft.template === 'careflow-healthcare') return runtime + '\n;(' + referenceMotionRuntime.toString() + ')();\n;(' + careflowRuntime.toString() + ')();';
   if (draft.template === 'lumi-business') return runtime + '\n;(' + lumiRuntime.toString() + ')();';
   return isSingleProductTemplate(draft.template) ? runtime + '\n' + singleProductRuntime : runtime;
 }

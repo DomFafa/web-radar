@@ -11,6 +11,7 @@ import { api, post, errorMessage, privateAssetBlob, requestId } from './api';
 import { Button, Icon, Notice } from './components';
 import { labels } from '../templates/labels';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
+import { referenceTemplatePreviewRuntime } from './reference-template-preview';
 
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
@@ -167,9 +168,12 @@ export function SitePreview({
         form.removeAttribute('target');
       });
       const nonce = requestId().replaceAll('-', '');
+      const nativeReferenceRuntime = await referenceTemplatePreviewRuntime(project.draft);
+      if (!active) return;
       const csp = doc.createElement('meta');
       csp.httpEquiv = 'Content-Security-Policy';
       csp.content = `default-src 'none'; img-src blob: data: https: http: 'self'; media-src blob: data: https: http: 'self'; style-src 'unsafe-inline' ${window.location.origin}; script-src 'nonce-${nonce}'; font-src data: https: ${window.location.origin}; base-uri 'none'; form-action 'none'`;
+      if (project.draft.template === 'careflow-healthcare') csp.content += '; frame-src https://www.youtube-nocookie.com';
       doc.head.insertBefore(csp, doc.head.firstChild);
       const bridge = doc.createElement('script');
       bridge.setAttribute('nonce', nonce);
@@ -193,6 +197,7 @@ export function SitePreview({
         ${singleProductRuntime}
         (${lumiRuntime.toString()})();
         (${goodBoyRuntime.toString()})();
+        ${nativeReferenceRuntime}
         const video = document.getElementById('hero-video');
         const toggle = document.getElementById('video-toggle');
         const motion = matchMedia('(prefers-reduced-motion: reduce)');

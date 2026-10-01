@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "revision": "2026-10-01.1",
+  "revision": "2026-10-01.2",
   "templateId": "careflow-healthcare",
   "name": "Careflow Healthcare / Careflow 医疗健康",
   "documentLanguage": "zh-CN",
@@ -89,7 +89,7 @@
     "bundledVideoCount": 0,
     "defaultHero": "image-or-css",
     "reuseRule": "每个服务主图在目录与详情复用。16 个布局槽位各 0–1 张；详情每服务 0–10 张附图；共用位置可以绑定同一已授权资源。移动图由 mobileMediaId 单独绑定。",
-    "decorativeAssets": "Inter Tight 本地字体、Brix 图标字体、蓝色圆形图标与光晕内置。原站视频播放入口改为咨询入口，未内置视频文件。"
+    "decorativeAssets": "Inter Tight 本地字体、Brix 图标字体、蓝色圆形图标与光晕内置。演示视频通过用户点击后才加载 YouTube 隐私增强播放器；非内置文件，客户版本不发布演示评价视频。恢复滚动渐入、按钮逐字切换、图片悬停、计数、折叠面板和循环团队滑块。"
   },
   "layoutImageSlots": [
     {
@@ -2516,7 +2516,7 @@
     }
   ],
   "generationWorkflow": [
-    "读取 /api/internal/template-guides/materials/careflow-healthcare 及其 requirementsPath，使用 typed-regions-v1；确认 contractRevision=2026-10-01.careflow-healthcare-materials.1。",
+    "读取 /api/internal/template-guides/materials/careflow-healthcare 及其 requirementsPath，使用 typed-regions-v1；确认 contractRevision=2026-10-01.careflow-healthcare-materials.2。",
     "收集机构事实、服务产品以及授权素材。客户版本省略 reference-claims，不能使用模板示例人物和评分冒充机构事实。",
     "复用已有授权素材，缺图才生成插画；证书和报告只能真实上传。不补示例产品、不复制示例医生、评分和院区作为客户事实。",
     "按本文件逐槽位准备图片；产品主图 1200×900，附图最多 10 张/产品。",
@@ -2531,7 +2531,10 @@
     "长文案换行，不硬截断或压成细列",
     "详情主副图切换、键盘与图片放大有效",
     "预览表单不发送，正式表单使用本项目询盘接口",
-    "未绑定的示例素材须按客户实际需求替换；医生身份、评价、数字和院区不自动发布"
+    "未绑定的示例素材须按客户实际需求替换；医生身份、评价、数字和院区不自动发布",
+    "同时测试滚动进入、按钮悬停、键盘焦点和移动菜单；不能只检测最终静态画面。",
+    "开启 prefers-reduced-motion 时取消装饰动画，所有信息仍可见且交互可用。",
+    "私有预览与正式发布使用同一项目原生动效，不加载原站 Webflow、GSAP 或跟踪脚本。"
   ],
   "outputContract": {
     "schemaEndpoint": "/api/internal/template-guides/output-schema",

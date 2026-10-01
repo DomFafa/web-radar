@@ -66,3 +66,9 @@ identical to the deployed source. New snapshots must use new filenames.
 The industry preview/runtime and static dependency manifests are retained too.
 `tests/materials-industry-release.test.ts` checks contract compatibility, all five
 pages, independence from subsequent standalone changes, and dependency bytes.
+
+## Native references, 2026-10-01
+
+`native-20261001.mjs` freezes Auravell and Careflow `.1` contracts, renderers and runtimes from `26615aee203bad1af8b1a22a98b5bf3466471db7`. The adjacent manifest records its digest. The reference-motion rebuild issues `.2` contracts and uses new `auravell/motion-v2/` media paths; original assets and the original confirmed-materials output remain available. Never overwrite this snapshot.
+
+`native-preview-20261001.mjs` contains only the original browser runtimes and has its own digest in that manifest. The editor loads this small module on demand for `.1` projects, without downloading legacy page renderers.

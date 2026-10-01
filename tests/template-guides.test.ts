@@ -75,7 +75,7 @@ describe('versioned internal template documents', () => {
     (guide) => {
       expect(guideSchema.safeParse(guide).success).toBe(true);
       const summary = templateMediaRequirements[guide.templateId]!;
-      expect(guide.revision).toBe(['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.1':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
+      expect(guide.revision).toBe(['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.2':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
       const [, width, height] = summary.bannerSize.match(/^(\d+)\s*×\s*(\d+)/)!;
       expect(guide.assets.find(asset => asset.id === (['careflow-healthcare', 'auravell'].includes(guide.templateId)?'home-hero':'hero-image'))!.dimensions).toEqual({ width: Number(width), height: Number(height) });
       expect(guide.inventory.bundledVideoCount).toBe(summary.videos);

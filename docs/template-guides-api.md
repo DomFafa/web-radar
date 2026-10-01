@@ -68,7 +68,7 @@ Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 | papernote | PaperNote | 6 张作品，1200 × 1200 | 1200 × 1400，1 张肖像 | 0 |
 | good-boy-pals | Good Boy Supply Co. | 4 张，1200 × 1600 | 1024 × 1152，1 张宠物肖像 | 0 |
 | mello-coffee | Mello Coffee & Bakery | 4 张精选饮品/烘焙，1200 × 1200 | 1200 × 1000，1 张饮品特写 | 0 |
-| auravell | Auravell Yoga & Mindful Living | 每课程 1 张，1200 × 900 | 3456 × 1800，1 张冥想场景 | 0 |
+| auravell | Auravell Yoga & Mindful Living | 每课程 1 张，1200 × 900 | 3456 × 1800，1 张冥想场景 | 3 |
 | careflow-healthcare | Careflow Healthcare | 建议 6 张，1200 × 900 | 2752 × 1412，1 张，主体居右 | 0 |
 | toorun-early-learning | Toorun Early Learning | 6 张课程照片，1200 × 1200 | 568 × 688，建议 4 张人物图 | 0 |
 
@@ -165,7 +165,7 @@ const context = {
 
 ## Careflow Healthcare 接入说明（2026-10-01）
 
-- 模板 ID：`careflow-healthcare`；Guide revision：`2026-10-01.1`；合同与渲染版本：`2026-10-01.careflow-healthcare-materials.1`。
+- 模板 ID：`careflow-healthcare`；Guide revision：`2026-10-01.2`；合同与渲染版本：`2026-10-01.careflow-healthcare-materials.2`。
 - 原生页面：`home`、`catalog`、`detail`、`about`、`contact`。详情由每个产品/服务生成，预览和发布走同一渲染器。
 - Guide：`GET /api/internal/template-guides/careflow-healthcare`（可加 `?format=markdown`）；Materials API 从 `/materials/catalog` 返回的版本化 `requirementsPath` 获取可执行合同。
 - 16 个页面图片槽位，每个 0–1 张；尺寸逐项列在 JSON 的 `layoutImageSlots` / `assets` 及合同的 `imageSlots`。保留默认示例图时无需上传。首屏 `home-hero` 为 **2752 × 1412**；左下角覆盖标题卡，主体宜放右侧。
@@ -203,7 +203,7 @@ const context = {
 
 ## Auravell Yoga & Mindful Living（2026-10-01）
 
-模板 ID `auravell`，Guide revision `2026-10-01.1`，合同与渲染版本 `2026-10-01.auravell-materials.1`。通过 `/api/internal/template-guides/auravell` 获取 JSON 或 Markdown，通过材料目录获取冻结合同。所有入口使用现有 API 认证。
+模板 ID `auravell`，Guide revision `2026-10-01.2`，合同与渲染版本 `2026-10-01.auravell-materials.2`。通过 `/api/internal/template-guides/auravell` 获取 JSON 或 Markdown，通过材料目录获取冻结合同。所有入口使用现有 API 认证。
 
 包含首页、课程目录、课程详情、关于、联系和会员方案（`extra-plans`，发布路径 `en/extra-plans/index.html`）。预览和发布共用原生渲染器，移动端菜单、课程筛选、图片切换和询盘均使用项目运行时。预览不发送询盘，正式表单调用现有 JSON 询盘接口，不确认预约。
 
@@ -222,3 +222,11 @@ const context = {
 | `product-gallery` | 1200 × 900 | 每课程 0–10 张 |
 
 9 个布局图位置可选；课程主图和附图按 `productId` 绑定，附图使用 `itemIndex` 排序。主体居中，保留裁切空间；图片不嵌文案，首页左侧留标题空间。支持 JPEG、PNG、WebP。正文为纯文本；字体和 CSS 依赖本地化。示例课程只用于演示，正式站不自动添加不存在的课程或虚假联系方式。运营方应核实课程、方案价格、营业时间和品牌介绍后发布。
+
+### 2026-10-01 动效修复版本
+
+两个模板的新合同均为 `materials.2`，旧 `.1` 合同、渲染器和预览运行时保留。已有确认素材项目继续使用原合同；需要新布局时按 Materials API 重新确认 `.2` 合同并发布。普通模板预览和新项目使用修复版。
+
+Auravell 恢复参考站五个页面的完整结构及原生动效：首屏入场、视差、服务卡悬停、练习图切换、视频滚动收拢、导师卡、分类/方案标签、FAQ 和移动菜单。3 段视频均为内置静音 MP4，配套封面；无需上传。图片槽位仍为 9 个，产品主图 1200×900、附图最多 10 张；视频并非 `imageBindings`，当前 API 不支持视频绑定。
+
+Careflow 恢复滚动渐入、逐字按钮悬停、图片放大、折叠高度过渡、团队横向循环、计数和导航交互。演示视频仅点击后加载隐私增强播放器。两者均支持减少动态效果、键盘操作及私有预览，装饰动效不能影响询盘及图库。

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "revision": "2026-10-01.1",
+  "revision": "2026-10-01.2",
   "templateId": "auravell",
   "name": "Auravell / Auravell 瑜伽美学生活馆",
   "documentLanguage": "zh-CN",
@@ -15,7 +15,7 @@
       "#d7d2c8"
     ],
     "artDirection": "温润静谧的北欧东方美学、自然木质与陶土赤陶色调、Playfair Display 衬线标题、Inter 无衬线正文与柔和微光浮动卡片。",
-    "composition": "1440px 容器，大画幅身心疗愈场景、沉浸式卡片拼贴、浮动导航栏与全屏页脚暗色反差。",
+    "composition": "保留原站 1440px 下的全屏首屏、底部左侧标题与右侧课程卡、矩形浮动导航、分区网格和图片页脚。原生滚动渐入、图片视差、视频收拢、按钮与卡片悬停、标签和 FAQ 动画。",
     "tone": "宁静、优雅、温润、专业、身心平衡",
     "avoid": [
       "文字背景色继承或行内色块遮挡",
@@ -53,12 +53,17 @@
   },
   "pagePlan": {
     "home": [
-      "首屏静修场景与浮动课程卡片",
-      "身心服务特色卡片",
-      "为什么选择我们与禅意图文",
-      "精选课程体验列表",
-      "会员计划预告",
-      "暗色极简页脚"
+      "全屏静修图片首屏与视频课程卡",
+      "身心服务卡片与移动滑动切换",
+      "滚动收拢的沉浸视频",
+      "三张悬停展开的服务图片卡",
+      "图文介绍",
+      "视频疗愈横幅",
+      "合作品牌滚动展示（演示）",
+      "悬停切换练习图片",
+      "课程时刻表",
+      "导师图文（演示）",
+      "背景图片与完整页脚"
     ],
     "catalog": [
       "课程目录分类导航",
@@ -92,10 +97,10 @@
   "inventory": {
     "recommendedDistinctProductImages": 6,
     "minimumProductImages": 1,
-    "bundledVideoCount": 0,
+    "bundledVideoCount": 3,
     "defaultHero": "image-or-css",
     "reuseRule": "课程主图在目录与详情通用复用。布局槽位支持按 slotId 灵活绑定客户实拍素材。",
-    "decorativeAssets": "Playfair Display、Inter 与 Lora 字体，瑜伽莲花矢量图标，星芒装饰与温润渐变背景。"
+    "decorativeAssets": "Playfair Display、Inter 与 Lora 字体，瑜伽莲花矢量图标，星芒装饰与温润渐变背景。 内置 3 段静音循环 MP4 及封面：分布于首页课程卡、沉浸式视频区及内页；无需上传即可播放，可暂停，减少动态效果或离开屏幕时暂停。Materials API 暂不接受 videoBindings，不要将视频填入图片槽位。"
   },
   "layoutImageSlots": [
     {
@@ -809,7 +814,7 @@
     }
   ],
   "generationWorkflow": [
-    "读取 /api/internal/template-guides/materials/auravell 及其 requirementsPath，确认 typed-regions-v1 合同与 contractRevision=2026-10-01.auravell-materials.1。",
+    "读取 /api/internal/template-guides/materials/auravell 及其 requirementsPath，确认 typed-regions-v1 合同与 contractRevision=2026-10-01.auravell-materials.2。",
     "收集会馆或工作室真实资料、课程体系与认证师资。不编造虚假国际资质与医疗效果承诺。",
     "复用已有授权素材，缺图才生成；证书和报告只能真实上传。不补示例产品，不编造虚构评分、假师资认证或虚假医疗效果承诺。",
     "课程主图按 4:3 比例（1200×900）准备，首屏大图按 16:9（3456×1800）准备，左侧留出暗色留白。",
@@ -824,7 +829,10 @@
     "首屏主图清晰呈现，左侧暗色渐变与纯白标题对比度超过 4.5:1",
     "移动端导航与课程分类标签无横向截断溢出",
     "预约表单在预览模式下安全禁用发送，正式模式对接本站询盘接口",
-    "课程与导师详情图文对应准确，不出现未经验证的虚假医疗功效承诺"
+    "课程与导师详情图文对应准确，不出现未经验证的虚假医疗功效承诺",
+    "同时测试滚动进入、按钮悬停、键盘焦点和移动菜单；不能只检测最终静态画面。",
+    "开启 prefers-reduced-motion 时取消装饰动画，所有信息仍可见且交互可用。",
+    "私有预览与正式发布使用同一项目原生动效，不加载原站 Webflow、GSAP 或跟踪脚本。"
   ],
   "outputContract": {
     "schemaEndpoint": "/api/internal/template-guides/output-schema",

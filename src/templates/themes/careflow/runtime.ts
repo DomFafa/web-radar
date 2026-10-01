@@ -25,6 +25,52 @@ export function careflowRuntime(): void {
     }
   });
   matchMedia('(min-width: 992px)').addEventListener('change', closeMenu);
+  const pagesToggle = document.querySelector<HTMLButtonElement>('.cf-pages-toggle');
+  const pagesPanel = document.querySelector<HTMLElement>('.cf-pages-panel');
+  const pagesOpen = (open: boolean) => {
+    if (pagesPanel) pagesPanel.hidden = !open;
+    pagesToggle?.setAttribute('aria-expanded', String(open));
+  };
+  pagesToggle?.addEventListener('click', () =>
+    pagesOpen(pagesToggle.getAttribute('aria-expanded') !== 'true'),
+  );
+  document.addEventListener('click', (e) => {
+    if (!document.querySelector('.cf-pages')?.contains(e.target as Node)) pagesOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') pagesOpen(false);
+  });
+  document.querySelectorAll<HTMLElement>('[data-careflow-video]').forEach((link) =>
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const id = link.dataset.careflowVideo;
+      if (!id || !/^[\w-]{11}$/.test(id)) return;
+      const dialog = document.createElement('dialog');
+      dialog.className = 'cf-video-dialog';
+      dialog.setAttribute('aria-label', 'Facility video');
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.textContent = 'Close video ×';
+      close.addEventListener('click', () => dialog.close());
+      const iframe = document.createElement('iframe');
+      iframe.title = 'Facility video';
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+      iframe.allowFullscreen = true;
+      dialog.appendChild(close);
+      dialog.appendChild(iframe);
+      document.body.appendChild(dialog);
+      dialog.addEventListener('close', () => {
+        dialog.remove();
+        link.focus();
+      });
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close();
+      });
+      dialog.showModal();
+      close.focus();
+    }),
+  );
   document.querySelectorAll<HTMLElement>('.accordion-item-wrapper').forEach((item, i) => {
     const heading = item.querySelector<HTMLElement>('.accordion-heading');
     const panel = item.querySelector<HTMLElement>('.accordion-body');
@@ -33,17 +79,35 @@ export function careflowRuntime(): void {
     heading.setAttribute('role', 'button');
     heading.tabIndex = 0;
     heading.setAttribute('aria-controls', panel.id);
-    const set = (open: boolean) => {
+    let animation: Animation | undefined;
+    const set = (open: boolean, initial = false) => {
+      animation?.cancel();
       heading.setAttribute('aria-expanded', String(open));
-      panel.hidden = !open;
+      panel.hidden = false;
+      const height = panel.scrollHeight;
+      if (!initial && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        animation = panel.animate(
+          open
+            ? [
+                { height: '0px', opacity: 0 },
+                { height: height + 'px', opacity: 1 },
+              ]
+            : [
+                { height: height + 'px', opacity: 1 },
+                { height: '0px', opacity: 0 },
+              ],
+          { duration: 300, easing: 'ease' },
+        );
+        animation.finished.then(() => (panel.hidden = !open)).catch(() => {});
+      } else panel.hidden = !open;
       item.classList.toggle('cf-expanded', open);
     };
-    set(i === 0);
-    heading.addEventListener('click', () => set(Boolean(panel.hidden)));
+    set(i === 0, true);
+    heading.addEventListener('click', () => set(heading.getAttribute('aria-expanded') !== 'true'));
     heading.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        set(Boolean(panel.hidden));
+        set(heading.getAttribute('aria-expanded') !== 'true');
       }
     });
   });
@@ -105,7 +169,12 @@ export function careflowRuntime(): void {
       button.setAttribute('aria-label', label);
       const move = () =>
         track.scrollBy({
-          left: direction * (track.firstElementChild?.getBoundingClientRect().width || 400),
+          left:
+            direction > 0 && track.scrollLeft + track.clientWidth >= track.scrollWidth - 2
+              ? -track.scrollWidth
+              : direction < 0 && track.scrollLeft <= 1
+                ? track.scrollWidth
+                : direction * (track.firstElementChild?.getBoundingClientRect().width || 400),
           behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
         });
       button.addEventListener('click', move);

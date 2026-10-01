@@ -1,8 +1,9 @@
+import { getAuravellMaterialsTemplate as legacyContract } from '../../releases/native-20261001.mjs';
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
 import { auravellImages, auravellTexts } from './inventory';
 
-export const auravellMaterialsRevision = '2026-10-01.auravell-materials.1';
+export const auravellMaterialsRevision = '2026-10-01.auravell-materials.2';
 
 const base = {
   min: 0,
@@ -18,11 +19,12 @@ const factualPolicy =
 export function getAuravellMaterialsTemplate(
   revision?: string,
 ): MaterialsTemplateContract | undefined {
+  if (revision === '2026-10-01.auravell-materials.1') return legacyContract(revision);
   if (revision && revision !== auravellMaterialsRevision) return;
   return {
     schemaVersion: 'wr-template-materials-v1',
     templateId: 'auravell',
-    guideRevision: '2026-10-01.1',
+    guideRevision: '2026-10-01.2',
     contractRevision: auravellMaterialsRevision,
     rendererRevision: auravellMaterialsRevision,
     materialsReady: true,
@@ -91,8 +93,7 @@ export function getAuravellMaterialsTemplate(
         max: 10,
         fit: 'cover',
         allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        composition:
-          'Supplemental authentic photographs of the same class or practice technique.',
+        composition: 'Supplemental authentic photographs of the same class or practice technique.',
         mobileComposition: 'Preserve the complete subject.',
       },
     ],
