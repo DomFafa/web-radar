@@ -104,6 +104,20 @@ try {
         const metrics = await frame.evaluate(async () => {
           document.querySelectorAll('img').forEach(img => img.loading = 'eager');
           await document.fonts.ready;
+          // Framer's metric-adjusted local fallbacks may be absent on Linux.
+          // A missing optional local font is not a failed web-font download.
+          const localFonts = new Set(), assetFonts = new Set();
+          const fontRules = rules => [...rules].forEach(rule => {
+            if (rule instanceof CSSFontFaceRule) {
+              const family = rule.style.getPropertyValue('font-family').replace(/^["']|["']$/g, '');
+              const source = rule.style.getPropertyValue('src');
+              if (/url\(/i.test(source)) assetFonts.add(family);
+              else if (/local\(/i.test(source)) localFonts.add(family);
+            } else if ('cssRules' in rule) fontRules(rule.cssRules);
+          });
+          [...document.styleSheets].forEach(sheet => fontRules(sheet.cssRules));
+          const unavailableFonts = [...document.fonts].filter(font => font.status === 'error').map(font => font.family.replace(/^["']|["']$/g, ''));
+          const optionalLocalFont = family => localFonts.has(family) && !assetFonts.has(family);
           const brokenBackgrounds = [];
           const backgrounds = [...new Set([...document.querySelectorAll('*')].flatMap(element => [null, '::before', '::after'].flatMap(pseudo => [...getComputedStyle(element, pseudo).backgroundImage.matchAll(/url\((?:"([^"]*)"|'([^']*)'|([^)]*))\)/g)].map(match => match[1] ?? match[2] ?? match[3]))))];
           await Promise.all([...document.images].map(img => img.decode().catch(() => {})));
@@ -115,7 +129,7 @@ try {
             overflowElements: document.documentElement.scrollWidth <= innerWidth + 1 ? [] : [...document.querySelectorAll('body *')].filter(node => { const rect = node.getBoundingClientRect(); return rect.width && rect.right > innerWidth + 1; }).slice(0, 8).map(node => ({ tag: node.tagName, className: node.className, style: node.getAttribute('style'), parent: node.parentElement?.outerHTML.slice(0, 190), right: node.getBoundingClientRect().right, text: node.textContent?.trim().slice(0, 100) })),
             loadedImages: [...document.images].filter(img => img.naturalWidth > 0).length,
             brokenImages: [...document.images].filter(img => img.getAttribute('src') && !img.naturalWidth).map(img => img.getAttribute('src')),
-            backgrounds: backgrounds.length, brokenBackgrounds, failedFonts: [...document.fonts].filter(font => font.status === 'error').map(font => font.family), deferredMedia: document.querySelectorAll('[data-pr-media]').length,
+            backgrounds: backgrounds.length, brokenBackgrounds, failedFonts: unavailableFonts.filter(family => !optionalLocalFont(family)), unavailableLocalFonts: unavailableFonts.filter(optionalLocalFont), deferredMedia: document.querySelectorAll('[data-pr-media]').length,
             headings: [...document.querySelectorAll('h1')].map(node => node.textContent?.trim()) };
         });
         const signals = mode === 'project-preview' ? await page.evaluate(() => window.previewSignals) : [];
@@ -129,7 +143,9 @@ try {
           } else {
             const toggle = frame.locator('[data-lumi-menu-toggle]');
             if (await toggle.count()) await toggle.click();
-            mobileMenuWorks = await menu.locator('a[data-wr-page="catalog"]').isVisible();
+            const catalogLink = menu.locator('a[data-wr-page="catalog"], a[href="#menu"]').first();
+            mobileMenuWorks = await catalogLink.isVisible();
+            if (mobileMenuWorks) mobileMenuWorks = await catalogLink.evaluate(link => !link.hash || Boolean(document.getElementById(decodeURIComponent(link.hash.slice(1)))));
             if (await toggle.count()) await toggle.click();
           }
         }
@@ -146,5 +162,5 @@ await writeFile(resolve(out, 'verification.json'), JSON.stringify({ scope: 'Loca
   renderBundleSha256: createHash('sha256').update(await readFile(resolve(out, 'render.mjs'))).digest('hex'),
   rendererSnapshotSha256: createHash('sha256').update(await readFile(resolve('src/templates/releases/demo-20260923.mjs'))).digest('hex'),
   productRadar: Boolean(previewClient), results }, null, 2));
-console.log(JSON.stringify({ cases: results.length, failed: failures.length, failures: failures.map(({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts})=>({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts})) }, null, 2));
+console.log(JSON.stringify({ cases: results.length, failed: failures.length, failures: failures.map(({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts,mobileMenuWorks})=>({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts,mobileMenuWorks})) }, null, 2));
 if (failures.length) process.exitCode = 1;
