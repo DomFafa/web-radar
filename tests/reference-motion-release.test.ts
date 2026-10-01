@@ -25,6 +25,8 @@ describe('reference motion release compatibility', () => {
       new URL('../src/templates/releases/native-preview-20261001.mjs', import.meta.url),
     );
     expect(createHash('sha256').update(preview).digest('hex')).toBe(manifest.previewSha256);
+    const strings = readFileSync(new URL('../src/templates/releases/native-preview-sources-20261001.mjs', import.meta.url));
+    expect(createHash('sha256').update(strings).digest('hex')).toBe(manifest.previewSourceSha256);
   });
   for (const [id, contractFor, renderer] of [
     ['auravell', getAuravellMaterialsTemplate, renderAuravellSite],

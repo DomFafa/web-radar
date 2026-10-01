@@ -6,5 +6,6 @@
     "careflow-healthcare"
   ],
   "description": "Unmodified original .1 materials renderers, contracts and private preview runtimes before reference-motion repair.",
-  "previewSha256": "3ffbe702eae7dfffb761188041355b10053d365bfa14555c9354a1e27af4c53c"
+  "previewSha256": "3ffbe702eae7dfffb761188041355b10053d365bfa14555c9354a1e27af4c53c",
+  "previewSourceSha256": "c76ecb6ec8e792e9dc91f9bccc86ff355e9ab85cc49ad5574c44c28aa5a5fe1f"
 }

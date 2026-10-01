@@ -8,9 +8,8 @@ export async function referenceTemplatePreviewRuntime(draft: Draft): Promise<str
   if (!['auravell', 'careflow-healthcare'].includes(draft.template)) return '';
   const revision = draft.materials?.contractRevision;
   if (revision === `2026-10-01.${draft.template}-materials.1`) {
-    const legacy = await import('../templates/releases/native-preview-20261001.mjs');
-    const runtime = draft.template === 'auravell' ? legacy.auravellRuntime : legacy.careflowRuntime;
-    return `;(${runtime.toString()})();`;
+    const legacy = await import('../templates/releases/native-preview-sources-20261001.mjs');
+    return draft.template === 'auravell' ? legacy.auravellPreviewRuntime : legacy.careflowPreviewRuntime;
   }
   const runtime = draft.template === 'auravell' ? auravellRuntime : careflowRuntime;
   return `;(${referenceMotionRuntime.toString()})();(${runtime.toString()})();`;

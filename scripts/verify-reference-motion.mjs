@@ -20,6 +20,9 @@ await build({
   outfile: resolve(out, 'render.mjs'),
 });
 const r = await import(pathToFileURL(resolve(out, 'render.mjs')).href);
+// Exercise production minification before serialising trusted scripts into the iframe.
+await build({entryPoints:['src/client/reference-template-preview.ts'], bundle:true, minify:true, format:'esm', platform:'browser', outfile:resolve(out,'client-runtime.mjs')});
+const client = await import(pathToFileURL(resolve(out,'client-runtime.mjs')).href);
 const html = new Map(),
   publicDir = resolve('public');
 let origin;
@@ -79,7 +82,7 @@ const server = createServer(async (req, res) => {
           )
           .replace(
             '</body>',
-            `<script nonce="reference-test">${r.projectPreviewRuntime}${await r.referenceTemplatePreviewRuntime(draft)}</script></body>`,
+            `<script nonce="reference-test">${r.projectPreviewRuntime}${await client.referenceTemplatePreviewRuntime(draft)}</script></body>`,
           );
       }
       html.set(key, value);
@@ -274,6 +277,16 @@ try {
     );
     results.push({ privatePreview, animationAndInteractionChecks: 'passed' });
     await context.close();
+  }
+  for (const template of ['auravell','careflow-healthcare']) {
+    const context = await browser.newContext();const page = await context.newPage();const errors = [];
+    page.on('pageerror',error=>errors.push(error.message));
+    const script = await client.referenceTemplatePreviewRuntime({template,materials:{contractRevision:`2026-10-01.${template}-materials.1`}});
+    const controls = template==='auravell' ? '<button data-auravell-menu aria-expanded="false">Menu</button><nav data-auravell-nav></nav>' : '<button data-careflow-menu aria-expanded="false">Menu</button><nav id="careflow-navigation"></nav>';
+    await page.setContent(`<body data-template="${template}">${controls}<script>${script}</script></body>`);
+    await page.getByRole('button',{name:'Menu',exact:true}).click();
+    assert.equal(await page.getByRole('button',{name:'Menu',exact:true}).getAttribute('aria-expanded'),'true');
+    assert.deepEqual(errors,[],`${template}: minified legacy preview must not depend on renamed module helpers`);await context.close();
   }
   const reduced = await browser.newContext({ reducedMotion: 'reduce' });
   const p = await reduced.newPage();
