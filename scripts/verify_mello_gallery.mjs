@@ -58,10 +58,12 @@ try {
     }
     const main = scope.locator('#wr-detail-main-img');
     await main.waitFor(); await main.evaluate(image => image.decode());
-    const original = await main.evaluate(image => image.currentSrc);
     const controls = scope.locator('.mello-gallery [data-wr-material-thumb]');
     const count = await controls.count();
     assert.ok(count >= 2, `${name}: missing functional gallery controls`);
+    // Published pages may initially serve a resized srcset candidate. Switching
+    // back must restore the full original, not that optimized initial response.
+    const original = await controls.first().locator('img').evaluate(image => image.src);
     const geometry = await main.boundingBox();
     for (let index = 0; index < count; index++) {
       const button = controls.nth(index);
