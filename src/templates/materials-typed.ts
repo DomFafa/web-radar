@@ -19,10 +19,13 @@ type ImageSlot=MaterialsTemplateContract['imageSlots'][number];
 type Binding=AppliedMaterials['imageBindings'][number];
 const rawDrafts=new WeakSet<Draft>();
 const modernAboutDrafts=new WeakSet<Draft>();
+const nativeToorunDrafts=new WeakSet<Draft>();
+export const isNativeToorunSource=(draft:Draft)=>nativeToorunDrafts.has(draft);
 export const isModernAboutSource=(draft:Draft)=>modernAboutDrafts.has(draft);
 /** Internal render context, never serialized into a project or exposed to standalone builds. */
 export const isTypedMaterialsSource=(draft:Draft)=>rawDrafts.has(draft);
 export const modernMaterialsRevision=(id:string)=>`2026-09-20.${id}-materials.2`;
+export const toorunNativeMaterialsRevision='2026-10-01.toorun-early-learning-materials.3';
 const aiAgencyHeroRevision='2026-09-21.corpox-ai-agency-materials.3';
 export const isTypedMaterials=(draft:Draft)=>draft.materials?.contractRevision===`2026-09-19.${draft.template}-materials.1`||draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||(draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision)||!!(draft.materials&&getMaterialsTemplate(draft.template,draft.materials.contractRevision)?.requiredCapabilities?.length);
 const attr=(node:Element,name:string)=>node.attrs.find(a=>a.name===name)?.value||'';
@@ -53,7 +56,8 @@ function rawHtml(draft:Draft,options:RenderOptions,modernAbout=false):string{
     modernAboutDrafts.add(raw);try{return renderSite(raw,aboutOptions);}finally{modernAboutDrafts.delete(raw);}
   }
   rawDrafts.add(raw);
-  try{return renderSite(raw,options);}finally{rawDrafts.delete(raw);}
+  if(draft.template==='toorun-early-learning'&&draft.materials?.contractRevision===toorunNativeMaterialsRevision)nativeToorunDrafts.add(raw);
+  try{return renderSite(raw,options);}finally{rawDrafts.delete(raw);nativeToorunDrafts.delete(raw);}
 }
 function withoutOptionalFacts(draft:Draft):Draft{
   return{...draft,company:{...draft.company,description:'',address:'',phone:'',whatsapp:'',slogan:'',capabilities:'',certifications:'',establishedYear:''},products:draft.products.map(p=>({...p,description:'',material:'',dimensions:'',tagline:undefined,sellingPoints:undefined,applications:undefined})),copy:{...draft.copy,en:{...draft.copy.en!,about:''}}};
@@ -257,8 +261,18 @@ function modernInventory(id:string,revision=modernMaterialsRevision(id)):Invento
   }
   modernInventories.set(revision,result);return result;
 }
+function toorunNativeInventory():Inventory {
+  const result=structuredClone(modernInventory('toorun-early-learning')!);
+  result.contract.contractRevision=toorunNativeMaterialsRevision;
+  // The four native portrait cards reuse approved product primaries. A portrait
+  // size must never become a full-width generated collection banner.
+  result.contract.imageSlots=result.contract.imageSlots.filter(slot=>slot.id!=='hero-slide-0');
+  for(const [target,plan] of Object.entries(result.media.home))if(plan.slotId==='hero-slide-0')delete result.media.home[target];
+  return result;
+}
 export function getModernMaterialsTemplate(id:string,contractRevision?:string):MaterialsTemplateContract|undefined{
   const revision=contractRevision??(id==='corpox-ai-agency'?aiAgencyHeroRevision:modernMaterialsRevision(id));
+  if(id==='toorun-early-learning'&&revision===toorunNativeMaterialsRevision)return toorunNativeInventory().contract;
   if(revision!==modernMaterialsRevision(id)&&!(id==='corpox-ai-agency'&&revision===aiAgencyHeroRevision))return;
   const value=modernInventory(id,revision);return value?structuredClone(value.contract):undefined;
 }
@@ -334,11 +348,12 @@ function removeUnboundTemplateBackgrounds(root:Node){
   }
 }
 export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):string{
+  const nativeToorun=draft.template==='toorun-early-learning'&&draft.materials?.contractRevision===toorunNativeMaterialsRevision;
   const preferExplicitHero=draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision;
   const isExecutable=Boolean(draft.materials?.contractRevision?.startsWith('2026-09-22.'));
-  const modern=draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||isExecutable||preferExplicitHero;
+  const modern=nativeToorun||draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||isExecutable||preferExplicitHero;
   const modernRevision=preferExplicitHero?aiAgencyHeroRevision:modernMaterialsRevision(draft.template);
-  const inv=modern?modernInventory(draft.template,modernRevision):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
+  const inv=nativeToorun?toorunNativeInventory():modern?modernInventory(draft.template,modernRevision):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
   const modernAbout=modern&&options.page==='about';if(modernAbout)draft=aboutDraft(draft,options.lang);
   const m=draft.materials!,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
   if(inv.legacyText&&!modernAbout){

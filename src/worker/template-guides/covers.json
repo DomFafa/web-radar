@@ -361,7 +361,7 @@
     "sha256": "db0d249082becfa2a48e0fed409dff8f9cc3f018f550fa881032dc5497346b0c",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-30.lumi-business-materials.1"
+    "contractRevision": "2026-10-01.lumi-business-materials.2"
   },
   "good-boy-pals": {
     "url": "/templates/previews/good-boy-pals.9ca28f1bd61b642f.jpg",
@@ -389,7 +389,7 @@
     "sha256": "dfb78be0504ef868e86fdb8bc56389f3e6fe3a5322412a03e94e0725db764697",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-20.toorun-early-learning-materials.2"
+    "contractRevision": "2026-10-01.toorun-early-learning-materials.3"
   },
   "careflow-healthcare": {
     "url": "/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg",

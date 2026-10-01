@@ -1,4 +1,5 @@
 import type { Product } from '../../shared/model';
+import { isNativeToorunSource } from '../materials-typed';
 import { esc, productPath, type ThemeContext } from './types';
 
 const base = '/templates/toorun-early-learning/';
@@ -91,7 +92,12 @@ export function renderToorunEarlyLearning(ctx: ThemeContext): string {
     ['03', 'Plan the next step', 'The team confirms the agreed introduction, visit or enrolment process.'],
   ].map(([number, title, text]) => `<article><span>${number}</span><h3>${title}</h3><p>${text}</p></article>`).join('')}</div></section>`;
 
-  const homeHeroImages = (programs.length >= 4
+  const homeHeroImages = isNativeToorunSource(draft) && programs.length
+    ? Array.from({ length: 4 }, (_, index) => {
+      const program = programs[index % programs.length];
+      return { src: productImage(program, index), alt: translateProduct(program).name };
+    })
+    : (programs.length >= 4
     ? programs.slice(0, 4).map((program, index) => ({ src: productImage(program, index), alt: translateProduct(program).name }))
     : Array.from({ length: 4 }, (_, index) => ({ src: `${base}hero-child-${index + 1}.jpg`, alt: `Child enjoying a learning activity ${index + 1}` })));
   const homeHero = `<section class="tr-hero" data-wr-hero data-wr-collection-hero>

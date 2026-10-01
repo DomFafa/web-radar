@@ -14,7 +14,7 @@ import { frozenIndustryPreviewRuntime } from './releases/industry-preview-202609
 import { getMaterialsTemplate as outreachContract, renderSite as outreachRender } from './releases/outreach-20260923.mjs';
 import { getOutreachDemoContract, repairOutreachMaterials } from './releases/outreach-demo-20260923.mjs';
 import { repairMaterialsDemo } from './releases/demo-20260923.mjs';
-import { getModernMaterialsTemplate, getTypedMaterialsTemplate } from './materials-typed';
+import { getModernMaterialsTemplate, getTypedMaterialsTemplate, toorunNativeMaterialsRevision } from './materials-typed';
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
 export const industryRendererRevision = '2026-09-22.industry-bafe6c1';
@@ -94,10 +94,11 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
   if (id === 'careflow-healthcare') return getCareflowMaterialsTemplate(revision);
   if (id === 'lumi-business') return getLumiMaterialsTemplate(revision);
   if (['toorun-early-learning', 'good-boy-pals', 'mello-coffee', 'papernote', 'pawfect-groom'].includes(id)) {
-    const contract = getModernMaterialsTemplate(id, revision);
+    const contract = getModernMaterialsTemplate(id, revision ?? (id === 'toorun-early-learning' ? toorunNativeMaterialsRevision : undefined));
     if (!contract) return;
     declareExecutionMetadata(contract);
     contract.rendererRevision = `2026-09-30.${id}-native.1`;
+    if (contract.contractRevision === toorunNativeMaterialsRevision) contract.rendererRevision = '2026-10-01.toorun-early-learning-native.2';
     return contract;
   }
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));

@@ -1,14 +1,27 @@
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
 import { lumiImageInventory, lumiTextInventory } from './materials-map';
-export const lumiMaterialsRevision = '2026-09-30.lumi-business-materials.1';
+export const lumiMaterialsRevision = '2026-10-01.lumi-business-materials.2';
+const originalLumiMaterialsRevision = '2026-09-30.lumi-business-materials.1';
 const base = {min:0,max:1,required:false,binding:'supported' as const,repeat:'once' as const};
 const factualPolicy='Use confirmed company, contact and service facts only. Do not invent prices, endorsements, experience, team members or performance figures.';
 export function getLumiMaterialsTemplate(revision?:string):MaterialsTemplateContract|undefined {
-  if(revision&&revision!==lumiMaterialsRevision)return;
+  if(revision&&revision!==lumiMaterialsRevision&&revision!==originalLumiMaterialsRevision)return;
+  const contract=originalLumiMaterialsTemplate();
+  if(revision===originalLumiMaterialsRevision)return contract;
+  contract.contractRevision=lumiMaterialsRevision;
+  contract.requiredCapabilities!.push('image.illustration.v1');
+  for(const slot of contract.imageSlots){
+    Reflect.deleteProperty(slot,'defaultAsset');
+    if(slot.materialSource==='product-primary'||slot.materialSource==='product-gallery')delete slot.role;
+  }
+  return contract;
+}
+// Saved projects retain the exact published document and renderer revision.
+function originalLumiMaterialsTemplate():MaterialsTemplateContract {
   return {
-    schemaVersion:'wr-template-materials-v1',templateId:'lumi-business',guideRevision:'2026-09-30.1',contractRevision:lumiMaterialsRevision,
-    rendererRevision:lumiMaterialsRevision,materialsReady:true,imagePolicy:'typed-regions-v1',pages:[...materialsPages],
+    schemaVersion:'wr-template-materials-v1',templateId:'lumi-business',guideRevision:'2026-09-30.1',contractRevision:originalLumiMaterialsRevision,
+    rendererRevision:originalLumiMaterialsRevision,materialsReady:true,imagePolicy:'typed-regions-v1',pages:[...materialsPages],
     requiredCapabilities:['image.slot.v1','image.product-primary.v1','image.product-gallery.v1','text.plain.v1'],
     imageSlots:[
       ...lumiImageInventory.map(s=>({...base,...s,page:s.page as typeof materialsPages[number],role:'facility' as const,sourcePolicy:'illustration' as const,productScope:'none' as const,materialSource:'slot-image' as const,reusePolicy:'distinct-slot' as const,fit:'cover' as const,allowedMimeTypes:['image/jpeg','image/png','image/webp'],composition:'Approved business photo or illustration matching the light-blue and peach visual system. No text in images; no invented client logos or employee identity.',mobileComposition:'Keep the focal subject within the central 60%; a separate mobile crop can be supplied.'})),
