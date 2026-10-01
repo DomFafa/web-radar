@@ -482,9 +482,30 @@ try {
   await page.getByLabel('公司 / 品牌名称',{exact:true}).waitFor();
   assert.equal(await page.getByText('AI 智能深度定制',{exact:true}).count(),0);
   await page.goto(origin+'/?project='+templateProject.id+'&tab=template');
+  const activeTemplates = [
+    ['auravell', 'Auravell 瑜伽美学生活馆'],
+    ['careflow-healthcare', 'Careflow 医疗健康'],
+    ['toorun-early-learning', '童趣早教中心'],
+    ['lumi-business', 'Lumi 智慧商业'],
+    ['pawfect-groom', '暖心宠物美容'],
+    ['mello-coffee', 'Mello 治愈咖啡烘焙'],
+    ['senseng-candy', '缤纷糖果乐园'],
+    ['senseng-video', '全屏视频版'],
+    ['senseng-nature', '森林原野工坊'],
+  ];
+  await page.locator('.template-media-card').first().waitFor();
+  assert.deepEqual(await page.locator('.template-card h3').allTextContents(), activeTemplates.map(([,name])=>name));
+  assert.equal(await page.locator('.template-media-card').count(), activeTemplates.length);
+  for (const [templateId, name] of activeTemplates) {
+    const saved = page.waitForResponse(response=>response.request().method()==='PUT'&&new URL(response.url()).pathname===`/api/projects/${templateProject.id}`);
+    await page.locator('.template-card').filter({has:page.getByRole('heading',{name,exact:true})}).click();
+    const response = await saved;
+    assert.equal(response.status(), 200);
+    assert.equal((await response.json()).project.draft.template, templateId);
+    await page.getByRole('heading',{name:`${name} · 素材准备清单`,exact:true}).waitFor();
+  }
   await page.locator('.template-card').filter({has:page.getByRole('heading',{name:'缤纷糖果乐园',exact:true})}).click();
   await page.locator('.template-media-guide').waitFor();
-  assert.equal(await page.locator('.template-media-card').count(), 11);
   assert.equal(await page.getByRole('button',{name:/切换为 AI/}).count(),0);
   await page.locator('.template-media-guide summary').click();
   assert.ok((await page.locator('.template-slot-sizes').innerText()).includes('1200 × 1200'));
@@ -538,7 +559,7 @@ try {
   await page.screenshot({path:'artifacts/task-review/url-publication-check.png'});
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: 11 current template media checklists match their layouts; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; explicit 200-point confirmation creates a private preview before manual publication; saved clone output remains readable without a preparation charge; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
+    'PASS: 9 current template media checklists match their layouts and selections persist the expected template IDs; mobile layout and two creation modes pass; custom AI entry points are hidden; URL-only creation automatically captures 5 desktop/mobile/main-page screenshots, imports media, calls mocked model once and stays private; publication requires brand/email; auto-save survives refresh; three publication workspaces and mobile preview controls pass; grouped company form saves/reloads with optional contact; Banner targets exclude product details; live streaming progress + ETA; reload while running/paused/stopped; pause checkpoint and resume without second model call; explicit 200-point confirmation creates a private preview before manual publication; saved clone output remains readable without a preparation charge; terminal polling stops; identical content reuses the release; smart-mode instructions are forwarded; Banner persists without model calls; 13 templates span their hero at 390/2560 px; multi-page carousel timing/pause and full-screen video playback/reduced motion/390+2560 widths pass; SEO audit and credential/domain controls pass.',
   );
 } catch (error) {
   const page = browser?.contexts()[0]?.pages()[0];
