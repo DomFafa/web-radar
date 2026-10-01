@@ -11,6 +11,11 @@ export const melloLayoutStyles = `
 .mello-coffee .text-and-volume-wrapper > p { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .mello-coffee .volumes-wrapper { flex-shrink: 0; gap: 20px; }
 .mello-coffee .volume-text { flex: 0 0 52px; width: 52px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Confirmed customer copy can replace prices with full phrases. */
+.mello-coffee.wr-materials-site .menu-item,
+.mello-coffee.wr-materials-site .text-and-volume-wrapper { grid-template-columns: minmax(0,1.4fr) repeat(2,minmax(0,1fr)); align-items: start; }
+.mello-coffee.wr-materials-site .menu-info .volumes-wrapper { display: contents; }
+.mello-coffee.wr-materials-site .menu-info .volume-text { min-width: 0; width: auto; white-space: normal; overflow-wrap: anywhere; }
 .mello-coffee .menu-link { isolation: isolate; color: var(--black); border-radius: var(--_sizes---small-radius); }
 .mello-coffee .menu-link:is(:hover,:focus-visible,[aria-current="page"]) { background: var(--accent); color: var(--mello-accent-ink); }
 .mello-coffee .menu-link .link-background { background: transparent; }

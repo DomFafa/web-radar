@@ -37,7 +37,8 @@ try {
       const issues = [];
       for (const row of document.querySelectorAll('.menu-item,.text-and-volume-wrapper')) {
         const label = row.querySelector('p'), prices = row.querySelector('.volumes-wrapper');
-        if (label && prices && (rect(label).right > rect(prices).left + 1 || rect(prices).right > rect(row).right + 1)) issues.push(row.textContent.trim());
+        const columns = [label, ...row.querySelectorAll('.volume-text')].filter(Boolean);
+        if (columns.some((el, index) => el.scrollWidth > el.clientWidth + 1 || rect(el).right > rect(row).right + 1 || (index && rect(columns[index-1]).right > rect(el).left + 1))) issues.push(row.textContent.trim());
       }
       const image = document.querySelector('.hero-image > .image');
       const annotations = [...document.querySelectorAll('.hero-image > .product,.hero-image > .quality-badge')];
