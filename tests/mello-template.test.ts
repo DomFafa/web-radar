@@ -6,6 +6,7 @@ import { getTemplateGuide } from '../src/worker/template-guides/catalog';
 import { getMaterialsTemplate } from '../src/templates/materials';
 import { materialsDemoDraft } from '../src/worker/template-guides/materials-demo';
 import { newBanner } from '../src/shared/banner-config';
+import { parse, type DefaultTreeAdapterMap } from 'parse5';
 
 const customer = () => ({
   ...defaultDraft(),
@@ -119,6 +120,21 @@ describe('Mello Coffee integrated template', () => {
     const contact = renderSite(customer(), { ...opts, page: 'contact', productId: 'iced-matcha' });
     expect(contact).toContain('value="iced-matcha" selected');
     expect(contact).toContain('type="submit" disabled');
+  });
+
+  it('offers the main image and every unique supplemental view as accessible gallery controls', () => {
+    const draft = customer();
+    draft.products[0].gallery.unshift({ assetId: 'matcha-photo', sourceImageId: 'matcha-photo', kind: 'detail', caption: 'Duplicate main' });
+    const html = renderSite(draft, { ...opts, page: 'detail', productId: 'iced-matcha' });
+    const buttons: Array<Record<string, string>> = [];
+    const visit = (node: DefaultTreeAdapterMap['node']) => {
+      if ('attrs' in node && node.attrs.some(a => a.name === 'data-wr-material-thumb')) buttons.push(Object.fromEntries(node.attrs.map(a => [a.name, a.value])));
+      if ('childNodes' in node) node.childNodes.forEach(visit);
+    };
+    parse(html).childNodes.forEach(visit);
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0]).toMatchObject({ type: 'button', 'aria-pressed': 'true', 'aria-label': 'Iced Strawberry Matcha' });
+    expect(buttons[1]).toMatchObject({ type: 'button', 'aria-pressed': 'false', 'aria-label': 'Fresh strawberry puree layer' });
   });
 
   it('exports full site with absolute local resource origins', () => {

@@ -943,6 +943,8 @@ export function renderMelloPage(ctx: ThemeContext): string {
       const tp = translateProduct(p);
       const imgUrl = asset(p.imageAssetId) || base + '6a75afbad8015a210ca48519_Cold matcha.avif';
       const gallery = (p.gallery || []).filter(g => asset(g.assetId));
+      const galleryImages = [{ src: imgUrl, alt: tp.name }, ...gallery.map(g => ({ src: asset(g.assetId), alt: g.caption || tp.name }))]
+        .filter((image, index, images) => images.findIndex(candidate => candidate.src === image.src) === index);
       mainContent = `
         <section class="section top-padd" data-wr-hero>
           <div class="w-layout-blockcontainer container w-container">
@@ -952,10 +954,12 @@ export function renderMelloPage(ctx: ThemeContext): string {
             <div class="mello-detail-grid">
               <div class="mello-detail-image">
                 <img id="wr-detail-main-img" src="${esc(imgUrl)}" alt="${esc(tp.name)}" fetchpriority="high">
-                ${gallery.length ? `
-                  <div class="mello-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:12px;margin-top:16px">
-                    ${gallery.map(g => `
-                      <img src="${esc(asset(g.assetId))}" alt="${esc(g.caption || tp.name)}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:2px solid var(--black);cursor:pointer" loading="lazy">
+                ${galleryImages.length > 1 ? `
+                  <div class="mello-gallery senseng-detail-thumbs">
+                    ${galleryImages.map((image, index) => `
+                      <button type="button" class="mello-gallery-thumb${index === 0 ? ' active' : ''}" data-wr-material-thumb aria-label="${esc(image.alt)}" aria-pressed="${index === 0}">
+                        <img src="${esc(image.src)}" alt="${esc(image.alt)}" loading="lazy">
+                      </button>
                     `).join('')}
                   </div>
                 ` : ''}

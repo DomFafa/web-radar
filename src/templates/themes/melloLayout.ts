@@ -2,6 +2,11 @@
 export const melloLayoutStyles = `
 .mello-coffee { --mello-accent-ink: #17261c; --mello-accent-icon: none; }
 .mello-coffee .pg-skip:not(:focus) { clip-path: inset(50%); }
+.mello-coffee .mello-gallery { display: grid; grid-template-columns: repeat(auto-fill,minmax(72px,1fr)); gap: 10px; margin: 0; padding: 14px; background: var(--white); }
+.mello-coffee .mello-gallery-thumb { display: block; min-width: 0; padding: 4px; border: 2px solid var(--black-opacity--10); border-radius: 10px; background: #fff; cursor: pointer; overflow: hidden; }
+.mello-coffee .mello-gallery-thumb.active { border-color: var(--black); box-shadow: 0 0 0 1px var(--black); }
+.mello-coffee .mello-gallery-thumb:focus-visible { outline: 3px solid var(--black); outline-offset: 3px; }
+.mello-coffee .mello-gallery-thumb img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; }
 .mello-coffee .menu-info { display: block; width: 100%; }
 .mello-coffee .menu-categories { width: 100%; min-width: 0; }
 .mello-coffee .menu-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 64px; }

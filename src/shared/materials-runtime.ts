@@ -22,7 +22,10 @@ export function materialsRuntime(){
       main.src=src;
       if(image?.alt)main.alt=image.alt;
       if(image?.style?.cssText)main.style.cssText=image.style.cssText;
-      buttons.forEach((button,i)=>button.classList.toggle('active',i===current));
+      buttons.forEach((button,i)=>{
+        button.classList.toggle('active',i===current);
+        button.setAttribute('aria-pressed',String(i===current));
+      });
     };
     buttons.forEach((button,i)=>{
       button.addEventListener('click',()=>show(i));
@@ -35,4 +38,3 @@ export function materialsRuntime(){
     arrows[1]?.addEventListener('click',()=>show(current+1));
   });
 }
-

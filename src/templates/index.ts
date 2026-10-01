@@ -118,7 +118,7 @@ function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const normalized = html.includes('<script>') && !html.includes('var __name')
     ? html.replace('<script>', '<script>var __name=(value)=>value;')
     : html;
-  return draft.materials
+  return draft.materials || draft.template === 'mello-coffee'
     ? normalized.replace('</body>', `<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`)
     : normalized;
 }
