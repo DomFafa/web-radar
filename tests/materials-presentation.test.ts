@@ -404,7 +404,7 @@ describe('explicit display group draft metadata', () => {
   });
 });
 
-it.each(Object.keys(templateMediaRequirements).filter(id => !id.startsWith('single-') && !['toorun-early-learning','good-boy-pals','mello-coffee','papernote','lumi-business','pawfect-groom'].includes(id)))('%s restores confirmed About copy in old drafts without changing their contract', async template => {
+it.each(Object.keys(templateMediaRequirements).filter(id => !id.startsWith('single-') && !['careflow-healthcare','toorun-early-learning','good-boy-pals','mello-coffee','papernote','lumi-business','pawfect-groom'].includes(id)))('%s restores confirmed About copy in old drafts without changing their contract', async template => {
   const revision = `2026-09-19.${template}-materials.1`;
   const draft = await fixture(template, 2, revision);
   Object.assign(draft.company, {description: '', targetMarkets: '', customerTypes: '', cooperationProcess: ''});

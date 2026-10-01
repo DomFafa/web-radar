@@ -9,9 +9,9 @@ import {createHash} from 'node:crypto';
 import typedManifest from '../docs/materials-requirements/typed-2026-09-19.json';
 import {newBanner} from '../src/shared/banner-config';
 
-// Lumi owns a native renderer and contract; its variants are covered by lumi-template,
+// Lumi and Careflow own native renderers/contracts, covered by their template tests,
 // the common materials handoff/presentation tests and the native-gallery browser check.
-const typedTemplates = Object.keys(templateMediaRequirements).filter(id => id !== 'lumi-business');
+const typedTemplates = Object.keys(templateMediaRequirements).filter(id => !['lumi-business','careflow-healthcare'].includes(id));
 
 function fixture(id:string,count=2):Draft {
   const contract=getTypedMaterialsTemplate(id)!;

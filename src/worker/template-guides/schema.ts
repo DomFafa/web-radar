@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const guideIds = [
+  'careflow-healthcare',
   'toorun-early-learning',
   'lumi-business',
   'pawfect-groom',

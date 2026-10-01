@@ -1,0 +1,23 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="mask0_15991_30289" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="60" height="60">
+<circle cx="30" cy="30" r="30" fill="#F7F7F8"/>
+</mask>
+<g mask="url(#mask0_15991_30289)">
+<circle cx="30" cy="30" r="30" fill="#EBF4FF"/>
+<g filter="url(#filter0_f_15991_30289)">
+<circle cx="31.2553" cy="75.8115" r="61.5545" transform="rotate(28.4918 31.2553 75.8115)" fill="#CCE6FF"/>
+</g>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M34.8439 17.1249C35.5938 16.375 36.8096 16.375 37.5594 17.1249L42.8751 22.4406C43.625 23.1905 43.625 24.4063 42.8751 25.1562C42.1253 25.906 40.9094 25.906 40.1596 25.1562L38.8594 23.856L36.259 26.4564L41.1028 31.3C41.8526 32.0499 41.8526 33.2657 41.1028 34.0156C40.3527 34.7654 39.137 34.7654 38.387 34.0156L36.4219 32.0502L29.8171 38.7872L29.8108 38.7937C29.3926 39.2125 28.8958 39.5447 28.3491 39.7713C27.8023 39.9979 27.2162 40.1146 26.6243 40.1146C26.0325 40.1146 25.4464 39.9979 24.8996 39.7713C24.4585 39.5885 24.05 39.3369 23.6889 39.0266L19.8405 42.8749C19.0906 43.6248 17.8748 43.6248 17.1249 42.8749C16.375 42.1251 16.375 40.9092 17.1249 40.1594L20.9733 36.3111C20.6629 35.9499 20.4113 35.5413 20.2284 35.1001C20.0018 34.5533 19.8851 33.9672 19.8851 33.3754C19.8851 32.7835 20.0018 32.1974 20.2284 31.6506C20.4551 31.1039 20.7873 30.6072 21.206 30.1889L21.2124 30.1825L27.9495 23.5779L25.9839 21.6124C25.2341 20.8625 25.2341 19.6467 25.9839 18.8968C26.7338 18.1469 27.9496 18.1469 28.6995 18.8968L33.5435 23.7408L36.1438 21.1404L34.8439 19.8405C34.094 19.0906 34.094 17.8748 34.8439 17.1249Z" fill="url(#paint0_linear_15991_30289)"/>
+</g>
+<defs>
+<filter id="filter0_f_15991_30289" x="-67.345" y="-22.7893" width="197.202" height="197.202" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="18.5172" result="effect1_foregroundBlur_15991_30289"/>
+</filter>
+<linearGradient id="paint0_linear_15991_30289" x1="30" y1="16.5625" x2="30" y2="43.4373" gradientUnits="userSpaceOnUse">
+<stop stop-color="#629DEC"/>
+<stop offset="1" stop-color="#1D6BD2"/>
+</linearGradient>
+</defs>
+</svg>

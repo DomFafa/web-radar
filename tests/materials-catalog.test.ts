@@ -23,7 +23,7 @@ describe('lightweight materials discovery', () => {
   it('advertises exact matching requirements without downloading full contracts', async () => {
     const response = await get('/materials/catalog');
     const catalog = await response.json() as any;
-    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     expect(catalog.catalogRevision).toBe(await sha256(JSON.stringify(catalog.templates)));
     expect(response.headers.get('ETag')).toBe(`"${catalog.catalogRevision}"`);
     for (const entry of catalog.templates) {

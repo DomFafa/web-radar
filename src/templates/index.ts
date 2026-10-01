@@ -1,3 +1,4 @@
+import { renderCareflowSite } from './themes/careflowHealthcare';
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
@@ -105,6 +106,7 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  if(draft.template === 'careflow-healthcare')return withBanner(withFavicon(renderCareflowSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
@@ -542,9 +544,13 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template) || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee' || draft.template === 'toorun-early-learning') {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'careflow-healthcare' || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee' || draft.template === 'toorun-early-learning') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee|toorun-early-learning)\//g, `$1${mediaOrigin}/templates/$2/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(careflow|single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee|toorun-early-learning)\//g, `$1${mediaOrigin}/templates/$2/`);
+    // srcset candidates after the first image are comma-separated rather than quoted.
+    if (draft.template === 'careflow-healthcare') {
+      for (const key of Object.keys(files)) files[key] = files[key].replace(/(,\s*)\/templates\/careflow\//g, `$1${mediaOrigin}/templates/careflow/`);
+    }
   }
   return files;
 }

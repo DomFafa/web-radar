@@ -86,7 +86,7 @@ it.each(Object.keys(templateMediaRequirements))(
     ]);
     expect(images(output)).toEqual(images(baseline));
     expect(nodes(output).filter((n) => n.tagName === 'h1')).toHaveLength(1);
-    expect(nodes(output).some((n) => attr(n, 'data-wr-mobile-menu') !== undefined || attr(n, 'data-lumi-mobile-menu') !== undefined)).toBe(true);
+    expect(nodes(output).some((n) => attr(n, 'data-wr-mobile-menu') !== undefined || attr(n, 'data-lumi-mobile-menu') !== undefined || attr(n, 'data-careflow-menu') !== undefined)).toBe(true);
     expect(saved.materials).toEqual(original.materials);
     expect(draft).toEqual(original);
   },

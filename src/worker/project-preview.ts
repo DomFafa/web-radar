@@ -1,3 +1,4 @@
+import { careflowRuntime } from '../templates/themes/careflow/runtime';
 import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
 import { lumiRuntime } from '../templates/themes/lumi/runtime';
 import { isSingleProductTemplate, singleProductRuntime } from '../templates/themes/singleProduct';
@@ -51,6 +52,7 @@ export const projectPreviewRuntime = `(()=>{
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
   const runtime = releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;
   if (draft.template === 'good-boy-pals') return runtime + '\n;(' + goodBoyRuntime.toString() + ')();';
+  if (draft.template === 'careflow-healthcare') return runtime + '\n;(' + careflowRuntime.toString() + ')();';
   if (draft.template === 'lumi-business') return runtime + '\n;(' + lumiRuntime.toString() + ')();';
   return isSingleProductTemplate(draft.template) ? runtime + '\n' + singleProductRuntime : runtime;
 }

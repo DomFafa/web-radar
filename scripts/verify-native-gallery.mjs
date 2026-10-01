@@ -31,7 +31,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch(process.platform === 'darwin' ? { channel: 'chrome' } : {});
 let cases = 0;
 try {
-  for (const template of ['lumi-business','papernote','pawfect-groom']) {
+  for (const template of ['careflow-healthcare','lumi-business','papernote','pawfect-groom']) {
     const input = await typedMaterialsFixture(template, 2);
     const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(asset => [asset.id, { id:asset.id }])));
     for (const materials of [draft.materials, undefined]) {

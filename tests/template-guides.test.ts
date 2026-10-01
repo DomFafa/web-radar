@@ -38,11 +38,11 @@ beforeEach(() => {
 
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
-    expect(TEMPLATES.map(template => template.id).sort()).toEqual(['good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(TEMPLATES.map(template => template.id).sort()).toEqual(['careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     for (const template of TEMPLATES) expect(guideIds).toContain(template.id);
     expect([...guideIds].sort()).toEqual(Object.keys(templateMediaRequirements).sort());
-    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(56);
-    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(56);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(57);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(57);
   });
   it('requires a matching confirmed-materials contract for every registered template', () => {
     for (const template of TEMPLATES) {
@@ -75,12 +75,12 @@ describe('versioned internal template documents', () => {
     (guide) => {
       expect(guideSchema.safeParse(guide).success).toBe(true);
       const summary = templateMediaRequirements[guide.templateId]!;
-      expect(guide.revision).toBe(['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
+      expect(guide.revision).toBe(guide.templateId==='careflow-healthcare'?'2026-10-01.1':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
       const [, width, height] = summary.bannerSize.match(/^(\d+)\s*×\s*(\d+)/)!;
-      expect(guide.assets.find(asset => asset.id === 'hero-image')!.dimensions).toEqual({ width: Number(width), height: Number(height) });
+      expect(guide.assets.find(asset => asset.id === (guide.templateId==='careflow-healthcare'?'home-hero':'hero-image'))!.dimensions).toEqual({ width: Number(width), height: Number(height) });
       expect(guide.inventory.bundledVideoCount).toBe(summary.videos);
       expect(guide.inventory.recommendedDistinctProductImages).toBe(summary.productCount);
-      expect(guide.layoutImageSlots.length).toBe(summary.productCount);
+      expect(guide.layoutImageSlots.length).toBe(guide.templateId==='careflow-healthcare'?16:summary.productCount);
       if (guide.templateId in referenceLayouts) {
         const layout = referenceLayouts[guide.templateId as keyof typeof referenceLayouts];
         expect(
@@ -105,7 +105,7 @@ describe('versioned internal template documents', () => {
         }
       }
       expect(guide.textSlots.some((t) => t.id === 'hero-headline')).toBe(true);
-      expect(guide.textSlots.some((t) => t.id === 'seo-description')).toBe(true);
+      expect(guide.textSlots.some((t) => t.id === (guide.templateId==='careflow-healthcare'?'home-seo-description':'seo-description'))).toBe(true);
       const md = guideMarkdown(guide);
       for (const asset of guide.assets) expect(md).toContain(asset.promptTemplate);
       for (const slot of guide.textSlots) expect(md).toContain(slot.promptTemplate);
@@ -119,14 +119,14 @@ describe('versioned internal template documents', () => {
   );
 });
 describe('read-only guide API', () => {
-  it('lists only the nine selectable documents and returns matching JSON, Markdown and schema', async () => {
+  it('lists only the ten selectable documents and returns matching JSON, Markdown and schema', async () => {
     const list = await get();
     expect(list.status).toBe(200);
     expect(list.headers.get('cache-control')).toBe('no-store');
     expect(list.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const catalog = (await list.json()) as any;
-    expect(catalog.total).toBe(9);
-    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(catalog.total).toBe(10);
+    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     for (const item of catalog.templates) {
       const res = await get('/' + item.templateId);
       expect(res.status).toBe(200);

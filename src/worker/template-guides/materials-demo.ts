@@ -13,6 +13,7 @@ import { typedMaterialsDemoDraft } from './materials-typed-demo';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(profile.templateId==='careflow-healthcare'){const draft=defaultDraft();draft.template='careflow-healthcare';draft.company.name='Careflow';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#6197de';return draft;}
   if(profile.templateId==='toorun-early-learning') {
     const draft=defaultDraft();draft.template='toorun-early-learning';draft.company.name='Toorun Early Learning';draft.company.email='demo@example.invalid';draft.company.description='A welcoming example of play-based early learning for children and families.';draft.languages=lang==='en'?['en']:['en',lang];draft.products=toorunExamplePrograms();draft.primaryProductId=draft.products[0].id;draft.brandColor='#3f6b52';draft.copy.en={headline:'Building Strong Foundations For Lifelong Learning',subtitle:'Thoughtful early learning experiences that help children build confidence, curiosity and everyday skills.',cta:'Explore programs',about:draft.company.description};return draft;
   }

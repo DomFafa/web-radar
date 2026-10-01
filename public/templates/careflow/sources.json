@@ -1,0 +1,609 @@
+{
+  "reference": "https://careflowtemplate.webflow.io/home-pages/home-v1",
+  "capturedAt": "2026-10-01",
+  "pages": [
+    "/home-pages/home-v1",
+    "/service-pages/services",
+    "/services/cardiology-consultations",
+    "/company-pages/about",
+    "/contact-pages/contact-v1"
+  ],
+  "assets": [
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dbf57a706522ab4c568f2_line-rounded-icon-font-brix.woff2",
+      "file": "6e045337b065edb4.woff2",
+      "bytes": 41372
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dbf57a706522ab4c568f3_line-squared-icon-font-brix.woff2",
+      "file": "f061aa863951dac7.woff2",
+      "bytes": 30968
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dbf57a706522ab4c568f5_filled-icon-brix.woff2",
+      "file": "a5e14c8f7864e4e8.woff2",
+      "bytes": 25740
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dbf57a706522ab4c56934_check-icon.svg",
+      "file": "07df3b3601c74f73.svg",
+      "bytes": 244
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dbf57a706522ab4c569f3_Social-Media-Icon-Font-Brix.woff",
+      "file": "f79a01f59652fa34.woff",
+      "bytes": 15236
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683de75b5a5b5ddcf3912d94_trust-icon-medicflow-webflow-template.svg",
+      "file": "d8783a96a3535a28.svg",
+      "bytes": 2006
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683de75ba51da2e93659bf18_responsibility-icon-medicflow-webflow-template.svg",
+      "file": "67c81d0fbac8b3a4.svg",
+      "bytes": 1787
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683de75c0c4854e163c7cd0a_collaboration-icon-medicflow-webflow-template.svg",
+      "file": "e77b08fc3a07a89d.svg",
+      "bytes": 3222
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683de75c22e591a15cef8bda_accessibility-icon-medicflow-webflow-template.svg",
+      "file": "40f07f05d97e743e.svg",
+      "bytes": 2684
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683de760879c6a6c70274138_innovation-icon-medicflow-webflow-template.svg",
+      "file": "c7ab8054767bc9a7.svg",
+      "bytes": 2771
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683de760879c6a6c70274149_empathy-icon-medicflow-webflow-template.svg",
+      "file": "67a9e909733db4d1.svg",
+      "bytes": 1757
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0d879c6a6c702a3765_sahara-johnson-patient-stories-medicflow-webflow-template.avif",
+      "file": "e131bea618c1a796.avif",
+      "bytes": 6632
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0da21aa8711ce7c863_matt-johnson-patient-stories-medicflow-webflow-template.avif",
+      "file": "632033e9416e7700.avif",
+      "bytes": 6073
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0e12f7d88bbb6eaef7_sophie-moore-patient-stories-medicflow-webflow-template.avif",
+      "file": "d2d70fbc8d5cf101.avif",
+      "bytes": 6935
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0e6e68e368b11fbef9_avatar-02-review-medicflow-webflow-template.avif",
+      "file": "5c6b989561ddec84.avif",
+      "bytes": 8725
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0e7459919723865171_john-carter-contact-avatar-medicflow-webflow-template.avif",
+      "file": "69a083b4993d53bd.avif",
+      "bytes": 8284
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0e8a6e4f831a52939b_avatar-03-review-medicflow-webflow-template.avif",
+      "file": "cfb3feba449cb490.avif",
+      "bytes": 7881
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0ebb6ae7c82c4fafde_sophie-moore-contact-avatar-medicflow-webflow-template.avif",
+      "file": "7e10e12c2157515a.avif",
+      "bytes": 9478
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0ec18306f368e9416f_derek-johnson-contact-avatar-medicflow-webflow-template.avif",
+      "file": "30b601cdc670f4fe.avif",
+      "bytes": 8177
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683dec0f6df907fa77ee1173_avatar-01-review-medicflow-webflow-template.avif",
+      "file": "9d18c322f8a9b7fd.avif",
+      "bytes": 7148
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f223a67ba97c921bb5776_walking-toward-wellness-medicflow-webflow-template-p-1080.avif",
+      "file": "57ab8d9a27d3b028.avif",
+      "bytes": 32878
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f223a67ba97c921bb5776_walking-toward-wellness-medicflow-webflow-template-p-1600.avif",
+      "file": "bb3848b0f2f4c8e0.avif",
+      "bytes": 57494
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f223a67ba97c921bb5776_walking-toward-wellness-medicflow-webflow-template-p-2000.avif",
+      "file": "8fe96e6fedcbca67.avif",
+      "bytes": 77396
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f223a67ba97c921bb5776_walking-toward-wellness-medicflow-webflow-template-p-500.avif",
+      "file": "2e88e16396d059fb.avif",
+      "bytes": 10743
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f223a67ba97c921bb5776_walking-toward-wellness-medicflow-webflow-template-p-800.avif",
+      "file": "6adb57796dcb5745.avif",
+      "bytes": 21600
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f223a67ba97c921bb5776_walking-toward-wellness-medicflow-webflow-template.avif",
+      "file": "54c37cd4aefe107d.avif",
+      "bytes": 121774
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f2296ca14e34c691e4aa1_star-medicflow-webflow-template.svg",
+      "file": "97ef80b7e4d07ba5.svg",
+      "bytes": 1031
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f2fb30a40fea094e05e25_your-health-his-mission-medicflow-webflow-template-p-500.avif",
+      "file": "512855a6b8ca949b.avif",
+      "bytes": 17618
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f2fb30a40fea094e05e25_your-health-his-mission-medicflow-webflow-template-p-800.avif",
+      "file": "3b7da5b9f9fa4866.avif",
+      "bytes": 33265
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f2fb30a40fea094e05e25_your-health-his-mission-medicflow-webflow-template.avif",
+      "file": "3a12c15e84bdb703.avif",
+      "bytes": 57921
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd90a0ddd54d3edbdd0_los-angeles-map-medicflow-webflow-template-p-1080.avif",
+      "file": "0802ca13fecfe46a.avif",
+      "bytes": 28532
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd90a0ddd54d3edbdd0_los-angeles-map-medicflow-webflow-template-p-1600.avif",
+      "file": "b0fd42fcc0627eac.avif",
+      "bytes": 47976
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd90a0ddd54d3edbdd0_los-angeles-map-medicflow-webflow-template-p-2000.avif",
+      "file": "09b270be63bcc1ec.avif",
+      "bytes": 62257
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd90a0ddd54d3edbdd0_los-angeles-map-medicflow-webflow-template-p-500.avif",
+      "file": "37f62bd39da27507.avif",
+      "bytes": 7408
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd90a0ddd54d3edbdd0_los-angeles-map-medicflow-webflow-template-p-800.avif",
+      "file": "890c88a834adb7fe.avif",
+      "bytes": 17552
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd90a0ddd54d3edbdd0_los-angeles-map-medicflow-webflow-template.avif",
+      "file": "18b5aacb640f6c01.avif",
+      "bytes": 87036
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd93a7291cd4360d5da_play-button-medicflow-webflow-template.svg",
+      "file": "584f0da8df4534e0.svg",
+      "bytes": 531
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd94237099ed4e50767_pediatric-care-medicflow-webflow-template.avif",
+      "file": "c6fdbe3a351ca93d.avif",
+      "bytes": 56222
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd9e46ee656c55dc374_pacient-room-medicflow-webflow-template-p-1080.avif",
+      "file": "250d0b1be7dbfeb9.avif",
+      "bytes": 37244
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd9e46ee656c55dc374_pacient-room-medicflow-webflow-template-p-500.avif",
+      "file": "8fb7674ab96e3df0.avif",
+      "bytes": 14190
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd9e46ee656c55dc374_pacient-room-medicflow-webflow-template-p-800.avif",
+      "file": "d9df5c654aef8f70.avif",
+      "bytes": 26409
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/683f3cd9e46ee656c55dc374_pacient-room-medicflow-webflow-template.avif",
+      "file": "e9fa1e1f3276cee3.avif",
+      "bytes": 57237
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a302d3ac913c65083f_nurse-comforting-an-elderly-patient-medicflow-webflow-template-p-500.avif",
+      "file": "7076ab80aedb113f.avif",
+      "bytes": 15081
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a302d3ac913c65083f_nurse-comforting-an-elderly-patient-medicflow-webflow-template.avif",
+      "file": "6b90df9c6f1f8b5c.avif",
+      "bytes": 39321
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a38e8413c507b63772_doctor-examinig-a-chest-x-ray-medicflow-webflow-template-p-500.avif",
+      "file": "73e8cbf4b95c0f10.avif",
+      "bytes": 13162
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a38e8413c507b63772_doctor-examinig-a-chest-x-ray-medicflow-webflow-template.avif",
+      "file": "4d1a0fc4706f3132.avif",
+      "bytes": 22088
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a3a1be7fb22550fdf5_two-doctor-walking-in-a-hospital-corridor-medicflow-webflow-template-p-500.avif",
+      "file": "52bfd647664c7df7.avif",
+      "bytes": 16384
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a3a1be7fb22550fdf5_two-doctor-walking-in-a-hospital-corridor-medicflow-webflow-template-p-800.avif",
+      "file": "2146fa83ce52563a.avif",
+      "bytes": 29923
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a3a1be7fb22550fdf5_two-doctor-walking-in-a-hospital-corridor-medicflow-webflow-template.avif",
+      "file": "eb22a5b579682f68.avif",
+      "bytes": 48414
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a3d4013911be17eacb_nurse-holding-documents-medicflow-webflow-template-p-500.avif",
+      "file": "2dee0c5d84da130c.avif",
+      "bytes": 10825
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a3d4013911be17eacb_nurse-holding-documents-medicflow-webflow-template.avif",
+      "file": "2eca0f7b3add96a5.avif",
+      "bytes": 26477
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a4f6adaa2ac2f9f9a9_physiotherapist%20-examining-patients-leg-medicflow-webflow-template-p-500.avif",
+      "file": "1618072bbc8e8f70.avif",
+      "bytes": 20443
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840a1a4f6adaa2ac2f9f9a9_physiotherapist%20-examining-patients-leg-medicflow-webflow-template.avif",
+      "file": "e3ddfd0890d5f76c.avif",
+      "bytes": 37816
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abdd8eb66cd9e7c72f94_los-angeles-thumbnail-medicflow-webflow-template-p-1080.avif",
+      "file": "280145318615d7dc.avif",
+      "bytes": 38864
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abdd8eb66cd9e7c72f94_los-angeles-thumbnail-medicflow-webflow-template-p-500.avif",
+      "file": "266499cd703cb07f.avif",
+      "bytes": 9886
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abdd8eb66cd9e7c72f94_los-angeles-thumbnail-medicflow-webflow-template-p-800.avif",
+      "file": "f3eeeb68b3d71fd2.avif",
+      "bytes": 23786
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abdd8eb66cd9e7c72f94_los-angeles-thumbnail-medicflow-webflow-template.avif",
+      "file": "2bdc4ebeaca9676e.avif",
+      "bytes": 80155
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abddc2dab521d1437408_san-francisco-thumbnail-medicflow-webflow-template-p-1080.avif",
+      "file": "3a98c202487f6c24.avif",
+      "bytes": 25037
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abddc2dab521d1437408_san-francisco-thumbnail-medicflow-webflow-template-p-500.avif",
+      "file": "b55f4aa020512438.avif",
+      "bytes": 8588
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abddc2dab521d1437408_san-francisco-thumbnail-medicflow-webflow-template-p-800.avif",
+      "file": "eb5f1f59754f1b6c.avif",
+      "bytes": 16863
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6840abddc2dab521d1437408_san-francisco-thumbnail-medicflow-webflow-template.avif",
+      "file": "9884f06213901ecd.avif",
+      "bytes": 50871
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a8f3cd013d2e065920e0d76_cta-v2-bg-gradient-medicflow-webflow-template.avif",
+      "file": "06f65af8ecb13c60.avif",
+      "bytes": 30211
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a91b9d8ee3b20d605be4f35_check-icon-medicflow-webflow-template.svg",
+      "file": "58208ba84c96daf5.svg",
+      "bytes": 1647
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a989f4b58bfb35d4df051db_testimonials-thumbnail-image-medicflow-webflow-template.avif",
+      "file": "c067b81d9a6573a4.avif",
+      "bytes": 62954
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf116408f423ab6488d_state-of-the-art-facilities-icon-medicflow-webflow-template.avif",
+      "file": "75d1b912edbcd609.avif",
+      "bytes": 9602
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf14cb744f81e7d8e56_24-7-emergency-care-icon-medicflow-webflow-template.avif",
+      "file": "5355a8a9616d209f.avif",
+      "bytes": 10006
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf15a5ff900454a81e1_email-icon-medicflow-webflow-template.avif",
+      "file": "705212eef3502e81.avif",
+      "bytes": 10979
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf1892794f9a4710a91_sterile-operating-theaters-icon-medicflow-webflow-template.avif",
+      "file": "710e55d791c8bb9e.avif",
+      "bytes": 10461
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf18d48ce826860c903_private-rooms-icon-medicflow-webflow-template.avif",
+      "file": "6960129b10b2944b.avif",
+      "bytes": 9692
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf1d6c253a6c84dbe32_mri-and-ct-scan-units-icon-medicflow-webflow-template.avif",
+      "file": "804698c588d9390c.avif",
+      "bytes": 10995
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf1d6c253a6c84dbe35_in-house-laboratories-icon-medicflow-webflow-template.avif",
+      "file": "65d3c689ed6e674b.avif",
+      "bytes": 10205
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf1e37f35384a35a08b_adress-icon-medicflow-webflow-template.avif",
+      "file": "a898214ea14a470e.avif",
+      "bytes": 10010
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf1f033ae3ee0bbdf67_phone-icon-medicflow-webflow-template.avif",
+      "file": "148edbb81cf62d4b.avif",
+      "bytes": 9787
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6a98aaf1f033ae3ee0bbdf6a_years-of-experience-icon-medicflow-webflow-template.avif",
+      "file": "75382a6361280260.avif",
+      "bytes": 11068
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab196cb75c64a75b4af0114_favicon-careflow-webflow-template.png",
+      "file": "04a17aa4bad6942d.png",
+      "bytes": 7201
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab196cb95d29d591af1594f_favicon-careflow-webflow-template.png",
+      "file": "696416a2a156a9f4.png",
+      "bytes": 16769
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab196cbc8af7292783acdc4_favicon-careflow-webflow-template.png",
+      "file": "43f18ae7cb814eaa.png",
+      "bytes": 1533
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab196cbc8af7292783acdc7_favicon-careflow-webflow-template.png",
+      "file": "905e916db5b84a6b.png",
+      "bytes": 855
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab196cbf55d7f207b54c9fe_favicon-careflow-webflow-template.png",
+      "file": "555af060a7a9399c.png",
+      "bytes": 5864
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab2df279a48b25c35c2b579_careflow-webflow-template-logo.svg",
+      "file": "8199358f4c8efb13.svg",
+      "bytes": 7884
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683dbf57a706522ab4c568e9/6ab30b449f92c9b04e50417b_open-graph-careflow-webflow-template.jpg",
+      "file": "3c483c4abc247b5f.jpg",
+      "bytes": 208596
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683df65923731a00127bf425_will-brown-portrait-medicflow-webflow-template.png",
+      "file": "092f41074bb9d78c.png",
+      "bytes": 332691
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683df69d34e3ad8da6486c50_sahara-smith-portrait-medicflow-webflow-template.png",
+      "file": "6315f62af1550850.png",
+      "bytes": 307679
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683df6e1307603d129fe1ef5_dereck-johnson-portrait-medicflow-webflow-template.png",
+      "file": "14934fce8b9b9833.png",
+      "bytes": 311043
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683df70f70f4411dd29bcad4_sophie-moore-portrait-medicflow-webflow-template.png",
+      "file": "699e6667ffa41440.png",
+      "bytes": 288290
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683df75fc28a376a53630656_john-carter-portrait-medicflow-webflow-template.png",
+      "file": "5253b9da983eb94b.png",
+      "bytes": 275226
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc061a55d1332a3c087e_telemedicine-appointments-icon-medicflow-webflow-template.svg",
+      "file": "ad30040042ad91d3.svg",
+      "bytes": 1845
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc0bee0ae48acc2cb339_service-single-medicflow-webflow-template-p-1080.jpg",
+      "file": "e419a5317e8cf297.jpg",
+      "bytes": 69062
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc0bee0ae48acc2cb339_service-single-medicflow-webflow-template-p-500.jpg",
+      "file": "50c8a1d563ff6908.jpg",
+      "bytes": 21406
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc0bee0ae48acc2cb339_service-single-medicflow-webflow-template-p-800.jpg",
+      "file": "d7cf40d803b9e866.jpg",
+      "bytes": 43738
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc0bee0ae48acc2cb339_service-single-medicflow-webflow-template.jpg",
+      "file": "57d4b52f64c9285f.jpg",
+      "bytes": 83887
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc974142c56cdd52e962_about-gallery-01-medicflow-webflow-template.jpg",
+      "file": "a4c64f9639a9beaa.jpg",
+      "bytes": 34725
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfc9ad14d41f9c28eb9d4_about-gallery-02-medicflow-webflow-template.jpg",
+      "file": "0bdd42cd99cd7c4e.jpg",
+      "bytes": 38679
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfcff61451b7872e483d2_post-surgery-follw-up-icon-medicflow-webflow-template.svg",
+      "file": "7f2721e9d9b9748d.svg",
+      "bytes": 2372
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfd25dce6eb76f136a58a_prescription-renewals-icon-medicflow-webflow-template.svg",
+      "file": "ffd289a78f163f68.svg",
+      "bytes": 2090
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfd4172337afd1235be34_radiology-imaging-icon-medicflow-webflow-template.svg",
+      "file": "b9a4db7ede952124.svg",
+      "bytes": 3069
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfd60be5d2151e6fc9195_lab-tests-blood-work-icon-medicflow-webflow-template.svg",
+      "file": "be25087270407e21.svg",
+      "bytes": 1982
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfd7d11b6a91dfa4133df_urgent-care-visits-icon-medicflow-webflow-template.svg",
+      "file": "2cfb9ec4235327f4.svg",
+      "bytes": 2371
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfdd8b06c8a525f03203b_womens-health-icon-medicflow-webflow-template.svg",
+      "file": "a23c21c6c989f493.svg",
+      "bytes": 2843
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfdfb198a1f0135d02e36_gastroenterology-icon-medicflow-webflow-template.svg",
+      "file": "f91fb02ec0c97e1f.svg",
+      "bytes": 1920
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfe3135ca01c448b0e274_orthopedic-consultation-icon-medicflow-webflow-template.svg",
+      "file": "142cf1bc8867aea3.svg",
+      "bytes": 2717
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfe51d54de59d92136185_mental-health-icon-medicflow-webflow-template.svg",
+      "file": "70f53482e7c9d9cf.svg",
+      "bytes": 3637
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfe6d61451b7872e59c14_dermatology-icon-medicflow-webflow-template.svg",
+      "file": "f241f1b4845c1a3b.svg",
+      "bytes": 1648
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfe8c9fc015e57b221a67_cardiology-consultations-icon-medicflow-webflow-template.svg",
+      "file": "ac3bc7b5e8e8bcea.svg",
+      "bytes": 2524
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfeb4b4e1237d69e49561_preventive-health-icon-medicflow-webflow-template.svg",
+      "file": "68534ba1c98cc530.svg",
+      "bytes": 2490
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfedf72337afd1236eb87_pediatric-icon-medicflow-webflow-template.svg",
+      "file": "049326ad0082e79c.svg",
+      "bytes": 4203
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dfef83f3394d771648419_family-medicine-icon-medicflow-webflow-template.svg",
+      "file": "7d12a7f0fe7ef801.svg",
+      "bytes": 2823
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dff12ce95896420853eeb_health-screenings-icon-medicflow-webflow-template.svg",
+      "file": "aca14e421f4572fa.svg",
+      "bytes": 1995
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dff2a5ee8b5803019b0c4_vaccinations-icon-medicflow-webflow-template.svg",
+      "file": "c6964859b80695ff.svg",
+      "bytes": 2326
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683dff44b59ae339c45ab4a4_general-checkups-icon-medicflow-webflow-template.svg",
+      "file": "ff08c939e2e1a9c7.svg",
+      "bytes": 2165
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683e094ae5909f98e75b24fc_mobile-health-apps-explained-16-9-medicflow-webflow-template.jpg",
+      "file": "ed0c9f487e36d3b3.jpg",
+      "bytes": 106806
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/683f43e7bdb05c8537eb5a38_lilly-woods-portrait-medicflow-webflow-template.png",
+      "file": "ff6a252452c7da15.png",
+      "bytes": 306848
+    },
+    {
+      "source": "https://cdn.prod.website-files.com/683df012abd9ba62886152dd/6ab2feed3ccb4a6396297e3e_virtual-doctor-visits-guide-16-9-careflow-webflow-template.jpg",
+      "file": "439380c78b55f545.jpg",
+      "bytes": 139512
+    },
+    {
+      "source": "https://d3e54v103j8qbb.cloudfront.net/static/custom-checkbox-checkmark.589d534424.svg",
+      "file": "5ff0c03f9b15de6e.svg",
+      "bytes": 167
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/intertight/v9/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2mj0QiqXA.ttf",
+      "file": "722ff42d0080d150.ttf",
+      "bytes": 302212
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/intertight/v9/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2mj6AiqXA.ttf",
+      "file": "3ff89d14ef3d3641.ttf",
+      "bytes": 302808
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/intertight/v9/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2mjDw-qXA.ttf",
+      "file": "42aaaf7a68ce5eb5.ttf",
+      "bytes": 298260
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/intertight/v9/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2mjPQ-qXA.ttf",
+      "file": "ba08b16a00221416.ttf",
+      "bytes": 301472
+    },
+    {
+      "source": "https://fonts.gstatic.com/s/intertight/v9/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2mjUQ-qXA.ttf",
+      "file": "1ec94267de47c192.ttf",
+      "bytes": 298720
+    }
+  ],
+  "note": "Public reference images, fonts and styles stored locally. No remote scripts or form integrations are shipped."
+}

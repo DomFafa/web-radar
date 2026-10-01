@@ -13,7 +13,7 @@ import { getMaterialsTemplate } from '../src/templates/materials';
 
 it('keeps retired plugin contracts readable without advertising additional templates', async () => {
   const catalog = await materialsCatalog();
-  expect(catalog.templates.map(t => t.templateId).sort()).toEqual(['good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+  expect(catalog.templates.map(t => t.templateId).sort()).toEqual(['careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
   expect(getMaterialsTemplate('integration-showcase')).toBeDefined();
   expect(getMaterialsTemplate('invalid-plugin')).toBeUndefined();
 });

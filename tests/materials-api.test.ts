@@ -17,9 +17,10 @@ describe('materials guide account boundary',()=>{
   it('allows an ordinary Product Radar account without a Web Radar login and returns a non-publishing demo',async()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
-    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     expect(entries.every((t:any)=>{
       if(['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(t.templateId))return t.contractRevision===`2026-09-20.${t.templateId}-materials.2`&&t.guideRevision==='2026-09-30.1';
+      if(t.templateId==='careflow-healthcare')return t.contractRevision==='2026-10-01.careflow-healthcare-materials.1'&&t.guideRevision==='2026-10-01.1';
       if(t.templateId==='lumi-business')return t.contractRevision==='2026-09-30.lumi-business-materials.1'&&t.guideRevision==='2026-09-30.1';
       return t.contractRevision===`2026-09-23.${t.templateId}-materials.6`&&t.guideRevision===(t.templateId.startsWith('single-')?'2026-09-26.1':'2026-09-20.1');
     })).toBe(true);
@@ -64,7 +65,7 @@ describe('materials guide account boundary',()=>{
     expect((await requirements.json()as any).imagePolicy).toBe('typed-regions-v1');
     for(const page of ['home','catalog','detail','about','contact']){
       const response=await get(`materials/${id}/preview?page=${page}`);expect(response.status,`${id}:${page}`).toBe(200);
-      const body=await response.json()as any;expect(body.demo).toBe(true);expect(body.html.includes(id==='toorun-early-learning'?'Toorun Early Learning':id==='pawfect-groom'?'Pawfect Groom':id==='lumi-business'?'Lumi':id==='papernote'?'PaperNote':id==='mello-coffee'?'Mello Coffee':id==='good-boy-pals'?'Good Boy Supply Co.':id.startsWith('single-')?({'single-device-showcase':'FORM / 01','single-artisan-craft':'ATELIER / ONE','single-wellness-nordic':'STILL / STUDIO'} as Record<string,string>)[id]:'Example Brand')).toBe(true);
+      const body=await response.json()as any;expect(body.demo).toBe(true);expect(body.html.includes(id==='careflow-healthcare'?'Careflow':id==='toorun-early-learning'?'Toorun Early Learning':id==='pawfect-groom'?'Pawfect Groom':id==='lumi-business'?'Lumi':id==='papernote'?'PaperNote':id==='mello-coffee'?'Mello Coffee':id==='good-boy-pals'?'Good Boy Supply Co.':id.startsWith('single-')?({'single-device-showcase':'FORM / 01','single-artisan-craft':'ATELIER / ONE','single-wellness-nordic':'STILL / STUDIO'} as Record<string,string>)[id]:'Example Brand')).toBe(true);
       if(page==='contact')expect(body.html.includes(' disabled')).toBe(true);
     }
   });

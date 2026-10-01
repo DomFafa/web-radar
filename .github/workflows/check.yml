@@ -59,11 +59,14 @@ jobs:
         env:
           DEMO_ALL_PAGES: '1'
       - run: node scripts/verify-native-gallery.mjs
+      - run: node scripts/verify-careflow-template.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: template-demo-regression
-          path: artifacts/materials-demo-release/
+          path: |
+            artifacts/materials-demo-release/
+            artifacts/careflow-browser/
 
   render-quality:
     runs-on: ubuntu-latest
