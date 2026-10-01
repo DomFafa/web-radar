@@ -191,4 +191,8 @@ export const melloLayoutStyles = `
   .mello-coffee .hero-image > .quality-badge { justify-self: start; }
   .mello-coffee .hero-image > .image { grid-row: auto; order: 1; }
 }
+@media (max-width:479px) {
+  .mello-coffee .spot-tabs { grid-template-columns: minmax(0,1fr); }
+  .mello-coffee .spot-tab { flex-direction: row; align-items: baseline; gap: 12px; }
+}
 `;
