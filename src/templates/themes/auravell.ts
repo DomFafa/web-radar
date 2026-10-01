@@ -4,7 +4,7 @@ import { materialsRuntime } from '../../shared/materials-runtime';
 import { buildThemeContext, esc, productPath, safeUrl, type RenderOptions } from './types';
 import { auravellExampleClasses, auravellImages, auravellTexts } from './auravell/inventory';
 import { auravellFixes } from './auravell/styles';
-import { auravellSnapshots, auravellNavigation, auravellFooter } from './auravell/snapshots';
+import { auravellSnapshots, getAuravellNavigation, getAuravellFooter } from './auravell/snapshots';
 import { referenceMotionStyles } from './reference-motion-styles';
 import { referenceMotionRuntime } from './reference-motion';
 import { auravellRuntime } from './auravell/runtime';
@@ -227,7 +227,7 @@ export function renderAuravellSite(input: Draft, options: RenderOptions): string
         </div>
       </section>
     `;
-    mainContent = auravellNavigation + mainContent + auravellFooter;
+    mainContent = getAuravellNavigation() + mainContent + getAuravellFooter();
   }
   if (!demo) {
     for (const key of ['TEAM', 'PARTNERS', 'QUOTE']) mainContent = region(mainContent, key, '');

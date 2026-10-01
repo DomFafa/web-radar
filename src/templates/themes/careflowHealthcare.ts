@@ -3,7 +3,7 @@ import { displayProducts } from '../../shared/product-display';
 import { materialsRuntime } from '../../shared/materials-runtime';
 import { buildThemeContext, esc, productPath, type RenderOptions } from './types';
 import { careflowSnapshots } from './careflow/snapshots';
-import { careflowReferenceStyles } from './careflow/styles';
+import { getCareflowReferenceStyles } from './careflow/styles';
 import { careflowOverrides } from './careflow/overrides';
 import { careflowTexts, careflowExampleServices } from './careflow/inventory';
 import { referenceMotionRuntime } from './reference-motion';
@@ -34,7 +34,7 @@ function ink(background: string): string {
 
 /** Dedicated renderer keeps preview, external materials and publication on the same responsive DOM. */
 export function renderCareflowSite(input: Draft, options: RenderOptions): string {
-  const page = careflowSnapshots[options.page] ? options.page : 'home';
+  const page = Object.hasOwn(careflowSnapshots, options.page) ? options.page : 'home';
   const demo = ['preview', 'materials-demo', 'careflow-demo'].includes(options.projectId);
   const text = (id: string) =>
     input.materials?.textBindings.find((b) => b.slotId === id && b.locale === options.lang)?.text;
@@ -267,5 +267,5 @@ export function renderCareflowSite(input: Draft, options: RenderOptions): string
   const palette = primary
     ? `.careflow-healthcare .primary-button{background:${primary};color:${ink(primary)}}.careflow-healthcare .primary-button *{color:inherit}.careflow-healthcare .cf-thumbs button[aria-pressed=true]{border-color:${primary}}`
     : '';
-  return `<!doctype html><html lang="${esc(options.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${careflowReferenceStyles}\n${careflowOverrides}${referenceMotionStyles}\n${palette}</style></head><body class="careflow-healthcare${draft.materials ? ' wr-materials-site' : ''}" data-template="careflow-healthcare">${options.preview ? '<div class="cf-preview-bar">Private preview · inquiry sending is disabled</div>' : ''}${body}<script>var __name=(value)=>value;(${referenceMotionRuntime.toString()})();(${careflowRuntime.toString()})();(${materialsRuntime.toString()})();</script></body></html>`;
+  return `<!doctype html><html lang="${esc(options.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${getCareflowReferenceStyles()}\n${careflowOverrides}${referenceMotionStyles}\n${palette}</style></head><body class="careflow-healthcare${draft.materials ? ' wr-materials-site' : ''}" data-template="careflow-healthcare">${options.preview ? '<div class="cf-preview-bar">Private preview · inquiry sending is disabled</div>' : ''}${body}<script>var __name=(value)=>value;(${referenceMotionRuntime.toString()})();(${careflowRuntime.toString()})();(${materialsRuntime.toString()})();</script></body></html>`;
 }

@@ -1,4 +1,4 @@
-import { auravellRuntime as legacyAuravellRuntime, careflowRuntime as legacyCareflowRuntime } from '../templates/releases/native-20261001.mjs';
+import { auravellRuntime as legacyAuravellRuntime, careflowRuntime as legacyCareflowRuntime } from '../templates/releases/native-preview-20261001.mjs';
 import { referenceMotionRuntime } from '../templates/themes/reference-motion';
 import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
