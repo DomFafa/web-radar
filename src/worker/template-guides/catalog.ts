@@ -1,3 +1,4 @@
+import auravellGuide from './documents/auravell.json';
 import careflowGuide from './documents/careflow-healthcare.json';
 import toorunGuide from './documents/toorun-early-learning.json';
 import goodBoyGuide from './documents/good-boy-pals.json';
@@ -58,6 +59,7 @@ import guideSingleArtisan from './documents/single-artisan-craft.json';
 import guideSingleWellness from './documents/single-wellness-nordic.json';
 
 const documents = [
+  auravellGuide,
   careflowGuide,
   toorunGuide,
   lumiGuide,

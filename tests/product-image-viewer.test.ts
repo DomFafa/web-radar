@@ -142,7 +142,7 @@ function mainImages(node: Node): DefaultTreeAdapterMap['element'][] {
 }
 
 it.each(Object.keys(templateMediaRequirements))('%s can enlarge the selected product in standalone and confirmed-materials details', async template => {
-  for (const revision of (['toorun-early-learning','good-boy-pals','mello-coffee','papernote','careflow-healthcare','lumi-business','pawfect-groom'].includes(template) ? [undefined] : [undefined, `2026-09-19.${template}-materials.1`])) {
+  for (const revision of (['toorun-early-learning','good-boy-pals','mello-coffee','papernote','careflow-healthcare','lumi-business','pawfect-groom','auravell'].includes(template) ? [undefined] : [undefined, `2026-09-19.${template}-materials.1`])) {
     const input = await typedMaterialsFixture(template, 2, revision);
     const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(m => [m.id, { id: m.id } as Asset])));
     if (template.startsWith('single-')) draft.primaryProductId = 'p1';

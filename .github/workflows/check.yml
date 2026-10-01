@@ -60,6 +60,7 @@ jobs:
           DEMO_ALL_PAGES: '1'
       - run: node scripts/verify-native-gallery.mjs
       - run: node scripts/verify-careflow-template.mjs
+      - run: node scripts/verify-auravell-template.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -67,6 +68,7 @@ jobs:
           path: |
             artifacts/materials-demo-release/
             artifacts/careflow-browser/
+            artifacts/auravell-browser/
 
   render-quality:
     runs-on: ubuntu-latest

@@ -14,6 +14,7 @@ export type ProductSnapshot = import('zod').infer<typeof import('./product-snaps
 export interface ProductGalleryImage { assetId: string; sourceImageId: string; kind: import('zod').infer<typeof import('./product-snapshot').productImageKind>; caption: string }
 export type Language = 'en' | 'de' | 'fr' | 'es' | 'pt' | 'it';
 export type TemplateId =
+  | 'auravell'
   | 'careflow-healthcare'
   | 'toorun-early-learning'
   | 'lumi-business'

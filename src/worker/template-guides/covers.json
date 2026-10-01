@@ -397,5 +397,12 @@
     "width": 1440,
     "height": 1000,
     "contractRevision": "2026-10-01.careflow-healthcare-materials.1"
+  },
+  "auravell": {
+    "url": "/templates/previews/auravell.ef136315db6fe813.jpg",
+    "sha256": "ef136315db6fe813e917881d8be6159e6b9f8ce341833e6bfa3f9a36c9a13f65",
+    "width": 1440,
+    "height": 1000,
+    "contractRevision": "2026-10-01.auravell-materials.1"
   }
 }

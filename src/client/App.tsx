@@ -892,6 +892,9 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                       {project.productCount} 个产品 ·{' '}
                       {
                         ({
+                          auravell: 'Auravell 瑜伽美学生活馆',
+                          'careflow-healthcare': 'Careflow 医疗健康',
+                          'toorun-early-learning': '童趣早教中心',
                           natural: '现代典雅',
                           technology: '先锋科技',
                           explorer: '硬核工业',

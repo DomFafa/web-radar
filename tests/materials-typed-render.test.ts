@@ -9,9 +9,9 @@ import {createHash} from 'node:crypto';
 import typedManifest from '../docs/materials-requirements/typed-2026-09-19.json';
 import {newBanner} from '../src/shared/banner-config';
 
-// Lumi and Careflow own native renderers/contracts, covered by their template tests,
+// Lumi, Careflow and Auravell own native renderers/contracts, covered by their template tests,
 // the common materials handoff/presentation tests and the native-gallery browser check.
-const typedTemplates = Object.keys(templateMediaRequirements).filter(id => !['lumi-business','careflow-healthcare'].includes(id));
+const typedTemplates = Object.keys(templateMediaRequirements).filter(id => !['lumi-business','careflow-healthcare','auravell'].includes(id));
 
 function fixture(id:string,count=2):Draft {
   const contract=getTypedMaterialsTemplate(id)!;

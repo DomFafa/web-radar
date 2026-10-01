@@ -1,5 +1,6 @@
 import { getCareflowMaterialsTemplate } from './themes/careflow/materials';
 import { getLumiMaterialsTemplate } from './themes/lumi/materials';
+import { getAuravellMaterialsTemplate } from './themes/auravell/materials';
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
 import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
@@ -88,6 +89,7 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (id === 'auravell') return getAuravellMaterialsTemplate(revision);
   if (id === 'careflow-healthcare') return getCareflowMaterialsTemplate(revision);
   if (id === 'lumi-business') return getLumiMaterialsTemplate(revision);
   if (['toorun-early-learning', 'good-boy-pals', 'mello-coffee', 'papernote', 'pawfect-groom'].includes(id)) {

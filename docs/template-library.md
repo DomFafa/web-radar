@@ -1,11 +1,19 @@
 # 当前模板库
 
-2026-09-30 起，创建网站和内部 AI 目录只提供：
+2026-10-01：创建网站和内部模板目录共提供 11 套模板。
 
-- Candy Pop & Play (`senseng-candy`)：新项目默认模板。
+- Candy Pop & Play (`senseng-candy`)，新项目默认模板。
 - Immersive Video (`senseng-video`)。
 - Botanical & Forest (`senseng-nature`)。
+- Pawfect Groom (`pawfect-groom`)。
+- Lumi (`lumi-business`)。
+- PaperNote (`papernote`)。
+- Good Boy Supply Co. (`good-boy-pals`)。
+- Mello Coffee & Bakery (`mello-coffee`)。
+- Toorun Early Learning (`toorun-early-learning`)。
+- Careflow Healthcare (`careflow-healthcare`)。
+- Auravell Yoga & Mindful Living (`auravell`)。
 
-其它模板已从选择页面和目录 API 下架。已有项目的模板标识、渲染器、版本化素材合同及资源保留兼容，不批量改写客户网站。旧模板项目进入模板选择页时，需要明确选择上述三套之一才能在该页继续；已有内容仍可预览。
+下架模板的标识、渲染器、冻结素材合同和资源继续兼容已有项目。可选列表集中定义于 `src/shared/template-availability.ts`，模板选择卡片与目录 API 使用同一清单。
 
-可选模板集中定义于 `src/shared/template-availability.ts`。模板选择卡片与目录 API 的测试确保列表一致。
+图片规格、数量和调用方式见 [模板 API 文档](template-guides-api.md)。

@@ -1,3 +1,5 @@
+import { auravellPages } from '../shared/auravell-pages';
+import { renderAuravellSite } from './themes/auravell';
 import { renderCareflowSite } from './themes/careflowHealthcare';
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
@@ -106,6 +108,7 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  if(draft.template === 'auravell')return withBanner(withFavicon(renderAuravellSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'careflow-healthcare')return withBanner(withFavicon(renderCareflowSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
@@ -527,7 +530,7 @@ export function renderSiteFiles(
   draft = singleProductDraft(draft);
   const files: Record<string, string> = {};
   for (const lang of draft.languages) {
-    for (const page of (draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
+    for (const page of (draft.template === 'auravell' ? auravellPages.filter(p => p !== 'detail') : draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
       files[`${lang}/${page === 'home' ? 'index.html' : `${page}/index.html`}`] = renderSite(
         draft,
         { ...options, lang, page },
@@ -544,12 +547,12 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template) || draft.template === 'careflow-healthcare' || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee' || draft.template === 'toorun-early-learning') {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'careflow-healthcare' || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee' || draft.template === 'toorun-early-learning' || draft.template === 'auravell') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(careflow|single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee|toorun-early-learning)\//g, `$1${mediaOrigin}/templates/$2/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(auravell|careflow|single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee|toorun-early-learning)\//g, `$1${mediaOrigin}/templates/$2/`);
     // srcset candidates after the first image are comma-separated rather than quoted.
-    if (draft.template === 'careflow-healthcare') {
-      for (const key of Object.keys(files)) files[key] = files[key].replace(/(,\s*)\/templates\/careflow\//g, `$1${mediaOrigin}/templates/careflow/`);
+    if (draft.template === 'careflow-healthcare' || draft.template === 'auravell') {
+      for (const key of Object.keys(files)) files[key] = files[key].replace(/(,\s*)\/templates\/(auravell|careflow)\//g, `$1${mediaOrigin}/templates/$2/`);
     }
   }
   return files;

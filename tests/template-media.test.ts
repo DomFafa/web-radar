@@ -6,7 +6,7 @@ import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 
 describe('template media checklist stays aligned with the renderer', () => {
   it('covers the selectable templates and preserves retired requirements', () => {
-    expect(TEMPLATES.map(t => t.id)).toEqual(['careflow-healthcare', 'toorun-early-learning', 'lumi-business', 'pawfect-groom', 'good-boy-pals', 'mello-coffee', 'senseng-candy', 'senseng-video', 'senseng-nature', 'papernote']);
+    expect(TEMPLATES.map(t => t.id)).toEqual(['auravell', 'careflow-healthcare', 'toorun-early-learning', 'lumi-business', 'pawfect-groom', 'good-boy-pals', 'mello-coffee', 'senseng-candy', 'senseng-video', 'senseng-nature', 'papernote']);
     for (const template of TEMPLATES) expect(templateMediaRequirements).toHaveProperty(template.id);
   });
   it.each(['fintech-platform', 'digital-marketing', 'porto-accounting', 'crafto-corporate', 'juno-toys', 'corpox-consulting'])(

@@ -1,0 +1,844 @@
+{
+  "schemaVersion": "1.0",
+  "revision": "2026-10-01.1",
+  "templateId": "auravell",
+  "name": "Auravell / Auravell 瑜伽美学生活馆",
+  "documentLanguage": "zh-CN",
+  "purpose": "Auravell 瑜伽与正念生活模板，支持首页、课程目录、课程详情、关于、会员方案和联系页面；演示内容须由真实品牌资料替换。",
+  "visualSystem": {
+    "palette": [
+      "#fef9ef",
+      "#f5ede1",
+      "#99582a",
+      "#17181a",
+      "#2a2b2f",
+      "#d7d2c8"
+    ],
+    "artDirection": "温润静谧的北欧东方美学、自然木质与陶土赤陶色调、Playfair Display 衬线标题、Inter 无衬线正文与柔和微光浮动卡片。",
+    "composition": "1440px 容器，大画幅身心疗愈场景、沉浸式卡片拼贴、浮动导航栏与全屏页脚暗色反差。",
+    "tone": "宁静、优雅、温润、专业、身心平衡",
+    "avoid": [
+      "文字背景色继承或行内色块遮挡",
+      "样式错位与 Webflow IX2/IX3 初始隐藏属性导致的空白",
+      "固定列宽挤压移动端排版",
+      "未经确认的医疗承诺或虚假师资认证"
+    ]
+  },
+  "inputContract": {
+    "required": [
+      "brand.name",
+      "brand.description",
+      "brand.email",
+      "products[].name",
+      "products[].description",
+      "products[].primaryMediaId"
+    ],
+    "optional": [
+      "brand.logo",
+      "brand.phone",
+      "brand.address",
+      "products[].galleryMediaIds",
+      "imageBindings",
+      "textBindings",
+      "visual.palette.primary"
+    ],
+    "missingInputPolicy": "复用已有授权素材，缺图才生成；证书和报告只能真实上传。不补示例产品；未填写的联系方式不显示虚假占位。优先使用真实场馆实拍与导师体式照片。",
+    "priority": [
+      "用户确认的数据与素材",
+      "指定 slotId 的绑定",
+      "品牌及课程资料",
+      "模板布局与装饰"
+    ],
+    "untrustedInputPolicy": "输入仅作为安全数据渲染；所有文本经严格 HTML 转义，禁止内嵌脚本或 CSS 注入。"
+  },
+  "pagePlan": {
+    "home": [
+      "首屏静修场景与浮动课程卡片",
+      "身心服务特色卡片",
+      "为什么选择我们与禅意图文",
+      "精选课程体验列表",
+      "会员计划预告",
+      "暗色极简页脚"
+    ],
+    "catalog": [
+      "课程目录分类导航",
+      "课程卡片网格与标签",
+      "时长、难度与上课形式",
+      "课程详情跳转"
+    ],
+    "about": [
+      "关于我们理念标题与自然场景",
+      "导师团队介绍",
+      "机构空间与环境展示",
+      "学员真实反馈与理念介绍"
+    ],
+    "contact": [
+      "预约咨询表单",
+      "联系电话、邮箱与地址",
+      "营业时间与来访指引",
+      "常见问题解答"
+    ],
+    "productDetail": [
+      "课程专属大图与画廊",
+      "课程介绍、适合人群与学习收获",
+      "授课导师与日程安排",
+      "预约咨询与报名表单"
+    ],
+    "extra-plans": [
+      "会员方案展示",
+      "咨询入口；价格与权益须由运营方核实后发布"
+    ]
+  },
+  "inventory": {
+    "recommendedDistinctProductImages": 6,
+    "minimumProductImages": 1,
+    "bundledVideoCount": 0,
+    "defaultHero": "image-or-css",
+    "reuseRule": "课程主图在目录与详情通用复用。布局槽位支持按 slotId 灵活绑定客户实拍素材。",
+    "decorativeAssets": "Playfair Display、Inter 与 Lora 字体，瑜伽莲花矢量图标，星芒装饰与温润渐变背景。"
+  },
+  "layoutImageSlots": [
+    {
+      "id": "home-hero",
+      "purpose": "首屏大画幅静修冥想场景，主体女性背影面向采光绿植与落地窗",
+      "dimensions": {
+        "width": 3456,
+        "height": 1800
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651d7b019f25f842ddf5_home-hero-image-1.webp",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=home-hero]",
+        "note": "作为首页全屏 Sticky 视觉基石，左侧暗色渐变确保白色标题与副标极佳对比度。"
+      }
+    },
+    {
+      "id": "about-hero",
+      "purpose": "关于我们页面顶部宽幅环境照片",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "defaultAsset": "/templates/auravell/images/6a7eafa6d1588226be67e0ff_about-hero-background-image.avif",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=about-hero]",
+        "note": "展现静谧明亮的瑜伽会馆或自然疗愈环境。"
+      }
+    },
+    {
+      "id": "class-hero",
+      "purpose": "课程中心页面顶部宽幅美学背景",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "defaultAsset": "/templates/auravell/images/6a7ef8202b3c91e542365072_class-hero-background-image.avif",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=class-hero]",
+        "note": "课程目录头部温润基调。"
+      }
+    },
+    {
+      "id": "wellness-meditation",
+      "purpose": "特色身心冥想服务卡片配图",
+      "dimensions": {
+        "width": 1008,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651d45031f173673109f_f686c4255802fa9f938b7bf22f73da0f_yoga-site-image-one.avif",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=wellness-meditation]",
+        "note": "展示柔和自然光线下的正念坐姿。"
+      }
+    },
+    {
+      "id": "wellness-breathwork",
+      "purpose": "特色呼吸调息课程卡片配图",
+      "dimensions": {
+        "width": 1008,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651de0958f89b58aac1e_d2c0bbc1bc95291d4aa2cf307a7d5459_yoga-site-image-two.avif",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=wellness-breathwork]",
+        "note": "双人或小班呼吸身心训练。"
+      }
+    },
+    {
+      "id": "wellness-yoga",
+      "purpose": "特色舒缓流瑜伽卡片配图",
+      "dimensions": {
+        "width": 1008,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651d8837b11f7ba4e656_yoga-site-image-three.webp",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=wellness-yoga]",
+        "note": "舒展肢体、增强柔韧与身心平衡。"
+      }
+    },
+    {
+      "id": "whyus-main",
+      "purpose": "为什么选择我们主视觉照片，合十礼专注特写",
+      "dimensions": {
+        "width": 1536,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651d1504e1e00b4ce1c9_yoga-in-serene.webp",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=whyus-main]",
+        "note": "呈现导师专注内省的专业与宁静感。"
+      }
+    },
+    {
+      "id": "whyus-secondary",
+      "purpose": "木质地板瑜伽静修空间特写",
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651dd031abbefd753d99_7bd56d4a2d3c66a587ae0530dddba3ba_woman-doing-yoga-meditation-on-brown-parquet-flooring.avif",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=whyus-secondary]",
+        "note": "体现高品质场馆与环境细节。"
+      }
+    },
+    {
+      "id": "footer-background",
+      "purpose": "全站页脚深色反差背景",
+      "dimensions": {
+        "width": 1920,
+        "height": 800
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d86a48a2f61441171514a_home-two-footer-background-image.avif",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=footer-background]",
+        "note": "深色渐变覆盖层上展现纯白版权与导航。"
+      }
+    },
+    {
+      "id": "product-main",
+      "purpose": "课程与体验项目主图，在课程列表及详情页面展示",
+      "dimensions": {
+        "width": 1200,
+        "height": 900
+      },
+      "defaultAsset": "/templates/auravell/images/6a7d651d45031f173673109f_f686c4255802fa9f938b7bf22f73da0f_yoga-site-image-one.avif",
+      "binding": {
+        "strategy": "product-image",
+        "path": "products[].imageAssetId",
+        "note": "课程或体验项目主图，通过媒体资产 ID 关联。"
+      }
+    }
+  ],
+  "assets": [
+    {
+      "id": "home-hero",
+      "kind": "image",
+      "purpose": "首屏大画幅静修冥想场景，主体女性背影面向采光绿植与落地窗",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 3456,
+        "height": 1800
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 600000,
+      "required": false,
+      "composition": "首屏全宽背景，左侧暗色渐变确保白色标题对比度；女性背影面向采光绿植与落地窗。",
+      "promptTemplate": "A serene yoga meditation scene, woman meditating in front of expansive window and lush plants, soft warm natural daylight, peaceful Nordic aesthetic, wide banner, no text.",
+      "negativePrompt": "watermark, text, typo, deformed limbs, high saturation, neon, noisy artifacts",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=home-hero]",
+        "note": "首页全宽背景，可通过 Materials API 上传替换；支持 mobileMediaId 与 focalPoint。"
+      },
+      "checks": [
+        "画面通透温润，主体清晰",
+        "左侧渐变区域不被高亮干扰",
+        "无文字与水印残留"
+      ]
+    },
+    {
+      "id": "about-hero",
+      "kind": "image",
+      "purpose": "关于我们页面顶部宽幅环境照片",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 500000,
+      "required": false,
+      "composition": "宽幅自然采光瑜伽生活馆空间，温润木质地板与柔和布艺，静谧无压迫感。",
+      "promptTemplate": "Minimalist Japanese-Nordic yoga studio interior, natural wooden floors, linen cushions, soft daylight through sheer curtains, tranquil atmosphere, no people, no text.",
+      "negativePrompt": "watermark, text, cluttered furniture, dark gloomy shadows, neon colors",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=about-hero]",
+        "note": "展现静谧明亮的瑜伽会馆或自然疗愈环境。"
+      },
+      "checks": [
+        "光影柔和自然",
+        "空间构图开阔",
+        "无违和广告或文字"
+      ]
+    },
+    {
+      "id": "class-hero",
+      "kind": "image",
+      "purpose": "课程中心页面顶部宽幅美学背景",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 500000,
+      "required": false,
+      "composition": "宽幅瑜伽课程美学背景，柔美肢体舒展或瑜伽道具体系。",
+      "promptTemplate": "A gentle yoga flow posture in an aesthetic sunlit studio, organic earth tones, linen and clay textures, elegant and serene, no text.",
+      "negativePrompt": "watermark, text, harsh shadows, aggressive fitness gym setting",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=class-hero]",
+        "note": "课程目录头部温润基调。"
+      },
+      "checks": [
+        "色彩与品牌陶土暖调协调",
+        "适合作为顶部 Banner"
+      ]
+    },
+    {
+      "id": "wellness-meditation",
+      "kind": "image",
+      "purpose": "特色身心冥想服务卡片配图",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1008,
+        "height": 1200
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 400000,
+      "required": false,
+      "composition": "3:4 竖幅静心打坐特写，专注呼吸与内在宁静。",
+      "promptTemplate": "Close-up portrait of peaceful meditation pose, hands in mudra on knees, serene expression, natural morning light, earth tone clothes.",
+      "negativePrompt": "watermark, text, busy background, unnatural expression",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=wellness-meditation]",
+        "note": "展示柔和自然光线下的正念坐姿。"
+      },
+      "checks": [
+        "体态优雅自然",
+        "主体在中心偏上，适配卡片裁剪"
+      ]
+    },
+    {
+      "id": "wellness-breathwork",
+      "kind": "image",
+      "purpose": "特色呼吸调息课程卡片配图",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1008,
+        "height": 1200
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 400000,
+      "required": false,
+      "composition": "3:4 竖幅调息与音钵疗愈特写，颂钵或呼吸沉浸体验。",
+      "promptTemplate": "Singing bowl sound therapy session in warm aesthetic wellness studio, serene mindfulness atmosphere, warm clay and wood palette, no text.",
+      "negativePrompt": "watermark, text, distorted fingers, dark lighting",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=wellness-breathwork]",
+        "note": "双人或小班呼吸身心训练。"
+      },
+      "checks": [
+        "细节丰富，质感温润"
+      ]
+    },
+    {
+      "id": "wellness-yoga",
+      "kind": "image",
+      "purpose": "特色舒缓流瑜伽卡片配图",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1008,
+        "height": 1200
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 400000,
+      "required": false,
+      "composition": "3:4 竖幅瑜伽体式侧影，舒展而专注。",
+      "promptTemplate": "Graceful yoga asana posture in minimalist studio, gentle stretch, soft beige and terracotta background, calming light, no text.",
+      "negativePrompt": "watermark, text, extreme acrobatic distortion",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=wellness-yoga]",
+        "note": "舒展肢体、增强柔韧与身心平衡。"
+      },
+      "checks": [
+        "线条优美专业"
+      ]
+    },
+    {
+      "id": "whyus-main",
+      "kind": "image",
+      "purpose": "为什么选择我们主视觉照片，合十礼专注特写",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1536,
+        "height": 1200
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 450000,
+      "required": false,
+      "composition": "4:3 比例，导师合十礼 Namaste 专注特写，传递真诚与信赖。",
+      "promptTemplate": "Hands folded in Namaste gesture close-up, linen yoga apparel, serene background with gentle shadows, mindful spiritual ambiance, no text.",
+      "negativePrompt": "watermark, text, deformed hands or fingers",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=whyus-main]",
+        "note": "呈现导师专注内省的专业与宁静感。"
+      },
+      "checks": [
+        "手部结构自然无瑕疵"
+      ]
+    },
+    {
+      "id": "whyus-secondary",
+      "kind": "image",
+      "purpose": "木质地板瑜伽静修空间特写",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 1200
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 400000,
+      "required": false,
+      "composition": "1:1 方幅瑜伽垫与木地板特写，展现精致空间质感。",
+      "promptTemplate": "Eco-friendly yoga mat laid on polished parquet wooden floor, warm sunlight casting window shadow patterns, peaceful morning mood, no text.",
+      "negativePrompt": "watermark, text, cluttered room, dirt",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=whyus-secondary]",
+        "note": "体现高品质场馆与环境细节。"
+      },
+      "checks": [
+        "质感细腻，色调温馨"
+      ]
+    },
+    {
+      "id": "footer-background",
+      "kind": "image",
+      "purpose": "全站页脚深色反差背景",
+      "quantity": {
+        "min": 0,
+        "recommended": 1,
+        "max": 1
+      },
+      "dimensions": {
+        "width": 1920,
+        "height": 800
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 400000,
+      "required": false,
+      "composition": "宽幅暗调背景纹理，低反差暗色石材或禅意阴翳质感。",
+      "promptTemplate": "Dark charcoal minimalist zen stone texture, subtle grain, deep moody gradient, perfect dark background for footer, no text.",
+      "negativePrompt": "watermark, text, bright spots, high contrast patterns",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.imageBindings[slotId=footer-background]",
+        "note": "深色渐变覆盖层上展现纯白版权与导航。"
+      },
+      "checks": [
+        "深色反差足够，不干扰白色文字辨识"
+      ]
+    },
+    {
+      "id": "product-main",
+      "kind": "image",
+      "purpose": "课程与体验项目主图，在课程列表及详情页面展示",
+      "quantity": {
+        "min": 1,
+        "recommended": 6,
+        "max": 30
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 900
+      },
+      "formats": [
+        "image/jpeg",
+        "image/webp",
+        "image/png"
+      ],
+      "recommendedMaxBytes": 400000,
+      "required": true,
+      "composition": "4:3 标准比例，真实课程体式或静心场景实拍，主体清晰，背景温润自然。",
+      "promptTemplate": "Yoga class posture demonstrating {product_name}, professional practitioner, serene studio lighting, earth tone aesthetics, high resolution photography, no text.",
+      "negativePrompt": "watermark, text, exaggerated unnatural flexibility, gym equipment",
+      "binding": {
+        "strategy": "product-image",
+        "path": "products[].imageAssetId",
+        "note": "课程或体验项目主图，通过媒体资产 ID 关联。"
+      },
+      "checks": [
+        "真实展现课程内容",
+        "无文字与水印覆盖"
+      ]
+    }
+  ],
+  "textSlots": [
+    {
+      "id": "hero-headline",
+      "purpose": "首页首屏主视觉标题",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 80,
+        "maxLines": 3,
+        "localeNote": "支持中英文诗意标题，斜体强调词将自动应用 Lora 衬线与赤陶色。"
+      },
+      "promptTemplate": "为高端身心瑜伽生活馆 {brand_name} 撰写首屏大标题，富有禅意与身心平衡之美。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "copy[language].headline",
+        "note": "首屏主标题，默认兼具白字对比度与优雅字形。"
+      }
+    },
+    {
+      "id": "hero-subtitle",
+      "purpose": "首页首屏副标题与导语",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 200,
+        "maxLines": 4,
+        "localeNote": "温和真诚，引导访客开启正念与身心练习。"
+      },
+      "promptTemplate": "撰写 2-3 句温润平缓的导语，介绍 {brand_name} 的身心课程体系与静心体验。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "copy[language].subtitle",
+        "note": "首屏副标题，支持长句自然折行。"
+      }
+    },
+    {
+      "id": "primary-cta",
+      "purpose": "行动召唤按钮文本",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 30,
+        "maxLines": 1,
+        "localeNote": "动作清晰明确，如'预约体验'或'探索课程'。"
+      },
+      "promptTemplate": "为 {brand_name} 设计凝练有吸引力的预约体验按钮文本。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "copy[language].cta",
+        "note": "全站通用的主行动入口文案。"
+      }
+    },
+    {
+      "id": "company-about",
+      "purpose": "品牌理念与空间介绍全文",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 2000,
+        "maxLines": 12,
+        "localeNote": "阐述创办初心、导师资质与空间环境。"
+      },
+      "promptTemplate": "根据 {brand_name} 的真实事实，撰写真挚沉静的关于我们品牌故事。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "company.aboutStory",
+        "note": "关于我们页面理念板块与品牌介绍。"
+      }
+    },
+    {
+      "id": "home-seo-title",
+      "purpose": "首页 SEO 标题",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 70,
+        "maxLines": 1,
+        "localeNote": "包含品牌名与核心身心瑜伽定位。"
+      },
+      "promptTemplate": "{brand_name} | 高端瑜伽冥想与身心美学生活馆",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=home-seo-title]",
+        "note": "首页页面标签标题。"
+      }
+    },
+    {
+      "id": "home-seo-description",
+      "purpose": "首页 SEO 摘要说明",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 170,
+        "maxLines": 3,
+        "localeNote": "搜索引擎抓取描述。"
+      },
+      "promptTemplate": "为 {brand_name} 编写准确的首页搜索摘要，涵盖课程特色与场馆理念。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=home-seo-description]",
+        "note": "首页搜索描述。"
+      }
+    },
+    {
+      "id": "catalog-seo-title",
+      "purpose": "课程目录页 SEO 标题",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 70,
+        "maxLines": 1,
+        "localeNote": "课程体系索引标题。"
+      },
+      "promptTemplate": "课程体系 | {brand_name} 瑜伽与身心疗愈课程",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=catalog-seo-title]",
+        "note": "课程目录页面标题。"
+      }
+    },
+    {
+      "id": "catalog-seo-description",
+      "purpose": "课程目录页 SEO 摘要",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 170,
+        "maxLines": 3,
+        "localeNote": "课程分类与安排概览。"
+      },
+      "promptTemplate": "探索 {brand_name} 的流瑜伽、阴瑜伽、正念冥想与呼吸调息特色课程，预约专属身心体验。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=catalog-seo-description]",
+        "note": "课程目录搜索描述。"
+      }
+    },
+    {
+      "id": "about-seo-title",
+      "purpose": "关于我们页 SEO 标题",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 70,
+        "maxLines": 1,
+        "localeNote": "关于页面标题。"
+      },
+      "promptTemplate": "关于我们 | {brand_name} 空间与导师理念",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=about-seo-title]",
+        "note": "关于页标签标题。"
+      }
+    },
+    {
+      "id": "about-seo-description",
+      "purpose": "关于我们页 SEO 摘要",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 170,
+        "maxLines": 3,
+        "localeNote": "场馆背景与师资理念。"
+      },
+      "promptTemplate": "了解 {brand_name} 的自然美学生活理念，认识专业资深认证导师团队与静修空间。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=about-seo-description]",
+        "note": "关于页搜索描述。"
+      }
+    },
+    {
+      "id": "contact-seo-title",
+      "purpose": "预约咨询页 SEO 标题",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 70,
+        "maxLines": 1,
+        "localeNote": "预约联系页面标题。"
+      },
+      "promptTemplate": "预约体验与联系 | {brand_name}",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=contact-seo-title]",
+        "note": "联系页标签标题。"
+      }
+    },
+    {
+      "id": "contact-seo-description",
+      "purpose": "预约咨询页 SEO 摘要",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 170,
+        "maxLines": 3,
+        "localeNote": "联系方式与地址指引。"
+      },
+      "promptTemplate": "在线预约 {brand_name} 课程体验，获取会馆地址、来访指引与营业时间。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=contact-seo-description]",
+        "note": "联系页搜索描述。"
+      }
+    },
+    {
+      "id": "productDetail-seo-title",
+      "purpose": "课程详情页 SEO 标题",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 70,
+        "maxLines": 1,
+        "localeNote": "单项课程名称与品牌名组合。"
+      },
+      "promptTemplate": "{product_name} | {brand_name} 课程详情",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=productDetail-seo-title]",
+        "note": "课程详情页标签标题。"
+      }
+    },
+    {
+      "id": "productDetail-seo-description",
+      "purpose": "课程详情页 SEO 摘要",
+      "quantity": 1,
+      "length": {
+        "unit": "unicode-code-points",
+        "recommendedMax": 170,
+        "maxLines": 3,
+        "localeNote": "单项课程功效、适合人群与日程。"
+      },
+      "promptTemplate": "查看 {product_name} 课程详细安排、导师介绍及身心收获，立即在线预约名额。",
+      "binding": {
+        "strategy": "draft-field",
+        "path": "draft.materials.textBindings[slotId=productDetail-seo-description]",
+        "note": "课程详情页搜索描述。"
+      }
+    }
+  ],
+  "generationWorkflow": [
+    "读取 /api/internal/template-guides/materials/auravell 及其 requirementsPath，确认 typed-regions-v1 合同与 contractRevision=2026-10-01.auravell-materials.1。",
+    "收集会馆或工作室真实资料、课程体系与认证师资。不编造虚假国际资质与医疗效果承诺。",
+    "复用已有授权素材，缺图才生成；证书和报告只能真实上传。不补示例产品，不编造虚构评分、假师资认证或虚假医疗效果承诺。",
+    "课程主图按 4:3 比例（1200×900）准备，首屏大图按 16:9（3456×1800）准备，左侧留出暗色留白。",
+    "通过资产接口上传素材并绑定对应 slotId 或产品条目；文本通过 locale 与 slotId 绑定。",
+    "在桌面（1440px）、平板（1024px/768px）与移动端（390px/320px）全范围验证文字对比度、无文字背景色块、无动画隐藏空白。",
+    "确认表单询盘功能与课程详情跳转均正常后完成发布。"
+  ],
+  "qualityChecks": [
+    "全站 5 个页面均具备正确导航结构且资源本地化可用",
+    "所有标题、正文、标签与斜体文字绝无矩形背景色块（background-color 为 transparent）",
+    "Webflow IX2/IX3 动画属性不导致任何首屏或卡片处于隐藏（opacity: 0 或 transform 移出视野）状态",
+    "首屏主图清晰呈现，左侧暗色渐变与纯白标题对比度超过 4.5:1",
+    "移动端导航与课程分类标签无横向截断溢出",
+    "预约表单在预览模式下安全禁用发送，正式模式对接本站询盘接口",
+    "课程与导师详情图文对应准确，不出现未经验证的虚假医疗功效承诺"
+  ],
+  "outputContract": {
+    "schemaEndpoint": "/api/internal/template-guides/output-schema",
+    "description": "返回符合 Auravell 瑜伽美学生活馆规范的素材生成清单；发布通过 Materials API 流程执行。",
+    "requiredFields": [
+      "schemaVersion",
+      "templateId",
+      "guideRevision",
+      "language",
+      "assets",
+      "copy",
+      "missingFacts",
+      "warnings"
+    ],
+    "bindingWarning": "assets.id 与本模板图片 slotId 对应。课程主图使用 product-main，单项课程附图使用 product-gallery。首屏必须保证暗色渐变层与白色文字对比度。"
+  }
+}

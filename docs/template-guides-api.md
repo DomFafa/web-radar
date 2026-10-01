@@ -22,7 +22,7 @@
 
 目录只注册通过执行映射验证的模板插件；新模板可由版本化清单接入，无需逐个修改 Product Radar。完整合同与执行能力仍由消费端按支持范围校验。演示在打开时单独请求，不在目录同步时批量生成或下载。封面生成/校验脚本及发布检查保证清单地址是对应图片，而非返回 `200` 的 HTML 页面。
 
-当前可选的 10 套模板各有一份独立 JSON 文档；历史模板规范保留用于已保存项目的兼容读取。文档保存在 `src/worker/template-guides/documents/<templateId>.json`。文档只打包进 Worker，**不进入前台 JS、静态素材目录或用户页面**。Markdown 由同一 JSON 渲染，避免两份文档不一致。
+当前可选的 11 套模板各有一份独立 JSON 文档；历史模板规范保留用于已保存项目的兼容读取。文档保存在 `src/worker/template-guides/documents/<templateId>.json`。文档只打包进 Worker，**不进入前台 JS、静态素材目录或用户页面**。Markdown 由同一 JSON 渲染，避免两份文档不一致。
 
 这些接口只读取规范，不调用模型、不扣生成额度、不上传素材、不修改项目，也不发布网站。
 
@@ -52,7 +52,7 @@
 
 错误状态：无效凭据 401、普通用户 403、模板不存在 404、写入方法 405、非法 format 400。
 
-## 当前 10 个模板（2026-10-01）
+## 当前 11 个模板（2026-10-01）
 
 Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 服务器根地址：`https://web.vnvnv.com/api/internal/template-guides`。
@@ -68,6 +68,7 @@ Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 | papernote | PaperNote | 6 张作品，1200 × 1200 | 1200 × 1400，1 张肖像 | 0 |
 | good-boy-pals | Good Boy Supply Co. | 4 张，1200 × 1600 | 1024 × 1152，1 张宠物肖像 | 0 |
 | mello-coffee | Mello Coffee & Bakery | 4 张精选饮品/烘焙，1200 × 1200 | 1200 × 1000，1 张饮品特写 | 0 |
+| auravell | Auravell Yoga & Mindful Living | 每课程 1 张，1200 × 900 | 3456 × 1800，1 张冥想场景 | 0 |
 | careflow-healthcare | Careflow Healthcare | 建议 6 张，1200 × 900 | 2752 × 1412，1 张，主体居右 | 0 |
 | toorun-early-learning | Toorun Early Learning | 6 张课程照片，1200 × 1200 | 568 × 688，建议 4 张人物图 | 0 |
 
@@ -81,7 +82,7 @@ Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 
 ### 外部 AI 的调用顺序
 
-1. `GET /api/internal/template-guides`，从当前 10 个模板中选择 `templateId`。
+1. `GET /api/internal/template-guides`，从当前 11 个模板中选择 `templateId`。
 2. `GET /api/internal/template-guides/:templateId`，读取 `assets` 和 `textSlots`；需要文字文档时添加 `?format=markdown`。
 3. 图片规格 ID（`assetSpecId`）用于生成清单；不能直接当成素材合同的 `slotId`。
 4. 准备提交项目素材时，使用既有 Product Radar 用户/工作区认证读取 `/materials/catalog` 和目录给出的版本化 `requirementsPath`。
@@ -198,3 +199,26 @@ const context = {
 | `contact-image-06` | 2752 × 1412 | 0–1 |
 
 主图与附图另计：`product-main` 每服务 1 张，`product-gallery` 每服务 0–10 张。92 个纯文本槽位包括各页 SEO、标题、正文与按钮。`company-about` 与 `about-copy-03` 指向同一段介绍，前者优先。联系方式直接读取品牌资料，版权行由品牌名与年份生成。
+
+
+## Auravell Yoga & Mindful Living（2026-10-01）
+
+模板 ID `auravell`，Guide revision `2026-10-01.1`，合同与渲染版本 `2026-10-01.auravell-materials.1`。通过 `/api/internal/template-guides/auravell` 获取 JSON 或 Markdown，通过材料目录获取冻结合同。所有入口使用现有 API 认证。
+
+包含首页、课程目录、课程详情、关于、联系和会员方案（`extra-plans`，发布路径 `en/extra-plans/index.html`）。预览和发布共用原生渲染器，移动端菜单、课程筛选、图片切换和询盘均使用项目运行时。预览不发送询盘，正式表单调用现有 JSON 询盘接口，不确认预约。
+
+| 图片槽位 | 尺寸（px） | 数量 |
+|---|---|---|
+| `home-hero` | 3456 × 1800 | 0–1 |
+| `about-hero` | 1920 × 1080 | 0–1 |
+| `class-hero` | 1920 × 1080 | 0–1 |
+| `wellness-meditation` | 1008 × 1200 | 0–1 |
+| `wellness-breathwork` | 1008 × 1200 | 0–1 |
+| `wellness-yoga` | 1008 × 1200 | 0–1 |
+| `whyus-main` | 1536 × 1200 | 0–1 |
+| `whyus-secondary` | 1200 × 1200 | 0–1 |
+| `footer-background` | 1920 × 800 | 0–1 |
+| `product-main` | 1200 × 900 | 每课程 1 张 |
+| `product-gallery` | 1200 × 900 | 每课程 0–10 张 |
+
+9 个布局图位置可选；课程主图和附图按 `productId` 绑定，附图使用 `itemIndex` 排序。主体居中，保留裁切空间；图片不嵌文案，首页左侧留标题空间。支持 JPEG、PNG、WebP。正文为纯文本；字体和 CSS 依赖本地化。示例课程只用于演示，正式站不自动添加不存在的课程或虚假联系方式。运营方应核实课程、方案价格、营业时间和品牌介绍后发布。

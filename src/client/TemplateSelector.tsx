@@ -21,6 +21,14 @@ export interface TemplateDefinition {
 
 export const TEMPLATES: TemplateDefinition[] = [
   {
+    id: 'auravell', name: 'Auravell 瑜伽美学生活馆', englishName: 'Auravell Yoga & Mindful Living',
+    tagline: '还原 Auravell 的静谧冥想大图、米白底色、暖沙陶土色系与衬线标题；全功能身心疗愈与瑜伽课程网站。',
+    category: 'consumer', industries: ['瑜伽馆', '冥想中心', '身心疗愈', '颂钵调息', '高端美学生活'],
+    features: ['1:1 还原静修首屏大图与浮动课程卡', '课程分类网格、时长与预约详情', '关于理念、导师团队与环境展示', '会员计划、折叠答疑与预约咨询表单'],
+    accentColor: '#99582a', badge: 'Auravell · 瑜伽身心',
+    previewImg: '/templates/previews/auravell.ef136315db6fe813.jpg',
+  },
+  {
     id: 'careflow-healthcare', name: 'Careflow 医疗健康', englishName: 'Careflow Healthcare',
     tagline: '还原 Careflow Home V1 的蓝白医疗视觉、宽幅走廊大图与柔光卡片；完整服务与预约咨询网站。',
     category: 'enterprise', industries: ['医疗机构', '健康服务', '诊所', '康复中心', '专业咨询'],

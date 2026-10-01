@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const guideIds = [
+  'auravell',
   'careflow-healthcare',
   'toorun-early-learning',
   'lumi-business',
@@ -103,6 +104,7 @@ export const guideSchema = z.strictObject({
     about: z.array(nonempty),
     contact: z.array(nonempty),
     productDetail: z.array(nonempty),
+    'extra-plans': z.array(nonempty).optional(),
   }),
   inventory: z.strictObject({
     recommendedDistinctProductImages: z.number().int().positive(),

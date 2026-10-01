@@ -19,6 +19,11 @@ const attr = (node: DefaultTreeAdapterMap['element'], name: string) => node.attr
 describe('versioned homepage hero inventory', () => {
   it.each(Object.keys(templateMediaRequirements))('%s requires one real homepage hero', id => {
     const contract = getMaterialsTemplate(id)!;
+    if (id === 'auravell') {
+      expect(contract.imageSlots.filter(slot => slot.id === 'home-hero')).toHaveLength(1);
+      expect(contract.contractRevision).toBe('2026-10-01.auravell-materials.1');
+      return;
+    }
     if (id === 'careflow-healthcare') {
       expect(contract.imageSlots.filter(slot => slot.id === 'home-hero')).toHaveLength(1);
       expect(contract.contractRevision).toBe('2026-10-01.careflow-healthcare-materials.1');

@@ -21,7 +21,7 @@ const server = createServer(async (request, response) => {
   if (url.pathname.startsWith('/media/')) { response.setHeader('Content-Type', 'image/jpeg'); return response.end(fixtureImage); }
   const path = resolve(publicDir, '.' + decodeURIComponent(url.pathname));
   if (url.pathname.startsWith('/templates/') && path.startsWith(publicDir + sep)) try {
-    response.setHeader('Content-Type', { '.woff2':'font/woff2', '.ttf':'font/ttf', '.svg':'image/svg+xml', '.jpg':'image/jpeg', '.png':'image/png', '.webp':'image/webp', '.avif':'image/avif' }[extname(path)] || 'application/octet-stream');
+    response.setHeader('Content-Type', { '.css':'text/css', '.woff2':'font/woff2', '.ttf':'font/ttf', '.svg':'image/svg+xml', '.jpg':'image/jpeg', '.png':'image/png', '.webp':'image/webp', '.avif':'image/avif' }[extname(path)] || 'application/octet-stream');
     return response.end(await readFile(path));
   } catch {}
   response.writeHead(404); response.end();
@@ -31,7 +31,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch(process.platform === 'darwin' ? { channel: 'chrome' } : {});
 let cases = 0;
 try {
-  for (const template of ['careflow-healthcare','lumi-business','papernote','pawfect-groom']) {
+  for (const template of ['auravell','careflow-healthcare','lumi-business','papernote','pawfect-groom']) {
     const input = await typedMaterialsFixture(template, 2);
     const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(asset => [asset.id, { id:asset.id }])));
     for (const materials of [draft.materials, undefined]) {
