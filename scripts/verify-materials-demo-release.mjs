@@ -115,7 +115,14 @@ try {
               else if (/local\(/i.test(source)) localFonts.add(family);
             } else if ('cssRules' in rule) fontRules(rule.cssRules);
           });
-          [...document.styleSheets].forEach(sheet => fontRules(sheet.cssRules));
+          [...document.styleSheets].forEach(sheet => {
+            try { fontRules(sheet.cssRules); }
+            catch (error) {
+              // Sandboxed previews cannot inspect cross-origin stylesheet rules.
+              // Their network resources and failed fonts are still checked below.
+              if (error.name !== 'SecurityError') throw error;
+            }
+          });
           const unavailableFonts = [...document.fonts].filter(font => font.status === 'error').map(font => font.family.replace(/^["']|["']$/g, ''));
           const optionalLocalFont = family => localFonts.has(family) && !assetFonts.has(family);
           const brokenBackgrounds = [];
