@@ -26,7 +26,9 @@ export function verifyReleaseSource({ cwd = process.cwd(), candidate = false, ex
   }
   const releaseRef = `refs/heads/${policy.releaseBranch}`;
   git(['check-ref-format', releaseRef]);
-  if (repositoryIdentity(readGit(['remote', 'get-url', 'origin'])) !== repositoryIdentity(policy.repository)) {
+  const allowedRepositories = [policy.repository, ...(candidate && Array.isArray(policy.candidateRepositories) ? policy.candidateRepositories.filter(value => typeof value === 'string' && value) : [])];
+  const origin = repositoryIdentity(readGit(['remote', 'get-url', 'origin']));
+  if (!allowedRepositories.some(repository => origin === repositoryIdentity(repository))) {
     throw new Error('origin does not identify the approved upstream repository.');
   }
   const sourceCommit = readGit(['rev-parse', 'HEAD']);

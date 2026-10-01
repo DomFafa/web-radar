@@ -1,5 +1,6 @@
 {
   "repository": "git@github.com:DomFafa/web-radar.git",
+  "candidateRepositories": ["https://github.com/wuyueerhao/web-radar.git"],
   "releaseBranch": "codex/web-radar-v1",
   "requiredAncestors": ["09fb979aae69319c750d19fd14fcc664282a60ff", "0633b8554e0c080f133237b5d4db36cfcec286f8"],
   "requiredWorkflows": [

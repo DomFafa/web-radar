@@ -7,7 +7,9 @@ export function materialsRuntime(){
     mobile.addEventListener('change',posters);posters();
     window.addEventListener('wr:materials-media-ready',posters);
   }
-  document.querySelectorAll<HTMLElement>('.senseng-detail-thumbs').forEach(group=>{
+  const bound=new WeakSet<HTMLElement>();
+  const bindGalleries=()=>document.querySelectorAll<HTMLElement>('.senseng-detail-thumbs').forEach(group=>{
+    if(bound.has(group))return;bound.add(group);
     const buttons=Array.from(group.querySelectorAll<HTMLElement>('[data-wr-material-thumb], .senseng-thumb-btn, .wr-detail-thumb'));
     const main=document.querySelector<HTMLImageElement>('#detailMainImg')||document.querySelector<HTMLImageElement>('#wr-detail-main-img');if(!main||!buttons.length)return;
     let current=Math.max(0, buttons.findIndex(b=>b.classList.contains('active')));
@@ -37,4 +39,5 @@ export function materialsRuntime(){
     arrows[0]?.addEventListener('click',()=>show(current-1));
     arrows[1]?.addEventListener('click',()=>show(current+1));
   });
+  bindGalleries();window.addEventListener('wr:template-mounted',bindGalleries);
 }

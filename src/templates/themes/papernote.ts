@@ -1,3 +1,4 @@
+import { displayProducts } from '../../shared/product-display';
 import type { Product } from '../../shared/model';
 import { esc, productPath, type ThemeContext } from './types';
 
@@ -280,10 +281,28 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
   <meta name="description" content="${esc(metaDesc)}">
   ${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}
   <link rel="icon" href="${PAPERNOTE_ASSETS.favicon}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+/* latin-ext */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(/templates/papernote/outfit-0.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(/templates/papernote/outfit-1.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('/templates/mello-coffee/inter.woff2') format('woff2')}
+
     :root {
       --pn-yellow: #ffe68c;
       --pn-pink: #ffc9f0;
@@ -420,7 +439,7 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
 
     /* Layout Containers */
     .pn-container {
-      width: min(1136px, calc(100vw - 40px));
+      width: min(1136px, calc(100% - 40px));
       margin: 0 auto;
       position: relative;
     }
@@ -952,11 +971,12 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
     /* SUBPAGE: CONTACT */
     .pn-contact-info-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 48px;
       margin: 40px 0;
     }
     .pn-contact-block {
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -968,6 +988,10 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
       font-size: 16px;
       font-weight: 600;
     }
+    .pn-contact-item { min-width: 0; }
+    .pn-contact-item svg { flex-shrink: 0; }
+    .pn-contact-item a, .pn-contact-item span { overflow-wrap: anywhere; min-width: 0; }
+    .pn-contact-socials { display:flex; flex-wrap:wrap; gap:20px; align-items:center; }
     .pn-inquiry-box {
       background: #ffffff;
       border: 1.5px solid var(--pn-border);
@@ -1001,7 +1025,19 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
       box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
     }
 
+    .pn-footer > .pn-container { width:100%; }
     /* Responsive */
+    @media (max-width: 600px) {
+      .pn-nav-bar { height:auto; min-height:56px; flex-wrap:wrap; justify-content:center; padding:10px 12px; gap:10px; border-radius:22px; }
+      .pn-nav-menu { width:100%; justify-content:center; gap:12px; flex-wrap:wrap; }
+      .pn-nav-link { font-size:13px; }
+      .pn-btn-hire { font-size:12px; padding:6px 12px; }
+      .pn-photo-frame-wrap { max-width:calc(100% - 24px); margin-inline:auto; }
+      .pn-footer { padding:40px 20px 28px; }
+      .pn-footer-bottom { flex-wrap:wrap; gap:16px; }
+      .pn-hero,.pn-subpage-hero { padding-top:160px; }
+    }
+
     @media (max-width: 900px) {
       .pn-hero-grid, .pn-detail-grid, .pn-contact-info-grid {
         grid-template-columns: 1fr;
@@ -1024,7 +1060,7 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
     }
   </style>
 </head>
-<body>
+<body class="papernote" data-template="papernote">
 
   <!-- Floating Navigation -->
   <div class="pn-nav-wrapper">
@@ -1084,7 +1120,7 @@ export function renderPaperNoteSite(ctx: ThemeContext): string {
       <div class="pn-footer-body">
         <h3>Ready to Bring Your Vision to Life?</h3>
         <p>Let’s make something incredible together! Reach out to discuss your project, and let’s create designs that resonate and inspire.</p>
-        <a class="pn-btn-primary" style="background:#ffffff; color:#000000 !important; font-weight:800;" href="${path(navPath('contact'))}" ${navAttrs('contact')}>
+        <a class="button pn-btn-primary" style="background:#ffffff; color:#000000 !important; font-weight:800;" href="${path(navPath('contact'))}" ${navAttrs('contact')}>
           Hire Me!
         </a>
       </div>
@@ -1159,10 +1195,10 @@ function renderHomeView(
           </p>
 
           <div class="pn-hero-actions">
-            <a class="pn-btn-primary" href="${path(navPath('contact'))}" ${navAttrs('contact')}>
+            <a class="button pn-btn-primary" href="${path(navPath('contact'))}" ${navAttrs('contact')}>
               Hire Me!
             </a>
-            <a class="pn-btn-outline" href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>
+            <a class="button pn-btn-outline" href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>
               See my Portfolio
             </a>
           </div>
@@ -1209,7 +1245,7 @@ function renderHomeView(
       </div>
 
       <div class="pn-btn-center-wrap">
-        <a class="pn-btn-outline" href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>
+        <a class="button pn-btn-outline" href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>
           Check my Portfolio
         </a>
       </div>
@@ -1321,7 +1357,9 @@ function renderDetailView(
   project: PaperProject,
 ): string {
   const { path, navAttrs, navPath } = ctx;
-
+  const product = ctx.draft.products.find(p => p.id === project.id);
+  const photos = [project.img, ...(product?.gallery || []).map(g => ctx.asset(g.assetId))].filter((src, i, all) => src && all.indexOf(src) === i);
+  const gallery = photos.length > 1 ? `<div class="senseng-detail-thumbs pn-detail-thumbs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:12px;margin-top:20px">${photos.map((src, i) => `<button type="button" class="wr-detail-thumb" data-wr-material-thumb data-src="${esc(src)}" aria-label="View image ${i + 1}" aria-pressed="${i === 0}" style="padding:4px;border:1px solid currentColor;border-radius:8px;background:transparent;cursor:pointer"><img src="${esc(src)}" alt="${esc(product?.gallery?.[i]?.caption || project.name)}" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain"></button>`).join('')}</div>` : '';
   return `
   <section class="pn-subpage-hero">
     <div class="pn-container">
@@ -1333,7 +1371,7 @@ function renderDetailView(
           <p style="font-size:17px;line-height:1.6;color:#111;margin-bottom:32px;">
             ${esc(project.description)}
           </p>
-          <a class="pn-btn-outline" href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>
+          <a class="button pn-btn-outline" href="${path(navPath('catalog'))}" ${navAttrs('catalog')}>
             &larr; Back to Portfolio
           </a>
         </div>
@@ -1362,8 +1400,8 @@ function renderDetailView(
 
       <!-- Detail Hero Showcase Banner -->
       <div class="pn-detail-banner-card">
-        <img src="${PAPERNOTE_ASSETS.detailBanner}" alt="${esc(project.name)} showcase">
-      </div>
+        <img id="wr-detail-main-img" src="${esc(project.img)}" alt="${esc(project.name)} showcase" loading="eager" fetchpriority="high">
+      </div>${gallery}
     </div>
   </section>
   `;
@@ -1375,7 +1413,6 @@ function renderAboutView(
   designerTagline: string,
 ): string {
   const { path, navAttrs, navPath } = ctx;
-
   return `
   <section class="pn-subpage-hero">
     <div class="pn-container">
@@ -1424,7 +1461,7 @@ function renderAboutView(
       </div>
 
       <div class="pn-btn-center-wrap" style="margin-top:40px;">
-        <a class="pn-btn-primary" href="${path(navPath('contact'))}" ${navAttrs('contact')}>
+        <a class="button pn-btn-primary" href="${path(navPath('contact'))}" ${navAttrs('contact')}>
           Discuss Opportunities &rarr;
         </a>
       </div>
@@ -1439,7 +1476,6 @@ function renderContactView(
   socialHandle: string,
 ): string {
   const { path, navAttrs, navPath } = ctx;
-
   return `
   <section class="pn-subpage-hero">
     <div class="pn-container">
@@ -1457,7 +1493,7 @@ function renderContactView(
 
         <div class="pn-contact-block">
           <div><span class="pn-hl-pink" style="font-weight:700;">Socials</span></div>
-          <div style="display:flex;gap:20px;align-items:center;">
+          <div class="pn-contact-socials">
             <div class="pn-contact-item">${TWITTER_ICON_BLACK} <span>${esc(socialHandle)}</span></div>
             <div class="pn-contact-item">${DRIBBBLE_ICON_BLACK} <span>${esc(socialHandle)}</span></div>
             <div class="pn-contact-item">${INSTAGRAM_ICON_BLACK} <span>${esc(socialHandle)}</span></div>
@@ -1478,11 +1514,15 @@ function renderContactView(
             <input class="pn-form-input" id="contact-email" name="email" type="email" placeholder="alex@company.com" required>
           </div>
           <div class="pn-form-group">
+            <label class="pn-form-label" for="contact-product">Project / Product</label>
+            <select class="pn-form-input" id="contact-product" name="productId"><option value="">—</option>${displayProducts(ctx.draft).map(p => `<option value="${esc(p.id)}"${p.id === ctx.options.productId ? ' selected' : ''}>${esc(ctx.translateProduct(p).name)}</option>`).join('')}</select>
+          </div>
+          <div class="pn-form-group">
             <label class="pn-form-label" for="contact-message">Project Details</label>
             <textarea class="pn-form-textarea" id="contact-message" name="message" rows="4" placeholder="Tell me about your project, timeline and goals..." required></textarea>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
-            <button class="pn-btn-primary" type="submit"${ctx.options.preview ? ' disabled' : ''}>
+            <button class="button pn-btn-primary" type="submit"${ctx.options.preview ? ' disabled' : ''}>
               Send Message &rarr;
             </button>
             <span role="status" style="font-size:14px;color:#666;"></span>

@@ -60,7 +60,7 @@ export function lumiRuntime(): void {
     const forms=[...root.querySelectorAll<HTMLFormElement>('form')].map(form=>[...form.querySelectorAll<HTMLInputElement|HTMLTextAreaElement>('input,textarea')].map(input=>({name:input.name,value:input.value})));
     cleanup.splice(0).forEach(dispose=>dispose());root.replaceChildren(source.content.cloneNode(true));mounted=screen;
     [...root.querySelectorAll<HTMLFormElement>('form')].forEach((form,index)=>{for(const field of forms[index]||[]){const input=[...form.querySelectorAll<HTMLInputElement|HTMLTextAreaElement>('input,textarea')].find(input=>input.name===field.name);if(input)input.value=field.value}});
-    bind();
+    bind();window.dispatchEvent(new Event('wr:template-mounted'));
   };
   mount();if(mounted==='desktop')bind();
   addEventListener('keydown',event=>{if(event.key!=='Escape')return;const menu=root.querySelector<HTMLElement>('[data-lumi-mobile-menu]'),toggle=root.querySelector<HTMLButtonElement>('[data-lumi-menu-toggle]');if(menu&&!menu.hidden){menu.hidden=true;toggle?.setAttribute('aria-expanded','false');toggle?.focus()}});

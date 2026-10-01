@@ -176,11 +176,11 @@ export function renderPawfectPage(ctx: ThemeContext): string {
   if (page === 'detail') {
     const p = draft.products.find((p) => p.id === options.productId);
     body = p
-      ? `<section class="pg-section pg-detail"><div>${photo(image(p), translateProduct(p).name, '', true)}<div class="pg-detail-gallery">${(
-          p.gallery || []
+      ? `<section class="pg-section pg-detail"><div>${photo(image(p), translateProduct(p).name, '', true).replace('<img ', '<img id="wr-detail-main-img" ')}<div class="pg-detail-gallery senseng-detail-thumbs">${(
+          [{assetId:p.imageAssetId,caption:translateProduct(p).name}, ...(p.gallery || [])]
         )
-          .filter((g) => g.assetId !== p.imageAssetId && asset(g.assetId))
-          .map((g) => photo(asset(g.assetId), g.caption || translateProduct(p).name))
+          .filter((g,i,all) => asset(g.assetId) && all.findIndex(other=>other.assetId===g.assetId)===i)
+          .map((g) => `<button type="button" class="wr-detail-thumb" data-wr-material-thumb data-src="${esc(asset(g.assetId))}" aria-label="${esc(g.caption || translateProduct(p).name)}" aria-pressed="false" style="padding:0;border:0;background:transparent;cursor:pointer">${photo(asset(g.assetId), g.caption || translateProduct(p).name)}</button>`)
           .join(
             '',
           )}</div></div><div>${route('catalog', '← All services', 'pg-text-link')}<span class="pg-eyebrow">A little care, made personal</span><h1>${esc(translateProduct(p).name)}</h1><p>${esc(translateProduct(p).description)}</p>${p.tagline ? `<p class="pg-chip">${esc(p.tagline)}</p>` : ''}${p.sellingPoints?.length ? `<ul class="pg-checks">${p.sellingPoints.map((t) => `<li>✓ ${esc(t)}</li>`).join('')}</ul>` : ''}${p.material || p.dimensions ? `<dl>${p.material ? `<dt>${esc(ctx.ui.material)}</dt><dd>${esc(p.material)}</dd>` : ''}${p.dimensions ? `<dt>${esc(ctx.ui.dimensions)}</dt><dd>${esc(p.dimensions)}</dd>` : ''}</dl>` : ''}${route('contact', 'Enquire about this service ↗', 'pg-button', p.id)}<p class="pg-small">Your request is an enquiry. Appointment time and price are confirmed by the salon.</p></div></section>${process()}`

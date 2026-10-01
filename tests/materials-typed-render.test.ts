@@ -9,6 +9,10 @@ import {createHash} from 'node:crypto';
 import typedManifest from '../docs/materials-requirements/typed-2026-09-19.json';
 import {newBanner} from '../src/shared/banner-config';
 
+// Lumi owns a native renderer and contract; its variants are covered by lumi-template,
+// the common materials handoff/presentation tests and the native-gallery browser check.
+const typedTemplates = Object.keys(templateMediaRequirements).filter(id => id !== 'lumi-business');
+
 function fixture(id:string,count=2):Draft {
   const contract=getTypedMaterialsTemplate(id)!;
   const products=Array.from({length:count},(_,i)=>({id:`real-${i}`,name:`Actual product ${i}`,description:`Verified description ${i}`,material:'Wood',dimensions:'10 cm',imageAssetId:`main-${i}`,gallery:[{assetId:`main-${i}`,sourceImageId:`main-${i}`,kind:'original' as const,caption:'Primary'},{assetId:`extra-${i}`,sourceImageId:`extra-${i}`,kind:'detail' as const,caption:'Detail'}]}));
@@ -20,8 +24,8 @@ function fixture(id:string,count=2):Draft {
 }
 const visible=(html:string)=>{const root=parse(html);let text='';const visit=(n:any)=>{if(['script','style','svg'].includes(n.tagName))return;if(n.nodeName==='#text')text+=n.value+' ';for(const c of n.childNodes||[])visit(c);};visit(root);return text;};
 describe('typed materials preserve template layouts with confirmed content',()=>{
-  it('covers every current template and exposes stable text identities',()=>{
-    for(const id of Object.keys(templateMediaRequirements)){
+  it('covers every typed-renderer template and exposes stable text identities',()=>{
+    for(const id of typedTemplates){
       const c=getTypedMaterialsTemplate(id)!;
       expect(c?.materialsReady,id).toBe(true);expect(c.imagePolicy).toBe('typed-regions-v1');
       expect(c.textSlots.some(s=>/^.+-copy-\d+$/.test(s.id)),id).toBe(false);
@@ -31,7 +35,7 @@ describe('typed materials preserve template layouts with confirmed content',()=>
       expect(c.imageSlots.some(s=>s.id==='product-main'&&!s.maxProducts),id).toBe(true);
     }
   });
-  it.each(Object.keys(templateMediaRequirements))('%s renders all pages without template sample claims or sample products',id=>{
+  it.each(typedTemplates)('%s renders all pages without template sample claims or sample products',id=>{
     const draft=fixture(id,2);
     for(const page of ['home','catalog','detail','about','contact']){
       const html=renderTypedMaterialsSite(draft,{projectId:'typed',lang:'en',page,productId:'real-0',assetUrl:id=>`/bound/${id}`,inquiryUrl:'/inquiry',preview:true});
@@ -53,7 +57,7 @@ describe('typed materials preserve template layouts with confirmed content',()=>
     expect(html).toContain('Actual product 7');
   });
   it.each([1,5,20])('fills every declared region for %i products, retaining original galleries and exact cardinality',count=>{
-    for(const id of Object.keys(templateMediaRequirements)){
+    for(const id of typedTemplates){
       const draft=fixture(id,count),contract=getTypedMaterialsTemplate(id)!,seen=new Set<string>();
       for(const page of ['home','catalog','detail','about','contact']){
         const html=renderTypedMaterialsSite(draft,{projectId:'typed',lang:'en',page,productId:'real-0',assetUrl:id=>`/bound/${id}`,inquiryUrl:'/inquiry',preview:true});
@@ -64,7 +68,7 @@ describe('typed materials preserve template layouts with confirmed content',()=>
       expect(contract.imageSlots.filter(s=>s.id!=='product-gallery'&&!seen.has(s.id)).map(s=>s.id),id+' unused contract image slots').toEqual([]);
     }
   });
-  it.each(Object.keys(templateMediaRequirements))('%s empty optional facts do not activate template demo claims',id=>{
+  it.each(typedTemplates)('%s empty optional facts do not activate template demo claims',id=>{
     const draft=fixture(id,1);draft.company.description='';draft.company.address='';draft.company.phone='';draft.company.whatsapp='';draft.copy.en!.about='';draft.products[0].description='';draft.products[0].material='';draft.products[0].dimensions='';
     for(const page of ['detail','about','contact']){
       const text=visible(renderTypedMaterialsSite(draft,{projectId:'typed',lang:'en',page,productId:'real-0',assetUrl:id=>`/bound/${id}`,inquiryUrl:'/inquiry',preview:true}));
@@ -145,7 +149,7 @@ describe('typed materials preserve template layouts with confirmed content',()=>
     }
   });
   it('keeps prepared image dimensions and all slot identities after presentation relocation',()=>{
-    for(const id of Object.keys(templateMediaRequirements)){
+    for(const id of typedTemplates){
       const draft=fixture(id,2),seen=new Set<string>();
       for(const page of ['home','catalog','detail','about','contact']){
         const html=renderTypedMaterialsSite(draft,{projectId:'typed',lang:'en',page,productId:'real-0',assetUrl:id=>`/bound/${id}`,inquiryUrl:'/inquiry',imageVariants:(id,widths)=>widths.map(w=>({url:`/bound/${id}?width=${w}`,width:w,height:w/2}))});
@@ -156,13 +160,13 @@ describe('typed materials preserve template layouts with confirmed content',()=>
   });
 
   it.each(['image','background'] as const)('preserves confirmed collections and responsive media with unassigned %s Banner settings',mode=>{
-    for(const id of Object.keys(templateMediaRequirements)){
+    for(const id of typedTemplates){
       const draft=fixture(id,2),contract=getTypedMaterialsTemplate(id)!;
       draft.banners=[{...newBanner('saved-home',[]),mode,headline:'Standalone Banner headline',subtitle:'Standalone Banner subtitle',tags:['Standalone Banner tag'],slides:[{assetId:'standalone-banner',alt:'Standalone Banner image'}]}];
       const root=parse(renderSite(draft,{projectId:'typed',lang:'en',page:'home',assetUrl:assetId=>`/bound/${assetId}`,inquiryUrl:'/inquiry',imageVariants:(assetId,widths)=>widths.map(width=>({url:`/bound/${assetId}?width=${width}`,width,height:width/2}))}));
       const images:any[]=[];let primaryHeadings=0,collectionHeroes=0,customBanners=0;
       const walk=(n:any)=>{const a=Object.fromEntries((n.attrs||[]).map((a:any)=>[a.name,a.value]));if(n.tagName==='img')images.push(a);if(n.tagName==='h1')primaryHeadings++;if('data-wr-collection-hero'in a)collectionHeroes++;if(a['data-wr-banner']==='custom')customBanners++;for(const child of n.childNodes||[])walk(child);};walk(root);
-      expect(collectionHeroes,id+' collection hero').toBe(id.startsWith('single-')?0:1);
+      expect(collectionHeroes,id+' collection hero').toBe(contract.imageSlots.some(slot=>slot.id==='hero-slide-0'&&slot.role==='collection')?1:0);
       expect(primaryHeadings,id+' primary heading').toBe(1);
       expect(customBanners,id+' confirmed-material boundary').toBe(0);
       for(const slot of contract.imageSlots.filter(s=>!id.startsWith('single-')&&s.id.startsWith('hero-slide-'))){

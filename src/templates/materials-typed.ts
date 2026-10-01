@@ -317,11 +317,11 @@ function retainGallery(root:Node,draft:Draft,options:RenderOptions){
   const nodes=elements(root),images=nodes.filter(n=>n.tagName==='img');
   const existing=new Set(images.map(n=>attr(n,'src')));
   const gallery=draft.materials!.imageBindings.filter(b=>b.slotId==='product-gallery'&&b.productId===productId&&!existing.has(safeUrl(options.assetUrl(b.assetId),options.preview))).sort((a,b)=>(a.itemIndex||0)-(b.itemIndex||0));
-  if(!gallery.length)return;
   const mainBinding=draft.materials!.imageBindings.find(b=>b.slotId==='product-main'&&b.productId===productId);
   const primary=images.find(n=>attr(n,'data-wr-material-image')==='product-main'&&attr(n,'data-wr-material-product')===productId)||images.find(n=>mainBinding&&attr(n,'src')===safeUrl(options.assetUrl(mainBinding.assetId),options.preview));
   const parent=primary?.parentNode;if(!parent)return;
   if(!attr(primary,'id'))set(primary,'id','wr-detail-main-img');
+  if(!gallery.length)return;
   const added=parseFragment(`<div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px">${[...(mainBinding?[mainBinding]:[]),...gallery].map((b,i)=>`<button type="button" class="wr-detail-thumb${i===0?' active':''}" data-wr-material-thumb="" aria-label="${esc(b.alt[options.lang]||b.alt.en||'')}" style="min-width:0;padding:0;cursor:pointer;background:transparent;border:1px solid #ddd">${materialImage(b,options)}</button>`).join('')}</div>`).childNodes;
   for(const node of added){node.parentNode=parent;parent.childNodes.push(node);}
 }

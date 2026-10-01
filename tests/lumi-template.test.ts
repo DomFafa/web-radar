@@ -1,3 +1,6 @@
+import {typedMaterialsFixture} from './fixtures/materials-typed';
+import {draftFromMaterials} from '../src/worker/materials-service';
+import type {Asset} from '../src/shared/model';
 import { newBanner } from '../src/shared/banner-config';
 import {describe,it,expect} from 'vitest';
 import {readFileSync,existsSync} from 'node:fs';
@@ -49,4 +52,17 @@ describe('Lumi integrated reference template',()=>{
  it('ships every original media file rather than fetching reference resources at runtime',()=>{
   const sources=JSON.parse(readFileSync('public/templates/lumi/sources.json','utf8'));expect(sources.assets.length).toBeGreaterThan(100);for(const s of sources.assets)expect(existsSync('public/templates/lumi/'+s.file),s.file).toBe(true);
  });
+});
+
+
+it('native confirmed Lumi content has no sample counter writers in any responsive variant', async () => {
+ const input=await typedMaterialsFixture('lumi-business',2);
+ const saved=draftFromMaterials(input,Object.fromEntries(input.materials.media.map(asset=>[asset.id,{id:asset.id} as Asset])));
+ for(const page of ['home','catalog','detail','about','contact']) {
+  const html=renderSite(saved,{...options,page,productId:'p1'});
+  expect(html,page).not.toMatch(/\bdata-(?:counter|suffix|progress)="/);
+  expect(html,page).not.toContain('data-wr-product-id="demo-');
+  expect(html,page).toContain('wr-materials-site');
+  expect(html,page).not.toMatch(/__WR_|__LUMI_/);
+ }
 });

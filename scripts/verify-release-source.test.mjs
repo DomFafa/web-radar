@@ -83,3 +83,18 @@ test('a requested release SHA must be complete and equal the checkout HEAD', () 
   assert.throws(() => verifyReleaseSource({ cwd: f.cwd, expectedCommit: head.slice(0, 7) }), /requested full release SHA/);
   assert.throws(() => verifyReleaseSource({ cwd: f.cwd, expectedCommit: f.baseline }), /requested full release SHA/);
 });
+
+
+test('an explicitly approved fork can validate a candidate but cannot publish a release', () => {
+  const f = fixture();
+  const fork = join(f.cwd, 'fork.git');
+  f.policy.candidateRepositories = [fork];
+  f.savePolicy();
+  f.git('add', '.');
+  f.git('commit', '-m', 'allow candidate checks');
+  f.git('remote', 'set-url', 'origin', fork);
+  assert.equal(verifyReleaseSource({ cwd: f.cwd, candidate: true }).mode, 'candidate');
+  assert.throws(() => verifyReleaseSource({ cwd: f.cwd }), /approved upstream repository/);
+  f.git('remote', 'set-url', 'origin', join(f.cwd, 'unapproved.git'));
+  assert.throws(() => verifyReleaseSource({ cwd: f.cwd, candidate: true }), /approved upstream repository/);
+});

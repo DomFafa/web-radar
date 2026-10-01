@@ -75,7 +75,8 @@ describe('papernote template integration', () => {
     // Structure & fonts
     expect(html).toContain('<!doctype html>');
     expect(html).toContain('<html lang="en">');
-    expect(html).toContain('fonts.googleapis.com/css2?family=Outfit');
+    expect(html).toContain('/templates/papernote/outfit-1.woff2');
+    expect(html).not.toContain('fonts.googleapis.com');
     expect(html).toContain('c0EZxtMucSR6UOSZk2TBnWsqr4.svg');
 
     // Branding & Header

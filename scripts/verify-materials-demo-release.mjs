@@ -35,7 +35,7 @@ const server = createServer(async (request, response) => {
   const path = resolve(publicDir, '.' + decodeURIComponent(url.pathname));
   if (url.pathname.startsWith('/templates/') && path.startsWith(publicDir + sep)) try {
     const bytes = await readFile(path);
-    const contentType = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.gif': 'image/gif', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf' }[extname(path)] || 'application/octet-stream';
+    const contentType = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.gif': 'image/gif', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.avif': 'image/avif', '.mp4': 'video/mp4', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf' }[extname(path)] || 'application/octet-stream';
     response.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*', 'Cross-Origin-Resource-Policy': 'cross-origin' });
     return response.end(bytes);
   } catch { /* A missing asset is a failed check, never an HTML fallback. */ }
@@ -53,13 +53,14 @@ try {
     const draft = render.materialsDemoDraft(contract, 'en');
     for (const pageName of process.env.DEMO_PAGES?.split(',') || (process.env.DEMO_ALL_PAGES === '1' || primary.includes(templateId) ? ['home', 'catalog', 'detail', 'about', 'contact'] : ['home'])) {
       const assets = new Map();
-      const options = { projectId: 'demo-repair', lang: 'en', page: pageName, productId: draft.products[0]?.id, assetUrl: id => id, inquiryUrl: '/inquiry', preview: true };
+      const options = { projectId: 'materials-demo', lang: 'en', page: pageName, productId: draft.products[0]?.id, assetUrl: id => id, inquiryUrl: '/inquiry', preview: true };
       const raw = render.renderSite(draft, options);
       const projectHtml = previewClient && primary.includes(templateId) ? render.renderSite(draft, { ...options, assetUrl: id => {
         const key = createHash('sha256').update(id).digest('hex').slice(0,20);
         assets.set(key, id); return `/api/web-radar/projects/demo-repair/assets/${key}`;
       } }) : undefined;
       for (const mode of projectHtml ? ['raw-demo', 'project-preview'] : ['raw-demo']) for (const width of process.env.DEMO_VIEWPORTS?.split(',').map(Number) || [1440, 390]) {
+        console.log(`Checking ${templateId} / ${pageName} / ${mode} / ${width}px`);
         const context = await browser.newContext({ viewport: { width, height: 960 } });
         const page = await context.newPage();
         const errors = [], missingAssets = [];
@@ -76,7 +77,7 @@ try {
         if (mode === 'raw-demo') {
           await page.evaluate(({ raw, origin }) => { document.getElementById('preview').srcdoc = raw.replace('<head>', `<head><base href="${origin}/">`); }, { raw, origin });
           frame = page.frames().find(candidate => candidate !== page.mainFrame());
-          await frame.waitForSelector('body.wr-materials-site', { state: 'attached' });
+          await frame.waitForSelector(`body[data-template="${templateId}"]`, { state: 'attached' });
           await frame.waitForLoadState('load');
         }
         if (mode === 'project-preview') {
@@ -104,7 +105,7 @@ try {
           document.querySelectorAll('img').forEach(img => img.loading = 'eager');
           await document.fonts.ready;
           const brokenBackgrounds = [];
-          const backgrounds = [...new Set([...document.querySelectorAll('*')].flatMap(element => [null, '::before', '::after'].flatMap(pseudo => [...getComputedStyle(element, pseudo).backgroundImage.matchAll(/url\(["']?(.*?)["']?\)/g)].map(match => match[1]))))];
+          const backgrounds = [...new Set([...document.querySelectorAll('*')].flatMap(element => [null, '::before', '::after'].flatMap(pseudo => [...getComputedStyle(element, pseudo).backgroundImage.matchAll(/url\((?:"([^"]*)"|'([^']*)'|([^)]*))\)/g)].map(match => match[1] ?? match[2] ?? match[3]))))];
           await Promise.all([...document.images].map(img => img.decode().catch(() => {})));
           await Promise.all(backgrounds.map(src => new Promise(resolve => {
             const image = new Image(); image.onload = resolve; image.onerror = () => { brokenBackgrounds.push(src); resolve(); }; image.src = src;
@@ -119,11 +120,18 @@ try {
         });
         const signals = mode === 'project-preview' ? await page.evaluate(() => window.previewSignals) : [];
         let mobileMenuWorks;
-        const menu = frame.locator('[data-wr-mobile-menu]');
+        const menu = frame.locator('[data-wr-mobile-menu], [data-lumi-mobile-menu]').first();
         if (width === 390 && await menu.count()) {
-          await menu.locator('summary').click();
-          mobileMenuWorks = await menu.evaluate(element => element.open && Boolean(element.querySelector('a[data-wr-page="catalog"]')));
-          await menu.locator('summary').click();
+          if (await menu.evaluate(element => element.tagName === 'DETAILS')) {
+            await menu.locator('summary').click();
+            mobileMenuWorks = await menu.evaluate(element => element.open && Boolean(element.querySelector('a[data-wr-page="catalog"]')));
+            await menu.locator('summary').click();
+          } else {
+            const toggle = frame.locator('[data-lumi-menu-toggle]');
+            if (await toggle.count()) await toggle.click();
+            mobileMenuWorks = await menu.locator('a[data-wr-page="catalog"]').isVisible();
+            if (await toggle.count()) await toggle.click();
+          }
         }
         const result = { templateId, contractRevision: contract.contractRevision, page: pageName, mode, viewportWidth: width, errors, missingAssets, ...metrics, signals, mobileMenuWorks };
         results.push(result);
