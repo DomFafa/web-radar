@@ -59,7 +59,7 @@ describe('Toorun early-learning integrated template', () => {
       guideRevision: guide.revision,
       materialsReady: true,
     });
-    expect(contract.imageSlots).toHaveLength(4);
+    expect(contract.imageSlots).toHaveLength(3);
     expect(contract.imageSlots.find((slot) => slot.id === 'product-main')).toMatchObject({
       width: 1200,
       height: 1200,

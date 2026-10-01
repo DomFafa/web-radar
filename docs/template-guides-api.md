@@ -164,7 +164,7 @@ const context = {
 
 ## Careflow Healthcare 接入说明（2026-10-01）
 
-- 模板 ID：`careflow-healthcare`；Guide revision：`2026-10-01.2`；合同与渲染版本：`2026-10-01.careflow-healthcare-materials.2`。
+- 模板 ID：`careflow-healthcare`；Guide revision：`2026-10-01.2`；合同版本：`2026-10-01.careflow-healthcare-materials.3`；渲染版本保持 `2026-10-01.careflow-healthcare-materials.2`。
 - 原生页面：`home`、`catalog`、`detail`、`about`、`contact`。详情由每个产品/服务生成，预览和发布走同一渲染器。
 - Guide：`GET /api/internal/template-guides/careflow-healthcare`（可加 `?format=markdown`）；Materials API 从 `/materials/catalog` 返回的版本化 `requirementsPath` 获取可执行合同。
 - 16 个页面图片槽位，每个 0–1 张；尺寸逐项列在 JSON 的 `layoutImageSlots` / `assets` 及合同的 `imageSlots`。保留默认示例图时无需上传。首屏 `home-hero` 为 **2752 × 1412**；左下角覆盖标题卡，主体宜放右侧。
@@ -202,7 +202,9 @@ const context = {
 
 ## Auravell Yoga & Mindful Living（2026-10-01）
 
-模板 ID `auravell`，Guide revision `2026-10-01.2`，合同与渲染版本 `2026-10-01.auravell-materials.2`。通过 `/api/internal/template-guides/auravell` 获取 JSON 或 Markdown，通过材料目录获取冻结合同。所有入口使用现有 API 认证。
+模板 ID `auravell`，Guide revision `2026-10-01.2`，合同版本 `2026-10-01.auravell-materials.3`，渲染版本保持 `2026-10-01.auravell-materials.2`。通过 `/api/internal/template-guides/auravell` 获取 JSON 或 Markdown，通过材料目录获取冻结合同。所有入口使用现有 API 认证。
+
+上述两套模板的 `.3` 合同与 Lumi 的 `2026-10-01.lumi-business-materials.2` 修正 Product Radar 可执行图片来源与能力声明，旧合同仍可按版本读取，页面渲染不变。Toorun 的 `2026-10-01.toorun-early-learning-materials.3` 使用 `2026-10-01.toorun-early-learning-native.2` 渲染器，首页四个原生卡片复用所选产品主图，不再要求生成整块首页横幅；旧项目继续使用原固定版本。
 
 包含首页、课程目录、课程详情、关于、联系和会员方案（`extra-plans`，发布路径 `en/extra-plans/index.html`）。预览和发布共用原生渲染器，移动端菜单、课程筛选、图片切换和询盘均使用项目运行时。预览不发送询盘，正式表单调用现有 JSON 询盘接口，不确认预约。
 

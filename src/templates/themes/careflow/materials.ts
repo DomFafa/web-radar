@@ -2,7 +2,8 @@ import { getCareflowMaterialsTemplate as legacyContract } from '../../releases/n
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
 import { careflowImages, careflowTexts } from './inventory';
-export const careflowMaterialsRevision = '2026-10-01.careflow-healthcare-materials.2';
+export const careflowMaterialsRevision = '2026-10-01.careflow-healthcare-materials.3';
+const originalCareflowMaterialsRevision = '2026-10-01.careflow-healthcare-materials.2';
 const base = {
   min: 0,
   max: 1,
@@ -16,13 +17,25 @@ export function getCareflowMaterialsTemplate(
   revision?: string,
 ): MaterialsTemplateContract | undefined {
   if (revision === '2026-10-01.careflow-healthcare-materials.1') return legacyContract(revision);
-  if (revision && revision !== careflowMaterialsRevision) return;
+  if (revision && revision !== careflowMaterialsRevision && revision !== originalCareflowMaterialsRevision) return;
+  const contract = originalCareflowMaterialsTemplate();
+  if (revision === originalCareflowMaterialsRevision) return contract;
+  contract.contractRevision = careflowMaterialsRevision;
+  contract.requiredCapabilities!.push('image.illustration.v1');
+  for (const slot of contract.imageSlots) {
+    if (slot.materialSource === 'product-primary' || slot.materialSource === 'product-gallery') delete slot.role;
+  }
+  return contract;
+}
+
+// Preserve the published document and renderer for projects pinned to revision 2.
+function originalCareflowMaterialsTemplate(): MaterialsTemplateContract {
   return {
     schemaVersion: 'wr-template-materials-v1',
     templateId: 'careflow-healthcare',
     guideRevision: '2026-10-01.2',
-    contractRevision: careflowMaterialsRevision,
-    rendererRevision: careflowMaterialsRevision,
+    contractRevision: originalCareflowMaterialsRevision,
+    rendererRevision: originalCareflowMaterialsRevision,
     materialsReady: true,
     imagePolicy: 'typed-regions-v1',
     pages: [...materialsPages],

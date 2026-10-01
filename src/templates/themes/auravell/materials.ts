@@ -3,7 +3,8 @@ import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
 import { auravellImages, auravellTexts } from './inventory';
 
-export const auravellMaterialsRevision = '2026-10-01.auravell-materials.2';
+export const auravellMaterialsRevision = '2026-10-01.auravell-materials.3';
+const originalAuravellMaterialsRevision = '2026-10-01.auravell-materials.2';
 
 const base = {
   min: 0,
@@ -20,13 +21,25 @@ export function getAuravellMaterialsTemplate(
   revision?: string,
 ): MaterialsTemplateContract | undefined {
   if (revision === '2026-10-01.auravell-materials.1') return legacyContract(revision);
-  if (revision && revision !== auravellMaterialsRevision) return;
+  if (revision && revision !== auravellMaterialsRevision && revision !== originalAuravellMaterialsRevision) return;
+  const contract = originalAuravellMaterialsTemplate();
+  if (revision === originalAuravellMaterialsRevision) return contract;
+  contract.contractRevision = auravellMaterialsRevision;
+  contract.requiredCapabilities!.push('image.illustration.v1');
+  for (const slot of contract.imageSlots) {
+    if (slot.materialSource === 'product-primary' || slot.materialSource === 'product-gallery') delete slot.role;
+  }
+  return contract;
+}
+
+// Preserve the published document and renderer for projects pinned to revision 2.
+function originalAuravellMaterialsTemplate(): MaterialsTemplateContract {
   return {
     schemaVersion: 'wr-template-materials-v1',
     templateId: 'auravell',
     guideRevision: '2026-10-01.2',
-    contractRevision: auravellMaterialsRevision,
-    rendererRevision: auravellMaterialsRevision,
+    contractRevision: originalAuravellMaterialsRevision,
+    rendererRevision: originalAuravellMaterialsRevision,
     materialsReady: true,
     imagePolicy: 'typed-regions-v1',
     pages: [...materialsPages],

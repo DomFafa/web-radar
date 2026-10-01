@@ -396,13 +396,13 @@
     "sha256": "0ffe9b22bce61216e5c3e6fc4ec6c9bb82cc425c086be7955f2c0b4cc5c36c78",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.careflow-healthcare-materials.2"
+    "contractRevision": "2026-10-01.careflow-healthcare-materials.3"
   },
   "auravell": {
     "url": "/templates/previews/auravell.2eaa361e7dfe8f0c.jpg",
     "sha256": "2eaa361e7dfe8f0c59c0227c203322a05a1e08538b6201e0071a74ab472e8e36",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.auravell-materials.2"
+    "contractRevision": "2026-10-01.auravell-materials.3"
   }
 }

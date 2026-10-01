@@ -20,19 +20,27 @@ const toorunRevision = '2026-10-01.toorun-early-learning-materials.3';
 it.each([
   ['lumi-business', '2026-09-30.lumi-business-materials.1', '95c8bb785c066ef2d3ff44c9e26097939621faf5bb6c0bfcc8326d3c7f535a2a'],
   ['toorun-early-learning', '2026-09-20.toorun-early-learning-materials.2', 'c46a2b9a72acdd50c872ec405b87dd2880c3db35ff7d53224f5b3e4bb75da87d'],
+  ['auravell', '2026-10-01.auravell-materials.2', '9c79f78de81cc348e6b3de9463c36e69760b7016e53002bc5474b2195e356c83'],
+  ['careflow-healthcare', '2026-10-01.careflow-healthcare-materials.2', '34bf391c34378c1efb22d7d011a4e19717e96d2db3de47e15dd555b8b800ea8f'],
 ])('retains published %s contract bytes for saved projects', (id, revision, hash) => {
   const contract = getMaterialsTemplate(id, revision)!;
   expect(createHash('sha256').update(JSON.stringify(contract)).digest('hex')).toBe(hash);
   expect(getMaterialsTemplate(id, 'unknown-revision')).toBeUndefined();
 });
 
-it.each(['home', 'catalog', 'detail', 'about', 'contact'])('keeps Lumi confirmed %s rendering unchanged across the compatibility revision', async page => {
-  const input = await typedMaterialsFixture('lumi-business', 2, '2026-09-30.lumi-business-materials.1');
+describe.each([
+  ['lumi-business', '2026-09-30.lumi-business-materials.1'],
+  ['auravell', '2026-10-01.auravell-materials.2'],
+  ['careflow-healthcare', '2026-10-01.careflow-healthcare-materials.2'],
+])('%s compatibility revision', (id, revision) => {
+it.each(['home', 'catalog', 'detail', 'about', 'contact'])('keeps confirmed %s rendering unchanged', async page => {
+  const input = await typedMaterialsFixture(id, 2, revision);
   const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(media => [media.id, { id: media.id } as Asset])));
   const options = { projectId: 'lumi-revision-test', lang: 'en' as const, page, productId: draft.products[0].id, assetUrl: (id: string) => `/confirmed/${id}`, inquiryUrl: '/inquiry', preview: true };
   const before = renderSite(draft, options);
-  draft.materials!.contractRevision = getMaterialsTemplate('lumi-business')!.contractRevision;
+  draft.materials!.contractRevision = getMaterialsTemplate(id)!.contractRevision;
   expect(renderSite(draft, options)).toBe(before);
+});
 });
 
 it('advertises only contracts with executable image semantics accepted by Product Radar', async () => {
