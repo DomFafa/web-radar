@@ -8,15 +8,9 @@ import { ACTIVE_TEMPLATE_IDS } from '../src/shared/template-availability';
 import { templateMediaRequirements } from '../src/shared/template-media';
 
 describe('papernote template integration', () => {
-  it('is registered in ACTIVE_TEMPLATE_IDS and TEMPLATES', () => {
-    expect(ACTIVE_TEMPLATE_IDS).toContain('papernote');
-    const templateDef = TEMPLATES.find(t => t.id === 'papernote');
-    expect(templateDef).toBeDefined();
-    expect(templateDef?.name).toBe('便签创意作品集');
-    expect(templateDef?.englishName).toBe('PaperNote');
-    expect(templateDef?.badge).toBe('创意作品集 · 纸韵拼贴');
-    expect(templateDef?.accentColor).toBe('#ffe68c');
-    expect(templateDef?.previewImg).toMatch(/^\/templates\/previews\/papernote\.[a-f0-9]{16}\.jpg$/);
+  it('is retired from the selectable template library', () => {
+    expect(ACTIVE_TEMPLATE_IDS).not.toContain('papernote');
+    expect(TEMPLATES.find(t => t.id === 'papernote')).toBeUndefined();
   });
 
   it('has media checklist configured in templateMediaRequirements', () => {

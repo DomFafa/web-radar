@@ -17,7 +17,7 @@ describe('materials guide account boundary',()=>{
   it('allows an ordinary Product Radar account without a Web Radar login and returns a non-publishing demo',async()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
-    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     expect(entries.every((t:any)=>{
       if(['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(t.templateId))return t.contractRevision===`2026-09-20.${t.templateId}-materials.2`&&t.guideRevision==='2026-09-30.1';
       if(t.templateId==='auravell')return t.contractRevision==='2026-10-01.auravell-materials.2'&&t.guideRevision==='2026-10-01.2';

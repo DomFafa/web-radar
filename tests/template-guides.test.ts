@@ -38,7 +38,7 @@ beforeEach(() => {
 
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
-    expect(TEMPLATES.map(template => template.id).sort()).toEqual(['auravell', 'careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(TEMPLATES.map(template => template.id).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     for (const template of TEMPLATES) expect(guideIds).toContain(template.id);
     expect([...guideIds].sort()).toEqual(Object.keys(templateMediaRequirements).sort());
     expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(58);
@@ -119,14 +119,14 @@ describe('versioned internal template documents', () => {
   );
 });
 describe('read-only guide API', () => {
-  it('lists only the ten selectable documents and returns matching JSON, Markdown and schema', async () => {
+  it('lists only the nine selectable documents and returns matching JSON, Markdown and schema', async () => {
     const list = await get();
     expect(list.status).toBe(200);
     expect(list.headers.get('cache-control')).toBe('no-store');
     expect(list.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const catalog = (await list.json()) as any;
-    expect(catalog.total).toBe(11);
-    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'good-boy-pals', 'lumi-business', 'mello-coffee', 'papernote', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    expect(catalog.total).toBe(9);
+    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     for (const item of catalog.templates) {
       const res = await get('/' + item.templateId);
       expect(res.status).toBe(200);

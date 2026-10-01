@@ -52,11 +52,12 @@
 
 错误状态：无效凭据 401、普通用户 403、模板不存在 404、写入方法 405、非法 format 400。
 
-## 当前 11 个模板（2026-10-01）
+## 当前 9 个模板（2026-10-01）
 
 Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 服务器根地址：`https://web.vnvnv.com/api/internal/template-guides`。
 两端保持相同的模板 ID 和规范；凭据由各部署环境管理。
+Good Boy Supply Co. (`good-boy-pals`) 和 PaperNote (`papernote`) 已从可选目录移除。旧项目使用的规范、版本化合同及素材继续兼容；新建项目以目录返回的 9 个模板为准。
 
 | templateId | 名称 | 建议商品/作品主图 | 首页主视觉 | 默认视频 |
 | --- | --- | --- | --- | --- |
@@ -65,8 +66,6 @@ Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 | senseng-nature | Botanical & Forest | 8 张，1200 × 1200 | 2560 × 960，1 张 | 0 |
 | pawfect-groom | Pawfect Groom | 6 张服务照片，1200 × 1200 | 1200 × 1400，1 张肖像 | 0 |
 | lumi-business | Lumi | 6 张，1200 × 1200 | 2560 × 1440，1 张 | 0；可选背景视频 |
-| papernote | PaperNote | 6 张作品，1200 × 1200 | 1200 × 1400，1 张肖像 | 0 |
-| good-boy-pals | Good Boy Supply Co. | 4 张，1200 × 1600 | 1024 × 1152，1 张宠物肖像 | 0 |
 | mello-coffee | Mello Coffee & Bakery | 4 张精选饮品/烘焙，1200 × 1200 | 1200 × 1000，1 张饮品特写 | 0 |
 | auravell | Auravell Yoga & Mindful Living | 每课程 1 张，1200 × 900 | 3456 × 1800，1 张冥想场景 | 3 |
 | careflow-healthcare | Careflow Healthcare | 建议 6 张，1200 × 900 | 2752 × 1412，1 张，主体居右 | 0 |
@@ -75,20 +74,20 @@ Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
 数量为建议准备的不同素材数，不是必传数；已有内置素材可保留，客户商品/作品按真实数量准备。
 每类图片、视频的 `quantity.min/recommended/max`、`dimensions`、格式、大小预算与构图说明以对应 JSON 为准。
 同一主图在首页、目录、详情重复使用只算 1 张；Mello 九宫格可复用菜单图片，不额外要求九张。
-附加素材包括 Pawfect 的沙龙照片和护理图库、Lumi 的插画与文章封面、PaperNote 的作品详情横幅、Good Boy 的分类切图及护理照片、Mello 的店内空间与生活方式图片；完整数量见各自 `assets`。
+附加素材包括 Pawfect 的沙龙照片和护理图库、Lumi 的插画与文章封面、Mello 的店内空间与生活方式图片；完整数量见各自 `assets`。
 
-新增规范文件：`pawfect-groom.json`、`lumi-business.json`、`papernote.json`、`good-boy-pals.json`、`mello-coffee.json`、`toorun-early-learning.json`。
+新增规范文件：`pawfect-groom.json`、`lumi-business.json`、`mello-coffee.json`、`toorun-early-learning.json`。
 每份包含五类页面规划、图片规格与生成提示词、文案条数和长度、缺失事实规则、输出 schema 及实际字段绑定。
 
 ### 外部 AI 的调用顺序
 
-1. `GET /api/internal/template-guides`，从当前 11 个模板中选择 `templateId`。
+1. `GET /api/internal/template-guides`，从当前 9 个模板中选择 `templateId`。
 2. `GET /api/internal/template-guides/:templateId`，读取 `assets` 和 `textSlots`；需要文字文档时添加 `?format=markdown`。
 3. 图片规格 ID（`assetSpecId`）用于生成清单；不能直接当成素材合同的 `slotId`。
 4. 准备提交项目素材时，使用既有 Product Radar 用户/工作区认证读取 `/materials/catalog` 和目录给出的版本化 `requirementsPath`。
 5. 按完整合同的 `imageSlots` / `textSlots` 绑定素材，使用现有项目 API 保存与预览。规范只读密钥不能修改项目。
 
-Mello 与 PaperNote 的原生首屏照片由 `hero-portrait` 素材槽替换；页面 Banner 覆盖整段首屏，二者不同。
+Mello 的原生首屏照片由 `hero-portrait` 素材槽替换；页面 Banner 覆盖整段首屏，二者不同。
 原生模板中尚未接入字段的静态内容会在规范中标为 `manual-template-edit`，不可承诺自动写回生效。
 内置示例人物、项目、价格、地址、营业时间与评价必须替换为客户确认信息，不能当作客户事实。
 
@@ -113,14 +112,14 @@ async function read(path) {
   if (!response.ok) throw new Error(`Template guide HTTP ${response.status}`);
   return response.json();
 }
-const guide = await read('/papernote');
+const guide = await read('/mello-coffee');
 const outputSchema = await read('/output-schema');
 // 由调用方提供真实上下文，不要把认证密钥交给模型。
 const context = {
   language: 'en',
   brand: { name: 'Example Brand', description: 'Provided description', audience: 'Wholesale buyers' },
   products: [{ id: 'p1', name: 'Provided product name', facts: ['Verified fact'], referenceImages: ['https://your-authorized-media.example/p1.png'] }],
-  requestedAssets: ['project-main', 'hero-image'],
+  requestedAssets: ['product-main', 'hero-image'],
 };
 // 将 guide / outputSchema 与 context 分别作为规范和资料传给你的生成服务。
 // 图片/视频地址由调用方按权限提供；规范 API 不读取这些地址，也不提供第三方模型凭据。

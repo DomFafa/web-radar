@@ -59,14 +59,6 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#38929a', badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.ef266445c18ecf37.jpg',
   },
   {
-    id: 'good-boy-pals', name: 'Good Boy 宠物好物', englishName: 'Good Boy Supply Co.',
-    tagline: '还原参考站的明黄与钴蓝、粗体字、贴纸和硬边卡片；完整宠物用品店网站。',
-    category: 'consumer', industries: ['宠物用品', '独立宠物店', '本地零售', '犬猫用品'],
-    features: ['参考原站图片与本地字体', '宠物分类与精选商品', '商品列表、详情、关于及联系页面', '移动菜单、商品搜索与咨询表单'],
-    accentColor: '#ffcd1e', badge: 'Good Boy · 宠物用品',
-    previewImg: '/templates/previews/good-boy-pals.9ca28f1bd61b642f.jpg',
-  },
-  {
     id: 'mello-coffee', name: 'Mello 治愈咖啡烘焙', englishName: 'Mello Coffee & Bakery',
     tagline: '1:1 还原 Mello Brooklyn 治愈系咖啡站；抹茶绿配色、Londrina 标题、互动心情罗盘、时间轴日程、小票账单与座位热点交互。',
     category: 'consumer', industries: ['咖啡烘焙', '精品茶饮', '轻食甜品', '街角咖啡', '餐饮零售'],
@@ -111,18 +103,6 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: '#4a7c59',
     badge: '零塑环保自然 · 动态减碳条',
     previewImg: '/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg',
-  },
-  {
-    id: 'papernote',
-    name: '便签创意作品集',
-    englishName: 'PaperNote',
-    tagline: '专为设计师与创意工作室定制；波点网格信纸、彩色荧光笔手绘涂鸦与微倾斜拍立得卡片',
-    category: 'creative',
-    industries: ['创意设计', '作品集展示', '个人主页', '品牌视觉', '插画设计'],
-    features: ['波点网格纸纹背景', '荧光笔高亮手绘涂鸦', '拍立得斜角卡片网格', '折叠问答与交互履历'],
-    accentColor: '#ffe68c',
-    badge: '创意作品集 · 纸韵拼贴',
-    previewImg: '/templates/previews/papernote.405e0639a2e3eaa7.jpg',
   },
 ];
 

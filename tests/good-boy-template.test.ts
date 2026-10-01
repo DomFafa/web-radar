@@ -45,10 +45,8 @@ const opts: RenderOptions = {
   preview: true,
 };
 describe('Good Boy integrated template', () => {
-  it('registers a selectable template and matching AI guide and materials contract', () => {
-    expect(TEMPLATES.find((t) => t.id === 'good-boy-pals')?.englishName).toBe(
-      'Good Boy Supply Co.',
-    );
+  it('preserves retired projects and their guide and materials contract', () => {
+    expect(TEMPLATES.find((t) => t.id === 'good-boy-pals')).toBeUndefined();
     expect(validateDraft(customer()).template).toBe('good-boy-pals');
     const guide = getTemplateGuide('good-boy-pals')!;
     expect(guide.pagePlan.productDetail).not.toHaveLength(0);
