@@ -1,5 +1,7 @@
 # Web Radar 生产部署记录
 
+当前仓库同步和发布流程以 [仓库同步与线上发布约定](repository-and-publishing.md) 为准。以下为历史部署记录，配置和版本状态需在实际发布时重新核对。
+
 2026-09-12（Asia/Shanghai）。已按用户授权将网站部署到 https://web-radar.net。
 
 ## 首页设计稿 HTTP 400 与参考图读取中断修复
@@ -288,4 +290,3 @@ Worker 回退使用上面记录的旧版本。复刻服务更新可回退 `curre
 - 全量自动化质量门禁：`npm run check`（TypeScript 零错误、86 个测试套件 / 1,945 项测试 100% 通过、Vite 生产构建通过）。
 - GitHub 状态：代码已提交并推送到远端 `fork/codex/10-industry-templates`（Commit `6ec9f85`）。
 - 生产环境健康检查：自定义域名 `https://web-radar.net` HTTP/2 200，新物料与封面资源均正常返回。
-
