@@ -4,6 +4,7 @@ import { parse, type DefaultTreeAdapterMap } from 'parse5';
 import { getMaterialsTemplate, validateMaterialsPositions } from '../src/templates/materials';
 import { renderSite } from '../src/templates';
 import { templateMediaRequirements } from '../src/shared/template-media';
+import { isActiveTemplate } from '../src/shared/template-availability';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { typedMaterialsFixture } from './fixtures/materials-typed';
 import type { Asset } from '../src/shared/model';
@@ -21,18 +22,18 @@ describe('versioned homepage hero inventory', () => {
     const contract = getMaterialsTemplate(id)!;
     if (id === 'auravell') {
       expect(contract.imageSlots.filter(slot => slot.id === 'home-hero')).toHaveLength(1);
-      expect(contract.contractRevision).toBe('2026-10-01.auravell-materials.3');
+      expect(contract.contractRevision).toBe('2026-10-02.auravell-materials.1');
       return;
     }
     if (id === 'careflow-healthcare') {
       expect(contract.imageSlots.filter(slot => slot.id === 'home-hero')).toHaveLength(1);
-      expect(contract.contractRevision).toBe('2026-10-01.careflow-healthcare-materials.3');
+      expect(contract.contractRevision).toBe('2026-10-02.careflow-healthcare-materials.1');
       return;
     }
     if (id === 'toorun-early-learning') {
       expect(contract.imageSlots.filter(slot => slot.id.startsWith('hero-slide-'))).toHaveLength(0);
       expect(contract.imageSlots.find(slot => slot.id === 'product-main')).toMatchObject({materialSource:'product-primary', repeat:'per-product'});
-      expect(contract.contractRevision).toBe('2026-10-01.toorun-early-learning-materials.3');
+      expect(contract.contractRevision).toBe('2026-10-02.toorun-early-learning-materials.1');
       return;
     }
     if (['good-boy-pals', 'mello-coffee', 'pawfect-groom', 'papernote'].includes(id)) {
@@ -44,7 +45,7 @@ describe('versioned homepage hero inventory', () => {
       return;
     }
     expect(contract.imageSlots.filter(slot => slot.id.startsWith('hero-slide-')).map(slot => slot.id)).toEqual(['hero-slide-0']);
-    expect(contract.contractRevision).toBe(`2026-09-23.${id}-materials.6`);
+    expect(contract.contractRevision).toBe(isActiveTemplate(id) ? `2026-10-02.${id}-materials.1` : `2026-09-23.${id}-materials.6`);
   });
 
   it.each(['2026-09-19.corpox-ai-agency-materials.1', '2026-09-20.corpox-ai-agency-materials.2', undefined])(

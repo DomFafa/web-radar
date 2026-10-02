@@ -57,7 +57,7 @@ describe('Mello Coffee integrated template', () => {
     const guide = getTemplateGuide('mello-coffee')!;
     expect(guide).toBeDefined();
     expect(guide.pagePlan.productDetail).not.toHaveLength(0);
-    expect(guide.revision).toBe('2026-09-30.1');
+    expect(guide.revision).toBe('2026-10-02.1');
 
     const contract = getMaterialsTemplate('mello-coffee')!;
     expect(contract).toMatchObject({ materialsReady: true, guideRevision: guide.revision });

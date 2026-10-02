@@ -15,7 +15,7 @@ const elements = (node: Node): DefaultTreeAdapterMap['element'][] => [
 ];
 const attr = (node: DefaultTreeAdapterMap['element'], name: string) => node.attrs.find(a => a.name === name)?.value;
 const hasClass = (node: DefaultTreeAdapterMap['element'], name: string) => attr(node, 'class')?.split(/\s+/).includes(name);
-const toorunRevision = '2026-10-01.toorun-early-learning-materials.3';
+const toorunRevision = '2026-10-02.toorun-early-learning-materials.1';
 
 it.each([
   ['lumi-business', '2026-09-30.lumi-business-materials.1', '95c8bb785c066ef2d3ff44c9e26097939621faf5bb6c0bfcc8326d3c7f535a2a'],

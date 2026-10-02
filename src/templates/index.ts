@@ -9,7 +9,7 @@ import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee
 import { renderPaperNoteSite } from './themes/papernote';
 import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
 import { toorunStyles } from './themes/toorunStyles';
-import { renderReleasedMaterials } from './materials-releases';
+import { renderReleasedMaterials, materialsDraftForRenderer } from './materials-releases';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
@@ -98,6 +98,7 @@ function segment(id: string): string {
 }
 const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  draft = materialsDraftForRenderer(draft);
   if (!isTypedMaterialsSource(draft)) draft = singleProductDraft(draft);
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);

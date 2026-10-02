@@ -11,14 +11,14 @@
     "sha256": "e34176ef503d3488dc7df603142b902026117e01c29c8de4fecc89b928ca16f9",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-23.senseng-video-materials.6"
+    "contractRevision": "2026-10-02.senseng-video-materials.1"
   },
   "senseng-candy": {
     "url": "/templates/previews/senseng-candy.9b0f0d6425301df8.jpg",
     "sha256": "9b0f0d6425301df83989394e2283ea3b59bac77502428e1018eefad08966c2ae",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-23.senseng-candy-materials.6"
+    "contractRevision": "2026-10-02.senseng-candy-materials.1"
   },
   "senseng-wonder": {
     "url": "/templates/previews/senseng-wonder.91574a9e2f66acd1.jpg",
@@ -39,7 +39,7 @@
     "sha256": "833f84aa6cdbc38f4a3bf0f63e7380c141f59577c864794fb8d2251176809cf0",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-23.senseng-nature-materials.6"
+    "contractRevision": "2026-10-02.senseng-nature-materials.1"
   },
   "senseng-minimal": {
     "url": "/templates/previews/senseng-minimal.188e54942d194362.jpg",
@@ -354,14 +354,14 @@
     "sha256": "ef266445c18ecf3757265ab68013416edae5514465c21ab525db8ed859f03e31",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-20.pawfect-groom-materials.2"
+    "contractRevision": "2026-10-02.pawfect-groom-materials.1"
   },
   "lumi-business": {
     "url": "/templates/previews/lumi-business.db0d249082becfa2.jpg",
     "sha256": "db0d249082becfa2a48e0fed409dff8f9cc3f018f550fa881032dc5497346b0c",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.lumi-business-materials.2"
+    "contractRevision": "2026-10-02.lumi-business-materials.1"
   },
   "good-boy-pals": {
     "url": "/templates/previews/good-boy-pals.9ca28f1bd61b642f.jpg",
@@ -375,7 +375,7 @@
     "sha256": "f251cb4d1c141730fe5af89cf44f56664161d65be25631a24ddb67139179ddb9",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-09-20.mello-coffee-materials.2"
+    "contractRevision": "2026-10-02.mello-coffee-materials.1"
   },
   "papernote": {
     "url": "/templates/previews/papernote.405e0639a2e3eaa7.jpg",
@@ -389,20 +389,20 @@
     "sha256": "dfb78be0504ef868e86fdb8bc56389f3e6fe3a5322412a03e94e0725db764697",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.toorun-early-learning-materials.3"
+    "contractRevision": "2026-10-02.toorun-early-learning-materials.1"
   },
   "careflow-healthcare": {
     "url": "/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg",
     "sha256": "0ffe9b22bce61216e5c3e6fc4ec6c9bb82cc425c086be7955f2c0b4cc5c36c78",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.careflow-healthcare-materials.3"
+    "contractRevision": "2026-10-02.careflow-healthcare-materials.1"
   },
   "auravell": {
     "url": "/templates/previews/auravell.2eaa361e7dfe8f0c.jpg",
     "sha256": "2eaa361e7dfe8f0c59c0227c203322a05a1e08538b6201e0071a74ab472e8e36",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-01.auravell-materials.3"
+    "contractRevision": "2026-10-02.auravell-materials.1"
   }
 }

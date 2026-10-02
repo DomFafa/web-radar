@@ -5,7 +5,7 @@ import { TEMPLATES } from '../src/client/TemplateSelector';
 import { getMaterialsTemplate } from '../src/templates/materials';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import covers from '../src/worker/template-guides/covers.json';
-import { auravellMaterialsRevision } from '../src/templates/themes/auravell/materials';
+import { imageContentGuideRevision, imageContentMaterialsRevision } from '../src/templates/materials-image-content';
 
 describe('Auravell Yoga & Mindful Living Template', () => {
   it('validates a draft configured with template auravell', () => {
@@ -39,8 +39,8 @@ describe('Auravell Yoga & Mindful Living Template', () => {
     const contract = getMaterialsTemplate('auravell');
     expect(contract).toBeDefined();
     expect(contract!.templateId).toBe('auravell');
-    expect(contract!.guideRevision).toBe('2026-10-01.2');
-    expect(contract!.contractRevision).toBe(auravellMaterialsRevision);
+    expect(contract!.guideRevision).toBe(imageContentGuideRevision);
+    expect(contract!.contractRevision).toBe(imageContentMaterialsRevision('auravell'));
     expect(contract!.imagePolicy).toBe('typed-regions-v1');
     expect(contract!.materialsReady).toBe(true);
 

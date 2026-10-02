@@ -20,11 +20,12 @@ describe('new native template material guides', () => {
       const html = renderSite(draft,{projectId:'guide-test',page:'home',lang:'en',assetUrl:id=>'/test-assets/'+id,inquiryUrl:'/inquiry',preview:true});
       expect(html).toMatch(/<img[^>]+src="\/test-assets\/approved-hero"/);
     });
-  it('Mello documents coffee assets without inherited pet-shop instructions', () => {
+  it('Mello describes actual product assets without imposing its demonstration subject', () => {
     const guide = getTemplateGuide('mello-coffee')!;
     expect(JSON.stringify(guide)).not.toMatch(/pet.shop|pet-category|宠物|洗护/);
     expect(guide.assets.find(a=>a.id==='product-main')).toMatchObject({dimensions:{width:1200,height:1200},quantity:{recommended:4}});
-    expect(guide.assets.find(a=>a.id==='cafe-gallery')?.composition).toContain('不等于必须另做');
+    expect(guide.inventory.reuseRule).toContain('不要求额外造图');
+    for (const asset of guide.assets) expect(asset.promptTemplate).not.toMatch(/golden retriever|coffee favorites|strawberry matcha|dog-care scene/i);
   });
   it('PaperNote describes six projects and marks shared detail artwork binding explicitly', () => {
     const guide=getTemplateGuide('papernote')!;

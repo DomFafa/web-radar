@@ -36,7 +36,7 @@ describe('reference motion release compatibility', () => {
       const revision = `2026-10-01.${id}-materials.1`;
       const original = contractFor(revision)!;
       expect(getMaterialsTemplate(id, revision)).toEqual(original);
-      expect(getMaterialsTemplate(id)?.contractRevision).toBe(`2026-10-01.${id}-materials.3`);
+      expect(getMaterialsTemplate(id)?.contractRevision).toBe(`2026-10-02.${id}-materials.1`);
       const input = await typedMaterialsFixture(id, 2);
       const draft = draftFromMaterials(
         input,
