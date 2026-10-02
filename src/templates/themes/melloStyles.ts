@@ -6249,4 +6249,6 @@ img {
 }
 
 ${melloLayoutStyles}
+/* Inner-page sections must not cover the absolute navigation's hit area. */
+body.mello-coffee .header{z-index:20}
 `;

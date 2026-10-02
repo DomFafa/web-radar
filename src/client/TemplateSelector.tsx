@@ -4,6 +4,7 @@ import type { Draft, TemplateId } from '../shared/model';
 import { Button, Icon } from './components';
 import { templateMediaRequirements } from '../shared/template-media';
 import { templateCoverUrl } from '../shared/template-covers';
+import { TEMPLATE_BRAND_COLORS, brandColorPatch, templateSelectionPatch } from '../shared/template-brand-color';
 
 export interface TemplateDefinition {
   id: TemplateId;
@@ -25,7 +26,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     tagline: '还原 Auravell 的静谧冥想大图、米白底色、暖沙陶土色系与衬线标题；全功能身心疗愈与瑜伽课程网站。',
     category: 'consumer', industries: ['瑜伽馆', '冥想中心', '身心疗愈', '颂钵调息', '高端美学生活'],
     features: ['1:1 还原静修首屏大图与浮动课程卡', '课程分类网格、时长与预约详情', '关于理念、导师团队与环境展示', '会员计划、折叠答疑与预约咨询表单'],
-    accentColor: '#99582a', badge: 'Auravell · 瑜伽身心',
+    accentColor: TEMPLATE_BRAND_COLORS.auravell, badge: 'Auravell · 瑜伽身心',
     previewImg: '/templates/previews/auravell.2eaa361e7dfe8f0c.jpg',
   },
   {
@@ -33,14 +34,14 @@ export const TEMPLATES: TemplateDefinition[] = [
     tagline: '还原 Careflow Home V1 的蓝白医疗视觉、宽幅走廊大图与柔光卡片；完整服务与预约咨询网站。',
     category: 'enterprise', industries: ['医疗机构', '健康服务', '诊所', '康复中心', '专业咨询'],
     features: ['原站响应式布局与本地字体', '设施介绍、团队轮播与折叠问答', '服务目录、详情、关于和联系页', '主副图切换与预约咨询表单'],
-    accentColor: '#6197de', badge: 'Careflow · 医疗健康', previewImg: '/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg',
+    accentColor: TEMPLATE_BRAND_COLORS['careflow-healthcare'], badge: 'Careflow · 医疗健康', previewImg: '/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg',
   },
   {
     id: 'toorun-early-learning', name: '童趣早教中心', englishName: 'Toorun Early Learning',
     tagline: '还原 Toorun 的云朵渐变、倾斜儿童照片、草绿与紫色圆角体系；适合早教、托育和儿童课程机构。',
     category: 'consumer', industries: ['早教中心', '托育机构', '幼儿园', '儿童课程', '亲子活动'],
     features: ['云朵渐变与四图拼贴首屏', '课程列表与独立课程详情', '关于、联系与常见问题页面', '移动菜单与现有询盘表单'],
-    accentColor: '#3f6b52', badge: 'Toorun · 幼儿早教',
+    accentColor: TEMPLATE_BRAND_COLORS['toorun-early-learning'], badge: 'Toorun · 幼儿早教',
     previewImg: '/templates/previews/toorun-early-learning.dfb78be0504ef868.jpg',
   },
   {
@@ -48,7 +49,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     tagline: '还原 Lumi 的浅蓝渐变、Satoshi 字体、衬线斜体标题与视频首屏；完整企业服务网站。',
     category: 'enterprise', industries: ['企业咨询', '数字服务', '营销工作室', '商务服务', '软件服务'],
     features: ['参考原站桌面与移动布局', '视频首屏与服务轮播', '价格、博客、文章与招聘页面', '服务详情与现有询盘表单'],
-    accentColor: '#48a7ff', badge: 'Lumi · 企业服务', hasVideo: true,
+    accentColor: TEMPLATE_BRAND_COLORS['lumi-business'], badge: 'Lumi · 企业服务', hasVideo: true,
     previewImg: '/templates/previews/lumi-business.db0d249082becfa2.jpg',
   },
   {
@@ -56,14 +57,14 @@ export const TEMPLATES: TemplateDefinition[] = [
     tagline: '暖白、青绿与琥珀色的宠物美容沙龙；有机轮廓首屏、服务菜单与预约咨询。',
     category: 'consumer', industries: ['宠物美容', '犬只护理', '本地服务', '宠物沙龙'],
     features: ['金毛肖像与有机浮动首屏', '服务列表与独立详情页', '图库、关于我们与常见问题', '预约咨询接入现有询盘'],
-    accentColor: '#38929a', badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.ef266445c18ecf37.jpg',
+    accentColor: TEMPLATE_BRAND_COLORS['pawfect-groom'], badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.ef266445c18ecf37.jpg',
   },
   {
     id: 'mello-coffee', name: 'Mello 治愈咖啡烘焙', englishName: 'Mello Coffee & Bakery',
     tagline: '1:1 还原 Mello Brooklyn 治愈系咖啡站；抹茶绿配色、Londrina 标题、互动心情罗盘、时间轴日程、小票账单与座位热点交互。',
     category: 'consumer', industries: ['咖啡烘焙', '精品茶饮', '轻食甜品', '街角咖啡', '餐饮零售'],
     features: ['1:1 还原 Webflow 原站全套桌面与移动布局', '互动心情罗盘与时间轴日程选项卡', '手绘小票卡片与座位热点交互', '完整 6 大品类咖啡烘焙价目单与详情页'],
-    accentColor: '#78bf30', badge: 'Mello · 治愈咖啡烘焙',
+    accentColor: TEMPLATE_BRAND_COLORS['mello-coffee'], badge: 'Mello · 治愈咖啡烘焙',
     previewImg: '/templates/previews/mello-coffee.f251cb4d1c141730.jpg',
   },
 
@@ -75,7 +76,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer',
     industries: ['儿童玩具', '萌宠解压', '感官潮玩', '亲子母婴', '外贸出口'],
     features: ['马卡龙糖果配色', '左右分栏萌趣舞台', '4大感官魔力标签', '立体糖果展台网格'],
-    accentColor: '#ff6b8b',
+    accentColor: TEMPLATE_BRAND_COLORS['senseng-candy'],
     badge: '童趣感官玩具 · 爆款首选',
     previewImg: '/templates/previews/senseng-candy.9b0f0d6425301df8.jpg',
   },
@@ -87,7 +88,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer',
     industries: ['品牌出海', '精品独立站', '潮流消费品', '生态家居', '外贸工厂'],
     features: ['100vh 动态视频全屏铺满', '半透明磨砂质感浮层', '平滑下滚引导箭头', '声画动效控制'],
-    accentColor: '#0284c7',
+    accentColor: TEMPLATE_BRAND_COLORS['senseng-video'],
     badge: '首屏动态视频 · 沉浸震撼',
     hasVideo: true,
     previewImg: '/templates/previews/senseng-video.e34176ef503d3488.jpg',
@@ -100,7 +101,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer',
     industries: ['母婴玩具', '环保可降解', '自然生活美学', '绿色供应链', '亲子早教'],
     features: ['柔和波浪弧线', '生态减碳进度条', '晨雾滑入动效', '植物标本瀑布流'],
-    accentColor: '#4a7c59',
+    accentColor: TEMPLATE_BRAND_COLORS['senseng-nature'],
     badge: '零塑环保自然 · 动态减碳条',
     previewImg: '/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg',
   },
@@ -285,24 +286,14 @@ export default function TemplateSelector({
             <div
               key={tmpl.id}
               className={`template-card ${isSelected ? 'selected' : ''}`}
-              onClick={() =>
-                onUpdateDraft({
-                  buildBranch: 'template',
-                  template: tmpl.id,
-                  brandColor: tmpl.accentColor,
-                })
-              }
+              onClick={() => onUpdateDraft(templateSelectionPatch(draft, tmpl.id))}
               onKeyDown={(event) => {
                 if (
                   event.target === event.currentTarget &&
                   (event.key === 'Enter' || event.key === ' ')
                 ) {
                   event.preventDefault();
-                  onUpdateDraft({
-                    buildBranch: 'template',
-                    template: tmpl.id,
-                    brandColor: tmpl.accentColor,
-                  });
+                  onUpdateDraft(templateSelectionPatch(draft, tmpl.id));
                 }
               }}
               role="button"
@@ -434,11 +425,7 @@ export default function TemplateSelector({
                   className={`select-tmpl-btn ${isSelected ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onUpdateDraft({
-                      buildBranch: 'template',
-                      template: tmpl.id,
-                      brandColor: tmpl.accentColor,
-                    });
+                    onUpdateDraft(templateSelectionPatch(draft, tmpl.id));
                   }}
                 >
                   {isSelected ? '✓ 当前已选用' : '选用此模版'}
@@ -464,7 +451,7 @@ export default function TemplateSelector({
                 key={c.value}
                 type="button"
                 className={`color-pill ${currentColor === c.value ? 'selected' : ''}`}
-                onClick={() => onUpdateDraft({ brandColor: c.value })}
+                onClick={() => onUpdateDraft(brandColorPatch(draft, c.value))}
               >
                 <span className="color-circle" style={{ backgroundColor: c.value }} />
                 <span>{c.label}</span>
@@ -477,11 +464,16 @@ export default function TemplateSelector({
             <input
               type="color"
               value={currentColor}
-              onChange={(e) => onUpdateDraft({ brandColor: e.target.value })}
+              onChange={(e) => onUpdateDraft(brandColorPatch(draft, e.target.value))}
               title="选择自定义主色调"
             />
             <code className="color-code">{currentColor.toUpperCase()}</code>
           </div>
+          {selectedTemplate && (
+            <Button kind="quiet" onClick={() => onPreview(selectedTemplate)}>
+              <Icon name="eye" size={16} /> 预览配色效果
+            </Button>
+          )}
         </div>
       </div>
 

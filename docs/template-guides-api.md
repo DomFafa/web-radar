@@ -176,6 +176,12 @@ const context = {
 
 本地真实 Worker 验证：先 `npm run build`，再执行 `node scripts/verify_template_guides.mjs`。测试使用隔离的 D1 和测试密钥，不发起模型请求。
 
+## 品牌主色调
+
+当前 9 个可选模板都支持网站品牌色：普通草稿使用 `draft.brandColor`，Materials 接入使用 `visual.palette.primary`；在编辑器改色时两者同步。主色应用于导航选中/悬停、主要按钮、装饰线与联系卡片。按钮保留所选颜色，文字自动选用黑色或白色；浅色品牌的导航文字使用更深的同色系，确保可读。
+
+模板试览、整站预览和发布采用同一颜色规则。更换模板保留客户自定义色，未自定义时使用新模板默认色；再次选用当前模板不重置颜色。品牌色仅影响网站 CSS，不更改图片、视频或产品生图指令。已发布的静态网站需保存草稿并重新发布后更新。
+
 ## Careflow Healthcare 接入说明（2026-10-02）
 
 - 模板 ID：`careflow-healthcare`；Guide revision：`2026-10-02.1`；合同版本：`2026-10-02.careflow-healthcare-materials.1`；渲染版本保持 `2026-10-01.careflow-healthcare-materials.2`。
@@ -184,7 +190,7 @@ const context = {
 - 16 个页面图片槽位，每个 0–1 张；尺寸逐项列在 JSON 的 `layoutImageSlots` / `assets` 及合同的 `imageSlots`。保留默认示例图时无需上传。首屏 `home-hero` 为 **2752 × 1412**；左下角覆盖标题卡，主体宜放右侧。
 - `product-main`：每个服务 1 张 **1200 × 900** 主图；`product-gallery`：每个服务 **0–10 张 1200 × 900** 附图，使用 `productId` 与 `itemIndex` 关联。主图在目录和详情复用；附图可以点击切换、键盘切换和放大。
 - 支持 JPEG、PNG、WebP，建议大图 ≤600 KB、其他图片 ≤350 KB；可传独立移动图和焦点。字体、图标和示例图片已本地化，无需运行 Webflow 脚本。
-- 文案使用纯文本槽位与 `locale`；`palette.primary` 控制按钮主色，按钮文字根据背景亮度自动选择深色或白色。其他调色参数未在此版本声明支持。
+- 文案使用纯文本槽位与 `locale`；`palette.primary` 控制上述品牌色组件，按钮文字根据背景亮度自动选择黑色或白色。其他调色参数未在此版本声明支持。
 - 示例医生、评分、患者评价、统计、院区和资讯仅用于参考预览；客户发布省略 `reference-claims`，使用已确认的机构和服务数据。预约入口提交现有询盘，不直接确认预约；页脚入口转联系页，不伪装已订阅。
 - 参考站的图库、导航、折叠问答和院区选项卡采用项目自有运行时；没有外部 Webflow 表单、广告或跟踪脚本。
 

@@ -249,6 +249,8 @@ After authentication WR reads the server-issued receipt on the project, bypasses
 
 Keep the imported source snapshot immutable for provenance. Store editable applied bindings/visual settings separately in the draft; preview/edit/publish read that current draft, so user edits are not overwritten by the original import snapshot. Existing company/product/contact fields stay authoritative for their mapped positions. Read-only provenance cannot be overwritten through ordinary PUT drafts. Changing template requires explicit rebind/revalidation for this new project, not silently applying old position IDs.
 
+For the nine active templates, `visual.palette.primary` and the editable draft's `brandColor` stay synchronized. The current draft color drives navigation highlights, primary buttons, accent lines and contact cards in preview and publication. Buttons retain the exact primary color and use contrasting black/white text; light-surface links may use a darker companion. Reference layouts and media are unchanged. Brand color is a website CSS parameter only, never an image-generation instruction. Existing static publications update after an explicit republish.
+
 ## 6. Binding and acceptance obligations
 
 - Existing reference layouts cycle main product photos by index; new bindings must resolve exact positions. Senseng additionally contains hard-coded brand/logo, headline, static copy and example product padding. Under the new import branch, replace these with approved data; never fill missing products with demo products.

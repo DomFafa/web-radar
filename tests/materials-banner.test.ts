@@ -1,4 +1,4 @@
-import { parse, type DefaultTreeAdapterMap } from 'parse5';
+import { parse, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import { expect, it } from 'vitest';
 import { newBanner } from '../src/shared/banner-config';
 import type { Asset } from '../src/shared/model';
@@ -163,7 +163,10 @@ it.each(
 
 it('keeps unconfigured output and page/detail scope unchanged for typed materials', async () => {
   const draft = await fixture('senseng-candy');
-  expect(renderSite(draft, options)).toBe(renderReleasedMaterials(draft, options));
+  // The final renderer adds brand CSS to <head>; banner-free page content must
+  // still match the pinned materials renderer, including its media and scripts.
+  const body = (html: string) => nodes(parse(html)).find(node => node.tagName === 'body')!;
+  expect(serialize(body(renderSite(draft, options)))).toBe(serialize(body(renderReleasedMaterials(draft, options)!)));
   const empty = editDraft(draft, { ...draft, banners: [newBanner('new-home', ['home'])] });
   expect(renderSite(empty, options)).toBe(renderSite(draft, options));
   const saved = editDraft(draft, {

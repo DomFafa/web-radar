@@ -10,6 +10,7 @@ import { renderPaperNoteSite } from './themes/papernote';
 import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
 import { toorunStyles } from './themes/toorunStyles';
 import { renderReleasedMaterials, materialsDraftForRenderer } from './materials-releases';
+import { withTemplateBrandColor } from './brand-color';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
@@ -102,8 +103,8 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
   if (!isTypedMaterialsSource(draft)) draft = singleProductDraft(draft);
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);
-  if (released !== undefined) return released;
-  const html = renderSiteContent(draft, options);
+  if (released !== undefined) return withTemplateBrandColor(released, draft);
+  const html = withTemplateBrandColor(renderSiteContent(draft, options), draft);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return withProductImageViewer(html);
 }
