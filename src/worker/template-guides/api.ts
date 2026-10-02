@@ -11,6 +11,7 @@ import { guideMarkdown } from './markdown';
 import { currentMaterialsPrincipal, verifyMaterialsSecret } from '../materials-auth';
 import { getMaterialsTemplate } from '../../templates/materials';
 import { materialsLocales, materialsPages } from '../../shared/materials';
+import { isProductNativeRevision } from '../../shared/product-native-materials';
 import { renderSite } from '../../templates';
 import { materialsDemoDraft } from './materials-demo';
 import { materialsCatalog, matchesMaterialsEtag } from './materials-catalog';
@@ -92,7 +93,7 @@ export function createTemplateGuidesApp() {
     const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
     const page=c.req.query('page')||'home',lang=c.req.query('lang')||'en';
-    if(!(profile.templateId==='auravell'?auravellPages:profile.templateId==='lumi-business'?lumiPages:materialsPages).includes(page as never)||!materialsLocales.includes(lang as never))throw new ApiError(400,'invalid_preview','页面或语言无效。');
+    if(!(isProductNativeRevision(profile.templateId,profile.contractRevision)?materialsPages:profile.templateId==='auravell'?auravellPages:profile.templateId==='lumi-business'?lumiPages:materialsPages).includes(page as never)||!materialsLocales.includes(lang as never))throw new ApiError(400,'invalid_preview','页面或语言无效。');
     const draft=materialsDemoDraft(profile,lang as typeof materialsLocales[number]);
     const html=renderSite(draft,{projectId:'materials-demo',lang:lang as typeof draft.languages[number],page,productId:draft.primaryProductId,assetUrl:id=>id,inquiryUrl:'',preview:true});
     return c.json({templateId:profile.templateId,contractRevision:profile.contractRevision,page,html,assetBaseUrl:c.env.APP_ORIGIN||new URL(c.req.url).origin,demo:true});

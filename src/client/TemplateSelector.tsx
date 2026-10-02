@@ -57,7 +57,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     tagline: '暖白、青绿与琥珀色的宠物美容沙龙；有机轮廓首屏、服务菜单与预约咨询。',
     category: 'consumer', industries: ['宠物美容', '犬只护理', '本地服务', '宠物沙龙'],
     features: ['金毛肖像与有机浮动首屏', '服务列表与独立详情页', '图库、关于我们与常见问题', '预约咨询接入现有询盘'],
-    accentColor: TEMPLATE_BRAND_COLORS['pawfect-groom'], badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.ef266445c18ecf37.jpg',
+    accentColor: TEMPLATE_BRAND_COLORS['pawfect-groom'], badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.17b92249c4802926.jpg',
   },
   {
     id: 'mello-coffee', name: 'Mello 治愈咖啡烘焙', englishName: 'Mello Coffee & Bakery',
