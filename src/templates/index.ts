@@ -5,6 +5,7 @@ import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
+import { isPawfectMaterials, renderPawfectMaterialsPage, pawfectMaterialsStyles, pawfectMaterialsPalette } from './themes/pawfect/renderer';
 import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee';
 import { renderPaperNoteSite } from './themes/papernote';
 import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
@@ -113,7 +114,7 @@ function renderSiteContent(draft: Draft, options: RenderOptions): string {
   if(draft.template === 'auravell')return withBanner(withFavicon(renderAuravellSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'careflow-healthcare')return withBanner(withFavicon(renderCareflowSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
-  if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
+  if(isTypedMaterials(draft)&&!isPawfectMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
   // Several standalone headers build their own language links and used catalog
   // depth on product pages. Normalize those links at the common output boundary.
@@ -383,6 +384,10 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   }
   if (template === 'pawfect-groom') {
     const ctx = buildThemeContext(draft, options);
+    if (isPawfectMaterials(draft)) {
+      const seo = materialsSeo(draft, options)!;
+      return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title || company.name)}</title><meta name="description" content="${esc(seo.description || copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectMaterialsStyles}</style></head><body class="pawfect-groom wr-pawfect-materials" data-template="pawfect-groom" data-wr-materials-revision="${esc(draft.materials!.contractRevision)}" style="${pawfectMaterialsPalette(draft)}--pg-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectMaterialsPage(ctx)}<script>${script}</script></body></html>`;
+    }
     const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;
   }

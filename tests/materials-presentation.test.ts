@@ -152,6 +152,7 @@ describe('confirmed materials presentation', () => {
     '%s groups only confirmed IDs and preserves stored products and original galleries',
     async (template) => {
       const draft = grouped(await fixture(template));
+      const nativePawfect = draft.materials?.contractRevision === '2026-10-02.pawfect-groom-materials.2';
       draft.products[2].name = draft.products[0].name;
       const before = JSON.stringify(draft);
       for (const [page, count] of [
@@ -162,7 +163,7 @@ describe('confirmed materials presentation', () => {
         const list = nodes.find((n) => attr(n, 'data-wr-product-list') === page)!;
         expect(list, template + ' ' + page).toBeDefined();
         const cards = elements(list).filter((n) => attr(n, 'data-wr-product-card') !== undefined);
-        expect(cards).toHaveLength(count);
+        expect(cards).toHaveLength(nativePawfect && page === 'home' ? 5 : count);
         expect(cards.some((n) => attr(n, 'data-wr-product-id') === 'p1')).toBe(false);
         expect(cards.some((n) => attr(n, 'data-wr-product-id') === 'p2')).toBe(true);
         expect(cards.every((n) => !text(n).includes('Verified description'))).toBe(true);
@@ -175,7 +176,8 @@ describe('confirmed materials presentation', () => {
         elements(select).filter((n) => n.tagName === 'option' && attr(n, 'value')),
       ).toHaveLength(18);
       const detail = renderSite(draft, options('detail', 'p1'));
-      expect(detail).toContain('/bound/gallery-p1');
+      if (nativePawfect) expect(detail).not.toContain('/bound/gallery-p1');
+      else expect(detail).toContain('/bound/gallery-p1');
       expect(detail).toContain('Actual toy 1');
       const nodes = elements(parse(detail)),
         main = nodes.find(
@@ -298,6 +300,8 @@ describe('confirmed materials presentation', () => {
       draft.copy.en!.cta = 'Send Product Inquiry';
       draft.materials!.textBindings.find((b) => b.slotId === 'primary-cta')!.text =
         'Send Product Inquiry';
+      const nativePawfect = draft.materials?.contractRevision === '2026-10-02.pawfect-groom-materials.2';
+      if (nativePawfect) draft.materials!.textBindings.find(b => b.slotId === 'cta-button')!.text = 'Send Product Inquiry';
       for (const [page, path] of [
         ['home', 'index.html'],
         ['catalog', 'catalog/index.html'],
@@ -318,7 +322,7 @@ describe('confirmed materials presentation', () => {
           (n) => n.tagName === 'a' && /Send Product Inquiry/.test(text(n)),
         ))
           expect(new URL(attr(link, 'href')!, `https://example.test/en/${path}`).pathname).toBe(
-            '/en/contact/index.html',
+            nativePawfect && attr(link, 'data-wr-material-text') === 'primary-cta' ? '/en/catalog/index.html' : '/en/contact/index.html',
           );
       }
     },

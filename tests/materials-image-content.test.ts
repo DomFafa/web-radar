@@ -37,12 +37,13 @@ function executableInventory(contract: MaterialsTemplateContract) {
 }
 
 describe('customer-owned image subjects in template materials', () => {
-  it('publishes a distinct revision for all nine selectable templates', () => {
+  it('publishes the current revision while keeping image-content revisions readable', () => {
     expect(ACTIVE_TEMPLATE_IDS).toHaveLength(9);
     for (const id of ACTIVE_TEMPLATE_IDS) {
       const contract = getMaterialsTemplate(id)!;
       expect(contract, id).toBeDefined();
-      expect(contract.contractRevision).toBe(`2026-10-02.${id}-materials.1`);
+      expect(contract.contractRevision).toBe(`2026-10-02.${id}-materials.${id === 'pawfect-groom' ? 2 : 1}`);
+      expect(getMaterialsTemplate(id, `2026-10-02.${id}-materials.1`)).toBeDefined();
       expect(contract.guideRevision).toBe('2026-10-02.1');
       expect(getMaterialsTemplate(id, contract.contractRevision)).toEqual(contract);
     }
@@ -83,8 +84,9 @@ describe('customer-owned image subjects in template materials', () => {
   });
 
   it.each(ACTIVE_TEMPLATE_IDS)('%s preserves the previous executable slot inventory', async id => {
-    const latest = getMaterialsTemplate(id)!;
-    const input = await typedMaterialsFixture(id, 2);
+    const revision = `2026-10-02.${id}-materials.1`;
+    const latest = getMaterialsTemplate(id, revision)!;
+    const input = await typedMaterialsFixture(id, 2, revision);
     const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(media => [media.id, { id: media.id } as Asset])));
     const rendererDraft = materialsDraftForRenderer(draft);
     const previous = getMaterialsTemplate(id, rendererDraft.materials!.contractRevision)!;
@@ -105,7 +107,7 @@ describe('customer-owned image subjects in template materials', () => {
   });
 
   it.each(ACTIVE_TEMPLATE_IDS)('%s requires customer evidence or an approved business subject, never a template example', id => {
-    const contract = getMaterialsTemplate(id)!;
+    const contract = getMaterialsTemplate(id, `2026-10-02.${id}-materials.1`)!;
     expect(contract.imageSlots.length).toBeGreaterThan(0);
     if (contract.productApplicability) expect(contract.productApplicability.preferredFamilies).toEqual([]);
     for (const slot of contract.imageSlots) {
@@ -136,7 +138,7 @@ describe('customer-owned image subjects in template materials', () => {
   });
 
   it.each(ACTIVE_TEMPLATE_IDS)('%s renders the same confirmed images and layout under both revisions', async id => {
-    const input = await typedMaterialsFixture(id, 2);
+    const input = await typedMaterialsFixture(id, 2, `2026-10-02.${id}-materials.1`);
     const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(media => [media.id, { id: media.id } as Asset])));
     const original = structuredClone(draft);
     const previous = materialsDraftForRenderer(draft);

@@ -39,6 +39,19 @@ describe('typed region wire extensions',()=>{
 });
 
 describe('common typed image policy',()=>{
+  it.each(['retained bytes','same slot duplicate','fresh bytes'])('enforces generate-new composition: %s',async scenario=>{
+    const {m,profile}=await typedFixture();
+    profile.imageSlots.find(slot=>slot.id==='scene')!.reusePolicy='generate-new';
+    const scenes=m.imageBindings.filter(binding=>binding.slotId==='scene');
+    const first=m.media.find(media=>media.id===scenes[0].mediaId)!;
+    if(scenario==='retained bytes')first.sha256=m.media.find(media=>media.id===m.products[0].primaryMediaId)!.sha256;
+    if(scenario==='same slot duplicate'){
+      m.media.find(media=>media.id===scenes[1].mediaId)!.sha256=first.sha256;
+    }
+    const codes=validateTypedMaterials(m,profile).map(issue=>issue.code);
+    if(scenario==='fresh bytes')expect(codes).toEqual([]);
+    else expect(codes).toContain(scenario==='retained bytes'?'generated_source_reused':'slot_composition_reused');
+  });
   it('accepts six paired products, a smaller scene selection and independent factory imagery',async()=>{
     const{m,profile}=await typedFixture();expect(validateTypedMaterials(m,profile)).toEqual([]);
   });

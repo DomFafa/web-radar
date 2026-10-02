@@ -28,7 +28,10 @@ export function projectPreviewHtml(html: string, base: string, origin: string, s
         const params = new URLSearchParams({ page, lang: get('data-wr-lang') || selection.lang, expectedVersion: String(selection.expectedVersion) });
         const productId = get('data-wr-product-id') || selection.productId;
         if (productId && (page === 'detail' || page === 'contact')) params.set('productId', productId);
-        set('href', base + '/preview?' + params);
+        const href = get('href') || '';
+        const fragment = href.includes('#') ? href.slice(href.indexOf('#') + 1) : undefined;
+        const hash = fragment && /^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(fragment) ? '#' + fragment : '';
+        set('href', base + '/preview?' + params + hash);
       }
       if (node.tagName === 'form') { set('action', '#'); set('data-wr-preview-disabled', 'true'); }
     }

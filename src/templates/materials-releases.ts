@@ -4,6 +4,7 @@ import { renderAuravellSite as legacyAuravell, renderCareflowSite as legacyCaref
 import { getCareflowMaterialsTemplate } from './themes/careflow/materials';
 import { getLumiMaterialsTemplate } from './themes/lumi/materials';
 import { getAuravellMaterialsTemplate } from './themes/auravell/materials';
+import { getPawfectMaterialsTemplate, pawfectMaterialsRevision } from './themes/pawfect/materials';
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
 import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
@@ -92,6 +93,7 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (id === 'pawfect-groom' && (!revision || revision === pawfectMaterialsRevision)) return getPawfectMaterialsTemplate(revision);
   if (usesImageContentRevision(id, revision) || (!revision && isActiveTemplate(id) && imageContentBaseRevision(id))) {
     const source = originalMaterialsContract(id, imageContentBaseRevision(id));
     return source ? withConfirmedImageContent(source) : undefined;

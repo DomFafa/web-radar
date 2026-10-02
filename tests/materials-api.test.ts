@@ -18,7 +18,7 @@ describe('materials guide account boundary',()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
     expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
-    expect(entries.every((t:any)=>t.contractRevision===`2026-10-02.${t.templateId}-materials.1`&&t.guideRevision==='2026-10-02.1')).toBe(true);
+    expect(entries.every((t:any)=>t.contractRevision===`2026-10-02.${t.templateId}-materials.${t.templateId==='pawfect-groom'?2:1}`&&t.guideRevision==='2026-10-02.1')).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
     const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
   });
