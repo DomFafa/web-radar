@@ -4,6 +4,8 @@ import{testDb}from'./helpers/db';
 import{MaterialsService}from'../src/worker/materials-service';
 import{DomainStore}from'../src/worker/domain-store';
 import{materialsFixture,materialsPng}from'./fixtures/materials';
+import{typedMaterialsFixture}from'./fixtures/materials-typed';
+import{ACTIVE_TEMPLATE_IDS}from'../src/shared/template-availability';
 import * as templates from '../src/templates';
 import{ApiError,canonical,sha256}from'../src/worker/http';
 import type{AppEnv}from'../src/worker/env';
@@ -52,6 +54,33 @@ describe('durable confirmed materials receiver',()=>{
   const deferred=()=>{let resolve!:(response:Response)=>void;const promise=new Promise<Response>(r=>{resolve=r;});return{promise,resolve};};
   const progress=()=>service.status(fixture.principal,fixture.submissionId);
   const finish=async()=>{for(let i=0;i<5;i++){await service.tick();const receipt=await service.status(fixture.principal,fixture.submissionId);if(receipt.state!=='receiving')return receipt;}throw Error('did not finish');};
+  it.each(ACTIVE_TEMPLATE_IDS)('creates a durable five-page result for advertised %s materials',async templateId=>{
+    fixture=await typedMaterialsFixture(templateId,2);
+    // This receiver fixture serves actual 1x1 PNGs rather than render-only metadata.
+    for(const media of fixture.materials.media){media.width=1;media.height=1;}
+    fixture.confirmation.contentSha256=await sha256(canonical({source:fixture.source,materials:fixture.materials}));
+    respond=async assetId=>{
+      const media=fixture.materials.media.find(item=>item.sourceAssetId===assetId)!;
+      const bytes=Buffer.concat([materialsPng,Buffer.from(media.id)]);
+      return new Response(bytes,{headers:{'content-type':'image/png','content-length':String(bytes.length)}});
+    };
+    expect((await service.submit(fixture.principal,fixture)).state).toBe('receiving');
+    const receipt=await finish();expect(receipt.state,JSON.stringify(receipt)).toBe('accepted');
+    const saved=objects.get(`website-results/${receipt.projectId}/1/result.json`)!;
+    const result=JSON.parse(new TextDecoder().decode(saved.bytes));
+    expect(result.project.draft.materials.contractRevision).toBe(fixture.materials.template.contractRevision);
+    expect(result.project.draft.products).toHaveLength(2);
+    for(const path of ['en/index.html','en/products/index.html','en/products/p1/index.html','en/about/index.html','en/contact/index.html']){
+      expect(result.pages[path],path).toContain('<html');
+    }
+    if(templateId==='toorun-early-learning'){
+      expect(result.pages['en/index.html']).toContain('class="tr-hero"');
+      expect(result.pages['en/index.html']).not.toContain('class="wr-confirmed-hero"');
+    }
+    expect(websiteCalls.filter(call=>call==='commit')).toHaveLength(1);
+    expect((await service.submit(fixture.principal,fixture)).projectId).toBe(receipt.projectId);
+    expect(websiteCalls.filter(call=>call==='commit')).toHaveLength(1);
+  });
   it('accepts Product Radar code-unit hashes for product identities and still rejects changed content',async()=>{
     const identity={version:1 as const,family:'toy' as const,composition:'single' as const,packCount:1,packagingBox:'present' as const,subjectVisible:true,geometry:'concept' as const,parts:[],shape:'round hamster',colors:['orange'],features:['acorn']};
     fixture.materials.products[0].productIdentity=identity;

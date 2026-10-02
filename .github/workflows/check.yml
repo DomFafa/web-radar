@@ -58,11 +58,21 @@ jobs:
       - run: node scripts/verify-materials-demo-release.mjs
         env:
           DEMO_ALL_PAGES: '1'
+      - run: node scripts/verify-native-gallery.mjs
+      - run: node scripts/verify-template-brand-colors.mjs
+      - run: node scripts/verify-careflow-template.mjs
+      - run: node scripts/verify-auravell-template.mjs
+      - run: node scripts/verify-reference-motion.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: template-demo-regression
-          path: artifacts/materials-demo-release/
+          path: |
+            artifacts/materials-demo-release/
+            artifacts/careflow-browser/
+            artifacts/auravell-browser/
+            artifacts/reference-motion-browser/
+            artifacts/template-brand-colors/
 
   render-quality:
     runs-on: ubuntu-latest

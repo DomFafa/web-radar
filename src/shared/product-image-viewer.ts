@@ -178,7 +178,9 @@ export function productImageViewerRuntime(originalUrl?: string) {
     fullImage.removeAttribute('src');
     opener?.focus({ preventScroll: true });
   });
-  images.forEach(image => {
+  const bound = new WeakSet<HTMLImageElement>();
+  const bindImages = (images: HTMLImageElement[]) => images.forEach(image => {
+    if (bound.has(image)) return; bound.add(image);
     image.setAttribute('data-wr-image-zoom', '');
     image.setAttribute('role', 'button');
     image.setAttribute('aria-label', enlarge);
@@ -199,6 +201,8 @@ export function productImageViewerRuntime(originalUrl?: string) {
       }
     });
   });
+  bindImages(images);
+  window.addEventListener('wr:template-mounted', () => bindImages([...document.querySelectorAll<HTMLImageElement>('#detailMainImg, #wr-detail-main-img, [data-wr-product-image]')]));
 }
 
 export function withProductImageViewer(html: string, originalUrl?: string): string {

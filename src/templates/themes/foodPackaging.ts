@@ -23,7 +23,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Raw wildflower honey · diastase > 8 Gothe · HMF < 15 mg/kg',
     dimensions: '500 g glass jar · shelf life 36 months · batch traceable',
     tagline: 'Cold-Extracted Enzyme-Active Wildflower from High-Altitude Meadows',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800&q=80&auto=format',
   },
   {
     id: 'food-2',
@@ -33,7 +33,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Koroneiki EVOO · acidity < 0.3% · polyphenols > 350 mg/kg',
     dimensions: '500 ml dark glass bottle · PDO certified · organic',
     tagline: 'PDO-Protected Koroneiki with Polyphenol-Rich First Press',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=80&auto=format',
   },
   {
     id: 'food-3',
@@ -43,7 +43,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Malatya apricots · no sulphur dioxide · jumbo grade > 35 mm',
     dimensions: '1 kg resealable pouch · shelf life 18 months',
     tagline: 'Sulphur-Free Sun-Dried Malatya Jumbo with Natural Carotenoids',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1606851094655-b2593a9af63f?w=800&q=80&auto=format',
   },
   {
     id: 'food-4',
@@ -53,7 +53,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Single-estate oolong · altitude 800-1800 m · hand-rolled',
     dimensions: '6 × 50 g vacuum-sealed tins · nitrogen-flushed',
     tagline: 'Hand-Rolled High-Mountain Estate Oolongs from 6 Terroirs',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&q=80&auto=format',
   },
   {
     id: 'food-5',
@@ -63,7 +63,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Whole spices ground to order · no anti-caking agents',
     dimensions: '8 × 45 g glass jars in wooden presentation box',
     tagline: 'Small-Batch Ground-to-Order Blends from 8 Global Origins',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&q=80&auto=format',
   },
   {
     id: 'food-6',
@@ -73,7 +73,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Chuao Trinitario cacao · 72% · 72-hour stone grind',
     dimensions: '80 g bar · micro-batch of 200 · compostable wrapper',
     tagline: 'Stone-Ground 72-Hour Chuao Trinitario in Micro Batches',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=800&q=80&auto=format',
   },
   {
     id: 'food-7',
@@ -83,7 +83,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Organic oats, pecans, maple syrup · no refined sugar',
     dimensions: '400 g kraft standup pouch · 12-month shelf life',
     tagline: 'Slow-Baked Organic Clusters with Grade A Dark Maple',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1517093157656-b9ec81646279?w=800&q=80&auto=format',
   },
   {
     id: 'food-8',
@@ -93,7 +93,7 @@ export const FOOD_DEFAULT_PRODUCTS: ThemedFoodItem[] = [
     material: 'Stone-milled Italian durum semolina · bronze-die extruded',
     dimensions: '4 × 500 g (rigatoni, fusilli, pappardelle, orecchiette)',
     tagline: '48-Hour Slow-Dried Stone-Milled Bronze-Die Texture',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281292?w=800&q=80&auto=format',
   },
 ];
 

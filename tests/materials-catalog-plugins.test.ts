@@ -10,16 +10,10 @@ vi.mock('../src/templates/materials-release-registry', async () => {
 
 import { materialsCatalog } from '../src/worker/template-guides/materials-catalog';
 import { getMaterialsTemplate } from '../src/templates/materials';
-import { sha256 } from '../src/worker/http';
 
-it('discovers a validated plugin without consumer changes and excludes invalid execution contracts', async () => {
+it('keeps retired plugin contracts readable without advertising additional templates', async () => {
   const catalog = await materialsCatalog();
-  const plugin = catalog.templates.find(t => t.templateId === 'integration-showcase')!;
-  expect(plugin).toBeDefined();
-  expect(catalog.templates.some(t => t.templateId === 'invalid-plugin')).toBe(false);
-  expect(plugin.contractSha256).toBe(await sha256(JSON.stringify(getMaterialsTemplate(plugin.templateId, plugin.contractRevision!))));
-  expect(plugin.requirementsPath).toContain(encodeURIComponent(plugin.contractRevision!));
-  // A missing corresponding cover is explicit; never borrow another template's image.
-  expect(plugin.thumbnailUrl).toBeNull();
-  expect(plugin.thumbnailRevision).toBeNull();
+  expect(catalog.templates.map(t => t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+  expect(getMaterialsTemplate('integration-showcase')).toBeDefined();
+  expect(getMaterialsTemplate('invalid-plugin')).toBeUndefined();
 });

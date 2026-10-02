@@ -37,7 +37,10 @@ it('selects the full original gallery image and clears stale picture/srcset cand
     querySelector: (selector: string) => (selector === '.wr-materials-site' ? null : main),
     querySelectorAll: () => [group],
   });
+  const mounted = vi.fn();
+  vi.stubGlobal('window', { addEventListener: mounted });
   materialsRuntime();
+  expect(mounted).toHaveBeenCalledWith('wr:template-mounted', expect.any(Function));
   clicked();
   expect(main.src).toBe('/original-detail');
   expect(main.alt).toBe('Side view');

@@ -33,7 +33,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Traditional interlocking mortise & tenon with concealed hardwood dowels',
     moq: '20 Pcs per Run',
     tagline: 'Pure Structural Honesty Without a Single Exposed Screw',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80&auto=format',
   },
   {
     id: 'fur-2',
@@ -48,7 +48,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Counterbalanced pneumatic scissor mechanism tested to 50,000 cycles',
     moq: '15 Units Batch',
     tagline: 'Yielding +45% Usable Living Floor Area in Urban Condos',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80&auto=format',
   },
   {
     id: 'fur-3',
@@ -63,7 +63,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'French cleat heavy-duty wall mounting with micro-leveling adjustments',
     moq: '25 Units Order',
     tagline: 'Zero-Footprint Visual Levitation for Modern Living Rooms',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800&q=80&auto=format',
   },
   {
     id: 'fur-4',
@@ -78,7 +78,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Precision cogwheel cable synchronization for effortless single-person pull',
     moq: '20 Pcs Run',
     tagline: 'Seamlessly Adapting from Intimate Dinners to Grand Banquets',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?w=800&q=80&auto=format',
   },
   {
     id: 'fur-5',
@@ -93,7 +93,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Continuous grain wrapping across all drawer fronts and seamless miter joints',
     moq: '30 Pcs Order',
     tagline: 'Unbroken Continuous Grain Across Every Architectural Surface',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&q=80&auto=format',
   },
   {
     id: 'fur-6',
@@ -108,7 +108,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Interlocking invisible steel alligator connectors with gas-assisted chaise lift',
     moq: '15 Sets Production',
     tagline: 'De-Cluttering Living Spaces with Invisible Volumetric Vaults',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800&q=80&auto=format',
   },
   {
     id: 'fur-7',
@@ -123,7 +123,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Precision mandrel CNC bending with zero weld seams on main curve',
     moq: '40 Pcs Order',
     tagline: 'Defying Mass with Floating Elastic Structural Suspension',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=800&q=80&auto=format',
   },
   {
     id: 'fur-8',
@@ -138,7 +138,7 @@ export const FURNITURE_DEFAULT_PRODUCTS: ThemedFurnitureItem[] = [
     joineryMechanismDetail: 'Smooth pneumatic anti-pinch scissor linkage with soft-closing dampers',
     moq: '50 Pcs Run',
     tagline: 'Transforming Lounge Space into Productive Home Office in Seconds',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1532372320978-5d7f2a01862a?w=800&q=80&auto=format',
   },
 ];
 

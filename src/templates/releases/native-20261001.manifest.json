@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "26615aee203bad1af8b1a22a98b5bf3466471db7",
+  "sha256": "59adf5f5261e8e91dcdcf3fef139c657223fccdc90434c8d752797b8c094e8c6",
+  "templates": [
+    "auravell",
+    "careflow-healthcare"
+  ],
+  "description": "Unmodified original .1 materials renderers, contracts and private preview runtimes before reference-motion repair.",
+  "previewSha256": "3ffbe702eae7dfffb761188041355b10053d365bfa14555c9354a1e27af4c53c",
+  "previewSourceSha256": "c76ecb6ec8e792e9dc91f9bccc86ff355e9ab85cc49ad5574c44c28aa5a5fe1f"
+}

@@ -33,7 +33,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: '15° per side hand-honed bevel with octagonal desert ironwood handle',
     moq: '50 Pcs per Batch',
     tagline: 'Surgical Precision Born from Ancient Swordmaking Metallurgy',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80&auto=format',
   },
   {
     id: 'kit-2',
@@ -48,7 +48,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Spiked rainfall condensation self-basting lid with ergonomic brass knob',
     moq: '100 Pcs per Run',
     tagline: 'Centuries of Simmering Depth in Timeless French Enamel',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?w=800&q=80&auto=format',
   },
   {
     id: 'kit-3',
@@ -63,7 +63,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Stay-cool hollow cast stainless handle riveted with dual solid aircraft rivets',
     moq: '80 Pcs Batch',
     tagline: 'Instantaneous Flame Control for Michelin-Star Deglazing',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800&q=80&auto=format',
   },
   {
     id: 'kit-4',
@@ -78,7 +78,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Flat cutting edge with balanced forward weight for effortless chopping',
     moq: '60 Pcs Order',
     tagline: 'Whisper-Clean Slicing Without Bruising Delicate Fibers',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=800&q=80&auto=format',
   },
   {
     id: 'kit-5',
@@ -93,7 +93,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Deep spherical bowl with detachable lathe-turned German beechwood handle',
     moq: '150 Pcs Production',
     tagline: 'Capturing the High-Heat Breath of Ancient Asian Culinary Masters',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=800&q=80&auto=format',
   },
   {
     id: 'kit-6',
@@ -108,7 +108,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Generous molded easy-grip handles with flared anti-spill rim',
     moq: '120 Pcs Run',
     tagline: 'Oven-to-Table Elegance with Flawless Heat Retention',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&q=80&auto=format',
   },
   {
     id: 'kit-7',
@@ -123,7 +123,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Perimeter deep juice reservoir groove with routed side finger grips',
     moq: '40 Pcs Order',
     tagline: 'Self-Healing Fibers Protecting the Keens of Fine Blades',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80&auto=format',
   },
   {
     id: 'kit-8',
@@ -138,7 +138,7 @@ export const KITCHEN_DEFAULT_PRODUCTS: ThemedKitchenItem[] = [
     bladeGeometryDetail: 'Full-tang triple brass mosaic rivets with dark pakkawood scales',
     moq: '30 Sets Run',
     tagline: 'Gliding Through Prime Steaks with Effortless Hydraulic Grace',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1588784189819-067eec6aab07?w=800&q=80&auto=format',
   },
 ];
 

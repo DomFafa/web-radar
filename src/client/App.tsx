@@ -892,6 +892,9 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                       {project.productCount} 个产品 ·{' '}
                       {
                         ({
+                          auravell: 'Auravell 瑜伽美学生活馆',
+                          'careflow-healthcare': 'Careflow 医疗健康',
+                          'toorun-early-learning': '童趣早教中心',
                           natural: '现代典雅',
                           technology: '先锋科技',
                           explorer: '硬核工业',
@@ -909,6 +912,11 @@ function Projects({ onOpen, principal }: { onOpen: (id: string) => void; princip
                           'senseng-wonder': '北欧温润工坊',
                           'senseng-arcade': '霓虹赛博潮玩',
                           'senseng-nature': '森林原野工坊',
+                          'good-boy-pals': 'Good Boy 宠物好物',
+                          'mello-coffee': 'Mello 治愈咖啡烘焙',
+                          'pawfect-groom': '暖心宠物美容',
+                          'lumi-business': 'Lumi 智慧商业',
+                          'papernote': '便签创意作品集',
                           'senseng-minimal': '瑞士极简生活馆',
                           'universal-trade-banner': '全品类精选展台',
                           'universal-showcase-video': '全景商贸视界',

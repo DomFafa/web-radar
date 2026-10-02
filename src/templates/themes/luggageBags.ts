@@ -33,7 +33,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Solid Cast Brass Hardware + YKK Excella Dual Zippers',
     moq: '50 Pcs per Colorway',
     tagline: 'A Century of Patina in Every Stitch',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80&auto=format',
   },
   {
     id: 'lug-2',
@@ -48,7 +48,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Japanese Hinomoto Lisof® Silent 360° Dual Spinners',
     moq: '200 Pcs per Batch',
     tagline: 'Ultralight Engineering for Global Transit',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=800&q=80&auto=format',
   },
   {
     id: 'lug-3',
@@ -63,7 +63,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Hand-Milled Solid Brass Latches with Key Lock',
     moq: '80 Pcs per Order',
     tagline: 'Architectural Elegance for Discerning Connoisseurs',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80&auto=format',
   },
   {
     id: 'lug-4',
@@ -78,7 +78,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'German Fidlock® Magnetic Buckles + Duraflex Sliders',
     moq: '150 Pcs per Style',
     tagline: 'All-Weather Armor for Urban Commuters',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1577733966973-d680bffd2e80?w=800&q=80&auto=format',
   },
   {
     id: 'lug-5',
@@ -93,7 +93,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Reinforced 60mm Ball-Bearing Shock-Absorbing Wheels',
     moq: '100 Pcs per Run',
     tagline: 'Fortress-Level Armor for Transcontinental Voyages',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1581553680321-4fffae59fccd?w=800&q=80&auto=format',
   },
   {
     id: 'lug-6',
@@ -108,7 +108,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Solid Copper Hand-Pounded Rivets + Antiqued Snaps',
     moq: '100 Pcs per Colorway',
     tagline: 'Water-Repellent Heritage Born from Nautical Sailcloth',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80&auto=format',
   },
   {
     id: 'lug-7',
@@ -123,7 +123,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Laser-Etched Aluminum G-Hooks + YKK Aquaguard',
     moq: '250 Pcs per Order',
     tagline: 'Dynamic Capacity Adapting to Every Journey',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=800&q=80&auto=format',
   },
   {
     id: 'lug-8',
@@ -138,7 +138,7 @@ export const LUGGAGE_DEFAULT_PRODUCTS: ThemedLuggageItem[] = [
     wheelHardware: 'Hand-Skived Edges + French Fil Au Chinois Linen Thread',
     moq: '200 Pcs per Run',
     tagline: 'Pocket-Sized Luxury for Seamless Check-In',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80&auto=format',
   },
 ];
 

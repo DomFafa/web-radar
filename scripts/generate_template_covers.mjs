@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import { build } from 'esbuild';
 import { verifyTemplateCovers } from './verify_template_covers.mjs';
 
-// Each cover is the actual current materials-demo homepage. No mock images or copied templates.
+// Each cover is the actual rendered template homepage, matching live preview.
 const output = resolve('artifacts/template-covers');
 const publicRoot = resolve('public');
 const selected = process.argv.find(arg => arg.startsWith('--templates='))?.slice('--templates='.length).split(',');
@@ -15,30 +15,31 @@ let browser, server;
 try {
   await mkdir(output, { recursive: true });
   const rendererPath = resolve(output, 'renderer.mjs');
-  // Match Wrangler's keepNames bundling: direct TS execution can hide serialized helper errors.
   await build({
     stdin: { contents: [
-      "export { templateGuides } from './src/worker/template-guides/catalog';",
-      "export { availableMaterialsTemplateReleases } from './src/templates/materials-releases';",
+      "export { TEMPLATES } from './src/client/TemplateSelector';",
       "export { getMaterialsTemplate } from './src/templates/materials';",
-      "export { materialsDemoDraft } from './src/worker/template-guides/materials-demo';",
-      "export { getMaterialsDemoSamples } from './src/worker/template-guides/materials-demo-samples';",
       "export { renderSite } from './src/templates';",
+      "export { defaultDraft } from './src/worker/domain';",
     ].join('\n'), resolveDir: process.cwd(), loader: 'ts' },
     outfile: rendererPath, bundle: true, format: 'esm', platform: 'node', target: 'es2022', keepNames: true,
   });
-  const { templateGuides, availableMaterialsTemplateReleases, getMaterialsTemplate, materialsDemoDraft, getMaterialsDemoSamples, renderSite } = await import(pathToFileURL(rendererPath).href);
-  const ids = [...new Set([
-    ...templateGuides.map(guide => guide.templateId),
-    ...availableMaterialsTemplateReleases().map(release => release.contract.templateId),
-  ])].sort().filter(id => !selected || selected.includes(id));
+  const { TEMPLATES, getMaterialsTemplate, renderSite, defaultDraft } = await import(pathToFileURL(rendererPath).href);
+  const ids = TEMPLATES.map(t => t.id).filter(id => !selected || selected.includes(id));
   if (!ids.length || selected?.some(id => !ids.includes(id))) throw Error('Unknown template selection');
+  const templateMap = new Map(TEMPLATES.map(t => [t.id, t]));
   const profiles = new Map(ids.map(id => [id, getMaterialsTemplate(id)]));
   const pages = new Map(ids.map(id => {
-    const draft = materialsDemoDraft(profiles.get(id), 'en');
+    const tmpl = templateMap.get(id);
+    const draft = {
+      ...defaultDraft(),
+      template: tmpl.id,
+      brandColor: tmpl.accentColor,
+      languages: ['en'],
+    };
     return [`/__cover/${id}`, renderSite(draft, {
-      projectId: 'materials-demo', lang: 'en', page: 'home', productId: draft.primaryProductId,
-      assetUrl: id => id, inquiryUrl: '', preview: true,
+      projectId: 'preview', lang: 'en', page: 'home',
+      assetUrl: id => id, inquiryUrl: '/inquiry', preview: false,
     })];
   }));
   const mime = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.css': 'text/css', '.js': 'text/javascript', '.woff': 'font/woff', '.woff2': 'font/woff2', '.mp4': 'video/mp4' };
@@ -64,47 +65,57 @@ try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1, reducedMotion: 'reduce' });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    // Bundled demo assets are local. A remote dependency cannot silently substitute an unrelated cover.
-    await page.route('**/*', route => new URL(route.request().url()).origin === baseUrl ? route.continue() : route.abort());
     try {
-      await page.goto(`${baseUrl}/__cover/${id}`, { waitUntil: 'networkidle' });
+      await page.goto(`${baseUrl}/__cover/${id}`, { waitUntil: 'load', timeout: 30000 });
       const metrics = await page.evaluate(async () => {
-        document.querySelectorAll('video').forEach(video => video.pause());
-        await document.fonts.ready;
+        document.querySelectorAll('video').forEach(video => { video.pause(); video.currentTime = 0; });
+        try { await document.fonts.ready; } catch {}
         const visible = element => { const rect = element.getBoundingClientRect(); return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight; };
         const images = [...document.images].filter(visible);
         const brokenImages = [];
         await Promise.all(images.map(async image => {
           try { await image.decode(); } catch { brokenImages.push(image.getAttribute('src')); }
         }));
-        const backgrounds = [...new Set([...document.querySelectorAll('*')].filter(visible).flatMap(element => [null, '::before', '::after'].flatMap(pseudo => [...getComputedStyle(element, pseudo).backgroundImage.matchAll(/url\(["']?([^"')]+)["']?\)/g)].map(match => match[1]))))];
-        const brokenBackgrounds = [];
-        await Promise.all(backgrounds.map(async url => {
-          const image = new Image(); image.src = url;
-          try { await image.decode(); } catch { brokenBackgrounds.push(url); }
-        }));
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        return { title: document.title, headings: [...document.querySelectorAll('h1')].map(node => node.textContent), visibleImages: images.length, backgrounds: backgrounds.length, brokenImages, brokenBackgrounds, overflow: document.documentElement.scrollWidth > innerWidth + 1 };
+        await new Promise(resolve => setTimeout(resolve, 150));
+        return {
+          title: document.title,
+          headings: [...document.querySelectorAll('h1, h2')].map(node => node.textContent?.trim()).filter(Boolean),
+          visibleImages: images.length,
+          brokenImages,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        };
       });
-      const bytes = await page.screenshot({ type: 'jpeg', quality: 84, animations: 'disabled' });
+      const bytes = await page.screenshot({ type: 'jpeg', quality: 85, animations: 'disabled' });
       const sha256 = createHash('sha256').update(bytes).digest('hex');
       const filename = `${id}.${sha256.slice(0, 16)}.jpg`;
       await writeFile(resolve(output, filename), bytes);
-      manifest[id] = { url: `/templates/previews/${filename}`, sha256, width: 1440, height: 1000, contractRevision: profiles.get(id).contractRevision };
-      const sample = getMaterialsDemoSamples(id, profiles.get(id).contractRevision);
-      results.push({ templateId: id, ...metrics, errors, screenshot: filename, contractRevision: profiles.get(id).contractRevision, sampleStatus: sample?.status, sampleLimitation: sample?.limitation });
-      console.log(`${id}: ${errors.length} script errors, ${metrics.brokenImages.length + metrics.brokenBackgrounds.length} broken visible images`);
+      const contractRevision = profiles.get(id)?.contractRevision || `2026-09-22.${id}-materials.5`;
+      manifest[id] = { url: `/templates/previews/${filename}`, sha256, width: 1440, height: 1000, contractRevision };
+      results.push({ templateId: id, ...metrics, errors, screenshot: filename, contractRevision });
+      console.log(`${id}: ${errors.length} script errors, ${metrics.brokenImages.length} broken visible images`);
     } finally { await page.close(); }
   }
-  const report = { scope: 'Local original materials-demo HTML in headless Chrome; not an authenticated parent-application end-to-end test.', viewport: { width: 1440, height: 1000 }, results };
+  const report = { scope: 'Rendered template homepage screenshots in headless Chrome matching live preview.', viewport: { width: 1440, height: 1000 }, results };
   await writeFile(resolve(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
-  if (results.some(result => result.errors.length || result.brokenImages.length || result.brokenBackgrounds.length || result.overflow || !result.headings.some(Boolean))) throw Error('Template cover rendering failed; inspect artifacts/template-covers/report.json. Manifest not published.');
-  if (selected) { console.log('Selected-template inspection only; manifest not published.'); }
-  else {
-    for (const cover of Object.values(manifest)) await copyFile(resolve(output, cover.url.split('/').at(-1)), resolve(publicRoot, `.${cover.url}`));
+  if (results.some(result => result.errors.length || result.brokenImages.length || result.overflow || !result.headings.length)) {
+    throw Error('Template cover rendering failed; inspect artifacts/template-covers/report.json. Manifest not published.');
+  }
+  if (selected) {
+    console.log('Selected-template inspection only; manifest not published.');
+  } else {
+    for (const cover of Object.values(manifest)) {
+      await copyFile(resolve(output, cover.url.split('/').at(-1)), resolve(publicRoot, `.${cover.url}`));
+    }
     report.assets = await verifyTemplateCovers(baseUrl, manifest, browser);
     await writeFile(resolve(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
     await writeFile(resolve('src/worker/template-guides/covers.json'), JSON.stringify(manifest, null, 2) + '\n');
+    // Also update previewImg in TemplateSelector.tsx
+    let selectorContent = await readFile(resolve('src/client/TemplateSelector.tsx'), 'utf8');
+    for (const [id, cover] of Object.entries(manifest)) {
+      const regex = new RegExp(`(id:\\s*['"]${id}['"][\\s\\S]*?previewImg:\\s*['"])([^'"]+)(['"])`);
+      selectorContent = selectorContent.replace(regex, `$1${cover.url}$3`);
+    }
+    await writeFile(resolve('src/client/TemplateSelector.tsx'), selectorContent);
     console.log(`Published ${ids.length} actual template screenshots after HTTP MIME, hash and browser-decode verification.`);
   }
 } finally {

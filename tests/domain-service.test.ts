@@ -1646,12 +1646,12 @@ it('renders product detail pages and accepts the frontend detail preview query',
   let p = await publishable();
   const preview = await request(`/api/projects/${p.id}/preview?page=detail&productId=p1`);
   expect(preview.status).toBe(200);
-  expect(preview.data.html).toContain('class="detail wrap"');
+  expect(preview.data.html).toContain('id="wr-detail-main-img"');
   p = await publishNow(p);
   const page = await service.fetch(
     new Request(`http://localhost/public/sites/${p.id}/en/products/p1/index.html`),
   );
-  expect(await page.text()).toContain('class="detail wrap"');
+  expect(await page.text()).toContain('id="wr-detail-main-img"');
 });
 it('keeps expired ambiguous mail delivery unknown and blocks every retry path', async () => {
   let p = await publishable();

@@ -18,7 +18,7 @@ export function renderWonderHome(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Pure Joy',
     category: 'sensory',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&q=80&auto=format',
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 

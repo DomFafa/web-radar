@@ -1,6 +1,8 @@
-# Web Radar 受控生产发布
+# Web Radar 上游 Actions 发布工作流（可选）
 
-生产入口是 `.github/workflows/production-release.yml` 的手动 dispatch。普通 push、PR 或本地 `npm run release:production` 不会部署。此工作流发布 Web Radar 主 Worker 和对应静态文件，不部署 Product Radar、建站服务或客户网站，不执行 D1 迁移。
+2026-10-01 更新：项目负责人已确认常规流程为“推送 wuyueerhao/web-radar → 向 DomFafa/web-radar 提交 PR → 使用项目 Token 直接发布 Cloudflare”，仓库合并由负责人后续手动完成。以 [仓库同步与线上发布约定](repository-and-publishing.md) 为准；下面的合并和工作流前置条件仅适用于选择本 Actions 工作流的情况，不阻挡常规 Token 发布。
+
+本可选工作流的入口是 `.github/workflows/production-release.yml` 的手动 dispatch。普通 push、PR 或本地 `npm run release:production` 不会启动该工作流部署。此工作流发布 Web Radar 主 Worker 和对应静态文件，不部署 Product Radar、建站服务或客户网站，不执行 D1 迁移。
 
 ## 发布前提和执行过程
 

@@ -11,6 +11,7 @@ import { guideMarkdown } from '../src/worker/template-guides/markdown';
 import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import { TEMPLATES } from '../src/client/TemplateSelector';
+import { isActiveTemplate } from '../src/shared/template-availability';
 import { getMaterialsTemplate } from '../src/templates/materials';
 import { authenticate, mintSession } from '../src/worker/auth';
 import { testPrincipal } from '../src/worker/product-radar';
@@ -38,11 +39,11 @@ beforeEach(() => {
 
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
-    expect(templateGuides.map((g) => g.templateId)).toEqual([...guideIds]);
-    expect([...guideIds].sort()).toEqual(TEMPLATES.map((template) => template.id).sort());
+    expect(TEMPLATES.map(template => template.id).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
+    for (const template of TEMPLATES) expect(guideIds).toContain(template.id);
     expect([...guideIds].sort()).toEqual(Object.keys(templateMediaRequirements).sort());
-    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(50);
-    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(50);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.artDirection)).size).toBe(58);
+    expect(new Set(templateGuides.map((g) => g.visualSystem.composition)).size).toBe(58);
   });
   it('requires a matching confirmed-materials contract for every registered template', () => {
     for (const template of TEMPLATES) {
@@ -56,7 +57,7 @@ describe('versioned internal template documents', () => {
     }
   });
   it.each([
-    ['senseng-candy', '#FF6B8B', '糖果', 930],
+    ['senseng-candy', '#FF6B8B', '马卡龙', 930],
     ['senseng-wonder', '#264653', '北欧', 1070],
     ['senseng-arcade', '#00F5D4', 'HUD', 1000],
     ['senseng-nature', '#2D4A22', '森林', 960],
@@ -75,12 +76,12 @@ describe('versioned internal template documents', () => {
     (guide) => {
       expect(guideSchema.safeParse(guide).success).toBe(true);
       const summary = templateMediaRequirements[guide.templateId]!;
-      expect(guide.revision).toBe(guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
+      expect(guide.revision).toBe(isActiveTemplate(guide.templateId) ? '2026-10-02.1' : ['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.2':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
       const [, width, height] = summary.bannerSize.match(/^(\d+)\s*×\s*(\d+)/)!;
-      expect(guide.assets.find(asset => asset.id === 'hero-image')!.dimensions).toEqual({ width: Number(width), height: Number(height) });
+      expect(guide.assets.find(asset => asset.id === (['careflow-healthcare', 'auravell'].includes(guide.templateId)?'home-hero':'hero-image'))!.dimensions).toEqual({ width: Number(width), height: Number(height) });
       expect(guide.inventory.bundledVideoCount).toBe(summary.videos);
       expect(guide.inventory.recommendedDistinctProductImages).toBe(summary.productCount);
-      expect(guide.layoutImageSlots.length).toBe(summary.productCount);
+      expect(guide.layoutImageSlots.length).toBe(guide.templateId==='careflow-healthcare'?16:guide.templateId==='auravell'?10:summary.productCount);
       if (guide.templateId in referenceLayouts) {
         const layout = referenceLayouts[guide.templateId as keyof typeof referenceLayouts];
         expect(
@@ -105,7 +106,7 @@ describe('versioned internal template documents', () => {
         }
       }
       expect(guide.textSlots.some((t) => t.id === 'hero-headline')).toBe(true);
-      expect(guide.textSlots.some((t) => t.id === 'seo-description')).toBe(true);
+      expect(guide.textSlots.some((t) => t.id === (['careflow-healthcare', 'auravell'].includes(guide.templateId)?'home-seo-description':'seo-description'))).toBe(true);
       const md = guideMarkdown(guide);
       for (const asset of guide.assets) expect(md).toContain(asset.promptTemplate);
       for (const slot of guide.textSlots) expect(md).toContain(slot.promptTemplate);
@@ -119,13 +120,14 @@ describe('versioned internal template documents', () => {
   );
 });
 describe('read-only guide API', () => {
-  it('lists all 29 selectable documents and returns matching JSON, Markdown and schema', async () => {
+  it('lists only the nine selectable documents and returns matching JSON, Markdown and schema', async () => {
     const list = await get();
     expect(list.status).toBe(200);
     expect(list.headers.get('cache-control')).toBe('no-store');
     expect(list.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     const catalog = (await list.json()) as any;
-    expect(catalog.total).toBe(50);
+    expect(catalog.total).toBe(9);
+    expect(catalog.templates.map((t: any) => t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
     for (const item of catalog.templates) {
       const res = await get('/' + item.templateId);
       expect(res.status).toBe(200);

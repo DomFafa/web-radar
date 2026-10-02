@@ -1,0 +1,5 @@
+export const referenceMotionStyles = `
+.wr-motion-marquee{display:flex;width:max-content;animation:wr-reference-marquee 35s linear infinite}.wr-motion-marquee>*{flex:none}.wr-motion-marquee:hover,.wr-motion-marquee:focus-within{animation-play-state:paused}@keyframes wr-reference-marquee{to{transform:translateX(-50%)}}
+.careflow-healthcare .button-text-container{position:relative;overflow:hidden;height:auto;line-height:1.35}.careflow-healthcare .button-text-out{position:relative;display:block}.careflow-healthcare .button-text-in{position:absolute;display:block;inset:0}.wr-motion-char{display:inline-block}.careflow-healthcare [data-careflow-header]{transition:translate .3s ease}.careflow-healthcare [link-item-animation] .image{transition:transform .45s}.careflow-healthcare [link-item-animation]:is(:hover,:focus-within) .image{transform:scale(1.1)}.careflow-healthcare [link-item-animation]:is(:hover,:focus-within) :is(h2,h3){color:var(--accent--primary-1,#1d36b6)}
+@media(prefers-reduced-motion:reduce){.wr-motion-marquee{animation:none}.careflow-healthcare .button-text-in{visibility:hidden!important}}
+`;

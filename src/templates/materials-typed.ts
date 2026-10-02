@@ -19,10 +19,13 @@ type ImageSlot=MaterialsTemplateContract['imageSlots'][number];
 type Binding=AppliedMaterials['imageBindings'][number];
 const rawDrafts=new WeakSet<Draft>();
 const modernAboutDrafts=new WeakSet<Draft>();
+const nativeToorunDrafts=new WeakSet<Draft>();
+export const isNativeToorunSource=(draft:Draft)=>nativeToorunDrafts.has(draft);
 export const isModernAboutSource=(draft:Draft)=>modernAboutDrafts.has(draft);
 /** Internal render context, never serialized into a project or exposed to standalone builds. */
 export const isTypedMaterialsSource=(draft:Draft)=>rawDrafts.has(draft);
 export const modernMaterialsRevision=(id:string)=>`2026-09-20.${id}-materials.2`;
+export const toorunNativeMaterialsRevision='2026-10-01.toorun-early-learning-materials.3';
 const aiAgencyHeroRevision='2026-09-21.corpox-ai-agency-materials.3';
 export const isTypedMaterials=(draft:Draft)=>draft.materials?.contractRevision===`2026-09-19.${draft.template}-materials.1`||draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||(draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision)||!!(draft.materials&&getMaterialsTemplate(draft.template,draft.materials.contractRevision)?.requiredCapabilities?.length);
 const attr=(node:Element,name:string)=>node.attrs.find(a=>a.name===name)?.value||'';
@@ -53,7 +56,8 @@ function rawHtml(draft:Draft,options:RenderOptions,modernAbout=false):string{
     modernAboutDrafts.add(raw);try{return renderSite(raw,aboutOptions);}finally{modernAboutDrafts.delete(raw);}
   }
   rawDrafts.add(raw);
-  try{return renderSite(raw,options);}finally{rawDrafts.delete(raw);}
+  if(draft.template==='toorun-early-learning'&&draft.materials?.contractRevision===toorunNativeMaterialsRevision)nativeToorunDrafts.add(raw);
+  try{return renderSite(raw,options);}finally{rawDrafts.delete(raw);nativeToorunDrafts.delete(raw);}
 }
 function withoutOptionalFacts(draft:Draft):Draft{
   return{...draft,company:{...draft.company,description:'',address:'',phone:'',whatsapp:'',slogan:'',capabilities:'',certifications:'',establishedYear:''},products:draft.products.map(p=>({...p,description:'',material:'',dimensions:'',tagline:undefined,sellingPoints:undefined,applications:undefined})),copy:{...draft.copy,en:{...draft.copy.en!,about:''}}};
@@ -119,7 +123,7 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
     const sensengHero=page==='home'&&(newSenseng.test(id)?cls.split(/\s+/).includes(`wr-${id.slice(8)}-hero`):id==='senseng-video'&&cls.split(/\s+/).includes('senseng-hero-video-full'));
     // A later product section is not another hero when the template already supplied one.
     // Keep the old heuristic only for contracts that froze its two-slot inventory.
-    const genericHero=page==='home'&&((firstContentSection&&(!preferExplicitHero||heroIndex===0)&&!/senseng|crafto|juno|consulting/.test(id))||(id==='corpox-ai-agency'&&cls.split(/\s+/).includes('ai-agency-demo-banner')));
+    const genericHero=!['pawfect-groom','good-boy-pals','mello-coffee','papernote'].includes(id)&&page==='home'&&((firstContentSection&&(!preferExplicitHero||heroIndex===0)&&!/senseng|crafto|juno|consulting/.test(id))||(id==='corpox-ai-agency'&&cls.split(/\s+/).includes('ai-agency-demo-banner')));
     if(slide||sensengHero||genericHero){
       const single=id.startsWith('single-');
       const slot=imageSlot(`hero-slide-${heroIndex++}`,'home',single?'scene':'collection',bw,bh,single?'Homepage hero showing only the selected primary product':'Homepage collection banner; every selected product in a distinct composition');
@@ -127,6 +131,22 @@ function walkMedia(root:Node,id:string,page:Page,visit:(node:Element,target:stri
         const media=elements(n).find(child=>child.tagName==='video')||elements(n).find(child=>child.tagName==='img');
         if(media)visit(media,slot.id,slot,[...parents,n],media.tagName==='video'?'video':'image');
       }else visit(n,slot.id,slot,parents,'background');
+    }
+    if(['mello-coffee','papernote'].includes(id)&&n.tagName==='img'&&src.includes(`/templates/${id}/`)&&!/\.svg(?:$|[?#])/.test(src)) {
+      const hero=page==='home'&&(id==='papernote'?cls.split(/\s+/).includes('pn-photo-img'):cls.split(/\s+/).includes('hero-image'));
+      const slot=imageSlot(hero?'hero-portrait':`${page}-photo-${hash(src)}`,page,'facility',hero?1200:id==='papernote'?1920:1200,hero?(id==='papernote'?1400:1000):id==='papernote'?1080:900,hero?'Authorized portrait or drink editorial photograph in the native split hero':'Approved project artwork or cafe photography; never imply unverified customer facts');
+      slot.fit='cover';visit(n,slot.id,slot,parents,'image');
+    }
+    if(id==='good-boy-pals'&&n.tagName==='img'&&src.includes('/templates/good-boy-pals/')) {
+      const hero=cls.split(/\s+/).includes('gb-portrait');
+      const slot=imageSlot(hero?'hero-portrait':`${page}-photo-${slug(src.split('/').at(-1) || '')}`,page,'facility',1024,hero?1152:1024,hero?'Pet portrait in yellow light; preserve eyes and ears, no embedded lettering':'Illustrative pet photography or transparent category portrait; not a claim of a customer or owned shop');
+      slot.fit=hero?'cover':'contain';visit(n,slot.id,slot,parents,'image');
+    }
+    if(id==='pawfect-groom'&&n.tagName==='img'&&src.includes('/templates/pawfect-groom/')) {
+      const hero=cls.split(/\s+/).includes('pg-portrait');
+      const slot=imageSlot(hero?'hero-portrait':`${page}-photo-${slug(src.split('/').at(-1) || '')}`,page,'facility',hero?1200:1200,hero?1400:1000,hero?'Friendly dog portrait with crop-safe face and ears; illustrative, not a customer result':'Approved salon photography or clearly illustrative dog-care scene');
+      slot.fit='cover';slot.composition='Warm white, teal and amber dog-care photography. No embedded text, fake staff identity or fabricated customer result.';
+      visit(n,slot.id,slot,parents,'image');
     }
     if(n.tagName==='img'&&slotIndex!==''&&layout){
       const raw=layout.slots[Number(slotIndex)];
@@ -226,12 +246,12 @@ function modernInventory(id:string,revision=modernMaterialsRevision(id)):Invento
   const cached=modernInventories.get(revision);if(cached)return cached;
   const previous=inventory(id,revision===aiAgencyHeroRevision);if(!previous)return;
   const result=structuredClone(previous),contract=result.contract;
-  contract.guideRevision=id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
+  contract.guideRevision=['toorun-early-learning','pawfect-groom','good-boy-pals','mello-coffee','papernote'].includes(id)?'2026-09-30.1':id.startsWith('single-')?'2026-09-26.1':'2026-09-20.1';contract.contractRevision=revision;
   contract.imageSlots=contract.imageSlots.filter(s=>s.page!=='about');
   // Juno's legacy copy map also contains shared chrome used on other pages.
   contract.textSlots=contract.textSlots.filter(s=>s.page!=='about'||s.id==='company-about'||s.id.includes('-seo-')||!!result.legacyText?.[s.id]);
   contract.imageSlots.push({...imageSlot('about-primary-image','about','facility',1536,1024,'About lead editorial image representing the approved business, without implying an owned factory'),fit:'cover'});
-  if(id==='senseng-clean'||id==='senseng-video')contract.imageSlots.push({...imageSlot('about-secondary-image','about','facility',1536,1024,'About supporting process illustration; a distinct composition from the lead image'),fit:'cover'});
+  if(id==='senseng-clean'||id==='senseng-video'||id==='pawfect-groom')contract.imageSlots.push({...imageSlot('about-secondary-image','about','facility',1536,1024,'About supporting process illustration; a distinct composition from the lead image'),fit:'cover'});
   contract.textSlots.push(textSlot('about-headline','about','About page headline from saved brand and product facts',160),textSlot('about-story','about','About company story, one to six paragraphs using saved facts only',2500),{...textSlot('about-highlights','about','One to four lines, each: value | label | description. Use ✓ as value when no verified numeric metric exists. Never copy template sample statistics.',1000),maxLines:4});
   result.text.about={};result.media.about={};
   const draft=demo(id as TemplateId);
@@ -241,8 +261,18 @@ function modernInventory(id:string,revision=modernMaterialsRevision(id)):Invento
   }
   modernInventories.set(revision,result);return result;
 }
+function toorunNativeInventory():Inventory {
+  const result=structuredClone(modernInventory('toorun-early-learning')!);
+  result.contract.contractRevision=toorunNativeMaterialsRevision;
+  // The four native portrait cards reuse approved product primaries. A portrait
+  // size must never become a full-width generated collection banner.
+  result.contract.imageSlots=result.contract.imageSlots.filter(slot=>slot.id!=='hero-slide-0');
+  for(const [target,plan] of Object.entries(result.media.home))if(plan.slotId==='hero-slide-0')delete result.media.home[target];
+  return result;
+}
 export function getModernMaterialsTemplate(id:string,contractRevision?:string):MaterialsTemplateContract|undefined{
   const revision=contractRevision??(id==='corpox-ai-agency'?aiAgencyHeroRevision:modernMaterialsRevision(id));
+  if(id==='toorun-early-learning'&&revision===toorunNativeMaterialsRevision)return toorunNativeInventory().contract;
   if(revision!==modernMaterialsRevision(id)&&!(id==='corpox-ai-agency'&&revision===aiAgencyHeroRevision))return;
   const value=modernInventory(id,revision);return value?structuredClone(value.contract):undefined;
 }
@@ -301,11 +331,11 @@ function retainGallery(root:Node,draft:Draft,options:RenderOptions){
   const nodes=elements(root),images=nodes.filter(n=>n.tagName==='img');
   const existing=new Set(images.map(n=>attr(n,'src')));
   const gallery=draft.materials!.imageBindings.filter(b=>b.slotId==='product-gallery'&&b.productId===productId&&!existing.has(safeUrl(options.assetUrl(b.assetId),options.preview))).sort((a,b)=>(a.itemIndex||0)-(b.itemIndex||0));
-  if(!gallery.length)return;
   const mainBinding=draft.materials!.imageBindings.find(b=>b.slotId==='product-main'&&b.productId===productId);
   const primary=images.find(n=>attr(n,'data-wr-material-image')==='product-main'&&attr(n,'data-wr-material-product')===productId)||images.find(n=>mainBinding&&attr(n,'src')===safeUrl(options.assetUrl(mainBinding.assetId),options.preview));
   const parent=primary?.parentNode;if(!parent)return;
   if(!attr(primary,'id'))set(primary,'id','wr-detail-main-img');
+  if(!gallery.length)return;
   const added=parseFragment(`<div class="senseng-detail-thumbs wr-confirmed-gallery" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px">${[...(mainBinding?[mainBinding]:[]),...gallery].map((b,i)=>`<button type="button" class="wr-detail-thumb${i===0?' active':''}" data-wr-material-thumb="" aria-label="${esc(b.alt[options.lang]||b.alt.en||'')}" style="min-width:0;padding:0;cursor:pointer;background:transparent;border:1px solid #ddd">${materialImage(b,options)}</button>`).join('')}</div>`).childNodes;
   for(const node of added){node.parentNode=parent;parent.childNodes.push(node);}
 }
@@ -318,11 +348,12 @@ function removeUnboundTemplateBackgrounds(root:Node){
   }
 }
 export function renderTypedMaterialsSite(draft:Draft,options:RenderOptions):string{
+  const nativeToorun=draft.template==='toorun-early-learning'&&draft.materials?.contractRevision===toorunNativeMaterialsRevision;
   const preferExplicitHero=draft.template==='corpox-ai-agency'&&draft.materials?.contractRevision===aiAgencyHeroRevision;
   const isExecutable=Boolean(draft.materials?.contractRevision?.startsWith('2026-09-22.'));
-  const modern=draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||isExecutable||preferExplicitHero;
+  const modern=nativeToorun||draft.materials?.contractRevision===modernMaterialsRevision(draft.template)||isExecutable||preferExplicitHero;
   const modernRevision=preferExplicitHero?aiAgencyHeroRevision:modernMaterialsRevision(draft.template);
-  const inv=modern?modernInventory(draft.template,modernRevision):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
+  const inv=nativeToorun?toorunNativeInventory():modern?modernInventory(draft.template,modernRevision):inventory(draft.template);if(!inv||!draft.materials)throw Error('Unsupported typed materials template');
   const modernAbout=modern&&options.page==='about';if(modernAbout)draft=aboutDraft(draft,options.lang);
   const m=draft.materials!,page=(materialsPages.includes(options.page as Page)?options.page:'home') as Page;
   if(inv.legacyText&&!modernAbout){

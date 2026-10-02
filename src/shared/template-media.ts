@@ -12,6 +12,24 @@ export interface TemplateMediaRequirements {
 // Original slot geometry mirrors referenceLayouts; keep the large HTML bundle out of the editor.
 // Product counts are recommendations for avoiding repeated images, never upload minimums.
 export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMediaRequirements>> = {
+  'auravell': { productCount: 6, productSize: '1200 × 900（4:3，瑜伽与疗愈课程照片）', bannerSize: '3456 × 1800（16:9，静修冥想场景大图）', bannerNote: '首屏静修冥想场景、各课程展示图、关于我们空间照片、本地字体与莲花矢量图标已内置；支持 9 个页面图片槽位以及每门课程主附图。内置 3 段可暂停的静音视频，无需另外上传。', videos: 3, slots: [{count: 1, width: 3456, height: 1800}, {count: 2, width: 1920, height: 1080}, {count: 3, width: 1008, height: 1200}, {count: 6, width: 1200, height: 1200}] },
+  'careflow-healthcare': { productCount: 6, productSize: '1200 × 900（4:3，服务或产品照片）', bannerSize: '2752 × 1412（原站宽幅医疗场景）', bannerNote: '首屏医疗走廊、设施和团队示例图、本地字体及图标已内置；左下角为标题卡片，主体建议居右。支持 16 个页面图片位置以及每个服务 1 张主图、最多 10 张附图；完整尺寸见模板 API。默认无需视频。', videos: 0, slots: [{count: 1, width: 2752, height: 1412}, {count: 1, width: 1136, height: 1204}, {count: 1, width: 1544, height: 1412}, {count: 6, width: 1200, height: 900}] },
+  'toorun-early-learning': { productCount: 6, productSize: '1200 × 1200（1:1，课程与活动场景）', bannerSize: '568 × 688（71:86，首屏儿童活动肖像）', bannerNote: '内置云朵背景、4 张首屏儿童肖像、5 张活动图库和 6 个课程图标。建议提供 4 张不同儿童活动肖像用于首屏，另为每个课程准备 1 张真实课堂或活动照片；无需视频。', videos: 0, slots: [{count: 4, width: 568, height: 688}, {count: 6, width: 1200, height: 1200}, {count: 2, width: 1200, height: 1260}] },
+  'lumi-business': { productCount: 6, productSize: '1200 × 1200（1:1，服务或产品展示）', bannerSize: '2560 × 1440（16:9，会议或协作场景）', bannerNote: '原站渐变、插画、字体和首屏视频已内置；可提供真实团队、办公场景、服务插画及文章封面。视频建议 MP4 / H.264，另附同尺寸封面。', videos: 1, slots: [{ count: 1, width: 2560, height: 1440 }, { count: 3, width: 880, height: 1040 }, { count: 3, width: 1240, height: 795 }, { count: 1, width: 1240, height: 1300 }] },
+  'papernote': {
+    productCount: 6,
+    productSize: '1200 × 1200（1:1，设计作品与标志）',
+    bannerSize: '1200 × 1400（6:7，个人肖像摄影）',
+    bannerNote: '首屏肖像大图、波点网格与折叠问答已内置；作品集最多展示 6 个精选项目，默认无需视频。',
+    videos: 0,
+    slots: [
+      { count: 1, width: 1200, height: 1400 },
+      { count: 6, width: 1200, height: 1200 },
+    ],
+  },
+  'good-boy-pals': { productCount: 4, productSize: '1200 × 1600（3:4，独立商品图片）', bannerSize: '1024 × 1152（8:9，宠物肖像）', bannerNote: '内置首屏金毛肖像、4 张宠物分类透明图、自助洗护与宠物故事照片、商品示例及本地字体。分类图建议 1024 × 1024 透明 PNG；护理与故事图建议 1024 × 1024；无需视频。', videos: 0, slots: [{count: 1, width: 1024, height: 1152}, {count: 4, width: 1024, height: 1024}, {count: 4, width: 1200, height: 1600}, {count: 2, width: 1024, height: 1024}] },
+  'mello-coffee': { productCount: 4, productSize: '1200 × 1200（1:1，单品/饮品烘焙）', bannerSize: '1200 × 1000（冷萃/抹茶首屏特写）', bannerNote: '首屏抹茶特写、菜单图库、心情轮盘插图与店内空间照片已完整内置；支持自定义咖啡、饮品和烘焙小点，无需视频。', videos: 0, slots: [{count: 1, width: 1200, height: 1000}, {count: 4, width: 1200, height: 1200}] },
+  'pawfect-groom': {productCount: 6, productSize: '1200 × 1200（1:1，服务照片）', bannerSize: '1200 × 1400（6:7，狗狗肖像）', bannerNote: '首屏金毛肖像、护理图库和字体已内置；关于页建议两张 1200 × 1000 沙龙实拍。图库最多展示 5 张服务照片，不需要视频。', videos: 0, slots: [{count: 1, width: 1200, height: 1400}, {count: 2, width: 1200, height: 1000}, {count: 5, width: 640, height: 800}]},
   'senseng-clean': {
     productCount: 8,
     productSize: '1536 × 1024（3:2）',
@@ -768,4 +786,3 @@ export const templateMediaRequirements: Partial<Record<TemplateId, TemplateMedia
     ],
   },
 };
-

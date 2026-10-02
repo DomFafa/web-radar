@@ -33,7 +33,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Raw unglazed matte exterior with waterproof vitreous interior lining',
     moq: '30 Pcs per Batch',
     tagline: 'Ancient Earth Sculpted by Ocean Winds and Fire',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=800&q=80&auto=format',
   },
   {
     id: 'dec-2',
@@ -48,7 +48,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Traditional mortise joinery with zero exposed screws and linen cord',
     moq: '50 Pcs per Run',
     tagline: 'Gentle Diffused Radiance Calming the Modern Spirit',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80&auto=format',
   },
   {
     id: 'dec-3',
@@ -63,7 +63,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Matte honed finish with protective anti-stain fluoropolymer seal',
     moq: '60 Sets Order',
     tagline: 'Timeless Geological Architecture on Your Tabletop',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80&auto=format',
   },
   {
     id: 'dec-4',
@@ -78,7 +78,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Formaldehyde-free zero-VOC plant-based adhesive lamination',
     moq: '25 Panels',
     tagline: 'Serene Acoustic Stillness in Minimalist Balance',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&q=80&auto=format',
   },
   {
     id: 'dec-5',
@@ -93,7 +93,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Fire-polished fluted rim with optical prismatic refraction',
     moq: '100 Pcs Run',
     tagline: 'Liquid Sunlight Frozen in Fluid Motion',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&q=80&auto=format',
   },
   {
     id: 'dec-6',
@@ -108,7 +108,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Raw fringed eyelash edges with double interlock seam reinforcing',
     moq: '80 Pcs Batch',
     tagline: 'Pure Earth Fibre Breathing Gentle Comfort into Living Spaces',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&q=80&auto=format',
   },
   {
     id: 'dec-7',
@@ -123,7 +123,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Hand-waxed hot liver-of-sulfur chemical patina',
     moq: '40 Pcs Order',
     tagline: 'Ancient Molten Metal Sculpted into Modern Rituals',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1602874801007-bd458bb1b8b8?w=800&q=80&auto=format',
   },
   {
     id: 'dec-8',
@@ -138,7 +138,7 @@ export const DECOR_DEFAULT_PRODUCTS: ThemedDecorItem[] = [
     finishCraftDetail: 'Sandblasted electrostatic DuPont textured powder coating',
     moq: '50 Pcs Production',
     tagline: 'Razor-Sharp Graphic Silhouette Defying Gravity',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1594026112284-02bb6f3352fe?w=800&q=80&auto=format',
   },
 ];
 

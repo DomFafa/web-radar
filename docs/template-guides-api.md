@@ -22,7 +22,7 @@
 
 目录只注册通过执行映射验证的模板插件；新模板可由版本化清单接入，无需逐个修改 Product Radar。完整合同与执行能力仍由消费端按支持范围校验。演示在打开时单独请求，不在目录同步时批量生成或下载。封面生成/校验脚本及发布检查保证清单地址是对应图片，而非返回 `200` 的 HTML 页面。
 
-39 套模板各有一份独立 JSON 文档，保存在 `src/worker/template-guides/documents/<templateId>.json`。文档只打包进 Worker，**不进入前台 JS、静态素材目录或用户页面**。Markdown 由同一 JSON 渲染，避免两份文档不一致。
+当前可选的 9 套模板各有一份独立 JSON 文档；历史模板规范保留用于已保存项目的兼容读取。文档保存在 `src/worker/template-guides/documents/<templateId>.json`。文档只打包进 Worker，**不进入前台 JS、静态素材目录或用户页面**。Markdown 由同一 JSON 渲染，避免两份文档不一致。
 
 这些接口只读取规范，不调用模型、不扣生成额度、不上传素材、不修改项目，也不发布网站。
 
@@ -52,26 +52,58 @@
 
 错误状态：无效凭据 401、普通用户 403、模板不存在 404、写入方法 405、非法 format 400。
 
-## 原有模板示例（完整列表以目录接口为准）
+## 图片内容与模板外观的边界（2026-10-02）
 
-| templateId | 名称 | 建议不同产品主图 | 默认内置视频 |
-| --- | --- | ---: | ---: |
-| senseng-clean | Senseng 经典工贸 | 8 | 0 |
-| senseng-video | Senseng 全屏视频版 | 8 | 1 |
-| saas-automation | SaaS 智能自动化 | 12 | 1 |
-| fintech-platform | 金融资产管理平台 | 8 | 0 |
-| digital-marketing | 数字营销增长机构 | 12 | 0 |
-| porto-accounting | Porto 经典财税会计 | 3 | 0 |
-| crafto-corporate | Crafto 现代企业集团 | 6 | 0 |
-| juno-toys | Juno 儿童童趣玩具 | 12 | 0 |
-| corpox-ai-agency | Corpox AI 智能工坊 | 12 | 0 |
-| corpox-consulting | Corpox 顶级战略咨询 | 12 | 1（内容区） |
+当前 9 份 Guide revision 均为 `2026-10-02.1`，最新材料合同为 `2026-10-02.<templateId>-materials.1`。模板只决定网站的布局、字体、CSS 配色、图片尺寸、裁切安全区和展示槽位；图片主体与产品属性只能由客户真实产品资料、授权 `product_reference` 和确认的业务 brief 决定。
 
-建议数量用于减少图片复用，并非上传硬性最低数；实际按产品数量生成。无需为内置装饰、背景、图标重复生成。
+优先原样复用产品主图和附图，只做必要尺寸适配。模板建议数量代表展示容量，不代表必须生成的数量。只有确有缺图、真实参考充分且客户确认后才补图；不得为了匹配模板风格给产品换色、换材质、换包装、换品类或引入无关人物、动物和场景。品牌故事/运营配图也必须与客户真实业务相关，没有 brief 则返回 `missingFacts`。
+
+`visualSystem` 仅描述网站 CSS 外观，不能直接拼入图片 prompt。`layoutImageSlots.defaultAsset`、模板封面、预览截图及内置视频只演示布局，不属于客户产品资料，不能作为生成 reference。模板里保留的默认素材不是客户事实；客户发布前需要按真实业务替换或省略。文字、导航和按钮由 HTML/CSS 呈现，不绘入图片；产品原图本来就有的标签与商标应保留。
+
+Logo 和 favicon 优先使用客户原件；缺少原件时报告缺失，不依据模板风格造商标。证书、报告、经营场所、团队身份和地址等证据只能使用可核实的真实资料。旧项目仍读取保存的历史合同版本；旧冻结合同与渲染器保持兼容。外部生成服务需要重新获取最新 Guide/目录合同并清理旧提示词缓存，API 的规范更新不会自动重跑已生成素材。
+
+## 当前 9 个模板（2026-10-02）
+
+Cloudflare 根地址：`https://web-radar.net/api/internal/template-guides`。
+服务器根地址：`https://web.vnvnv.com/api/internal/template-guides`。
+两端保持相同的模板 ID 和规范；凭据由各部署环境管理。
+Good Boy Supply Co. (`good-boy-pals`) 和 PaperNote (`papernote`) 已从可选目录移除。旧项目使用的规范、版本化合同及素材继续兼容；新建项目以目录返回的 9 个模板为准。
+
+| templateId | 名称 | 建议商品/作品主图 | 首页主视觉 | 默认视频 |
+| --- | --- | --- | --- | --- |
+| senseng-candy | Candy Pop & Play | 8 张，1200 × 1200 | 2560 × 930，1 张 | 0 |
+| senseng-video | Immersive Video | 8 张，1536 × 1024 | 2560 × 1440，1 张封面 | 1 段内置；替换规格见 JSON |
+| senseng-nature | Botanical & Forest | 8 张，1200 × 1200 | 2560 × 960，1 张 | 0 |
+| pawfect-groom | Pawfect Groom | 6 张真实产品/服务图，1200 × 1200 | 1200 × 1400，1 张展示图 | 0 |
+| lumi-business | Lumi | 6 张，1200 × 1200 | 2560 × 1440，1 张 | 0；可选背景视频 |
+| mello-coffee | Mello Coffee & Bakery | 4 张精选真实产品图，1200 × 1200 | 1200 × 1000，1 张展示图 | 0 |
+| auravell | Auravell Yoga & Mindful Living | 每产品/服务 1 张，1200 × 900 | 3456 × 1800，1 张展示图 | 3 段内置装饰演示 |
+| careflow-healthcare | Careflow Healthcare | 建议 6 张，1200 × 900 | 2752 × 1412，1 张，主体居右 | 0 |
+| toorun-early-learning | Toorun Early Learning | 6 张真实产品/服务图，1200 × 1200 | 568 × 688，建议 4 张竖幅展示图 | 0 |
+
+数量为建议准备的不同素材数，不是必传数；已有内置素材可保留，客户商品/作品按真实数量准备。
+每类图片、视频的 `quantity.min/recommended/max`、`dimensions`、格式、大小预算与构图说明以对应 JSON 为准。
+同一主图在首页、目录、详情重复使用只算 1 张；Mello 九宫格可复用菜单图片，不额外要求九张。
+附加素材是品牌故事、业务运营说明、插画、文章封面和图库的展示位置；这些位置的内容取决于客户确认的真实业务 brief，不因选用模板而要求犬只、咖啡、瑜伽、医生或儿童等示例主体。完整数量见各自 `assets`。
+
+新增规范文件：`pawfect-groom.json`、`lumi-business.json`、`mello-coffee.json`、`toorun-early-learning.json`。
+每份包含五类页面规划、图片规格与生成提示词、文案条数和长度、缺失事实规则、输出 schema 及实际字段绑定。
+
+### 外部 AI 的调用顺序
+
+1. `GET /api/internal/template-guides`，从当前 9 个模板中选择 `templateId`。
+2. `GET /api/internal/template-guides/:templateId`，读取 `assets` 和 `textSlots`；需要文字文档时添加 `?format=markdown`。
+3. 图片规格 ID（`assetSpecId`）用于生成清单；不能直接当成素材合同的 `slotId`。
+4. 准备提交项目素材时，使用既有 Product Radar 用户/工作区认证读取 `/materials/catalog` 和目录给出的版本化 `requirementsPath`。
+5. 按完整合同的 `imageSlots` / `textSlots` 绑定素材，使用现有项目 API 保存与预览。规范只读密钥不能修改项目。
+
+Mello 的原生首屏照片由 `hero-portrait` 素材槽替换；页面 Banner 覆盖整段首屏，二者不同。
+原生模板中尚未接入字段的静态内容会在规范中标为 `manual-template-edit`，不可承诺自动写回生效。
+内置示例人物、项目、价格、地址、营业时间与评价必须替换为客户确认信息，不能当作客户事实。
 
 ## 每份规范包含
 
-- `visualSystem`：色板、视觉风格、构图、文字语气与禁用项。
+- `visualSystem`：仅描述网站 CSS 色板、字体、布局和 HTML 层叠外观；不是产品图生成条件，不得直接拼入图片提示词。
 - `inputContract`：真实品牌/产品/目标语言输入、缺失事实处理与不可信输入边界。
 - `pagePlan`：首页、目录、关于、联系、商品详情各页内容结构。
 - `inventory` / `layoutImageSlots`：真实模板槽位数量、原始尺寸、用途及复用规则。
@@ -90,23 +122,27 @@ async function read(path) {
   if (!response.ok) throw new Error(`Template guide HTTP ${response.status}`);
   return response.json();
 }
-const guide = await read('/senseng-clean');
+const guide = await read('/mello-coffee');
 const outputSchema = await read('/output-schema');
 // 由调用方提供真实上下文，不要把认证密钥交给模型。
 const context = {
   language: 'en',
   brand: { name: 'Example Brand', description: 'Provided description', audience: 'Wholesale buyers' },
   products: [{ id: 'p1', name: 'Provided product name', facts: ['Verified fact'], referenceImages: ['https://your-authorized-media.example/p1.png'] }],
-  requestedAssets: ['product-master', 'hero-image'],
+  product_reference: [{ productId: 'p1', images: ['https://your-authorized-media.example/p1.png'], facts: ['Verified fact'] }],
+  confirmed_business_brief: 'Customer-confirmed business context and the requested image purpose',
+  requestedAssets: ['product-main', 'hero-image'],
 };
-// 将 guide / outputSchema 与 context 分别作为规范和资料传给你的生成服务。
+// 图片内容仅从 context 的真实参考与已确认 brief 获取。
+// guide 仅提供尺寸、裁切安全区和绑定位置，不把 visualSystem/defaultAsset/preview 作为生成参考。
+// 先复用已有原图；客户确认后才补确实缺少的图。
 // 图片/视频地址由调用方按权限提供；规范 API 不读取这些地址，也不提供第三方模型凭据。
 ```
 
 ## 推荐 AI 操作契约
 
 1. 获取指定模板规范和输出 schema；先核对输入资料，不擅自改用其它模板。
-2. 只生成 `requestedAssets`。产品素材缺失时报告 `missingFacts`，不要根据商品名虚构外形或包装。
+2. 优先复用真实产品原图；只为客户已确认且确实缺少的 `requestedAssets` 补图。产品 reference 或业务 brief 缺失时报告 `missingFacts`，不根据模板名称、行业、配色、演示图或商品名称虚构主体、外形或包装。
 3. 每张图片/视频输出实际地址或已上传的 assetId、像素、MIME、字节数与 alt；视频另报时长/帧率。
 4. 文案输出 `textSlotId`，产品文案带 `productId`；重复条目带从 0 开始的 `itemIndex`，页面文案带 `page`，并列出 `factReferences`。
 5. 校验 schema 之后，还要按对应 guide 检查 assetSpecId/textSlotId 是否存在、尺寸/数量是否匹配、事实是否有来源。不要以 schema 通过代替视觉与真实性检查。
@@ -126,8 +162,8 @@ const context = {
 ```json
 {
   "schemaVersion": "1.0",
-  "templateId": "senseng-clean",
-  "guideRevision": "2026-09-17.1",
+  "templateId": "senseng-candy",
+  "guideRevision": "2026-10-02.1",
   "language": "en",
   "assets": [],
   "copy": [{"textSlotId":"product-description","productId":"p1","text":"A description supported by supplied product facts.","factReferences":["products[p1].facts"]}],
@@ -139,3 +175,79 @@ const context = {
 维护时同步修改对应 JSON、增加 revision，并运行 `npm run check`。测试覆盖模板槽位尺寸与渲染器一致性、文案/视频规则、只读权限、JSON/Markdown 等价性与输出协议。
 
 本地真实 Worker 验证：先 `npm run build`，再执行 `node scripts/verify_template_guides.mjs`。测试使用隔离的 D1 和测试密钥，不发起模型请求。
+
+## 品牌主色调
+
+当前 9 个可选模板都支持网站品牌色：普通草稿使用 `draft.brandColor`，Materials 接入使用 `visual.palette.primary`；在编辑器改色时两者同步。主色应用于导航选中/悬停、主要按钮、装饰线与联系卡片。按钮保留所选颜色，文字自动选用黑色或白色；浅色品牌的导航文字使用更深的同色系，确保可读。
+
+模板试览、整站预览和发布采用同一颜色规则。更换模板保留客户自定义色，未自定义时使用新模板默认色；再次选用当前模板不重置颜色。品牌色仅影响网站 CSS，不更改图片、视频或产品生图指令。已发布的静态网站需保存草稿并重新发布后更新。
+
+## Careflow Healthcare 接入说明（2026-10-02）
+
+- 模板 ID：`careflow-healthcare`；Guide revision：`2026-10-02.1`；合同版本：`2026-10-02.careflow-healthcare-materials.1`；渲染版本保持 `2026-10-01.careflow-healthcare-materials.2`。
+- 原生页面：`home`、`catalog`、`detail`、`about`、`contact`。详情由每个产品/服务生成，预览和发布走同一渲染器。
+- Guide：`GET /api/internal/template-guides/careflow-healthcare`（可加 `?format=markdown`）；Materials API 从 `/materials/catalog` 返回的版本化 `requirementsPath` 获取可执行合同。
+- 16 个页面图片槽位，每个 0–1 张；尺寸逐项列在 JSON 的 `layoutImageSlots` / `assets` 及合同的 `imageSlots`。保留默认示例图时无需上传。首屏 `home-hero` 为 **2752 × 1412**；左下角覆盖标题卡，主体宜放右侧。
+- `product-main`：每个服务 1 张 **1200 × 900** 主图；`product-gallery`：每个服务 **0–10 张 1200 × 900** 附图，使用 `productId` 与 `itemIndex` 关联。主图在目录和详情复用；附图可以点击切换、键盘切换和放大。
+- 支持 JPEG、PNG、WebP，建议大图 ≤600 KB、其他图片 ≤350 KB；可传独立移动图和焦点。字体、图标和示例图片已本地化，无需运行 Webflow 脚本。
+- 文案使用纯文本槽位与 `locale`；`palette.primary` 控制上述品牌色组件，按钮文字根据背景亮度自动选择黑色或白色。其他调色参数未在此版本声明支持。
+- 示例医生、评分、患者评价、统计、院区和资讯仅用于参考预览；客户发布省略 `reference-claims`，使用已确认的机构和服务数据。预约入口提交现有询盘，不直接确认预约；页脚入口转联系页，不伪装已订阅。
+- 参考站的图库、导航、折叠问答和院区选项卡采用项目自有运行时；没有外部 Webflow 表单、广告或跟踪脚本。
+
+### Careflow 页面图片清单
+
+每个槽位 0–1 张；留空使用对应示例图。所有图片和文案通过版本化合同绑定，不能把多个位置拼在同一张图中。
+
+| 图片槽位 | 建议尺寸（px） | 数量 |
+|---|---|---|
+| `home-hero` | 2752 × 1412 | 0–1 |
+| `home-image-02` | 1136 × 1204 | 0–1 |
+| `home-image-03` | 1544 × 1412 | 0–1 |
+| `home-image-04` | 2752 × 1412 | 0–1 |
+| `detail-image-01` | 2752 × 1412 | 0–1 |
+| `about-image-01` | 1004 × 892 | 0–1 |
+| `about-image-02` | 764 × 892 | 0–1 |
+| `about-image-03` | 764 × 892 | 0–1 |
+| `about-image-04` | 1004 × 892 | 0–1 |
+| `about-image-05` | 1132 × 1220 | 0–1 |
+| `contact-image-01` | 400 × 400 | 0–1 |
+| `contact-image-02` | 400 × 400 | 0–1 |
+| `contact-image-03` | 400 × 400 | 0–1 |
+| `contact-image-04` | 400 × 400 | 0–1 |
+| `contact-image-05` | 400 × 400 | 0–1 |
+| `contact-image-06` | 2752 × 1412 | 0–1 |
+
+主图与附图另计：`product-main` 每真实产品/服务 1 张，`product-gallery` 每真实产品/服务 0–10 张。92 个纯文本槽位包括各页 SEO、标题、正文与按钮。`company-about` 与 `about-copy-03` 指向同一段介绍，前者优先。联系方式直接读取品牌资料，版权行由品牌名与年份生成。
+
+
+## Auravell Yoga & Mindful Living（2026-10-02）
+
+模板 ID `auravell`，Guide revision `2026-10-02.1`，合同版本 `2026-10-02.auravell-materials.1`，渲染版本保持 `2026-10-01.auravell-materials.2`。通过 `/api/internal/template-guides/auravell` 获取 JSON 或 Markdown，通过材料目录获取冻结合同。所有入口使用现有 API 认证。
+
+历史兼容：上述两套模板的 `2026-10-01.*-materials.3` 合同与 Lumi 的 `2026-10-01.lumi-business-materials.2` 修正 Product Radar 可执行图片来源与能力声明，旧合同仍可按版本读取，页面渲染不变。Toorun 的 `2026-10-01.toorun-early-learning-materials.3` 使用 `2026-10-01.toorun-early-learning-native.2` 渲染器，首页四个原生卡片复用所选产品主图，不再要求生成整块首页横幅；旧项目继续使用原固定版本。这些是历史合同说明，不是当前目录的默认合同；当前 9 个模板均以目录返回的 `2026-10-02.<templateId>-materials.1` 为准。
+
+包含首页、课程目录、课程详情、关于、联系和会员方案（`extra-plans`，发布路径 `en/extra-plans/index.html`）。预览和发布共用原生渲染器，移动端菜单、课程筛选、图片切换和询盘均使用项目运行时。预览不发送询盘，正式表单调用现有 JSON 询盘接口，不确认预约。
+
+| 图片槽位 | 尺寸（px） | 数量 |
+|---|---|---|
+| `home-hero` | 3456 × 1800 | 0–1 |
+| `about-hero` | 1920 × 1080 | 0–1 |
+| `class-hero` | 1920 × 1080 | 0–1 |
+| `wellness-meditation` | 1008 × 1200 | 0–1 |
+| `wellness-breathwork` | 1008 × 1200 | 0–1 |
+| `wellness-yoga` | 1008 × 1200 | 0–1 |
+| `whyus-main` | 1536 × 1200 | 0–1 |
+| `whyus-secondary` | 1200 × 1200 | 0–1 |
+| `footer-background` | 1920 × 800 | 0–1 |
+| `product-main` | 1200 × 900 | 每真实产品/服务 1 张 |
+| `product-gallery` | 1200 × 900 | 每真实产品/服务 0–10 张 |
+
+9 个布局图位置可选；课程主图和附图按 `productId` 绑定，附图使用 `itemIndex` 排序。主体居中，保留裁切空间；图片不嵌文案，首页左侧留标题空间。支持 JPEG、PNG、WebP。正文为纯文本；字体和 CSS 依赖本地化。示例课程只用于演示，正式站不自动添加不存在的课程或虚假联系方式。运营方应核实课程、方案价格、营业时间和品牌介绍后发布。
+
+### 2026-10-01 动效修复版本
+
+两个模板的新合同均为 `materials.2`，旧 `.1` 合同、渲染器和预览运行时保留。已有确认素材项目继续使用原合同；需要新布局时按 Materials API 重新确认 `.2` 合同并发布。普通模板预览和新项目使用修复版。
+
+Auravell 恢复参考站五个页面的完整结构及原生动效：首屏入场、视差、服务卡悬停、练习图切换、视频滚动收拢、导师卡、分类/方案标签、FAQ 和移动菜单。3 段视频均为内置静音 MP4，配套封面；无需上传。图片槽位仍为 9 个，产品主图 1200×900、附图最多 10 张；视频并非 `imageBindings`，当前 API 不支持视频绑定。
+
+Careflow 恢复滚动渐入、逐字按钮悬停、图片放大、折叠高度过渡、团队横向循环、计数和导航交互。演示视频仅点击后加载隐私增强播放器。两者均支持减少动态效果、键盘操作及私有预览，装饰动效不能影响询盘及图库。

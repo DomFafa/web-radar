@@ -7,6 +7,7 @@ import { WebsiteConnections } from './ProviderAccounts';
 import { ProjectHistory } from './ProjectHistory';
 import { UploadProgress, type UploadState } from './UploadProgress';
 import { hasCloneOutput } from '../shared/clone-output';
+import { brandColorPatch, templatePreviewDraft } from '../shared/template-brand-color';
 import { liveJob } from './task-polling';
 import { samePublishedDraft } from '../shared/publication';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -385,7 +386,10 @@ export default function Editor({
     } catch {}
   }
   function patch(fields: Partial<Draft>) {
-    update((draft) => ({ ...draft, ...fields }));
+    update((draft) => {
+      const next = { ...draft, ...fields };
+      return fields.brandColor === undefined ? next : { ...next, ...brandColorPatch(next, fields.brandColor) };
+    });
   }
   function company(fields: Partial<Company>) {
     update((draft) => ({ ...draft, company: { ...draft.company, ...fields } }));
@@ -1440,7 +1444,7 @@ export default function Editor({
                   <TemplateSelector
                     onPreview={(template) => {
                       const current = projectRef.current!;
-                      setPreviewProject({ ...current, draft: { ...current.draft, buildBranch: 'template', template: template.id, brandColor: template.accentColor, cloneConfig: undefined, siteDesign: undefined } });
+                      setPreviewProject({ ...current, draft: templatePreviewDraft(current.draft, template.id) });
                       setPreviewOpen(true);
                     }}
                     draft={draft}

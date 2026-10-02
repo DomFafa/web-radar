@@ -23,7 +23,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: '310 gsm 100% cotton rag + Epson UltraChrome HDX inks',
     dimensions: 'A3 / A2 / A1 / Custom · 200+ year lightfastness',
     tagline: 'Museum-Grade Cotton Rag with 200-Year Archival Inks',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80&auto=format',
   },
   {
     id: 'pst-2',
@@ -33,7 +33,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: 'Holographic PET vinyl + UV-resistant matte lamination',
     dimensions: '50 × 50 mm to 100 × 100 mm · waterproof · UV stable 5+ years',
     tagline: 'Rainbow-Shift Holographic with UV-Resistant Lamination',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80&auto=format',
   },
   {
     id: 'pst-3',
@@ -43,7 +43,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: 'Poly-cotton 400 gsm canvas + kiln-dried pine stretcher',
     dimensions: '30 × 40 cm to 100 × 150 cm · 3.8 cm depth · wire-hung',
     tagline: 'Stretched Pine Frame with UV Protective Varnish',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80&auto=format',
   },
   {
     id: 'pst-4',
@@ -53,7 +53,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: 'Frosted PVC vinyl + repositionable micro-dot adhesive',
     dimensions: 'Custom sizes · removable · indoor/outdoor rated 3+ years',
     tagline: 'Bubble-Free Micro-Dot Repositionable Application',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80&auto=format',
   },
   {
     id: 'pst-5',
@@ -63,7 +63,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: '600 gsm Crane Lettra cotton + Pantone spot inks',
     dimensions: 'A6 folded (105 × 148 mm) · 12 cards + 12 envelopes',
     tagline: 'Deep-Impression Letterpress on 600 gsm Cotton',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1578301978162-7aae4d755744?w=800&q=80&auto=format',
   },
   {
     id: 'pst-6',
@@ -73,7 +73,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: 'Woven polyester fabric + residue-free adhesive',
     dimensions: 'Custom die-cut · repositionable · wall-safe adhesive',
     tagline: 'Residue-Free Repositionable Woven Polyester Fabric',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1482160549825-59d1b23cb208?w=800&q=80&auto=format',
   },
   {
     id: 'pst-7',
@@ -83,7 +83,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: '120 gsm recycled uncoated stock + soy-based riso inks',
     dimensions: 'A5 (148 × 210 mm) · 24 pages · saddle-stitched',
     tagline: 'Soy-Based Risograph on 100% Recycled Uncoated Stock',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80&auto=format',
   },
   {
     id: 'pst-8',
@@ -93,7 +93,7 @@ export const POSTER_DEFAULT_PRODUCTS: ThemedPosterItem[] = [
     material: '350 gsm C2S art paper + hot-stamped metallic foil',
     dimensions: 'A4 / A3 / Custom · selective gold/silver/rose-gold foil',
     tagline: 'Hot-Stamped Metallic Foil with Blind Emboss Texture',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&q=80&auto=format',
   },
 ];
 

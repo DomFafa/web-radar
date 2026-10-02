@@ -1,3 +1,4 @@
+import { DEFAULT_TEMPLATE } from '../shared/template-availability';
 import { viewTeamData } from '../shared/access';
 import { ProductIdentitySchema } from "../shared/product-identity";
 import type { BannerTarget } from '../shared/model';
@@ -108,6 +109,13 @@ const draftSchema = z.object({
   country: short,
   languages: z.array(language).min(1).max(2),
   template: z.enum([
+    'auravell',
+    'careflow-healthcare', 'toorun-early-learning',
+    'lumi-business',
+    'papernote',
+    'pawfect-groom',
+    'good-boy-pals',
+    'mello-coffee',
     'natural',
     'technology',
     'explorer',
@@ -313,8 +321,8 @@ export function defaultDraft(): Draft {
     category: 'general',
     country: '',
     languages: ['en'],
-    template: 'natural',
-    brandColor: '#416851',
+    template: DEFAULT_TEMPLATE,
+    brandColor: '#ff6b8b',
     copy: {},
     duration: 8,
     direction: '',

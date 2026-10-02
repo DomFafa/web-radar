@@ -35,7 +35,7 @@ const server = createServer(async (request, response) => {
   const path = resolve(publicDir, '.' + decodeURIComponent(url.pathname));
   if (url.pathname.startsWith('/templates/') && path.startsWith(publicDir + sep)) try {
     const bytes = await readFile(path);
-    const contentType = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.gif': 'image/gif', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf' }[extname(path)] || 'application/octet-stream';
+    const contentType = { '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.gif': 'image/gif', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.avif': 'image/avif', '.mp4': 'video/mp4', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf' }[extname(path)] || 'application/octet-stream';
     response.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*', 'Cross-Origin-Resource-Policy': 'cross-origin' });
     return response.end(bytes);
   } catch { /* A missing asset is a failed check, never an HTML fallback. */ }
@@ -53,13 +53,14 @@ try {
     const draft = render.materialsDemoDraft(contract, 'en');
     for (const pageName of process.env.DEMO_PAGES?.split(',') || (process.env.DEMO_ALL_PAGES === '1' || primary.includes(templateId) ? ['home', 'catalog', 'detail', 'about', 'contact'] : ['home'])) {
       const assets = new Map();
-      const options = { projectId: 'demo-repair', lang: 'en', page: pageName, productId: draft.products[0]?.id, assetUrl: id => id, inquiryUrl: '/inquiry', preview: true };
+      const options = { projectId: 'materials-demo', lang: 'en', page: pageName, productId: draft.products[0]?.id, assetUrl: id => id, inquiryUrl: '/inquiry', preview: true };
       const raw = render.renderSite(draft, options);
       const projectHtml = previewClient && primary.includes(templateId) ? render.renderSite(draft, { ...options, assetUrl: id => {
         const key = createHash('sha256').update(id).digest('hex').slice(0,20);
         assets.set(key, id); return `/api/web-radar/projects/demo-repair/assets/${key}`;
       } }) : undefined;
       for (const mode of projectHtml ? ['raw-demo', 'project-preview'] : ['raw-demo']) for (const width of process.env.DEMO_VIEWPORTS?.split(',').map(Number) || [1440, 390]) {
+        console.log(`Checking ${templateId} / ${pageName} / ${mode} / ${width}px`);
         const context = await browser.newContext({ viewport: { width, height: 960 } });
         const page = await context.newPage();
         const errors = [], missingAssets = [];
@@ -76,7 +77,7 @@ try {
         if (mode === 'raw-demo') {
           await page.evaluate(({ raw, origin }) => { document.getElementById('preview').srcdoc = raw.replace('<head>', `<head><base href="${origin}/">`); }, { raw, origin });
           frame = page.frames().find(candidate => candidate !== page.mainFrame());
-          await frame.waitForSelector('body.wr-materials-site', { state: 'attached' });
+          await frame.waitForSelector(`body[data-template="${templateId}"]`, { state: 'attached' });
           await frame.waitForLoadState('load');
         }
         if (mode === 'project-preview') {
@@ -103,8 +104,29 @@ try {
         const metrics = await frame.evaluate(async () => {
           document.querySelectorAll('img').forEach(img => img.loading = 'eager');
           await document.fonts.ready;
+          // Framer's metric-adjusted local fallbacks may be absent on Linux.
+          // A missing optional local font is not a failed web-font download.
+          const localFonts = new Set(), assetFonts = new Set();
+          const fontRules = rules => [...rules].forEach(rule => {
+            if (rule instanceof CSSFontFaceRule) {
+              const family = rule.style.getPropertyValue('font-family').replace(/^["']|["']$/g, '');
+              const source = rule.style.getPropertyValue('src');
+              if (/url\(/i.test(source)) assetFonts.add(family);
+              else if (/local\(/i.test(source)) localFonts.add(family);
+            } else if ('cssRules' in rule) fontRules(rule.cssRules);
+          });
+          [...document.styleSheets].forEach(sheet => {
+            try { fontRules(sheet.cssRules); }
+            catch (error) {
+              // Sandboxed previews cannot inspect cross-origin stylesheet rules.
+              // Their network resources and failed fonts are still checked below.
+              if (error.name !== 'SecurityError') throw error;
+            }
+          });
+          const unavailableFonts = [...document.fonts].filter(font => font.status === 'error').map(font => font.family.replace(/^["']|["']$/g, ''));
+          const optionalLocalFont = family => localFonts.has(family) && !assetFonts.has(family);
           const brokenBackgrounds = [];
-          const backgrounds = [...new Set([...document.querySelectorAll('*')].flatMap(element => [null, '::before', '::after'].flatMap(pseudo => [...getComputedStyle(element, pseudo).backgroundImage.matchAll(/url\(["']?(.*?)["']?\)/g)].map(match => match[1]))))];
+          const backgrounds = [...new Set([...document.querySelectorAll('*')].flatMap(element => [null, '::before', '::after'].flatMap(pseudo => [...getComputedStyle(element, pseudo).backgroundImage.matchAll(/url\((?:"([^"]*)"|'([^']*)'|([^)]*))\)/g)].map(match => match[1] ?? match[2] ?? match[3]))))];
           await Promise.all([...document.images].map(img => img.decode().catch(() => {})));
           await Promise.all(backgrounds.map(src => new Promise(resolve => {
             const image = new Image(); image.onload = resolve; image.onerror = () => { brokenBackgrounds.push(src); resolve(); }; image.src = src;
@@ -114,16 +136,30 @@ try {
             overflowElements: document.documentElement.scrollWidth <= innerWidth + 1 ? [] : [...document.querySelectorAll('body *')].filter(node => { const rect = node.getBoundingClientRect(); return rect.width && rect.right > innerWidth + 1; }).slice(0, 8).map(node => ({ tag: node.tagName, className: node.className, style: node.getAttribute('style'), parent: node.parentElement?.outerHTML.slice(0, 190), right: node.getBoundingClientRect().right, text: node.textContent?.trim().slice(0, 100) })),
             loadedImages: [...document.images].filter(img => img.naturalWidth > 0).length,
             brokenImages: [...document.images].filter(img => img.getAttribute('src') && !img.naturalWidth).map(img => img.getAttribute('src')),
-            backgrounds: backgrounds.length, brokenBackgrounds, failedFonts: [...document.fonts].filter(font => font.status === 'error').map(font => font.family), deferredMedia: document.querySelectorAll('[data-pr-media]').length,
+            backgrounds: backgrounds.length, brokenBackgrounds, failedFonts: unavailableFonts.filter(family => !optionalLocalFont(family)), unavailableLocalFonts: unavailableFonts.filter(optionalLocalFont), deferredMedia: document.querySelectorAll('[data-pr-media]').length,
             headings: [...document.querySelectorAll('h1')].map(node => node.textContent?.trim()) };
         });
         const signals = mode === 'project-preview' ? await page.evaluate(() => window.previewSignals) : [];
         let mobileMenuWorks;
-        const menu = frame.locator('[data-wr-mobile-menu]');
+        const menu = frame.locator('[data-wr-mobile-menu], [data-lumi-mobile-menu]').first();
         if (width === 390 && await menu.count()) {
-          await menu.locator('summary').click();
-          mobileMenuWorks = await menu.evaluate(element => element.open && Boolean(element.querySelector('a[data-wr-page="catalog"]')));
-          await menu.locator('summary').click();
+          if (await menu.evaluate(element => element.tagName === 'DETAILS')) {
+            await menu.locator('summary').click();
+            mobileMenuWorks = await menu.evaluate(element => element.open && Boolean(element.querySelector('a[data-wr-page="catalog"]')));
+            await menu.locator('summary').click();
+          } else if (await frame.locator('[data-auravell-menu]').count()) {
+            const toggle = frame.locator('[data-auravell-menu]');
+            await toggle.click();
+            mobileMenuWorks = await frame.locator('[data-auravell-nav] .rt-nav-link[data-wr-page="catalog"]').isVisible();
+            await toggle.click();
+          } else {
+            const toggle = frame.locator('[data-lumi-menu-toggle]');
+            if (await toggle.count()) await toggle.click();
+            const catalogLink = menu.locator('a[data-wr-page="catalog"], a[href="#menu"]').first();
+            mobileMenuWorks = await catalogLink.isVisible();
+            if (mobileMenuWorks) mobileMenuWorks = await catalogLink.evaluate(link => !link.hash || Boolean(document.getElementById(decodeURIComponent(link.hash.slice(1)))));
+            if (await toggle.count()) await toggle.click();
+          }
         }
         const result = { templateId, contractRevision: contract.contractRevision, page: pageName, mode, viewportWidth: width, errors, missingAssets, ...metrics, signals, mobileMenuWorks };
         results.push(result);
@@ -138,5 +174,5 @@ await writeFile(resolve(out, 'verification.json'), JSON.stringify({ scope: 'Loca
   renderBundleSha256: createHash('sha256').update(await readFile(resolve(out, 'render.mjs'))).digest('hex'),
   rendererSnapshotSha256: createHash('sha256').update(await readFile(resolve('src/templates/releases/demo-20260923.mjs'))).digest('hex'),
   productRadar: Boolean(previewClient), results }, null, 2));
-console.log(JSON.stringify({ cases: results.length, failed: failures.length, failures: failures.map(({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts})=>({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts})) }, null, 2));
+console.log(JSON.stringify({ cases: results.length, failed: failures.length, failures: failures.map(({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts,mobileMenuWorks})=>({templateId,page,mode,viewportWidth,errors,missingAssets,overflow,brokenImages,brokenBackgrounds,failedFonts,mobileMenuWorks})) }, null, 2));
 if (failures.length) process.exitCode = 1;

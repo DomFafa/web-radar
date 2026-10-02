@@ -15,7 +15,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '食品级环保无毒 TPR + 高弹微爆珠',
     dimensions: '8.5 × 8.5 × 9.0 cm',
     tagline: 'A Satisfying Squeeze Every Time!',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=800&q=80&auto=format',
     category: 'kids',
   },
   {
@@ -28,7 +28,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '高弹环保记忆发泡（不含双酚A）',
     dimensions: '8.0 × 8.0 × 7.5 cm',
     tagline: 'Soft Squishy Fun! A Happier Day!',
-    img: '/templates/senseng/products-2.jpg',
+    img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&q=80&auto=format',
     category: 'kids',
   },
   {
@@ -41,7 +41,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '丝绒肤感亲肤硅胶 / 环保 TPR',
     dimensions: '8.5 × 8.0 × 9.5 cm',
     tagline: 'Squeeze Focus Feel Calmer',
-    img: '/templates/senseng/products-3.jpg',
+    img: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80&auto=format',
     category: 'adults',
   },
   {
@@ -54,7 +54,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '环保慢回弹记忆聚合物',
     dimensions: '8.2 × 8.2 × 8.0 cm',
     tagline: 'A Little Calm For Your Busy Day',
-    img: '/templates/senseng/products-4.jpg',
+    img: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&q=80&auto=format',
     category: 'adults',
   },
   {
@@ -67,7 +67,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '高抗撕拉食品级弹性聚合物',
     dimensions: '8.5 × 8.5 × 8.5 cm',
     tagline: 'A Calm Moment At Your Desk',
-    img: '/templates/senseng/products-5.jpg',
+    img: 'https://images.unsplash.com/photo-1558679908-541bcf1249ff?w=800&q=80&auto=format',
     category: 'adults',
   },
   {
@@ -80,7 +80,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '温敏变色环保 TPR + 珍珠微珠充填',
     dimensions: '9.5 × 7.5 × 8.0 cm',
     tagline: 'Color-Changing Soft-Fill Magic',
-    img: '/templates/senseng/products-6.jpg',
+    img: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=800&q=80&auto=format',
     category: 'magic',
   },
   {
@@ -93,7 +93,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '低敏无毒环保食品级材料',
     dimensions: '8.0 × 8.0 × 8.5 cm',
     tagline: 'Small Squish Big Smiles',
-    img: '/templates/senseng/products-7.jpg',
+    img: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&q=80&auto=format',
     category: 'kids',
   },
   {
@@ -106,7 +106,7 @@ export const CANDY_DEFAULT_PRODUCTS = [
     materialZh: '特调亲肤丝绒触感软胶',
     dimensions: '8.5 × 8.0 × 9.0 cm',
     tagline: 'A Little Happiness For Everyone',
-    img: '/templates/senseng/products-8.jpg',
+    img: 'https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=800&q=80&auto=format',
     category: 'gift',
   },
 ];
@@ -182,7 +182,7 @@ export function renderCandyHome(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Pure Joy',
     category: 'sensory',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=800&q=80&auto=format',
   };
 
   const copy = draft.copy[ctx.lang] ?? {

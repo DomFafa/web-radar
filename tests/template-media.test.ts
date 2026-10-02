@@ -5,11 +5,9 @@ import { getMaterialsTemplate } from '../src/templates/materials';
 import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 
 describe('template media checklist stays aligned with the renderer', () => {
-  it('covers exactly the selectable templates', () => {
-    expect(TEMPLATES).toHaveLength(50);
-    expect(Object.keys(templateMediaRequirements).sort()).toEqual(
-      TEMPLATES.map((t) => t.id).sort(),
-    );
+  it('covers the selectable templates and preserves retired requirements', () => {
+    expect(TEMPLATES.map(t => t.id)).toEqual(['auravell', 'careflow-healthcare', 'toorun-early-learning', 'lumi-business', 'pawfect-groom', 'mello-coffee', 'senseng-candy', 'senseng-video', 'senseng-nature']);
+    for (const template of TEMPLATES) expect(templateMediaRequirements).toHaveProperty(template.id);
   });
   it.each(['fintech-platform', 'digital-marketing', 'porto-accounting', 'crafto-corporate', 'juno-toys', 'corpox-consulting'])(
     '%s remains readable for existing sites but is absent from the new-site selector', (id) => {

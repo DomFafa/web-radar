@@ -2050,6 +2050,54 @@ body[data-template="single-wellness-nordic"] {
   }
 }
 
+/* Native Candy/Nature headers use two rows on narrow screens so all navigation
+   and header actions remain available without widening the page. Frozen
+   materials sites keep their own header layout. */
+@media (max-width: 767px) {
+  body.senseng-candy:not(.wr-materials-site) .wr-candy-header > .wrap,
+  body.senseng-nature:not(.wr-materials-site) .wr-nature-header > .wrap {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px !important;
+    padding: 14px 0 !important;
+  }
+  body.senseng-candy:not(.wr-materials-site) .wr-candy-header > .wrap > a,
+  body.senseng-nature:not(.wr-materials-site) .wr-nature-header > .wrap > a {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  body.senseng-candy:not(.wr-materials-site) .wr-candy-header > .wrap > a > *,
+  body.senseng-nature:not(.wr-materials-site) .wr-nature-header > .wrap > a > * {
+    min-width: 0;
+  }
+  body.senseng-candy:not(.wr-materials-site) .wr-candy-header > .wrap > nav,
+  body.senseng-nature:not(.wr-materials-site) .wr-nature-header > .wrap > nav {
+    grid-column: 1 / -1;
+    order: 3;
+    min-width: 0;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px !important;
+  }
+  body.senseng-candy:not(.wr-materials-site) .wr-candy-header > .wrap > div:last-child,
+  body.senseng-nature:not(.wr-materials-site) .wr-nature-header > .wrap > div:last-child {
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px !important;
+  }
+  body.senseng-candy:not(.wr-materials-site) .wr-candy-header .languages {
+    max-width: 112px;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+}
+
 @keyframes wrPulse {
   0%, 100% {
     opacity: 1;

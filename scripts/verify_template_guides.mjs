@@ -18,7 +18,7 @@ try {
   const listResponse = await request(prefix);
   assert.equal(listResponse.status, 200);
   const list = await listResponse.json();
-  assert.equal(list.total, 10);
+  assert.equal(list.total, 9);
   for (const template of list.templates) {
     const response = await request(template.document);
     assert.equal(response.status, 200);
@@ -26,8 +26,13 @@ try {
     assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
     const guide = await response.json();
     assert.equal(guide.templateId, template.templateId);
-    assert.ok(guide.assets.length >= 6);
-    assert.ok(guide.textSlots.length >= 10);
+    assert.equal(guide.revision, '2026-10-02.1');
+    assert.ok(guide.inputContract.missingInputPolicy.includes('missingFacts'));
+    assert.ok(guide.visualSystem.artDirection.includes('不是图片生成条件'));
+    assert.ok(guide.assets.some(asset => asset.kind === 'image'));
+    assert.equal(new Set(guide.assets.map(asset => asset.id)).size, guide.assets.length);
+    assert.ok(guide.textSlots.length > 0);
+    assert.equal(new Set(guide.textSlots.map(slot => slot.id)).size, guide.textSlots.length);
     const md = await request(template.markdown);
     assert.equal(md.status, 200);
     assert.ok((await md.text()).includes(guide.name));
@@ -51,7 +56,7 @@ try {
   }
   const forbidden = (await readdir('dist', { recursive: true })).filter(path => /template-guides/.test(path));
   assert.deepEqual(forbidden, []);
-  const result = { passed: true, templates: list.templates.map(t => t.templateId), checks: ['protected JSON and Markdown for all ten templates', 'JSON schemas', 'no anonymous/ordinary/workspace-admin access', 'read-only key cannot access projects or mutate', 'platform admin allowed', 'no documents or secrets in public bundle'], checkedAt: new Date().toISOString() };
+  const result = { passed: true, templates: list.templates.map(t => t.templateId), checks: ['protected JSON and Markdown for all nine templates', 'JSON schemas', 'no anonymous/ordinary/workspace-admin access', 'read-only key cannot access projects or mutate', 'platform admin allowed', 'no documents or secrets in public bundle'], checkedAt: new Date().toISOString() };
   await writeFile(artifacts + '/result.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 } finally { await worker?.dispose(); }

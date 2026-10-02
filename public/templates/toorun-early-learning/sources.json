@@ -1,0 +1,22 @@
+{
+  "reference": "https://toorun.webflow.io/",
+  "retrieved": "2026-09-30",
+  "purpose": "Web Radar reusable early-learning template; reference media is bundled locally",
+  "assets": [
+    { "file": "clouds.png", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696f76565e4b93d3bd8ce53a_Banner-Bg-Image.png" },
+    { "file": "footer-clouds.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696f94174780d931e8ad8995_06e26f5982afed896af76042c5c5ed33_Footer-BG.jpg" },
+    { "file": "hero-child-1.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/6990a28e166ca8330f026940_Banner-Image-1.jpg" },
+    { "file": "hero-child-2.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/6990a28eb18521d37cb361a9_Banner-Image-2.jpg" },
+    { "file": "hero-child-3.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/6990a28e153af5609e1a9fd8_Banner-Image-3.jpg" },
+    { "file": "hero-child-4.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/6990a28ed02a54ec4897ed33_Banner-Image-4.jpg" },
+    { "file": "learning-1.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696fd74fe104bba0868dc559_Choose-Us-Img-1.jpg" },
+    { "file": "learning-2.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696fd74f21e47d35295ae242_Choose-Us-Img-2.jpg" },
+    { "file": "learning-3.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696fd74f8c08e181dc476d12_Choose-Us-Img-3.jpg" },
+    { "file": "learning-4.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696fd74e32d3a99cd82d4903_Choose-Us-Img-4.jpg" },
+    { "file": "learning-5.jpg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696fd74e1ad81365be349d97_Choose-Us-Img-5.jpg" },
+    { "file": "program-1.svg … program-6.svg", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/697e55e16a93d48b0898c757_Service-Icon-1.svg", "note": "Six matching service icons from the same reference asset set." },
+    { "file": "favicon.png", "url": "https://cdn.prod.website-files.com/696e2debfd9b2c6b8f930e40/696e322eebb2141e5daee5e4_Favicon.png" },
+    { "file": "open-sans-latin.woff2", "url": "https://fonts.gstatic.com/s/opensans/v44/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS-mu0SC55I.woff2", "note": "Open Sans variable font, Latin subset." },
+    { "file": "quicksand-latin.woff2", "url": "https://fonts.gstatic.com/s/quicksand/v37/6xKtdSZaM9iE8KbpRA_hK1QNYuDyPw.woff2", "note": "Quicksand variable font, Latin subset." }
+  ]
+}

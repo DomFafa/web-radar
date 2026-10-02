@@ -1,3 +1,7 @@
+import { goodBoyExampleProducts } from '../../templates/themes/goodBoyPals';
+import { PAPERNOTE_DEFAULT_PROJECTS } from '../../templates/themes/papernote';
+import { melloExampleProducts } from '../../templates/themes/melloCoffee';
+import { toorunExamplePrograms } from '../../templates/themes/toorunEarlyLearning';
 import type { Language } from '../../shared/model';
 import type { MaterialsTemplateContract } from '../../shared/materials';
 import { referenceLayouts } from '../../templates/themes/referenceLayouts';
@@ -9,6 +13,21 @@ import { typedMaterialsDemoDraft } from './materials-typed-demo';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(profile.templateId==='auravell'){const draft=defaultDraft();draft.template='auravell';draft.company.name='Auravell';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#99582a';return draft;}
+  if(profile.templateId==='careflow-healthcare'){const draft=defaultDraft();draft.template='careflow-healthcare';draft.company.name='Careflow';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#6197de';return draft;}
+  if(profile.templateId==='toorun-early-learning') {
+    const draft=defaultDraft();draft.template='toorun-early-learning';draft.company.name='Toorun Early Learning';draft.company.email='demo@example.invalid';draft.company.description='A welcoming example of play-based early learning for children and families.';draft.languages=lang==='en'?['en']:['en',lang];draft.products=toorunExamplePrograms();draft.primaryProductId=draft.products[0].id;draft.brandColor='#3f6b52';draft.copy.en={headline:'Building Strong Foundations For Lifelong Learning',subtitle:'Thoughtful early learning experiences that help children build confidence, curiosity and everyday skills.',cta:'Explore programs',about:draft.company.description};return draft;
+  }
+  if(profile.templateId==='good-boy-pals') {
+    const draft=defaultDraft();draft.template='good-boy-pals';draft.company.name='Good Boy Supply Co.';draft.company.email='demo@example.invalid';draft.languages=lang==='en'?['en']:['en',lang];draft.products=goodBoyExampleProducts();draft.primaryProductId=draft.products[0].id;draft.brandColor='#ffcd1e';return draft;
+  }
+  if(profile.templateId==='papernote') {
+    const draft=defaultDraft();draft.template='papernote';draft.company.name='PaperNote';draft.company.email='demo@example.invalid';draft.languages=lang==='en'?['en']:['en',lang];draft.products=PAPERNOTE_DEFAULT_PROJECTS.map((p,i)=>({id:`demo-${i}`,name:p.name,description:p.description,material:'',dimensions:'',imageAssetId:p.img}));draft.primaryProductId=draft.products[0].id;return draft;
+  }
+  if(profile.templateId==='mello-coffee') {
+    const draft=defaultDraft();draft.template='mello-coffee';draft.company.name='Mello Coffee';draft.company.email='demo@example.invalid';draft.languages=lang==='en'?['en']:['en',lang];draft.products=melloExampleProducts();draft.primaryProductId=draft.products[0].id;draft.brandColor='#78bf30';return draft;
+  }
+  if(profile.templateId==='lumi-business'){const draft=defaultDraft();draft.template='lumi-business';draft.company.name='Lumi';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#48a7ff';return draft;}
   if(profile.imagePolicy==='typed-regions-v1')return typedMaterialsDemoDraft(profile,lang);
   const draft=defaultDraft();draft.template=profile.templateId as typeof draft.template;draft.buildBranch='template';draft.templateConfirmed=true;
   draft.languages=lang==='en'?['en']:['en',lang];draft.company.name='Example Brand';

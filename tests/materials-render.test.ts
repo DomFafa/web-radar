@@ -49,7 +49,11 @@ describe('approved materials rendering',()=>{
     for(let i=0;i<10;i++)expect(catalog).toContain(`data-wr-product-id="p${i}"`);
   });
   it('does not apply the new branch to ordinary drafts and keeps their original template defaults',async()=>{
-    const d=await draft();delete d.materials;const html=renderSite(d,options);expect(html).toContain('Mandy Mathers');expect(html).toContain('Dolls Trailer');expect(html).not.toContain('wr-materials-site');
+    const d=await draft();delete d.materials;const html=renderSite(d,options);expect(html).toContain('Mandy Mathers');expect(html).toContain('Dolls Trailer');
+    // Shared styles may mention the materials class in a selector; only the
+    // actual body marker determines which rendering branch produced the page.
+    const bodyTag=html.match(/<body\b[^>]*>/)?.[0];
+    expect(bodyTag).toBeDefined();expect(bodyTag).not.toContain('wr-materials-site');
     for(const id of ['6f48de11','67fddce','7b2b7e3','87636bb','54828a1'])expect(html).toContain(`data-id="${id}"`);
   });
 });

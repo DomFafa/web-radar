@@ -20,7 +20,7 @@ describe('all-template confirmed materials handoff',()=>{
   it.each(Object.keys(templateMediaRequirements))('%s accepts and preserves 1, 5 and 20 products across edits and all pages',async id=>{
     const profile=getMaterialsTemplate(id)!;
     expect(profile.imagePolicy).toBe('typed-regions-v1');
-    expect(profile.imageSlots.filter(s=>['product-main','product-gallery'].includes(s.id)).every(s=>!s.role&&s.maxProducts===undefined)).toBe(true);
+    expect(profile.imageSlots.filter(s=>['product-main','product-gallery'].includes(s.id)).every(s=>s.repeat.startsWith('per-product')&&s.maxProducts===undefined)).toBe(true);
     for(const count of [1,5,20]){
       const input=await typedMaterialsFixture(id,count),m=input.materials;
       expect(materialsSubmissionSchema.safeParse(input).success,`${id}:${count}:wire`).toBe(true);

@@ -1,3 +1,5 @@
+import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
+import { lumiRuntime } from '../templates/themes/lumi/runtime';
 import { singleProductRuntime } from '../templates/themes/singleProduct';
 import { bannerRuntime } from '../shared/banner-runtime';
 import { materialsRuntime } from '../shared/materials-runtime';
@@ -9,6 +11,7 @@ import { api, post, errorMessage, privateAssetBlob, requestId } from './api';
 import { Button, Icon, Notice } from './components';
 import { labels } from '../templates/labels';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
+import { referenceTemplatePreviewRuntime } from './reference-template-preview';
 
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
@@ -68,7 +71,7 @@ function restoreMaterialsPreviewMedia(urls:Map<string,string>,projectId:string){
   const assetId=(value:string)=>{
     try{const match=new URL(value,'https://preview.invalid').pathname.match(/^\/api\/projects\/([^/]+)\/assets\/([^/]+)$/);return match&&decodeURIComponent(match[1])===projectId?decodeURIComponent(match[2]):null;}catch{return null;}
   };
-  document.querySelectorAll('[data-wr-material-style],[data-wr-srcset],[data-wr-desktop-poster-id],[data-wr-mobile-poster-id]').forEach(node=>{
+  [document,...Array.from(document.querySelectorAll<HTMLTemplateElement>('template[data-lumi-screen]'),template=>template.content)].flatMap(root=>Array.from(root.querySelectorAll('[data-wr-material-style],[data-wr-srcset],[data-wr-desktop-poster-id],[data-wr-mobile-poster-id]'))).forEach(node=>{
     const style=node.getAttribute('data-wr-material-style');
     if(style)node.setAttribute('style',style.replace(/url\((['"]?)([^)]+?)\1\)/g,(match,quote:string,url:string)=>{const id=assetId(url);return id?urls.has(id)?`url("${urls.get(id)}")`:'none':match;}));
     for(const attribute of ['srcset','data-wr-desktop-poster','data-wr-mobile-poster']){
@@ -137,14 +140,14 @@ export function SitePreview({
         ? await post<{ html: string }>(path, { draft: project.draft })
         : await api<{ html: string }>(path);
       const doc = new DOMParser().parseFromString(result.html, 'text/html');
+      const queryPreview = (selector:string) => [doc,...Array.from(doc.querySelectorAll<HTMLTemplateElement>('template[data-lumi-screen]'),template=>template.content)].flatMap(root=>Array.from(root.querySelectorAll(selector)));
       // Only trusted template styling and our tiny navigation bridge run inside the sandbox.
-      doc
-        .querySelectorAll(
+      queryPreview(
           'script,base,meta[http-equiv="refresh"],meta[http-equiv="Content-Security-Policy"]',
         )
         .forEach((node) => node.remove());
-      const targets = [...doc.querySelectorAll('[src],[poster],[data-src],[data-large]')];
-      const materialsIds=project.materials?[...doc.querySelectorAll('[style],[srcset],[data-wr-desktop-poster],[data-wr-mobile-poster]')].flatMap(node=>rewriteMaterialsPreviewMedia(node,project.id)):[];
+      const targets = queryPreview('[src],[poster],[data-src],[data-large]');
+      const materialsIds=project.materials?queryPreview('[style],[srcset],[data-wr-desktop-poster],[data-wr-mobile-poster]').flatMap(node=>rewriteMaterialsPreviewMedia(node,project.id)):[];
       const ids = [
         ...new Set(
           [...materialsIds,...targets.flatMap((node) =>
@@ -160,14 +163,17 @@ export function SitePreview({
       if (!active) return;
       media.current = items;
       targets.forEach((node) => rewritePreviewMedia(node, project.id));
-      doc.querySelectorAll('form').forEach((form) => {
+      queryPreview('form').forEach((form) => {
         form.removeAttribute('action');
         form.removeAttribute('target');
       });
       const nonce = requestId().replaceAll('-', '');
+      const nativeReferenceRuntime = await referenceTemplatePreviewRuntime(project.draft);
+      if (!active) return;
       const csp = doc.createElement('meta');
       csp.httpEquiv = 'Content-Security-Policy';
       csp.content = `default-src 'none'; img-src blob: data: https: http: 'self'; media-src blob: data: https: http: 'self'; style-src 'unsafe-inline' ${window.location.origin}; script-src 'nonce-${nonce}'; font-src data: https: ${window.location.origin}; base-uri 'none'; form-action 'none'`;
+      if (project.draft.template === 'careflow-healthcare') csp.content += '; frame-src https://www.youtube-nocookie.com';
       doc.head.insertBefore(csp, doc.head.firstChild);
       const bridge = doc.createElement('script');
       bridge.setAttribute('nonce', nonce);
@@ -189,6 +195,9 @@ export function SitePreview({
           status.textContent = 'Preview: form validation passed. No message was sent.';
         });
         ${singleProductRuntime}
+        (${lumiRuntime.toString()})();
+        (${goodBoyRuntime.toString()})();
+        ${nativeReferenceRuntime}
         const video = document.getElementById('hero-video');
         const toggle = document.getElementById('video-toggle');
         const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -220,7 +229,7 @@ export function SitePreview({
           const urls = new Map(event.data.items.map(item => {
             const url = URL.createObjectURL(item.blob); mediaUrls.push(url); return [item.id, url];
           }));
-          document.querySelectorAll('[data-wr-src],[data-wr-poster],[data-wr-data-src],[data-wr-data-large]').forEach(node => {
+          [document,...Array.from(document.querySelectorAll('template[data-lumi-screen]'),template=>template.content)].flatMap(root=>Array.from(root.querySelectorAll('[data-wr-src],[data-wr-poster],[data-wr-data-src],[data-wr-data-large]'))).forEach(node => {
             for (const attribute of ['src', 'poster', 'data-src', 'data-large']) {
               const url = urls.get(node.getAttribute('data-wr-' + attribute));
               if (url) node.setAttribute(attribute, url);

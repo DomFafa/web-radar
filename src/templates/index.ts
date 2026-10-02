@@ -1,4 +1,16 @@
-import { renderReleasedMaterials } from './materials-releases';
+import { auravellPages } from '../shared/auravell-pages';
+import { renderAuravellSite } from './themes/auravell';
+import { renderCareflowSite } from './themes/careflowHealthcare';
+import { renderLumiSite } from './themes/lumiBusiness';
+import { lumiPages } from '../shared/lumi-pages';
+import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
+import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
+import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee';
+import { renderPaperNoteSite } from './themes/papernote';
+import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
+import { toorunStyles } from './themes/toorunStyles';
+import { renderReleasedMaterials, materialsDraftForRenderer } from './materials-releases';
+import { withTemplateBrandColor } from './brand-color';
 import { withBanner } from '../shared/banner';
 import type { Draft, Language, Product } from '../shared/model';
 import { withFavicon } from '../shared/favicon';
@@ -87,16 +99,20 @@ function segment(id: string): string {
 }
 const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  draft = materialsDraftForRenderer(draft);
   if (!isTypedMaterialsSource(draft)) draft = singleProductDraft(draft);
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);
-  if (released !== undefined) return released;
-  const html = renderSiteContent(draft, options);
+  if (released !== undefined) return withTemplateBrandColor(released, draft);
+  const html = withTemplateBrandColor(renderSiteContent(draft, options), draft);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return withProductImageViewer(html);
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  if(draft.template === 'auravell')return withBanner(withFavicon(renderAuravellSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
+  if(draft.template === 'careflow-healthcare')return withBanner(withFavicon(renderCareflowSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
+  if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
   // Several standalone headers build their own language links and used catalog
@@ -106,9 +122,15 @@ function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const html=rendered.replace(/<a\b[^>]*\bdata-wr-lang="([a-z]{2})"[^>]*>/g,(tag,lang:string)=>draft.languages.includes(lang as Language)?tag.replace(/\bhref="[^"]*"/,`href="${esc(`${depth}../${lang}/${target}`)}"`):tag);
   // Wrangler's keepNames inserts __name calls inside stringified functions.
   // Keep the approved branch self-contained when it runs outside the Worker.
-  return draft.materials?html.replace('<script>', '<script>var __name=(value)=>value;').replace('</body>',`<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`):html;
+  const normalized = html.includes('<script>') && !html.includes('var __name')
+    ? html.replace('<script>', '<script>var __name=(value)=>value;')
+    : html;
+  return draft.materials || ['mello-coffee','papernote','pawfect-groom'].includes(draft.template)
+    ? normalized.replace('</body>', `<script>(()=>{const __name=(value)=>value;(${materialsRuntime.toString()})();})();</script></body>`)
+    : normalized;
 }
 function renderSiteHtml(draft: Draft, options: RenderOptions): string {
+  if (draft.template === 'lumi-business') return renderLumiSite(draft, options);
   const lang = draft.languages.includes(options.lang) ? options.lang : 'en';
   const ui = labels[lang];
   const template = draft.template || 'senseng-clean';
@@ -347,6 +369,33 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     }
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(page === 'home' ? company.name : `${page === 'detail' ? translate(draft.products.find((p) => p.id === options.productId) ?? mainProduct ?? ({ name: ui.product, description: '' } as Product)).name : ui[page as 'home' | 'catalog' | 'about' | 'contact']} · ${company.name}`)}</title><meta name="description" content="${esc(copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${styles}\n${themeStyles}</style></head><body class="${template}" data-template="${template}" style="--brand:${color};--brand-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${bodyHtml}<script>${script}</script></body></html>`;
   }
+  if (template === 'good-boy-pals') {
+    const ctx = buildThemeContext(draft, options);
+    const title = page === 'home' ? (company.name || 'Good Boy Supply Co.') : `${page === 'detail' ? ctx.translateProduct(draft.products.find(p => p.id === options.productId) ?? ({ name: 'Product', description: '' } as Product)).name : ui[page as 'catalog' | 'about' | 'contact']} · ${company.name || 'Good Boy Supply Co.'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Discover pet supplies, thoughtful everyday essentials and a friendly independent shop.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${goodBoyStyles}</style></head><body class="good-boy-pals" data-template="good-boy-pals"${color !== '#ffcd1e' && options.projectId !== 'preview' ? ` style="--primary:${color}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderGoodBoyPage(ctx)}<script>${script};(${goodBoyRuntime.toString()})();</script></body></html>`;
+  }
+  if (template === 'toorun-early-learning') {
+    const ctx = buildThemeContext(draft, options);
+    const current = draft.products.find((p) => p.id === options.productId);
+    const sectionTitle = page === 'detail' ? ctx.translateProduct(current ?? ({ name: 'Program', description: '' } as Product)).name : ({ catalog: 'Programs', about: 'About us', contact: 'Contact' } as Record<string, string>)[page] || company.name;
+    const title = page === 'home' ? company.name || 'Toorun Early Learning' : `${sectionTitle} · ${company.name || 'Toorun Early Learning'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore play-based early learning programs, a caring approach and a welcoming path for families.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<link rel="icon" href="/templates/toorun-early-learning/favicon.png"><style>${toorunStyles}</style></head><body class="toorun-early-learning" data-template="toorun-early-learning"${color !== '#3f6b52' && options.projectId !== 'preview' ? ` style="--tr-green:${color}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderToorunEarlyLearning(ctx)}<script>${script}</script></body></html>`;
+  }
+  if (template === 'pawfect-groom') {
+    const ctx = buildThemeContext(draft, options);
+    const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;
+  }
+  if (template === 'mello-coffee') {
+    const ctx = buildThemeContext(draft, options);
+    const title = page === 'home' ? (company.name || 'Mello') : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Menu Item',description:''} as Product)).name : ({catalog:'Menu',about:'About us',contact:'Visit & Contact'} as Record<string,string>)[page] || 'Mello'} · ${company.name || 'Mello'}`;
+    return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Visit Mello in Brooklyn, NY for a brighter coffee break. Enjoy our specialty espresso, refreshing cold matcha, and freshly baked pastries.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${melloStyles}</style></head><body class="mello-coffee" data-template="mello-coffee"${color !== '#78bf30' && options.projectId !== 'preview' ? ` style="--accent:${color};--mello-accent-ink:${brandInk};--mello-accent-icon:${brandInk === '#ffffff' ? 'brightness(0) invert(1)' : 'none'}"` : ''}>${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderMelloPage(ctx)}<script>${script};(${melloRuntime.toString()})();</script></body></html>`;
+  }
+  if (template === 'papernote') {
+    const ctx = buildThemeContext(draft, options);
+    return renderPaperNoteSite(ctx);
+  }
+
   if (template === 'senseng-candy') {
     const ctx = buildThemeContext(draft, options);
     const bodyHtml = renderCandyPage(ctx);
@@ -483,7 +532,7 @@ export function renderSiteFiles(
   draft = singleProductDraft(draft);
   const files: Record<string, string> = {};
   for (const lang of draft.languages) {
-    for (const page of ['home', 'catalog', 'about', 'contact'])
+    for (const page of (draft.template === 'auravell' ? auravellPages.filter(p => p !== 'detail') : draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
       files[`${lang}/${page === 'home' ? 'index.html' : `${page}/index.html`}`] = renderSite(
         draft,
         { ...options, lang, page },
@@ -500,9 +549,13 @@ export function renderSiteFiles(
     `<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=en/index.html"><title>${esc(draft.company.name)}</title><a href="en/index.html">${esc(draft.company.name)}</a></html>`;
   files['index.html'] = withFavicon(files['index.html'], draft, options.assetUrl);
   // Exported sites run on their own domain; bundled template media lives on the builder.
-  if (isSingleProductTemplate(draft.template)) {
+  if (isSingleProductTemplate(draft.template) || draft.template === 'careflow-healthcare' || draft.template === 'lumi-business' || draft.template === 'pawfect-groom' || draft.template === 'good-boy-pals' || draft.template === 'papernote' || draft.template === 'mello-coffee' || draft.template === 'toorun-early-learning' || draft.template === 'auravell') {
     const mediaOrigin = new URL(options.publicBaseUrl).origin;
-    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/single-product\//g, `$1${mediaOrigin}/templates/single-product/`);
+    for (const key of Object.keys(files)) files[key] = files[key].replace(/(["'(])\/templates\/(auravell|careflow|single-product|pawfect-groom|good-boy-pals|papernote|lumi|mello-coffee|toorun-early-learning)\//g, `$1${mediaOrigin}/templates/$2/`);
+    // srcset candidates after the first image are comma-separated rather than quoted.
+    if (draft.template === 'careflow-healthcare' || draft.template === 'auravell') {
+      for (const key of Object.keys(files)) files[key] = files[key].replace(/(,\s*)\/templates\/(auravell|careflow)\//g, `$1${mediaOrigin}/templates/$2/`);
+    }
   }
   return files;
 }

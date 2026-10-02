@@ -18,7 +18,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Hyper-Tactile Relief',
     category: 'cyber',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80&auto=format',
   };
   const pAt = (idx: number) => (products.length > 0 ? products[idx % products.length] : heroProduct);
 
@@ -125,7 +125,7 @@ export function renderArcadeHome(ctx: ThemeContext): string {
 
             <!-- Main Floating Image with Radar Scan Line -->
             <div style="position:relative;overflow:hidden;padding:15px;">
-              <img src="${esc(heroProduct.img || '/templates/senseng/products-1.jpg')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;filter:drop-shadow(0 0 25px rgba(0,245,212,0.4));animation:wrArcadeFloat 4s ease-in-out infinite alternate;">
+              <img src="${esc(heroProduct.img || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80&auto=format')}" alt="${esc(heroProduct.name)}" style="width:100%;max-width:360px;height:auto;object-fit:contain;filter:drop-shadow(0 0 25px rgba(0,245,212,0.4));animation:wrArcadeFloat 4s ease-in-out infinite alternate;">
               <div style="position:absolute;inset:0;height:2px;background:linear-gradient(90deg,transparent,#00f5d4,transparent);box-shadow:0 0 8px #00f5d4;animation:wrArcadeScan 3s linear infinite;"></div>
             </div>
 
@@ -399,7 +399,7 @@ export function renderArcadeDetail(ctx: ThemeContext): string {
     dimensions: '8.5 × 6.5 cm',
     tagline: 'Hyper-Tactile Relief',
     category: 'cyber',
-    img: '/templates/senseng/products-1.jpg',
+    img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80&auto=format',
   };
   const related = products.filter((item) => item.id !== p.id).slice(0, 3);
   const waDigits = (draft.company.whatsapp || '').replace(/[^0-9]/g, '');

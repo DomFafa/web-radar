@@ -11,6 +11,21 @@ Status: implementation contract, 2026-09-17. This document does not claim deploy
 - No automatic publication, no repeat consultation/planning/image generation in Web Radar. “Build” means deterministic template assembly from approved assets and text.
 - No independent deployment until the Product Radar task requests the coordinated release. No git commit/push is included.
 
+## Image subjects and template appearance (2026-10-02)
+
+The current nine active templates publish new guidance revision `2026-10-02.1` and materials revisions `2026-10-02.<templateId>-materials.1`. Historical revisions remain readable with their original hashes. Slot IDs, dimensions, quantities, product bindings and renderers are unchanged. Consumers must fetch the current catalog and complete requirements again for new work; an already confirmed package retains its original revision.
+
+A template supplies website layout and image display geometry only. Its name, industry, `visualSystem`, `visualParameters`, palette, thumbnail, demo images, image alt text and `textSlots[].exampleText` must not select image subjects or set product-image style. In particular, a pet, coffee, healthcare or yoga template does not request dogs, drinks, doctors or yoga scenes for an unrelated product catalog. These website tokens affect HTML/CSS, not the image-generation prompt.
+
+- Reuse `primaryMediaId` and ordered `galleryMediaIds` for product primary and supplemental pictures. A template change must not automatically redraw, recolor or regenerate products.
+- A newly requested product image uses the actual selected product references and explicitly approved customer brief. Preserve its shape, materials, colors, markings, included parts and evidenced packaging. Slot dimensions and live-text safe areas constrain framing only.
+- Collection pictures preserve the identity and coverage of the actual selected products.
+- Business illustrations require an explicitly approved customer subject. Without authorized imagery or an approved brief, show a missing-input state instead of generating the template's sample industry. Never present generated premises, staff or certificates as real customer facts.
+- Logo/favicon generation must not copy the template brand. Reuse approved customer assets; missing identity assets remain missing.
+- Default assets and full-page previews are public layout demonstrations, never fallback generation references. Do not pass the full template guide, preview or its website visual tokens to an image model as subject/style instructions.
+
+An image-generation consumer remains responsible for filtering these fields when assembling prompts. This Web Radar change cannot retroactively repair stored generated images or a consumer's cached old requirements. Existing wrong images should be replaced only after the customer confirms the correct subjects and references.
+
 ## 1. Template discovery, requirements and complete preview
 
 Existing read-only API remains available under `/api/internal/template-guides` with `Authorization: Bearer <TEMPLATE_GUIDES_API_KEY>`. Keep this credential on the Product Radar server. Existing `/:templateId`, `/schema`, `/output-schema` and Markdown responses retain their contract.
@@ -233,6 +248,8 @@ Reuse `/embed/product-radar?parentOrigin=<exact PR origin>` and existing `web-ra
 After authentication WR reads the server-issued receipt on the project, bypasses only this project's completed intake/template/brief steps, and performs idempotent deterministic template assembly. Refresh or renewed login must not create another import/build. Open the normal preview/edit/publish workspace when ready; leave publication an explicit existing action.
 
 Keep the imported source snapshot immutable for provenance. Store editable applied bindings/visual settings separately in the draft; preview/edit/publish read that current draft, so user edits are not overwritten by the original import snapshot. Existing company/product/contact fields stay authoritative for their mapped positions. Read-only provenance cannot be overwritten through ordinary PUT drafts. Changing template requires explicit rebind/revalidation for this new project, not silently applying old position IDs.
+
+For the nine active templates, `visual.palette.primary` and the editable draft's `brandColor` stay synchronized. The current draft color drives navigation highlights, primary buttons, accent lines and contact cards in preview and publication. Buttons retain the exact primary color and use contrasting black/white text; light-surface links may use a darker companion. Reference layouts and media are unchanged. Brand color is a website CSS parameter only, never an image-generation instruction. Existing static publications update after an explicit republish.
 
 ## 6. Binding and acceptance obligations
 

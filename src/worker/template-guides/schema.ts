@@ -1,6 +1,14 @@
 import { z } from 'zod';
 
 export const guideIds = [
+  'auravell',
+  'careflow-healthcare',
+  'toorun-early-learning',
+  'lumi-business',
+  'pawfect-groom',
+  'good-boy-pals',
+  'mello-coffee',
+  'papernote',
   'senseng-clean',
   'senseng-video',
   'senseng-candy',
@@ -96,6 +104,7 @@ export const guideSchema = z.strictObject({
     about: z.array(nonempty),
     contact: z.array(nonempty),
     productDetail: z.array(nonempty),
+    'extra-plans': z.array(nonempty).optional(),
   }),
   inventory: z.strictObject({
     recommendedDistinctProductImages: z.number().int().positive(),

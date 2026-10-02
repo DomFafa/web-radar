@@ -27,6 +27,10 @@ npm run dev:test
 
 需要热更新时另开 `npm run dev:ui`，端口 5174 代理 API 到 8788。内嵌鉴权和 CSP 最终验证应使用 Worker 原点 8788。
 
+## 仓库同步与发布
+
+本地提交先推送到 [wuyueerhao/web-radar](https://github.com/wuyueerhao/web-radar)，再向 [DomFafa/web-radar](https://github.com/DomFafa/web-radar) 发起或更新 PR，后续由负责人手动合并。用户要求上线时，Cloudflare 使用项目 Token 直接发布，无需等待上游合并或运行 `production-release`。具体流程与验证要求见 [仓库同步与线上发布约定](docs/repository-and-publishing.md)。
+
 ## 校验
 
 ```sh

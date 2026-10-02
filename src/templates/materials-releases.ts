@@ -1,3 +1,9 @@
+import { isActiveTemplate } from '../shared/template-availability';
+import { imageContentBaseRevision, usesImageContentRevision, withConfirmedImageContent, materialsRenderDraft } from './materials-image-content';
+import { renderAuravellSite as legacyAuravell, renderCareflowSite as legacyCareflow } from './releases/native-20261001.mjs';
+import { getCareflowMaterialsTemplate } from './themes/careflow/materials';
+import { getLumiMaterialsTemplate } from './themes/lumi/materials';
+import { getAuravellMaterialsTemplate } from './themes/auravell/materials';
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
 import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
@@ -10,7 +16,7 @@ import { frozenIndustryPreviewRuntime } from './releases/industry-preview-202609
 import { getMaterialsTemplate as outreachContract, renderSite as outreachRender } from './releases/outreach-20260923.mjs';
 import { getOutreachDemoContract, repairOutreachMaterials } from './releases/outreach-demo-20260923.mjs';
 import { repairMaterialsDemo } from './releases/demo-20260923.mjs';
-import { getModernMaterialsTemplate, getTypedMaterialsTemplate } from './materials-typed';
+import { getModernMaterialsTemplate, getTypedMaterialsTemplate, toorunNativeMaterialsRevision } from './materials-typed';
 
 export const materialsRendererRevision = '2026-09-22.baseline-09fb979';
 export const industryRendererRevision = '2026-09-22.industry-bafe6c1';
@@ -86,6 +92,31 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (usesImageContentRevision(id, revision) || (!revision && isActiveTemplate(id) && imageContentBaseRevision(id))) {
+    const source = originalMaterialsContract(id, imageContentBaseRevision(id));
+    return source ? withConfirmedImageContent(source) : undefined;
+  }
+  return originalMaterialsContract(id, revision);
+}
+
+/** New image guidance uses the existing renderer and position inventory unchanged. */
+export function materialsDraftForRenderer(draft: Draft): Draft {
+  return usesImageContentRevision(draft.template, draft.materials?.contractRevision)
+    ? materialsRenderDraft(draft, originalMaterialsContract(draft.template, imageContentBaseRevision(draft.template))) : draft;
+}
+
+function originalMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (id === 'auravell') return getAuravellMaterialsTemplate(revision);
+  if (id === 'careflow-healthcare') return getCareflowMaterialsTemplate(revision);
+  if (id === 'lumi-business') return getLumiMaterialsTemplate(revision);
+  if (['toorun-early-learning', 'good-boy-pals', 'mello-coffee', 'papernote', 'pawfect-groom'].includes(id)) {
+    const contract = getModernMaterialsTemplate(id, revision ?? (id === 'toorun-early-learning' ? toorunNativeMaterialsRevision : undefined));
+    if (!contract) return;
+    declareExecutionMetadata(contract);
+    contract.rendererRevision = `2026-09-30.${id}-native.1`;
+    if (contract.contractRevision === toorunNativeMaterialsRevision) contract.rendererRevision = '2026-10-01.toorun-early-learning-native.2';
+    return contract;
+  }
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === id && (!revision || item.contract.contractRevision === revision));
   if (release) return structuredClone(release.contract);
   if (!revision || revision === demoMaterialsRevision(id)) return demoMaterialsContract(id);
@@ -97,8 +128,11 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
 }
 
 export function renderReleasedMaterials(draft: Draft, options: RenderOptions): string | undefined {
+  draft = materialsDraftForRenderer(draft);
   const revision = draft.materials?.contractRevision;
   if (!revision) return;
+  if (draft.template === 'auravell' && revision === '2026-10-01.auravell-materials.1') return legacyAuravell(draft, options);
+  if (draft.template === 'careflow-healthcare' && revision === '2026-10-01.careflow-healthcare-materials.1') return legacyCareflow(draft, options);
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release) return renderMaterialsTemplateRelease(release,draft,options);
   // The repaired release renders demos, private projects and customer publications alike.
@@ -121,7 +155,9 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
+  draft = materialsDraftForRenderer(draft);
   const revision = draft.materials?.contractRevision;
+  if (draft.template === 'lumi-business' || draft.template === 'careflow-healthcare' || draft.template === 'auravell') return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);
   if (release && [demoRendererRevision, outreachDemoRendererRevision].includes(release.contract.rendererRevision || '')) return frozenContract(release.rendererTemplateId) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
   if (revision && releasedMaterialsContract(draft.template, revision)) return frozenContract(draft.template) ? frozenMaterialsPreviewRuntime : frozenIndustryPreviewRuntime;
