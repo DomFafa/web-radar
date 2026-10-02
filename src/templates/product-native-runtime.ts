@@ -2,6 +2,37 @@ import type { Draft } from '../shared/model';
 import { labels } from './labels';
 import { materialsRuntime } from '../shared/materials-runtime';
 import { esc, type RenderOptions } from './themes/types';
+import { isProductNativeEnhancedRevision } from '../shared/product-native-materials';
+import { productMotionPrepareSource, productMotionSource } from './themes/product-motion-source';
+
+/** Native disclosures keep their no-JavaScript behavior and gain keyboard/outside-close support. */
+export function productNativeEnhancedNavRuntime() {
+  const disclosures = [...document.querySelectorAll<HTMLDetailsElement>('[data-product-nav-disclosure]')];
+  const close = (details: HTMLDetailsElement, focus = false) => {
+    details.open = false;
+    if (focus) details.querySelector<HTMLElement>('summary')?.focus();
+  };
+  for (const details of disclosures) {
+    details.addEventListener('toggle', () => {
+      if (details.open) for (const other of disclosures) if (other !== details) close(other);
+    });
+    details.querySelectorAll('a').forEach(link => link.addEventListener('click', () => close(details)));
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    for (const details of disclosures) if (details.open) close(details, details.contains(document.activeElement));
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-product-menu-toggle][aria-expanded="true"]')) {
+      const menu = document.getElementById(button.getAttribute('aria-controls') || '');
+      button.setAttribute('aria-expanded', 'false');
+      menu?.setAttribute('data-open', 'false');
+      if (menu?.contains(document.activeElement)) button.focus();
+    }
+  });
+  document.addEventListener('click', event => {
+    if (!(event.target instanceof Node)) return;
+    for (const details of disclosures) if (details.open && !details.contains(event.target)) close(details);
+  });
+}
 
 /** Progressive enhancement shared only by the five product-native candidate releases. */
 export function productNativeUiRuntime() {
@@ -111,5 +142,10 @@ export function productNativeInquiryRuntime() {
 export function withProductNativeRuntime(html: string, _draft: Draft, options: RenderOptions): string {
   const ui = labels[options.lang];
   const prepared = html.replace('id="inquiry"', `id="inquiry" data-wr-sending="${esc(ui.sending)}" data-wr-sent="${esc(ui.sent)}" data-wr-failed="${esc(ui.failed)}"`);
+  if (isProductNativeEnhancedRevision(_draft.template, _draft.materials?.contractRevision)) {
+    return prepared
+      .replace('</head>', () => `<script>${productMotionPrepareSource}</script></head>`)
+      .replace('</body>', () => `<script>(()=>{const __name=(value)=>value;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();(${materialsRuntime.toString()})();${options.preview ? '' : `(${productNativeInquiryRuntime.toString()})();`}})();${productMotionSource}</script></body>`);
+  }
   return prepared.replace('</body>', `<script>(()=>{const __name=(value)=>value;(${productNativeUiRuntime.toString()})();(${materialsRuntime.toString()})();${options.preview ? '' : `(${productNativeInquiryRuntime.toString()})();`}})();</script></body>`);
 }

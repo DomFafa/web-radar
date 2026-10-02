@@ -1,5 +1,6 @@
 import type { Draft } from '../shared/model';
-import { isProductNativeRevision } from '../shared/product-native-materials';
+import { isProductNativeEnhancedRevision, isProductNativeRevision, productNativeMaterialsRevision } from '../shared/product-native-materials';
+import { enhancedProductNativeContract } from './product-native-enhanced-materials';
 import { getAuravellProductMaterials } from './themes/auravell/product-materials';
 import { renderAuravellProductSite } from './themes/auravell/product-renderer';
 import { getCareflowProductMaterials } from './themes/careflow/product-materials';
@@ -23,7 +24,9 @@ const releases = {
 /** Candidates are opt-in by revision. No existing catalog default or saved release changes. */
 export function getProductNativeContract(templateId: string, revision?: string) {
   if (!isProductNativeRevision(templateId, revision)) return;
-  return releases[templateId as keyof typeof releases].contract(revision);
+  const release = releases[templateId as keyof typeof releases];
+  if (isProductNativeEnhancedRevision(templateId, revision)) return enhancedProductNativeContract(release.contract(productNativeMaterialsRevision(templateId))!);
+  return release.contract(revision);
 }
 export function renderProductNativeSite(draft: Draft, options: RenderOptions): string | undefined {
   if (!isProductNativeRevision(draft.template, draft.materials?.contractRevision)) return;
