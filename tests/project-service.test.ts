@@ -12,6 +12,7 @@ import { typedMaterialsFixture } from './fixtures/materials-typed';
 import { draftFromMaterials } from '../src/worker/materials-service';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import { frozenMaterialsPreviewRuntime } from '../src/templates/releases/baseline-preview-20260922';
+import { productMotionPrepareSource, productMotionSource } from '../src/templates/themes/product-motion-source';
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Job, Principal, Project, PublicMediaManifest, Release } from '../src/shared/model';
 
@@ -22,6 +23,7 @@ describe('Product Radar private project service', () => {
   let providers: ReturnType<typeof fixtureProviders>;
   const app = createIntegrationApp();
   const secret = 's'.repeat(40);
+  const enhancedTemplates = ['auravell', 'careflow-healthcare', 'toorun-early-learning', 'lumi-business', 'mello-coffee'];
   const objects = new Map<string, { bytes: Uint8Array; options: any }>();
   beforeEach(async () => {
     fixture = await materialsFixture(2); fixture.principal.email='member@example.com'; current = structuredClone(fixture.principal); revoked = false; objects.clear();
@@ -161,7 +163,47 @@ describe('Product Radar private project service', () => {
     expect(first.runtime).toBe(second.runtime); expect(second.runtime).not.toContain(p.draft.company.name);
     expect(first.runtime).toContain('const __name='); expect(first.runtime).toContain('data-wr-banner');
     expect(first.runtime).not.toContain('<script'); expect(first.runtime).not.toContain(secret);
+    expect(first).not.toHaveProperty('prepareRuntime'); expect(second).not.toHaveProperty('prepareRuntime');
     expect(() => new Function(first.runtime)).not.toThrow();
+  });
+  it.each(enhancedTemplates)('returns fixed head preparation and body motion for explicit %s v3 materials', async template => {
+    const p = await accepted(), input = await typedMaterialsFixture(template, 2, `2026-10-03.${template}-materials.3`);
+    p.draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(m => [m.id, { id: 'stored-' + m.id } as Asset])));
+    await store.update('projects', p).run();
+    const response = await call(p.id, 'preview', { page: 'home' }); expect(response.status).toBe(200);
+    const first: any = await response.json();
+    expect(first.prepareRuntime).toBe(productMotionPrepareSource);
+    expect(first.prepareRuntime.length).toBeGreaterThan(0);
+    expect(first.runtime).toContain(productMotionSource);
+    p.draft.company.name = 'CUSTOMER_CODE_MUST_NOT_ENTER_PREPARATION';
+    await store.update('projects', p).run();
+    const changed = await call(p.id, 'preview', { page: 'detail', productId: 'p1' }); expect(changed.status).toBe(200);
+    const second: any = await changed.json();
+    expect(second.prepareRuntime).toBe(first.prepareRuntime);
+    expect(second.runtime).toBe(first.runtime);
+    expect(second.prepareRuntime).not.toContain(p.draft.company.name);
+    expect(second.prepareRuntime).not.toContain(secret);
+    expect(second.prepareRuntime).not.toContain('<script');
+    expect(() => new Function(second.prepareRuntime)).not.toThrow();
+  });
+  it.each(enhancedTemplates)('omits head preparation for default and v2 %s materials', async template => {
+    const p = await accepted();
+    for (const revision of [undefined, `2026-10-02.${template}-materials.2`]) {
+      const input = await typedMaterialsFixture(template, 2, revision);
+      p.draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(m => [m.id, { id: 'stored-' + m.id } as Asset])));
+      await store.update('projects', p).run();
+      const response = await call(p.id, 'preview'); expect(response.status).toBe(200);
+      const result: any = await response.json();
+      expect(result).not.toHaveProperty('prepareRuntime');
+      expect(result.runtime).not.toContain(productMotionSource);
+    }
+  });
+  it('omits head preparation for Pawfect materials', async () => {
+    const p = await accepted(), input = await typedMaterialsFixture('pawfect-groom', 2);
+    p.draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(m => [m.id, { id: 'stored-' + m.id } as Asset])));
+    await store.update('projects', p).run();
+    const response = await call(p.id, 'preview'); expect(response.status).toBe(200);
+    expect(await response.json()).not.toHaveProperty('prepareRuntime');
   });
   it('rejects stale versions, unknown page/product/language and unsafe proxy prefixes', async () => {
     const p = await accepted();
