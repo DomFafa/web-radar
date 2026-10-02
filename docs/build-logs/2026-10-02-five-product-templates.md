@@ -1,6 +1,6 @@
 # 五套产品原生模板候选与统一验收
 
-状态：五套候选已上线，真实素材 QA、资料导入、70 项桌面/手机版面检查和截图复核完成，可供用户视觉验收。已知 Product Radar 询盘跳转参数修复已推送，因 GitHub 正常登录待恢复而尚未部署。历史默认版本未切换，五个验收网站均未发布。
+状态：五套候选与跨库询盘修复已上线。真实素材 QA、资料导入、70 项桌面/手机版面检查、五套截图复核及 30 项真实询盘导航检查全部通过，待用户视觉验收。历史默认版本未切换，五个验收网站均未发布。
 
 本次将 Pawfect 的资料生产经验用于 Auravell、Careflow、Toorun、Lumi、Mello，按各模板页面重新规划产品展示。五套统一使用 Senseng 十二件水果套装、LOOF 净化器设计和紫色羊玩偶三款已保存产品；核对 17 张原素材，缺失或冲突规格继续留空，不推断实物认证、功效或生产能力。区块场景独立生成，原主图保持原始字节。规划方法沿用 [产品网站模板 playbook](../product-website-template-playbook.md)，本文记录交付与验证结果。
 
@@ -38,10 +38,16 @@ Product Radar 的固定 B 端语气按用户指定交由另一聊天修改并发
 
 最终五个真实私有项目各 14 项桌面/手机版面检查与离线截图复核通过，总计 70 项；Toorun 使用更新后的 version 2 / materials revision 7，另补 2 项真实桌面/手机编号说明检查，10 条产品链接完整可见且绑定正确。原图完整显示、素材载入、全部产品详情、导航、移动菜单、FAQ 和 Mello 场景按钮/键盘分别按模板实际功能验证。询盘项单独记录，不把 layout-only 的通过写成整体交互通过。
 
-Product Radar contact 请求漏传 productId 已修复并推送 `2833f8554692558f832c2cc2da1ecdae210dc9af`（`codex/preview-inquiry-product`），66 项目标回归和类型检查通过；正常 GitHub CLI 登录失效，尚未部署该修复。首次用户网页授权后，CLI 接收阶段直连超时；第二次修正连接后等待用户确认，设备码已过期。等待用户准备好后继续正常授权，不重复自动创建授权流程。网络诊断确认命令行需使用 macOS 已配置的 HTTP/HTTPS 代理，未更改全局网络设置，也未提取浏览器 GitHub 凭据。成功部署后仍需用实际 UI 复测三款产品进入询盘时的选择。
+Product Radar contact 请求漏传 productId 的修复 `2833f8554692558f832c2cc2da1ecdae210dc9af` 经 66 项目标回归和类型检查，通过 PR #71 合并为 `5d0482483844fafdc682b3bd83a3f4b0288f99d1`。用户完成正常 GitHub CLI 授权后，精确 main 的 CI run `37032091992` 通过，唯一一次受控发布于北京时间 2026-10-03 00:18:18 完成。网络使用 macOS 已配置的 HTTP/HTTPS 代理，未修改全局设置或提取浏览器 GitHub 凭据。
+
+该 Product Radar 发布完成 4810 项测试（16 项显式跳过）、37 项发布护栏、跨库合同验证、类型检查和构建；归档解包后按完整清单验证。实际 ECS current 为 `20261002-161809-5d0482483844-cb1e1558`，旧版本保留；两项服务和内外健康检查正常，本机 90 个静态文件、公网 HTML/主 JS/CSS 均与制品哈希一致。受控入口全程 277.397 秒，主要耗时为完整 TypeScript 回归 195.416 秒；跨库验证 13.587 秒、类型检查与构建 4.691 秒、归档验证 1.504 秒、上传 9.657 秒、激活 12.537 秒。压缩包装未单独计时。证据见 `/Users/dom/Desktop/product-radar-preview-inquiry-release-20261003-5d04824/` 与 `/Users/dom/Desktop/product-radar-preview-inquiry-20261002/public-verification.json`。回执内的 Web Radar `f526591a` 仅是受控入口使用的上游集成测试源，线上候选 Worker 仍按本任务 `4415b753` 的独立发布回执归因。
 
 GitHub 主任务沿既有 `DomFafa/web-radar` 分支和 PR #18 更新，未自动合并。按仓库约定向 `wuyueerhao/web-radar` 分支推送尝试一次被远端 permission denied，未改权限、未强推；该 fork 同步限制另存 `fork-push-status.json`，不混称已完成同步。
 
 验收证据位于各 `production/<templateId>/browser-final/layout-only/report.json` 和 `final-visual-report.{md,json}`；Toorun 的补采为 `collage-captions-live.json`，仅验证名称，完整图片以 14 项主报告为准。Mello 初次按钮截图落在 CSS 颜色过渡中间帧，稳定补图与计算样式核对后不视为应用缺陷；数字小标手机换行仅作非阻断外观观察。Auravell 手机首屏浮动导航部分覆盖氛围场景，按原模板风格保留；原主图卡片完整显示、产品绑定正确，场景裁切与主图截断分别判断。
 
-剩余事项：恢复 GitHub CLI 正常登录后，部署 Product Radar `2833f855` 修复并复测五套三款产品的询盘入口。当前线上选择净化器或玩偶后可能仍默认回第一款水果，此已知问题未被 layout-only 结果掩盖。用户尚未确认五套视觉效果，五个客户网站保持未发布，旧模板默认未切换。
+Product Radar `5d048248` 上线后，五套真实项目各完成三产品 × 1440/390 两种视口的询盘导航，总计 30/30 通过。每次通过目录进入真实详情、点击询盘按钮，校验 GET 的 productId/expectedVersion、返回项目/版本/产品以及表单实际选中项，均与点击产品一致；询盘提交继续禁用，未发送真实询盘。五份 `browser-final/inquiry-only/report.json` 均为 `passed=true`，无页面异常、交互失败或版本错配。70 项排版证据保持原范围，未因一处请求参数修复重复整套版面检查、生成或部署。
+
+首轮复测发现 Playwright 自带 `serviceWorkers: block` 在不带 allow-same-origin 的沙箱页面读取 navigator.serviceWorker 时抛出异常。通过无联网的最小复现确认后，仅把测试脚本改为带访问判断的注册拦截；保留全部业务断言、页面异常检查和 API 写请求阻止。Auravell 首轮一次点击未发出详情请求，独立窄诊断和随后完整六项均成功，未宣称已证明字体或应用根因，也未据此修改网站。首次失败原件、哈希、最小复现与窄诊断均保留在 `repairs/inquiry-tooling/`。最终测试脚本 SHA256 为 `ac6bd0e0ffdff25029fae956565e64f4b9b0d89111163a9ae56d80fc9c89d7d0`，所有隔离测试浏览器完成即关闭。
+
+剩余事项仅为用户确认五套风格效果。五个客户网站保持私有、未发布；Web Radar PR #18 按现有仓库约定待手动合并。另一聊天后续获授权的产品辅图与六卡片模板选择改进在独立分支处理，不计入本次上线与验收结果。
