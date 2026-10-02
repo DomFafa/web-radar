@@ -3260,7 +3260,7 @@ export class DomainService {
             continue;
           }
           remaining = true;
-          if (count + wave.length >= 4 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
+          if (wave.length >= 4 || count + wave.length >= 12 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
           const asset = await this.projectAsset(job.projectId, id);
           if (count + wave.length > 0 && inputBytes + asset.size > 40 * 1024 * 1024) break;
           wave.push({ asset, entry, width }); inputBytes += asset.size;
