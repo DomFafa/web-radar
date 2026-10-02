@@ -15,6 +15,10 @@ import { referenceTemplatePreviewPrepare, referenceTemplatePreviewRuntime } from
 
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
+export function previewRequestQuery(page: DesignPage, lang: Language, productId?: string) {
+  return new URLSearchParams({lang,page,...((page === 'detail' || page === 'contact') && productId ? {productId} : {})});
+}
+
 /** Serialized into the sandbox; only declared page routes and bounded element IDs can navigate. */
 export function previewNavigationBridge(channel:string, parentOrigin:string, currentPage:string, productId:string) {
   document.addEventListener('click', event => {
@@ -158,11 +162,7 @@ export function SitePreview({
     setHtml('');
     (async () => {
       const effectiveProductId = productId || project.draft.primaryProductId || project.draft.products[0]?.id || '';
-      const query = new URLSearchParams({
-        lang,
-        page,
-        ...(page === 'detail' && effectiveProductId ? { productId: effectiveProductId } : {}),
-      });
+      const query = previewRequestQuery(page, lang, effectiveProductId);
       const path = `/api/projects/${encodeURIComponent(project.id)}/preview?${query}`;
       const result = draftPreview
         ? await post<{ html: string }>(path, { draft: project.draft })

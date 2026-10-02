@@ -38,6 +38,19 @@ export function projectPreviewHtml(html: string, base: string, origin: string, s
         set('href', base + '/preview?' + params + hash);
       }
       if (node.tagName === 'form') { set('action', '#'); set('data-wr-preview-disabled', 'true'); }
+      if (selection.page === 'contact' && selection.productId && node.tagName === 'select' && get('name') === 'productId') {
+        const options: DefaultTreeAdapterMap['element'][] = [];
+        const collect = (child: DefaultTreeAdapterMap['node']) => {
+          if ('tagName' in child && child.tagName === 'option') options.push(child);
+          else if ('childNodes' in child) child.childNodes.forEach(collect);
+        };
+        node.childNodes.forEach(collect);
+        const selected = options.find(option => option.attrs.some(attribute => attribute.name === 'value' && attribute.value === selection.productId));
+        if (selected) for (const option of options) {
+          option.attrs = option.attrs.filter(attribute => attribute.name !== 'selected');
+          if (option === selected) option.attrs.push({name:'selected',value:''});
+        }
+      }
     }
     if ('childNodes' in node) for (const child of node.childNodes) visit(child);
     if ('tagName' in node && node.tagName === 'template' && 'content' in node) visit(node.content);
