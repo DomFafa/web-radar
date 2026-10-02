@@ -5,6 +5,8 @@ import { getCareflowMaterialsTemplate } from './themes/careflow/materials';
 import { getLumiMaterialsTemplate } from './themes/lumi/materials';
 import { getAuravellMaterialsTemplate } from './themes/auravell/materials';
 import { getPawfectMaterialsTemplate } from './themes/pawfect/materials';
+import { getProductNativeContract } from './product-native';
+import { isProductNativeMaterials } from '../shared/product-native-materials';
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
 import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
@@ -93,6 +95,8 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  const candidate = getProductNativeContract(id, revision);
+  if (candidate) return candidate;
   if (id === 'pawfect-groom') {
     const native = getPawfectMaterialsTemplate(revision);
     if (native) return native;
@@ -161,6 +165,7 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   draft = materialsDraftForRenderer(draft);
+  if (isProductNativeMaterials(draft)) return;
   const revision = draft.materials?.contractRevision;
   if (draft.template === 'lumi-business' || draft.template === 'careflow-healthcare' || draft.template === 'auravell') return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);

@@ -3,6 +3,9 @@ import { renderAuravellSite } from './themes/auravell';
 import { renderCareflowSite } from './themes/careflowHealthcare';
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
+import { isProductNativeMaterials } from '../shared/product-native-materials';
+import { renderProductNativeSite } from './product-native';
+import { withProductNativeRuntime } from './product-native-runtime';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
 import { isPawfectMaterials, renderPawfectMaterialsPage, pawfectMaterialsStyles, pawfectMaterialsPalette } from './themes/pawfect/renderer';
@@ -113,6 +116,8 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  const productNative = renderProductNativeSite(draft, options);
+  if (productNative !== undefined) return withBanner(withFavicon(withProductNativeRuntime(productNative, draft, options), draft, options.assetUrl), draft, options.assetUrl, { page: options.page, productId: effectiveProductId });
   if(draft.template === 'auravell')return withBanner(withFavicon(renderAuravellSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'careflow-healthcare')return withBanner(withFavicon(renderCareflowSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
@@ -543,7 +548,7 @@ export function renderSiteFiles(
   draft = singleProductDraft(draft);
   const files: Record<string, string> = {};
   for (const lang of draft.languages) {
-    for (const page of (draft.template === 'auravell' ? auravellPages.filter(p => p !== 'detail') : draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
+    for (const page of (isProductNativeMaterials(draft) ? ['home', 'catalog', 'about', 'contact'] : draft.template === 'auravell' ? auravellPages.filter(p => p !== 'detail') : draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
       files[`${lang}/${page === 'home' ? 'index.html' : `${page}/index.html`}`] = renderSite(
         draft,
         { ...options, lang, page },

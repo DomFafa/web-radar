@@ -4,6 +4,8 @@ import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
 import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
 import { lumiRuntime } from '../templates/themes/lumi/runtime';
+import { isProductNativeMaterials } from '../shared/product-native-materials';
+import { productNativeUiRuntime } from '../templates/product-native-runtime';
 import { isSingleProductTemplate, singleProductRuntime } from '../templates/themes/singleProduct';
 import { parse, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
@@ -58,6 +60,7 @@ export const projectPreviewRuntime = `var __name=(value)=>value;(()=>{
 })();`;
 
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
+  if (isProductNativeMaterials(draft)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();';
   if (draft.template === 'auravell' && draft.materials?.contractRevision === '2026-10-01.auravell-materials.1') return projectPreviewRuntime + '\n;(' + legacyAuravellRuntime.toString() + ')();';
   if (draft.template === 'careflow-healthcare' && draft.materials?.contractRevision === '2026-10-01.careflow-healthcare-materials.1') return projectPreviewRuntime + '\n;(' + legacyCareflowRuntime.toString() + ')();';
   const runtime = releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;

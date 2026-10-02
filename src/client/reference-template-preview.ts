@@ -1,4 +1,6 @@
 import type { Draft } from '../shared/model';
+import { isProductNativeMaterials } from '../shared/product-native-materials';
+import { productNativeUiRuntime } from '../templates/product-native-runtime';
 import { referenceMotionRuntime } from '../templates/themes/reference-motion';
 import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
@@ -14,6 +16,7 @@ export function referenceTemplatePreviewPrepare(draft: Draft): string {
 
 /** Only reviewed local code enters the preview's nonce-protected script. */
 export async function referenceTemplatePreviewRuntime(draft: Draft): Promise<string> {
+  if (isProductNativeMaterials(draft)) return `;(${productNativeUiRuntime.toString()})();`;
   if (usesPawfectMotion(draft)) return pawfectMotionSource;
   if (!['auravell', 'careflow-healthcare'].includes(draft.template)) return '';
   const revision = draft.materials?.contractRevision;
