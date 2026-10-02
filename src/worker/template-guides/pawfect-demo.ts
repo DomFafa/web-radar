@@ -1,11 +1,11 @@
 import type { Language } from '../../shared/model';
 import type { MaterialsTemplateContract, AppliedMaterials } from '../../shared/materials';
 import { defaultDraft } from '../domain';
-import { pawfectMaterialsRevision } from '../../templates/themes/pawfect/materials';
+import { pawfectLegacyMaterialsRevision, pawfectMaterialsRevision } from '../../templates/themes/pawfect/materials';
 
 /** Public demonstration data only; never inserted into a customer's draft. */
 export function pawfectDemoDraft(profile: MaterialsTemplateContract, lang: Language) {
-  if (profile.contractRevision === pawfectMaterialsRevision) return nativePawfectDemoDraft(profile, lang);
+  if ([pawfectLegacyMaterialsRevision, pawfectMaterialsRevision].includes(profile.contractRevision)) return nativePawfectDemoDraft(profile, lang);
   const draft = defaultDraft();
   draft.template = 'pawfect-groom';
   draft.buildBranch = 'template';

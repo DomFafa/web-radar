@@ -152,7 +152,7 @@ describe('confirmed materials presentation', () => {
     '%s groups only confirmed IDs and preserves stored products and original galleries',
     async (template) => {
       const draft = grouped(await fixture(template));
-      const nativePawfect = draft.materials?.contractRevision === '2026-10-02.pawfect-groom-materials.2';
+      const nativePawfect = ['2026-10-02.pawfect-groom-materials.2', '2026-10-02.pawfect-groom-materials.3'].includes(draft.materials?.contractRevision || '');
       draft.products[2].name = draft.products[0].name;
       const before = JSON.stringify(draft);
       for (const [page, count] of [
@@ -300,7 +300,7 @@ describe('confirmed materials presentation', () => {
       draft.copy.en!.cta = 'Send Product Inquiry';
       draft.materials!.textBindings.find((b) => b.slotId === 'primary-cta')!.text =
         'Send Product Inquiry';
-      const nativePawfect = draft.materials?.contractRevision === '2026-10-02.pawfect-groom-materials.2';
+      const nativePawfect = ['2026-10-02.pawfect-groom-materials.2', '2026-10-02.pawfect-groom-materials.3'].includes(draft.materials?.contractRevision || '');
       if (nativePawfect) draft.materials!.textBindings.find(b => b.slotId === 'cta-button')!.text = 'Send Product Inquiry';
       for (const [page, path] of [
         ['home', 'index.html'],

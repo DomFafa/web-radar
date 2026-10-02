@@ -11,6 +11,8 @@ import { materialsRuntime } from '../shared/materials-runtime';
 import { productImageViewerRuntime } from '../shared/product-image-viewer';
 import { bannerRuntime } from '../shared/banner-runtime';
 import { releasedMaterialsPreviewRuntime } from '../templates/materials-releases';
+import { pawfectMaterialsRevision } from '../templates/themes/pawfect/materials';
+import { pawfectMotionSource } from '../templates/themes/pawfect/motion-source';
 import type { DesignPage, Draft, Language } from '../shared/model';
 
 /** Keep renderer data-wr hooks for the parent's sandbox bridge; only remap destinations. */
@@ -59,6 +61,7 @@ export function projectPreviewRuntimeForDraft(draft: Draft): string {
   if (draft.template === 'auravell' && draft.materials?.contractRevision === '2026-10-01.auravell-materials.1') return projectPreviewRuntime + '\n;(' + legacyAuravellRuntime.toString() + ')();';
   if (draft.template === 'careflow-healthcare' && draft.materials?.contractRevision === '2026-10-01.careflow-healthcare-materials.1') return projectPreviewRuntime + '\n;(' + legacyCareflowRuntime.toString() + ')();';
   const runtime = releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;
+  if (draft.template === 'pawfect-groom' && draft.materials?.contractRevision === pawfectMaterialsRevision) return runtime + '\n;' + pawfectMotionSource;
   if (draft.template === 'auravell') return runtime + '\n;(' + referenceMotionRuntime.toString() + ')();\n;(' + auravellRuntime.toString() + ')();';
   if (draft.template === 'good-boy-pals') return runtime + '\n;(' + goodBoyRuntime.toString() + ')();';
   if (draft.template === 'careflow-healthcare') return runtime + '\n;(' + referenceMotionRuntime.toString() + ')();\n;(' + careflowRuntime.toString() + ')();';

@@ -42,7 +42,7 @@ describe('customer-owned image subjects in template materials', () => {
     for (const id of ACTIVE_TEMPLATE_IDS) {
       const contract = getMaterialsTemplate(id)!;
       expect(contract, id).toBeDefined();
-      expect(contract.contractRevision).toBe(`2026-10-02.${id}-materials.${id === 'pawfect-groom' ? 2 : 1}`);
+      expect(contract.contractRevision).toBe(`2026-10-02.${id}-materials.${id === 'pawfect-groom' ? 3 : 1}`);
       expect(getMaterialsTemplate(id, `2026-10-02.${id}-materials.1`)).toBeDefined();
       expect(contract.guideRevision).toBe('2026-10-02.1');
       expect(getMaterialsTemplate(id, contract.contractRevision)).toEqual(contract);

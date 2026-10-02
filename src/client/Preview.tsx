@@ -11,7 +11,7 @@ import { api, post, errorMessage, privateAssetBlob, requestId } from './api';
 import { Button, Icon, Notice } from './components';
 import { labels } from '../templates/labels';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
-import { referenceTemplatePreviewRuntime } from './reference-template-preview';
+import { referenceTemplatePreviewPrepare, referenceTemplatePreviewRuntime } from './reference-template-preview';
 
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
@@ -203,6 +203,13 @@ export function SitePreview({
       csp.content = `default-src 'none'; img-src blob: data: https: http: 'self'; media-src blob: data: https: http: 'self'; style-src 'unsafe-inline' ${window.location.origin}; script-src 'nonce-${nonce}'; font-src data: https: ${window.location.origin}; base-uri 'none'; form-action 'none'`;
       if (project.draft.template === 'careflow-healthcare') csp.content += '; frame-src https://www.youtube-nocookie.com';
       doc.head.insertBefore(csp, doc.head.firstChild);
+      const prepareSource = referenceTemplatePreviewPrepare(project.draft);
+      if (prepareSource) {
+        const prepare = doc.createElement('script');
+        prepare.setAttribute('nonce', nonce);
+        prepare.textContent = prepareSource;
+        doc.head.appendChild(prepare);
+      }
       const bridge = doc.createElement('script');
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `

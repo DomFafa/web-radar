@@ -2,9 +2,19 @@ import type { Draft } from '../shared/model';
 import { referenceMotionRuntime } from '../templates/themes/reference-motion';
 import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
+import { pawfectMaterialsRevision } from '../templates/themes/pawfect/materials';
+import { pawfectMotionPrepareSource, pawfectMotionSource } from '../templates/themes/pawfect/motion-source';
+
+const usesPawfectMotion = (draft: Draft) => draft.template === 'pawfect-groom' && draft.materials?.contractRevision === pawfectMaterialsRevision;
+
+/** Runs in the nonce-protected head before the iframe can paint its body. */
+export function referenceTemplatePreviewPrepare(draft: Draft): string {
+  return usesPawfectMotion(draft) ? pawfectMotionPrepareSource : '';
+}
 
 /** Only reviewed local code enters the preview's nonce-protected script. */
 export async function referenceTemplatePreviewRuntime(draft: Draft): Promise<string> {
+  if (usesPawfectMotion(draft)) return pawfectMotionSource;
   if (!['auravell', 'careflow-healthcare'].includes(draft.template)) return '';
   const revision = draft.materials?.contractRevision;
   if (revision === `2026-10-01.${draft.template}-materials.1`) {

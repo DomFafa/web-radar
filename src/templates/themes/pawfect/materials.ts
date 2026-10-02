@@ -1,8 +1,9 @@
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
 
-export const pawfectMaterialsRevision = '2026-10-02.pawfect-groom-materials.2';
-export const pawfectRendererRevision = '2026-10-02.pawfect-groom-native.2';
+export const pawfectLegacyMaterialsRevision = '2026-10-02.pawfect-groom-materials.2';
+export const pawfectMaterialsRevision = '2026-10-02.pawfect-groom-materials.3';
+export const pawfectRendererRevision = '2026-10-02.pawfect-groom-native.3';
 const base = { min: 1, max: 1, required: true, binding: 'supported' as const, repeat: 'once' as const };
 const factualPolicy = 'Use only confirmed product and real brand facts. Preserve proposed specifications as proposed. Do not invent company history, facilities, staff, certifications, reviews, prices, availability or safety claims. Template sample pet-grooming content is not a customer fact. Write concise copy for this specific region, without HTML.';
 type Page = typeof materialsPages[number];
@@ -17,10 +18,10 @@ const scene = (id: string, page: Page, width: number, height: number, purpose: s
 });
 
 export function getPawfectMaterialsTemplate(revision?: string): MaterialsTemplateContract | undefined {
-  if (revision && revision !== pawfectMaterialsRevision) return;
+  if (revision && revision !== pawfectMaterialsRevision && revision !== pawfectLegacyMaterialsRevision) return;
   return {
-    schemaVersion: 'wr-template-materials-v1', templateId: 'pawfect-groom', guideRevision: '2026-10-02.1', contractRevision: pawfectMaterialsRevision,
-    rendererRevision: pawfectRendererRevision, materialsReady: true, pages: [...materialsPages], imagePolicy: 'typed-regions-v1',
+    schemaVersion: 'wr-template-materials-v1', templateId: 'pawfect-groom', guideRevision: '2026-10-02.1', contractRevision: revision || pawfectMaterialsRevision,
+    rendererRevision: revision === pawfectLegacyMaterialsRevision ? '2026-10-02.pawfect-groom-native.2' : pawfectRendererRevision, materialsReady: true, pages: [...materialsPages], imagePolicy: 'typed-regions-v1',
     selectionGroups: { scene: 3, featured: 6 },
     websitePalette: { primary: '#327f85', secondary: '#c9833a', background: '#faf8f3', surface: '#f0eee6', text: '#203337', mutedText: '#617071' },
     requiredCapabilities: ['image.slot.v1', 'image.product-primary.v1', 'image.generate-new.v1', 'selection.product-groups.v1', 'text.plain.v1', 'website.visual-plan.v1'],

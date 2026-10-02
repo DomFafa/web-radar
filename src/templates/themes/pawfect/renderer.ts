@@ -3,17 +3,18 @@ import { displayProducts } from '../../../shared/product-display';
 import { materialImage } from '../../materials-render';
 import { pawfectStyles } from '../pawfectGroom';
 import { buildThemeContext, esc, productPath, type ThemeContext } from '../types';
-import { pawfectMaterialsRevision } from './materials';
+import { pawfectLegacyMaterialsRevision, pawfectMaterialsRevision } from './materials';
 
-export const isPawfectMaterials = (draft: Draft) => draft.template === 'pawfect-groom' && draft.materials?.contractRevision === pawfectMaterialsRevision;
+export const isPawfectMaterials = (draft: Draft) => draft.template === 'pawfect-groom' && [pawfectLegacyMaterialsRevision, pawfectMaterialsRevision].includes(draft.materials?.contractRevision || '');
 const heart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21C4 15 1 11 3 6c2-4 7-4 9 0 2-4 7-4 9 0 2 5-1 9-9 15Z"/></svg>';
 const lines = (value: string) => value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 const multiline = (value: string) => esc(value).replace(/\r?\n/g, '<br>');
 
-/** Only revision 2 uses this renderer. Slot IDs, product IDs and semantic copy regions are the executable boundary. */
+/** Native revisions keep the same semantic bindings; revision 3 adds reviewed presentation. */
 export function renderPawfectMaterialsPage(ctx: ThemeContext): string {
   const { draft, options, lang, page, path, navPath, navAttrs, translateProduct } = ctx;
   const materials = draft.materials!;
+  const expressive = materials.contractRevision === pawfectMaterialsRevision;
   const displayedProducts = displayProducts(draft);
   const canonicalId = (id?: string) => id && (displayedProducts.some(product => product.id === id) ? id : draft.productDisplayGroups?.find(group => group.includes(id))?.[0] || id);
   const text = (id: string) => materials.textBindings.find(binding => binding.slotId === id && binding.locale === lang)?.text || '';
@@ -47,7 +48,7 @@ export function renderPawfectMaterialsPage(ctx: ThemeContext): string {
   const faq = () => `<section class="pg-section pg-faq" id="faq" data-wr-material-region="faq"><div>${heading('faq')}${route('contact', `${ctx.ui.contact} ↗`, 'pg-text-link')}</div><div>${Array.from({ length: 4 }, (_, index) => `<details><summary ${mark(`faq-question-${index + 1}`)}>${esc(text(`faq-question-${index + 1}`))}<span aria-hidden="true">+</span></summary><p ${mark(`faq-answer-${index + 1}`)}>${esc(text(`faq-answer-${index + 1}`))}</p></details>`).join('')}</div></section>`;
   const process = () => `<section class="pg-section pg-next-steps" aria-label="${esc(ctx.ui.contact)}"><div class="pg-three">${[
     [ctx.ui.catalog, ctx.ui.details, route('catalog', `${ctx.ui.discover} ↗`, 'pg-text-link')],
-    [ctx.ui.inquire, ctx.ui.contactIntro, action()],
+    [ctx.ui.inquire, ctx.ui.contactIntro, expressive ? route('contact', `${text('cta-button') || ctx.ui.inquire} ↗`, 'pg-text-link', undefined, 'cta-button') : action()],
     [ctx.ui.contact, ctx.ui.emailDirect, draft.company.email ? `<a class="pg-text-link" href="mailto:${esc(draft.company.email)}">${esc(draft.company.email)}</a>` : ''],
   ].map(([title, description, link], index) => `<article class="pg-process"><span class="pg-step">${String(index + 1).padStart(2, '0')}</span><h3>${esc(title)}</h3><p>${esc(description)}</p>${link}</article>`).join('')}</div></section>`;
   let body = '';
@@ -74,7 +75,7 @@ export function renderPawfectMaterialsPage(ctx: ThemeContext): string {
     const local = page === 'home' || (id === 'gallery' && page === 'about') || (id === 'faq' && ['catalog', 'contact'].includes(page));
     return `<a href="${local ? '' : esc(path('index.html'))}#${id}"${local ? '' : ` ${navAttrs('home')}`}>${esc(label)}</a>`;
   };
-  return `<a class="pg-skip" href="#main">${esc(ctx.ui.skip)}</a><header class="pg-header"><a class="pg-brand" href="${esc(path('index.html'))}" ${navAttrs('home')}>${logo}</a><nav aria-label="${esc(ctx.ui.menu)}">${route('catalog', ctx.ui.catalog)}${route('about', ctx.ui.about)}${anchor('gallery', text('gallery-eyebrow'))}${anchor('faq', text('faq-eyebrow'))}</nav><div class="pg-header-right">${draft.languages.length > 1 ? `<div class="pg-languages">${ctx.languageLinks}</div>` : ''}${action()}</div></header><main id="main">${body}</main><section class="pg-booking" data-wr-material-region="cta"><div><span class="pg-eyebrow" ${mark('cta-eyebrow')}>${esc(text('cta-eyebrow'))}</span><h2 ${mark('cta-headline')}>${multiline(text('cta-headline'))}</h2><p ${mark('cta-description')}>${esc(text('cta-description'))}</p></div><div>${action()}${draft.company.phone ? `<a class="pg-call" href="tel:${esc(draft.company.phone.replace(/[^+\d]/g, ''))}">${esc(draft.company.phone)} ↗</a>` : ''}</div></section><footer class="pg-footer"><a class="pg-brand" href="${esc(path('index.html'))}" ${navAttrs('home')}>${logo}</a><div>${route('catalog', ctx.ui.catalog)}${route('about', ctx.ui.about)}${route('contact', ctx.ui.contact)}${ctx.socials}</div><p>© ${new Date().getUTCFullYear()} ${esc(draft.company.name)} · ${esc(ctx.ui.rights)}</p></footer>`;
+  return `<a class="pg-skip" href="#main">${esc(ctx.ui.skip)}</a><header class="pg-header"><a class="pg-brand" href="${esc(path('index.html'))}" ${navAttrs('home')}>${logo}</a><nav aria-label="${esc(ctx.ui.menu)}"${expressive ? ' style="margin-left:auto"' : ''}>${route('catalog', ctx.ui.catalog)}${route('about', expressive && lang === 'en' ? 'About us' : ctx.ui.about)}${expressive ? '' : anchor('gallery', text('gallery-eyebrow')) + anchor('faq', text('faq-eyebrow'))}</nav><div class="pg-header-right">${draft.languages.length > 1 ? `<div class="pg-languages">${ctx.languageLinks}</div>` : ''}${action()}</div></header><main id="main">${body}</main><section class="pg-booking" data-wr-material-region="cta"><div><span class="pg-eyebrow" ${mark('cta-eyebrow')}>${esc(text('cta-eyebrow'))}</span><h2 ${mark('cta-headline')}>${multiline(text('cta-headline'))}</h2><p ${mark('cta-description')}>${esc(text('cta-description'))}</p></div><div>${action()}${draft.company.phone ? `<a class="pg-call" href="tel:${esc(draft.company.phone.replace(/[^+\d]/g, ''))}">${esc(draft.company.phone)} ↗</a>` : ''}</div></section><footer class="pg-footer"><a class="pg-brand" href="${esc(path('index.html'))}" ${navAttrs('home')}>${logo}</a><div>${route('catalog', ctx.ui.catalog)}${route('about', ctx.ui.about)}${route('contact', ctx.ui.contact)}${ctx.socials}</div><p>© ${new Date().getUTCFullYear()} ${esc(draft.company.name)} · ${esc(ctx.ui.rights)}</p></footer>`;
 }
 
 /** The historical stylesheet is untouched. These rules apply only to revision 2. */

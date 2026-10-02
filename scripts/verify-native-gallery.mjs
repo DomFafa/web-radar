@@ -11,9 +11,10 @@ const output = resolve('artifacts/native-gallery');
 await mkdir(output, { recursive: true });
 await build({ stdin: { contents: `export {typedMaterialsFixture} from './tests/fixtures/materials-typed';
 export {draftFromMaterials} from './src/worker/materials-service';
+export {getMaterialsTemplate} from './src/templates/materials';
 export {renderSite} from './src/templates';`, resolveDir: process.cwd() }, bundle: true,
 keepNames: true, platform: 'node', format: 'esm', outfile: resolve(output, 'render.mjs') });
-const { typedMaterialsFixture, draftFromMaterials, renderSite } = await import(pathToFileURL(resolve(output, 'render.mjs')).href);
+const { typedMaterialsFixture, draftFromMaterials, getMaterialsTemplate, renderSite } = await import(pathToFileURL(resolve(output, 'render.mjs')).href);
 const publicDir = resolve('public'), fixtureImage = await readFile(resolve(publicDir, 'templates/senseng/products-1.jpg'));
 const server = createServer(async (request, response) => {
   const url = new URL(request.url, 'http://local.invalid');
@@ -70,6 +71,10 @@ try {
     const input = await typedMaterialsFixture(template, 2);
     const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(asset => [asset.id, { id:asset.id }])));
     for (const materials of [draft.materials, undefined]) {
+      const contract = materials && getMaterialsTemplate(template, materials.contractRevision);
+      assert.ok(!materials || contract, `${template}: materials revision resolves to a contract`);
+      // Native Pawfect contracts deliberately retain only the approved primary image.
+      const hasGallery = !materials || contract.imageSlots.some(slot => slot.page === 'detail' && slot.materialSource === 'product-gallery');
       const errors = [];
       const context = await browser.newContext({ viewport: { width:1440, height:960 } });
       const page = await context.newPage();
@@ -83,17 +88,24 @@ try {
         const main = page.locator('#wr-detail-main-img');
         await main.waitFor({state:'visible'});
         const thumbs = page.locator('.senseng-detail-thumbs [data-wr-material-thumb]');
-        assert.ok(await thumbs.count() >= 2, `${template}: original and supplemental thumbnail`);
-        await thumbs.last().click();
-        await page.waitForFunction(() => document.querySelector('#wr-detail-main-img').src.endsWith('/gallery-p1'));
-        assert.equal(await thumbs.last().getAttribute('aria-pressed'), 'true');
+        if (hasGallery) {
+          assert.ok(await thumbs.count() >= 2, `${template}: original and supplemental thumbnail`);
+          await thumbs.last().click();
+          await page.waitForFunction(() => document.querySelector('#wr-detail-main-img').src.endsWith('/gallery-p1'));
+          assert.equal(await thumbs.last().getAttribute('aria-pressed'), 'true');
+        } else {
+          assert.equal(await thumbs.count(), 0, `${template}: primary-only contract has no inherited gallery`);
+          assert.equal(await main.getAttribute('src'), origin+'/media/m1');
+        }
         await main.click();
         await page.locator('#wr-product-image-viewer[open]').waitFor();
-        assert.equal(await page.locator('#wr-product-image-viewer .wr-image-stage img').getAttribute('src'), origin+'/media/gallery-p1');
+        assert.equal(await page.locator('#wr-product-image-viewer .wr-image-stage img').getAttribute('src'), origin+'/media/'+(hasGallery ? 'gallery-p1' : 'm1'));
         await page.keyboard.press('Escape');
-        await thumbs.first().click();
-        await page.waitForFunction(() => document.querySelector('#wr-detail-main-img').src.endsWith('/m1'));
-        assert.equal(await thumbs.first().getAttribute('aria-pressed'), 'true');
+        if (hasGallery) {
+          await thumbs.first().click();
+          await page.waitForFunction(() => document.querySelector('#wr-detail-main-img').src.endsWith('/m1'));
+          assert.equal(await thumbs.first().getAttribute('aria-pressed'), 'true');
+        }
         assert.deepEqual(errors, [], `${template}: runtime errors`);
         cases++;
       }
@@ -101,4 +113,4 @@ try {
     }
   }
 } finally { await browser.close(); server.closeAllConnections(); await new Promise(done => server.close(done)); }
-console.log(`PASS: 4 confirmed Toorun hero cases and ${cases} native gallery cases, including desktop/mobile resize, main/secondary switching and the image viewer.`);
+console.log(`PASS: 4 confirmed Toorun hero cases and ${cases} native detail-image cases, including desktop/mobile resize, contract-supported main/secondary switching and the image viewer.`);

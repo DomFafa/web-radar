@@ -6,6 +6,8 @@ import { lumiPages } from '../shared/lumi-pages';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
 import { isPawfectMaterials, renderPawfectMaterialsPage, pawfectMaterialsStyles, pawfectMaterialsPalette } from './themes/pawfect/renderer';
+import { pawfectMaterialsRevision } from './themes/pawfect/materials';
+import { pawfectMotionPrepareSource, pawfectMotionSource } from './themes/pawfect/motion-source';
 import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee';
 import { renderPaperNoteSite } from './themes/papernote';
 import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
@@ -386,7 +388,11 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     const ctx = buildThemeContext(draft, options);
     if (isPawfectMaterials(draft)) {
       const seo = materialsSeo(draft, options)!;
-      return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title || company.name)}</title><meta name="description" content="${esc(seo.description || copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectMaterialsStyles}</style></head><body class="pawfect-groom wr-pawfect-materials" data-template="pawfect-groom" data-wr-materials-revision="${esc(draft.materials!.contractRevision)}" style="${pawfectMaterialsPalette(draft)}--pg-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectMaterialsPage(ctx)}<script>${script}</script></body></html>`;
+      const expressive = draft.materials!.contractRevision === pawfectMaterialsRevision;
+      const motionHead = expressive ? `<script>${pawfectMotionPrepareSource}</script>` : '';
+      const motionBody = expressive ? `<script>${pawfectMotionSource}</script>` : '';
+      const productOrder = expressive ? ` data-pawfect-product-order="${Math.max(0, draft.products.findIndex(product => product.id === options.productId))}"` : '';
+      return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title || company.name)}</title><meta name="description" content="${esc(seo.description || copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectMaterialsStyles}</style>${motionHead}</head><body class="pawfect-groom wr-pawfect-materials"${productOrder} data-template="pawfect-groom" data-wr-materials-revision="${esc(draft.materials!.contractRevision)}" style="${pawfectMaterialsPalette(draft)}--pg-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectMaterialsPage(ctx)}<script>${script}</script>${motionBody}</body></html>`;
     }
     const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;

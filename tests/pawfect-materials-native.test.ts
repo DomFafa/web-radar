@@ -16,7 +16,7 @@ const elements = (node: Node): DefaultTreeAdapterMap['element'][] => [
 const attr = (node: DefaultTreeAdapterMap['element'], name: string) => node.attrs.find(a => a.name === name)?.value;
 const region = (nodes: DefaultTreeAdapterMap['element'][], id: string) => nodes.find(node => attr(node, 'data-wr-material-region') === id)!;
 async function prepared(count: number) {
-  const input = await typedMaterialsFixture('pawfect-groom', count);
+  const input = await typedMaterialsFixture('pawfect-groom', count, revision);
   for (const product of input.materials.products) product.galleryMediaIds = [product.primaryMediaId];
   const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(media => [media.id, { id: media.id } as Asset])));
   return { input, draft };
@@ -25,7 +25,7 @@ const options = { projectId: 'pawfect-native-test', lang: 'en' as const, page: '
 
 describe('Pawfect product materials revision 2', () => {
   it('publishes executable semantic regions and distinct new scenes', () => {
-    const contract = getMaterialsTemplate('pawfect-groom')!;
+    const contract = getMaterialsTemplate('pawfect-groom', revision)!;
     expect(contract.contractRevision).toBe(revision);
     expect(contract.rendererRevision).toBe('2026-10-02.pawfect-groom-native.2');
     expect(contract.requiredCapabilities).toEqual(expect.arrayContaining(['website.visual-plan.v1', 'image.generate-new.v1']));
@@ -68,7 +68,7 @@ describe('Pawfect product materials revision 2', () => {
 
   it('rejects over-capacity regional copy without truncating confirmed facts at render time', async () => {
     const { input, draft } = await prepared(1);
-    const contract = getMaterialsTemplate('pawfect-groom')!;
+    const contract = getMaterialsTemplate('pawfect-groom', revision)!;
     const text = input.materials.textBindings.find(binding => binding.slotId === 'hero-headline')!;
     text.text = 'x'.repeat(contract.textSlots.find(slot => slot.id === text.slotId)!.maxCodePoints + 1);
     expect(validateMaterialsPositions(input.materials)).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'copy_too_long', message: 'hero-headline' })]));
@@ -78,7 +78,7 @@ describe('Pawfect product materials revision 2', () => {
 
   it('consumes every required regional copy and image binding across the five native pages', async () => {
     const { draft } = await prepared(3);
-    const contract = getMaterialsTemplate('pawfect-groom')!;
+    const contract = getMaterialsTemplate('pawfect-groom', revision)!;
     const pages = contract.pages.map(page => renderSite(draft, { ...options, page, productId: 'p0' }));
     const nodes = pages.flatMap(html => elements(parse(html)));
     for (const slot of contract.textSlots.filter(slot => slot.required)) {
