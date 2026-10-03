@@ -1,3 +1,4 @@
+import { staticProductDetailRuntime } from '../templates/product-detail-motion';
 import type { Draft } from '../shared/model';
 import { isProductNativeMaterials, isProductNativeEnhancedRevision, isProductGalleryRevision, isProductAboutCollectionRevision } from '../shared/product-native-materials';
 import { productGalleryRuntime } from '../shared/product-gallery-runtime';
@@ -15,7 +16,10 @@ const usesPawfectMotion = (draft: Draft) => draft.template === 'pawfect-groom' &
 
 /** Runs in the nonce-protected head before the iframe can paint its body. */
 export function referenceTemplatePreviewPrepare(draft: Draft): string {
-  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) return draft.template === 'pawfect-groom' ? pawfectMotionPrepareSource : productMotionPrepareSource;
+  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
+    const source = draft.template === 'pawfect-groom' ? pawfectMotionPrepareSource : productMotionPrepareSource;
+    return isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? staticProductDetailRuntime(source) : source;
+  }
   if (isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision)) return productMotionPrepareSource;
   return usesPawfectMotion(draft) ? pawfectMotionPrepareSource : '';
 }
@@ -25,7 +29,8 @@ export async function referenceTemplatePreviewRuntime(draft: Draft): Promise<str
   if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
     const motionSource = isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? productAboutCollectionMotionSource : productGalleryMotionSource;
     const motion = draft.template === 'pawfect-groom' ? pawfectMotionSource : `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${motionSource}`;
-    return `;(${productGalleryRuntime.toString()})();${motion}`;
+    const source = `;(${productGalleryRuntime.toString()})();${motion}`;
+    return isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? staticProductDetailRuntime(source) : source;
   }
   if (isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision)) return `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${productMotionSource}`;
   if (isProductNativeMaterials(draft)) return `;(${productNativeUiRuntime.toString()})();`;

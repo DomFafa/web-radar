@@ -1,3 +1,4 @@
+import { staticProductDetailRuntime } from '../templates/product-detail-motion';
 import { auravellRuntime as legacyAuravellRuntime, careflowRuntime as legacyCareflowRuntime } from '../templates/releases/native-preview-20261001.mjs';
 import { referenceMotionRuntime } from '../templates/themes/reference-motion';
 import { auravellRuntime } from '../templates/themes/auravell/runtime';
@@ -78,7 +79,10 @@ export const projectPreviewRuntime = `var __name=(value)=>value;(()=>{
 
 /** Trusted head code stays separate from customer HTML when previews strip its scripts. */
 export function projectPreviewPrepareForDraft(draft: Draft): string {
-  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) return draft.template === 'pawfect-groom' ? pawfectMotionPrepareSource : productMotionPrepareSource;
+  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
+    const source = draft.template === 'pawfect-groom' ? pawfectMotionPrepareSource : productMotionPrepareSource;
+    return isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? staticProductDetailRuntime(source) : source;
+  }
   return isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision) ? productMotionPrepareSource : '';
 }
 
@@ -86,7 +90,8 @@ export function projectPreviewRuntimeForDraft(draft: Draft): string {
   if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
     const motionSource = isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? productAboutCollectionMotionSource : productGalleryMotionSource;
     const motion = draft.template === 'pawfect-groom' ? pawfectMotionSource : `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${motionSource}`;
-    return projectPreviewRuntime + `\n;(${productGalleryRuntime.toString()})();${motion}`;
+    const source = projectPreviewRuntime + `\n;(${productGalleryRuntime.toString()})();${motion}`;
+    return isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? staticProductDetailRuntime(source) : source;
   }
   if (isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();\n;(' + productNativeEnhancedNavRuntime.toString() + ')();\n;' + productMotionSource;
   if (isProductNativeMaterials(draft)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();';

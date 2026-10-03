@@ -13,7 +13,7 @@ const prRoot = resolve(args[args.indexOf('--product-radar-root') + 1] || process
 assert(prRoot !== process.cwd(), 'Supply --product-radar-root for the actual preview consumer.');
 const revision = process.env.GALLERY_REVISION || '4';
 assert(['4', '5'].includes(revision), 'Choose a supported gallery release.');
-const out = resolve(revision === '5' ? 'artifacts/about-collection-motion' : 'artifacts/gallery-motion');
+const out = resolve(process.env.GALLERY_OUTPUT || (revision === '5' ? 'artifacts/about-collection-motion' : 'artifacts/gallery-motion'));
 await mkdir(out, { recursive: true });
 await build({ stdin: { contents: `export {renderSite} from './src/templates';export {typedMaterialsFixture} from './tests/fixtures/materials-typed';export {draftFromMaterials} from './src/worker/materials-service';export {projectPreviewHtml,projectPreviewRuntime,projectPreviewRuntimeForDraft,projectPreviewPrepareForDraft} from './src/worker/project-preview';`, resolveDir: process.cwd() }, bundle: true, keepNames: true, platform: 'node', format: 'esm', outfile: resolve(out, 'renderer.mjs') });
 await build({ entryPoints: ['src/client/reference-template-preview.ts'], bundle: true, minify: true, platform: 'browser', format: 'esm', outfile: resolve(out, 'client.mjs') });
@@ -125,6 +125,7 @@ try {
     page.on('console', message => { if (message.type() === 'error') errors.push(`${label}: ${message.text()}`); });
     try {
       for (const pageName of revision === '5' ? ['home', 'about', 'detail'] : ['home', 'detail']) {
+        const staticDetail = revision === '5' && pageName === 'detail';
         await page.goto(`${origin}/${mode}?template=${template}&page=${pageName}`, { waitUntil: 'domcontentloaded' });
         let frame = page.mainFrame();
         if (mode !== 'public') { await page.waitForFunction(() => document.querySelector('#preview')?.getAttribute('srcdoc') || document.querySelector('#preview')?.getAttribute('src')); frame = await page.locator('#preview').elementHandle().then(el => el.contentFrame()); }
@@ -133,10 +134,17 @@ try {
         if (mode === 'pr') { await page.waitForFunction(() => document.body.dataset.previewReady || document.body.dataset.previewError); assert.notEqual(await page.locator('body').getAttribute('data-preview-error'), 'true'); }
         await frame.evaluate(async () => { document.querySelectorAll('img').forEach(i => i.loading = 'eager'); await Promise.all([...document.querySelectorAll('img[src]')].map(i => i.decode())); });
         await tick(frame);
-        await frame.waitForFunction(() => window.galleryProbe.some(({animation}) => animation.id === 'pawfect-scroll-enter' || animation.id.startsWith('product-scroll-enter:'))).catch(async error => { await writeFile(resolve(out,'motion-diagnostic.json'),JSON.stringify(await frame.evaluate(()=>({hidden:document.hidden,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,animate:Element.prototype.animate.toString(),paints:window.galleryPaints.slice(0,4),innerWidth,innerHeight,probe:window.galleryProbe.map(({target,animation})=>({target:target.className,id:animation.id})),h1:document.querySelector('main h1')?.outerHTML,body:document.body.dataset,rect:document.querySelector('main h1')?.getBoundingClientRect().toJSON()})),null,2)); throw error; });
-        assert((await counts(frame)).total > 0, `${label}/${pageName}: entrance animations run`);
         const paints = await frame.evaluate(() => window.galleryPaints);
-        assert(paints.length && paints.every(p => p.prepared || p.opacity < .05), `${label}: headline does not flash before preparation`);
+        if (staticDetail) {
+          if (!paints.length || paints.some(p => p.opacity !== 1)) await writeFile(resolve(out, 'static-detail-paints.json'), JSON.stringify({label,paints,styles:await frame.locator('main h1').evaluate(h1=>{const nodes=[];for(let n=h1;n;n=n.parentElement)nodes.push({tag:n.tagName,className:n.className,style:n.getAttribute('style'),opacity:getComputedStyle(n).opacity});return nodes;})},null,2));
+          assert(await frame.locator('body').evaluate(body => body.hasAttribute('data-wr-static-detail')));
+          assert.equal(await frame.evaluate(() => window.galleryProbe.length), 0, `${label}: detail never starts an animation`);
+          assert(paints.length && paints.every(p => p.opacity === 1), `${label}: detail headline is visible immediately`);
+        } else {
+          await frame.waitForFunction(() => window.galleryProbe.some(({animation}) => animation.id === 'pawfect-scroll-enter' || animation.id.startsWith('product-scroll-enter:'))).catch(async error => { await writeFile(resolve(out,'motion-diagnostic.json'),JSON.stringify(await frame.evaluate(()=>({hidden:document.hidden,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,paints:window.galleryPaints.slice(0,4),probe:window.galleryProbe.map(({target,animation})=>({target:target.className,id:animation.id})),body:document.body.dataset})),null,2)); throw error; });
+          assert((await counts(frame)).total > 0, `${label}/${pageName}: entrance animations run`);
+          assert(paints.length && paints.every(p => p.prepared || p.opacity < .05), `${label}: headline does not flash before preparation`);
+        }
         await finish(frame);
         if (pageName === 'about') {
           const slot = { 'pawfect-groom': 'about-primary-image', auravell: 'about-hero-scene', 'careflow-healthcare': 'about-wide-scene', 'toorun-early-learning': 'about-primary-image', 'lumi-business': 'about-wide', 'mello-coffee': 'about-primary-image' }[template];
@@ -158,7 +166,7 @@ try {
           await thumbs.nth(1).click();
           await frame.waitForFunction(src => document.querySelector('#wr-detail-main-img').getAttribute('src') !== src, initialSrc);
           assert.equal(await thumbs.nth(1).getAttribute('aria-pressed'), 'true');
-          assert(await frame.evaluate(() => window.galleryProbe.some(({target,animation}) => target.id === 'wr-detail-main-img' && !animation.id && animation.effect.getTiming().duration > 0)), 'Image switching animates');
+          assert.equal(await frame.evaluate(() => window.galleryProbe.some(({target,animation}) => target.id === 'wr-detail-main-img' && !animation.id && animation.effect.getTiming().duration > 0)), !staticDetail, 'Image switching follows the detail motion policy');
           const selectedSrcset = await main.getAttribute('srcset');
           if (mode === 'pr') assert.equal(selectedSrcset, null, 'Private previews use authorized blobs');
           else assert(!selectedSrcset || selectedSrcset.split(',').every(item => item.includes('gallery-p0')), 'Selected responsive sources belong to the auxiliary');
@@ -180,6 +188,12 @@ try {
           await frame.locator('#wr-product-image-viewer[open]').waitFor();
           assert.equal(await frame.locator('#wr-product-image-viewer .wr-image-thumbnail').count(), 3, 'Full image viewer retains the entire product gallery');
           await page.keyboard.press('Escape');
+          if (staticDetail) {
+            await main.hover(); await tick(frame);
+            assert.equal(await frame.evaluate(() => window.galleryProbe.length), 0, 'Gallery and viewer interactions are instant');
+            assert.equal(await frame.evaluate(() => document.getAnimations().length), 0, 'No CSS or Web Animations effects on the detail page');
+            assert.equal(await main.evaluate(image => getComputedStyle(image).transform), 'none', 'No hover zoom');
+          }
           await frame.evaluate(() => document.getAnimations().filter(animation => Number.isFinite(animation.effect?.getComputedTiming().endTime)).forEach(animation => animation.finish()));
           await page.screenshot({ path: resolve(out, `${template}-${width}-${mode}.png`) });
         }
@@ -194,7 +208,8 @@ try {
         await page.emulateMedia({ reducedMotion: 'no-preference' });
         await frame.waitForFunction(() => !matchMedia('(prefers-reduced-motion: reduce)').matches);
         await tick(frame);
-        results.push({ template, width, mode, page: pageName, entrances: first.total, gallery: pageName === 'detail', aboutCollection: pageName === 'about', onceOnly: true, reducedMotion: true });
+        if (staticDetail) assert.equal(await frame.evaluate(() => window.galleryProbe.length), 0, 'Scrolling and preference changes keep details static');
+        results.push({ template, width, mode, page: pageName, entrances: first.total, staticDetail, gallery: pageName === 'detail', aboutCollection: pageName === 'about', onceOnly: true, reducedMotion: true });
       }
       console.log(`PASS ${label}: gallery and motion`);
     } catch (error) { await writeFile(resolve(out, 'failed-page.html'), await page.content()); await writeFile(resolve(out, 'failed-frames.json'), JSON.stringify(await Promise.all(page.frames().map(async frame => ({url:frame.url(),html:await frame.content()}))), null, 2)); await page.screenshot({ path: resolve(out, label.replaceAll('/', '-') + '-failed.png') }).catch(() => {}); throw error; }

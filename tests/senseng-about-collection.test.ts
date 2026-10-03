@@ -63,7 +63,7 @@ describe.each(ids)('%s explicit About collection release',id=>{
   expect(lead).toBeDefined();expect(attr(lead,'src')).toBe(`/confirmed/${about.assetId}`);expect(attr(lead,'src')).not.toBe(`/confirmed/${home.assetId}`);
   expect(html).not.toContain(`/confirmed/${home.assetId}`);
   const mapped=materialsDraftForRenderer(draft);expect(mapped.materials!.contractRevision).toBe(`2026-09-23.${id}-materials.6`);expect(mapped.materials!.imageBindings).toEqual(draft.materials!.imageBindings);
-  if(id==='senseng-video')expect(html).toBe(renderSite(mapped,options));expect(draft).toEqual(original);
+  expect(draft).toEqual(original);
   const homeHtml=renderSite(draft,{...options,page:'home'});expect(homeHtml).toContain(`/confirmed/${home.assetId}`);expect(homeHtml).not.toContain(`/confirmed/${about.assetId}`);
   about.mobileAssetId='about-mobile';about.fit='contain';about.focalPoint={x:.35,y:.45};about.alt.en='Every approved product <together>';
   const mobileHtml=renderSite(draft,options),mobileNodes=elements(parse(mobileHtml));const photo=mobileNodes.find(node=>node.tagName==='img'&&attr(node,'data-wr-material-image')==='about-primary-image')!;
@@ -71,6 +71,23 @@ describe.each(ids)('%s explicit About collection release',id=>{
   expect(mobileNodes.some(node=>node.tagName==='source'&&attr(node,'srcset')==='/confirmed/about-mobile'&&attr(node,'media')?.includes('max-width'))).toBe(true);
   expect(input.materials.imageBindings.find(binding=>binding.slotId==='about-primary-image')!.mediaId).toBe(about.assetId);
  });
+});
+
+it.each(ids)('%s keeps the v5 About collection at its natural aspect ratio on mobile only',async id=>{
+ const {draft}=await fixture(id),mapped=materialsDraftForRenderer(draft);
+ for(const mobile of [false,true]){
+  if(mobile)draft.materials!.imageBindings.find(binding=>binding.slotId==='about-primary-image')!.mobileAssetId='about-mobile';
+  const html=renderSite(draft,options),nodes=elements(parse(html));
+  const image=nodes.find(node=>attr(node,'data-wr-material-image')==='about-primary-image')!;
+  const parent=image.parentNode as Element;
+  const frame=parent.tagName==='picture'?parent.parentNode as Element:parent;
+  expect(attr(frame,'data-wr-about-collection-frame')).toBe('');
+  const style=nodes.find(node=>node.tagName==='style'&&attr(node,'data-wr-about-collection-mobile')!==undefined)!;
+  expect(style).toBeDefined();const css=style.childNodes.map(node=>'value' in node?node.value:'').join('');
+  expect(css).toMatch(/^@media\(max-width:767px\)/);expect(css).toContain('height:auto!important');expect(css).toContain('position:relative!important');expect(css).toContain('object-fit:contain!important');
+ }
+ expect(renderSite(mapped,options)).not.toContain('data-wr-about-collection-mobile');
+ for(const page of ['home','catalog','detail','contact'])expect(renderSite(draft,{...options,page,productId:'p0'})).toBe(renderSite(mapped,{...options,page,productId:'p0'}));
 });
 
 it.each(['senseng-candy','senseng-nature'])('%s moves the unchanged caption outside the About photograph only in v5',async id=>{
@@ -84,6 +101,17 @@ it.each(['senseng-candy','senseng-nature'])('%s moves the unchanged caption outs
  const copy=(node:Node):string=>('value' in node?String(node.value):'childNodes' in node?node.childNodes.map(copy).join(''):'');expect(copy(caption)).toBe(copy(oldCaption));
  for(const page of ['home','catalog','detail','contact'])expect(renderSite(draft,{...options,page,productId:'p0'})).toBe(renderSite(mapped,{...options,page,productId:'p0'}));
  expect(renderSite(mapped,options)).not.toContain('data-wr-about-collection-caption');
+});
+
+it('places the Video collection labels after the full image in mobile flow',async()=>{
+ const {draft}=await fixture('senseng-video'),nodes=elements(parse(renderSite(draft,options)));
+ const frame=nodes.find(node=>attr(node,'data-wr-about-collection-frame')!==undefined)!;
+ const children=frame.childNodes.filter((node):node is Element=>'tagName' in node);
+ expect(children.map(node=>node.tagName)).toEqual(['img','div','div']);
+ const style=nodes.find(node=>node.tagName==='style'&&attr(node,'data-wr-about-collection-mobile')!==undefined)!;
+ const css=style.childNodes.map(node=>'value' in node?node.value:'').join('');
+ expect(css).toContain('[data-wr-about-collection-frame]>div{position:static!important;');
+ const mapped=materialsDraftForRenderer(draft);expect(renderSite(mapped,options)).not.toContain('data-wr-about-collection-mobile');
 });
 
 it('freezes all three previous contracts, five rendered pages and preview runtime byte for byte',async()=>{

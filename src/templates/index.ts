@@ -67,6 +67,8 @@ import { withProductImageViewer } from '../shared/product-image-viewer';
 import { isTypedMaterials, isTypedMaterialsSource,isModernAboutSource, renderTypedMaterialsSite } from './materials-typed';
 import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline } from './themes/aboutHelper';
 import { withProductGalleryRuntime } from './product-native-gallery';
+import { withProductAboutCollectionMobileImage } from './product-about-mobile';
+import { withStaticProductDetail } from './product-detail-motion';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -113,9 +115,9 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);
   if (released !== undefined) return withLegacyAboutCollectionCaption(withTemplateBrandColor(released, draft), draft.template, materialsRevision, options.page);
-  const html = withProductGalleryRuntime(withTemplateBrandColor(renderSiteContent(draft, options), draft), draft, options);
-  if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
-  return withProductImageViewer(html);
+  const html = withProductAboutCollectionMobileImage(withProductGalleryRuntime(withTemplateBrandColor(renderSiteContent(draft, options), draft), draft, options), draft, options);
+  const result = options.page === 'detail' && !html.includes('id="wr-product-image-viewer-script"') ? withProductImageViewer(html) : html;
+  return withStaticProductDetail(result, draft, options);
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;

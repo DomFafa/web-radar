@@ -89,6 +89,18 @@ describe.each(Object.entries(slots))('%s independent About collection', (id, slo
     const homeSlots = new Set(profile.imageSlots.filter(slot => slot.page === 'home').map(slot => slot.id));
     expect(draft.materials!.imageBindings.filter(binding => homeSlots.has(binding.slotId)).every(home => home.assetId !== about.assetId)).toBe(true);
   });
+
+  it('protects only the .5 About opening image on mobile, leaving other pages and the previous release unchanged', async () => {
+    const input = await typedMaterialsFixture(id, 1, revision(id));
+    const draft = draftFromMaterials(input, Object.fromEntries(input.materials.media.map(media => [media.id, { id: media.id } as Asset])));
+    const options = { projectId: 'about-mobile-scope', lang: 'en' as const, assetUrl: (id: string) => `/confirmed/${id}`, inquiryUrl: '/inquiry', preview: true };
+    const about = renderSite(draft, { ...options, page: 'about' });
+    expect(about).toContain('id="wr-about-collection-mobile-image"');
+    expect(about).toContain('object-fit:contain!important');
+    for (const page of ['home', 'catalog', 'detail', 'contact']) expect(renderSite(draft, { ...options, page, productId: 'p0' })).not.toContain('wr-about-collection-mobile-image');
+    draft.materials!.contractRevision = revision(id, 4);
+    expect(renderSite(draft, { ...options, page: 'about' })).not.toContain('wr-about-collection-mobile-image');
+  });
 });
 
 it('preserves all six .4 contracts, page output and trusted preview scripts byte for byte', async () => {
