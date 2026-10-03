@@ -14,6 +14,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: node scripts/build-product-motion.mjs --check
       - run: npm run check
       - run: npm run test:release
       - run: npx wrangler deploy --dry-run
@@ -63,6 +64,7 @@ jobs:
       - run: node scripts/verify-careflow-template.mjs
       - run: node scripts/verify-auravell-template.mjs
       - run: node scripts/verify-reference-motion.mjs
+      - run: node scripts/verify-product-motion.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -73,6 +75,7 @@ jobs:
             artifacts/auravell-browser/
             artifacts/reference-motion-browser/
             artifacts/template-brand-colors/
+            artifacts/product-motion/
 
   render-quality:
     runs-on: ubuntu-latest
