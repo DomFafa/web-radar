@@ -1,7 +1,10 @@
 /** @jsxImportSource react */
 import React from "react";
+import { useAuth } from "../App";
 
 export function EmailGuidePage({ onNavigate }: { onNavigate: (page: string) => void }) {
+  const { user } = useAuth();
+  const writable = !!user && ['admin', 'member'].includes(user.role);
   return (
     <div className="email-guide-page">
       <div className="page-header">
@@ -10,50 +13,45 @@ export function EmailGuidePage({ onNavigate }: { onNavigate: (page: string) => v
             <h2>📖 邮件发送使用指南</h2>
             <p>从准备联系人到查看发送结果的完整操作说明</p>
           </div>
-          <button className="btn btn-primary" onClick={() => onNavigate("send")}>开始发送邮件</button>
+          {writable && <button className="btn btn-primary" onClick={() => onNavigate("send")}>开始准备邮件</button>}
         </div>
       </div>
 
       <div className="page-body email-guide-content">
         <section className="email-guide-intro">
           <div>
-            <span className="badge badge-success">发信环境已配置</span>
-            <h3>发送前只需要准备联系人和邮件内容</h3>
-            <p>系统已经配置并验证发信域名 <strong>wuyueer.com</strong>，客户无需配置 Mailchimp 或 DNS。</p>
+            <span className="badge badge-info">先检查，再发送</span>
+            <h3>从发送邮件开始，按三步完成准备</h3>
+            <p>发送页面会检查当前工作区的可用发信域名。尚未配置或检查失败时，请联系工作区管理员；你仍可先准备联系人和邮件内容。</p>
           </div>
-          <div className="email-guide-time"><strong>约 3 分钟</strong><span>完成一次发送</span></div>
+          <div className="email-guide-time"><strong>3 步</strong><span>选择客户 · 准备邮件 · 预览确认</span></div>
         </section>
 
         <section className="email-guide-steps" aria-label="邮件发送步骤">
           <article>
             <span className="email-guide-number">1</span>
-            <div><h3>导入联系人</h3><p>进入“联系人”，上传 CSV 或 Excel (.xlsx) 文件。建议先下载标准模板，填写邮箱、名称、公司、网站、行业、地区和标签。</p><button className="btn btn-secondary btn-sm" onClick={() => onNavigate("contacts")}>前往联系人</button></div>
+            <div><h3>选择客户</h3><p>按分组、标签或指定联系人选择一种方式。没有联系人时，可先上传 CSV 或 Excel (.xlsx)，邮箱为必填列。系统会去重并排除已退订联系人。</p><button className="btn btn-secondary btn-sm" onClick={() => onNavigate("contacts")}>查看联系人</button></div>
           </article>
           <article>
             <span className="email-guide-number">2</span>
-            <div><h3>准备邮件模板</h3><p>进入“邮件模板”，新建自己的模板，或从内置模板中选择“编辑并保存”。发送中心只会使用“我的模板”。</p><button className="btn btn-secondary btn-sm" onClick={() => onNavigate("templates")}>前往邮件模板</button></div>
+            <div><h3>准备邮件</h3><p>选择已有邮件，或在发送页面直接新建模板，保存后继续当前步骤。内置模板可按中文场景浏览，使用前请改成自己的公司资料，并检查主题、图片和链接。</p><button className="btn btn-secondary btn-sm" onClick={() => onNavigate("templates")}>浏览邮件模板</button></div>
           </article>
           <article>
             <span className="email-guide-number">3</span>
-            <div><h3>选择收件人</h3><p>在发送中心按分组、标签或单独联系人选择收件人，三种方式选择任意一种即可。系统会在发送时自动去重并排除已退订联系人。</p></div>
-          </article>
-          <article>
-            <span className="email-guide-number">4</span>
-            <div><h3>选择邮件并确认</h3><p>选择“我的模板”，检查主题、发件人名称和回复地址。发件人邮箱可选择 uh@wuyueer.com，也可填写其他 @wuyueer.com 地址。</p></div>
-          </article>
-          <article>
-            <span className="email-guide-number">5</span>
-            <div><h3>发送并查看结果</h3><p>确认后邮件进入发送队列。在“营销活动”中可以查看每位收件人的发送状态，以及送达、打开、点击和退信数据。</p><button className="btn btn-secondary btn-sm" onClick={() => onNavigate("campaigns")}>查看营销活动</button></div>
+            <div><h3>预览并确认</h3><p>检查客户范围、邮件主题和正文，填写客户看到的发件人名称，并使用已验证域名下的邮箱。只有点击“确认发送”后才会提交发送队列，发出后无法撤回。</p></div>
           </article>
         </section>
 
         <section className="card email-guide-notes">
-          <h3>导入与发送注意事项</h3>
+          <h3>发送后，去哪里看</h3>
+          <p>在发送记录查看任务和每位客户的处理状态、下载报表。提交超时或进度暂时无法更新时，先查看原任务，避免重复发送。</p>
+          <button className="btn btn-secondary btn-sm" onClick={() => onNavigate("campaigns")}>查看发送记录</button>
           <div className="email-guide-note-grid">
             <div><strong>联系人许可</strong><p>只向已获得许可的联系人发送邮件，退订联系人不会进入发送队列。</p></div>
             <div><strong>文件格式</strong><p>CSV 建议使用 UTF-8；Excel 使用 .xlsx。邮箱为必填列，其余信息可选。</p></div>
             <div><strong>图片与链接</strong><p>发送前确认图片能够公开访问，按钮和正文链接指向正确页面。</p></div>
-            <div><strong>结果延迟</strong><p>打开、点击和退信事件由服务商异步回传，统计数据可能稍有延迟。</p></div>
+            <div><strong>客户回复</strong><p>自动追踪回复需要管理员启用收信配置；未启用时使用填写的固定回复邮箱。已启用的新任务可在客户收件箱查看回复，历史数据不会自动补齐。</p></div>
+            <div><strong>结果延迟</strong><p>“处理完成”不代表全部送达。打开、点击和退信事件由服务商异步回传，统计取决于帐号和追踪配置。</p></div>
           </div>
         </section>
       </div>

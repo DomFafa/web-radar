@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import readXlsxFile from "read-excel-file/browser";
 import { contactsApi } from "../lib/api";
-import { useToast } from "../App";
+import { useAuth, useToast } from "../App";
 import { ContactImportReports } from "./ContactImportReports";
 
 const IMPORT_HEADERS = ["邮箱", "名称", "公司", "网站", "行业", "地区", "标签"];
@@ -78,6 +78,8 @@ const parseContactTags = (value: unknown): string[] => {
 
 export function ContactsPage() {
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const writable = !!user && ['admin', 'member'].includes(user.role);
   const [contacts, setContacts] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
   const [knownTags, setKnownTags] = useState<any[]>([]);
@@ -539,7 +541,7 @@ export function ContactsPage() {
           </div>
           <div className="flex gap-sm" style={{ flexWrap: "wrap" }}>
             <button className="btn btn-secondary" onClick={() => setShowImportReports(true)}>导入进度与报告</button>
-            <button className="btn btn-secondary" onClick={() => setShowGroupModal(true)}>
+            {writable && <><button className="btn btn-secondary" onClick={() => setShowGroupModal(true)}>
               📁 分组管理
             </button>
             <button className="btn btn-secondary" onClick={() => { if (!importing && (!activeImportId || importProgress?.current === importProgress?.total)) resetImport(); setShowImportModal(true); }}>
@@ -552,7 +554,7 @@ export function ContactsPage() {
               setShowModal(true);
             }}>
               ➕ 添加联系人
-            </button>
+            </button></>}
           </div>
         </div>
       </div>
@@ -593,10 +595,10 @@ export function ContactsPage() {
               <option key={tag.name} value={tag.name}>#{tag.name} ({tag.contactCount})</option>
             ))}
           </select>
-          <button className="btn btn-secondary btn-sm" disabled={loading || bulkBusy || !meta?.total} onClick={() => { setAllSelected(true); setExcludedIds([]); setSelected([]); }}>选择全部结果 ({meta?.total || 0})</button>
-          {selectedCount > 0 && <button className="btn btn-secondary btn-sm" disabled={bulkBusy} onClick={clearSelection}>取消选择</button>}
-          <button className="btn btn-danger-outline btn-sm" disabled={bulkBusy || importing} onClick={() => setDeleteScope("all")}>清空联系人库</button>
-          {selectedCount > 0 && (
+          {writable && <button className="btn btn-secondary btn-sm" disabled={loading || bulkBusy || !meta?.total} onClick={() => { setAllSelected(true); setExcludedIds([]); setSelected([]); }}>选择全部结果 ({meta?.total || 0})</button>}
+          {writable && selectedCount > 0 && <button className="btn btn-secondary btn-sm" disabled={bulkBusy} onClick={clearSelection}>取消选择</button>}
+          {writable && <button className="btn btn-danger-outline btn-sm" disabled={bulkBusy || importing} onClick={() => setDeleteScope("all")}>清空联系人库</button>}
+          {writable && selectedCount > 0 && (
             <div className="flex gap-sm items-center" style={{ flexWrap: "wrap" }}>
               <select
                 className="form-select"
@@ -634,7 +636,7 @@ export function ContactsPage() {
                   <input
                     type="checkbox"
                     aria-label="选择本页联系人"
-                    disabled={loading || bulkBusy}
+                    disabled={!writable || loading || bulkBusy}
                     checked={contacts.length > 0 && contacts.every((contact) => isSelected(contact.id))}
                     onChange={toggleSelectAll}
                   />
@@ -676,7 +678,7 @@ export function ContactsPage() {
                       <input
                         type="checkbox"
                         aria-label={`选择 ${contact.email}`}
-                        disabled={bulkBusy}
+                        disabled={!writable || bulkBusy}
                         checked={isSelected(contact.id)}
                         onChange={() => toggleSelect(contact.id)}
                       />
@@ -719,7 +721,7 @@ export function ContactsPage() {
                       </span>
                     </td>
                     <td>
-                      <div className="flex gap-xs">
+                      {writable ? <div className="flex gap-xs">
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => openEditModal(contact)}
@@ -735,7 +737,7 @@ export function ContactsPage() {
                         >
                           🗑️
                         </button>
-                      </div>
+                      </div> : <span className="muted">只读</span>}
                     </td>
                   </tr>
                 ))
@@ -761,7 +763,7 @@ export function ContactsPage() {
       </div>
 
       {/* Add Contact Modal */}
-      {showModal && (
+      {writable && showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -871,7 +873,7 @@ export function ContactsPage() {
       )}
 
       {/* Import Modal */}
-      {showImportModal && (
+      {writable && showImportModal && (
         <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -993,7 +995,7 @@ export function ContactsPage() {
       )}
 
       {/* Group Management Modal */}
-      {showGroupModal && (
+      {writable && showGroupModal && (
         <div className="modal-overlay" onClick={() => { setShowGroupModal(false); setEditingGroup(null); setGroupForm({name:"", description:""}); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 650 }}>
             <div className="modal-header">
@@ -1089,7 +1091,7 @@ export function ContactsPage() {
           </div>
         </div>
       )}
-      {deleteScope && <div className="modal-overlay"><div className="modal" role="dialog" aria-modal="true" aria-label="确认删除联系人">
+      {writable && deleteScope && <div className="modal-overlay"><div className="modal" role="dialog" aria-modal="true" aria-label="确认删除联系人">
         <div className="modal-header"><h3>{deleteScope === "all" ? "清空联系人库" : `删除 ${selectedCount} 位联系人`}</h3></div>
         <div className="modal-body">
           <p>{deleteScope === "all" ? "将删除当前账号全部分组的联系人，不受当前筛选和分页限制。" : `将删除选中的 ${selectedCount} 位联系人。`}</p>
@@ -1099,7 +1101,7 @@ export function ContactsPage() {
           <button className="btn btn-danger" disabled={bulkBusy} onClick={handleBatchDelete}>{bulkBusy ? "处理中..." : "确认删除"}</button>
         </div>
       </div></div>}
-      {deletingGroup && <div className="modal-overlay"><div className="modal" role="dialog" aria-modal="true" aria-label="删除分组">
+      {writable && deletingGroup && <div className="modal-overlay"><div className="modal" role="dialog" aria-modal="true" aria-label="删除分组">
         <div className="modal-header"><h3>删除分组：{deletingGroup.name}</h3></div>
         <div className="modal-body">
           <label className="flex gap-sm items-center"><input type="checkbox" checked={deleteGroupContacts} disabled={bulkBusy} onChange={(event) => setDeleteGroupContacts(event.target.checked)} />同时删除该分组内的联系人</label>

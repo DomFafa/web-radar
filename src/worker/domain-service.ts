@@ -4,7 +4,7 @@ import { ProductIdentitySchema } from '../shared/product-identity';
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
 import type { ProjectServiceStatus, ProjectServicePreview } from '../shared/project-service';
-import { projectPreviewHtml, projectPreviewRuntimeForDraft } from './project-preview';
+import { projectPreviewHtml, projectPreviewPrepareForDraft, projectPreviewRuntimeForDraft } from './project-preview';
 import { currentMaterialsPrincipal } from './materials-auth';
 import { materialsImageAssetIds, validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
@@ -829,8 +829,10 @@ export class DomainService {
       const html = archived ? archived.pages[siteFilePath(lang, page, productId)] : await this.renderPage(draft, { projectId: project.id, page, lang, productId,
         assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
       const htmlStarted = performance.now();
+      const prepareRuntime = projectPreviewPrepareForDraft(draft);
       const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
         projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntimeForDraft(draft),
+        ...(prepareRuntime ? { prepareRuntime } : {}),
         html: projectPreviewHtml(html, proxyBasePath, this.origin(), { page, lang, productId, expectedVersion: project.version }) };
       const result = json(response);
       result.headers.set('Server-Timing', `wr-render;dur=${(htmlStarted - renderStarted).toFixed(1)}, wr-html;dur=${(performance.now() - htmlStarted).toFixed(1)}`);
@@ -3260,7 +3262,7 @@ export class DomainService {
             continue;
           }
           remaining = true;
-          if (count + wave.length >= 4 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
+          if (wave.length >= 4 || count + wave.length >= 12 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
           const asset = await this.projectAsset(job.projectId, id);
           if (count + wave.length > 0 && inputBytes + asset.size > 40 * 1024 * 1024) break;
           wave.push({ asset, entry, width }); inputBytes += asset.size;

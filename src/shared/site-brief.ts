@@ -1,4 +1,5 @@
 import { auravellPages } from './auravell-pages';
+import { isProductNativeMaterials } from './product-native-materials';
 import { lumiPages, lumiPageLabels } from './lumi-pages';
 import { designCompany } from './site-contacts';
 import { z } from 'zod';
@@ -121,6 +122,7 @@ export function parseSiteBrief(input: unknown, draft: Draft): SiteBrief {
   return result;
 }
 export function plannedPages(draft: Draft): DesignPage[] {
+  if (isProductNativeMaterials(draft)) return [...basePages];
   if (draft.template === 'auravell' && !['clone', 'custom'].includes(draft.buildBranch || '')) return [...auravellPages];
   if (draft.template === 'lumi-business' && !['clone','custom'].includes(draft.buildBranch||'')) return [...lumiPages];
   if (draft.buildBranch === 'template') return [...basePages];
@@ -128,7 +130,7 @@ export function plannedPages(draft: Draft): DesignPage[] {
 }
 export function pageLabel(draft: Draft, page: DesignPage): string {
   if (draft.template === 'auravell' && page === 'extra-plans') return '会员方案';
-  if (draft.template === 'lumi-business') return lumiPageLabels[page] || page;
+  if (draft.template === 'lumi-business' && !isProductNativeMaterials(draft)) return lumiPageLabels[page] || page;
   return (
     draft.consultation?.brief?.pages.find((p) => p.id === page)?.label ??
     (

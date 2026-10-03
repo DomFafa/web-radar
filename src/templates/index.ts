@@ -3,8 +3,14 @@ import { renderAuravellSite } from './themes/auravell';
 import { renderCareflowSite } from './themes/careflowHealthcare';
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
+import { isProductNativeMaterials } from '../shared/product-native-materials';
+import { renderProductNativeSite } from './product-native';
+import { withProductNativeRuntime } from './product-native-runtime';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
 import { renderPawfectPage, pawfectStyles } from './themes/pawfectGroom';
+import { isPawfectMaterials, renderPawfectMaterialsPage, pawfectMaterialsStyles, pawfectMaterialsPalette } from './themes/pawfect/renderer';
+import { pawfectMaterialsRevision } from './themes/pawfect/materials';
+import { pawfectMotionPrepareSource, pawfectMotionSource } from './themes/pawfect/motion-source';
 import { renderMelloPage, melloStyles, melloRuntime } from './themes/melloCoffee';
 import { renderPaperNoteSite } from './themes/papernote';
 import { renderToorunEarlyLearning } from './themes/toorunEarlyLearning';
@@ -110,10 +116,12 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
+  const productNative = renderProductNativeSite(draft, options);
+  if (productNative !== undefined) return withBanner(withFavicon(withProductNativeRuntime(productNative, draft, options), draft, options.assetUrl), draft, options.assetUrl, { page: options.page, productId: effectiveProductId });
   if(draft.template === 'auravell')return withBanner(withFavicon(renderAuravellSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'careflow-healthcare')return withBanner(withFavicon(renderCareflowSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   if(draft.template === 'lumi-business')return withBanner(withFavicon(renderLumiSite(draft,options),draft,options.assetUrl),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
-  if(isTypedMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
+  if(isTypedMaterials(draft)&&!isPawfectMaterials(draft))return withBanner(renderTypedMaterialsSite(draft,options),draft,options.assetUrl,{page:options.page,productId:effectiveProductId});
   const rendered=withBanner(withFavicon(renderSiteHtml(draft, options), draft, options.assetUrl), draft, options.assetUrl, {page: options.page, productId: effectiveProductId});
   // Several standalone headers build their own language links and used catalog
   // depth on product pages. Normalize those links at the common output boundary.
@@ -383,6 +391,14 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
   }
   if (template === 'pawfect-groom') {
     const ctx = buildThemeContext(draft, options);
+    if (isPawfectMaterials(draft)) {
+      const seo = materialsSeo(draft, options)!;
+      const expressive = draft.materials!.contractRevision === pawfectMaterialsRevision;
+      const motionHead = expressive ? `<script>${pawfectMotionPrepareSource}</script>` : '';
+      const motionBody = expressive ? `<script>${pawfectMotionSource}</script>` : '';
+      const productOrder = expressive ? ` data-pawfect-product-order="${Math.max(0, draft.products.findIndex(product => product.id === options.productId))}"` : '';
+      return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(seo.title || company.name)}</title><meta name="description" content="${esc(seo.description || copy.subtitle)}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectMaterialsStyles}</style>${motionHead}</head><body class="pawfect-groom wr-pawfect-materials"${productOrder} data-template="pawfect-groom" data-wr-materials-revision="${esc(draft.materials!.contractRevision)}" style="${pawfectMaterialsPalette(draft)}--pg-ink:${brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectMaterialsPage(ctx)}<script>${script}</script>${motionBody}</body></html>`;
+    }
     const title = page === 'home' ? company.name || 'Pawfect Groom' : `${page === 'detail' ? translate(draft.products.find(p => p.id === options.productId) ?? mainProduct ?? ({name:'Service',description:''} as Product)).name : ({catalog:'Grooming services',about:'About us',contact:'Request an appointment'} as Record<string,string>)[page]} · ${company.name || 'Pawfect Groom'}`;
     return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(copy.subtitle || 'Explore grooming services, meet the salon and enquire about your dog’s next visit.')}">${options.preview ? '<meta name="robots" content="noindex,nofollow">' : ''}<style>${pawfectStyles}</style></head><body class="pawfect-groom" data-template="pawfect-groom" style="--pg-primary:${color === '#38929a' ? '#327f85' : color};--pg-ink:${color === '#38929a' ? '#ffffff' : brandInk}">${options.preview ? `<div class="preview-bar">${esc(ui.preview)}</div>` : ''}${renderPawfectPage(ctx)}<script>${script}</script></body></html>`;
   }
@@ -532,7 +548,7 @@ export function renderSiteFiles(
   draft = singleProductDraft(draft);
   const files: Record<string, string> = {};
   for (const lang of draft.languages) {
-    for (const page of (draft.template === 'auravell' ? auravellPages.filter(p => p !== 'detail') : draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
+    for (const page of (isProductNativeMaterials(draft) ? ['home', 'catalog', 'about', 'contact'] : draft.template === 'auravell' ? auravellPages.filter(p => p !== 'detail') : draft.template === 'lumi-business' ? lumiPages.filter(p => p !== 'detail') : ['home', 'catalog', 'about', 'contact']))
       files[`${lang}/${page === 'home' ? 'index.html' : `${page}/index.html`}`] = renderSite(
         draft,
         { ...options, lang, page },

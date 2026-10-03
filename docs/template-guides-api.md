@@ -1,5 +1,7 @@
 # 内部模板使用规范 API（供其它 AI / 服务调用）
 
+新版产品场景合同及模板编写要求见 [产品资料到原生模板](website-materials-system.md)。Pawfect 的最新材料合同升级为 `2026-10-02.pawfect-groom-materials.2`；下文 `.1` 为其历史合同说明，其他模板以目录返回的版本为准。
+
 ## Product Radar 轻量目录与按需合同（2026-09-23）
 
 建站资料使用 `/materials/catalog`，普通 Product Radar 账号可通过既有服务认证读取；下面旧规范接口的管理员限制不适用于这组资料路由。每次请求（包括条件请求）仍验证当前账号及工作区权限。
