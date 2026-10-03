@@ -41,3 +41,11 @@ Product Radar [PR #79](https://github.com/DomFafa/product-radar/pull/79) 已合�
 修正图通过现有项目上传/素材编辑流程替换 About 绑定；Product Radar 的已确认交接快照保留其生成候选，Web Radar 草稿保存编辑后的最终图片。交接关闭自动发布，在替换、验证之前不发布中间候选。首页和其余 116 个图绑定（含 90 张辅图）保持原资源。本机图片、提示词与复核证据位于 `artifacts/about-collection-motion/live-lumi/` 及 `/tmp/web-radar-about-release-20261003/original-count-qa/`。
 
 最终回归：类型检查 1.306 秒、132 文件/2,674 测试通过（62.715 秒）、生产构建 1.323 秒。六套模板的 108 组最终浏览器矩阵通过（89.104 秒），其中 36 组详情从加载到滚动、鼠标、图库、键盘与灯箱均无动画调用，其他 72 组首页/About 仍有入场且不重播。Product Radar 在 head 首位执行准备脚本，因此详情静态标记放在已先解析的 html 标签上；已复现并修正初版仅在后续 style 上判断而短暂隐藏文字的问题。最终浏览器证据为 artifacts/about-collection-motion/final/report.json。
+
+第二次 Web Radar 服务发布源为 2fd2ee7551e762767270301b72f9a4bfdd46118c，实际配对 Product Radar 0a144583915e237957760d8f1c450a8700f4bed0。部署 609622aa-619c-4fd1-83e3-882725154335，Worker e8a646a3-ad2e-4c41-9122-bbf8f760ea84 承载 100% 流量；Worker 字节与封存产物完全一致，20 个变更相关静态资源在线核验通过，1,612 个未变文件沿用同哈希的已验证前序回执。生产绑定与变量保持、健康正常。封存 22.396 秒、上传及激活 31.239 秒、上线核验 13.862 秒。封存与发布仅一次，产物摘要 dccd08e7bb0a7a8a96b57f4dfb6f40be722191dab375235c3ef790481314320f。
+
+客户原 Lumi 网站已完成发布：项目记录 V7、发布草稿 V6，release 154c0215-87ca-4322-95df-31e25dbcc891，地址保持 https://wr-54ad832cb1cae685ae8e2d0f64155581.pages.dev。336 个图片变体全部准备完成，发布任务于 2026-10-03T07:33:21.110Z 成功，无未发布修改。此次发布未重新生成首页或90张辅图，逐个 SHA 核对其余116个图绑定内容一致；About绑定最终上传图片，上传字节及保存后资产摘要均等于上述496166…SHA。
+
+最终公开站的六组 Chrome 案例（1440/390 × 首页/About/桃子详情）全部通过，耗时31.558秒，无页面脚本错误。两端About加载最终合集、手机保持自然9:5与完整图框无横向溢出；详情加载、滚动、悬停、十张缩略图依次切换、键盘选择、灯箱内选图/缩放/Escape均无Web Animations调用、CSS动画事件或活动动画。首页和About继续出现原模板入场效果。根代理核看公开站电脑About、手机About和手机详情截图确认实际图像。已登录Web Radar真实V7预览亦加载新About图及十张桃子图，手机完整显示；该私有预览只核实接入与显示，其动画调用证据来自前述108矩阵及公开站运行时检查。证据保存在artifacts/about-collection-motion/live-lumi/live-acceptance.json与/tmp/web-radar-about-release-20261003/live-screenshots/。
+
+客户网站发布总计 440.135 秒，主要等待 336 张响应式图片准备；约 33 秒一次的状态回执没有分别精确计时媒体准备与外部部署。任务连续推进，未重新提交或重启。以上发布后回执作为文档补记提交，不重复构建或部署应用。
