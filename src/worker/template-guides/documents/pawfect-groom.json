@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0",
-  "revision": "2026-10-02.1",
+  "revision": "2026-10-03.3",
   "templateId": "pawfect-groom",
   "name": "暖心宠物美容 · Pawfect Groom",
   "documentLanguage": "zh-CN",
-  "purpose": "当前项目模板外观、槽位与素材绑定规范。模板仅决定网站外观、图片尺寸、裁切安全区与展示槽位，不是图片内容或产品事实来源。 图片生成使用真实产品资料和客户确认的业务 brief。确认素材使用 typed-regions-v1；入口 /api/internal/template-guides/materials/pawfect-groom；最新内容中立合同版本 2026-10-02.pawfect-groom-materials.1。规范 API 只读，不调用模型或发布。",
+  "purpose": "当前项目模板外观、槽位与素材绑定规范。模板仅决定网站外观、图片尺寸、裁切安全区与展示槽位，不是图片内容或产品事实来源。 图片生成使用真实产品资料和客户确认的业务 brief。确认素材使用 typed-regions-v1；入口 /api/internal/template-guides/materials/pawfect-groom；最新内容中立合同版本 2026-10-03.pawfect-groom-materials.5。规范 API 只读，不调用模型或发布。",
   "visualSystem": {
     "palette": [
       "#FAF8F3",
@@ -506,7 +506,8 @@
     }
   ],
   "generationWorkflow": [
-    "读取 /api/internal/template-guides/materials/pawfect-groom 与目录的 requirementsPath，使用最新内容中立合同 2026-10-02.pawfect-groom-materials.1；固定 guideRevision 与 contractRevision。旧草稿继续读取其固定历史合同，不自动升级。",
+    "About us 首图必须独立生成一张包含全部所选真实产品的合集图，与首页采用不同场景、相机视角和排列；保留产品身份与模板的比例及手机安全区。只选择一个产品时保留该产品，不虚构更多款式。",
+    "读取 /api/internal/template-guides/materials/pawfect-groom 与目录的 requirementsPath，使用最新内容中立合同 2026-10-03.pawfect-groom-materials.5；固定 guideRevision 与 contractRevision。旧草稿继续读取其固定历史合同，不自动升级。",
     "模板仅决定网站外观、图片尺寸、裁切安全区与展示槽位，不是图片内容或产品事实来源。",
     "图片主体、品类、外观、材质、颜色、包装、商标与用途只能来自真实 product_reference、产品资料和客户确认的业务 brief；不得从模板名称、行业主题、配色、预览截图或演示图片推断。",
     "优先复用已授权的真实产品原图，只做必要的尺寸适配，不为填满模板建议数量重复生成。缺少真实 product_reference 或已确认业务 brief 时返回 missingFacts 并停止对应图片生成；可留空、缩减或隐藏，不能用模板默认图补充客户产品事实。证书、报告、人员身份、地址和真实经营场所只能使用可核实资料。",
@@ -543,6 +544,6 @@
       "missingFacts",
       "warnings"
     ],
-    "bindingWarning": "指南字段为草稿绑定说明。确认素材接口需先读取 /api/internal/template-guides/materials/pawfect-groom 的版本化 contract；不要把此处的 assetSpecId 直接当成 contract slotId。 最新合同为 2026-10-02.pawfect-groom-materials.1。模板外观不是图片生成条件；缺少真实产品参考或业务 brief 时应返回 missingFacts，不使用模板默认图作为 reference。"
+    "bindingWarning": "指南字段为草稿绑定说明。确认素材接口需先读取 /api/internal/template-guides/materials/pawfect-groom 的版本化 contract；不要把此处的 assetSpecId 直接当成 contract slotId。 最新合同为 2026-10-03.pawfect-groom-materials.5。模板外观不是图片生成条件；缺少真实产品参考或业务 brief 时应返回 missingFacts，不使用模板默认图作为 reference。"
   }
 }

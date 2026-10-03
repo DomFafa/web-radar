@@ -4,7 +4,7 @@ import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
 import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
 import { lumiRuntime } from '../templates/themes/lumi/runtime';
-import { isProductNativeMaterials, isProductNativeEnhancedRevision, isProductGalleryRevision } from '../shared/product-native-materials';
+import { isProductNativeMaterials, isProductNativeEnhancedRevision, isProductGalleryRevision, isProductAboutCollectionRevision } from '../shared/product-native-materials';
 import { productGalleryRuntime } from '../shared/product-gallery-runtime';
 import { productNativeUiRuntime, productNativeEnhancedNavRuntime } from '../templates/product-native-runtime';
 import { productMotionPrepareSource, productMotionSource } from '../templates/themes/product-motion-source';
@@ -19,6 +19,7 @@ import { pawfectMaterialsRevision } from '../templates/themes/pawfect/materials'
 import { pawfectMotionPrepareSource, pawfectMotionSource } from '../templates/themes/pawfect/motion-source';
 import type { DesignPage, Draft, Language } from '../shared/model';
 import { productGalleryMotionSource } from '../templates/themes/product-gallery-motion-source';
+import { productAboutCollectionMotionSource } from '../templates/themes/product-about-collection-motion-source';
 
 /** Keep renderer data-wr hooks for the parent's sandbox bridge; only remap destinations. */
 export function projectPreviewHtml(html: string, base: string, origin: string, selection: { page: DesignPage; lang: Language; productId?: string; expectedVersion: number }): string {
@@ -83,7 +84,8 @@ export function projectPreviewPrepareForDraft(draft: Draft): string {
 
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
   if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
-    const motion = draft.template === 'pawfect-groom' ? pawfectMotionSource : `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${productGalleryMotionSource}`;
+    const motionSource = isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? productAboutCollectionMotionSource : productGalleryMotionSource;
+    const motion = draft.template === 'pawfect-groom' ? pawfectMotionSource : `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${motionSource}`;
     return projectPreviewRuntime + `\n;(${productGalleryRuntime.toString()})();${motion}`;
   }
   if (isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();\n;(' + productNativeEnhancedNavRuntime.toString() + ')();\n;' + productMotionSource;

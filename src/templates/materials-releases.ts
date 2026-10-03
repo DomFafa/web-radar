@@ -1,3 +1,4 @@
+import {usesLegacyAboutCollectionRevision,legacyAboutCollectionContract,legacyAboutCollectionRenderDraft} from './legacy-about-collection';
 import { isActiveTemplate } from '../shared/template-availability';
 import { imageContentBaseRevision, usesImageContentRevision, withConfirmedImageContent, materialsRenderDraft } from './materials-image-content';
 import { renderAuravellSite as legacyAuravell, renderCareflowSite as legacyCareflow } from './releases/native-20261001.mjs';
@@ -95,6 +96,10 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (usesLegacyAboutCollectionRevision(id, revision)) {
+    const source = originalMaterialsContract(id, imageContentBaseRevision(id));
+    return source ? legacyAboutCollectionContract(source) : undefined;
+  }
   const candidate = getProductNativeContract(id, revision);
   if (candidate) return candidate;
   if (id === 'pawfect-groom') {
@@ -110,6 +115,7 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
 
 /** New image guidance uses the existing renderer and position inventory unchanged. */
 export function materialsDraftForRenderer(draft: Draft): Draft {
+  draft = legacyAboutCollectionRenderDraft(draft);
   return usesImageContentRevision(draft.template, draft.materials?.contractRevision)
     ? materialsRenderDraft(draft, originalMaterialsContract(draft.template, imageContentBaseRevision(draft.template))) : draft;
 }

@@ -1,5 +1,5 @@
 import type { Draft } from '../shared/model';
-import { isProductGalleryRevision, isProductNativeEnhancedRevision, isProductNativeRevision, productNativeMaterialsRevision } from '../shared/product-native-materials';
+import { isProductAboutCollectionRevision, isProductGalleryRevision, isProductNativeEnhancedRevision, isProductNativeRevision, productNativeMaterialsRevision } from '../shared/product-native-materials';
 import { enhancedProductNativeContract } from './product-native-enhanced-materials';
 import { productGalleryContract } from './product-gallery-materials';
 import { getAuravellProductMaterials } from './themes/auravell/product-materials';
@@ -13,6 +13,7 @@ import { renderToorunProductSite } from './themes/toorun/product-renderer';
 import { getMelloProductMaterials } from './themes/mello/product-materials';
 import { renderMelloProductSite } from './themes/mello/product-renderer';
 import type { RenderOptions } from './themes/types';
+import { productAboutCollectionContract } from './product-about-collection-materials';
 
 const releases = {
   auravell: { contract: getAuravellProductMaterials, render: renderAuravellProductSite },
@@ -26,6 +27,7 @@ const releases = {
 export function getProductNativeContract(templateId: string, revision?: string) {
   if (!isProductNativeRevision(templateId, revision)) return;
   const release = releases[templateId as keyof typeof releases];
+  if (isProductAboutCollectionRevision(templateId, revision)) return productAboutCollectionContract(productGalleryContract(enhancedProductNativeContract(release.contract(productNativeMaterialsRevision(templateId))!)));
   if (isProductGalleryRevision(templateId, revision)) return productGalleryContract(enhancedProductNativeContract(release.contract(productNativeMaterialsRevision(templateId))!));
   if (isProductNativeEnhancedRevision(templateId, revision)) return enhancedProductNativeContract(release.contract(productNativeMaterialsRevision(templateId))!);
   return release.contract(revision);

@@ -2,9 +2,10 @@ import type { Draft } from '../shared/model';
 import { labels } from './labels';
 import { materialsRuntime } from '../shared/materials-runtime';
 import { esc, type RenderOptions } from './themes/types';
-import { isProductGalleryRevision, isProductNativeEnhancedRevision } from '../shared/product-native-materials';
+import { isProductAboutCollectionRevision, isProductGalleryRevision, isProductNativeEnhancedRevision } from '../shared/product-native-materials';
 import { productMotionPrepareSource, productMotionSource } from './themes/product-motion-source';
 import { productGalleryMotionSource } from './themes/product-gallery-motion-source';
+import { productAboutCollectionMotionSource } from './themes/product-about-collection-motion-source';
 
 /** Native disclosures keep their no-JavaScript behavior and gain keyboard/outside-close support. */
 export function productNativeEnhancedNavRuntime() {
@@ -144,7 +145,7 @@ export function withProductNativeRuntime(html: string, _draft: Draft, options: R
   const ui = labels[options.lang];
   const prepared = html.replace('id="inquiry"', `id="inquiry" data-wr-sending="${esc(ui.sending)}" data-wr-sent="${esc(ui.sent)}" data-wr-failed="${esc(ui.failed)}"`);
   if (isProductNativeEnhancedRevision(_draft.template, _draft.materials?.contractRevision)) {
-    const motionSource = isProductGalleryRevision(_draft.template, _draft.materials?.contractRevision) ? productGalleryMotionSource : productMotionSource;
+    const motionSource = isProductAboutCollectionRevision(_draft.template, _draft.materials?.contractRevision) ? productAboutCollectionMotionSource : isProductGalleryRevision(_draft.template, _draft.materials?.contractRevision) ? productGalleryMotionSource : productMotionSource;
     return prepared
       .replace('</head>', () => `<script>${productMotionPrepareSource}</script></head>`)
       .replace('</body>', () => `<script>(()=>{const __name=(value)=>value;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();(${materialsRuntime.toString()})();${options.preview ? '' : `(${productNativeInquiryRuntime.toString()})();`}})();${motionSource}</script></body>`);

@@ -1,7 +1,8 @@
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
-import { isProductGalleryRevision } from '../../../shared/product-native-materials';
+import { isProductAboutCollectionRevision, isProductGalleryRevision } from '../../../shared/product-native-materials';
 import { productGalleryContract } from '../../product-gallery-materials';
+import { productAboutCollectionContract } from '../../product-about-collection-materials';
 
 export const pawfectLegacyMaterialsRevision = '2026-10-02.pawfect-groom-materials.2';
 export const pawfectMaterialsRevision = '2026-10-02.pawfect-groom-materials.3';
@@ -20,6 +21,7 @@ const scene = (id: string, page: Page, width: number, height: number, purpose: s
 });
 
 export function getPawfectMaterialsTemplate(revision?: string): MaterialsTemplateContract | undefined {
+  if (isProductAboutCollectionRevision('pawfect-groom', revision)) return productAboutCollectionContract(productGalleryContract(getPawfectMaterialsTemplate(pawfectMaterialsRevision)!));
   if (isProductGalleryRevision('pawfect-groom', revision)) return productGalleryContract(getPawfectMaterialsTemplate(pawfectMaterialsRevision)!);
   if (revision && revision !== pawfectMaterialsRevision && revision !== pawfectLegacyMaterialsRevision) return;
   return {

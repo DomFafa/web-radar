@@ -4,8 +4,12 @@ export const productNativeTemplateIds = ['auravell', 'careflow-healthcare', 'too
 export const productNativeMaterialsRevision = (templateId: string) => `2026-10-02.${templateId}-materials.2`;
 export const productNativeEnhancedMaterialsRevision = (templateId: string) => `2026-10-03.${templateId}-materials.3`;
 export const productGalleryMaterialsRevision = (templateId: string) => `2026-10-03.${templateId}-materials.4`;
+export const productAboutCollectionMaterialsRevision = (templateId: string) => `2026-10-03.${templateId}-materials.5`;
+export function isProductAboutCollectionRevision(templateId: string, revision?: string): boolean {
+  return (templateId === 'pawfect-groom' || productNativeTemplateIds.some(id => id === templateId)) && revision === productAboutCollectionMaterialsRevision(templateId);
+}
 export function isProductGalleryRevision(templateId: string, revision?: string): boolean {
-  return (templateId === 'pawfect-groom' || productNativeTemplateIds.some(id => id === templateId)) && revision === productGalleryMaterialsRevision(templateId);
+  return (templateId === 'pawfect-groom' || productNativeTemplateIds.some(id => id === templateId)) && (revision === productGalleryMaterialsRevision(templateId) || isProductAboutCollectionRevision(templateId, revision));
 }
 export function isProductNativeEnhancedRevision(templateId: string, revision?: string): boolean {
   return productNativeTemplateIds.some(id => id === templateId) && (revision === productNativeEnhancedMaterialsRevision(templateId) || isProductGalleryRevision(templateId, revision));

@@ -11,7 +11,9 @@ import { pathToFileURL } from 'node:url';
 const args = process.argv.slice(2);
 const prRoot = resolve(args[args.indexOf('--product-radar-root') + 1] || process.env.PRODUCT_RADAR_ROOT || '');
 assert(prRoot !== process.cwd(), 'Supply --product-radar-root for the actual preview consumer.');
-const out = resolve('artifacts/gallery-motion');
+const revision = process.env.GALLERY_REVISION || '4';
+assert(['4', '5'].includes(revision), 'Choose a supported gallery release.');
+const out = resolve(revision === '5' ? 'artifacts/about-collection-motion' : 'artifacts/gallery-motion');
 await mkdir(out, { recursive: true });
 await build({ stdin: { contents: `export {renderSite} from './src/templates';export {typedMaterialsFixture} from './tests/fixtures/materials-typed';export {draftFromMaterials} from './src/worker/materials-service';export {projectPreviewHtml,projectPreviewRuntime,projectPreviewRuntimeForDraft,projectPreviewPrepareForDraft} from './src/worker/project-preview';`, resolveDir: process.cwd() }, bundle: true, keepNames: true, platform: 'node', format: 'esm', outfile: resolve(out, 'renderer.mjs') });
 await build({ entryPoints: ['src/client/reference-template-preview.ts'], bundle: true, minify: true, platform: 'browser', format: 'esm', outfile: resolve(out, 'client.mjs') });
@@ -25,7 +27,7 @@ const widths = process.env.GALLERY_WIDTHS?.split(',').map(Number) || [1440, 390]
 const modes = process.env.GALLERY_MODES?.split(',') || ['public', 'wr', 'pr'];
 const drafts = new Map();
 for (const id of templates) {
-  const input = await api.typedMaterialsFixture(id, 3, `2026-10-03.${id}-materials.4`);
+  const input = await api.typedMaterialsFixture(id, 3, `2026-10-03.${id}-materials.${revision}`);
   const m = input.materials;
   for (const product of m.products) {
     const mediaId = `second-${product.id}`;
@@ -122,7 +124,7 @@ try {
     page.on('pageerror', error => errors.push(`${label}: ${error.stack || error.message}`));
     page.on('console', message => { if (message.type() === 'error') errors.push(`${label}: ${message.text()}`); });
     try {
-      for (const pageName of ['home', 'detail']) {
+      for (const pageName of revision === '5' ? ['home', 'about', 'detail'] : ['home', 'detail']) {
         await page.goto(`${origin}/${mode}?template=${template}&page=${pageName}`, { waitUntil: 'domcontentloaded' });
         let frame = page.mainFrame();
         if (mode !== 'public') { await page.waitForFunction(() => document.querySelector('#preview')?.getAttribute('srcdoc') || document.querySelector('#preview')?.getAttribute('src')); frame = await page.locator('#preview').elementHandle().then(el => el.contentFrame()); }
@@ -136,6 +138,18 @@ try {
         const paints = await frame.evaluate(() => window.galleryPaints);
         assert(paints.length && paints.every(p => p.prepared || p.opacity < .05), `${label}: headline does not flash before preparation`);
         await finish(frame);
+        if (pageName === 'about') {
+          const slot = { 'pawfect-groom': 'about-primary-image', auravell: 'about-hero-scene', 'careflow-healthcare': 'about-wide-scene', 'toorun-early-learning': 'about-primary-image', 'lumi-business': 'about-wide', 'mello-coffee': 'about-primary-image' }[template];
+          const draft = drafts.get(template), binding = draft.materials.imageBindings.find(image => image.slotId === slot);
+          assert(binding, `${label}: About opening binding exists`);
+          assert.deepEqual([...binding.depictedProductIds].sort(), draft.products.map(product => product.id).sort());
+          const image = frame.locator(`img[data-wr-material-image="${slot}"]`);
+          assert.equal(await image.count(), 1, `${label}: one About collection photograph`);
+          assert.equal(await image.getAttribute('alt'), binding.alt.en);
+          assert(await image.evaluate(image => image.naturalWidth > 0));
+          if (mode !== 'pr') assert((await image.getAttribute('src')).includes(binding.assetId));
+          await page.screenshot({ path: resolve(out, `${template}-${width}-${mode}-about.png`) });
+        }
         if (pageName === 'detail') {
           const thumbs = frame.locator('[data-wr-product-gallery] [data-wr-material-thumb]'), main = frame.locator('#wr-detail-main-img');
           assert.equal(await thumbs.count(), 3, `${label}: original plus two auxiliaries`);
@@ -180,7 +194,7 @@ try {
         await page.emulateMedia({ reducedMotion: 'no-preference' });
         await frame.waitForFunction(() => !matchMedia('(prefers-reduced-motion: reduce)').matches);
         await tick(frame);
-        results.push({ template, width, mode, page: pageName, entrances: first.total, gallery: pageName === 'detail', onceOnly: true, reducedMotion: true });
+        results.push({ template, width, mode, page: pageName, entrances: first.total, gallery: pageName === 'detail', aboutCollection: pageName === 'about', onceOnly: true, reducedMotion: true });
       }
       console.log(`PASS ${label}: gallery and motion`);
     } catch (error) { await writeFile(resolve(out, 'failed-page.html'), await page.content()); await writeFile(resolve(out, 'failed-frames.json'), JSON.stringify(await Promise.all(page.frames().map(async frame => ({url:frame.url(),html:await frame.content()}))), null, 2)); await page.screenshot({ path: resolve(out, label.replaceAll('/', '-') + '-failed.png') }).catch(() => {}); throw error; }

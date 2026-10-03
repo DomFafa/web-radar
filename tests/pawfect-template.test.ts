@@ -1,4 +1,5 @@
 import { materialsDemoDraft } from '../src/worker/template-guides/materials-demo';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { describe, it, expect } from 'vitest';
 import { renderSite, renderSiteFiles } from '../src/templates';
 import { defaultDraft, validateDraft } from '../src/worker/domain';
@@ -74,8 +75,9 @@ describe('Pawfect Groom integrated template', () => {
     expect(TEMPLATES.find((t) => t.id === 'pawfect-groom')?.englishName).toBe('Pawfect Groom');
     expect(validateDraft(draft()).template).toBe('pawfect-groom');
     const guide = guideSchema.parse(getTemplateGuide('pawfect-groom'));
-    expect(getMaterialsTemplate('pawfect-groom')).toMatchObject({
+    expect(currentMaterialsTemplate('pawfect-groom')).toMatchObject({
       templateId: 'pawfect-groom',
+      contractRevision: '2026-10-03.pawfect-groom-materials.5',
       guideRevision: guide.revision,
       materialsReady: true,
     });

@@ -1,3 +1,4 @@
+import {withLegacyAboutCollectionCaption} from './legacy-about-collection';
 import { auravellPages } from '../shared/auravell-pages';
 import { renderAuravellSite } from './themes/auravell';
 import { renderCareflowSite } from './themes/careflowHealthcare';
@@ -106,11 +107,12 @@ function segment(id: string): string {
 }
 const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  const materialsRevision = draft.materials?.contractRevision;
   draft = materialsDraftForRenderer(draft);
   if (!isTypedMaterialsSource(draft)) draft = singleProductDraft(draft);
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);
-  if (released !== undefined) return withTemplateBrandColor(released, draft);
+  if (released !== undefined) return withLegacyAboutCollectionCaption(withTemplateBrandColor(released, draft), draft.template, materialsRevision, options.page);
   const html = withProductGalleryRuntime(withTemplateBrandColor(renderSiteContent(draft, options), draft), draft, options);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return withProductImageViewer(html);

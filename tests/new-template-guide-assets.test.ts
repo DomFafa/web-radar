@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getTemplateGuide } from '../src/worker/template-guides/catalog';
 import { getMaterialsTemplate } from '../src/templates/materials';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { renderSite } from '../src/templates';
 import { defaultDraft } from '../src/worker/domain';
 
@@ -9,7 +10,8 @@ describe('new native template material guides', () => {
     '%s binds its documented portrait to the native image', (template, width, height) => {
       const guide = getTemplateGuide(template)!;
       const contract = getMaterialsTemplate(template)!;
-      expect(contract.guideRevision).toBe(guide.revision);
+      expect(currentMaterialsTemplate(template)!.guideRevision).toBe(guide.revision);
+      expect(contract.guideRevision).toBe(template === 'papernote' ? '2026-09-30.1' : '2026-10-02.1');
       expect(contract.imageSlots.find(s => s.id === 'hero-portrait')).toMatchObject({width, height, binding: 'supported'});
       const draft = {...defaultDraft(), template};
       draft.company.name = 'Confirmed Brand';

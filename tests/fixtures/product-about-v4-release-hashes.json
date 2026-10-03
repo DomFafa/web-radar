@@ -1,0 +1,86 @@
+{
+  "pawfect-groom": {
+    "revision": "2026-10-03.pawfect-groom-materials.4",
+    "contract": "7936efe0d018835ea614d1375cbc7a1adcb79eaafd4cbcd9d45700a3f89d645d",
+    "pages": {
+      "home": "431d1488f6e30c0417b7c6157633bfcba185ee1bdae9e8f84a411598af93bdce",
+      "catalog": "adcbc98c1bb5e58f80e463d9b83d6e812e86aba02cc72f8dc724892566ef435e",
+      "about": "55ba12c3d0f4d022dc48056c86af4ff81f751059a60310aa94c54f901b3bf2d7",
+      "contact": "7033561e1b8ce932e0228a285c2438ac47be81d25cac118db506dabef98af452",
+      "detail:p0": "c14b04d16dfb4d3c2f92a0941a44c1fb1f44e2d6d672ffe85f1f84d7659ab96c",
+      "detail:p1": "c290f1ef3e43e623b02bcbe17cff8dec93fa807dc3d34ce317cf4b6391a4ec94"
+    },
+    "worker": "1f89cf3ba54464e7b9fd6f735729a6edd38fed5768749f1e593718f6cb01b2ee",
+    "client": "9f0755168ff4e4db04c39bd0abdae52de1aba26834c5c7efbe5938ddeb47d102"
+  },
+  "auravell": {
+    "revision": "2026-10-03.auravell-materials.4",
+    "contract": "e85bb0c23859fc4ca6eee76d90d99224ae3201413c6ba916a6fa80f2d0fe9e41",
+    "pages": {
+      "home": "bbaa4ddd987a8bebe5dd5c0a3a8dad272034f193973fabc49a0ab6915ff8179f",
+      "catalog": "e8626dbe2aae74a8d05bde6ee8491471d23470bc3f7273cf9c8cc672a41ad18d",
+      "about": "e2f7c53f55bae3071aef53cc707d5a7f17da9cb78ead4b2b2403594d523589ae",
+      "contact": "271e943f1f22d9782b7e50262151f4d9f27ee4db34d2f0630fbdfb73d32ef622",
+      "detail:p0": "645645ead5a3f111cd2d957a5e6e6ed4a13be06283582cff191e48c4878129b4",
+      "detail:p1": "b17bebfa47ec84507d79d9bb353f1ee57e1a0c7a004d29459e813f2d68ab5d03"
+    },
+    "worker": "e6cb45f1b23239e8c516dfd7ae966923513ed7c2c08240c4b60c2851af39de39",
+    "client": "e18cb6cd7b34c433598621ba24de1932b33584bbb6750a5e463417db4441a1f7"
+  },
+  "careflow-healthcare": {
+    "revision": "2026-10-03.careflow-healthcare-materials.4",
+    "contract": "76b75fb55b539994497319096901127c45a99cd3081b6d0a996974f6a4c27cd9",
+    "pages": {
+      "home": "0bf32ec779b2fdd5790a4bc88bdab706d4392c22a01ff9d75b1c281e511fee55",
+      "catalog": "5a9dab64e608d18a5fa1f1f0050d462c374903412ee719b854771da2041ad905",
+      "about": "70277bb1bf63b69f8dd247bee7eb0a3eb6cbdc36e627ea47c241d915bc693cb3",
+      "contact": "c573d865267fa0e9f056a1ffcf2589763a7616ab05e3ba9f8c62c968f4af6c02",
+      "detail:p0": "f970920e7d4c07886b733c2962d0d79c467eff2fc3b3fe0111509acf3d7b27b8",
+      "detail:p1": "c7ffd5fad69fdad20dd8196d23ea7a2c83e724833ce20f663001792601894f42"
+    },
+    "worker": "e6cb45f1b23239e8c516dfd7ae966923513ed7c2c08240c4b60c2851af39de39",
+    "client": "e18cb6cd7b34c433598621ba24de1932b33584bbb6750a5e463417db4441a1f7"
+  },
+  "toorun-early-learning": {
+    "revision": "2026-10-03.toorun-early-learning-materials.4",
+    "contract": "37e95a4b4f25d76d769cd5de3fde2e26e5d694292d6a36cd9628009c8672b200",
+    "pages": {
+      "home": "237d2e2d0f678bc7eaf062d432e1426ba29de421e2d330de20a9352777854193",
+      "catalog": "4aa28207329a48a95dedaa910881c135f99c9cf379b01e52e4fb75c799bc6e6c",
+      "about": "f8b32fa328d942eae567b6b4e9544f8d5ecfe51cd8e30fa5da71978801de63cb",
+      "contact": "0bc56426f2fe785ebf15ed98c1ce8bd68cfe8e7d02d74a0dbff3022a069508a4",
+      "detail:p0": "21609596caa9375aa446686ff704b11b07d3d3b300309ae6bb2634676492b74e",
+      "detail:p1": "b585020459ea4d1061f86161f6682e699bafe1cccb4b08d9181c31dbcc1f84fe"
+    },
+    "worker": "e6cb45f1b23239e8c516dfd7ae966923513ed7c2c08240c4b60c2851af39de39",
+    "client": "e18cb6cd7b34c433598621ba24de1932b33584bbb6750a5e463417db4441a1f7"
+  },
+  "lumi-business": {
+    "revision": "2026-10-03.lumi-business-materials.4",
+    "contract": "42fe4b236e43aa7a87c1d7cc5c844872b9a67814ee35e55a2956b2f3b5f2aaee",
+    "pages": {
+      "home": "5332069c5b3b0ad62c7f7bbc4c2217a44add4996bc7f695393065192a02a60bb",
+      "catalog": "4c8522fb578c1caf897499b387cb2d4199500a0f46c39a58d9cb6a9db8e05ec2",
+      "about": "c46a13dd4308b31b7b3171a9932ee8468c31b5c3afa0871d6ec47103f421e5c5",
+      "contact": "e308932c96c1dad3f42c8a7b609e933f4923d1468211435546ac8b9ad90fcc1f",
+      "detail:p0": "0d768c53c71ce5f74530e36c46cbbdb1e4eac6a09e8c7eb8a7be79163a799c83",
+      "detail:p1": "4d0daf90ddf5630fe2e66bb542695130cde5f03d78f3718af6e27bb3ebb28ac4"
+    },
+    "worker": "e6cb45f1b23239e8c516dfd7ae966923513ed7c2c08240c4b60c2851af39de39",
+    "client": "e18cb6cd7b34c433598621ba24de1932b33584bbb6750a5e463417db4441a1f7"
+  },
+  "mello-coffee": {
+    "revision": "2026-10-03.mello-coffee-materials.4",
+    "contract": "cde1fa3db02d21958f9b796b4b6d53cd24abfb96ccde14a4d8d418bcfae22da3",
+    "pages": {
+      "home": "d96d1a9b646066cad7233652ac544f03755b41d4768fac8353a42ba85240e62c",
+      "catalog": "5e0155c29de8222948cbc08fabdecdc49af072b52edc6ada4d5c84b62ea77122",
+      "about": "02a0c1a388f4fcd216791d0eae1ff50c3247bae04291d177f3507b9a7aebb085",
+      "contact": "96242bf5ae22e9e40c3c254a82ad7e47b256b10ef657986c61df319eabd30b27",
+      "detail:p0": "45e13d2b58c7dd2dbbc55aa6cfd7d94f0f1f873b0aaacaa515b28f227fbdb70d",
+      "detail:p1": "6d4ef185a9abf69ff071609a0632ea9a505a4b56c3f6619652d50aa9099cb28f"
+    },
+    "worker": "e6cb45f1b23239e8c516dfd7ae966923513ed7c2c08240c4b60c2851af39de39",
+    "client": "e18cb6cd7b34c433598621ba24de1932b33584bbb6750a5e463417db4441a1f7"
+  }
+}
