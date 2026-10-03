@@ -4,7 +4,8 @@ import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
 import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
 import { lumiRuntime } from '../templates/themes/lumi/runtime';
-import { isProductNativeMaterials, isProductNativeEnhancedRevision } from '../shared/product-native-materials';
+import { isProductNativeMaterials, isProductNativeEnhancedRevision, isProductGalleryRevision } from '../shared/product-native-materials';
+import { productGalleryRuntime } from '../shared/product-gallery-runtime';
 import { productNativeUiRuntime, productNativeEnhancedNavRuntime } from '../templates/product-native-runtime';
 import { productMotionPrepareSource, productMotionSource } from '../templates/themes/product-motion-source';
 import { isSingleProductTemplate, singleProductRuntime } from '../templates/themes/singleProduct';
@@ -15,8 +16,9 @@ import { productImageViewerRuntime } from '../shared/product-image-viewer';
 import { bannerRuntime } from '../shared/banner-runtime';
 import { releasedMaterialsPreviewRuntime } from '../templates/materials-releases';
 import { pawfectMaterialsRevision } from '../templates/themes/pawfect/materials';
-import { pawfectMotionSource } from '../templates/themes/pawfect/motion-source';
+import { pawfectMotionPrepareSource, pawfectMotionSource } from '../templates/themes/pawfect/motion-source';
 import type { DesignPage, Draft, Language } from '../shared/model';
+import { productGalleryMotionSource } from '../templates/themes/product-gallery-motion-source';
 
 /** Keep renderer data-wr hooks for the parent's sandbox bridge; only remap destinations. */
 export function projectPreviewHtml(html: string, base: string, origin: string, selection: { page: DesignPage; lang: Language; productId?: string; expectedVersion: number }): string {
@@ -75,10 +77,15 @@ export const projectPreviewRuntime = `var __name=(value)=>value;(()=>{
 
 /** Trusted head code stays separate from customer HTML when previews strip its scripts. */
 export function projectPreviewPrepareForDraft(draft: Draft): string {
+  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) return draft.template === 'pawfect-groom' ? pawfectMotionPrepareSource : productMotionPrepareSource;
   return isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision) ? productMotionPrepareSource : '';
 }
 
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
+  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
+    const motion = draft.template === 'pawfect-groom' ? pawfectMotionSource : `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${productGalleryMotionSource}`;
+    return projectPreviewRuntime + `\n;(${productGalleryRuntime.toString()})();${motion}`;
+  }
   if (isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();\n;(' + productNativeEnhancedNavRuntime.toString() + ')();\n;' + productMotionSource;
   if (isProductNativeMaterials(draft)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();';
   if (draft.template === 'auravell' && draft.materials?.contractRevision === '2026-10-01.auravell-materials.1') return projectPreviewRuntime + '\n;(' + legacyAuravellRuntime.toString() + ')();';

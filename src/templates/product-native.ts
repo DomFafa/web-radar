@@ -1,6 +1,7 @@
 import type { Draft } from '../shared/model';
-import { isProductNativeEnhancedRevision, isProductNativeRevision, productNativeMaterialsRevision } from '../shared/product-native-materials';
+import { isProductGalleryRevision, isProductNativeEnhancedRevision, isProductNativeRevision, productNativeMaterialsRevision } from '../shared/product-native-materials';
 import { enhancedProductNativeContract } from './product-native-enhanced-materials';
+import { productGalleryContract } from './product-gallery-materials';
 import { getAuravellProductMaterials } from './themes/auravell/product-materials';
 import { renderAuravellProductSite } from './themes/auravell/product-renderer';
 import { getCareflowProductMaterials } from './themes/careflow/product-materials';
@@ -25,6 +26,7 @@ const releases = {
 export function getProductNativeContract(templateId: string, revision?: string) {
   if (!isProductNativeRevision(templateId, revision)) return;
   const release = releases[templateId as keyof typeof releases];
+  if (isProductGalleryRevision(templateId, revision)) return productGalleryContract(enhancedProductNativeContract(release.contract(productNativeMaterialsRevision(templateId))!));
   if (isProductNativeEnhancedRevision(templateId, revision)) return enhancedProductNativeContract(release.contract(productNativeMaterialsRevision(templateId))!);
   return release.contract(revision);
 }

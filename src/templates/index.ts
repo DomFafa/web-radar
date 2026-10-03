@@ -3,7 +3,7 @@ import { renderAuravellSite } from './themes/auravell';
 import { renderCareflowSite } from './themes/careflowHealthcare';
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
-import { isProductNativeMaterials } from '../shared/product-native-materials';
+import { isProductNativeMaterials, isProductGalleryRevision } from '../shared/product-native-materials';
 import { renderProductNativeSite } from './product-native';
 import { withProductNativeRuntime } from './product-native-runtime';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
@@ -65,6 +65,7 @@ import { materialsRuntime } from '../shared/materials-runtime';
 import { withProductImageViewer } from '../shared/product-image-viewer';
 import { isTypedMaterials, isTypedMaterialsSource,isModernAboutSource, renderTypedMaterialsSite } from './materials-typed';
 import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline } from './themes/aboutHelper';
+import { withProductGalleryRuntime } from './product-native-gallery';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -110,7 +111,7 @@ export function renderSite(draft: Draft, options: RenderOptions): string {
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);
   if (released !== undefined) return withTemplateBrandColor(released, draft);
-  const html = withTemplateBrandColor(renderSiteContent(draft, options), draft);
+  const html = withProductGalleryRuntime(withTemplateBrandColor(renderSiteContent(draft, options), draft), draft, options);
   if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
   return withProductImageViewer(html);
 }
@@ -393,7 +394,7 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     const ctx = buildThemeContext(draft, options);
     if (isPawfectMaterials(draft)) {
       const seo = materialsSeo(draft, options)!;
-      const expressive = draft.materials!.contractRevision === pawfectMaterialsRevision;
+      const expressive = draft.materials!.contractRevision === pawfectMaterialsRevision || isProductGalleryRevision(draft.template, draft.materials?.contractRevision);
       const motionHead = expressive ? `<script>${pawfectMotionPrepareSource}</script>` : '';
       const motionBody = expressive ? `<script>${pawfectMotionSource}</script>` : '';
       const productOrder = expressive ? ` data-pawfect-product-order="${Math.max(0, draft.products.findIndex(product => product.id === options.productId))}"` : '';

@@ -2,10 +2,11 @@ import type { Language } from '../../shared/model';
 import type { MaterialsTemplateContract, AppliedMaterials } from '../../shared/materials';
 import { defaultDraft } from '../domain';
 import { pawfectLegacyMaterialsRevision, pawfectMaterialsRevision } from '../../templates/themes/pawfect/materials';
+import { isProductGalleryRevision } from '../../shared/product-native-materials';
 
 /** Public demonstration data only; never inserted into a customer's draft. */
 export function pawfectDemoDraft(profile: MaterialsTemplateContract, lang: Language) {
-  if ([pawfectLegacyMaterialsRevision, pawfectMaterialsRevision].includes(profile.contractRevision)) return nativePawfectDemoDraft(profile, lang);
+  if ([pawfectLegacyMaterialsRevision, pawfectMaterialsRevision].includes(profile.contractRevision) || isProductGalleryRevision(profile.templateId, profile.contractRevision)) return nativePawfectDemoDraft(profile, lang);
   const draft = defaultDraft();
   draft.template = 'pawfect-groom';
   draft.buildBranch = 'template';
@@ -141,6 +142,14 @@ function nativePawfectDemoDraft(profile: MaterialsTemplateContract, lang: Langua
     {id:'demo-bath', name:'The Bath & Dry', description:'An illustrative bath and dry service. Discuss your dog’s coat and care requirements with a groomer.', material:'', dimensions:'', imageAssetId:base+'care.jpg', gallery:[]},
     {id:'demo-groom', name:'The Full Groom', description:'An illustrative grooming service. Ask a groomer about the suitable service and finish for your dog.', material:'', dimensions:'', imageAssetId:base+'poodle.jpg', gallery:[]},
   ];
+  if (isProductGalleryRevision(profile.templateId, profile.contractRevision)) {
+    draft.products.forEach(product => {
+      product.gallery = [
+        { assetId: product.imageAssetId!, sourceImageId: product.id, kind: 'original', caption: product.name },
+        { assetId: base + 'grooming.jpg', sourceImageId: product.id + '-detail', kind: 'detail', caption: 'Illustrative grooming detail' },
+      ];
+    });
+  }
   draft.primaryProductId = draft.products[0].id;
   const copy:Record<string,string> = {
     'hero-eyebrow':'A little care. A lot of love.',
@@ -185,6 +194,11 @@ function nativePawfectDemoDraft(profile: MaterialsTemplateContract, lang: Langua
     displaySelection:{sceneProductIds, featuredProductIds:[...sceneProductIds]},
     visual:{palette:profile.websitePalette!, backgroundStyle:'plain', imageTreatment:'natural', compositionSummary:'Illustrative dog-care photographs with warm light, teal and amber accents.'},
     imageBindings:profile.imageSlots.flatMap((slot,index)=>{
+      if (slot.materialSource === 'product-gallery') return draft.products.flatMap(product => (product.gallery || []).slice(1).map((image, i) => ({
+        slotId: slot.id, productId: product.id, itemIndex: i + 1, assetId: image.assetId,
+        fit: slot.fit, focalPoint: { x: .5, y: .5 }, alt: Object.fromEntries(draft.languages.map(locale => [locale, image.caption])),
+        ...(slot.role ? { role: slot.role, depictedProductIds: [product.id] } : {}),
+      })));
       const targets = slot.repeat === 'per-product' || slot.repeat === 'per-selection' ? draft.products : [draft.products[index % draft.products.length]];
       return targets.map((product,i)=>({slotId:slot.id, productId:product.id, assetId:slot.materialSource === 'product-primary' ? product.imageAssetId! : base+(slot.id === 'gallery-scene' ? ['poodle.jpg','care.jpg'][i] : sceneAssets[slot.id]), fit:slot.fit, focalPoint:{x:.5,y:.5},
         alt:Object.fromEntries(draft.languages.map(locale=>[locale,`Illustrative dog-care photograph: ${product.name}`])), ...(slot.role ? {role:slot.role, depictedProductIds:[product.id]} : {})}));

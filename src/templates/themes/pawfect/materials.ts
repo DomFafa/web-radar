@@ -1,5 +1,7 @@
 import type { MaterialsTemplateContract } from '../../../shared/materials';
 import { materialsPages } from '../../../shared/materials';
+import { isProductGalleryRevision } from '../../../shared/product-native-materials';
+import { productGalleryContract } from '../../product-gallery-materials';
 
 export const pawfectLegacyMaterialsRevision = '2026-10-02.pawfect-groom-materials.2';
 export const pawfectMaterialsRevision = '2026-10-02.pawfect-groom-materials.3';
@@ -18,6 +20,7 @@ const scene = (id: string, page: Page, width: number, height: number, purpose: s
 });
 
 export function getPawfectMaterialsTemplate(revision?: string): MaterialsTemplateContract | undefined {
+  if (isProductGalleryRevision('pawfect-groom', revision)) return productGalleryContract(getPawfectMaterialsTemplate(pawfectMaterialsRevision)!);
   if (revision && revision !== pawfectMaterialsRevision && revision !== pawfectLegacyMaterialsRevision) return;
   return {
     schemaVersion: 'wr-template-materials-v1', templateId: 'pawfect-groom', guideRevision: '2026-10-02.1', contractRevision: revision || pawfectMaterialsRevision,
