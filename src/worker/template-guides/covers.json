@@ -7,18 +7,18 @@
     "contractRevision": "2026-09-23.senseng-clean-materials.6"
   },
   "senseng-video": {
-    "url": "/templates/previews/senseng-video.e34176ef503d3488.jpg",
-    "sha256": "e34176ef503d3488dc7df603142b902026117e01c29c8de4fecc89b928ca16f9",
+    "url": "/templates/previews/senseng-video.ce17b0fca9b33a0c.jpg",
+    "sha256": "ce17b0fca9b33a0c7c33175ca5bb18852a852fbe17f51806ebcac5b3622c623d",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.senseng-video-materials.1"
+    "contractRevision": "2026-10-03.senseng-video-materials.5"
   },
   "senseng-candy": {
-    "url": "/templates/previews/senseng-candy.9b0f0d6425301df8.jpg",
-    "sha256": "9b0f0d6425301df83989394e2283ea3b59bac77502428e1018eefad08966c2ae",
+    "url": "/templates/previews/senseng-candy.46157a2be925cb18.jpg",
+    "sha256": "46157a2be925cb18b4a2c4ba40965c8cbb7f9daf25a661a84bd49ecfce475684",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.senseng-candy-materials.1"
+    "contractRevision": "2026-10-03.senseng-candy-materials.5"
   },
   "senseng-wonder": {
     "url": "/templates/previews/senseng-wonder.91574a9e2f66acd1.jpg",
@@ -35,11 +35,11 @@
     "contractRevision": "2026-09-23.senseng-arcade-materials.6"
   },
   "senseng-nature": {
-    "url": "/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg",
-    "sha256": "833f84aa6cdbc38f4a3bf0f63e7380c141f59577c864794fb8d2251176809cf0",
+    "url": "/templates/previews/senseng-nature.c8787079dddb616c.jpg",
+    "sha256": "c8787079dddb616cfb3e868ca6e84aea2bb6eef2f6f5e96a0a744293475572ee",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.senseng-nature-materials.1"
+    "contractRevision": "2026-10-03.senseng-nature-materials.5"
   },
   "senseng-minimal": {
     "url": "/templates/previews/senseng-minimal.188e54942d194362.jpg",
@@ -350,18 +350,18 @@
     "contractRevision": "2026-09-23.single-wellness-nordic-materials.6"
   },
   "pawfect-groom": {
-    "url": "/templates/previews/pawfect-groom.17b92249c4802926.jpg",
-    "sha256": "17b92249c4802926a6f61a93e83a414a1b81446d8d4e70cb59f279c73d597de9",
+    "url": "/templates/previews/pawfect-groom.4e3ef89afac2b6e1.jpg",
+    "sha256": "4e3ef89afac2b6e1472d8bda520bfec5d9ee007a19b5ec6645b8da61997ff4d5",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.pawfect-groom-materials.3"
+    "contractRevision": "2026-10-03.pawfect-groom-materials.5"
   },
   "lumi-business": {
-    "url": "/templates/previews/lumi-business.db0d249082becfa2.jpg",
-    "sha256": "db0d249082becfa2a48e0fed409dff8f9cc3f018f550fa881032dc5497346b0c",
+    "url": "/templates/previews/lumi-business.2a879a08ca1f3c86.jpg",
+    "sha256": "2a879a08ca1f3c86880e02c86bc7adbbf7b34da5178e7b1750351ee5f1e0a2b0",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.lumi-business-materials.1"
+    "contractRevision": "2026-10-03.lumi-business-materials.5"
   },
   "good-boy-pals": {
     "url": "/templates/previews/good-boy-pals.9ca28f1bd61b642f.jpg",
@@ -371,11 +371,11 @@
     "contractRevision": "2026-09-20.good-boy-pals-materials.2"
   },
   "mello-coffee": {
-    "url": "/templates/previews/mello-coffee.f251cb4d1c141730.jpg",
-    "sha256": "f251cb4d1c141730fe5af89cf44f56664161d65be25631a24ddb67139179ddb9",
+    "url": "/templates/previews/mello-coffee.b446e1c0ccaadec8.jpg",
+    "sha256": "b446e1c0ccaadec8035d876988dc7ccb05ef24a9038677ede141acfe869eecea",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.mello-coffee-materials.1"
+    "contractRevision": "2026-10-03.mello-coffee-materials.5"
   },
   "papernote": {
     "url": "/templates/previews/papernote.405e0639a2e3eaa7.jpg",
@@ -385,24 +385,24 @@
     "contractRevision": "2026-09-20.papernote-materials.2"
   },
   "toorun-early-learning": {
-    "url": "/templates/previews/toorun-early-learning.dfb78be0504ef868.jpg",
-    "sha256": "dfb78be0504ef868e86fdb8bc56389f3e6fe3a5322412a03e94e0725db764697",
+    "url": "/templates/previews/toorun-early-learning.b24ff8a490656106.jpg",
+    "sha256": "b24ff8a49065610637144e1797497bd32f28cdc2b9fbb9841429e3c4b2bb4085",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.toorun-early-learning-materials.1"
+    "contractRevision": "2026-10-03.toorun-early-learning-materials.5"
   },
   "careflow-healthcare": {
-    "url": "/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg",
-    "sha256": "0ffe9b22bce61216e5c3e6fc4ec6c9bb82cc425c086be7955f2c0b4cc5c36c78",
+    "url": "/templates/previews/careflow-healthcare.7fbbf15fcc5616a1.jpg",
+    "sha256": "7fbbf15fcc5616a158017b59af33618ec856634e570a5047971aaff284d0f169",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.careflow-healthcare-materials.1"
+    "contractRevision": "2026-10-03.careflow-healthcare-materials.5"
   },
   "auravell": {
-    "url": "/templates/previews/auravell.2eaa361e7dfe8f0c.jpg",
-    "sha256": "2eaa361e7dfe8f0c59c0227c203322a05a1e08538b6201e0071a74ab472e8e36",
+    "url": "/templates/previews/auravell.58199c6bf9c5ffbd.jpg",
+    "sha256": "58199c6bf9c5ffbda805d3845f0d479f27cf102dcd9f70cd223d79d46094948d",
     "width": 1440,
     "height": 1000,
-    "contractRevision": "2026-10-02.auravell-materials.1"
+    "contractRevision": "2026-10-03.auravell-materials.5"
   }
 }

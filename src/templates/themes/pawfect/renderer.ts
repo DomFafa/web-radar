@@ -1,11 +1,13 @@
+import { isProductGalleryRevision } from '../../../shared/product-native-materials';
 import type { Draft, Product } from '../../../shared/model';
 import { displayProducts } from '../../../shared/product-display';
 import { materialImage } from '../../materials-render';
 import { pawfectStyles } from '../pawfectGroom';
 import { buildThemeContext, esc, productPath, type ThemeContext } from '../types';
 import { pawfectLegacyMaterialsRevision, pawfectMaterialsRevision } from './materials';
+import { renderProductGallery } from '../../product-native-gallery';
 
-export const isPawfectMaterials = (draft: Draft) => draft.template === 'pawfect-groom' && [pawfectLegacyMaterialsRevision, pawfectMaterialsRevision].includes(draft.materials?.contractRevision || '');
+export const isPawfectMaterials = (draft: Draft) => draft.template === 'pawfect-groom' && ([pawfectLegacyMaterialsRevision, pawfectMaterialsRevision].includes(draft.materials?.contractRevision || '') || isProductGalleryRevision(draft.template, draft.materials?.contractRevision));
 const heart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21C4 15 1 11 3 6c2-4 7-4 9 0 2-4 7-4 9 0 2 5-1 9-9 15Z"/></svg>';
 const lines = (value: string) => value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 const multiline = (value: string) => esc(value).replace(/\r?\n/g, '<br>');
@@ -14,7 +16,7 @@ const multiline = (value: string) => esc(value).replace(/\r?\n/g, '<br>');
 export function renderPawfectMaterialsPage(ctx: ThemeContext): string {
   const { draft, options, lang, page, path, navPath, navAttrs, translateProduct } = ctx;
   const materials = draft.materials!;
-  const expressive = materials.contractRevision === pawfectMaterialsRevision;
+  const expressive = materials.contractRevision === pawfectMaterialsRevision || isProductGalleryRevision(draft.template, materials.contractRevision);
   const displayedProducts = displayProducts(draft);
   const canonicalId = (id?: string) => id && (displayedProducts.some(product => product.id === id) ? id : draft.productDisplayGroups?.find(group => group.includes(id))?.[0] || id);
   const text = (id: string) => materials.textBindings.find(binding => binding.slotId === id && binding.locale === lang)?.text || '';
@@ -58,7 +60,7 @@ export function renderPawfectMaterialsPage(ctx: ThemeContext): string {
   if (page === 'catalog') body = `<section class="pg-section pg-page-heading" data-wr-hero><div class="wr-confirmed-hero-copy"><span class="pg-eyebrow" ${mark('catalog-eyebrow')}>${esc(text('catalog-eyebrow'))}</span><h1 ${mark('catalog-headline')}>${multiline(text('catalog-headline'))}</h1><p ${mark('catalog-description')}>${esc(text('catalog-description'))}</p></div></section>${catalog(displayedProducts)}${process()}${categories()}${faq()}`;
   if (page === 'detail') {
     const product = draft.products.find(product => product.id === options.productId);
-    body = product ? `<section class="pg-section pg-detail" data-wr-material-region="detail"><div>${photo('product-main', product.id, true).replace('<img ', '<img id="wr-detail-main-img" ')}</div><div>${route('catalog', `← ${ctx.ui.back}`, 'pg-text-link')}<h1>${esc(translateProduct(product).name)}</h1>${product.tagline ? `<p class="pg-chip">${esc(product.tagline)}</p>` : ''}${translateProduct(product).description ? `<p>${esc(translateProduct(product).description)}</p>` : ''}${product.sellingPoints?.length ? `<ul class="pg-checks">${product.sellingPoints.map(point => `<li>✓ ${esc(point)}</li>`).join('')}</ul>` : ''}${product.material || product.dimensions ? `<dl>${product.material ? `<dt>${esc(ctx.ui.material)}</dt><dd>${esc(product.material)}</dd>` : ''}${product.dimensions ? `<dt>${esc(ctx.ui.dimensions)}</dt><dd>${esc(product.dimensions)}</dd>` : ''}</dl>` : ''}${action('cta-button', product.id)}</div></section>${process()}` : `<section class="pg-section pg-page-heading"><h1>${esc(ctx.ui.noProducts)}</h1>${route('catalog', ctx.ui.catalog, 'pg-button')}</section>`;
+    body = product ? `<section class="pg-section pg-detail" data-wr-material-region="detail">${renderProductGallery(draft, options, product, `<div>${photo('product-main', product.id, true).replace('<img ', '<img id="wr-detail-main-img" ')}</div>`)}<div>${route('catalog', `← ${ctx.ui.back}`, 'pg-text-link')}<h1>${esc(translateProduct(product).name)}</h1>${product.tagline ? `<p class="pg-chip">${esc(product.tagline)}</p>` : ''}${translateProduct(product).description ? `<p>${esc(translateProduct(product).description)}</p>` : ''}${product.sellingPoints?.length ? `<ul class="pg-checks">${product.sellingPoints.map(point => `<li>✓ ${esc(point)}</li>`).join('')}</ul>` : ''}${product.material || product.dimensions ? `<dl>${product.material ? `<dt>${esc(ctx.ui.material)}</dt><dd>${esc(product.material)}</dd>` : ''}${product.dimensions ? `<dt>${esc(ctx.ui.dimensions)}</dt><dd>${esc(product.dimensions)}</dd>` : ''}</dl>` : ''}${action('cta-button', product.id)}</div></section>${process()}` : `<section class="pg-section pg-page-heading"><h1>${esc(ctx.ui.noProducts)}</h1>${route('catalog', ctx.ui.catalog, 'pg-button')}</section>`;
   }
   if (page === 'about') {
     const companyAbout = text('company-about') || draft.company.description;

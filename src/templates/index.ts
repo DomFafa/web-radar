@@ -1,9 +1,10 @@
+import {withLegacyAboutCollectionCaption} from './legacy-about-collection';
 import { auravellPages } from '../shared/auravell-pages';
 import { renderAuravellSite } from './themes/auravell';
 import { renderCareflowSite } from './themes/careflowHealthcare';
 import { renderLumiSite } from './themes/lumiBusiness';
 import { lumiPages } from '../shared/lumi-pages';
-import { isProductNativeMaterials } from '../shared/product-native-materials';
+import { isProductNativeMaterials, isProductGalleryRevision } from '../shared/product-native-materials';
 import { renderProductNativeSite } from './product-native';
 import { withProductNativeRuntime } from './product-native-runtime';
 import { renderGoodBoyPage, goodBoyStyles, goodBoyRuntime } from './themes/goodBoyPals';
@@ -65,6 +66,9 @@ import { materialsRuntime } from '../shared/materials-runtime';
 import { withProductImageViewer } from '../shared/product-image-viewer';
 import { isTypedMaterials, isTypedMaterialsSource,isModernAboutSource, renderTypedMaterialsSite } from './materials-typed';
 import { parseAboutHighlights, getAboutStoryParagraphs, getAboutHeadline } from './themes/aboutHelper';
+import { withProductGalleryRuntime } from './product-native-gallery';
+import { withProductAboutCollectionMobileImage } from './product-about-mobile';
+import { withStaticProductDetail } from './product-detail-motion';
 export { labels };
 export interface RenderOptions {
   projectId: string;
@@ -105,14 +109,15 @@ function segment(id: string): string {
 }
 const productPath = (id?: string) => `products/${segment(id || '')}/index.html`;
 export function renderSite(draft: Draft, options: RenderOptions): string {
+  const materialsRevision = draft.materials?.contractRevision;
   draft = materialsDraftForRenderer(draft);
   if (!isTypedMaterialsSource(draft)) draft = singleProductDraft(draft);
   if (isSingleProductTemplate(draft.template) && draft.products.length) options = { ...options, productId: (draft.products.find(p => p.id === draft.primaryProductId) ?? draft.products[0]).id };
   const released = renderReleasedMaterials(draft, options);
-  if (released !== undefined) return withTemplateBrandColor(released, draft);
-  const html = withTemplateBrandColor(renderSiteContent(draft, options), draft);
-  if (options.page !== 'detail' || html.includes('id="wr-product-image-viewer-script"')) return html;
-  return withProductImageViewer(html);
+  if (released !== undefined) return withLegacyAboutCollectionCaption(withTemplateBrandColor(released, draft), draft.template, materialsRevision, options.page);
+  const html = withProductAboutCollectionMobileImage(withProductGalleryRuntime(withTemplateBrandColor(renderSiteContent(draft, options), draft), draft, options), draft, options);
+  const result = options.page === 'detail' && !html.includes('id="wr-product-image-viewer-script"') ? withProductImageViewer(html) : html;
+  return withStaticProductDetail(result, draft, options);
 }
 function renderSiteContent(draft: Draft, options: RenderOptions): string {
   const effectiveProductId = options.productId || draft.primaryProductId || draft.products[0]?.id;
@@ -393,7 +398,7 @@ function renderSiteHtml(draft: Draft, options: RenderOptions): string {
     const ctx = buildThemeContext(draft, options);
     if (isPawfectMaterials(draft)) {
       const seo = materialsSeo(draft, options)!;
-      const expressive = draft.materials!.contractRevision === pawfectMaterialsRevision;
+      const expressive = draft.materials!.contractRevision === pawfectMaterialsRevision || isProductGalleryRevision(draft.template, draft.materials?.contractRevision);
       const motionHead = expressive ? `<script>${pawfectMotionPrepareSource}</script>` : '';
       const motionBody = expressive ? `<script>${pawfectMotionSource}</script>` : '';
       const productOrder = expressive ? ` data-pawfect-product-order="${Math.max(0, draft.products.findIndex(product => product.id === options.productId))}"` : '';

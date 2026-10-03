@@ -12,7 +12,7 @@ import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import { TEMPLATES } from '../src/client/TemplateSelector';
 import { isActiveTemplate } from '../src/shared/template-availability';
-import { getMaterialsTemplate } from '../src/templates/materials';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { authenticate, mintSession } from '../src/worker/auth';
 import { testPrincipal } from '../src/worker/product-radar';
 import { testDb } from './helpers/db';
@@ -48,7 +48,7 @@ describe('versioned internal template documents', () => {
   it('requires a matching confirmed-materials contract for every registered template', () => {
     for (const template of TEMPLATES) {
       const guide = templateGuides.find(guide => guide.templateId === template.id)!;
-      expect(getMaterialsTemplate(template.id), template.id).toMatchObject({
+      expect(currentMaterialsTemplate(template.id), template.id).toMatchObject({
         templateId: template.id,
         guideRevision: guide.revision,
         materialsReady: true,
@@ -76,7 +76,7 @@ describe('versioned internal template documents', () => {
     (guide) => {
       expect(guideSchema.safeParse(guide).success).toBe(true);
       const summary = templateMediaRequirements[guide.templateId]!;
-      expect(guide.revision).toBe(isActiveTemplate(guide.templateId) ? '2026-10-02.1' : ['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.2':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
+      expect(guide.revision).toBe(isActiveTemplate(guide.templateId) ? '2026-10-03.3' : ['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.2':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
       const [, width, height] = summary.bannerSize.match(/^(\d+)\s*×\s*(\d+)/)!;
       expect(guide.assets.find(asset => asset.id === (['careflow-healthcare', 'auravell'].includes(guide.templateId)?'home-hero':'hero-image'))!.dimensions).toEqual({ width: Number(width), height: Number(height) });
       expect(guide.inventory.bundledVideoCount).toBe(summary.videos);

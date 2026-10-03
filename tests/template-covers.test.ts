@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { getMaterialsTemplate } from '../src/templates/materials';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { availableMaterialsTemplateReleases } from '../src/templates/materials-releases';
 import { templateGuides } from '../src/worker/template-guides/catalog';
 import { templateCovers } from '../src/worker/template-guides/covers';
@@ -32,7 +32,7 @@ describe('versioned template covers', () => {
 
   it('ships JPEGs matching their content hash, dimensions and current contract', () => {
     for (const [id, cover] of Object.entries(templateCovers)) {
-      expect(cover.contractRevision, id).toBe(getMaterialsTemplate(id)?.contractRevision);
+      expect(cover.contractRevision, id).toBe(currentMaterialsTemplate(id)?.contractRevision);
       expect(cover.url, id).toBe(`/templates/previews/${id}.${cover.sha256.slice(0, 16)}.jpg`);
       const bytes = readFileSync(resolve('public', `.${cover.url}`));
       expect(createHash('sha256').update(bytes).digest('hex'), id).toBe(cover.sha256);

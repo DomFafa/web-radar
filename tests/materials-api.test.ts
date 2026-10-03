@@ -18,7 +18,7 @@ describe('materials guide account boundary',()=>{
     const catalog=await get('materials/catalog');expect(catalog.status).toBe(200);
     const entries=(await catalog.json()as any).templates;
     expect(entries.filter((t:any)=>t.materialsReady).map((t:any)=>t.templateId).sort()).toEqual(['auravell', 'careflow-healthcare', 'lumi-business', 'mello-coffee', 'pawfect-groom', 'senseng-candy', 'senseng-nature', 'senseng-video', 'toorun-early-learning']);
-    expect(entries.every((t:any)=>t.contractRevision===`2026-10-02.${t.templateId}-materials.${t.templateId==='pawfect-groom'?3:1}`&&t.guideRevision==='2026-10-02.1')).toBe(true);
+    expect(entries.every((t:any)=>t.contractRevision===`2026-10-03.${t.templateId}-materials.5`&&t.guideRevision==='2026-10-03.3')).toBe(true);
     const req=await get('materials/juno-toys');expect(req.status).toBe(200);
     const p=await get('materials/juno-toys/preview?page=contact');expect(p.status).toBe(200);const b:any=await p.json();expect(/^<!doctype html>/i.test(b.html)).toBe(true);expect(b.html).toContain(' disabled');expect(b.assetBaseUrl).toBe('https://web-radar.net');
   });
@@ -60,7 +60,7 @@ describe('materials guide account boundary',()=>{
     expect((await requirements.json()as any).imagePolicy).toBe('typed-regions-v1');
     for(const page of ['home','catalog','detail','about','contact']){
       const response=await get(`materials/${id}/preview?page=${page}`);expect(response.status,`${id}:${page}`).toBe(200);
-      const body=await response.json()as any;expect(body.demo).toBe(true);expect(body.html.includes(id==='auravell'?'Auravell':id==='careflow-healthcare'?'Careflow':id==='toorun-early-learning'?'Toorun Early Learning':id==='pawfect-groom'?'Pawfect Groom':id==='lumi-business'?'Lumi':id==='papernote'?'PaperNote':id==='mello-coffee'?'Mello Coffee':id==='good-boy-pals'?'Good Boy Supply Co.':id.startsWith('single-')?({'single-device-showcase':'FORM / 01','single-artisan-craft':'ATELIER / ONE','single-wellness-nordic':'STILL / STUDIO'} as Record<string,string>)[id]:'Example Brand')).toBe(true);
+      const body=await response.json()as any;expect(body.demo).toBe(true);expect(body.html.includes(id==='pawfect-groom'?'Little Characters':['auravell','careflow-healthcare','toorun-early-learning','lumi-business','mello-coffee'].includes(id)?'Example Brand':id==='papernote'?'PaperNote':id==='good-boy-pals'?'Good Boy Supply Co.':id.startsWith('single-')?({'single-device-showcase':'FORM / 01','single-artisan-craft':'ATELIER / ONE','single-wellness-nordic':'STILL / STUDIO'} as Record<string,string>)[id]:'Example Brand')).toBe(true);
       if(page==='contact')expect(body.html.includes(' disabled')).toBe(true);
     }
   });

@@ -19,7 +19,7 @@ try {
   await build({
     stdin: { contents: [
       "export { TEMPLATES } from './src/client/TemplateSelector';",
-      "export { getMaterialsTemplate } from './src/templates/materials';",
+      "export { currentMaterialsTemplate as getMaterialsTemplate } from './src/worker/template-guides/current-materials';",
       "export { renderSite } from './src/templates';",
       "export { defaultDraft } from './src/worker/domain';",
       "export { materialsDemoDraft } from './src/worker/template-guides/materials-demo';",

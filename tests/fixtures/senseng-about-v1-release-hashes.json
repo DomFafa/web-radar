@@ -1,0 +1,35 @@
+{
+  "senseng-candy": {
+    "contract": "161df12d59327bb412ebc79eeb312657a3bdea1286d958bdee1c7dab62bb08b6",
+    "runtime": "8a8567f6a08eb7c4045f659d547400c1cc305890c94cac44d906d040800e09cb",
+    "pages": {
+      "home": "6139bfe17a221ea3babf2920d64ccfc7220124ebbf82e80c82e196434c279462",
+      "catalog": "9d55c475046ea5ef52ea6a7ca3dc1389bf8566ef03cf760dee5ec6551b6b5a94",
+      "detail": "cee671d6f1d0b759a2380a4abb3071f3332ac5f0793424e3035d17aa5fbab2cd",
+      "about": "3d80d1b1155a05861b38835394d0df9f8a47e4c4c9b5fd4043e101e0557028d1",
+      "contact": "6700bedfa97d857b9716169331237932f63b8d3b77ff656dfa2682c9699c08c3"
+    }
+  },
+  "senseng-video": {
+    "contract": "d672f5ea2790b8e7540072286f1290576fedc33e76380d22b862a3a6aac08225",
+    "runtime": "8a8567f6a08eb7c4045f659d547400c1cc305890c94cac44d906d040800e09cb",
+    "pages": {
+      "home": "4ebc6c3bbb0cfda353ddbe6ed8507b5c2fbe0b5fd4a116c3d4b24d86b720ac11",
+      "catalog": "d6bedcf8c17c36faeed16b7a882b98129e470785d9d16a92d3ec97a63669d099",
+      "detail": "57eca77bd8a7b524d89e4c9ad07cb0cf99aaa35d9950bce54250308916f08950",
+      "about": "4022d005f117c3fb9d19ae1e962040bf3030f484d13e6aa666d35105a1698594",
+      "contact": "a38e5a6a599b2de840b1a90aaae54cfb3d186eb4f1aef0edc816f70329bfc770"
+    }
+  },
+  "senseng-nature": {
+    "contract": "3a2a958e0ea90316f92bef547a102978e0e9a965e4511740907a73149741582b",
+    "runtime": "8a8567f6a08eb7c4045f659d547400c1cc305890c94cac44d906d040800e09cb",
+    "pages": {
+      "home": "95665f2d69333bc19f88668076930824b871fefe243d37ef524fd5e6f766b985",
+      "catalog": "a95b1b534c3e75b2d8ecb71764b8b9731b76b4de0a25c87dd70ac85502c24b31",
+      "detail": "a3ae3a0f5eb88d9970455848b6d419201c2b4c912aa24e415ff07c2f8b276e8b",
+      "about": "c00b4ee0efec36bfad956a553996d39401e6fb25697c0a5996c4a28ebd5e2fdf",
+      "contact": "80abf3269d1c404418a77e96f493f726fedc736e71e5241104e22846318d4d37"
+    }
+  }
+}
