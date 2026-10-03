@@ -3,7 +3,7 @@ import { EmailPreview } from "../components/EmailPreview";
 import React, { useState, useEffect } from "react";
 import { marked } from "marked";
 import { templatesApi } from "../lib/api";
-import { useToast } from "../App";
+import { useAuth, useToast } from "../App";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 
 import ReactQuill from "react-quill-new";
@@ -11,11 +11,7 @@ import { sessionHeaders } from "../../../client/api";
 import { useRef, useMemo } from "react";
 
 const BUILT_IN_CATEGORIES = ["产品资讯", "产品推广", "活动邀请", "客户跟进", "节日促销", "交易通知", "欢迎与留存"];
-const CATEGORY_LABELS: Record<string, string> = {
-  "产品资讯": "Newsletter", "产品推广": "Sell products", "活动邀请": "Invite to event",
-  "客户跟进": "Follow-up", "节日促销": "Seasonal campaigns", "交易通知": "Transactional", "欢迎与留存": "Onboarding & retention",
-};
-export const TEMPLATE_NAME_LABELS: Record<string, string> = {
+const TEMPLATE_ENGLISH_NAMES: Record<string, string> = {
   "欢迎介绍": "Welcome introduction", "品牌故事": "Brand story", "团队介绍": "Meet the team", "服务概览": "Service overview", "资源分享": "Resource share", "客户案例": "Customer story", "功能更新": "Feature update", "行业洞察": "Industry insights", "感谢关注": "Thank you for your interest", "简单通知": "Simple announcement",
   "月度简报": "Monthly digest", "行业报告": "Industry report", "内容精选": "Curated content", "产品周刊": "Product weekly", "数据洞察": "Data insights", "专家观点": "Expert perspective", "趋势速递": "Trend update", "团队通讯": "Team newsletter", "阅读清单": "Reading list", "知识专栏": "Knowledge column",
   "新品发布": "New product launch", "产品亮点": "Product highlights", "限时优惠": "Limited-time offer", "产品对比": "Product comparison", "功能上新": "New features", "套餐推荐": "Plan recommendation", "试用邀请": "Free trial invitation", "客户评价": "Customer reviews", "回购提醒": "Buy again", "升级通知": "Upgrade announcement",
@@ -25,6 +21,8 @@ export const TEMPLATE_NAME_LABELS: Record<string, string> = {
   "订单确认": "Order confirmation", "付款成功": "Payment successful", "发货通知": "Shipping notification", "配送更新": "Delivery update", "订单完成": "Order complete", "退款通知": "Refund notification", "发票发送": "Invoice delivery", "账户安全": "Account security", "密码重置": "Password reset", "服务到期": "Service expiry",
   "里程碑": "Milestone", "会员生日": "Member birthday", "欢迎加入": "Welcome aboard", "注册成功": "Registration success", "首次使用": "Getting started", "新手指南": "Getting started guide", "功能教学": "Feature tutorial", "使用提醒": "Usage reminder", "回归欢迎": "Welcome back", "满意度回访": "Satisfaction check-in",
 };
+export const TEMPLATE_NAME_LABELS: Record<string, string> = Object.fromEntries(Object.entries(TEMPLATE_ENGLISH_NAMES).flatMap(([chinese, english]) => [[chinese, chinese], [english, chinese]]));
+const isBuiltInTemplate = (template: any) => template.isBuiltIn === true || template.bodyHtml?.includes("data-growthos-template='en-v2'") || template.bodyHtml?.includes("data-growthos-template='en-v3'");
 
 interface ParsedTemplate {
   prefix: string;
@@ -96,15 +94,21 @@ function preserveButtonStyles(html: string): string {
   });
 }
 
-export function TemplatesPage({ editTemplate, onSaved, onClose }: {
+export function TemplatesPage({ editTemplate, createInline = false, onSaved, onClose }: {
   editTemplate?: any;
+  createInline?: boolean;
   onSaved?: (template: any) => void;
   onClose?: () => void;
 } = {}) {
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const writable = !!user && ['admin', 'member'].includes(user.role);
+  const inline = !!editTemplate || createInline;
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(createInline && writable);
+  const [saving, setSaving] = useState(false);
+  const saveLock = useRef(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -182,8 +186,10 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
   const [showAiOptions, setShowAiOptions] = useState(false);
 
   useEffect(() => {
-    if (editTemplate) handleEdit(editTemplate);
-    else loadTemplates();
+    if (editTemplate && writable) {
+      if (isBuiltInTemplate(editTemplate)) customizeBuiltInTemplate(editTemplate);
+      else handleEdit(editTemplate);
+    } else if (!createInline) loadTemplates();
   }, []);
 
   useEffect(() => {
@@ -216,6 +222,9 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!writable || saveLock.current) return;
+    saveLock.current = true;
+    setSaving(true);
     try {
       let finalBodyHtml = form.bodyHtml;
 
@@ -242,8 +251,9 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
         addToast("success", "模板已更新");
         onSaved?.({ ...editTemplate, ...payload, id: editingId });
       } else {
-        await templatesApi.create(payload);
+        const result = await templatesApi.create(payload);
         addToast("success", "模板已创建");
+        onSaved?.({ ...payload, ...result.data });
       }
       setShowModal(false);
       setEditingId(null);
@@ -251,11 +261,11 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
       setWrapperPrefix("");
       setWrapperSuffix("");
       setForm({ name: "", subject: "", bodyHtml: "", bodyText: "", category: "" });
-      if (editTemplate) onClose?.();
+      if (inline) onClose?.();
       else void loadTemplates(false);
     } catch (err: any) {
       addToast("error", err.message);
-    }
+    } finally { saveLock.current = false; setSaving(false); }
   };
 
   const handleEdit = (template: any) => {
@@ -295,7 +305,7 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
     setWrapperPrefix(parsed.prefix);
     setWrapperSuffix(parsed.suffix);
     setForm({
-      name: `${TEMPLATE_NAME_LABELS[template.name] || template.name} - Custom`,
+      name: `${TEMPLATE_NAME_LABELS[template.name] || template.name} - 我的版本`,
       subject: template.subject,
       bodyHtml: parsed.body,
       bodyText: template.bodyText || "",
@@ -364,28 +374,24 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
   };
 
   const categories = ["全部", ...BUILT_IN_CATEGORIES];
-  const isBuiltInTemplate = (tpl: any) =>
-    tpl.isBuiltIn === true ||
-    tpl.bodyHtml?.includes("data-growthos-template='en-v2'") ||
-    tpl.bodyHtml?.includes("data-growthos-template='en-v3'");
   const matchesFilter = (tpl: any) => {
     const categoryMatches = activeCategory === "全部" || tpl.category === activeCategory;
     const query = searchTerm.trim().toLowerCase();
-    return categoryMatches && (!query || `${tpl.name} ${tpl.subject}`.toLowerCase().includes(query));
+    return categoryMatches && (!query || `${tpl.name} ${TEMPLATE_NAME_LABELS[tpl.name] || ""} ${tpl.subject}`.toLowerCase().includes(query));
   };
   const builtInTemplates = templates.filter((tpl) => isBuiltInTemplate(tpl) && matchesFilter(tpl));
   const userTemplates = templates.filter((tpl) => !isBuiltInTemplate(tpl) && matchesFilter(tpl));
 
   return (
     <>
-      {!editTemplate && <>
+      {!inline && <>
       <div className="page-header">
         <div className="page-header-actions">
           <div>
             <h2>邮件模板</h2>
             <p>创建和管理你的邮件内容模板</p>
           </div>
-          <button
+          {writable && <button
             className="btn btn-primary"
             onClick={() => {
               setEditingId(null);
@@ -397,7 +403,7 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
             }}
           >
             ➕ 新建模板
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -422,13 +428,13 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
               <input className="form-input template-search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索模板名称或主题" />
               {activeTab === "builtin" && <div className="flex gap-sm template-category-filters">
                 {categories.map((category) => (
-                  <button key={category} className={`btn btn-sm ${activeCategory === category ? "btn-primary" : "btn-secondary"}`} onClick={() => setActiveCategory(category)}>{category === "全部" ? "All" : CATEGORY_LABELS[category] || category}</button>
+                  <button key={category} className={`btn btn-sm ${activeCategory === category ? "btn-primary" : "btn-secondary"}`} onClick={() => setActiveCategory(category)}>{category}</button>
                 ))}
               </div>}
             </div>
             {activeTab === "builtin" && <>
             <div className="template-section-heading">
-              <h3>{activeCategory === "全部" ? "All" : CATEGORY_LABELS[activeCategory] || activeCategory}</h3>
+              <h3>{activeCategory}场景</h3>
               <span>{builtInTemplates.length} 个模板</span>
             </div>
             <div className="template-grid template-grid-built-in">
@@ -437,7 +443,7 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
                   <div className="template-card-preview"><EmailPreview html={tpl.bodyHtml} height={160}/></div>
                   <h3 className="card-title">{TEMPLATE_NAME_LABELS[tpl.name] || tpl.name}</h3>
                   <p className="template-card-subject">{tpl.subject}</p>
-                  <div className="flex gap-sm"><button className="btn btn-secondary btn-sm" onClick={() => setShowPreview(tpl.id)}>预览</button><button className="btn btn-primary btn-sm" onClick={() => customizeBuiltInTemplate(tpl)}>编辑并保存</button></div>
+                  <div className="flex gap-sm"><button className="btn btn-secondary btn-sm" onClick={() => setShowPreview(tpl.id)}>预览邮件</button>{writable && <button className="btn btn-primary btn-sm" onClick={() => customizeBuiltInTemplate(tpl)}>使用此模板</button>}</div>
                 </div>
               ))}
             </div>
@@ -454,14 +460,9 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
                   <h3 className="card-title template-user-title">{tpl.name}</h3>
                   <div className="flex gap-sm">
                     <button className="btn btn-ghost btn-sm" onClick={() => setShowPreview(tpl.id)}>
-                      👁️
+                      预览
                     </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(tpl)}>
-                      ✏️
-                    </button>
-                    <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(tpl.id)}>
-                      🗑️
-                    </button>
+                    {writable && <><button className="btn btn-ghost btn-sm" onClick={() => handleEdit(tpl)}>编辑</button><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(tpl.id)}>删除</button></>}
                   </div>
                 </div>
                 <div className="template-user-subject">
@@ -489,7 +490,7 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
 
       {/* Template Editor Modal */}
       </>}
-      {showModal && (
+      {showModal && writable && (
         <div className="modal-overlay">
           <div className="modal template-editor-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -642,8 +643,8 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
                 <button type="button" className="btn btn-secondary" onClick={() => { setShowModal(false); onClose?.(); }}>
                   取消
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={editorBlockedTerms.length > 0}>
-                  {editingId ? "保存修改" : "创建模板"}
+                <button type="submit" className="btn btn-primary" disabled={saving || generating || editorBlockedTerms.length > 0}>
+                  {saving ? '正在保存…' : inline ? '保存并使用' : editingId ? "保存修改" : "创建模板"}
                 </button>
               </div>
             </form>
@@ -670,12 +671,7 @@ export function TemplatesPage({ editTemplate, onSaved, onClose }: {
                       <p style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{tpl.subject}</p>
                     </div>
                     <div className="template-email-canvas"><EmailPreview html={tpl.bodyHtml}/></div>
-                    <div className="template-preview-footer">
-                      <p>Copyright © {new Date().getFullYear()} Your Company. All rights reserved.</p>
-                      <p>You are receiving this email because you opted in via our website.</p>
-                      <p>Our mailing address is: Your Company</p>
-                      <p><a href="#">Update preferences</a><a href="#">Unsubscribe</a></p>
-                    </div>
+                    <div className="template-preview-footer"><p>发送前请检查主题、公司资料、图片及链接。正文中的变量会按联系人资料替换。</p>{writable && <button className="btn btn-primary" onClick={() => { setShowPreview(null); if (isBuiltInTemplate(tpl)) customizeBuiltInTemplate(tpl); else handleEdit(tpl); }}>{isBuiltInTemplate(tpl) ? '使用此模板' : '编辑这封邮件'}</button>}</div>
                   </>
                 );
               })()}

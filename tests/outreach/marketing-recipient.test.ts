@@ -9,7 +9,7 @@ vi.mock('../../src/outreach/server/lib/network', () => ({
 }));
 import { handleEmailQueue, type EmailSendMessage } from '../../src/outreach/server/queues/email-send.queue';
 
-test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplicate'])('Marketing delivery preserves recipient safety: %s', async (mode) => {
+test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplicate', 'confirmed snapshot', 'different personalized content', 'different variable values'])('Marketing delivery preserves recipient safety: %s', async (mode) => {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec(readFileSync('migrations/0007_outreach.sql', 'utf8'));
   sqlite.exec(readFileSync('migrations/0011_customer_inbox.sql','utf8'));
@@ -44,6 +44,19 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
       body: { recipientId: `recipient-${name}`, campaignId: 'campaign', providerId: 'provider', toEmail: `${name}@example.com`, toName: 'Test', fromEmail: 'from@example.com', fromName: 'Test', replyTo: null, subject: 'Hello', bodyHtml: '<p>Hello</p>', bodyText: 'Hello', variables: {} } satisfies EmailSendMessage,
       ack: vi.fn(), retry: vi.fn(),
     }));
+    if (mode === 'confirmed snapshot') {
+      sqlite.exec("UPDATE edm_templates SET subject='Edited after confirmation',body_html='<p>Unapproved content</p>',body_text='Unapproved plain text'; UPDATE edm_campaigns SET sender_name='Changed sender',sender_email='changed@example.com',reply_to='changed-reply@example.com'");
+    }
+    if (mode === 'different personalized content' || mode === 'different variable values') {
+      sqlite.exec("UPDATE edm_contacts SET subscription_status='subscribed'");
+      if (mode === 'different personalized content') messages[1].body.bodyHtml = '<p>Different confirmed content for this customer</p>';
+      else messages.forEach((message, index) => { message.body.subject = 'Hello {{name}}'; message.body.variables = { name: index === 0 ? 'Alice' : 'Bob' }; });
+      await handleEmailQueue({ messages }, env);
+      expect(network).not.toHaveBeenCalled();
+      expect(sqlite.prepare('SELECT total_sent,status FROM edm_campaigns').get()).toMatchObject({ total_sent: 0, status: 'failed' });
+      expect(sqlite.prepare('SELECT error_message FROM edm_campaign_recipients').get()?.error_message).toContain('逐封');
+      return;
+    }
     if (mode === 'split') {
       sqlite.exec("UPDATE edm_contacts SET subscription_status='subscribed'");
       await handleEmailQueue({ messages: [messages[0]] }, env);
@@ -78,6 +91,11 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
     expect(sqlite.prepare("SELECT status FROM edm_campaign_recipients WHERE id='recipient-subscribed'").get()?.status).toBe('sent');
     expect(sqlite.prepare("SELECT status,error_message FROM edm_campaign_recipients WHERE id='recipient-unsubscribed'").get()).toMatchObject({ status: 'failed', error_message: 'Contact unsubscribed' });
     expect(calls.find((call) => call.path.endsWith('/segments'))?.body.static_segment).toEqual(['subscribed@example.com']);
+    expect(calls.find((call) => call.path === '/3.0/campaigns')?.body.settings).toMatchObject({ subject_line: 'Hello', from_name: 'Test', reply_to: 'from@example.com' });
+    const content = calls.find((call) => call.path.endsWith('/content'))?.body;
+    expect(content).toMatchObject({ plain_text: 'Hello' });
+    expect(content.html).toContain('<p>Hello</p>');
+    expect(content.html).not.toContain('Unapproved');
     expect(calls.filter((call) => call.path.endsWith('/actions/send'))).toHaveLength(1);
     expect(calls.find((call) => call.path.includes('/members/'))?.path).toBe('/3.0/lists/audience/members/a94f73601a146ec566e131c7fb06d251');
     const callsAfterSending = network.mock.calls.length;
