@@ -16,6 +16,7 @@ export function DraftPreview({
   writable,
   onConfirm,
   onEdit,
+  onEditContent,
 }: {
   session: AssistantSession;
   options: AssistantOptions | null;
@@ -23,6 +24,7 @@ export function DraftPreview({
   writable: boolean;
   onConfirm: (siteAuthorized: boolean) => void;
   onEdit: () => void;
+  onEditContent?: (channel: AssistantChannel) => void;
 }) {
   const [authorized, setAuthorized] = useState(false);
   const email = session.pendingChannels.includes('email');
@@ -37,7 +39,7 @@ export function DraftPreview({
   return (
     <section className="wr-lazy-card wr-lazy-review" aria-label="发送前预览">
       <span className="wr-lazy-eyebrow">内容与对象</span>
-      <h2>{incomplete ? '内容已准备，继续完善这次任务' : '发送前，最后看一眼'}</h2>
+      <h2>{incomplete ? '这次发送还没准备好' : '发送前，最后看一眼'}</h2>
       <p>
         {incomplete
           ? '补齐下面的信息，就可以预览并确认。内容也能继续在聊天里调整。'
@@ -85,7 +87,14 @@ export function DraftPreview({
         </dl>
         {email && (
           <>
-            <h3>EDM 邮件 · {count} 位客户</h3>
+            <div className="wr-lazy-result-heading">
+              <h3>EDM 邮件 · {count} 位客户</h3>
+              {writable && onEditContent && (
+                <Button kind="quiet" disabled={busy} onClick={() => onEditContent('email')}>
+                  修改邮件或换模板
+                </Button>
+              )}
+            </div>
             <details>
               <summary>查看本次收件名单</summary>
               <div className="wr-lazy-contact-list">
@@ -110,7 +119,14 @@ export function DraftPreview({
         )}
         {site && (
           <>
-            <h3>网站留言 · {sites} 个网站</h3>
+            <div className="wr-lazy-result-heading">
+              <h3>网站留言 · {sites} 个网站</h3>
+              {writable && onEditContent && (
+                <Button kind="quiet" disabled={busy} onClick={() => onEditContent('site')}>
+                  修改网站留言
+                </Button>
+              )}
+            </div>
             <details>
               <summary>查看目标网站</summary>
               <div className="wr-lazy-contact-list">

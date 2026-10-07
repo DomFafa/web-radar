@@ -1,21 +1,23 @@
 export type AssistantChannel = 'email' | 'site';
+export type AssistantDraftingStatus = 'ready' | 'needs_facts';
 export interface AssistantDraft {
   channels: AssistantChannel[];
   brief: string;
   language: 'en' | 'zh';
   sender: { name: string; email: string; company: string; phone: string; address: string; country: string; city: string };
   email: { subject: string; bodyHtml: string; bodyText: string; contactIds: string[]; groupId: string; tag: string;
-    replyTo: string; replyTracking: boolean; sendRate: number };
+    replyTo: string; replyTracking: boolean; sendRate: number; templateId?: string };
   site: { subject: string; message: string; targets: string[]; replyTracking: boolean };
 }
 export type AssistantDraftPatch = Partial<Omit<AssistantDraft, 'sender' | 'email' | 'site'>> & {
-  sender?: Partial<AssistantDraft['sender']>; email?: Partial<AssistantDraft['email']>; site?: Partial<AssistantDraft['site']>;
+  sender?: Partial<AssistantDraft['sender']>; email?: Partial<Omit<AssistantDraft['email'], 'templateId'>>; site?: Partial<AssistantDraft['site']>;
 };
 export interface AssistantField {
   key: string; label: string; type: 'text' | 'email' | 'contacts' | 'websites' | 'content' | 'channels';
   channel?: AssistantChannel;
 }
-export interface AssistantMessage { id: string; role: 'user' | 'assistant'; content: string; createdAt: string }
+export interface AssistantMessage { id: string; role: 'user' | 'assistant'; content: string; createdAt: string;
+  draftingStatus?: AssistantDraftingStatus; draftingChannels?: AssistantChannel[] }
 export interface AssistantRecipient { id: string; email: string; name: string; company: string; industry: string }
 export interface AssistantOperation {
   channel: AssistantChannel; taskId: string; name: string;
@@ -32,6 +34,7 @@ export interface AssistantSession {
   draft: AssistantDraft; messages: AssistantMessage[]; operations: AssistantOperation[];
   missingFields: AssistantField[]; preview: AssistantPreview; confirmationToken: string | null;
   pendingChannels: AssistantChannel[]; createdAt: string; updatedAt: string;
+  draftingStates?: Partial<Record<AssistantChannel, AssistantDraftingStatus>>;
 }
 export interface AssistantSessionSummary {
   id: string; title: string; version: number; status: AssistantSession['status'];

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../../client/components';
 import type {
+  AssistantChannel,
   AssistantDraft,
   AssistantDraftPatch,
   AssistantOptions,
   AssistantSession,
 } from '../../shared/assistant';
 import { normalizeSiteTargets } from '../../shared/site-targets';
-import { assistantApi } from './api';
+import { assistantApi, type AssistantMailTemplate } from './api';
+import { EmailPreview } from '../components/EmailPreview';
 import { DraftPreview } from './AssistantCards';
 import {
   firstIncompleteGuidanceStep,
@@ -18,7 +20,12 @@ import {
   type GuidanceStep,
 } from './guidance';
 
-type ContentSource = 'ai' | 'manual';
+export type ComposerContext = {
+  step: GuidanceStep;
+  source: 'ai' | 'template' | 'manual';
+  channel?: AssistantChannel;
+};
+type ContentSource = ComposerContext['source'];
 function applyLocal(current: AssistantDraft, patch: AssistantDraftPatch): AssistantDraft {
   return {
     ...current,
@@ -58,16 +65,10 @@ function stepSummary(step: GuidanceStep, draft: AssistantDraft, options: Assista
       return draft.sender.name;
     case 'senderEmail':
       return draft.sender.email;
-    case 'contentSource':
-      return draft.brief ? '已按你的要求准备内容' : '使用已填写的内容';
-    case 'emailSubject':
-      return draft.email.subject;
-    case 'emailBody':
-      return '邮件正文已准备，可在预览中查看';
-    case 'siteSubject':
-      return draft.site.subject || '不填写主题';
-    case 'siteBody':
-      return '网站留言已准备，可在预览中查看';
+    case 'emailContent':
+      return draft.email.subject || '邮件已准备';
+    case 'siteContent':
+      return draft.site.subject || '网站留言已准备';
     case 'review':
       return '发送前确认';
   }
@@ -80,7 +81,8 @@ export function GuidedDraft({
   storageKey,
   onRefreshOptions,
   onSave,
-  onGenerate,
+  onComposerContext,
+  onTemplate,
   onConfirm,
 }: {
   session: AssistantSession;
@@ -88,8 +90,12 @@ export function GuidedDraft({
   busy: boolean;
   storageKey: string;
   onRefreshOptions: () => Promise<AssistantOptions>;
-  onSave: (patch: AssistantDraftPatch) => Promise<AssistantSession | null>;
-  onGenerate: (message: string) => Promise<AssistantSession | null>;
+  onSave: (
+    patch: AssistantDraftPatch,
+    contentChannel?: AssistantChannel,
+  ) => Promise<AssistantSession | null>;
+  onComposerContext: (context: ComposerContext) => void;
+  onTemplate?: (templateId: string) => Promise<AssistantSession | null>;
   onConfirm: (authorized: boolean) => void;
 }) {
   const steps = guidanceSteps(session.pendingChannels);
@@ -124,13 +130,13 @@ export function GuidedDraft({
   const scopedDraft = { ...session.draft, channels: session.pendingChannels };
   const [draft, setDraft] = useState<AssistantDraft>(restored?.draft || scopedDraft);
   const [step, setStep] = useState<GuidanceStep>(
-    restored?.step || firstIncompleteGuidanceStep(scopedDraft, options),
+    restored?.step || firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates),
   );
   const [dirty, setDirty] = useState<GuidanceStep[]>(restored?.dirty || []);
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
   const [source, setSource] = useState<ContentSource>(
-    restored?.source || (options?.aiConfigured ? 'ai' : 'manual'),
+    restored?.source || (options?.aiConfigured === false ? 'manual' : 'ai'),
   );
   const [audienceMethod, setAudienceMethod] = useState(
     draft.email.tag ? 'tag' : draft.email.contactIds.length ? 'contacts' : 'group',
@@ -140,12 +146,69 @@ export function GuidedDraft({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [htmlMode, setHtmlMode] = useState(false);
+  const [templates, setTemplates] = useState<AssistantMailTemplate[] | null>(null);
+  const [templateType, setTemplateType] = useState<'builtin' | 'mine'>('builtin');
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [templateLoading, setTemplateLoading] = useState(false);
+  const contentChannel: AssistantChannel | undefined =
+    step === 'emailContent' ? 'email' : step === 'siteContent' ? 'site' : undefined;
+  const contentReady =
+    !!contentChannel && !validateGuidanceStep(step, draft, options, session.draftingStates);
+  const showSavedContent = contentReady && (source === 'ai' || (source === 'template' && !!draft.email.templateId));
+  const lastMessageId = session.messages.at(-1)?.id;
+  const seenMessage = useRef(lastMessageId);
+  const selected = source === 'template' ? templates?.find((item) => item.id === selectedTemplate) : undefined;
+  const visibleTemplates =
+    templates?.filter((item) => (templateType === 'builtin' ? item.isBuiltIn : !item.isBuiltIn)) ||
+    [];
+
   const index = Math.max(0, steps.indexOf(step));
   const email = session.pendingChannels.includes('email');
   const site = session.pendingChannels.includes('site');
   const analysis = normalizeSiteTargets(draft.site.targets);
-  const reviewError = validateGuidanceStep('review', scopedDraft, options);
+  const reviewError = validateGuidanceStep('review', scopedDraft, options, session.draftingStates);
 
+  useEffect(() => {
+    onComposerContext({ step, source, channel: contentChannel });
+  }, [step, source, contentChannel, onComposerContext]);
+  useEffect(() => {
+    if (source !== 'template' || step !== 'emailContent' || templates) return;
+    let active = true;
+    setTemplateLoading(true);
+    assistantApi
+      .templates()
+      .then((items) => {
+        if (active) setTemplates(items);
+      })
+      .catch(() => {
+        if (active) setError('邮件模板暂时无法读取，请重新选择模板入口重试。');
+      })
+      .finally(() => {
+        if (active) setTemplateLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [source, step, templates]);
+  useEffect(() => {
+    const changed = seenMessage.current !== lastMessageId;
+    seenMessage.current = lastMessageId;
+    const message = session.messages.at(-1);
+    if (
+      changed &&
+      message?.draftingStatus === 'ready' &&
+      contentChannel &&
+      message.draftingChannels?.includes(contentChannel) &&
+      source === 'ai'
+    ) {
+      const remaining = dirtyRef.current.filter((item) => item !== step);
+      dirtyRef.current = remaining;
+      setDirty(remaining);
+      go(firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates));
+    } else if (step === 'review' && reviewError) {
+      go(firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates));
+    }
+  }, [session.version, lastMessageId]);
   useEffect(() => {
     setDraft((current) =>
       dirtyRef.current.reduce((next, item) => applyLocal(next, stepDraftPatch(item, current)), {
@@ -191,33 +254,21 @@ export function GuidedDraft({
   }
   function go(next: GuidanceStep) {
     setError('');
+    if (next !== step) setSelectedTemplate('');
+    if (next !== step && (next === 'emailContent' || next === 'siteContent')) {
+      setSource(
+        next === 'emailContent' && session.draft.email.templateId
+          ? 'template'
+          : options?.aiConfigured === false
+            ? 'manual'
+            : 'ai',
+      );
+    }
     setStep(next);
   }
-  async function next() {
-    if (busy) return;
-    const manualSource = step === 'contentSource' && source === 'manual';
-    const invalid = manualSource
-      ? null
-      : step === 'contentSource' && !draft.brief.trim()
-        ? '请说明这次要介绍的产品或服务，以及希望客户采取的行动。'
-        : validateGuidanceStep(step, draft, options);
-    if (invalid) {
-      setError(invalid);
-      return;
-    }
-    const saved = manualSource
-      ? dirty.includes(step)
-        ? await onSave({ brief: draft.brief })
-        : session
-      : step === 'contentSource'
-        ? await onGenerate(draft.brief.trim())
-        : await onSave(stepDraftPatch(step, draft));
-    if (!saved) return;
-    if (step === 'emailAudience' && !saved.preview.email.count) {
-      setError('当前名单没有可发送的联系人，请换一个名单或导入联系人。');
-      return;
-    }
-    const remaining = dirty.filter((item) => item !== step);
+  function accept(saved: AssistantSession) {
+    const remaining = dirtyRef.current.filter((item) => item !== step);
+    dirtyRef.current = remaining;
     setDirty(remaining);
     setDraft(
       remaining.reduce((value, item) => applyLocal(value, stepDraftPatch(item, draft)), {
@@ -225,7 +276,38 @@ export function GuidedDraft({
         channels: saved.pendingChannels,
       }),
     );
-    go(steps[index + 1]);
+    go(steps[index + 1] || 'review');
+  }
+  async function next() {
+    if (busy) return;
+    const invalid = validateGuidanceStep(
+      step,
+      draft,
+      options,
+      source === 'manual' && contentChannel ? {} : session.draftingStates,
+    );
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
+    const saved =
+      contentChannel &&
+      source !== 'manual' &&
+      session.draftingStates?.[contentChannel] === 'ready' &&
+      !dirty.includes(step)
+        ? session
+        : await onSave(stepDraftPatch(step, draft), contentChannel);
+    if (!saved) return;
+    if (step === 'emailAudience' && !saved.preview.email.count) {
+      setError('当前名单没有可发送的联系人，请换一个名单或导入联系人。');
+      return;
+    }
+    accept(saved);
+  }
+  async function useTemplate() {
+    if (!selectedTemplate || busy || !onTemplate) return;
+    const saved = await onTemplate(selectedTemplate);
+    if (saved) accept(saved);
   }
   const advancedContact = (
     <details className="wr-lazy-guided-advanced">
@@ -329,11 +411,13 @@ export function GuidedDraft({
             onConfirm={(authorized) => {
               if (!reviewError && !dirty.length) onConfirm(authorized);
             }}
+            onEditContent={(channel) => go(channel === 'email' ? 'emailContent' : 'siteContent')}
             onEdit={() =>
               go(
-                firstIncompleteGuidanceStep(scopedDraft, options) === 'review'
+                firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates) ===
+                  'review'
                   ? steps[0]
-                  : firstIncompleteGuidanceStep(scopedDraft, options),
+                  : firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates),
               )
             }
           />
@@ -549,107 +633,215 @@ export function GuidedDraft({
                 {advancedContact}
               </>
             )}
-            {step === 'contentSource' && (
+            {contentChannel && (
               <>
                 <div className="wr-lazy-pills" aria-label="内容来源">
                   <button
                     type="button"
+                    data-content-source="ai"
                     aria-pressed={source === 'ai'}
-                    disabled={!options?.aiConfigured}
-                    onClick={() => setSource('ai')}
+                    disabled={options?.aiConfigured === false}
+                    onClick={() => {
+                      setSource('ai');
+                      setSelectedTemplate('');
+                      setError('');
+                    }}
                   >
-                    让助手起草
+                    {contentChannel === 'email' ? '让助手写邮件' : '让助手写留言'}
                   </button>
+                  {contentChannel === 'email' && (
+                    <button
+                      type="button"
+                      data-content-source="template"
+                      aria-pressed={source === 'template'}
+                      onClick={() => {
+                        setSource('template');
+                        setError('');
+                      }}
+                    >
+                      选择邮件模板
+                    </button>
+                  )}
                   <button
                     type="button"
+                    data-content-source="manual"
                     aria-pressed={source === 'manual'}
-                    onClick={() => setSource('manual')}
+                    onClick={() => {
+                      setSource('manual');
+                      setSelectedTemplate('');
+                      setError('');
+                    }}
                   >
-                    自己填写
+                    {contentChannel === 'email' ? '自己填写邮件' : '自己填写留言'}
                   </button>
                 </div>
-                {source === 'ai' ? (
-                  <label className="wr-lazy-field">
-                    告诉助手这次想介绍什么
-                    <textarea
-                      aria-label="内容要求"
-                      rows={4}
-                      maxLength={12000}
-                      value={draft.brief}
-                      onChange={(event) => edit({ brief: event.target.value })}
-                      placeholder="例如：介绍我们的不锈钢水杯，邀请客户回复索取目录。请只填写真实资料。"
-                    />
-                    <small>复用现有文字服务起草；这一步不会发送。</small>
-                  </label>
-                ) : (
-                  <p>下一步分别填写主题和正文；已有内容会保留供你修改。</p>
+                {source === 'ai' && (
+                  <p className="wr-lazy-note">
+                    {session.draftingStates?.[contentChannel] === 'needs_facts'
+                      ? '助手还需要一些资料，请在下方对话框回答。补齐后会生成完整内容，接着展示发送前预览。'
+                      : contentReady
+                        ? '已保存的内容展示在下方。可以直接使用，或在对话框告诉助手要怎样修改。'
+                        : contentChannel === 'email'
+                          ? '在下方对话框告诉助手邮件目的和产品资料，助手会一起生成主题和正文，再展示完整预览。'
+                          : '在下方对话框告诉助手留言目的和产品资料，助手会生成完整留言，再展示发送前预览。'}
+                  </p>
+                )}
+                {source === 'template' && (
+                  <div className="wr-lazy-template-picker">
+                    <div className="wr-lazy-pills" aria-label="模板类型">
+                      <button
+                        type="button"
+                        aria-pressed={templateType === 'builtin'}
+                        onClick={() => {
+                          setTemplateType('builtin');
+                          setSelectedTemplate('');
+                        }}
+                      >
+                        内置模板
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={templateType === 'mine'}
+                        onClick={() => {
+                          setTemplateType('mine');
+                          setSelectedTemplate('');
+                        }}
+                      >
+                        我的模板
+                      </button>
+                    </div>
+                    <p className="wr-lazy-muted">
+                      选择后先查看邮件样式，使用模板后进入发送前预览。不会立即发送。
+                    </p>
+                    {templateLoading && <p role="status">正在读取邮件模板…</p>}
+                    {templates && !visibleTemplates.length && (
+                      <p>这里还没有模板，可以让助手代写或自己填写。</p>
+                    )}
+                    <div className="wr-lazy-template-list" aria-label="可选邮件模板">
+                      {visibleTemplates.map((item) => (
+                        <button
+                          type="button"
+                          key={item.id}
+                          data-template-id={item.id}
+                          aria-pressed={selectedTemplate === item.id}
+                          onClick={() => setSelectedTemplate(item.id)}
+                        >
+                          <strong>{item.name}</strong>
+                          <small>{item.category || '邮件模板'}</small>
+                          <span>{item.subject}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {selected && (
+                      <div className="wr-lazy-prepared-content" aria-label="所选模板预览">
+                        <h3>{selected.name}</h3>
+                        <p>
+                          <strong>邮件主题：</strong>
+                          {selected.subject}
+                        </p>
+                        <EmailPreview html={selected.bodyHtml} height={320} />
+                        <p className="wr-lazy-muted">
+                          姓名、公司等联系人变量会在发送时替换；请先确认模板内容适合本次邮件。
+                        </p>
+                        <Button
+                          type="button"
+                          kind="primary"
+                          disabled={busy}
+                          onClick={() => void useTemplate()}
+                        >
+                          使用这个模板，查看预览
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {source === 'manual' && (
+                  <>
+                    <p className="wr-lazy-muted">
+                      这里填写的就是客户收到的内容。保存后会展示完整预览。
+                    </p>
+                    <label className="wr-lazy-field">
+                      {contentChannel === 'email' ? '邮件主题' : '留言主题（选填）'}
+                      <input
+                        aria-label={contentChannel === 'email' ? '邮件主题' : '留言主题'}
+                        maxLength={500}
+                        value={
+                          contentChannel === 'email' ? draft.email.subject : draft.site.subject
+                        }
+                        onChange={(event) =>
+                          edit(
+                            contentChannel === 'email'
+                              ? { email: { subject: event.target.value } }
+                              : { site: { subject: event.target.value } },
+                          )
+                        }
+                      />
+                    </label>
+                    {contentChannel === 'email' ? (
+                      <>
+                        <label className="wr-lazy-field">
+                          邮件正文
+                          <textarea
+                            aria-label="邮件正文"
+                            rows={8}
+                            maxLength={htmlMode ? 50000 : 20000}
+                            value={htmlMode ? draft.email.bodyHtml : emailText(draft)}
+                            onChange={(event) =>
+                              edit({
+                                email: htmlMode
+                                  ? { bodyHtml: event.target.value, bodyText: '' }
+                                  : {
+                                      bodyText: event.target.value,
+                                      bodyHtml: textHtml(event.target.value),
+                                    },
+                              })
+                            }
+                          />
+                        </label>
+                        <details className="wr-lazy-guided-advanced">
+                          <summary>高级编辑</summary>
+                          <label className="wr-lazy-check">
+                            <input
+                              type="checkbox"
+                              checked={htmlMode}
+                              onChange={(event) => setHtmlMode(event.target.checked)}
+                            />
+                            <span>编辑 HTML 源码</span>
+                          </label>
+                        </details>
+                      </>
+                    ) : (
+                      <label className="wr-lazy-field">
+                        网站留言
+                        <textarea
+                          aria-label="网站留言"
+                          rows={8}
+                          maxLength={5000}
+                          value={draft.site.message}
+                          onChange={(event) => edit({ site: { message: event.target.value } })}
+                        />
+                        <small>同一任务使用这份留言，10–5000 个字符。</small>
+                      </label>
+                    )}
+                  </>
+                )}
+                {showSavedContent && !selected && (
+                  <div className="wr-lazy-prepared-content" aria-label="已保存的发送内容">
+                    <h3>{contentChannel === 'email' ? '已保存的邮件' : '已保存的网站留言'}</h3>
+                    <p>
+                      <strong>{contentChannel === 'email' ? '邮件主题：' : '留言主题：'}</strong>
+                      {contentChannel === 'email'
+                        ? draft.email.subject
+                        : draft.site.subject || '业务咨询'}
+                    </p>
+                    {contentChannel === 'email' ? (
+                      <EmailPreview html={draft.email.bodyHtml} height={260} />
+                    ) : (
+                      <div className="wr-lazy-preview-message">{draft.site.message}</div>
+                    )}
+                  </div>
                 )}
               </>
-            )}
-            {(step === 'emailSubject' || step === 'siteSubject') && (
-              <label className="wr-lazy-field">
-                {step === 'emailSubject' ? '邮件主题' : '留言主题（选填）'}
-                <input
-                  aria-label={step === 'emailSubject' ? '邮件主题' : '留言主题'}
-                  maxLength={500}
-                  value={step === 'emailSubject' ? draft.email.subject : draft.site.subject}
-                  onChange={(event) =>
-                    edit(
-                      step === 'emailSubject'
-                        ? { email: { subject: event.target.value } }
-                        : { site: { subject: event.target.value } },
-                    )
-                  }
-                />
-              </label>
-            )}
-            {step === 'emailBody' && (
-              <>
-                <label className="wr-lazy-field">
-                  邮件正文
-                  <textarea
-                    aria-label="邮件正文"
-                    rows={8}
-                    maxLength={htmlMode ? 50000 : 20000}
-                    value={htmlMode ? draft.email.bodyHtml : emailText(draft)}
-                    onChange={(event) =>
-                      edit({
-                        email: htmlMode
-                          ? { bodyHtml: event.target.value, bodyText: '' }
-                          : {
-                              bodyText: event.target.value,
-                              bodyHtml: textHtml(event.target.value),
-                            },
-                      })
-                    }
-                  />
-                </label>
-                <label className="wr-lazy-check">
-                  <input
-                    type="checkbox"
-                    checked={htmlMode}
-                    onChange={(event) => setHtmlMode(event.target.checked)}
-                  />
-                  <span>编辑 HTML（高级）</span>
-                </label>
-                <p className="wr-lazy-muted">
-                  可以继续在聊天里调整语气；下一步会展示实际邮件预览。
-                </p>
-              </>
-            )}
-            {step === 'siteBody' && (
-              <label className="wr-lazy-field">
-                网站留言
-                <textarea
-                  aria-label="网站留言"
-                  rows={8}
-                  minLength={10}
-                  maxLength={5000}
-                  value={draft.site.message}
-                  onChange={(event) => edit({ site: { message: event.target.value } })}
-                />
-                <small>同一任务使用这份留言，10–5000 个字符。</small>
-              </label>
             )}
             {error && (
               <p role="alert" className="wr-lazy-error">
@@ -665,15 +857,21 @@ export function GuidedDraft({
               >
                 上一步
               </Button>
-              <Button kind="primary" type="submit" disabled={busy}>
-                {busy
-                  ? '正在保存…'
-                  : step === 'contentSource' && source === 'ai'
-                    ? '起草内容，下一步'
-                    : step === 'siteSubject' && !draft.site.subject
-                      ? '跳过，下一步'
-                      : '下一步'}
-              </Button>
+              {(!contentChannel || source === 'manual' || (showSavedContent && !selectedTemplate)) && (
+                <Button kind="primary" type="submit" disabled={busy}>
+                  {busy
+                    ? '正在保存…'
+                    : !contentChannel
+                      ? '下一步'
+                      : source === 'manual'
+                        ? contentChannel === 'email'
+                          ? '保存邮件，继续'
+                          : '保存留言，继续'
+                        : contentChannel === 'email'
+                          ? '使用这封邮件，继续'
+                          : '使用这份留言，继续'}
+                </Button>
+              )}
             </div>
             <p className="wr-lazy-muted wr-lazy-guided-footer">
               此处只准备和保存草稿，最后确认后才会发送。

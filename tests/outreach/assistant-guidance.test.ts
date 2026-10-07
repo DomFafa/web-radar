@@ -56,11 +56,8 @@ test('restored channel order cannot move website steps ahead of email steps', ()
     'siteTargets',
     'senderName',
     'senderEmail',
-    'contentSource',
-    'emailSubject',
-    'emailBody',
-    'siteSubject',
-    'siteBody',
+    'emailContent',
+    'siteContent',
     'review',
   ]);
 });
@@ -70,18 +67,14 @@ test('a single channel only asks for its own audience and content', () => {
     'emailAudience',
     'senderName',
     'senderEmail',
-    'contentSource',
-    'emailSubject',
-    'emailBody',
+    'emailContent',
     'review',
   ]);
   expect(guidanceSteps(['site'])).toEqual([
     'siteTargets',
     'senderName',
     'senderEmail',
-    'contentSource',
-    'siteSubject',
-    'siteBody',
+    'siteContent',
     'review',
   ]);
   expect(guidanceSteps([])).toEqual([]);
@@ -143,15 +136,6 @@ test('sender email needs a valid address while missing domain configuration does
   }
 });
 
-test('content source allows a brief or finished content for every active channel', () => {
-  const draft = readyDraft();
-  expect(validateGuidanceStep('contentSource', draft, options)).toBeNull();
-  draft.site.message = '';
-  expect(validateGuidanceStep('contentSource', draft, options)).toBeTruthy();
-  draft.brief = 'Introduce our product samples';
-  expect(validateGuidanceStep('contentSource', draft, options)).toBeNull();
-});
-
 test.each(['emailSubject', 'emailBody'] as const)(
   '%s cannot advance with blank content',
   (step) => {
@@ -174,7 +158,7 @@ test.each(['<p></p>', '<p><br></p>', '<p>&nbsp; &#160; &#xA0; </p>'])(
     draft.email.bodyText = '';
     expect(validateGuidanceStep('emailBody', draft, options)).toBeTruthy();
     expect(validateGuidanceStep('review', draft, options)).toBeTruthy();
-    expect(firstIncompleteGuidanceStep(draft, options)).toBe('emailBody');
+    expect(firstIncompleteGuidanceStep(draft, options)).toBe('emailContent');
   },
 );
 
@@ -221,9 +205,11 @@ test('review requires the selected channels and every channel content, without r
 
 test('restored drafts resume at the first real missing field instead of content source or an optional subject', () => {
   const draft = readyDraft();
-  expect(firstIncompleteGuidanceStep(draft, options)).toBe('review');
+  expect(firstIncompleteGuidanceStep(draft, options, { email: 'ready', site: 'ready' })).toBe(
+    'review',
+  );
   draft.site.message = '';
-  expect(firstIncompleteGuidanceStep(draft, options)).toBe('siteBody');
+  expect(firstIncompleteGuidanceStep(draft, options, { email: 'ready' })).toBe('siteContent');
   draft.sender.name = '';
   expect(firstIncompleteGuidanceStep(draft, options)).toBe('senderName');
   draft.email.contactIds = [];
@@ -246,15 +232,16 @@ test('each Next patch submits only its own confirmed field', () => {
     email: { replyTo: 'reply@example.com', replyTracking: true },
     site: { replyTracking: false },
   });
-  expect(stepDraftPatch('emailSubject', draft)).toEqual({ email: { subject: 'Sample proposal' } });
-  expect(stepDraftPatch('emailBody', draft)).toEqual({
-    email: { bodyHtml: '<p>Would you like a sample?</p>', bodyText: 'Would you like a sample?' },
+  expect(stepDraftPatch('emailContent', draft)).toEqual({
+    email: {
+      subject: 'Sample proposal',
+      bodyHtml: '<p>Would you like a sample?</p>',
+      bodyText: 'Would you like a sample?',
+    },
   });
-  expect(stepDraftPatch('siteSubject', draft)).toEqual({ site: { subject: '' } });
-  expect(stepDraftPatch('siteBody', draft)).toEqual({
-    site: { message: 'Would your team like a sample?' },
+  expect(stepDraftPatch('siteContent', draft)).toEqual({
+    site: { subject: '', message: 'Would your team like a sample?' },
   });
-  expect(stepDraftPatch('contentSource', draft)).toEqual({ brief: '' });
   expect(stepDraftPatch('review', draft)).toEqual({});
 });
 
@@ -276,4 +263,19 @@ test('optional reply settings are only submitted for active channels', () => {
     sender: { email: 'seller@example.com', phone: '', address: '', country: '', city: '' },
     email: { replyTo: 'reply@example.com', replyTracking: true },
   });
+});
+
+test('an AI follow-up blocks old complete content from review and resumes at that content step', () => {
+  const draft = readyDraft();
+  expect(validateGuidanceStep('review', draft, options, { email: 'needs_facts' })).toBeTruthy();
+  expect(firstIncompleteGuidanceStep(draft, options, { email: 'needs_facts', site: 'ready' })).toBe(
+    'emailContent',
+  );
+  expect(firstIncompleteGuidanceStep(draft, options, { email: 'ready', site: 'needs_facts' })).toBe(
+    'siteContent',
+  );
+});
+test('a legacy saved email is shown for explicit use instead of assuming AI completed it', () => {
+  const draft = readyDraft();
+  expect(firstIncompleteGuidanceStep(draft, options)).toBe('emailContent');
 });

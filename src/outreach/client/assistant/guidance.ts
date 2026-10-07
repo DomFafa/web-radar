@@ -12,23 +12,19 @@ export type GuidanceStep =
   | 'siteTargets'
   | 'senderName'
   | 'senderEmail'
-  | 'contentSource'
-  | 'emailSubject'
-  | 'emailBody'
-  | 'siteSubject'
-  | 'siteBody'
+  | 'emailContent'
+  | 'siteContent'
   | 'review';
+
+type DraftingStates = Partial<Record<AssistantChannel, 'ready' | 'needs_facts'>>;
 
 export const guidedSteps: Record<GuidanceStep, { label: string; question: string }> = {
   emailAudience: { label: '选择客户', question: '这封邮件发给哪些客户？' },
   siteTargets: { label: '目标网站', question: '要向哪些网站留言？' },
   senderName: { label: '发件人姓名', question: '客户看到的发件人是谁？' },
   senderEmail: { label: '联系邮箱', question: '使用哪个邮箱联系客户？' },
-  contentSource: { label: '准备内容', question: '这次内容怎么准备？' },
-  emailSubject: { label: '邮件主题', question: '邮件主题写什么？' },
-  emailBody: { label: '邮件正文', question: '邮件里要告诉客户什么？' },
-  siteSubject: { label: '留言主题', question: '需要给留言加一个主题吗？' },
-  siteBody: { label: '留言正文', question: '要向网站客户留言什么？' },
+  emailContent: { label: '准备邮件', question: '这封邮件怎么准备？' },
+  siteContent: { label: '准备网站留言', question: '这份网站留言怎么准备？' },
   review: { label: '预览确认', question: '以上对象、身份和内容确认无误吗？' },
 };
 
@@ -37,16 +33,17 @@ export function guidanceSteps(channels: AssistantChannel[]): GuidanceStep[] {
   const steps: GuidanceStep[] = [];
   if (channels.includes('email')) steps.push('emailAudience');
   if (channels.includes('site')) steps.push('siteTargets');
-  steps.push('senderName', 'senderEmail', 'contentSource');
-  if (channels.includes('email')) steps.push('emailSubject', 'emailBody');
-  if (channels.includes('site')) steps.push('siteSubject', 'siteBody');
+  steps.push('senderName', 'senderEmail');
+  if (channels.includes('email')) steps.push('emailContent');
+  if (channels.includes('site')) steps.push('siteContent');
   return [...steps, 'review'];
 }
 
 export function validateGuidanceStep(
-  step: GuidanceStep,
+  step: GuidanceStep | 'emailSubject' | 'emailBody' | 'siteSubject' | 'siteBody',
   draft: AssistantDraft,
   options: AssistantOptions | null,
+  states: DraftingStates = {},
 ): string | null {
   switch (step) {
     case 'emailAudience':
@@ -66,16 +63,16 @@ export function validateGuidanceStep(
       return draft.sender.name.length > 100 ? '发件人姓名最多 100 个字符。' : null;
     case 'senderEmail':
       return z.email().safeParse(draft.sender.email).success ? null : '请填写有效的联系邮箱。';
-    case 'contentSource': {
-      const hasContent =
-        draft.channels.length > 0 &&
-        draft.channels.every((channel) =>
-          channel === 'email'
-            ? !validateGuidanceStep('emailBody', draft, options)
-            : !validateGuidanceStep('siteBody', draft, options),
-        );
-      return draft.brief.trim() || hasContent ? null : '请说明本次内容要求，或填写要使用的内容。';
-    }
+    case 'emailContent':
+      return states.email === 'needs_facts'
+        ? '助手还需要补充邮件资料，请在对话中回答。'
+        : validateGuidanceStep('emailSubject', draft, options) ||
+            validateGuidanceStep('emailBody', draft, options);
+    case 'siteContent':
+      return states.site === 'needs_facts'
+        ? '助手还需要补充留言资料，请在对话中回答。'
+        : validateGuidanceStep('siteSubject', draft, options) ||
+            validateGuidanceStep('siteBody', draft, options);
     case 'emailSubject':
       if (!draft.email.subject.trim()) return '请填写邮件主题。';
       return draft.email.subject.length > 500 ? '邮件主题最多 500 个字符。' : null;
@@ -97,8 +94,8 @@ export function validateGuidanceStep(
     case 'review':
       if (!draft.channels.length) return '请选择发送渠道。';
       for (const current of guidanceSteps(draft.channels)) {
-        if (current === 'contentSource' || current === 'review') continue;
-        const error = validateGuidanceStep(current, draft, options);
+        if (current === 'review') continue;
+        const error = validateGuidanceStep(current, draft, options, states);
         if (error) return error;
       }
       return null;
@@ -108,14 +105,15 @@ export function validateGuidanceStep(
 export function firstIncompleteGuidanceStep(
   draft: AssistantDraft,
   options: AssistantOptions | null,
+  states: DraftingStates = {},
 ): GuidanceStep {
   return (
     guidanceSteps(draft.channels).find(
       (step) =>
-        step !== 'contentSource' &&
-        step !== 'siteSubject' &&
         step !== 'review' &&
-        validateGuidanceStep(step, draft, options),
+        (validateGuidanceStep(step, draft, options, states) ||
+          (step === 'emailContent' && !states.email) ||
+          (step === 'siteContent' && !states.site)),
     ) || 'review'
   );
 }
@@ -151,16 +149,16 @@ export function stepDraftPatch(step: GuidanceStep, draft: AssistantDraft): Assis
           ? { site: { replyTracking: draft.site.replyTracking } }
           : {}),
       };
-    case 'contentSource':
-      return { brief: draft.brief };
-    case 'emailSubject':
-      return { email: { subject: draft.email.subject } };
-    case 'emailBody':
-      return { email: { bodyHtml: draft.email.bodyHtml, bodyText: draft.email.bodyText } };
-    case 'siteSubject':
-      return { site: { subject: draft.site.subject } };
-    case 'siteBody':
-      return { site: { message: draft.site.message } };
+    case 'emailContent':
+      return {
+        email: {
+          subject: draft.email.subject,
+          bodyHtml: draft.email.bodyHtml,
+          bodyText: draft.email.bodyText,
+        },
+      };
+    case 'siteContent':
+      return { site: { subject: draft.site.subject, message: draft.site.message } };
     case 'review':
       return {};
   }

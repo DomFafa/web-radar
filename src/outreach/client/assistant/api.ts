@@ -1,4 +1,5 @@
 import { api, sessionHeaders } from '../../../client/api';
+import { templatesApi } from '../lib/api';
 import type {
   AssistantChannel,
   AssistantDraftPatch,
@@ -7,6 +8,11 @@ import type {
   AssistantSession,
   AssistantSessionSummary,
 } from '../../shared/assistant';
+
+export interface AssistantMailTemplate {
+  id: string; name: string; subject: string; bodyHtml: string; bodyText: string | null;
+  category: string | null; isBuiltIn: boolean;
+}
 
 const base = '/api/outreach/assistant';
 async function request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -19,20 +25,29 @@ async function request<T>(path: string, method = 'GET', body?: unknown): Promise
 }
 export const assistantApi = {
   list: () => request<AssistantSessionSummary[]>('/sessions'),
+  templates: (): Promise<AssistantMailTemplate[]> => templatesApi.listAll(),
   options: (search = '') =>
     request<AssistantOptions>('/options' + (search ? '?search=' + encodeURIComponent(search) : '')),
   create: (channels: AssistantChannel[], requestId: string) =>
     request<AssistantSession>('/sessions', 'POST', { channels, requestId }),
   get: (id: string) => request<AssistantSession>('/sessions/' + encodeURIComponent(id)),
-  message: (session: AssistantSession, message: string, requestId: string) =>
-    request<AssistantSession>(`/sessions/${session.id}/messages`, 'POST', {
-      message,
+  selectTemplate: (session: AssistantSession, templateId: string, requestId: string) =>
+    request<AssistantSession>(`/sessions/${session.id}/template`, 'POST', {
+      templateId,
       requestId,
       expectedVersion: session.version,
     }),
-  patch: (session: AssistantSession, draft: AssistantDraftPatch, requestId: string) =>
+  message: (session: AssistantSession, message: string, requestId: string, composeChannels?: AssistantChannel[]) =>
+    request<AssistantSession>(`/sessions/${session.id}/messages`, 'POST', {
+      message,
+      ...(composeChannels?.length ? { intent: 'compose', composeChannels } : {}),
+      requestId,
+      expectedVersion: session.version,
+    }),
+  patch: (session: AssistantSession, draft: AssistantDraftPatch, requestId: string, contentChannel?: AssistantChannel) =>
     request<AssistantSession>(`/sessions/${session.id}/draft`, 'PATCH', {
       draft,
+      ...(contentChannel ? { contentSource: 'manual', contentChannel } : {}),
       requestId,
       expectedVersion: session.version,
     }),

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AssistantDraft, AssistantDraftPatch, AssistantField, AssistantMessage, AssistantOperation, AssistantPreview, AssistantRecipient, AssistantSession } from '../../shared/assistant';
+import type { AssistantChannel, AssistantDraft, AssistantDraftingStatus, AssistantDraftPatch, AssistantField, AssistantMessage, AssistantOperation, AssistantPreview, AssistantRecipient, AssistantSession } from '../../shared/assistant';
 import type { Bindings, Variables } from '../../shared/types';
 import { normalizeSiteTargets } from '../../shared/site-targets';
 import { sha256 } from '../../../worker/http';
@@ -52,7 +52,14 @@ export function mergeDraft(current: AssistantDraft, patch: AssistantDraftPatch):
   if (parsed.data.email?.contactIds?.length) { draft.email.groupId = ''; draft.email.tag = ''; }
   else if (parsed.data.email?.groupId) { draft.email.contactIds = []; draft.email.tag = ''; }
   else if (parsed.data.email?.tag) { draft.email.contactIds = []; draft.email.groupId = ''; }
+  if (parsed.data.email && (['subject', 'bodyHtml', 'bodyText'] as const).some(key =>
+    parsed.data.email![key] !== undefined && parsed.data.email![key] !== current.email[key])) delete draft.email.templateId;
   return draft;
+}
+export function hasCompleteAssistantContent(draft: AssistantDraftPatch, channel: AssistantChannel): boolean {
+  if (channel === 'site') return !!draft.site?.message && draft.site.message.trim().length >= 10 && draft.site.message.length <= 5000;
+  const html = draft.email?.bodyHtml || '';
+  return !!draft.email?.subject?.trim() && !!html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;|&#x0*a0;/gi, ' ').trim();
 }
 export async function sessionRow(db: D1Database, user: AssistantUser, id: string): Promise<SessionRow> {
   const row = await db.prepare(`SELECT * FROM edm_assistant_sessions WHERE id=? AND user_id=? ${user.teamRead ? '' : 'AND created_by=?'}`)
@@ -103,15 +110,21 @@ export function missingFields(draft: AssistantDraft, preview: AssistantPreview, 
 }
 export async function presentSession(db: D1Database, user: AssistantUser, row: SessionRow, countOnly = false): Promise<AssistantSession> {
   const draft = JSON.parse(row.draft) as AssistantDraft, operations = JSON.parse(row.operations) as AssistantOperation[];
+  const messages = JSON.parse(row.messages) as AssistantMessage[];
+  const draftingStates: Partial<Record<AssistantChannel, AssistantDraftingStatus>> = {};
+  for (const item of messages) if (item.role === 'assistant' && item.draftingStatus)
+    for (const channel of item.draftingChannels || []) draftingStates[channel] = item.draftingStatus;
   const pendingChannels = draft.channels.filter(channel => !operations.some(op => op.channel === channel));
   const preview = await previewDraft(db, user, draft, countOnly), fields = missingFields(draft, preview, pendingChannels);
+  if (pendingChannels.some(channel => draftingStates[channel] === 'needs_facts'))
+    fields.push({ key: 'content.requirements', label: '补充本次内容所需的业务资料', type: 'content' });
   const confirmationToken = !countOnly && pendingChannels.length && !fields.length && !row.pending_request_id
     ? await sha256(JSON.stringify({ id: row.id, version: row.version, draft, preview, pendingChannels })) : null;
   const status = row.pending_request_id || operations.some(op => op.status === 'dispatching') ? 'dispatching'
     : operations.some(op => ['failed', 'uncertain'].includes(op.status)) ? 'needs_attention'
       : pendingChannels.length ? fields.length ? 'draft' : 'ready' : operations.length ? 'submitted' : 'draft';
   return { id: row.id, title: row.title, version: row.version, status, draft, operations,
-    messages: JSON.parse(row.messages), pendingChannels, missingFields: fields, preview, confirmationToken,
+    messages, draftingStates, pendingChannels, missingFields: fields, preview, confirmationToken,
     createdAt: row.created_at, updatedAt: row.updated_at };
 }
 export function ensureContent(draft: AssistantDraft) {
