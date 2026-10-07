@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { Hono } from 'hono';
 import { templateGuides } from '../src/worker/template-guides/catalog';
 import {
@@ -36,6 +36,7 @@ beforeEach(() => {
     TEMPLATE_GUIDES_API_KEY: key,
   } as AppEnv;
 });
+afterEach(() => vi.unstubAllGlobals());
 
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
@@ -154,11 +155,18 @@ describe('read-only guide API', () => {
     env.TEMPLATE_GUIDES_API_KEY = undefined;
     expect((await get()).status).toBe(401);
   });
-  it('allows platform administrators but denies normal users and workspace administrators', async () => {
+  it('does not grant human template access to other accounts through their platform or workspace role', async () => {
     for (const identity of ['owner', 'admin', 'member', 'outsider', 'platform']) {
       const session = await mintSession(env, testPrincipal(identity), identity);
-      expect((await get('', session.token)).status).toBe(identity === 'platform' ? 200 : 403);
+      expect((await get('', session.token)).status).toBe(403);
     }
+  });
+  it('preserves the designated owner human access to guides and material previews',async()=>{
+    const principal={...testPrincipal('platform'),email:'vc.ddom@gmail.com'};
+    env.ENVIRONMENT='production';env.TEST_PROVIDERS='false';env.PRODUCT_RADAR_BASE_URL='https://account.example.test';env.PRODUCT_RADAR_INTEGRATION_SECRET='test-secret-at-least-32-characters';
+    vi.stubGlobal('fetch',vi.fn(async()=>Response.json({protocolVersion:1,principal})));
+    const session=await mintSession(env,principal);
+    for(const path of ['', '/materials/catalog', '/materials/senseng-candy/preview'])expect((await get(path,session.token)).status).toBe(200);
   });
   it('does not turn the read-only key into a project/session credential', async () => {
     await expect(

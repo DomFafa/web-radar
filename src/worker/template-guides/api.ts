@@ -15,6 +15,7 @@ import { isProductNativeRevision } from '../../shared/product-native-materials';
 import { renderSite } from '../../templates';
 import { materialsDemoDraft } from './materials-demo';
 import { materialsCatalog, matchesMaterialsEtag } from './materials-catalog';
+import { canBuildWebsites } from '../../shared/access';
 
 async function equalKey(received: string, expected: string): Promise<boolean> {
   const [a, b] = await Promise.all([sha256(received), sha256(expected)]);
@@ -50,6 +51,8 @@ export function createTemplateGuidesApp() {
       if(materialsRoute)await currentMaterialsPrincipal(c.env,{userId:c.req.header('X-Product-Radar-User-Id')||'',workspaceId:c.req.header('X-Product-Radar-Workspace-Id')||''});
     } else {
       const { principal } = await authenticate(c.req.raw, c.env);
+      if (!canBuildWebsites(principal))
+        throw new ApiError(403, 'website_access_denied', '当前账号未开放网站项目功能。');
       if(materialsRoute)await currentMaterialsPrincipal(c.env,principal);
       else if (principal.systemRole !== 'super_admin')
         throw new ApiError(

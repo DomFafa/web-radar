@@ -1,6 +1,6 @@
 import { templateCoverUrl } from '../shared/template-covers';
 import type { Member } from './UserManagement';
-import { manageUsers, viewTeamData, writeBusiness } from '../shared/access';
+import { canBuildWebsites, manageUsers, viewTeamData, writeBusiness } from '../shared/access';
 import { PendingWebsiteCreation } from './website-creation';
 import type { ProjectSummary, ProjectList } from '../shared/model';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
@@ -81,6 +81,19 @@ export default function App() {
     [sessionMessage, setSessionMessage] = useState('');
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
+  const websitesVisible = canBuildWebsites(principal);
+  const activeView = (view === 'projects' && !websitesVisible) ||
+    (view === 'admin' && (!websitesVisible || principal?.systemRole !== 'super_admin')) ? 'dashboard' : view;
+  const visibleServices = websitesVisible ? config?.services || [] : (config?.services || [])
+    .filter(service => ['Product Radar', 'text', 'email'].includes(service.name))
+    .map(service => service.name === 'email' && service.configured
+      ? { ...service, detail: '邮件服务已配置，发送结果以实际任务为准。' } : service);
+
+  useEffect(() => {
+    if (!principal) return;
+    if (!websitesVisible && selected) setSelected(null);
+    if (activeView !== view) setView(activeView);
+  }, [principal, websitesVisible, selected, activeView, view]);
 
   useEffect(() => {
     try {
@@ -144,7 +157,7 @@ export default function App() {
       } catch {}
       setSessionMessage('');
       setEmbedError('');
-      if (result.projectId) {
+      if (result.projectId && canBuildWebsites(result.principal)) {
         if(result.entry==='prepared-materials'){
           const url=new URL(window.location.href);url.searchParams.set('tab','publish');window.history.replaceState({},'',url.toString());
         }
@@ -155,10 +168,13 @@ export default function App() {
     [expire],
   );
   useEffect(() => {
-    api<Config>('/api/config')
-      .then(setConfig)
-      .catch((error) => setConfigError(errorMessage(error)));
-  }, []);
+    const controller = new AbortController();
+    setConfigError('');
+    api<Config>('/api/config', { signal: controller.signal })
+      .then(result => { if (!controller.signal.aborted) setConfig(result); })
+      .catch((error) => { if (!controller.signal.aborted) setConfigError(errorMessage(error)); });
+    return () => controller.abort();
+  }, [principal?.userId]);
   useEffect(() => {
     window.addEventListener('wr:session-expired', expire);
     return () => window.removeEventListener('wr:session-expired', expire);
@@ -204,7 +220,7 @@ export default function App() {
   useEffect(() => {
     if (!embedded || !config) return;
     if (!embedOrigin || window.parent === window || !config.parentOrigins?.includes(embedOrigin)) {
-      setEmbedError('请从 Product Radar 的建站入口打开此页面。嵌入来源无效或尚未获准。');
+      setEmbedError('请从 Product Radar 打开此页面。嵌入来源无效或尚未获准。');
       return;
     }
     const receive = async (event: MessageEvent) => {
@@ -265,6 +281,7 @@ export default function App() {
     if (principal) setLastPrincipal(principal);
   }, [principal]);
   const editorPrincipal = principal || lastPrincipal;
+  const editorVisible = selected && editorPrincipal && canBuildWebsites(editorPrincipal);
   const needsLogin = !principal;
   if (restoring) return <div className="preview-loading"><span className="spinner" />正在恢复登录状态…</div>;
   return (
@@ -272,11 +289,11 @@ export default function App() {
       {config?.testMode && (
         <div className="test-banner">
           <span className="test-label">本地测试环境</span>
-          生成、邮件与发布使用明确标记的测试适配器；未连接真实服务。
+          {websitesVisible ? '生成、邮件与发布' : '邮件与站内信'}使用明确标记的测试适配器；未连接真实服务。
           <span className="test-banner-end">TEST MODE</span>
         </div>
       )}
-      {selected && editorPrincipal ? (
+      {editorVisible ? (
         <ErrorBoundary
           scope="section"
           title="项目编辑器加载异常"
@@ -297,7 +314,7 @@ export default function App() {
           </Suspense>
         </ErrorBoundary>
       ) : !needsLogin ? (
-        <div className={`app-shell ${embedded ? 'is-embedded' : ''} ${view === 'lazy-mode' ? 'is-assistant' : ''}`}>
+        <div className={`app-shell ${embedded ? 'is-embedded' : ''} ${activeView === 'lazy-mode' ? 'is-assistant' : ''}`}>
           <aside className="sidebar">
             <a
               className="brand-link"
@@ -314,7 +331,7 @@ export default function App() {
             <nav aria-label="工作台导航">
               <button disabled={contactsBusy} className={view === 'lazy-mode' ? 'active' : ''} aria-current={view === 'lazy-mode' ? 'page' : undefined} onClick={() => setView('lazy-mode')}><Icon name="globe" />懒人模式</button>
               <button disabled={contactsBusy} className={view === 'dashboard' ? 'active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><Icon name="chart" />控制台</button>
-              <button
+              {websitesVisible && <button
                 disabled={contactsBusy}
                 className={view === 'projects' ? 'active' : ''}
                 aria-current={view === 'projects' ? 'page' : undefined}
@@ -322,7 +339,7 @@ export default function App() {
               >
                 <Icon name="grid" />
                 网站项目
-              </button>
+              </button>}
               <button disabled={contactsBusy} className={view === 'contacts' ? 'active' : ''} aria-current={view === 'contacts' ? 'page' : undefined} onClick={() => {setContactsAction(undefined);setView('contacts')}}><Icon name="users" />联系人管理</button>
               <button disabled={contactsBusy} className={view === 'edm' ? 'active' : ''} aria-current={view === 'edm' ? 'page' : undefined} onClick={() => setView('edm')}><Icon name="mail" />EDM 邮件</button>
               <button disabled={contactsBusy} className={view === 'site-messages' ? 'active' : ''} aria-current={view === 'site-messages' ? 'page' : undefined} onClick={() => setView('site-messages')}><Icon name="message" />站内信</button>
@@ -338,7 +355,7 @@ export default function App() {
               <button disabled={contactsBusy} className={view === 'inbox' ? 'active' : ''} onClick={() => setView('inbox')}><Icon name="mail"/>客户收件箱</button>
               {manageUsers(principal) && <button disabled={contactsBusy} className={view === 'users' ? 'active' : ''} onClick={() => setView('users')}><Icon name="users"/>用户管理</button>}
               {viewTeamData(principal) && <button disabled={contactsBusy} className={view === 'business' ? 'active' : ''} onClick={() => {setBusinessMember(null);setView('business')}}><Icon name="chart"/>业务数据</button>}
-              {principal.systemRole === 'super_admin' && (
+              {websitesVisible && principal.systemRole === 'super_admin' && (
                 <button
                   disabled={contactsBusy}
                   className={view === 'admin' ? 'active' : ''}
@@ -351,7 +368,7 @@ export default function App() {
               )}
             </nav>
             <div className="sidebar-bottom">
-              <span className="muted">Web Radar · 网站管理</span>
+              <span className="muted">Web Radar · {websitesVisible ? '网站管理' : '客户沟通'}</span>
             </div>
           </aside>
           <main className="workspace-main">
@@ -370,31 +387,31 @@ export default function App() {
                 )}
               </div>
             </header>
-            {view === 'lazy-mode' ? (
+            {activeView === 'lazy-mode' ? (
               <ErrorBoundary scope="section" title="会话暂时无法加载" onBack={() => setView('edm')} backText="返回邮件工作台">
                 <Suspense fallback={<ChunkFallback />}><OutreachAssistant key={`${principal.userId}:${principal.workspaceId}`} principal={principal} testMode={!!config?.testMode} onManageContacts={manageContacts} onWorkbench={(channel,taskId)=>{const url=new URL(location.href);url.searchParams.set('edmTab','campaigns');url.searchParams.delete('campaignId');url.searchParams.delete('siteJobId');if(taskId)url.searchParams.set(channel==='email'?'campaignId':'siteJobId',taskId);history.replaceState({},'',url);setView(channel==='email'?'edm':'site-messages');}} /></Suspense>
               </ErrorBoundary>
-            ) : view === 'dashboard' ? (
-              <ErrorBoundary scope="section" title="控制台加载异常" onBack={() => setView('projects')} backText="返回网站项目">
-                <Suspense fallback={<ChunkFallback />}><Dashboard key={`${principal.userId}:${principal.workspaceId}`} onNavigate={setView} onOpenProject={setSelected} /></Suspense>
+            ) : activeView === 'dashboard' ? (
+              <ErrorBoundary scope="section" title="控制台加载异常" onBack={() => setView('edm')} backText="返回邮件工作台">
+                <Suspense fallback={<ChunkFallback />}><Dashboard key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onNavigate={setView} onOpenProject={setSelected} /></Suspense>
               </ErrorBoundary>
-            ) : view === 'projects' ? (
+            ) : activeView === 'projects' && websitesVisible ? (
               <Projects key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onOpen={setSelected} />
             ) : view === 'edm' || view === 'site-messages' || view === 'contacts' ? (
-              <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回网站项目。" onBack={()=>setView('projects')} backText="返回网站项目">
+              <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回控制台。" onBack={()=>setView('dashboard')} backText="返回控制台">
                 <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}:${view==='contacts'?'contacts':'outreach'}`} principal={principal} section={view} contactsAction={contactsAction} onImportingChange={setContactsBusy} onContinueContacts={continueContacts}/></Suspense>
               </ErrorBoundary>
             ) : view === 'inbox' ? (
               <Suspense fallback={<ChunkFallback/>}><CustomerInbox key={principal.userId+':'+principal.workspaceId} principal={principal}/></Suspense>
             ) : view === 'users' || view === 'business' ? (
-              (view==='users'?manageUsers(principal):viewTeamData(principal)) ? <Suspense fallback={<ChunkFallback/>}><UserManagement key={`${view}:${businessMember?.workspace_id}:${businessMember?.user_id}`} principal={principal} section={view} initialMember={view==='business'?businessMember:null} onViewData={member=>{setBusinessMember(member);setView('business')}}/></Suspense> : <Notice tone="error">当前角色没有此功能的访问权限。</Notice>
-            ) : view === 'admin' ? (
+              (view==='users'?manageUsers(principal):viewTeamData(principal)) ? <Suspense fallback={<ChunkFallback/>}><UserManagement key={`${principal.userId}:${principal.workspaceId}:${view}:${businessMember?.workspace_id}:${businessMember?.user_id}`} principal={principal} section={view} initialMember={view==='business'?businessMember:null} onViewData={member=>{setBusinessMember(member);setView('business')}}/></Suspense> : <Notice tone="error">当前角色没有此功能的访问权限。</Notice>
+            ) : activeView === 'admin' && websitesVisible && principal.systemRole === 'super_admin' ? (
               <ErrorBoundary
                 scope="section"
                 title="平台管理加载异常"
-                description="平台管理组件遇到错误。您可以尝试重试，或切换回网站项目列表。"
-                onBack={() => setView('projects')}
-                backText="返回网站项目"
+                description="平台管理组件遇到错误。您可以尝试重试，或返回控制台。"
+                onBack={() => setView('dashboard')}
+                backText="返回控制台"
               >
                 <Suspense fallback={<ChunkFallback />}><Admin /></Suspense>
               </ErrorBoundary>
@@ -405,10 +422,10 @@ export default function App() {
                   <p>接入由平台管理员配置。客户无需填写 AI 密钥。</p>
                 </div>
                 <div className="panel">
-                  <ServiceList services={config?.services || []} />
+                  <ServiceList services={visibleServices} />
                 </div>
                 <Notice>
-                  “已配置”表示已提供连接配置；真实模型调用、发信和发布仍以实际任务结果为准。
+                  “已配置”表示已提供连接配置；真实模型调用、发信{websitesVisible ? '和发布' : ''}仍以实际任务结果为准。
                 </Notice>
               </>
             )}
@@ -416,7 +433,7 @@ export default function App() {
         </div>
       ) : null}
       {needsLogin &&
-        (selected && editorPrincipal ? (
+        (editorVisible ? (
           <div className="reauth-overlay">
             <Login
               config={config}
@@ -488,16 +505,16 @@ function Login({
       {!compact && (
         <header className="login-brand">
           <Brand />
-          <span>网站管理工作台</span>
+          <span>客户沟通工作台</span>
         </header>
       )}
       <section className="login-form-area">
         <div className="login-form">
-          <h2>{embedded ? '正在连接网站工作区' : '登录 Web Radar'}</h2>
+          <h2>{embedded ? '正在连接工作区' : '登录 Web Radar'}</h2>
           <p>
             {embedded
-              ? '通过 Product Radar 安全验证身份后，继续同一份网站草稿。'
-              : '使用现有 Product Radar 账号，进入网站工作室。'}
+              ? '通过 Product Radar 安全验证身份后，继续当前工作。'
+              : '使用现有 Product Radar 账号，进入工作台。'}
           </p>
           {(error || embedError) && <Notice tone="error">{error || embedError}</Notice>}
           {embedded ? (
@@ -554,7 +571,7 @@ function Login({
               <p>仅测试环境可用，数据与额度均为测试用途。</p>
               <div>
                 {[
-                  ['owner', '项目创建者'],
+                  ['owner', '业务成员'],
                   ['admin', '公司管理员'],
                   ['member', '普通成员'],
                   ['outsider', '其他公司'],
