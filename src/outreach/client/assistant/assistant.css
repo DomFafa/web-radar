@@ -499,6 +499,16 @@
   overflow: auto;
   overflow-wrap: anywhere;
 }
+.wr-lazy-contact-management {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--lazy-line);
+  border-radius: 12px;
+  background: var(--lazy-soft);
+}
+.wr-lazy-contact-management > p {
+  margin: 0 0 12px;
+}
 .wr-lazy-pills {
   display: flex;
   gap: 8px;

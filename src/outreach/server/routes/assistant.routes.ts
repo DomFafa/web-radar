@@ -2,11 +2,12 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Bindings, Variables } from '../../shared/types';
 import type { AssistantDraft, AssistantMessage, AssistantOperation, AssistantOptions, AssistantSessionSummary } from '../../shared/assistant';
+import { ASSISTANT_EMAIL_RECIPIENT_LIMIT } from '../../shared/assistant';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import { createDb } from '../../db';
 import { loadProviders } from '../lib/credentials';
 import { resolveSenderDomains } from '../lib/sender-domains';
-import { AssistantError, beginRequest, draftPatchSchema, emptyDraft, ensureContent, failRequest, finishRequest, hasCompleteAssistantContent, mergeDraft, message, presentSession, requestHash, requestSchema, sessionRow, type AssistantUser, type SessionRow } from '../lib/assistant';
+import { AssistantError, beginRequest, draftPatchSchema, emptyDraft, ensureContent, failRequest, finishRequest, hasCompleteAssistantContent, mergeDraft, message, presentSession, previewDraft, requestHash, requestSchema, sessionRow, type AssistantUser, type SessionRow } from '../lib/assistant';
 import { assistantAiConfigured, generateAssistantDraft } from '../lib/assistant-ai';
 import { assistantEmailReport, assistantResults, dispatchOperations, ensureSendingConfigured, materializeOperations, verifyRetrySnapshot } from '../lib/assistant-execution';
 import { safeAssistantHtml } from '../lib/assistant-content';
@@ -21,6 +22,13 @@ assistantRoutes.use('*', async (c, next) => {
 assistantRoutes.onError((error, c) => error instanceof AssistantError
   ? c.json({ success: false, code: error.code, error: error.message }, error.status)
   : c.json({ success: false, code: 'assistant_unavailable', error: '会话操作未完成，请刷新查看已保存的状态后重试。' }, 503));
+
+async function ensureRecipientLimit(env: Bindings, user: AssistantUser, draft: AssistantDraft, operations: AssistantOperation[]) {
+  if (!draft.channels.includes('email') || operations.some(operation => operation.channel === 'email')) return;
+  const preview = await previewDraft(env.DB, user, draft, true);
+  if (preview.email.count > ASSISTANT_EMAIL_RECIPIENT_LIMIT)
+    throw new AssistantError(400, 'too_many_recipients', `一次最多选择 ${ASSISTANT_EMAIL_RECIPIENT_LIMIT} 位联系人，请缩小分组。`);
+}
 
 async function audienceOptions(env: Bindings, user: AssistantUser) {
   const groups = await env.DB.prepare("SELECT g.id,g.name,(SELECT count(*) FROM edm_contacts c WHERE c.group_id=g.id AND c.user_id=? AND c.subscription_status='subscribed') contactCount FROM edm_contact_groups g WHERE user_id=? ORDER BY name").bind(user.id, user.id).all<AssistantOptions['groups'][number]>();
@@ -154,6 +162,7 @@ assistantRoutes.patch('/sessions/:id/draft', async c => {
     if (body.draft.email?.bodyHtml && body.draft.email.bodyHtml !== previous.email.bodyHtml) draft.email.bodyHtml = safeAssistantHtml(draft.email.bodyHtml);
     draft = preserveConfirmedChannels(draft, previous, operations);
     ensureContent(draft);
+    await ensureRecipientLimit(c.env, user, draft, operations);
     const messages = JSON.parse(row.messages) as AssistantMessage[];
     if (body.contentSource && body.contentChannel) {
       const channel = body.contentChannel;
@@ -184,6 +193,7 @@ assistantRoutes.post('/sessions/:id/messages', async c => {
     const result = await generateAssistantDraft(c.env, user.id, previous, messages, body.message, await audienceOptions(c.env, user), composeChannels);
     const draft = preserveConfirmedChannels(result.draft, previous, operations);
     ensureContent(draft);
+    await ensureRecipientLimit(c.env, user, draft, operations);
     let draftingChannels = result.draftingChannels.filter(channel => draft.channels.includes(channel) && !operations.some(operation => operation.channel === channel));
     if (result.draftingStatus === 'needs_facts' && !draftingChannels.length)
       draftingChannels = draft.channels.filter(channel => !operations.some(operation => operation.channel === channel));

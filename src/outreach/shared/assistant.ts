@@ -1,3 +1,5 @@
+export const ASSISTANT_EMAIL_RECIPIENT_LIMIT = 20000;
+
 export type AssistantChannel = 'email' | 'site';
 export type AssistantDraftingStatus = 'ready' | 'needs_facts';
 export interface AssistantDraft {

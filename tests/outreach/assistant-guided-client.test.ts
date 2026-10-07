@@ -38,6 +38,7 @@ function render(value: AssistantSession) {
       onSave: vi.fn(),
       onComposerContext: vi.fn(),
       onConfirm: vi.fn(),
+      onManageContacts: vi.fn(),
     }),
   );
 }
@@ -49,6 +50,13 @@ test('new email guide displays audience alone, with progress and no sending acti
   expect(html).not.toContain('aria-label="发件人名称"');
   expect(html).not.toContain('aria-label="发件人邮箱"');
   expect(html).not.toContain('确认发送');
+});
+test('audience preparation has visible same-tab contact creation, import and group management actions', () => {
+  const html = render(session('email'));
+  expect(html).toContain('添加联系人');
+  expect(html).toContain('批量导入名单');
+  expect(html).toContain('管理分组');
+  expect(html).not.toContain('target="_blank"');
 });
 test('new website guide displays target URLs alone, without EDM contact selection', () => {
   const html = render(session('site'));
@@ -121,4 +129,23 @@ test('a complete legacy email requires explicitly using its saved content before
   expect(html).toContain('使用这封邮件，继续');
   expect(html).not.toContain('aria-label="发送前预览"');
   expect(html).not.toContain('确认向');
+});
+
+test('a saved audience enlarged beyond the server limit returns to audience selection with its content intact', () => {
+  const saved = session('email');
+  saved.draft.email.groupId = 'grown-group';
+  saved.draft.sender.name = 'Seller';
+  saved.draft.sender.email = 'seller@example.com';
+  saved.draft.email.subject = 'Reviewed email';
+  saved.draft.email.bodyHtml = '<p>Our original proposal is unchanged.</p>';
+  saved.draft.email.bodyText = 'Our original proposal is unchanged.';
+  saved.draftingStates = { email: 'ready' };
+  saved.preview.email.count = 20001;
+  saved.missingFields = [{ key: 'email.audience', type: 'contacts', channel: 'email', label: '选择收件联系人（最多 20000 人）' }];
+  const html = render(saved);
+  expect(html.includes('data-guidance-step="emailAudience"')).toBe(true);
+  expect(html.includes('20,001 位可发送客户')).toBe(true);
+  expect(html.includes('每次最多 20,000 位')).toBe(true);
+  expect(html.includes('确认向')).toBe(false);
+  expect(saved.draft.email.subject).toBe('Reviewed email');
 });

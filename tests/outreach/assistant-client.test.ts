@@ -56,6 +56,23 @@ test('without a custom reply address the email preview shows the sender address'
   expect(preview(session)).toContain('<dt>邮件回复</dt><dd>回复至 seller@example.com</dd>');
 });
 
+test('a large audience previews only one page while preserving the full confirmation count and data', () => {
+  const session = readySession();
+  session.pendingChannels = ['email'];
+  session.preview.email.recipients = Array.from({ length: 20000 }, (_, index) => ({
+    id: `buyer-${index}`, email: `buyer${index}@example.com`, name: '', company: '', industry: '',
+  }));
+  session.preview.email.count = 20000;
+  const html = preview(session);
+  expect(html).toContain('确认向 20000 位客户发送');
+  expect(html).toContain('buyer99@example.com');
+  expect(html).not.toContain('buyer100@example.com');
+  expect(html).toContain('第 1 / 200 页');
+  expect(html).toContain('下一页名单');
+  expect(session.preview.email.recipients).toHaveLength(20000);
+  expect(session.confirmationToken).toBe('reviewed-content-token');
+});
+
 test.each([
   ['needs_review', '结果待核实'],
   ['unavailable', '暂时无法读取'],

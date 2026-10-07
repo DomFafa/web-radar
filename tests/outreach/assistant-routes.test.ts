@@ -8,6 +8,7 @@ import type { AppEnv } from '../../src/worker/env';
 import type { Principal } from '../../src/shared/model';
 import { seal } from '../../src/outreach/server/lib/credentials';
 import { outreachBindings } from '../../src/worker/outreach';
+import { emptyDraft, mergeDraft } from '../../src/outreach/server/lib/assistant';
 
 let sqlite: DatabaseSync;
 let env: AppEnv;
@@ -50,6 +51,15 @@ async function ready(channels: string[] = ['email']) {
 async function emailProvider() {
   const key = await seal('unit-test-provider-key', 'provider', outreachBindings(env));
   sqlite.prepare("INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at) VALUES('provider','w1','sendgrid','Unit test',?,1,0,0)").run(key);
+}
+function insertRecipientGroup(id: string, count: number) {
+  sqlite.prepare("INSERT INTO edm_contact_groups(id,user_id,name,created_at,updated_at) VALUES(?,'w1',?,0,0)").run(id, 'Bulk customers');
+  sqlite.exec('BEGIN');
+  const insert = sqlite.prepare("INSERT INTO edm_contacts(id,user_id,group_id,email,created_at,updated_at) VALUES(?,'w1',?,?,0,0)");
+  const ids = Array.from({ length: count }, (_, index) => id + '-' + index);
+  for (const contactId of ids) insert.run(contactId, id, contactId + '@example.com');
+  sqlite.exec('COMMIT');
+  return ids;
 }
 const confirmation = (session: any, requestId: string = crypto.randomUUID()) => ({ requestId, expectedVersion: session.version, confirmationToken: session.confirmationToken, siteAuthorized: true });
 const mockAiReply = (data: unknown) => {
@@ -377,19 +387,126 @@ test('reusing a create request with different channel choices is a conflict', as
   expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_sessions').get()!.n).toBe(1);
 });
 
-test('a large recipient snapshot stays below D1 row limits and queues every approved recipient once', async () => {
+test('imports 20000 contacts in 40 batches, selects the new group and queues its confirmed snapshot exactly once', async () => {
   let session = await ready(); await emailProvider();
-  sqlite.exec('BEGIN');
-  const insert = sqlite.prepare("INSERT INTO edm_contacts(id,user_id,email,name,company,industry,created_at,updated_at) VALUES(?,?,?,?,?,?,0,0)");
-  for (let index = 0; index < 15000; index++) insert.run('bulk-' + index, 'w1', 'buyer-' + index + '@example.com', 'Customer '.repeat(12), 'Company '.repeat(20), 'Industry '.repeat(12));
-  sqlite.exec("DELETE FROM edm_contacts WHERE id='contact'; COMMIT");
-  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'all', expectedVersion: session.version, draft: { email: { groupId: 'null', tag: '', contactIds: [] } } })).json() as any).data;
-  expect(session.preview.email.count).toBe(15000);
-  const response = await request('/' + session.id + '/confirm', 'POST', confirmation(session)); expect(response.status).toBe(200);
-  expect(emailQueue).toHaveLength(15000);
-  expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_recipients').get()!.n).toBe(15000);
+  const contacts = (path: string, method = 'GET', body?: unknown) => outreachFetch(new Request(
+    'https://wr.example.test/api/outreach/contacts' + path,
+    { method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }) },
+  ), env, {} as any);
+  const groupResponse = await contacts('/groups', 'POST', { name: 'Imported customers' });
+  expect(groupResponse.status).toBe(201);
+  const groupId = (await groupResponse.json() as any).data.id;
+  const importResponse = await contacts('/imports', 'POST', { name: 'customers.csv', groupId, total: 20000 });
+  expect(importResponse.status).toBe(201);
+  const importId = (await importResponse.json() as any).data.id;
+  for (let batchIndex = 0; batchIndex < 40; batchIndex++) {
+    const chunk = Array.from({ length: 500 }, (_, offset) => ({
+      email: `buyer-${batchIndex * 500 + offset}@example.com`, name: 'Customer '.repeat(12),
+      company: 'Company '.repeat(20), industry: 'Industry '.repeat(12),
+    }));
+    const response = await contacts(`/imports/${importId}/batches`, 'POST', { batchIndex, contacts: chunk });
+    expect(response.status).toBe(200);
+    expect((await response.json() as any).data).toEqual({ imported: 500, updated: 0, skipped: 0, failed: 0, total: 500 });
+    if (batchIndex === 0) {
+      const repeated = await contacts(`/imports/${importId}/batches`, 'POST', { batchIndex, contacts: chunk });
+      expect(repeated.status).toBe(200);
+      expect((await repeated.json() as any).data.imported).toBe(500);
+    }
+  }
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_contact_import_batches WHERE job_id=?').get(importId)!.n).toBe(40);
+  expect(sqlite.prepare('SELECT processed,imported,skipped,failed FROM edm_contact_import_jobs WHERE id=?').get(importId))
+    .toEqual({ processed: 20000, imported: 20000, skipped: 0, failed: 0 });
+  expect(sqlite.prepare('SELECT contact_count n FROM edm_contact_groups WHERE id=?').get(groupId)!.n).toBe(20000);
+  const groups = (await (await contacts('/groups')).json() as any).data;
+  expect(groups.find((group: any) => group.id === groupId).contactCount).toBe(20000);
+  const selected = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'all', expectedVersion: session.version,
+    draft: { email: { groupId, tag: '', contactIds: [] } } });
+  expect(selected.status).toBe(200);
+  session = (await selected.json() as any).data;
+  expect(session.preview.email.count).toBe(20000);
+  expect(session.missingFields).toEqual([]); expect(session.confirmationToken).toBeTruthy();
+  const queueBatchSizes: number[] = [];
+  const queue = env.EDM_EMAIL_QUEUE!;
+  env.EDM_EMAIL_QUEUE = { ...queue, sendBatch: async (batch: any[]) => {
+    queueBatchSizes.push(batch.length); return queue.sendBatch(batch);
+  } } as any;
+  const confirmed = confirmation(session, 'confirm-imported');
+  const response = await request('/' + session.id + '/confirm', 'POST', confirmed);
+  expect(response.status).toBe(200);
+  expect(emailQueue).toHaveLength(20000);
+  expect(queueBatchSizes).toHaveLength(200); expect(queueBatchSizes.every(size => size === 100)).toBe(true);
+  expect(new Set(emailQueue.map(item => item.toEmail)).size).toBe(20000);
+  expect(new Set(emailQueue.map(item => item.recipientId)).size).toBe(20000);
+  expect(emailQueue.every(item => /^buyer-\d+@example\.com$/.test(item.toEmail))).toBe(true);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_recipients').get()!.n).toBe(20000);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaign_recipients').get()!.n).toBe(20000);
   const saved = sqlite.prepare('SELECT max(length(snapshot)) n FROM edm_assistant_snapshots').get()!;
   expect(Number(saved.n)).toBeLessThan(2000000);
+  expect((await request('/' + session.id + '/confirm', 'POST', confirmed)).status).toBe(200);
+  expect(emailQueue).toHaveLength(20000);
+});
+
+test('accepts exactly 20000 explicit recipient IDs in the saved assistant draft', () => {
+  const contactIds = Array.from({ length: 20000 }, (_, index) => 'contact-' + index);
+  expect(mergeDraft(emptyDraft(['email']), { email: { contactIds } }).email.contactIds).toHaveLength(20000);
+});
+
+test('rejects 20001 recipients by group or explicit selection without dispatching or changing the saved audience', async () => {
+  const session = await ready();
+  const ids = insertRecipientGroup('oversized', 20001);
+  const groupResponse = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'oversized-group', expectedVersion: session.version,
+    draft: { email: { groupId: 'oversized', contactIds: [] } } });
+  expect(groupResponse.status).toBe(400);
+  expect((await groupResponse.json() as any).code).toBe('too_many_recipients');
+  const explicitResponse = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'oversized-explicit', expectedVersion: session.version,
+    draft: { email: { contactIds: ids } } });
+  expect(explicitResponse.status).toBe(400);
+  expect((await explicitResponse.json() as any).code).toBe('invalid_request');
+  const restored = (await (await request('/' + session.id)).json() as any).data;
+  expect(restored.draft.email.contactIds).toEqual(['contact']); expect(restored.version).toBe(session.version);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaigns').get()!.n).toBe(0);
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test('a saved recipient group that grows to 20001 stays editable without a confirmation token', async () => {
+  let session = await ready();
+  insertRecipientGroup('growing', 0);
+  sqlite.exec("UPDATE edm_contacts SET group_id='growing' WHERE id='contact'");
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'select-growing', expectedVersion: session.version,
+    draft: { email: { groupId: 'growing', contactIds: [] } } })).json() as any).data;
+  expect(session.preview.email.count).toBe(1); expect(session.confirmationToken).toBeTruthy();
+  sqlite.exec('BEGIN');
+  const insert = sqlite.prepare("INSERT INTO edm_contacts(id,user_id,group_id,email,created_at,updated_at) VALUES(?,'w1','growing',?,0,0)");
+  for (let index = 0; index < 20000; index++) insert.run('added-' + index, `added-${index}@example.com`);
+  sqlite.exec('COMMIT');
+  const response = await request('/' + session.id);
+  expect(response.status).toBe(200);
+  const expanded = (await response.json() as any).data;
+  expect(expanded.status).toBe('draft'); expect(expanded.confirmationToken).toBeNull();
+  expect(expanded.preview.email.count).toBe(20001);
+  expect(expanded.missingFields.some((field: any) => field.key === 'email.audience')).toBe(true);
+  const repaired = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'shrink-audience', expectedVersion: expanded.version,
+    draft: { email: { contactIds: ['contact'], groupId: '', tag: '' } } });
+  expect(repaired.status).toBe(200);
+  const small = (await repaired.json() as any).data;
+  expect(small.preview.email.count).toBe(1); expect(small.status).toBe('ready'); expect(small.confirmationToken).toBeTruthy();
+  expect(emailQueue).toEqual([]);
+});
+
+test('ordinary assistant chat rejects an oversized group before replacing the saved audience', async () => {
+  const session = await ready();
+  insertRecipientGroup('oversized', 20001);
+  mockAiReply({ message: '选择客户分组。', draft: {}, audience: { groupId: 'oversized' } });
+  const response = await request('/' + session.id + '/messages', 'POST', { requestId: 'oversized-chat', expectedVersion: session.version,
+    message: '选择 Bulk customers 分组发送邮件' });
+  expect(response.status).toBe(400); expect((await response.json() as any).code).toBe('too_many_recipients');
+  const restoredResponse = await request('/' + session.id);
+  expect(restoredResponse.status).toBe(200);
+  const restored = (await restoredResponse.json() as any).data;
+  expect(restored.draft.email).toEqual(session.draft.email); expect(restored.version).toBe(session.version);
+  expect(restored.messages).toEqual(session.messages); expect(restored.preview.email.count).toBe(1);
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
 });
 
 test('saving a draft preserves the complete existing conversation instead of truncating old messages', async () => {

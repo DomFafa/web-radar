@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AssistantChannel, AssistantDraft, AssistantDraftingStatus, AssistantDraftPatch, AssistantField, AssistantMessage, AssistantOperation, AssistantPreview, AssistantRecipient, AssistantSession } from '../../shared/assistant';
+import { ASSISTANT_EMAIL_RECIPIENT_LIMIT } from '../../shared/assistant';
 import type { Bindings, Variables } from '../../shared/types';
 import { normalizeSiteTargets } from '../../shared/site-targets';
 import { sha256 } from '../../../worker/http';
@@ -17,7 +18,7 @@ export interface SessionRow {
 const text = (max = 1000) => z.string().max(max);
 const senderSchema = z.strictObject({ name: text(200), email: text(320), company: text(300), phone: text(100), address: text(), country: text(100), city: text(100) });
 const emailSchema = z.strictObject({ subject: text(500), bodyHtml: text(50000), bodyText: text(20000),
-  contactIds: z.array(text(100)).max(15000), groupId: text(100), tag: text(200), replyTo: text(320),
+  contactIds: z.array(text(100)).max(ASSISTANT_EMAIL_RECIPIENT_LIMIT), groupId: text(100), tag: text(200), replyTo: text(320),
   replyTracking: z.boolean(), sendRate: z.number().int().min(1).max(200) });
 const siteSchema = z.strictObject({ subject: text(500), message: text(5000), targets: z.array(text(2048)).max(1000), replyTracking: z.boolean() });
 export const draftPatchSchema = z.strictObject({ channels: z.array(z.enum(['email', 'site'])).max(2), brief: text(12000), language: z.enum(['en', 'zh']),
@@ -80,11 +81,17 @@ export async function previewDraft(db: D1Database, user: AssistantUser, draft: A
         .bind(user.id, ...(filter.includes('?') ? [value] : [])).first<{ n: number }>();
       recipientCount = count?.n || 0;
     } else {
-      const rows = await db.prepare(`SELECT id,email,COALESCE(name,'') name,COALESCE(company,'') company,COALESCE(industry,'') industry FROM edm_contacts WHERE user_id=? AND subscription_status='subscribed' AND ${filter} ORDER BY id LIMIT 15001`)
+      const rows = await db.prepare(`SELECT id,email,COALESCE(name,'') name,COALESCE(company,'') company,COALESCE(industry,'') industry FROM edm_contacts WHERE user_id=? AND subscription_status='subscribed' AND ${filter} ORDER BY id LIMIT ${ASSISTANT_EMAIL_RECIPIENT_LIMIT + 1}`)
       .bind(user.id, ...(filter.includes('?') ? [value] : [])).all<AssistantRecipient>();
       recipients = rows.results;
       recipientCount = recipients.length;
-      if (recipients.length > 15000) throw new AssistantError(400, 'too_many_recipients', '一次最多选择 15000 位联系人，请缩小分组。');
+      if (recipients.length > ASSISTANT_EMAIL_RECIPIENT_LIMIT) {
+        // A selected group can grow later. Keep the session editable, with confirmation blocked by missingFields.
+        const count = await db.prepare(`SELECT count(*) n FROM edm_contacts WHERE user_id=? AND subscription_status='subscribed' AND ${filter}`)
+          .bind(user.id, ...(filter.includes('?') ? [value] : [])).first<{ n: number }>();
+        recipientCount = Math.max(recipients.length, count?.n || 0);
+        recipients = [];
+      }
     }
   }
   const sites = normalizeSiteTargets(draft.site.targets);
@@ -99,7 +106,7 @@ export function missingFields(draft: AssistantDraft, preview: AssistantPreview, 
     if (!z.email().safeParse(draft.sender.email).success) fields.push({ key: 'sender.email', label: '发件人邮箱', type: 'email' });
   }
   if (pendingChannels.includes('email')) {
-    if (!preview.email.count || preview.email.count > 15000) fields.push({ key: 'email.audience', label: '选择收件联系人（最多 15000 人）', type: 'contacts', channel: 'email' });
+    if (!preview.email.count || preview.email.count > ASSISTANT_EMAIL_RECIPIENT_LIMIT) fields.push({ key: 'email.audience', label: `选择收件联系人（最多 ${ASSISTANT_EMAIL_RECIPIENT_LIMIT} 人）`, type: 'contacts', channel: 'email' });
     if (!draft.email.subject.trim() || !draft.email.bodyHtml.trim()) fields.push({ key: 'email.content', label: '邮件主题与正文', type: 'content', channel: 'email' });
   }
   if (pendingChannels.includes('site')) {

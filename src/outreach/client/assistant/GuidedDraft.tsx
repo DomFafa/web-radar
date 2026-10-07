@@ -7,6 +7,7 @@ import type {
   AssistantOptions,
   AssistantSession,
 } from '../../shared/assistant';
+import { ASSISTANT_EMAIL_RECIPIENT_LIMIT } from '../../shared/assistant';
 import { normalizeSiteTargets } from '../../shared/site-targets';
 import { assistantApi, type AssistantMailTemplate } from './api';
 import { EmailPreview } from '../components/EmailPreview';
@@ -84,6 +85,7 @@ export function GuidedDraft({
   onComposerContext,
   onTemplate,
   onConfirm,
+  onManageContacts,
 }: {
   session: AssistantSession;
   options: AssistantOptions | null;
@@ -97,6 +99,7 @@ export function GuidedDraft({
   onComposerContext: (context: ComposerContext) => void;
   onTemplate?: (templateId: string) => Promise<AssistantSession | null>;
   onConfirm: (authorized: boolean) => void;
+  onManageContacts?: (action: 'add' | 'import' | 'groups') => void;
 }) {
   const steps = guidanceSteps(session.pendingChannels);
   const [restored] = useState(() => {
@@ -128,9 +131,14 @@ export function GuidedDraft({
     }
   });
   const scopedDraft = { ...session.draft, channels: session.pendingChannels };
+  const audienceMissing = session.pendingChannels.includes('email') &&
+    session.missingFields.some((field) => field.key === 'email.audience');
+  const audienceTooLarge = audienceMissing && session.preview.email.count > ASSISTANT_EMAIL_RECIPIENT_LIMIT;
+  const requiredStep = audienceMissing ? 'emailAudience' :
+    firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates);
   const [draft, setDraft] = useState<AssistantDraft>(restored?.draft || scopedDraft);
   const [step, setStep] = useState<GuidanceStep>(
-    restored?.step || firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates),
+    audienceTooLarge ? 'emailAudience' : restored?.step || requiredStep,
   );
   const [dirty, setDirty] = useState<GuidanceStep[]>(restored?.dirty || []);
   const dirtyRef = useRef(dirty);
@@ -204,11 +212,11 @@ export function GuidedDraft({
       const remaining = dirtyRef.current.filter((item) => item !== step);
       dirtyRef.current = remaining;
       setDirty(remaining);
-      go(firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates));
-    } else if (step === 'review' && reviewError) {
-      go(firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates));
+      go(requiredStep);
+    } else if (step === 'review' && (reviewError || audienceMissing)) {
+      go(requiredStep);
     }
-  }, [session.version, lastMessageId]);
+  }, [session.version, lastMessageId, audienceMissing]);
   useEffect(() => {
     setDraft((current) =>
       dirtyRef.current.reduce((next, item) => applyLocal(next, stepDraftPatch(item, current)), {
@@ -227,6 +235,9 @@ export function GuidedDraft({
       /* Server saves still work without browser storage. */
     }
   }, [storageKey, session.version, draft, step, dirty, source]);
+  useEffect(() => {
+    if (search.trim().length < 2) setContacts(options?.contacts || []);
+  }, [options?.contacts, search]);
   useEffect(() => {
     if (step !== 'emailAudience' || audienceMethod !== 'contacts' || search.trim().length < 2)
       return;
@@ -414,10 +425,7 @@ export function GuidedDraft({
             onEditContent={(channel) => go(channel === 'email' ? 'emailContent' : 'siteContent')}
             onEdit={() =>
               go(
-                firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates) ===
-                  'review'
-                  ? steps[0]
-                  : firstIncompleteGuidanceStep(scopedDraft, options, session.draftingStates),
+                requiredStep === 'review' ? steps[0] : requiredStep,
               )
             }
           />
@@ -434,6 +442,28 @@ export function GuidedDraft({
             <h2>{guidedSteps[step].question}</h2>
             {step === 'emailAudience' && (
               <>
+                {audienceTooLarge && (
+                  <p role="alert" className="wr-lazy-note">
+                    当前名单有 {session.preview.email.count.toLocaleString('en-US')} 位可发送客户，
+                    每次最多 {ASSISTANT_EMAIL_RECIPIENT_LIMIT.toLocaleString('en-US')} 位。请换一个较小的分组或缩小名单。
+                  </p>
+                )}
+                {onManageContacts && (
+                  <div className="wr-lazy-contact-management">
+                    <p>名单还没准备好？先添加客户或上传 CSV / Excel，再选择要发送的分组。</p>
+                    <div className="wr-lazy-actions">
+                      <Button kind="secondary" type="button" onClick={() => onManageContacts('add')}>
+                        添加联系人
+                      </Button>
+                      <Button kind="primary" type="button" onClick={() => onManageContacts('import')}>
+                        批量导入名单
+                      </Button>
+                      <Button kind="quiet" type="button" onClick={() => onManageContacts('groups')}>
+                        管理分组
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div className="wr-lazy-pills" aria-label="选择名单方式">
                   {[
                     ['group', '已有分组'],
@@ -535,9 +565,7 @@ export function GuidedDraft({
                 )}
                 <p className="wr-lazy-muted">
                   发送前会核对有效人数并排除已退订客户。
-                  <a href="/?view=edm&edmTab=contacts" target="_blank" rel="noreferrer">
-                    导入新名单
-                  </a>
+                  批量发送时选择分组，无需逐个勾选客户。
                 </p>
                 <Button
                   kind="quiet"

@@ -44,10 +44,12 @@ export default function AssistantPage({
   principal,
   testMode,
   onWorkbench,
+  onManageContacts,
 }: {
   principal: Principal;
   testMode: boolean;
   onWorkbench: (channel: AssistantChannel, taskId?: string) => void;
+  onManageContacts?: (action: 'add' | 'import' | 'groups') => void;
 }) {
   const writable = writeBusiness(principal);
   const [activeId, setActiveId] = useState<string | null>(() =>
@@ -568,6 +570,7 @@ export default function AssistantPage({
               onComposerContext={setComposerContext}
               onTemplate={applyTemplate}
               onConfirm={(authorized) => void confirm(authorized)}
+              onManageContacts={onManageContacts}
             />
           )}
           {session && hasContent && !writable && (

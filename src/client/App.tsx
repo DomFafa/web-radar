@@ -61,14 +61,21 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'lazy-mode' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
+  const [view, setView] = useState<'lazy-mode' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages' | 'contacts'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'lazy-mode' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
+        if (v === 'lazy-mode' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages' || v === 'contacts') return v;
       } catch {}
       return 'dashboard';
     }),
     [embedError, setEmbedError] = useState('');
+  const [contactsAction,setContactsAction]=useState<'add'|'import'|'groups'|undefined>(()=>{
+    const action=new URL(location.href).searchParams.get('contactsAction');
+    return action==='add'||action==='import'||action==='groups'?action:undefined;
+  });
+  const [contactsBusy,setContactsBusy]=useState(false);
+  const manageContacts=(action:'add'|'import'|'groups')=>{setContactsAction(action);setView('contacts')};
+  const continueContacts=()=>{if(!contactsBusy){setContactsAction(undefined);setView('lazy-mode')}};
   const [businessMember,setBusinessMember]=useState<Member|null>(null);
   const [authBusy, setAuthBusy] = useState(false),
     [sessionMessage, setSessionMessage] = useState('');
@@ -95,9 +102,11 @@ export default function App() {
       } else {
         url.searchParams.delete('view');
       }
+      if(view==='contacts'&&contactsAction)url.searchParams.set('contactsAction',contactsAction);
+      else url.searchParams.delete('contactsAction');
       window.history.replaceState({}, '', url.toString());
     } catch {}
-  }, [view]);
+  }, [view,contactsAction]);
   const exchanging = useRef(new HandoffAttempts());
   const authEpoch = useRef(0);
   const previousActor = useRef<string | null>(null);
@@ -295,6 +304,7 @@ export default function App() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
+                if(contactsBusy)return;
                 setView('dashboard');
               }}
             >
@@ -302,9 +312,10 @@ export default function App() {
             </a>
             <div className="workspace-label">工作台</div>
             <nav aria-label="工作台导航">
-              <button className={view === 'lazy-mode' ? 'active' : ''} aria-current={view === 'lazy-mode' ? 'page' : undefined} onClick={() => setView('lazy-mode')}><Icon name="globe" />懒人模式</button>
-              <button className={view === 'dashboard' ? 'active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><Icon name="chart" />控制台</button>
+              <button disabled={contactsBusy} className={view === 'lazy-mode' ? 'active' : ''} aria-current={view === 'lazy-mode' ? 'page' : undefined} onClick={() => setView('lazy-mode')}><Icon name="globe" />懒人模式</button>
+              <button disabled={contactsBusy} className={view === 'dashboard' ? 'active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><Icon name="chart" />控制台</button>
               <button
+                disabled={contactsBusy}
                 className={view === 'projects' ? 'active' : ''}
                 aria-current={view === 'projects' ? 'page' : undefined}
                 onClick={() => setView('projects')}
@@ -312,9 +323,11 @@ export default function App() {
                 <Icon name="grid" />
                 网站项目
               </button>
-              <button className={view === 'edm' ? 'active' : ''} aria-current={view === 'edm' ? 'page' : undefined} onClick={() => setView('edm')}><Icon name="mail" />EDM 邮件</button>
-              <button className={view === 'site-messages' ? 'active' : ''} aria-current={view === 'site-messages' ? 'page' : undefined} onClick={() => setView('site-messages')}><Icon name="message" />站内信</button>
+              <button disabled={contactsBusy} className={view === 'contacts' ? 'active' : ''} aria-current={view === 'contacts' ? 'page' : undefined} onClick={() => {setContactsAction(undefined);setView('contacts')}}><Icon name="users" />联系人管理</button>
+              <button disabled={contactsBusy} className={view === 'edm' ? 'active' : ''} aria-current={view === 'edm' ? 'page' : undefined} onClick={() => setView('edm')}><Icon name="mail" />EDM 邮件</button>
+              <button disabled={contactsBusy} className={view === 'site-messages' ? 'active' : ''} aria-current={view === 'site-messages' ? 'page' : undefined} onClick={() => setView('site-messages')}><Icon name="message" />站内信</button>
               <button
+                disabled={contactsBusy}
                 className={view === 'services' ? 'active' : ''}
                 aria-current={view === 'services' ? 'page' : undefined}
                 onClick={() => setView('services')}
@@ -322,11 +335,12 @@ export default function App() {
                 <Icon name="globe" />
                 服务状态
               </button>
-              <button className={view === 'inbox' ? 'active' : ''} onClick={() => setView('inbox')}><Icon name="mail"/>客户收件箱</button>
-              {manageUsers(principal) && <button className={view === 'users' ? 'active' : ''} onClick={() => setView('users')}><Icon name="users"/>用户管理</button>}
-              {viewTeamData(principal) && <button className={view === 'business' ? 'active' : ''} onClick={() => {setBusinessMember(null);setView('business')}}><Icon name="chart"/>业务数据</button>}
+              <button disabled={contactsBusy} className={view === 'inbox' ? 'active' : ''} onClick={() => setView('inbox')}><Icon name="mail"/>客户收件箱</button>
+              {manageUsers(principal) && <button disabled={contactsBusy} className={view === 'users' ? 'active' : ''} onClick={() => setView('users')}><Icon name="users"/>用户管理</button>}
+              {viewTeamData(principal) && <button disabled={contactsBusy} className={view === 'business' ? 'active' : ''} onClick={() => {setBusinessMember(null);setView('business')}}><Icon name="chart"/>业务数据</button>}
               {principal.systemRole === 'super_admin' && (
                 <button
+                  disabled={contactsBusy}
                   className={view === 'admin' ? 'active' : ''}
                   aria-current={view === 'admin' ? 'page' : undefined}
                   onClick={() => setView('admin')}
@@ -350,7 +364,7 @@ export default function App() {
                 <span className="avatar">{principal.displayName.slice(0, 1).toUpperCase()}</span>
                 <span>{principal.displayName}</span>
                 {!embedded && (
-                  <Button kind="quiet" onClick={signOut} aria-label="退出登录">
+                  <Button kind="quiet" disabled={contactsBusy} onClick={signOut} aria-label="退出登录">
                     <Icon name="logout" size={16} />
                   </Button>
                 )}
@@ -358,7 +372,7 @@ export default function App() {
             </header>
             {view === 'lazy-mode' ? (
               <ErrorBoundary scope="section" title="会话暂时无法加载" onBack={() => setView('edm')} backText="返回邮件工作台">
-                <Suspense fallback={<ChunkFallback />}><OutreachAssistant key={`${principal.userId}:${principal.workspaceId}`} principal={principal} testMode={!!config?.testMode} onWorkbench={(channel,taskId)=>{const url=new URL(location.href);url.searchParams.set('edmTab','campaigns');url.searchParams.delete('campaignId');url.searchParams.delete('siteJobId');if(taskId)url.searchParams.set(channel==='email'?'campaignId':'siteJobId',taskId);history.replaceState({},'',url);setView(channel==='email'?'edm':'site-messages');}} /></Suspense>
+                <Suspense fallback={<ChunkFallback />}><OutreachAssistant key={`${principal.userId}:${principal.workspaceId}`} principal={principal} testMode={!!config?.testMode} onManageContacts={manageContacts} onWorkbench={(channel,taskId)=>{const url=new URL(location.href);url.searchParams.set('edmTab','campaigns');url.searchParams.delete('campaignId');url.searchParams.delete('siteJobId');if(taskId)url.searchParams.set(channel==='email'?'campaignId':'siteJobId',taskId);history.replaceState({},'',url);setView(channel==='email'?'edm':'site-messages');}} /></Suspense>
               </ErrorBoundary>
             ) : view === 'dashboard' ? (
               <ErrorBoundary scope="section" title="控制台加载异常" onBack={() => setView('projects')} backText="返回网站项目">
@@ -366,9 +380,9 @@ export default function App() {
               </ErrorBoundary>
             ) : view === 'projects' ? (
               <Projects key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onOpen={setSelected} />
-            ) : view === 'edm' || view === 'site-messages' ? (
+            ) : view === 'edm' || view === 'site-messages' || view === 'contacts' ? (
               <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回网站项目。" onBack={()=>setView('projects')} backText="返回网站项目">
-                <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}`} principal={principal} section={view}/></Suspense>
+                <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}:${view==='contacts'?'contacts':'outreach'}`} principal={principal} section={view} contactsAction={contactsAction} onImportingChange={setContactsBusy} onContinueContacts={continueContacts}/></Suspense>
               </ErrorBoundary>
             ) : view === 'inbox' ? (
               <Suspense fallback={<ChunkFallback/>}><CustomerInbox key={principal.userId+':'+principal.workspaceId} principal={principal}/></Suspense>

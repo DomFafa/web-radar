@@ -27,6 +27,13 @@ export function DraftPreview({
   onEditContent?: (channel: AssistantChannel) => void;
 }) {
   const [authorized, setAuthorized] = useState(false);
+  const [recipientPage, setRecipientPage] = useState(1);
+  const recipientPages = Math.max(1, Math.ceil(session.preview.email.recipients.length / 100));
+  const currentRecipientPage = Math.min(recipientPage, recipientPages);
+  const shownRecipients = session.preview.email.recipients.slice(
+    (currentRecipientPage - 1) * 100,
+    currentRecipientPage * 100,
+  );
   const email = session.pendingChannels.includes('email');
   const site = session.pendingChannels.includes('site');
   const count = session.preview.email.count,
@@ -98,13 +105,26 @@ export function DraftPreview({
             <details>
               <summary>查看本次收件名单</summary>
               <div className="wr-lazy-contact-list">
-                {session.preview.email.recipients.map((person) => (
+                {shownRecipients.map((person) => (
                   <p key={person.id}>
                     {person.name ? person.name + ' · ' : ''}
                     {person.email}
                   </p>
                 ))}
               </div>
+              {recipientPages > 1 && (
+                <nav className="wr-lazy-actions" aria-label="收件名单分页">
+                  <Button kind="quiet" disabled={currentRecipientPage === 1}
+                    onClick={() => setRecipientPage(currentRecipientPage - 1)}>
+                    上一页名单
+                  </Button>
+                  <span>第 {currentRecipientPage} / {recipientPages} 页 · 每页 100 位</span>
+                  <Button kind="quiet" disabled={currentRecipientPage === recipientPages}
+                    onClick={() => setRecipientPage(currentRecipientPage + 1)}>
+                    下一页名单
+                  </Button>
+                </nav>
+              )}
             </details>
             <dl>
               <dt>邮件主题</dt>
