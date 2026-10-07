@@ -56,6 +56,18 @@ test('an email domain is not explicit authorization to add its website as a targ
   expect(result.draft.site.targets).toEqual([]);
 });
 
+test('an AI channel change cannot restore an old target or content from the inactive channel', async () => {
+  const draft = emptyDraft(['email']);
+  draft.brief = 'Old email proposal';
+  draft.email = { ...draft.email, subject: 'Old email', bodyHtml: '<p>Old email body</p>', bodyText: 'Old email body', groupId: 'buyers' };
+  draft.site = { ...draft.site, subject: 'Old site subject', message: 'An earlier website inquiry', targets: ['https://old-buyer.example.com/contact'] };
+  mockReply({ message: 'Prepared a new website message', draft: { channels: ['site'], site: { message: 'May we share a new catalog with your team?' } } });
+  const result = await generateAssistantDraft(env, 'w', draft, [], 'Use only website messages this time', options);
+  expect(result.draft.site).toEqual({ subject: '', message: 'May we share a new catalog with your team?', targets: [], replyTracking: false });
+  expect(result.draft.email).toMatchObject({ subject: '', bodyHtml: '', bodyText: '', groupId: '', contactIds: [] });
+  expect(result.draft.brief).toBe('');
+});
+
 test('an explicit recipient not in contacts clears the previous group instead of confirming the old audience', async () => {
   const draft = emptyDraft(['email']); draft.email.groupId = 'buyers';
   mockReply({ message: 'Prepared', draft: {}, audience: { emails: ['new-buyer@example.com'] } });

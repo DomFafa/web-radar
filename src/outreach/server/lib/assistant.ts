@@ -32,8 +32,20 @@ export function emptyDraft(channels: AssistantDraft['channels'] = []): Assistant
 export function mergeDraft(current: AssistantDraft, patch: AssistantDraftPatch): AssistantDraft {
   const parsed = draftPatchSchema.safeParse(patch);
   if (!parsed.success) throw new AssistantError(400, 'invalid_draft', '草稿字段或长度不正确，请检查输入。');
+  const changedChannels = parsed.data.channels
+    ? (['email', 'site'] as const).filter(channel => current.channels.includes(channel) !== parsed.data.channels!.includes(channel))
+    : [];
+  const defaults = emptyDraft();
+  // Changing channels starts its audience and content afresh; only explicitly supplied fields carry over.
+  const email = changedChannels.includes('email')
+    ? { ...defaults.email, replyTo: current.email.replyTo, replyTracking: current.email.replyTracking, sendRate: current.email.sendRate }
+    : current.email;
+  const site = changedChannels.includes('site')
+    ? { ...defaults.site, replyTracking: current.site.replyTracking }
+    : current.site;
   const draft = { ...current, ...parsed.data, sender: { ...current.sender, ...parsed.data.sender },
-    email: { ...current.email, ...parsed.data.email }, site: { ...current.site, ...parsed.data.site } };
+    email: { ...email, ...parsed.data.email }, site: { ...site, ...parsed.data.site } };
+  if (changedChannels.length && parsed.data.brief === undefined) draft.brief = '';
   draft.channels = [...new Set(draft.channels)];
   draft.email.contactIds = [...new Set(draft.email.contactIds)];
   // Switching recipient source replaces the previous selection instead of silently preferring it.

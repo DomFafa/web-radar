@@ -116,10 +116,56 @@ test('adding a website channel after email submission preserves the original ema
   let session = await ready(); await emailProvider();
   session = (await (await request('/' + session.id + '/confirm', 'POST', confirmation(session))).json() as any).data;
   const emailTask = session.operations[0].taskId;
-  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'add-site', expectedVersion: session.version, draft: { channels: ['email', 'site'] } })).json() as any).data;
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'add-site', expectedVersion: session.version,
+    draft: { channels: ['email', 'site'], site: { targets: ['https://buyer.example.com/contact'], message: 'Hello, would your team like a product sample?' } } })).json() as any).data;
   expect(session.pendingChannels).toEqual(['site']);
   session = (await (await request('/' + session.id + '/confirm', 'POST', confirmation(session))).json() as any).data;
   expect(session.operations[0].taskId).toBe(emailTask); expect(emailQueue).toHaveLength(1); expect(siteQueue).toHaveLength(1);
+});
+
+test('removing and re-enabling a channel does not restore its old audience or content', async () => {
+  let session = await ready(['email', 'site']);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'settings', expectedVersion: session.version,
+    draft: { language: 'zh', email: { replyTo: 'reply@example.com', replyTracking: true, sendRate: 12 }, site: { replyTracking: true } } })).json() as any).data;
+  const email = session.draft.email;
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'email-only', expectedVersion: session.version,
+    draft: { channels: ['email'] } })).json() as any).data;
+  expect(session.draft.site).toEqual({ subject: '', message: '', targets: [], replyTracking: true });
+  expect(session.draft.email).toEqual(email);
+  expect(session.draft.sender).toMatchObject({ name: 'Seller', email: 'sales@example.com' });
+  expect(session.draft.language).toBe('zh'); expect(session.draft.brief).toBe('');
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'site-again', expectedVersion: session.version,
+    draft: { channels: ['email', 'site'] } })).json() as any).data;
+  expect(session.preview.site.count).toBe(0);
+  expect(session.draft.site.message).toBe('');
+  expect(session.confirmationToken).toBeNull();
+  expect(session.missingFields.map((field: any) => field.key)).toEqual(['site.targets', 'site.content']);
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test('newly selected channel uses only explicitly supplied content and targets', async () => {
+  let session = await ready(['email']);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'switch-site', expectedVersion: session.version,
+    draft: { channels: ['site'], brief: 'Ask about a new catalog', site: { message: 'May we send your team a catalog?' } } })).json() as any).data;
+  expect(session.draft.site).toEqual({ subject: '', message: 'May we send your team a catalog?', targets: [], replyTracking: false });
+  expect(session.draft.email).toMatchObject({ contactIds: [], groupId: '', tag: '', subject: '', bodyHtml: '', bodyText: '' });
+  expect(session.draft.brief).toBe('Ask about a new catalog');
+  expect(session.preview.site.count).toBe(0); expect(session.preview.email.count).toBe(0);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'switch-email', expectedVersion: session.version,
+    draft: { channels: ['email'], email: { subject: 'New request' } } })).json() as any).data;
+  expect(session.draft.email).toMatchObject({ subject: 'New request', bodyHtml: '', bodyText: '', contactIds: [] });
+  expect(session.draft.site.message).toBe(''); expect(session.draft.brief).toBe('');
+});
+
+test('restating the current channel preserves content and audience when changing sender details', async () => {
+  const session = await ready(['email', 'site']);
+  const response = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'same-channels', expectedVersion: session.version,
+    draft: { channels: ['site', 'email'], sender: { name: 'Updated Seller' } } });
+  expect(response.status).toBe(200);
+  const next = (await response.json() as any).data;
+  expect(next.draft.email).toEqual(session.draft.email); expect(next.draft.site).toEqual(session.draft.site);
+  expect(next.draft.brief).toBe(session.draft.brief); expect(next.draft.sender.name).toBe('Updated Seller');
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
 });
 
 test('partial queue failure stays uncertain and repeat confirmation only reads the original tasks', async () => {

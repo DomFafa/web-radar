@@ -11,7 +11,8 @@ import type {
   AssistantSessionSummary,
 } from '../../shared/assistant';
 import { assistantApi } from './api';
-import { DraftPreview, NecessaryInputs, ResultCards } from './AssistantCards';
+import { DraftPreview, ResultCards } from './AssistantCards';
+import { GuidedDraft } from './GuidedDraft';
 import './assistant.css';
 
 const statusLabel: Record<AssistantSession['status'], string> = {
@@ -60,7 +61,6 @@ export default function AssistantPage({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [listOpen, setListOpen] = useState(false);
-  const [showInputs, setShowInputs] = useState(false);
   const [composer, setComposer] = useState('');
   const activeRef = useRef(activeId);
   activeRef.current = activeId;
@@ -110,7 +110,6 @@ export default function AssistantPage({
     setSession(null);
     setResults(null);
     setError('');
-    setShowInputs(false);
     setListOpen(false);
     setPendingMessage(null);
     const url = new URL(location.href);
@@ -245,12 +244,12 @@ export default function AssistantPage({
       if (mounted.current) setBusy(false);
     }
   }
-  async function sendMessage(retry = false) {
-    const text = retry ? pendingMessage?.text : composer.trim();
-    if (!text || pending.current || !writable) return;
+  async function sendMessage(retry = false, content?: string): Promise<AssistantSession | null> {
+    const text = content ?? (retry ? pendingMessage?.text : composer.trim());
+    if (!text || pending.current || !writable) return null;
     if (!session) {
       await start([], text);
-      return;
+      return null;
     }
     const current = session;
     const request =
@@ -267,8 +266,8 @@ export default function AssistantPage({
       if (activeRef.current === current.id) {
         changeComposer('');
         setPendingMessage(null);
-        setShowInputs(false);
       }
+      return next;
     } catch (error) {
       if (activeRef.current === current.id) {
         setError(errorText(error));
@@ -286,9 +285,10 @@ export default function AssistantPage({
       pending.current = false;
       if (mounted.current) setBusy(false);
     }
+    return null;
   }
-  async function saveInputs(draft: AssistantDraftPatch) {
-    if (!session || pending.current || !writable) return;
+  async function saveInputs(draft: AssistantDraftPatch): Promise<AssistantSession | null> {
+    if (!session || pending.current || !writable) return null;
     pending.current = true;
     setBusy(true);
     setError('');
@@ -296,12 +296,7 @@ export default function AssistantPage({
     try {
       const next = await assistantApi.patch(current, draft, crypto.randomUUID());
       remember(next);
-      try {
-        sessionStorage.removeItem(`${scope}:${current.id}:${current.version}:fields`);
-      } catch {
-        /* Server draft is saved. */
-      }
-      if (activeRef.current === current.id) setShowInputs(false);
+      return activeRef.current === current.id ? next : null;
     } catch (error) {
       if (activeRef.current === current.id) {
         setError(errorText(error));
@@ -315,6 +310,7 @@ export default function AssistantPage({
       pending.current = false;
       if (mounted.current) setBusy(false);
     }
+    return null;
   }
   async function confirm(siteAuthorized: boolean) {
     if (!session || !session.confirmationToken || pending.current || !writable) return;
@@ -365,10 +361,6 @@ export default function AssistantPage({
       if (mounted.current) setBusy(false);
     }
   }
-  const needsInputs = !!session?.missingFields.some(
-    (field) =>
-      ['contacts', 'websites', 'email'].includes(field.type) || field.key.startsWith('sender.'),
-  );
   const hasContent =
     !!session &&
     ((session.pendingChannels.includes('email') && !!session.draft.email.bodyHtml) ||
@@ -510,31 +502,24 @@ export default function AssistantPage({
               ))}
             </div>
           )}
-          {session && writable && !showInputs && needsInputs && !hasContent && (
-            <div className="wr-lazy-actions">
-              <Button kind="secondary" disabled={processing} onClick={() => setShowInputs(true)}>
-                补充名单和联系资料
-              </Button>
-              <span className="wr-lazy-muted">只需提供本次发送必需的信息</span>
-            </div>
-          )}
-          {session && showInputs && (
-            <NecessaryInputs
-              key={`${session.id}:${session.version}`}
+          {session && writable && session.pendingChannels.length > 0 && (
+            <GuidedDraft
+              key={`${session.id}:${session.pendingChannels.join(',')}`}
               session={session}
               options={options}
               busy={processing}
-              storageKey={`${scope}:${session.id}:${session.version}:fields`}
+              storageKey={`${scope}:${session.id}:${session.pendingChannels.join(',')}:guidance`}
               onRefreshOptions={async () => {
                 const next = await assistantApi.options();
                 setOptions(next);
                 return next;
               }}
-              onSave={(draft) => void saveInputs(draft)}
-              onCancel={() => setShowInputs(false)}
+              onSave={saveInputs}
+              onGenerate={(content) => sendMessage(false, content)}
+              onConfirm={(authorized) => void confirm(authorized)}
             />
           )}
-          {session && hasContent && !showInputs && (
+          {session && hasContent && !writable && (
             <DraftPreview
               key={`${session.id}:${session.version}`}
               session={session}
@@ -542,7 +527,7 @@ export default function AssistantPage({
               busy={processing}
               writable={writable}
               onConfirm={(authorized) => void confirm(authorized)}
-              onEdit={() => setShowInputs(true)}
+              onEdit={() => {}}
             />
           )}
           {results && results.channels.length > 0 && (

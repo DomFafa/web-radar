@@ -69,7 +69,7 @@ assistantRoutes.post('/sessions', async c => {
   const createHash = await requestHash('create', { channels: draft.channels });
   await c.env.DB.batch([c.env.DB.prepare('INSERT OR IGNORE INTO edm_assistant_sessions(id,user_id,created_by,create_request_id,title,draft,messages,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)')
     .bind(id, user.id, actor, parsed.data.requestId, '新的外联会话', JSON.stringify(draft),
-      JSON.stringify([message('assistant', '告诉我这次想联系哪些客户、介绍什么产品或服务，以及希望对方如何回复。我会帮你准备邮件或网站留言，发送前请你预览确认。')]), now, now),
+      JSON.stringify([message('assistant', '我们一步一步准备。先选择要联系的客户或目标网站，资料和内容可以随时返回修改，最后由你确认发送。')]), now, now),
     c.env.DB.prepare("INSERT OR IGNORE INTO edm_assistant_requests(session_id,request_id,request_hash,kind,status,created_at) SELECT id,'__create__',?,'create','done',? FROM edm_assistant_sessions WHERE user_id=? AND created_by=? AND create_request_id=?")
       .bind(createHash, now, user.id, actor, parsed.data.requestId),
   ]);

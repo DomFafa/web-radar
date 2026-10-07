@@ -25,6 +25,8 @@ let app,
   browser,
   origin,
   confirmations = 0,
+  modelRequests = 0,
+  emptyModelBody = false,
   failModel = false,
   loseConfirmation = false;
 const confirmationIds = new Set();
@@ -61,11 +63,14 @@ const server = await createServer({
               response = Response.json({ testMode: false, services: [] });
             else if (req.url === '/api/auth/me') response = Response.json({ principal });
             else if (req.url.startsWith('/model/')) {
+              modelRequests++;
               if (failModel) {
                 failModel = false;
                 response = Response.json({ error: 'fixture outage' }, { status: 503 });
               } else {
                 const input = JSON.parse(JSON.parse(body).messages.at(-1).content);
+                const blankBody = emptyModelBody;
+                emptyModelBody = false;
                 response = Response.json({
                   choices: [
                     {
@@ -77,9 +82,9 @@ const server = await createServer({
                             brief: input.latestInput,
                             email: {
                               subject: 'Catalog for your retail team',
-                              bodyHtml:
+                              bodyHtml: blankBody ? '<p><br></p>' :
                                 '<p>Hello, we make stainless steel bottles. May I share our catalog?</p>',
-                              bodyText: 'We make stainless steel bottles. May I share our catalog?',
+                              bodyText: blankBody ? '' : 'We make stainless steel bottles. May I share our catalog?',
                             },
                             site: {
                               subject: 'Catalog inquiry',
@@ -169,10 +174,11 @@ try {
   origin = server.resolvedUrls.local[0].replace(/\/$/, '');
   env.TEXT_API_BASE_URL = 'https://model.fixture.invalid/model';
   globalThis.fetch = (url, init) => {
-    const address = String(url);
+    const address = url instanceof Request ? url.url : String(url);
     if (address.startsWith('https://model.fixture.invalid/'))
       return originalFetch(address.replace('https://model.fixture.invalid', origin), init);
-    return originalFetch(url, init);
+    if (new URL(address).origin === origin) return originalFetch(url, init);
+    throw new Error('External requests are disabled in assistant acceptance fixtures');
   };
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -184,24 +190,28 @@ try {
   await expect(page.getByRole('heading', { name: '今天想完成什么？' })).toBeVisible();
   await page.screenshot({ path: artifacts + '/welcome.png' });
   await page.getByRole('button', { name: /给客户发一封邮件/ }).click();
+  const guided = page.getByRole('region', { name: '逐步准备发送' });
+  const atStep = async (step) => expect(guided).toHaveAttribute('data-guidance-step', step);
+  const nextStep = async (step) => {
+    const queued = queues.email.length + queues.site.length;
+    await guided.getByRole('button', { name: /^(下一步|跳过，下一步)$/ }).click();
+    await atStep(step);
+    expect(queues.email.length + queues.site.length).toBe(queued);
+  };
+  await atStep('emailAudience');
+  await expect(page.getByLabel('发件人名称', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('目标网站', { exact: true })).toHaveCount(0);
   await page
     .getByLabel('给助手的消息')
     .fill('我们生产不锈钢水杯，想给客户发英文新品目录邀请，也向网站留言，请写得自然些。');
   await page.getByRole('button', { name: '发送', exact: true }).click();
-  await expect(page.getByRole('region', { name: '发送前预览' })).toBeVisible();
+  await atStep('emailAudience');
   expect(queues.email.length + queues.site.length).toBe(0);
-  await page.getByRole('button', { name: '补充名单和联系资料' }).click();
   await page.getByLabel('客户分组').selectOption('null');
-  await page.getByLabel('目标网站', { exact: true }).fill('https://buyer.example.com/contact');
-  await page.getByLabel('发件人名称', { exact: true }).fill('Alex');
-  await page.getByLabel('发件人邮箱', { exact: true }).fill('sales@example.com');
-  // Unsaved necessary fields survive reload, and imports refresh without clearing them.
+  // Unsaved step inputs and the current position survive reload and list refresh.
   await page.reload();
-  await page.getByRole('button', { name: '补充名单和联系资料' }).click();
-  await expect(page.getByLabel('发件人名称', { exact: true })).toHaveValue('Alex');
-  await expect(page.getByLabel('目标网站', { exact: true })).toHaveValue(
-    'https://buyer.example.com/contact',
-  );
+  await atStep('emailAudience');
+  await expect(page.getByLabel('客户分组')).toHaveValue('null');
   sqlite.exec(
     "INSERT INTO edm_contact_groups(id,user_id,name,created_at,updated_at) VALUES('imported','workspace','Newly imported',0,0)",
   );
@@ -209,8 +219,59 @@ try {
   await expect(
     page.getByLabel('客户分组').locator('option', { hasText: 'Newly imported' }),
   ).toHaveCount(1);
+  await expect(page.getByLabel('客户分组')).toHaveValue('null');
+  await nextStep('siteTargets');
+  await page.getByLabel('目标网站', { exact: true }).fill('https://buyer.example.com/contact');
+  await expect(page.getByLabel('发件人名称', { exact: true })).toHaveCount(0);
+  await nextStep('senderName');
+  await page.getByLabel('发件人名称', { exact: true }).fill('Alex');
+  await page.reload();
+  await atStep('senderName');
   await expect(page.getByLabel('发件人名称', { exact: true })).toHaveValue('Alex');
-  await page.getByRole('button', { name: '保存资料，继续聊天' }).click();
+  await nextStep('senderEmail');
+  await page.getByLabel('发件人邮箱', { exact: true }).fill('sales@example.com');
+  // Moving back and saving a different step must retain this unsaved email address.
+  await guided.getByRole('button', { name: '上一步', exact: true }).click();
+  await atStep('senderName');
+  await expect(page.getByLabel('发件人名称', { exact: true })).toHaveValue('Alex');
+  await nextStep('senderEmail');
+  await expect(page.getByLabel('发件人邮箱', { exact: true })).toHaveValue('sales@example.com');
+  await page.screenshot({ path: artifacts + '/guided-email.png', fullPage: true });
+  await nextStep('contentSource');
+  await guided.getByRole('button', { name: '自己填写', exact: true }).click();
+  await nextStep('emailSubject');
+  await expect(page.getByLabel('邮件主题', { exact: true })).toHaveValue('Catalog for your retail team');
+  await nextStep('emailBody');
+  await expect(page.getByLabel('邮件正文', { exact: true })).toHaveValue('We make stainless steel bottles. May I share our catalog?');
+  await nextStep('siteSubject');
+  await nextStep('siteBody');
+  await nextStep('review');
+  await expect(page.getByRole('region', { name: '发送前预览' })).toBeVisible();
+  await expect(page.frameLocator('iframe[title="邮件内容预览"]').locator('body')).toContainText('Hello, we make stainless steel bottles.');
+  // Edit a completed summary without losing other completed steps.
+  await guided.getByRole('button', { name: '修改邮件主题', exact: true }).click();
+  await atStep('emailSubject');
+  await page.getByLabel('邮件主题', { exact: true }).fill('Product catalog for your retail team');
+  await nextStep('emailBody');
+  await expect(page.getByLabel('邮件正文', { exact: true })).toHaveValue('We make stainless steel bottles. May I share our catalog?');
+  await nextStep('siteSubject');
+  await nextStep('siteBody');
+  await nextStep('review');
+  await expect(page.getByText('Product catalog for your retail team', { exact: true }).last()).toBeVisible();
+  // A chat update can leave the current review open, but empty HTML must not remain sendable.
+  emptyModelBody = true;
+  await page.getByLabel('给助手的消息').fill('重新整理这次邮件正文。');
+  await page.getByRole('button', { name: '发送', exact: true }).click();
+  await atStep('review');
+  await expect(guided.getByRole('alert')).toContainText('请填写邮件正文');
+  await expect(page.getByRole('button', { name: '确认发送 1 封邮件并向 1 个网站留言', exact: true })).toHaveCount(0);
+  expect(confirmations).toBe(0); expect(queues.email.length + queues.site.length).toBe(0);
+  await page.screenshot({ path: artifacts + '/empty-body-review-blocked.png', fullPage: true });
+  await page.getByLabel('给助手的消息').fill('恢复有效的邮件正文。');
+  await page.getByRole('button', { name: '发送', exact: true }).click();
+  await atStep('review');
+  await expect(guided.getByRole('alert')).toHaveCount(0);
+  await expect(page.frameLocator('iframe[title="邮件内容预览"]').locator('body')).toContainText('Hello, we make stainless steel bottles.');
   const confirm = page.getByRole('button', {
     name: '确认发送 1 封邮件并向 1 个网站留言',
     exact: true,
@@ -280,8 +341,86 @@ try {
     '为我们的不锈钢水杯准备邮件和网站留言。',
   );
   await page.getByRole('button', { name: '重试这条消息', exact: true }).click();
-  await expect(page.getByRole('region', { name: '发送前预览' })).toBeVisible();
+  await atStep('emailAudience');
   await expect(page.getByLabel('给助手的消息')).toHaveValue('');
+  // Each single-channel manual journey has only its own fields and never queues while preparing.
+  for (const channel of ['email', 'site']) {
+    await page.getByRole('button', { name: '新建会话', exact: true }).click();
+    await page.getByRole('button', {
+      name: channel === 'email' ? /给客户发一封邮件/ : /向客户网站留言/,
+    }).click();
+    await atStep(channel === 'email' ? 'emailAudience' : 'siteTargets');
+    if (channel === 'email') {
+      await page.getByLabel('客户分组').selectOption('null');
+    } else {
+      await page.getByLabel('目标网站', { exact: true }).fill('https://buyer.example.com/contact\nnot-a-website');
+      await guided.getByRole('button', { name: '下一步', exact: true }).click();
+      await expect(guided.getByRole('alert')).toContainText('请修改无效网址');
+      await atStep('siteTargets');
+      await page.getByLabel('目标网站', { exact: true }).fill('https://buyer.example.com/contact\nhttps://www.buyer.example.com/contact');
+      await expect(guided.getByText('有效 1 个 · 重复 1 个 · 无效 0 个', { exact: true })).toBeVisible();
+    }
+    await nextStep('senderName');
+    await expect(page.getByLabel('发件人名称', { exact: true })).toHaveValue('');
+    await page.getByLabel('发件人名称', { exact: true }).fill('Manual Seller');
+    await nextStep('senderEmail');
+    if (channel === 'site') await expect(guided.getByText('对方可通过这个邮箱回复你，无需配置 EDM 发信域名。', { exact: true })).toBeVisible();
+    await page.getByLabel('发件人邮箱', { exact: true }).fill('manual@example.com');
+    await nextStep('contentSource');
+    await guided.getByRole('button', { name: '自己填写', exact: true }).click();
+    await nextStep(channel === 'email' ? 'emailSubject' : 'siteSubject');
+    if (channel === 'email') {
+      await expect(page.getByLabel('邮件主题', { exact: true })).toHaveValue('');
+      await guided.getByRole('button', { name: '下一步', exact: true }).click();
+      await expect(guided.getByRole('alert')).toContainText('请填写邮件主题');
+      await atStep('emailSubject');
+      await page.getByLabel('邮件主题', { exact: true }).fill('Manual catalog proposal');
+      await nextStep('emailBody');
+      await page.getByLabel('邮件正文', { exact: true }).fill('Hello, may we send your team our catalog?');
+    } else {
+      await expect(page.getByLabel('留言主题', { exact: true })).toHaveValue('');
+      await nextStep('siteBody');
+      await page.getByLabel('网站留言', { exact: true }).fill('Hello, may we send your team our catalog?');
+    }
+    await nextStep('review');
+    const singleConfirm = page.getByRole('button', {
+      name: channel === 'email' ? '确认向 1 位客户发送' : '确认向 1 个网站提交', exact: true,
+    });
+    if (channel === 'email') {
+      await expect(singleConfirm).toBeEnabled();
+      await expect(page.getByRole('checkbox', { name: /这些网站允许提交/ })).toHaveCount(0);
+      await expect(page.frameLocator('iframe[title="邮件内容预览"]').locator('body')).toContainText('Hello, may we send your team our catalog?');
+      // Existing manual content does not satisfy the brief needed for an AI redraft.
+      await guided.getByRole('button', { name: '修改准备内容', exact: true }).click();
+      await atStep('contentSource');
+      await guided.getByRole('button', { name: '让助手起草', exact: true }).click();
+      await expect(page.getByLabel('内容要求', { exact: true })).toHaveValue('');
+      const beforeModels = modelRequests;
+      await guided.getByRole('button', { name: '起草内容，下一步', exact: true }).click();
+      await expect(guided.getByRole('alert')).toContainText(/请说明.*产品或服务/);
+      await atStep('contentSource');
+      expect(modelRequests).toBe(beforeModels);
+      await page.screenshot({ path: artifacts + '/ai-brief-required.png', fullPage: true });
+      await guided.getByRole('button', { name: '自己填写', exact: true }).click();
+      await nextStep('emailSubject');
+      await nextStep('emailBody');
+      await expect(page.getByLabel('邮件正文', { exact: true })).toHaveValue('Hello, may we send your team our catalog?');
+      await nextStep('review');
+      await expect(singleConfirm).toBeEnabled();
+    } else {
+      await expect(singleConfirm).toBeDisabled();
+      await page.getByRole('checkbox', { name: /这些网站允许提交/ }).check();
+      await expect(singleConfirm).toBeEnabled();
+      await page.reload();
+      await atStep('review');
+      await expect(singleConfirm).toBeDisabled();
+      await page.setViewportSize({ width: 390, height: 844 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    }
+    await page.screenshot({ path: artifacts + '/' + channel + '-only-review.png', fullPage: true });
+    expect(confirmationIds.size).toBe(1);
+    expect(queues.email).toHaveLength(1); expect(queues.site).toHaveLength(1);
+  }
   assert.deepEqual(errors, []);
   writeFileSync(
     artifacts + '/evidence.json',
@@ -292,6 +431,10 @@ try {
         queuedEmail: queues.email.length,
         queuedSite: queues.site.length,
         externalDelivery: false,
+        guidedChannels: ['email', 'site', 'both'],
+        manualJourneysQueued: false,
+        emptyBodyReviewBlocked: true,
+        emptyAiBriefBlockedWithoutModelRequest: true,
         passed: true,
       },
       null,
@@ -299,7 +442,7 @@ try {
     ),
   );
   console.log(
-    'PASS: real assistant routes, dual-channel conversation, required fields, exact preview, reload, model outage, lost confirmation recovery, CSV, viewer and mobile. Queues and model are fixtures; no external delivery.',
+    'PASS: real assistant routes, guided email/site/both journeys, one-question steps, back and summary edits, unsaved reload, required fields, exact preview, model outage, lost confirmation recovery, CSV, viewer and mobile. Queues and model are fixtures; no external delivery.',
   );
 } catch (error) {
   console.error('Browser errors:', errors);

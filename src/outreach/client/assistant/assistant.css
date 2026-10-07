@@ -284,6 +284,107 @@
   box-shadow: 0 2px 8px #23204a09;
   min-width: 0;
 }
+.wr-lazy-guidance {
+  margin: 22px 0;
+}
+.wr-lazy-guided-card fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.wr-lazy-guided-progress {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.wr-lazy-guided-progress > span {
+  color: var(--lazy-muted);
+}
+.wr-lazy-guided-progress progress {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 5px;
+  border: 0;
+  border-radius: 4px;
+  accent-color: var(--lazy-action);
+}
+.wr-lazy-guided-progress progress::-webkit-progress-bar {
+  background: var(--lazy-line);
+  border-radius: 4px;
+}
+.wr-lazy-guided-progress progress::-webkit-progress-value {
+  background: var(--lazy-action);
+  border-radius: 4px;
+}
+.wr-lazy-guided-progress progress::-moz-progress-bar {
+  background: var(--lazy-action);
+  border-radius: 4px;
+}
+.wr-lazy-guided-summaries {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.wr-lazy-guided-summaries > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  background: white;
+  color: inherit;
+  border: 1px solid var(--lazy-line);
+  border-radius: 10px;
+  text-align: left;
+}
+.wr-lazy-guided-summaries > button > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.wr-lazy-guided-summaries small,
+.wr-lazy-guided-summaries strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.wr-lazy-guided-summaries small {
+  color: var(--lazy-muted);
+  font-size: 11px;
+}
+.wr-lazy-guided-summaries strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.wr-lazy-guided-tick,
+.wr-lazy-guided-edit {
+  color: var(--lazy-action);
+}
+.wr-lazy-guided-edit {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+.wr-lazy-guided-advanced {
+  border-top: 1px solid var(--lazy-line);
+  margin-top: 20px;
+  padding-top: 12px;
+}
+.wr-lazy-guided-advanced summary {
+  cursor: pointer;
+  color: var(--lazy-muted);
+}
+.wr-lazy-guided-navigation {
+  justify-content: space-between;
+  border-top: 1px solid var(--lazy-line);
+  padding-top: 18px;
+  margin-top: 22px;
+}
+.wr-lazy-guided-footer {
+  margin-bottom: 0;
+  font-size: 12px;
+}
 .wr-lazy-card h2 {
   font-size: 20px;
   line-height: 1.5;
