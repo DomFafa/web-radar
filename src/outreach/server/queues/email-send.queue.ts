@@ -1,4 +1,5 @@
 import { trackedAddress, plain } from '../../../worker/inbox/core';
+import { captureOutbound, completeOutbound, readOutboundReceipt } from '../../../worker/crm/capture';
 import { emailSendDelay, deferEmail, resendCooldown } from '../lib/email-pacing';
 import { resendRequest, ResendApiError } from '../lib/resend';
 import { createHash } from 'node:crypto';
@@ -6,7 +7,7 @@ import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { createDb } from "../../db";
-import { campaignRecipients, campaigns, contacts, providers, templates } from "../../db/schema";
+import { campaignRecipients, campaigns, contacts, providers } from "../../db/schema";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { selectEmailProviderForSender } from "../lib/email-provider-selection";
 import { readAttempt, claimAttempt, saveAttempt } from "../lib/email-attempt";
@@ -31,6 +32,7 @@ export interface EmailSendMessage {
   recipientId: string;
   campaignId: string;
   providerId?: string;
+  engagementTrackingSource?: 'resend';
   toEmail: string;
   toName: string | null;
   fromEmail: string;
@@ -60,6 +62,8 @@ function clipMessage(message: string): string {
 }
 
 type ProgressReporter = (message: string) => Promise<void>;
+type ContentCapture = (subject: string, bodyHtml: string, bodyText?: string) => Promise<void>;
+type ProviderResult = { messageId: string; providerMessageId?: string | null };
 
 async function fetchWithTimeout(
   url: string,
@@ -210,8 +214,9 @@ async function sendViaSES(
   apiKey: string,
   configStr: string | null,
   contactId: string,
-  betterAuthUrl: string
-): Promise<{ messageId: string }> {
+  betterAuthUrl: string,
+  capture: ContentCapture
+): Promise<ProviderResult> {
   // Try to extract secret key and region from config, otherwise fallback to env config logic
   let secretKey = "";
   let region = "us-east-1";
@@ -260,6 +265,7 @@ async function sendViaSES(
     ...(message.replyTo && { ReplyToAddresses: [message.replyTo] }),
   };
 
+  await capture(subject, bodyHtml, bodyText);
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -276,7 +282,7 @@ async function sendViaSES(
   }
 
   const result: any = await response.json();
-  return { messageId: result.MessageId || crypto.randomUUID() };
+  return { messageId: result.MessageId || crypto.randomUUID(), providerMessageId: result.MessageId || null };
 }
 
 /**
@@ -296,8 +302,9 @@ async function sendViaMailchimp(
   contactId: string,
   betterAuthUrl: string,
   trackingSecret: string,
-  reportProgress?: ProgressReporter
-): Promise<{ messageId: string }> {
+  reportProgress: ProgressReporter | undefined,
+  capture: ContentCapture
+): Promise<ProviderResult> {
   const subject = replaceVariables(message.subject, message.variables);
   let bodyHtml = replaceVariables(message.bodyHtml, message.variables);
   const bodyText = message.bodyText
@@ -340,6 +347,7 @@ async function sendViaMailchimp(
   };
 
   await reportProgress?.(`Mailchimp Transactional request started at ${new Date().toISOString()}`);
+  await capture(subject, bodyHtml, bodyText);
   const response = await fetchWithTimeout(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -415,7 +423,7 @@ async function sendViaMailchimpMarketingBatch(
   try { config = configStr ? JSON.parse(configStr) : {}; } catch {}
 
   const [campaign] = await db
-    .select({ id: campaigns.id, name: campaigns.name, status: campaigns.status, templateId: campaigns.templateId, senderEmail: campaigns.senderEmail, senderName: campaigns.senderName, replyTo: campaigns.replyTo, mailchimpCampaignId: campaigns.mailchimpCampaignId })
+    .select({ id: campaigns.id, userId: campaigns.userId, createdBy: campaigns.createdBy, name: campaigns.name, status: campaigns.status, mailchimpCampaignId: campaigns.mailchimpCampaignId })
     .from(campaigns)
     .where(eq(campaigns.id, messages[0].campaignId));
   if (!campaign) throw new Error("Campaign not found");
@@ -434,26 +442,56 @@ async function sendViaMailchimpMarketingBatch(
     throw new Error("待核实：Marketing 已有远端活动，无法确认本批收件人是否已发送，禁止自动重发");
 
   const eligible: EmailSendMessage[] = [];
+  const contactIds = new Map<string, string>();
   for (const message of messages) {
     if (!pendingIds.has(message.recipientId)) continue;
     const [contact] = await db
-      .select({ subscriptionStatus: contacts.subscriptionStatus })
+      .select({ contactId: contacts.id, subscriptionStatus: contacts.subscriptionStatus })
       .from(campaignRecipients)
       .innerJoin(contacts, eq(contacts.id, campaignRecipients.contactId))
       .where(and(eq(campaignRecipients.id, message.recipientId), eq(campaignRecipients.campaignId, campaign.id)));
     if (contact?.subscriptionStatus === "subscribed") {
       eligible.push(message);
+      contactIds.set(message.recipientId, contact.contactId);
     } else {
       await db.update(campaignRecipients).set({ status: "failed", errorMessage: "Contact unsubscribed" }).where(eq(campaignRecipients.id, message.recipientId));
     }
   }
   if (!eligible.length) throw new Error("没有可发送的已订阅收件人");
+  // The queue payload is the approved send snapshot. A Marketing campaign has
+  // one shared body, so it cannot safely send different personalized snapshots.
+  const snapshots = eligible.map(message => ({
+    subject: replaceVariables(message.subject, message.variables),
+    bodyHtml: replaceVariables(message.bodyHtml, message.variables),
+    bodyText: message.bodyText ? replaceVariables(message.bodyText, message.variables) : undefined,
+    fromEmail: message.fromEmail,
+    fromName: message.fromName,
+    replyTo: message.replyTo,
+  }));
+  const snapshot = snapshots[0];
+  if (snapshots.some(item => JSON.stringify(item) !== JSON.stringify(snapshot))) {
+    throw new Error("Marketing 无法在同一批次发送不同的个性化邮件，请使用逐封发送通道");
+  }
+  assertEmailContentAllowed(snapshot.subject, snapshot.bodyHtml, snapshot.bodyText);
   const attemptId = eligible.map((message) => message.recipientId).sort()[0];
   if (!await claimAttempt(database, attemptId))
     throw new Error("待核实：Marketing 发送已开始，禁止重复提交活动");
 
-  let remoteCampaignId: string;
-  {
+  const html = appendComplianceFooter(snapshot.bodyHtml, betterAuthUrl, eligible[0].recipientId, campaign.id, snapshot.fromName, "*|UNSUB|*", "*|UPDATE_PROFILE|*");
+  const snapshotIds: string[] = [];
+  const snapshotAttemptId = crypto.randomUUID();
+  let dispatchStarted = false;
+  let remoteCampaignId = '';
+  let accepted = false;
+  try {
+    for (const message of eligible) {
+      snapshotIds.push(await captureOutbound(database, {
+        workspaceId: campaign.userId, ownerId: campaign.createdBy, source: 'edm', businessId: campaign.id,
+        targetId: message.recipientId, attemptId: snapshotAttemptId, contactId: contactIds.get(message.recipientId),
+        subject: snapshot.subject, bodyHtml: html, bodyText: snapshot.bodyText, provider: 'mailchimp_marketing',
+        recipientEmail: message.toEmail, senderEmail: snapshot.fromEmail, senderName: snapshot.fromName, replyTo: snapshot.replyTo,
+      }));
+    }
     const listId = String(config.listId || "").trim();
     let audience: any;
     if (listId) {
@@ -487,34 +525,32 @@ async function sendViaMailchimpMarketingBatch(
     });
     if (!segment?.id) throw new Error("Mailchimp 未返回静态 Segment ID");
 
-    const templateRows = await db.select({ subject: templates.subject, bodyHtml: templates.bodyHtml, bodyText: templates.bodyText }).from(templates).where(eq(templates.id, campaign.templateId));
-    const template = templateRows[0];
-    if (!template) throw new Error("邮件模板不存在");
-    const subject = replaceVariables(template.subject, eligible[0].variables);
-    let html = replaceVariables(template.bodyHtml, eligible[0].variables);
-    const text = template.bodyText ? replaceVariables(template.bodyText, eligible[0].variables) : undefined;
-    assertEmailContentAllowed(subject, html, text);
-    html = appendComplianceFooter(html, betterAuthUrl, eligible[0].recipientId, campaign.id, campaign.senderName, "*|UNSUB|*", "*|UPDATE_PROFILE|*");
     const remote: any = await mailchimpMarketingRequest(baseUrl, apiKey, "/campaigns", {
       method: "POST",
       body: JSON.stringify({
         type: "regular",
         recipients: { list_id: audience.id, segment_opts: { saved_segment_id: segment.id } },
-        settings: { subject_line: subject, title: campaign.name, from_name: campaign.senderName, reply_to: campaign.replyTo || campaign.senderEmail },
+        settings: { subject_line: snapshot.subject, title: campaign.name, from_name: snapshot.fromName, reply_to: snapshot.replyTo || snapshot.fromEmail },
       }),
     });
     remoteCampaignId = remote.id;
     await db.update(campaigns).set({ mailchimpCampaignId: remoteCampaignId, updatedAt: new Date() }).where(eq(campaigns.id, campaign.id));
     await mailchimpMarketingRequest(baseUrl, apiKey, `/campaigns/${remoteCampaignId}/content`, {
       method: "PUT",
-      body: JSON.stringify({ html, plain_text: text }),
+      body: JSON.stringify({ html, plain_text: snapshot.bodyText }),
     });
-  }
 
-  await mailchimpMarketingRequest(baseUrl, apiKey, `/campaigns/${remoteCampaignId}/actions/send`, { method: "POST", body: "{}" });
-  await saveAttempt(database, attemptId, remoteCampaignId);
-  await db.update(campaignRecipients).set({ status: "sent", sesMessageId: remoteCampaignId, sentAt: new Date(), errorMessage: null }).where(inArray(campaignRecipients.id, eligible.map((m) => m.recipientId)));
-  await db.update(campaigns).set({ totalSent: sql`${campaigns.totalSent} + ${eligible.length}`, status: "completed", completedAt: new Date(), updatedAt: new Date() }).where(eq(campaigns.id, campaign.id));
+    dispatchStarted = true;
+    await mailchimpMarketingRequest(baseUrl, apiKey, `/campaigns/${remoteCampaignId}/actions/send`, { method: "POST", body: "{}" });
+    accepted = true;
+    for (const id of snapshotIds) await completeOutbound(database, id, { status: 'sent', providerMessageId: remoteCampaignId }).catch(error => console.error('CRM receipt could not be saved:', error));
+    await saveAttempt(database, attemptId, remoteCampaignId);
+    await db.update(campaignRecipients).set({ status: "sent", sesMessageId: remoteCampaignId, sentAt: new Date(), errorMessage: null }).where(inArray(campaignRecipients.id, eligible.map((m) => m.recipientId)));
+    await db.update(campaigns).set({ totalSent: sql`${campaigns.totalSent} + ${eligible.length}`, status: "completed", completedAt: new Date(), updatedAt: new Date() }).where(eq(campaigns.id, campaign.id));
+  } catch (error: any) {
+    for (const id of snapshotIds) await completeOutbound(database, id, { status: accepted ? 'sent' : dispatchStarted ? 'uncertain' : 'failed', providerMessageId: accepted ? remoteCampaignId : null, errorMessage: accepted ? null : clipMessage(error.message || 'Marketing send failed') }).catch(captureError => console.error('CRM receipt could not be saved:', captureError));
+    throw error;
+  }
 }
 
 /**
@@ -524,8 +560,9 @@ async function sendViaSendGrid(
   message: EmailSendMessage,
   apiKey: string,
   contactId: string,
-  betterAuthUrl: string
-): Promise<{ messageId: string }> {
+  betterAuthUrl: string,
+  capture: ContentCapture
+): Promise<ProviderResult> {
   const endpoint = "https://api.sendgrid.com/v3/mail/send";
   const subject = replaceVariables(message.subject, message.variables);
   let bodyHtml = replaceVariables(message.bodyHtml, message.variables);
@@ -552,6 +589,7 @@ async function sendViaSendGrid(
     content: contentList,
   };
 
+  await capture(subject, bodyHtml, bodyText);
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -567,7 +605,7 @@ async function sendViaSendGrid(
   }
 
   const sgMsgId = response.headers.get("X-Message-Id") || crypto.randomUUID();
-  return { messageId: sgMsgId };
+  return { messageId: sgMsgId, providerMessageId: response.headers.get("X-Message-Id") };
 }
 
 /** 通过 Mailgun Messages API 发送邮件 */
@@ -576,8 +614,9 @@ async function sendViaMailgun(
   apiKey: string,
   configStr: string | null,
   contactId: string,
-  betterAuthUrl: string
-): Promise<{ messageId: string }> {
+  betterAuthUrl: string,
+  capture: ContentCapture
+): Promise<ProviderResult> {
   let domain = "";
   let baseUrl = "https://api.mailgun.net";
   if (configStr) {
@@ -602,6 +641,7 @@ async function sendViaMailgun(
   if (bodyText) form.append("text", bodyText);
   if (message.replyTo) form.append("h:Reply-To", message.replyTo);
 
+  await capture(subject, bodyHtml, bodyText);
   const response = await fetchWithTimeout(`${baseUrl}/v3/${encodeURIComponent(domain)}/messages`, {
     method: "POST",
     headers: { Authorization: `Basic ${btoa(`api:${apiKey}`)}` },
@@ -612,7 +652,7 @@ async function sendViaMailgun(
     throw new Error(`Mailgun API Error (${response.status}): ${errorText}`);
   }
   const result: any = await readJsonWithTimeout(response, "Mailgun response body");
-  return { messageId: result.id || crypto.randomUUID() };
+  return { messageId: result.id || crypto.randomUUID(), providerMessageId: result.id || null };
 }
 
 /** 通过 Brevo Transactional Email API 发送邮件 */
@@ -620,13 +660,15 @@ async function sendViaBrevo(
   message: EmailSendMessage,
   apiKey: string,
   contactId: string,
-  betterAuthUrl: string
-): Promise<{ messageId: string }> {
+  betterAuthUrl: string,
+  capture: ContentCapture
+): Promise<ProviderResult> {
   const subject = replaceVariables(message.subject, message.variables);
   let bodyHtml = replaceVariables(message.bodyHtml, message.variables);
   const bodyText = message.bodyText ? replaceVariables(message.bodyText, message.variables) : undefined;
   bodyHtml = appendComplianceFooter(bodyHtml, betterAuthUrl, message.unsubscribeToken!, message.campaignId, message.fromName);
 
+  await capture(subject, bodyHtml, bodyText);
   const response = await fetchWithTimeout("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "Content-Type": "application/json", "api-key": apiKey },
@@ -636,7 +678,7 @@ async function sendViaBrevo(
       subject,
       htmlContent: bodyHtml,
       ...(bodyText && { textContent: bodyText }),
-      ...(message.replyTo && { replyTo: message.replyTo }),
+      ...(message.replyTo && { replyTo: { email: message.replyTo } }),
     }),
   });
   if (!response.ok) {
@@ -644,7 +686,7 @@ async function sendViaBrevo(
     throw new Error(`Brevo API Error (${response.status}): ${errorText}`);
   }
   const result: any = await readJsonWithTimeout(response, "Brevo response body");
-  return { messageId: result.messageId || crypto.randomUUID() };
+  return { messageId: result.messageId || crypto.randomUUID(), providerMessageId: result.messageId || null };
 }
 
 /**
@@ -655,8 +697,9 @@ async function sendViaSMTP(
   apiKey: string,
   configStr: string | null,
   contactId: string,
-  betterAuthUrl: string
-): Promise<{ messageId: string }> {
+  betterAuthUrl: string,
+  capture: ContentCapture
+): Promise<ProviderResult> {
   let host = "";
   let port = 587;
   let username = "";
@@ -677,6 +720,7 @@ async function sendViaSMTP(
     throw new Error("SMTP 服务器配置为空，请检查主机地址");
   }
 
+  await capture(subject, bodyHtml);
   const response = await fetch(`https://${host}:${port}/send`, {
     method: "POST",
     headers: {
@@ -689,14 +733,16 @@ async function sendViaSMTP(
       subject,
       html: bodyHtml,
     }),
-  }).catch(() => null);
+  });
 
-  if (response && response.ok) {
-    const resData: any = await response.json().catch(() => ({}));
-    return { messageId: resData.id || crypto.randomUUID() };
+  if (!response.ok) {
+    throw new Error(`SMTP gateway error (${response.status}): ${await response.text()}`);
   }
-
-  return { messageId: crypto.randomUUID() };
+  const resData: any = await response.json();
+  if (typeof resData.id !== 'string' || !resData.id.trim()) {
+    throw new Error('SMTP gateway returned no message ID; delivery requires reconciliation');
+  }
+  return { messageId: resData.id };
 }
 
 /**
@@ -754,7 +800,10 @@ export async function handleEmailQueue(
       chunk.map(async (msg) => {
         const message = msg.body;
         let dispatchStarted = false;
-        let providerResult: { messageId: string } | undefined;
+        let providerResult: ProviderResult | undefined;
+        let attemptClaimed = false;
+        let snapshotId: string | undefined;
+        const snapshotAttemptId = crypto.randomUUID();
         try {
           // 获取联系人 ID
           const [recipient] = await db
@@ -778,8 +827,10 @@ export async function handleEmailQueue(
           if (!campaignState || (campaignState.status === "completed" && !recipient.errorMessage)) { msg.ack(); return; }
           if (campaignState.status === "paused") { await deferEmail(env, msg, 300000); return; }
           const attempt = await readAttempt(env.DB, message.recipientId);
-          if (attempt?.result) {
-            const saved = JSON.parse(attempt.result);
+          const receipt = attempt && !attempt.result ? await readOutboundReceipt(env.DB, message.recipientId) : null;
+          if (attempt?.result || receipt) {
+            const saved = attempt?.result ? JSON.parse(attempt.result) : { messageId: receipt!.provider_message_id, sentAt: receipt!.completed_at };
+            if (receipt) await saveAttempt(env.DB, message.recipientId, receipt.provider_message_id);
             await db.update(campaignRecipients).set({
               status: sql`CASE WHEN ${campaignRecipients.status} IN ('delivered','opened','clicked','bounced','complained','unsubscribed') OR ${campaignRecipients.errorMessage} = 'Resend: email.failed' THEN ${campaignRecipients.status} ELSE 'sent' END`,
               sesMessageId: saved.messageId, sentAt: sql`COALESCE(${campaignRecipients.sentAt}, ${Math.floor(new Date(saved.sentAt).getTime()/1000)})`,
@@ -813,7 +864,7 @@ export async function handleEmailQueue(
 
           // Fetch campaign to get userId
           const [campaign] = await db
-            .select({ userId: campaigns.userId })
+            .select({ userId: campaigns.userId, createdBy: campaigns.createdBy })
             .from(campaigns)
             .where(eq(campaigns.id, message.campaignId));
 
@@ -866,10 +917,10 @@ export async function handleEmailQueue(
 
           const delay = await emailSendDelay(env.DB, message.recipientId, message.campaignId, campaignState.sendRate, provider.provider === 'resend');
           if (delay > 0) { await deferEmail(env, msg, delay); return; }
-          const inboxReply = await trackedAddress(env.DB, 'edm', message.recipientId, plain(replaceVariables(message.bodyHtml, message.variables)), replaceVariables(message.subject, message.variables));
+          const inboxReply = provider.provider === 'smtp' ? null : await trackedAddress(env.DB, 'edm', message.recipientId, plain(replaceVariables(message.bodyHtml, message.variables)), replaceVariables(message.subject, message.variables));
           if (inboxReply) message.replyTo = inboxReply;
           if (!await claimAttempt(env.DB, message.recipientId)) { msg.retry({ delaySeconds: 120 }); return; }
-          dispatchStarted = true;
+          attemptClaimed = true;
 
           await db
             .update(campaignRecipients)
@@ -890,6 +941,16 @@ export async function handleEmailQueue(
               .where(eq(campaignRecipients.id, message.recipientId)).catch(() => {});
           };
           
+          const capture: ContentCapture = async (subject, bodyHtml, bodyText) => {
+            snapshotId = await captureOutbound(env.DB, {
+              workspaceId: campaign.userId, ownerId: campaign.createdBy, source: 'edm',
+              businessId: message.campaignId, targetId: message.recipientId, attemptId: snapshotAttemptId,
+              recipientEmail: message.toEmail, senderEmail: message.fromEmail, senderName: message.fromName, replyTo: provider.provider === 'smtp' ? null : message.replyTo,
+              contactId: recipient.contactId, subject, bodyHtml, bodyText, provider: provider.provider,
+              engagementTrackingSource: provider.provider === 'resend' ? message.engagementTrackingSource : undefined,
+            });
+            dispatchStarted = true;
+          };
           message.unsubscribeToken = await signTrackingPayload({cid:recipient.contactId},env.BETTER_AUTH_SECRET);
           if (provider.provider === "mailchimp") {
             await reportProgress(`Calling Mailchimp Transactional API for ${message.toEmail} at ${new Date().toISOString()}`);
@@ -900,11 +961,13 @@ export async function handleEmailQueue(
               recipient.contactId,
               betterAuthUrl,
               env.BETTER_AUTH_SECRET,
-              reportProgress
+              reportProgress,
+              capture
             );
           } else if (provider.provider === "resend") {
             await env.DB.prepare('INSERT OR IGNORE INTO edm_resend_deliveries (recipient_id,provider_id,created_at) VALUES (?,?,?)').bind(message.recipientId,provider.id,Math.floor(Date.now()/1000)).run();
             const html = appendComplianceFooter(replaceVariables(message.bodyHtml,message.variables),betterAuthUrl,message.unsubscribeToken!,message.campaignId,message.fromName);
+            await capture(replaceVariables(message.subject,message.variables), html, message.bodyText ? replaceVariables(message.bodyText,message.variables) : undefined);
             const response = await resendRequest(provider.apiKey,'/emails',{method:'POST',headers:{'Idempotency-Key':`wr-${message.recipientId}`},body:JSON.stringify({
               from:`${message.fromName.replace(/[\r\n"<>]/g,'')} <${message.fromEmail}>`,to:[message.toEmail],subject:replaceVariables(message.subject,message.variables),html,
               ...(message.bodyText?{text:replaceVariables(message.bodyText,message.variables)}:{}),...(message.replyTo?{reply_to:message.replyTo}:{}),
@@ -916,20 +979,21 @@ export async function handleEmailQueue(
             await saveAttempt(env.DB,message.recipientId,response.id);
             await env.DB.prepare('UPDATE edm_resend_deliveries SET email_id=? WHERE recipient_id=? AND provider_id=?').bind(response.id,message.recipientId,provider.id).run();
           } else if (provider.provider === "amazon_ses") {
-            result = await sendViaSES(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl);
+            result = await sendViaSES(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl, capture);
           } else if (provider.provider === "sendgrid") {
-            result = await sendViaSendGrid(message, provider.apiKey, recipient.contactId, betterAuthUrl);
+            result = await sendViaSendGrid(message, provider.apiKey, recipient.contactId, betterAuthUrl, capture);
           } else if (provider.provider === "mailgun") {
-            result = await sendViaMailgun(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl);
+            result = await sendViaMailgun(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl, capture);
           } else if (provider.provider === "brevo") {
-            result = await sendViaBrevo(message, provider.apiKey, recipient.contactId, betterAuthUrl);
+            result = await sendViaBrevo(message, provider.apiKey, recipient.contactId, betterAuthUrl, capture);
           } else if (provider.provider === "smtp") {
-            result = await sendViaSMTP(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl);
+            result = await sendViaSMTP(message, provider.apiKey, provider.config, recipient.contactId, betterAuthUrl, capture);
           } else {
             throw new Error(`Unsupported provider: ${provider.provider}`);
           }
 
           providerResult = result;
+          if (snapshotId) await completeOutbound(env.DB, snapshotId, { status: 'sent', providerMessageId: result.providerMessageId === undefined ? result.messageId : result.providerMessageId }).catch(error => console.error('CRM receipt could not be saved:', error));
           await saveAttempt(env.DB, message.recipientId, result.messageId);
           await env.DB.prepare("UPDATE wr_inbox_routes SET provider_message_id=? WHERE source='edm' AND target_id=?").bind(result.messageId,message.recipientId).run();
           // 更新发送状态
@@ -949,6 +1013,18 @@ export async function handleEmailQueue(
             `Failed to send email to ${message.toEmail}:`,
             error.message
           );
+
+          if (snapshotId) {
+            const rejected = (error instanceof ResendApiError && [401,403,429].includes(error.status))
+              || /Mailchimp Transactional API Error \(401\):.*Invalid_Key/.test(error.message || '');
+            await completeOutbound(env.DB, snapshotId, {
+              status: providerResult ? 'sent' : rejected ? 'failed' : 'uncertain',
+              providerMessageId: providerResult?.providerMessageId === undefined ? providerResult?.messageId : providerResult.providerMessageId, errorMessage: providerResult ? null : clipMessage(error.message || 'Unknown error'),
+            }).catch(captureError => console.error('CRM receipt could not be saved:', captureError));
+          }
+          if (!dispatchStarted && attemptClaimed) {
+            await env.DB.prepare('DELETE FROM edm_email_send_attempts WHERE recipient_id=? AND result IS NULL').bind(message.recipientId).run();
+          }
 
           if (dispatchStarted && error instanceof ResendApiError && [401,403,429].includes(error.status)) {
             // These responses explicitly reject acceptance, so a retry is safe.

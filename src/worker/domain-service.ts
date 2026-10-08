@@ -1,10 +1,11 @@
+import { MAX_WEBSITE_PRODUCTS } from "../shared/website-limits";
 import { applyUserAccess } from './user-access';
 import { writeBusiness } from '../shared/access';
 import { ProductIdentitySchema } from '../shared/product-identity';
 import { blocksModeChange, buildMode } from '../shared/build-mode';
 import { MaterialsService } from './materials-service';
 import type { ProjectServiceStatus, ProjectServicePreview } from '../shared/project-service';
-import { projectPreviewHtml, projectPreviewRuntimeForDraft } from './project-preview';
+import { projectPreviewHtml, projectPreviewPrepareForDraft, projectPreviewRuntimeForDraft } from './project-preview';
 import { currentMaterialsPrincipal } from './materials-auth';
 import { materialsImageAssetIds, validateMaterialsDraft } from './materials-draft';
 import { siteContacts } from '../shared/site-contacts';
@@ -558,10 +559,10 @@ export class DomainService {
       requireCondition(
         project.draft.products.length +
           ids.filter((id) => !project.draft.products.some((p) => p.source?.id === id)).length <=
-          20,
+          MAX_WEBSITE_PRODUCTS,
         400,
         'product_limit',
-        '每个网站最多包含 20 个产品。',
+        '每个网站最多包含 24 个产品。',
       );
       const { products } = await prService<{ products: ProductSnapshot[] }>(
         this.env,
@@ -690,7 +691,7 @@ export class DomainService {
       requireCondition(project.ownerId === principal.userId, 403, 'read_only_role', '仅网站所有者可以确认制作费用。');
       if (!claim?.deferred || claim.state === 'charged') return json({project});
       const count = claim.resultKey ? claim.productCount! : project.draft.products.length;
-      requireCondition(count >= 1 && count <= 20, 400, 'invalid_products', '请选择 1–20 个产品后制作网站。');
+      requireCondition(count >= 1 && count <= MAX_WEBSITE_PRODUCTS, 400, 'invalid_products', '请选择 1–24 个产品后制作网站。');
       requireCondition(body.acceptedPoints === (count <= 10 ? 200 : 300), 409, 'website_price_changed', '制作费用已变化，请重新确认当前产品数量与点数。');
       if (!claim.resultKey) {
         const draft = project.draft;
@@ -829,8 +830,10 @@ export class DomainService {
       const html = archived ? archived.pages[siteFilePath(lang, page, productId)] : await this.renderPage(draft, { projectId: project.id, page, lang, productId,
         assetUrl: id => `${proxyBasePath}/assets/${encodeURIComponent(id)}`, inquiryUrl: '#', preview: true });
       const htmlStarted = performance.now();
+      const prepareRuntime = projectPreviewPrepareForDraft(draft);
       const response: ProjectServicePreview = { schemaVersion: 'wr-project-service-v1', projectId: project.id,
         projectVersion: project.version, page, lang, productId, proxyBasePath, assetBaseUrl: this.origin(), runtime: projectPreviewRuntimeForDraft(draft),
+        ...(prepareRuntime ? { prepareRuntime } : {}),
         html: projectPreviewHtml(html, proxyBasePath, this.origin(), { page, lang, productId, expectedVersion: project.version }) };
       const result = json(response);
       result.headers.set('Server-Timing', `wr-render;dur=${(htmlStarted - renderStarted).toFixed(1)}, wr-html;dur=${(performance.now() - htmlStarted).toFixed(1)}`);
@@ -949,12 +952,12 @@ export class DomainService {
     requireCondition(
       Array.isArray(value) &&
         value.length > 0 &&
-        value.length <= 20 &&
+        value.length <= MAX_WEBSITE_PRODUCTS &&
         value.every((v) => typeof v === 'string' && v.length > 0 && v.length <= 200) &&
         new Set(value).size === value.length,
       400,
       'invalid_products',
-      '请选择 1–20 个不重复的产品。',
+      '请选择 1–24 个不重复的产品。',
     );
     return value as string[];
   }
@@ -964,7 +967,7 @@ export class DomainService {
   ): asserts products is ProductSnapshot[] {
     requireCondition(
       Array.isArray(products) &&
-        products.length <= 20 &&
+        products.length <= MAX_WEBSITE_PRODUCTS &&
         products.every((p) => snapshotSchema.safeParse(p).success) &&
         new Set(products.map((p) => p.id)).size === products.length,
       502,
@@ -3260,7 +3263,7 @@ export class DomainService {
             continue;
           }
           remaining = true;
-          if (count + wave.length >= 4 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
+          if (wave.length >= 4 || count + wave.length >= 12 || (count + wave.length > 0 && Date.now() - started >= 30_000)) break;
           const asset = await this.projectAsset(job.projectId, id);
           if (count + wave.length > 0 && inputBytes + asset.size > 40 * 1024 * 1024) break;
           wave.push({ asset, entry, width }); inputBytes += asset.size;

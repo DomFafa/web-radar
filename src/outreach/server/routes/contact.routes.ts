@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { eq, like, and, desc, sql, count, isNull, getTableColumns } from "drizzle-orm";
 import { createDb } from "../../db";
 import { contacts, contactGroups } from "../../db/schema";
@@ -259,8 +260,11 @@ contactRoutes.post("/", requirePermission("contacts:write"), async (c) => {
     tags?: string[];
   }>();
 
-  if (!body.email?.trim()) {
+  if (typeof body.email !== "string" || !body.email.trim()) {
     return c.json({ success: false, error: "邮箱地址不能为空" }, 400);
+  }
+  if (!z.email().safeParse(body.email.trim()).success) {
+    return c.json({ success: false, error: "邮箱地址格式无效" }, 400);
   }
 
   // 检查邮箱是否已存在
@@ -349,6 +353,10 @@ contactRoutes.put("/:id", requirePermission("contacts:write"), async (c) => {
 
   if (!existing) {
     return c.json({ success: false, error: "联系人不存在" }, 404);
+  }
+
+  if (body.email !== undefined && (typeof body.email !== "string" || !z.email().safeParse(body.email.trim()).success)) {
+    return c.json({ success: false, error: "邮箱地址格式无效" }, 400);
   }
 
   const updateData: Record<string, any> = { updatedAt: new Date() };

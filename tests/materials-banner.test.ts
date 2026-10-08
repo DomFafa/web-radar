@@ -86,7 +86,17 @@ it.each(Object.keys(templateMediaRequirements))(
     ]);
     expect(images(output)).toEqual(images(baseline));
     expect(nodes(output).filter((n) => n.tagName === 'h1')).toHaveLength(1);
-    expect(nodes(output).some((n) => attr(n, 'data-wr-mobile-menu') !== undefined || attr(n, 'data-lumi-mobile-menu') !== undefined || attr(n, 'data-careflow-menu') !== undefined || attr(n, 'data-auravell-menu') !== undefined)).toBe(true);
+    if (['2026-10-02.pawfect-groom-materials.2', '2026-10-02.pawfect-groom-materials.3'].includes(saved.materials?.contractRevision || '')) {
+      const header = nodes(output).find(n => n.tagName === 'header')!;
+      const nav = nodes(header).find(n => n.tagName === 'nav')!;
+      expect(nodes(nav).filter(n => n.tagName === 'a').map(n => attr(n, 'href'))).toEqual(
+        saved.materials!.contractRevision.endsWith('.3')
+          ? ['catalog/index.html', 'about/index.html']
+          : ['catalog/index.html', 'about/index.html', '#gallery', '#faq'],
+      );
+    } else {
+      expect(nodes(output).some((n) => attr(n, 'data-wr-mobile-menu') !== undefined || attr(n, 'data-lumi-mobile-menu') !== undefined || attr(n, 'data-careflow-menu') !== undefined || attr(n, 'data-auravell-menu') !== undefined)).toBe(true);
+    }
     expect(saved.materials).toEqual(original.materials);
     expect(draft).toEqual(original);
   },

@@ -39,7 +39,7 @@ try{
  await page.goto(origin+'/?view=edm');
  const nav=page.getByRole('navigation',{name:'工作台导航'});await nav.getByRole('button',{name:'EDM 邮件',exact:true}).waitFor();
  const tabs=page.getByRole('navigation',{name:'EDM 邮件功能'});
- for(const label of ['联系人','邮件模板','营销活动','服务商配置','发信域名','发送中心']){await tabs.getByRole('button',{name:label,exact:true}).click();await page.waitForTimeout(700);assert.ok(!(await page.locator('.outreach').innerText()).includes('内部服务器错误'));}
+ for(const label of ['联系人','邮件模板','发送记录','服务商配置','发信域名','发送邮件']){await tabs.getByRole('button',{name:label,exact:true}).click();await page.waitForTimeout(700);assert.ok(!(await page.locator('.outreach').innerText()).includes('内部服务器错误'));}
  await tabs.getByRole('button',{name:'邮件模板',exact:true}).click();
  await page.getByRole('button',{name:'➕ 新建模板',exact:true}).click();await page.locator('.ql-editor').waitFor();await page.locator('.template-editor-modal').getByRole('button',{name:'✕',exact:true}).click();
  await page.screenshot({path:artifacts+'/edm.png'});

@@ -1,9 +1,14 @@
+import { staticProductDetailRuntime } from '../templates/product-detail-motion';
 import { auravellRuntime as legacyAuravellRuntime, careflowRuntime as legacyCareflowRuntime } from '../templates/releases/native-preview-20261001.mjs';
 import { referenceMotionRuntime } from '../templates/themes/reference-motion';
 import { auravellRuntime } from '../templates/themes/auravell/runtime';
 import { careflowRuntime } from '../templates/themes/careflow/runtime';
 import { goodBoyRuntime } from '../templates/themes/goodBoyRuntime';
 import { lumiRuntime } from '../templates/themes/lumi/runtime';
+import { isProductNativeMaterials, isProductNativeEnhancedRevision, isProductGalleryRevision, isProductAboutCollectionRevision } from '../shared/product-native-materials';
+import { productGalleryRuntime } from '../shared/product-gallery-runtime';
+import { productNativeUiRuntime, productNativeEnhancedNavRuntime } from '../templates/product-native-runtime';
+import { productMotionPrepareSource, productMotionSource } from '../templates/themes/product-motion-source';
 import { isSingleProductTemplate, singleProductRuntime } from '../templates/themes/singleProduct';
 import { parse, serialize, type DefaultTreeAdapterMap } from 'parse5';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
@@ -11,7 +16,11 @@ import { materialsRuntime } from '../shared/materials-runtime';
 import { productImageViewerRuntime } from '../shared/product-image-viewer';
 import { bannerRuntime } from '../shared/banner-runtime';
 import { releasedMaterialsPreviewRuntime } from '../templates/materials-releases';
+import { pawfectMaterialsRevision } from '../templates/themes/pawfect/materials';
+import { pawfectMotionPrepareSource, pawfectMotionSource } from '../templates/themes/pawfect/motion-source';
 import type { DesignPage, Draft, Language } from '../shared/model';
+import { productGalleryMotionSource } from '../templates/themes/product-gallery-motion-source';
+import { productAboutCollectionMotionSource } from '../templates/themes/product-about-collection-motion-source';
 
 /** Keep renderer data-wr hooks for the parent's sandbox bridge; only remap destinations. */
 export function projectPreviewHtml(html: string, base: string, origin: string, selection: { page: DesignPage; lang: Language; productId?: string; expectedVersion: number }): string {
@@ -28,9 +37,25 @@ export function projectPreviewHtml(html: string, base: string, origin: string, s
         const params = new URLSearchParams({ page, lang: get('data-wr-lang') || selection.lang, expectedVersion: String(selection.expectedVersion) });
         const productId = get('data-wr-product-id') || selection.productId;
         if (productId && (page === 'detail' || page === 'contact')) params.set('productId', productId);
-        set('href', base + '/preview?' + params);
+        const href = get('href') || '';
+        const fragment = href.includes('#') ? href.slice(href.indexOf('#') + 1) : undefined;
+        const hash = fragment && /^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(fragment) ? '#' + fragment : '';
+        set('href', base + '/preview?' + params + hash);
       }
       if (node.tagName === 'form') { set('action', '#'); set('data-wr-preview-disabled', 'true'); }
+      if (selection.page === 'contact' && selection.productId && node.tagName === 'select' && get('name') === 'productId') {
+        const options: DefaultTreeAdapterMap['element'][] = [];
+        const collect = (child: DefaultTreeAdapterMap['node']) => {
+          if ('tagName' in child && child.tagName === 'option') options.push(child);
+          else if ('childNodes' in child) child.childNodes.forEach(collect);
+        };
+        node.childNodes.forEach(collect);
+        const selected = options.find(option => option.attrs.some(attribute => attribute.name === 'value' && attribute.value === selection.productId));
+        if (selected) for (const option of options) {
+          option.attrs = option.attrs.filter(attribute => attribute.name !== 'selected');
+          if (option === selected) option.attrs.push({name:'selected',value:''});
+        }
+      }
     }
     if ('childNodes' in node) for (const child of node.childNodes) visit(child);
     if ('tagName' in node && node.tagName === 'template' && 'content' in node) visit(node.content);
@@ -52,10 +77,28 @@ export const projectPreviewRuntime = `var __name=(value)=>value;(()=>{
   });
 })();`;
 
+/** Trusted head code stays separate from customer HTML when previews strip its scripts. */
+export function projectPreviewPrepareForDraft(draft: Draft): string {
+  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
+    const source = draft.template === 'pawfect-groom' ? pawfectMotionPrepareSource : productMotionPrepareSource;
+    return isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? staticProductDetailRuntime(source) : source;
+  }
+  return isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision) ? productMotionPrepareSource : '';
+}
+
 export function projectPreviewRuntimeForDraft(draft: Draft): string {
+  if (isProductGalleryRevision(draft.template, draft.materials?.contractRevision)) {
+    const motionSource = isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? productAboutCollectionMotionSource : productGalleryMotionSource;
+    const motion = draft.template === 'pawfect-groom' ? pawfectMotionSource : `;(${productNativeUiRuntime.toString()})();(${productNativeEnhancedNavRuntime.toString()})();${motionSource}`;
+    const source = projectPreviewRuntime + `\n;(${productGalleryRuntime.toString()})();${motion}`;
+    return isProductAboutCollectionRevision(draft.template, draft.materials?.contractRevision) ? staticProductDetailRuntime(source) : source;
+  }
+  if (isProductNativeEnhancedRevision(draft.template, draft.materials?.contractRevision)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();\n;(' + productNativeEnhancedNavRuntime.toString() + ')();\n;' + productMotionSource;
+  if (isProductNativeMaterials(draft)) return projectPreviewRuntime + '\n;(' + productNativeUiRuntime.toString() + ')();';
   if (draft.template === 'auravell' && draft.materials?.contractRevision === '2026-10-01.auravell-materials.1') return projectPreviewRuntime + '\n;(' + legacyAuravellRuntime.toString() + ')();';
   if (draft.template === 'careflow-healthcare' && draft.materials?.contractRevision === '2026-10-01.careflow-healthcare-materials.1') return projectPreviewRuntime + '\n;(' + legacyCareflowRuntime.toString() + ')();';
   const runtime = releasedMaterialsPreviewRuntime(draft) ?? projectPreviewRuntime;
+  if (draft.template === 'pawfect-groom' && draft.materials?.contractRevision === pawfectMaterialsRevision) return runtime + '\n;' + pawfectMotionSource;
   if (draft.template === 'auravell') return runtime + '\n;(' + referenceMotionRuntime.toString() + ')();\n;(' + auravellRuntime.toString() + ')();';
   if (draft.template === 'good-boy-pals') return runtime + '\n;(' + goodBoyRuntime.toString() + ')();';
   if (draft.template === 'careflow-healthcare') return runtime + '\n;(' + referenceMotionRuntime.toString() + ')();\n;(' + careflowRuntime.toString() + ')();';

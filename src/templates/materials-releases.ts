@@ -1,9 +1,13 @@
+import {usesLegacyAboutCollectionRevision,legacyAboutCollectionContract,legacyAboutCollectionRenderDraft} from './legacy-about-collection';
 import { isActiveTemplate } from '../shared/template-availability';
 import { imageContentBaseRevision, usesImageContentRevision, withConfirmedImageContent, materialsRenderDraft } from './materials-image-content';
 import { renderAuravellSite as legacyAuravell, renderCareflowSite as legacyCareflow } from './releases/native-20261001.mjs';
 import { getCareflowMaterialsTemplate } from './themes/careflow/materials';
 import { getLumiMaterialsTemplate } from './themes/lumi/materials';
 import { getAuravellMaterialsTemplate } from './themes/auravell/materials';
+import { getPawfectMaterialsTemplate } from './themes/pawfect/materials';
+import { getProductNativeContract } from './product-native';
+import { isProductNativeMaterials } from '../shared/product-native-materials';
 import { additionalMaterialsReleases, type MaterialsTemplateRelease } from './materials-release-registry';
 import type { ProductIdentity } from '../shared/product-identity';
 import type { Draft } from '../shared/model';
@@ -92,6 +96,16 @@ function declareExecutionMetadata(contract:MaterialsTemplateContract):MaterialsT
 
 /** This snapshot never imports the mutable standalone theme tree. */
 export function releasedMaterialsContract(id: string, revision?: string): MaterialsTemplateContract | undefined {
+  if (usesLegacyAboutCollectionRevision(id, revision)) {
+    const source = originalMaterialsContract(id, imageContentBaseRevision(id));
+    return source ? legacyAboutCollectionContract(source) : undefined;
+  }
+  const candidate = getProductNativeContract(id, revision);
+  if (candidate) return candidate;
+  if (id === 'pawfect-groom') {
+    const native = getPawfectMaterialsTemplate(revision);
+    if (native) return native;
+  }
   if (usesImageContentRevision(id, revision) || (!revision && isActiveTemplate(id) && imageContentBaseRevision(id))) {
     const source = originalMaterialsContract(id, imageContentBaseRevision(id));
     return source ? withConfirmedImageContent(source) : undefined;
@@ -101,6 +115,7 @@ export function releasedMaterialsContract(id: string, revision?: string): Materi
 
 /** New image guidance uses the existing renderer and position inventory unchanged. */
 export function materialsDraftForRenderer(draft: Draft): Draft {
+  draft = legacyAboutCollectionRenderDraft(draft);
   return usesImageContentRevision(draft.template, draft.materials?.contractRevision)
     ? materialsRenderDraft(draft, originalMaterialsContract(draft.template, imageContentBaseRevision(draft.template))) : draft;
 }
@@ -156,6 +171,7 @@ export function renderReleasedMaterials(draft: Draft, options: RenderOptions): s
 /** Preview drops page scripts at its sandbox boundary, so its trusted replacement is versioned too. */
 export function releasedMaterialsPreviewRuntime(draft: Draft): string | undefined {
   draft = materialsDraftForRenderer(draft);
+  if (isProductNativeMaterials(draft)) return;
   const revision = draft.materials?.contractRevision;
   if (draft.template === 'lumi-business' || draft.template === 'careflow-healthcare' || draft.template === 'auravell') return;
   const release = availableMaterialsTemplateReleases().find(item => item.contract.templateId === draft.template && item.contract.contractRevision === revision);

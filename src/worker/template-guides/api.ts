@@ -9,11 +9,13 @@ import { getTemplateGuide, templateGuides } from './catalog';
 import { guideJsonSchema, outputJsonSchema } from './schema';
 import { guideMarkdown } from './markdown';
 import { currentMaterialsPrincipal, verifyMaterialsSecret } from '../materials-auth';
-import { getMaterialsTemplate } from '../../templates/materials';
+import { currentMaterialsTemplate } from './current-materials';
 import { materialsLocales, materialsPages } from '../../shared/materials';
+import { isProductNativeRevision } from '../../shared/product-native-materials';
 import { renderSite } from '../../templates';
 import { materialsDemoDraft } from './materials-demo';
 import { materialsCatalog, matchesMaterialsEtag } from './materials-catalog';
+import { canBuildWebsites } from '../../shared/access';
 
 async function equalKey(received: string, expected: string): Promise<boolean> {
   const [a, b] = await Promise.all([sha256(received), sha256(expected)]);
@@ -49,6 +51,8 @@ export function createTemplateGuidesApp() {
       if(materialsRoute)await currentMaterialsPrincipal(c.env,{userId:c.req.header('X-Product-Radar-User-Id')||'',workspaceId:c.req.header('X-Product-Radar-Workspace-Id')||''});
     } else {
       const { principal } = await authenticate(c.req.raw, c.env);
+      if (!canBuildWebsites(principal))
+        throw new ApiError(403, 'website_access_denied', '当前账号未开放网站项目功能。');
       if(materialsRoute)await currentMaterialsPrincipal(c.env,principal);
       else if (principal.systemRole !== 'super_admin')
         throw new ApiError(
@@ -89,16 +93,16 @@ export function createTemplateGuidesApp() {
     return c.json(summary);
   });
   app.get('/materials/:id/preview',(c)=>{
-    const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
+    const profile=currentMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
     const page=c.req.query('page')||'home',lang=c.req.query('lang')||'en';
-    if(!(profile.templateId==='auravell'?auravellPages:profile.templateId==='lumi-business'?lumiPages:materialsPages).includes(page as never)||!materialsLocales.includes(lang as never))throw new ApiError(400,'invalid_preview','页面或语言无效。');
+    if(!(isProductNativeRevision(profile.templateId,profile.contractRevision)?materialsPages:profile.templateId==='auravell'?auravellPages:profile.templateId==='lumi-business'?lumiPages:materialsPages).includes(page as never)||!materialsLocales.includes(lang as never))throw new ApiError(400,'invalid_preview','页面或语言无效。');
     const draft=materialsDemoDraft(profile,lang as typeof materialsLocales[number]);
     const html=renderSite(draft,{projectId:'materials-demo',lang:lang as typeof draft.languages[number],page,productId:draft.primaryProductId,assetUrl:id=>id,inquiryUrl:'',preview:true});
     return c.json({templateId:profile.templateId,contractRevision:profile.contractRevision,page,html,assetBaseUrl:c.env.APP_ORIGIN||new URL(c.req.url).origin,demo:true});
   });
   app.get('/materials/:id',async(c)=>{
-    const profile=getMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
+    const profile=currentMaterialsTemplate(c.req.param('id'),c.req.query('contractRevision'));
     if(!profile)throw new ApiError(404,'materials_template_not_ready','该模板尚未支持新版资料交接。');
     const hash = await sha256(JSON.stringify(profile));
     c.header('X-Template-Materials-Revision',profile.contractRevision);

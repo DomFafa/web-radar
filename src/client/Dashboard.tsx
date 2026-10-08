@@ -1,4 +1,5 @@
-import type { ProjectList } from '../shared/model';
+import type { Principal, ProjectList } from '../shared/model';
+import { canBuildWebsites } from '../shared/access';
 import { Button, Icon, dateTime } from './components';
 import {
   EmailOverviewPanel,
@@ -8,19 +9,36 @@ import {
   useOverview,
 } from './ChannelOverview';
 export default function Dashboard({
+  principal,
   onNavigate,
   onOpenProject,
 }: {
+  principal: Principal;
+  onNavigate: (view: 'projects' | 'edm' | 'site-messages') => void;
+  onOpenProject: (id: string) => void;
+}) {
+  const websitesVisible = canBuildWebsites(principal);
+  return (
+    <div className="console-dashboard">
+      <header className="page-heading">
+        <h1>控制台</h1>
+        <p>当前工作区的{websitesVisible ? '网站项目、' : ''}邮件营销与站内信概览。统计按需刷新。</p>
+      </header>
+      {websitesVisible && <ProjectsOverview onNavigate={onNavigate} onOpenProject={onOpenProject} />}
+      <div className="console-channels">
+        <EmailOverviewPanel onOpen={() => onNavigate('edm')} />
+        <SiteOverviewPanel onOpen={() => onNavigate('site-messages')} />
+      </div>
+    </div>
+  );
+}
+
+function ProjectsOverview({ onNavigate, onOpenProject }: {
   onNavigate: (view: 'projects' | 'edm' | 'site-messages') => void;
   onOpenProject: (id: string) => void;
 }) {
   const projects = useOverview<ProjectList>('/api/projects?page=1&pageSize=5&status=all');
   return (
-    <div className="console-dashboard">
-      <header className="page-heading">
-        <h1>控制台</h1>
-        <p>当前工作区的网站项目、邮件营销与站内信概览。统计按需刷新。</p>
-      </header>
       <SummaryFrame
         title="网站项目概览"
         description="项目创建与发布状态"
@@ -62,10 +80,5 @@ export default function Dashboard({
           </div>
         )}
       </SummaryFrame>
-      <div className="console-channels">
-        <EmailOverviewPanel onOpen={() => onNavigate('edm')} />
-        <SiteOverviewPanel onOpen={() => onNavigate('site-messages')} />
-      </div>
-    </div>
   );
 }

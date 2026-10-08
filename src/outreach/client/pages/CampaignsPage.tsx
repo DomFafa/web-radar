@@ -2,7 +2,7 @@
 import { CampaignProgress } from "../components/CampaignProgress";
 import React, { useState, useEffect, useRef } from "react";
 import { campaignsApi, templatesApi, contactsApi } from "../lib/api";
-import { useToast } from "../App";
+import { useAuth, useToast } from "../App";
 import { TEMPLATE_NAME_LABELS } from "./TemplatesPage";
 
 const statusLabels: Record<string, { label: string; badge: string }> = {
@@ -32,8 +32,10 @@ function CampaignRate({ label, value, totalSent }: { label: string; value: unkno
   );
 }
 
-export function CampaignsPage() {
+export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const writable = !!user && ['admin', 'member'].includes(user.role);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
@@ -80,8 +82,6 @@ export function CampaignsPage() {
     sendRate: 50,
     replyTracking: true,
   });
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
   // State for Add Recipients in Detail view
   const [detailSelectedGroups, setDetailSelectedGroups] = useState<string[]>([]);
@@ -92,6 +92,8 @@ export function CampaignsPage() {
     loadTemplates();
     loadGroups();
     loadContacts();
+    const requestedId = new URLSearchParams(window.location.search).get("campaignId");
+    if (requestedId) void loadDetail(requestedId);
   }, []);
 
   // Only active sends need polling; completed details refresh on demand.
@@ -117,8 +119,8 @@ export function CampaignsPage() {
     try {
       const res = await campaignsApi.list();
       setCampaigns(res.data || []);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      if (!silent) addToast('error', err.message || '发送记录加载失败，请刷新重试');
     } finally {
       listLoading.current = false;
       if (!silent) setLoading(false);
@@ -191,39 +193,14 @@ export function CampaignsPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!writable || !editId) return;
     try {
-      if (editId) {
-        await campaignsApi.update(editId, form);
-        addToast("success", "活动已更新");
-        setShowModal(false);
-        setEditId(null);
-        setForm({ name: "", templateId: "", senderEmail: "", senderName: "", replyTo: "", sendRate: 50, replyTracking: true });
-        loadCampaigns();
-        return;
-      }
-
-      const res = await campaignsApi.create(form);
-      const newCampaignId = res.data.id;
-
-      let added = 0;
-      // Add groups if selected
-      for (const groupId of selectedGroups) {
-        const r = await campaignsApi.addRecipients(newCampaignId, { groupId });
-        added += r.data.added;
-      }
-      // Add individual contacts if selected
-      if (selectedContacts.length > 0) {
-        const r = await campaignsApi.addRecipients(newCampaignId, { contactIds: selectedContacts });
-        added += r.data.added;
-      }
-
-      addToast("success", `活动已创建，添加了 ${added} 个收件人`);
+      await campaignsApi.update(editId, form);
+      addToast("success", "邮件任务已更新");
       setShowModal(false);
-      setForm({ name: "", templateId: "", senderEmail: "", senderName: "", replyTo: "", sendRate: 50, replyTracking: true });
-      setSelectedGroups([]);
-      setSelectedContacts([]);
+      setEditId(null);
       loadCampaigns();
     } catch (err: any) {
       addToast("error", err.message);
@@ -241,8 +218,6 @@ export function CampaignsPage() {
       replyTracking: !!c.replyTracking,
     });
     setEditId(c.id);
-    setSelectedGroups([]);
-    setSelectedContacts([]);
     setShowModal(true);
   };
 
@@ -291,7 +266,7 @@ export function CampaignsPage() {
   };
 
   const handleSend = async (campaignId: string) => {
-    if (!confirm("确定开始发送？邮件将通过默认邮件通道批量发送给所有收件人。")) return;
+    if (!writable || !confirm("确认继续发送此任务中尚未发送的邮件？已失败的邮件不会通过此操作自动重试。")) return;
     setSending(true);
     try {
       const res = await campaignsApi.send(campaignId);
@@ -329,18 +304,10 @@ export function CampaignsPage() {
       <div className="page-header">
         <div className="page-header-actions">
           <div>
-            <h2>营销活动</h2>
-            <p>创建和管理邮件营销活动</p>
+            <h2>发送记录</h2>
+            <p>查看进度、继续草稿、下载结果；新邮件从发送页面开始。</p>
           </div>
-          <button className="btn btn-primary" onClick={() => {
-            setEditId(null);
-            setForm({ name: "", templateId: "", senderEmail: "", senderName: "", replyTo: "", sendRate: 50, replyTracking: true });
-            setSelectedGroups([]);
-            setSelectedContacts([]);
-            setShowModal(true);
-          }}>
-            ➕ 新建活动
-          </button>
+          {writable && onCreate && <button className="btn btn-primary" onClick={onCreate}>新建邮件</button>}
         </div>
       </div>
 
@@ -358,17 +325,9 @@ export function CampaignsPage() {
           <div className="card">
             <div className="empty-state">
               <div className="empty-icon">🚀</div>
-              <h3>暂无营销活动</h3>
-              <p>创建你的第一个邮件营销活动</p>
-              <button className="btn btn-primary" onClick={() => {
-                setEditId(null);
-                setForm({ name: "", templateId: "", senderEmail: "", senderName: "", replyTo: "", sendRate: 50, replyTracking: true });
-                setSelectedGroups([]);
-                setSelectedContacts([]);
-                setShowModal(true);
-              }}>
-                新建活动
-              </button>
+              <h3>还没有发送记录</h3>
+              <p>{writable ? '准备第一封邮件，发送进度和结果会显示在这里。' : '有可查看的邮件任务后，进度和结果会显示在这里。'}</p>
+              {writable && onCreate && <button className="btn btn-primary" onClick={onCreate}>新建邮件</button>}
             </div>
           </div>
         ) : (
@@ -377,7 +336,7 @@ export function CampaignsPage() {
               <div className="stat-card">
                 <div className="stat-icon" style={{ background: "rgba(99, 102, 241, 0.12)", color: "#6366f1" }}>🚀</div>
                 <div className="stat-value">{campaigns.length}</div>
-                <div className="stat-label">营销活动数</div>
+                <div className="stat-label">邮件任务</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{ background: "rgba(59, 130, 246, 0.12)", color: "#3b82f6" }}>👥</div>
@@ -406,7 +365,7 @@ export function CampaignsPage() {
             <table>
               <thead>
                 <tr>
-                  <th>活动名称</th>
+                  <th>任务名称</th>
                   <th>状态</th>
                   <th>收件人</th>
                   <th>已发送</th>
@@ -447,14 +406,14 @@ export function CampaignsPage() {
                       </td>
                       <td>
                         <div className="flex gap-sm" style={{ flexWrap: "wrap" }}>
-                          <a className="btn btn-ghost btn-sm" href={'/?view=inbox&inboxSource=edm&inboxBusiness='+encodeURIComponent(c.id)}>客户回复</a>
+                          <a className="btn btn-ghost btn-sm" href={'/?view=crm&crmTab=replies&inboxSource=edm&inboxBusiness='+encodeURIComponent(c.id)}>客户回复</a>
                           <button className="btn btn-ghost btn-sm" onClick={() => loadDetail(c.id)} title="查看详情">
                             查看
                           </button>
                           <button className="btn btn-ghost btn-sm" disabled={!!exporting} onClick={() => downloadReport(c)}>
                             {exporting === c.id ? "正在导出..." : "下载报表"}
                           </button>
-                          {c.status !== "sending" && (
+                          {writable && c.status !== "sending" && (
                             <>
                               <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(c)} title="编辑">
                                 编辑
@@ -476,18 +435,18 @@ export function CampaignsPage() {
         )}
       </div>
 
-      {/* Create Campaign Modal */}
-      {showModal && (
+      {/* Edit Campaign Modal */}
+      {showModal && writable && (
         <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title">{editId ? "编辑营销活动" : "新建营销活动"}</h3>
+              <h3 className="modal-title">编辑邮件任务</h3>
               <button className="btn btn-ghost" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleCreate}>
+            <form onSubmit={handleSave}>
               <div className="modal-body">
                 <div className="form-group">
-                  <label className="form-label">活动名称 *</label>
+                  <label className="form-label">任务名称 *</label>
                   <input
                     className="form-input"
                     value={form.name}
@@ -567,71 +526,10 @@ export function CampaignsPage() {
                   </div>
                 </div>
 
-                {/* Recipient Selection (Only show on Create) */}
-                {!editId && (
-                  <div style={{ marginTop: 16 }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>选择收件人</h4>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                      <div>
-                        <label className="form-label" style={{ fontSize: 13 }}>按分组添加（点击选择）</label>
-                        <div style={{ maxHeight: 150, overflowY: "auto", border: "1px solid var(--color-border)", padding: 12, borderRadius: 6, display: "flex", flexWrap: "wrap", gap: 8 }}>
-                          <button
-                            type="button"
-                            className={`btn btn-sm ${selectedGroups.includes("null") ? "btn-primary" : "btn-secondary"}`}
-                            style={{ borderRadius: 20 }}
-                            onClick={() => {
-                              if (selectedGroups.includes("null")) setSelectedGroups(selectedGroups.filter((id) => id !== "null"));
-                              else setSelectedGroups([...selectedGroups, "null"]);
-                            }}
-                          >
-                            默认分组
-                          </button>
-                          {groups.map(g => (
-                            <button
-                              key={g.id}
-                              type="button"
-                              className={`btn btn-sm ${selectedGroups.includes(g.id) ? "btn-primary" : "btn-secondary"}`}
-                              style={{ borderRadius: 20 }}
-                              onClick={() => {
-                                if (selectedGroups.includes(g.id)) setSelectedGroups(selectedGroups.filter((id) => id !== g.id));
-                                else setSelectedGroups([...selectedGroups, g.id]);
-                              }}
-                            >
-                              {g.name} ({g.contactCount})
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="form-label" style={{ fontSize: 13 }}>按独立联系人添加（点击选择）</label>
-                        <div style={{ maxHeight: 150, overflowY: "auto", border: "1px solid var(--color-border)", padding: 12, borderRadius: 6, display: "flex", flexWrap: "wrap", gap: 8, alignContent: "flex-start" }}>
-                          {contacts.length === 0 ? (
-                            <div style={{ fontSize: 12, color: "var(--color-text-muted)", width: "100%" }}>暂无联系人</div>
-                          ) : (
-                            contacts.map(c => (
-                              <button
-                                key={c.id}
-                                type="button"
-                                className={`btn btn-sm ${selectedContacts.includes(c.id) ? "btn-primary" : "btn-secondary"}`}
-                                style={{ borderRadius: 20 }}
-                                onClick={() => {
-                                  if (selectedContacts.includes(c.id)) setSelectedContacts(selectedContacts.filter((id) => id !== c.id));
-                                  else setSelectedContacts([...selectedContacts, c.id]);
-                                }}
-                              >
-                                {c.email} {c.name ? `(${c.name})` : ""}
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               <div className="modal-footer">
                 <button type="submit" className="btn btn-primary">
-                  {editId ? "保存修改" : "创建活动"}
+                  保存修改
                 </button>
               </div>
             </form>
@@ -668,14 +566,14 @@ export function CampaignsPage() {
                     </button>
                     <button className="btn btn-secondary btn-sm" disabled={detailLoading}
                       onClick={() => loadDetail(detail.id, false, true)}>同步服务商数据</button>
-                    <button
+                    {writable && <button
                       className="btn btn-primary btn-sm"
                       onClick={() => handleSend(detail.id)}
                       disabled={sending || detail.status === "sending" || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
                     >
-                      {sending ? "正在提交..." : detail.status === "sending" ? "正在发送" : detail.status === "completed" ? "发送完成" : "开始发送"}
-                    </button>
-                    {detail.status === "sending" && (
+                      {sending ? "正在提交..." : detail.status === "sending" ? "正在发送" : detail.status === "completed" ? "处理完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
+                    </button>}
+                    {writable && detail.status === "sending" && (
                       <button className="btn btn-secondary btn-sm" onClick={() => handlePause(detail.id)}>
                         ⏸️ 暂停
                       </button>
@@ -688,7 +586,7 @@ export function CampaignsPage() {
                     className="form-select"
                     style={{ flex: 1, padding: "4px 8px", fontSize: 13 }}
                     value={detail.templateId || ""}
-                    disabled={detail.status === "sending"}
+                    disabled={!writable || detail.status === "sending" || detail.status === 'completed'}
                     onChange={async (e) => {
                       const newTplId = e.target.value;
                       try {
@@ -746,7 +644,7 @@ export function CampaignsPage() {
               </div>
 
               {/* Add Recipients */}
-              {(detail.status !== "sending" && detail.status !== "completed") && (
+              {writable && (detail.status !== "sending" && detail.status !== "completed") && (
                 <div className="card" style={{ marginBottom: 16 }}>
                   <div className="card-header">
                     <h4 className="card-title">添加收件人</h4>

@@ -69,6 +69,7 @@ const server = createServer(async (req, res) => {
         inquiryUrl: '/inquiry',
       });
       if (u.searchParams.has('private')) {
+        const previewRuntime = await client.referenceTemplatePreviewRuntime(draft);
         value = r
           .projectPreviewHtml(value, '/api/projects/fixture', origin, {
             page,
@@ -82,7 +83,8 @@ const server = createServer(async (req, res) => {
           )
           .replace(
             '</body>',
-            `<script nonce="reference-test">${r.projectPreviewRuntime}${await client.referenceTemplatePreviewRuntime(draft)}</script></body>`,
+            // Keep minified code literal: replacement strings interpret tokens such as $&.
+            () => `<script nonce="reference-test">${r.projectPreviewRuntime}${previewRuntime}</script></body>`,
           );
       }
       html.set(key, value);

@@ -6,6 +6,7 @@ import { renderSite, renderSiteFiles } from '../src/templates';
 import { getMaterialsTemplate, validateMaterialsPositions } from '../src/templates/materials';
 import { getTemplateGuide } from '../src/worker/template-guides/catalog';
 import { materialsDemoDraft } from '../src/worker/template-guides/materials-demo';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { projectPreviewHtml, projectPreviewRuntimeForDraft } from '../src/worker/project-preview';
 import { typedMaterialsFixture } from './fixtures/materials-typed';
 import { draftFromMaterials } from '../src/worker/materials-service';
@@ -72,7 +73,8 @@ describe('Careflow native template', () => {
   it('registers the template, guide, immutable contract and reference preview', () => {
     expect(validateDraft(draft()).template).toBe('careflow-healthcare');
     const profile = getMaterialsTemplate('careflow-healthcare')!;
-    expect(profile.guideRevision).toBe(getTemplateGuide('careflow-healthcare')?.revision);
+    expect(profile).toMatchObject({ contractRevision: '2026-10-02.careflow-healthcare-materials.1', guideRevision: '2026-10-02.1' });
+    expect(currentMaterialsTemplate('careflow-healthcare')).toMatchObject({ contractRevision: '2026-10-03.careflow-healthcare-materials.5', guideRevision: getTemplateGuide('careflow-healthcare')?.revision });
     expect(profile.imageSlots).toHaveLength(18);
     expect(getMaterialsTemplate('careflow-healthcare', 'unknown')).toBeUndefined();
     const html = renderSite(materialsDemoDraft(profile, 'en'), {

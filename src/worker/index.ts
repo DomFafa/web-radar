@@ -1,4 +1,5 @@
 import inbox from './inbox/api';
+import crm from './crm/api';
 import { userManagement } from './user-management';
 import { outreachFetch, outreachQueue } from './outreach';
 import { withStoredEmailStatus } from './provider-settings';
@@ -12,6 +13,7 @@ import { ApiError, errorResponse } from './http';
 import { integrationConfig, parentOrigins, isLoopback } from './product-radar';
 import { createProviders } from './providers';
 import { createPublicApp } from './public';
+import { canBuildWebsites } from '../shared/access';
 export { Coordinator } from './coordinator';
 const app = new Hono<HonoEnv>();
 app.onError(errorResponse);
@@ -51,6 +53,14 @@ app.get('/api/health', (c) =>
   c.json({ ok: true, service: 'web-radar', testMode: testMode(c.env) }),
 );
 app.get('/api/config', async (c) => {
+  let websiteAccess = false;
+  if (c.req.header('Authorization') || /(?:^|;\s*)(?:__Host-wr_session|wr_session)=/.test(c.req.header('Cookie') || '')) {
+    try {
+      websiteAccess = canBuildWebsites((await authenticate(c.req.raw, c.env)).principal);
+    } catch (error) {
+      if (!(error instanceof ApiError && error.status === 401)) throw error;
+    }
+  }
   let configured = false,
     origins: string[] = [];
   try {
@@ -70,12 +80,15 @@ app.get('/api/config', async (c) => {
         mode: testMode(c.env) ? 'test' : configured ? 'live' : 'unconfigured',
         detail: configured ? '账号衔接已配置，实际连通性待登录核验。' : '账号衔接尚未配置。',
       },
-      ...(await withStoredEmailStatus(c.env, createProviders(c.env).status())),
+      ...(websiteAccess
+        ? await withStoredEmailStatus(c.env, createProviders(c.env).status())
+        : createProviders(c.env).status().filter(service => service.name === 'text')),
     ],
   });
 });
 app.route('/api/auth', createAuthApp());
 app.route('/api/inbox', inbox);
+app.route('/api/crm', crm);
 app.route('/api/management', userManagement);
 app.route('/api/internal/template-guides', createTemplateGuidesApp());
 app.route('/api/integrations/product-radar', createIntegrationApp());
@@ -93,6 +106,8 @@ app.all('/api/public/*', async (c) => {
 app.all('/api/outreach/*',c=>outreachFetch(c.req.raw,c.env,c.executionCtx));
 app.all('/api/*', async (c) => {
   const { principal } = await authenticate(c.req.raw, c.env);
+  if (!canBuildWebsites(principal))
+    throw new ApiError(403, 'website_access_denied', '当前账号未开放网站项目功能。');
   const headers = new Headers(c.req.raw.headers);
   headers.set('X-WR-Principal', encodeURIComponent(JSON.stringify(principal)));
   headers.delete('Authorization');

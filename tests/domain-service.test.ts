@@ -2721,3 +2721,18 @@ describe('product set gallery storage',()=>{
     expect(sourceState.imageRequests).toEqual(['original','detail']);
   });
 });
+
+it.each([3,20,24])('imports and replays %i products without truncating the website handoff',async count=>{
+ const sourceProject=await create(),ids=Array.from({length:count},(_,i)=>`selected-${i}`);
+ const imported=await request(`/api/projects/${sourceProject.id}/import`,{expectedVersion:sourceProject.version,productIds:ids});
+ expect(imported.status).toBe(200);expect(imported.data.project.draft.products.map((p:any)=>p.source.id)).toEqual(ids);
+ const products=imported.data.project.draft.products.map((p:any)=>p.source),body={requestId:crypto.randomUUID(),products};
+ const result=await request('/internal/handoff-project',body);expect(result.status).toBe(200);
+ const {project}=await get(result.data.project);expect(project.draft.products.map((p:any)=>p.source.id)).toEqual(ids);
+ expect((await request('/internal/handoff-project',body)).data.project.id).toBe(project.id);
+});
+it('rejects twenty-five products before importing images',async()=>{
+ const project=await create();sourceState.imageRequests=[];
+ expect((await request(`/api/projects/${project.id}/import`,{expectedVersion:project.version,productIds:Array.from({length:25},(_,i)=>`selected-${i}`)})).status).toBe(400);
+ expect(sourceState.imageRequests).toEqual([]);
+});
