@@ -87,12 +87,14 @@ export default {
   },
   async queue(batch: MessageBatch<{ key: string }>, env: Env) {
     for (const m of batch.messages) {
+      let stage = 'read', status: number | undefined;
       try {
         const obj = await env.RAW.get(m.body.key);
         if (!obj) {
           m.ack();
           continue;
         }
+        stage = 'prepare';
         const { to, from, forward, forwardTo } = obj.customMetadata!,
           t = target(env, to),
           time = String(Date.now()),
@@ -101,6 +103,7 @@ export default {
           t.secret,
           [t.id, time, to, from, forward, forwardTo, await hash(raw)].join('\n'),
         );
+        stage = 'fetch';
         const response = await fetch(t.endpoint, {
           method: 'POST',
           redirect: 'error',
@@ -116,10 +119,16 @@ export default {
           body: raw,
           signal: AbortSignal.timeout(25000),
         });
+        status = response.status;
         if (!response.ok) throw new Error('Inbox delivery failed: ' + response.status);
+        stage = 'delete';
         await env.RAW.delete(m.body.key);
         m.ack();
-      } catch {
+      } catch (error) {
+        // Log only coarse diagnostics: exception text can contain mail or target credentials.
+        const name = error instanceof Error && ['Error', 'TypeError', 'SyntaxError', 'AbortError', 'TimeoutError', 'OperationError'].includes(error.name) ? error.name : 'UnknownError';
+        const code = error instanceof Error ? error.message.match(/(?:\berror(?: code)?[: ]+|\bcode[: ]+|\()(\d{3,5})\b/i)?.[1] : undefined;
+        console.error('Inbox delivery retry', { stage, name, code, status, attempt: m.attempts });
         m.retry({ delaySeconds: Math.min(3600, 60 * 2 ** Math.min(m.attempts, 6)) });
       }
     }

@@ -108,3 +108,27 @@ it('retains the message on delivery failure and reports forwarding failure', asy
   expect(retry).toHaveBeenCalled();
   expect(objects.size).toBe(1);
 });
+it.each([
+  { stage: 'fetch', failure: new Error('Fetch failed: Unknown error (1042); customer@example.org key-a Subject: Hi Hello'), name: 'Error', code: '1042' },
+  { stage: 'read', failure: new TypeError('RAW.get unavailable for customer@example.org key-a Subject: Hi Hello'), name: 'TypeError', code: undefined },
+])('logs a safe diagnostic for $stage failures while retaining the message for retry', async ({ stage, failure, name, code }) => {
+  const { env, jobs, objects } = fixture(), log = vi.spyOn(console, 'error').mockImplementation(() => {});
+  await gateway.email(mail('sales@reply.example.com'), env);
+  if (stage === 'read') vi.spyOn(env.RAW, 'get').mockRejectedValue(failure);
+  else vi.spyOn(globalThis, 'fetch').mockRejectedValue(failure);
+  const ack = vi.fn(), retry = vi.fn();
+  await gateway.queue({ messages: [{ body: jobs[0], ack, retry, attempts: 1 }] } as any, env);
+  expect(log).toHaveBeenCalledWith('Inbox delivery retry', { stage, name, code, status: undefined, attempt: 1 });
+  expect(JSON.stringify(log.mock.calls)).not.toMatch(/customer@example\.org|key-a|Subject: Hi|Hello|sales@|reply\.example\.com/);
+  expect(ack).not.toHaveBeenCalled(); expect(retry).toHaveBeenCalledWith({ delaySeconds: 120 }); expect(objects.size).toBe(1);
+});
+it('logs only the HTTP status for rejected ingestion without logging the response body', async () => {
+  const { env, jobs, objects } = fixture(), log = vi.spyOn(console, 'error').mockImplementation(() => {});
+  await gateway.email(mail('sales@reply.example.com'), env);
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('key-a customer@example.org private message', { status: 401 }));
+  const ack = vi.fn(), retry = vi.fn();
+  await gateway.queue({ messages: [{ body: jobs[0], ack, retry, attempts: 1 }] } as any, env);
+  expect(log).toHaveBeenCalledWith('Inbox delivery retry', { stage: 'fetch', name: 'Error', code: undefined, status: 401, attempt: 1 });
+  expect(JSON.stringify(log.mock.calls)).not.toMatch(/key-a|customer@example\.org|private message/);
+  expect(ack).not.toHaveBeenCalled(); expect(retry).toHaveBeenCalledWith({ delaySeconds: 120 }); expect(objects.size).toBe(1);
+});
