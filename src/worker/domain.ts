@@ -1,3 +1,4 @@
+import { MAX_WEBSITE_PRODUCTS } from "../shared/website-limits";
 import { DEFAULT_TEMPLATE } from '../shared/template-availability';
 import { viewTeamData } from '../shared/access';
 import { ProductIdentitySchema } from "../shared/product-identity";
@@ -52,7 +53,7 @@ const copy = z.object({
 export { importProductSnapshotSchema as snapshotSchema } from '../shared/product-snapshot';
 import { productSnapshotSchema as source, productImageKind } from '../shared/product-snapshot';
 const draftSchema = z.object({
-  productDisplayGroups: z.array(z.array(id).min(2).max(20)).max(10).optional(),
+  productDisplayGroups: z.array(z.array(id).min(2).max(MAX_WEBSITE_PRODUCTS)).max(10).optional(),
   materials: appliedMaterialsSchema.optional(),
   buildBranch: z.enum(['template', 'custom', 'clone']).optional(),
   templateConfirmed: z.boolean().optional(),
@@ -103,7 +104,7 @@ const draftSchema = z.object({
         translations: z.partialRecord(language, translation).optional(),
       }),
     )
-    .max(20),
+    .max(MAX_WEBSITE_PRODUCTS),
   primaryProductId: z.string().max(200),
   category: short,
   country: short,
