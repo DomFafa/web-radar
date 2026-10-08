@@ -50,7 +50,7 @@ export const confirmedMaterialsSchema = z.strictObject({
     profileId:id,profileVersion:id,name:z.string().min(1).max(300),description:text,
     businessType:z.enum(['factory','trader']).optional(),slogan:z.string().max(300).optional(),address:text.optional(),establishedYear:z.string().max(300).optional(),certifications:text.optional(),capabilities:text.optional(),
     targetMarkets:text.optional(),customerTypes:text.optional(),cooperationProcess:text.optional(),
-    linkedin:z.string().max(300).optional(),facebook:z.string().max(300).optional(),instagram:z.string().max(300).optional(),x:z.string().max(300).optional(),logoMediaId:id.optional(),faviconMediaId:id.optional(),
+    linkedin:z.string().max(2048).optional(),facebook:z.string().max(2048).optional(),instagram:z.string().max(2048).optional(),x:z.string().max(2048).optional(),logoMediaId:id.optional(),faviconMediaId:id.optional(),
   }),
   contact:z.strictObject({cardId:id,cardVersion:id,name:z.string().min(1).max(300),email:z.email().max(254),phone:z.string().max(200).optional(),whatsapp:z.string().max(200).optional()}),
   products:z.array(z.strictObject({
