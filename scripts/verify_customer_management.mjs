@@ -217,6 +217,32 @@ try {
     await page.screenshot({ path: output + '/' + name, animations: 'disabled' });
     screenshots.push(name);
   };
+  const checkMobileTable = async (name) => {
+    const container = page.locator('.crm-table-scroll').first();
+    await expect(container.locator('tbody td').first()).toBeVisible();
+    const cell = await container.locator('tbody td').first().boundingBox();
+    assert.ok(cell.width >= 220, 'Mobile table first column must remain readable');
+    const scroll = await container.evaluate((element) => {
+      element.scrollLeft = 180;
+      const result = {
+        viewport: element.clientWidth,
+        content: element.scrollWidth,
+        scrollLeft: element.scrollLeft,
+      };
+      element.scrollLeft = 0;
+      return result;
+    });
+    assert.ok(
+      scroll.content > scroll.viewport && scroll.scrollLeft > 0,
+      'Table must scroll horizontally',
+    );
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+      false,
+    );
+    await container.scrollIntoViewIfNeeded();
+    await shot(name);
+  };
   await stage('browserMs', async () => {
     await page.goto(origin + '/?view=crm');
     await expect(page.getByRole('heading', { name: '客户管理系统', exact: true })).toBeVisible();
@@ -363,6 +389,15 @@ try {
       await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
       false,
     );
+    await checkMobileTable('crm-customers-mobile-table.png');
+    await page.getByRole('tab', { name: '沟通记录', exact: true }).click();
+    await expect(page.locator('.crm-table tbody tr')).toHaveCount(50);
+    await checkMobileTable('crm-communications-mobile-table.png');
+    await page.getByRole('tab', { name: '员工汇总', exact: true }).click();
+    await expect(page.getByRole('columnheader', { name: '联系客户数', exact: true })).toBeVisible();
+    await expect(page.locator('.crm-table tbody tr')).toHaveCount(2);
+    await checkMobileTable('crm-employees-mobile-table.png');
+    await page.getByRole('tab', { name: '客户名单', exact: true }).click();
     await page.getByLabel('搜索客户', { exact: true }).fill('CRM Buyer');
     await page.getByRole('button', { name: '搜索', exact: true }).click();
     await page.getByRole('button', { name: 'CRM Buyer', exact: true }).click();
@@ -372,7 +407,10 @@ try {
       await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
       false,
     );
-    cases.push({ name: '390px responsive list and customer profile', passed: true });
+    cases.push({
+      name: '390px readable customer, communication and employee tables plus profile',
+      passed: true,
+    });
     await page.setViewportSize({ width: 1440, height: 1000 });
     // A bulk draft exists before opening the single customer mail entry; it must not carry over.
     await page.evaluate(() =>

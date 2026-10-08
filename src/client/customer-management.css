@@ -426,6 +426,13 @@
   .crm-table th {
     padding: 13px 14px;
   }
+  .crm-table {
+    min-width: 860px;
+  }
+  .crm-table th:first-child,
+  .crm-table td:first-child {
+    min-width: 220px;
+  }
   .crm-email-preview {
     height: 400px;
   }
