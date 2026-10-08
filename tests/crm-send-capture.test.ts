@@ -41,6 +41,28 @@ test('actual recipient and sender metadata survive subsequent contact edits with
   expect(request).toHaveBeenCalledTimes(1);
 });
 
+test('the real Resend request and CRM snapshot use the same complete per-customer reply alias', async () => {
+  sqlite.exec(`INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,track_edm,track_sites,verified_at,created_at)
+    VALUES('12345678-1234-1234-1234-123456789abc','workspace','reply.example.com','sales@example.com','unused',1,1,1,'2026-10-09','2026-10-09');
+    UPDATE edm_campaigns SET reply_tracking=1;`);
+  sqlite.prepare("UPDATE edm_providers SET provider='resend',api_key=?").run(await seal('test-api-key', 'provider', env));
+  let sent: any;
+  const request = vi.fn(async (_url: any, init: any) => {
+    sent = JSON.parse(init.body);
+    const route = sqlite.prepare('SELECT address FROM wr_inbox_routes WHERE target_id=?').get('recipient');
+    expect(sent.reply_to).toMatch(/^reply\+e-123456781234-[a-f0-9]{32}@reply\.example\.com$/);
+    expect(route?.address).toBe(sent.reply_to);
+    expect(snapshots()[0]).toMatchObject({ reply_to: sent.reply_to, status: 'prepared' });
+    return Response.json({ id: 'tracked-receipt' });
+  });
+  vi.stubGlobal('fetch', request);
+  const message = queued();
+  await handleEmailQueue({ messages: [message] }, env);
+  await handleEmailQueue({ messages: [message] }, env);
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(snapshots()[0]).toMatchObject({ reply_to: sent.reply_to, status: 'sent' });
+});
+
 test('snapshot content is immutable and each genuine attempt has its own outcome', async () => {
   const input = { workspaceId: 'workspace', ownerId: 'employee', source: 'site' as const, businessId: 'job', targetId: 'target', attemptId: 'attempt-1', websiteUrl: 'https://customer.example/contact', subject: 'Inquiry', bodyText: 'Original message', provider: 'browser' };
   const id = await captureOutbound(env.DB, input);

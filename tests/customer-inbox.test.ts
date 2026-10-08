@@ -143,12 +143,40 @@ describe('customer inbox', () => {
     await enable();
     const a = await trackedAddress(db, 'edm', 'recipient', 'original body', 'subject'),
       b = await trackedAddress(db, 'site', 'target', 'original form', 'subject');
-    expect(a).toMatch(new RegExp('^e-' + cfg.id.replaceAll('-', '').slice(0, 12)));
-    expect(b).toMatch(/^s-/);
+    expect(a).toMatch(new RegExp('^reply\\+e-' + cfg.id.replaceAll('-', '').slice(0, 12) + '-[a-f0-9]{32}@reply\\.example\\.com$'));
+    expect(b).toMatch(/^reply\+s-[a-f0-9]{12}-[a-f0-9]{32}@reply\.example\.com$/);
     expect(await trackedAddress(db, 'edm', 'recipient', 'edited body', 'changed')).toBe(a);
     expect(
       db.sqlite.prepare("SELECT snapshot FROM wr_inbox_routes WHERE source='edm'").get().snapshot,
     ).toBe('original body');
+  });
+  it('preserves legacy route addresses and matches new aliases using their complete signed recipient', async () => {
+    await enable();
+    const legacy = 'e-' + cfg.id.replaceAll('-', '').slice(0, 12) + '-old@reply.example.com';
+    db.sqlite.prepare(`INSERT INTO wr_inbox_routes(id,config_id,workspace_id,owner_id,source,business_id,target_id,address,original_email,subject,snapshot,created_at) VALUES('legacy',?,'w','owner','edm','campaign','recipient',?,'customer@client.example','Legacy subject','Legacy body','2026-10-09')`).run(cfg.id, legacy);
+    expect(await trackedAddress(db, 'edm', 'recipient', 'Edited body', 'Edited subject')).toBe(legacy);
+    const site = (await trackedAddress(db, 'site', 'target', 'Original site body', 'Subject'))!;
+    expect((await receive(email('legacy-reply'), legacy)).status).toBe(200);
+    expect((await receive(email('same-id'), site)).status).toBe(200);
+    const result = db.sqlite.prepare('SELECT recipient,match_method FROM wr_inbox_messages WHERE recipient=?').get(site);
+    expect(result).toEqual({ recipient: site, match_method: 'address' });
+    const raw = new TextEncoder().encode(email('tampered-to')).buffer, time = String(Date.now());
+    const signature = await sign(cfg.secret, [cfg.id,time,'reply@reply.example.com','customer@client.example','forwarded','sales@work.example',await digest(raw)].join('\n'));
+    const rejected = await inbox.request('https://app.example/receive/' + cfg.id, { method: 'POST', headers: { 'Content-Type': 'message/rfc822', 'X-Inbox-To': site, 'X-Inbox-From': 'customer@client.example', 'X-Inbox-Forward': 'forwarded', 'X-Inbox-Forward-To': 'sales@work.example', 'X-Inbox-Time': time, 'X-Inbox-Signature': signature }, body: raw }, env);
+    expect(rejected.status).toBe(401);
+    expect(db.sqlite.prepare("SELECT COUNT(*) n FROM wr_inbox_messages WHERE message_id='<tampered-to@client.example>'").get().n).toBe(0);
+  });
+  it('keeps full plus aliases distinct for deduplication and cannot match a route in another workspace', async () => {
+    await enable();
+    const edm = (await trackedAddress(db, 'edm', 'recipient', 'Body', 'Subject'))!, site = (await trackedAddress(db, 'site', 'target', 'Body', 'Subject'))!;
+    await receive(email('shared-message-id'), edm); await receive(email('shared-message-id'), site);
+    expect(db.sqlite.prepare("SELECT COUNT(*) n FROM wr_inbox_messages WHERE message_id='<shared-message-id@client.example>'").get().n).toBe(2);
+    const foreignAlias = 'reply+e-aaaaaaaaaaaa-' + '1'.repeat(32) + '@reply.example.com';
+    db.sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,created_at) VALUES('foreign-config','other','other.example.com','other@work.example','not-used','2026-10-09')");
+    db.sqlite.prepare("INSERT INTO wr_inbox_routes(id,config_id,workspace_id,owner_id,source,business_id,target_id,address,rfc_message_id,created_at) VALUES('foreign-route','foreign-config','other','outsider','edm','foreign-campaign','foreign-target',?,'<foreign-sent@example.com>','2026-10-09')").run(foreignAlias);
+    await receive(email('wrong-workspace', 'In-Reply-To: <foreign-sent@example.com>\r\n'), foreignAlias);
+    expect(db.sqlite.prepare("SELECT workspace_id,match_method FROM wr_inbox_messages WHERE message_id='<wrong-workspace@client.example>'").get()).toEqual({ workspace_id: 'w', match_method: 'unmatched' });
+    expect(db.sqlite.prepare("SELECT COUNT(*) n FROM wr_inbox_threads WHERE route_id='foreign-route'").get().n).toBe(0);
   });
   it('deduplicates redelivery, groups replies and prevents cross-user or workspace access', async () => {
     await enable();

@@ -120,7 +120,7 @@ export async function trackedAddress(
     .first<InboxConfig>();
   if (!config) return null;
   const id = crypto.randomUUID(),
-    address = `${source === 'edm' ? 'e' : 's'}-${config.id.replaceAll('-', '').slice(0, 12)}-${crypto.randomUUID().replaceAll('-', '')}@${config.domain}`;
+    address = `reply+${source === 'edm' ? 'e' : 's'}-${config.id.replaceAll('-', '').slice(0, 12)}-${crypto.randomUUID().replaceAll('-', '')}@${config.domain}`;
   await db
     .prepare(
       `INSERT OR IGNORE INTO wr_inbox_routes(id,config_id,workspace_id,owner_id,source,business_id,target_id,address,original_email,website_url,subject,snapshot,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,

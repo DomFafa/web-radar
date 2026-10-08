@@ -678,7 +678,7 @@ async function sendViaBrevo(
       subject,
       htmlContent: bodyHtml,
       ...(bodyText && { textContent: bodyText }),
-      ...(message.replyTo && { replyTo: message.replyTo }),
+      ...(message.replyTo && { replyTo: { email: message.replyTo } }),
     }),
   });
   if (!response.ok) {
@@ -917,7 +917,7 @@ export async function handleEmailQueue(
 
           const delay = await emailSendDelay(env.DB, message.recipientId, message.campaignId, campaignState.sendRate, provider.provider === 'resend');
           if (delay > 0) { await deferEmail(env, msg, delay); return; }
-          const inboxReply = await trackedAddress(env.DB, 'edm', message.recipientId, plain(replaceVariables(message.bodyHtml, message.variables)), replaceVariables(message.subject, message.variables));
+          const inboxReply = provider.provider === 'smtp' ? null : await trackedAddress(env.DB, 'edm', message.recipientId, plain(replaceVariables(message.bodyHtml, message.variables)), replaceVariables(message.subject, message.variables));
           if (inboxReply) message.replyTo = inboxReply;
           if (!await claimAttempt(env.DB, message.recipientId)) { msg.retry({ delaySeconds: 120 }); return; }
           attemptClaimed = true;
@@ -945,7 +945,7 @@ export async function handleEmailQueue(
             snapshotId = await captureOutbound(env.DB, {
               workspaceId: campaign.userId, ownerId: campaign.createdBy, source: 'edm',
               businessId: message.campaignId, targetId: message.recipientId, attemptId: snapshotAttemptId,
-              recipientEmail: message.toEmail, senderEmail: message.fromEmail, senderName: message.fromName, replyTo: message.replyTo,
+              recipientEmail: message.toEmail, senderEmail: message.fromEmail, senderName: message.fromName, replyTo: provider.provider === 'smtp' ? null : message.replyTo,
               contactId: recipient.contactId, subject, bodyHtml, bodyText, provider: provider.provider,
               engagementTrackingSource: provider.provider === 'resend' ? message.engagementTrackingSource : undefined,
             });
