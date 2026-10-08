@@ -65,7 +65,7 @@ const cli = async (args) => {
   return result.stdout;
 };
 const quote = (value) => "'" + String(value).replaceAll("'", "''") + "'";
-let worker, browser;
+let worker, browser, activePage;
 const stage = async (name, action) => {
   const begin = performance.now();
   const result = await action();
@@ -221,6 +221,7 @@ try {
   });
   const page = await admin.newPage(),
     navigation = page.getByRole('navigation', { name: '工作台导航' });
+  activePage = page;
   let siteLinkPutCount = 0;
   page.on('request', (request) => {
     if (new URL(request.url()).pathname === '/api/crm/site-link' && request.method() === 'PUT')
@@ -350,7 +351,7 @@ try {
     ).toBeVisible();
     cases.push({ name: 'reply tab, direct thread and reload', passed: true });
     await page.getByRole('tab', { name: '客户资料', exact: true }).click();
-    await page.getByLabel('搜索客户', { exact: true }).fill('client.example');
+    await page.getByLabel('搜索客户', { exact: true }).fill('https://client.example/');
     await page.getByRole('button', { name: '搜索', exact: true }).click();
     await page.getByRole('button', { name: 'https://client.example/', exact: true }).click();
     await page.getByLabel('搜索联系人邮箱或名称', { exact: true }).fill('buyer@client.example');
@@ -635,6 +636,10 @@ try {
     'PASS: CRM customer pages, two staff, original contents, signed reply, explicit association, followup, export, permissions, single-contact mail handoff, desktop/mobile. No real mail sent.',
   );
 } catch (error) {
+  if (activePage) {
+    await activePage.screenshot({path: output + '/failure.png'}).catch(() => {});
+    await writeFile(output + '/failure-page.txt', await activePage.locator('body').innerText().catch(() => 'No page available'));
+  }
   await writeFile(
     output + '/failure.json',
     JSON.stringify(
