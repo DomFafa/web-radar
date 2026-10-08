@@ -87,7 +87,7 @@ crm.get('/communications/export', async c => {
   const stream = new ReadableStream({ async pull(controller) {
     try {
       if (header) { controller.enqueue(encode.encode('\uFEFF渠道,客户,收件邮箱,目标网站,负责人,任务,主题,状态,已发送,人工回复,发送时间,内容记录,发送时分组,分组记录,已打开,已点击,打开时间,点击时间,回复时间\r\n')); header = false; }
-      const rows = await c.env.DB.prepare(`${q.sql} SELECT source,customer_label,email,website,owner_name,owner_id,business_name,subject,status,sent,replied,sent_at,capture_status,activity_group_name,activity_group_basis,opened,clicked,opened_at,clicked_at,replied_at FROM communication q WHERE ${f.sql} ORDER BY q.source,q.target_id LIMIT 200 OFFSET ?`).bind(...q.args, ...f.args, offset).all();
+      const rows = await c.env.DB.prepare(`${q.sql} SELECT source,customer_label,email,website,owner_name,owner_id,business_name,subject,status,sent,replied,sent_at,capture_status,activity_group_name,activity_group_basis,opened,clicked,opened_at,clicked_at,replied_at FROM communication q WHERE ${f.sql} ORDER BY q.source,q.target_id LIMIT 1000 OFFSET ?`).bind(...q.args, ...f.args, offset).all();
       if (!rows.results.length) { controller.close(); return; }
       controller.enqueue(encode.encode(rows.results.map((r: any) => [r.source, r.customer_label, r.email, r.website, r.owner_name || r.owner_id, r.business_name, r.subject, r.status, r.sent, r.replied, r.sent_at, r.capture_status, r.activity_group_name, r.activity_group_basis, r.opened, r.clicked, r.opened_at, r.clicked_at, r.replied_at].map(csv).join(',')).join('\r\n') + '\r\n'));
       offset += rows.results.length;
