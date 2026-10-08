@@ -208,6 +208,11 @@ try {
   });
   const page = await admin.newPage(),
     navigation = page.getByRole('navigation', { name: '工作台导航' });
+  let siteLinkPutCount = 0;
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/crm/site-link' && request.method() === 'PUT')
+      siteLinkPutCount++;
+  });
   const shot = async (name) => {
     await page.screenshot({ path: output + '/' + name, animations: 'disabled' });
     screenshots.push(name);
@@ -233,6 +238,9 @@ try {
     await expect(
       page.getByText('Please send the quotation for 200 units.', { exact: true }),
     ).toBeVisible();
+    await expect(
+      page.locator('.crm-event').filter({ hasText: 'Please send the quotation for 200 units.' }),
+    ).toContainText('来自 buyer@client.example · 关联员工 工作区管理员');
     await page
       .getByLabel('跟进记录', { exact: true })
       .fill('Discuss the customer request tomorrow.');
@@ -275,8 +283,10 @@ try {
       .getByRole('button', { name: '查看发送内容与结果 →', exact: true })
       .click();
     await expect(page.getByRole('heading', { name: '发送内容与结果', exact: true })).toBeVisible();
-    await expect(page.getByText('ACTUAL FIRST OFFER', { exact: true })).toBeVisible();
-    const frame = page.frameLocator('iframe[title="发送时的邮件内容"]');
+    await expect(
+      page.getByRole('heading', { name: 'ACTUAL FIRST OFFER', level: 3, exact: true }),
+    ).toBeVisible();
+    const frame = page.frameLocator('.crm-communication-detail > iframe[title="发送时的邮件内容"]');
     await expect(
       frame.getByRole('heading', { name: 'ACTUAL FIRST OFFER', exact: true }),
     ).toBeVisible();
@@ -306,6 +316,10 @@ try {
     await page.getByRole('button', { name: 'https://client.example/', exact: true }).click();
     await page.getByLabel('搜索联系人邮箱或名称', { exact: true }).fill('buyer@client.example');
     await page.getByRole('button', { name: '查找联系人', exact: true }).click();
+    await expect(
+      page.getByLabel('确认关联的客户', { exact: true }).locator('option[value="crm-contact"]'),
+    ).toHaveCount(1);
+    assert.equal(siteLinkPutCount, 0, 'Contact search must not associate a customer');
     await page.getByLabel('确认关联的客户', { exact: true }).selectOption('crm-contact');
     const linkResponse = page.waitForResponse(
       (response) =>
@@ -313,6 +327,7 @@ try {
     );
     await page.getByRole('button', { name: '确认关联', exact: true }).click();
     assert.equal((await linkResponse).status(), 200);
+    assert.equal(siteLinkPutCount, 1, 'Explicit confirmation must associate exactly once');
     await page.getByRole('tab', { name: '客户名单', exact: true }).click();
     await page.getByLabel('搜索客户', { exact: true }).fill('CRM Buyer');
     await page.getByRole('button', { name: '搜索', exact: true }).click();

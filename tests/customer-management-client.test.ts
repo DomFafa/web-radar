@@ -7,6 +7,7 @@ import CustomerManagement, {
   emailPreviewDocument,
   auditActionLabel,
   trackingStatus,
+  timelineParticipantLabel,
 } from '../src/client/CustomerManagement';
 
 const principal: Principal = {
@@ -69,6 +70,20 @@ test('tracking does not turn absent or partial tracking into a confirmed no repl
   expect(communicationStatus('unknown')).toBe('结果待确认');
   expect(communicationStatus('uncertain')).toBe('待核实');
   expect(communicationStatus('submitted_unconfirmed')).toBe('提交待核实');
+});
+
+test('inbound timeline identifies the actual customer sender separately from the assigned staff', () => {
+  expect(
+    timelineParticipantLabel({
+      direction: 'inbound',
+      sender: 'buyer@client.example',
+      ownerName: 'Dom',
+    }),
+  ).toBe('来自 buyer@client.example · 关联员工 Dom');
+  expect(timelineParticipantLabel({ direction: 'inbound', ownerName: null })).toBe(
+    '来自 历史客户发件信息未保存 · 关联员工 历史负责人未记录',
+  );
+  expect(timelineParticipantLabel({ direction: 'outbound', ownerName: 'Dom' })).toBe('Dom');
 });
 
 test('email historical preview restricts network, scripts, navigation and forms with a CSP', () => {

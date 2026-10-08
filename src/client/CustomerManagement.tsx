@@ -89,6 +89,13 @@ export function trackingStatus(tracked: number, sent: number): string {
         ? '部分追踪'
         : '已追踪';
 }
+export function timelineParticipantLabel(
+  event: Pick<CrmTimelineEvent, 'direction' | 'sender' | 'ownerName'>,
+): string {
+  return event.direction === 'inbound'
+    ? `来自 ${event.sender || '历史客户发件信息未保存'} · 关联员工 ${event.ownerName || '历史负责人未记录'}`
+    : event.ownerName || '历史负责人未记录';
+}
 function captureLabel(status: CrmCaptureStatus): string {
   return status === 'captured'
     ? '发送时保存的内容'
@@ -465,6 +472,7 @@ export default function CustomerManagement({
       {principal.systemRole === 'super_admin' && (
         <Field label="客户工作区">
           <select
+            aria-label="客户工作区"
             value={scopedWorkspace() || principal.workspaceId}
             onChange={(event) => {
               const url = new URL(location.href);
@@ -555,6 +563,7 @@ export default function CustomerManagement({
                   {team && (
                     <Field label="员工">
                       <select
+                        aria-label="员工"
                         value={ownerId}
                         onChange={(event) => changeFilter(setOwnerId, event.target.value)}
                       >
@@ -571,6 +580,7 @@ export default function CustomerManagement({
                   )}
                   <Field label="沟通渠道">
                     <select
+                      aria-label="沟通渠道"
                       value={channel}
                       onChange={(event) => changeFilter(setChannel, event.target.value)}
                     >
@@ -582,6 +592,7 @@ export default function CustomerManagement({
                   {tab === 'customers' && ownWorkspace && (
                     <Field label="客户分组">
                       <select
+                        aria-label="客户分组"
                         value={groupId}
                         onChange={(event) => changeFilter(setGroupId, event.target.value)}
                       >
@@ -1116,6 +1127,7 @@ function CustomerProfile({
                 <input value={linkSearch} onChange={(event) => setLinkSearch(event.target.value)} />
               </Field>
               <Button
+                type="button"
                 disabled={saving || !linkSearch.trim()}
                 onClick={() =>
                   action(async () => {
@@ -1133,6 +1145,7 @@ function CustomerProfile({
               </Button>
               <Field label="确认关联的客户">
                 <select
+                  aria-label="确认关联的客户"
                   value={linkContactId}
                   onChange={(event) => setLinkContactId(event.target.value)}
                 >
@@ -1215,9 +1228,7 @@ function TimelineEvent({
         <time>{dateTime(event.occurredAt)}</time>
       </div>
       <p>
-        {event.ownerName ||
-          (event.direction === 'inbound' ? event.sender : null) ||
-          '历史负责人未记录'}
+        {timelineParticipantLabel(event)}
         {event.direction === 'outbound' && (
           <>
             {' '}
