@@ -87,6 +87,8 @@ try {
         case '/api/inbox/members': response = { members: [] }; break;
         case '/api/inbox/threads': response = { threads: [], total: 0, stats: {} }; break;
         case '/api/inbox/report': response = { reports: [] }; break;
+        case '/api/crm/employees': response = { employees: [] }; break;
+        case '/api/crm/customers': response = { customers: [], total: 0, page: 1, pageSize: 50 }; break;
         default: unexpected.push({ type: 'unhandled-api', path: url.pathname, query: url.search }); return route.fulfill({ status: 500, json: { error: 'Unhandled fixture: ' + url.pathname } });
       }
       return route.fulfill({ status: 200, json: response });
@@ -114,7 +116,7 @@ try {
     await expect(page.getByRole('region', { name: 'EDM 邮件概览' })).toBeVisible();
     await expect(page.getByRole('region', { name: '站内信概览' })).toBeVisible();
     await assertHidden(state);
-    for (const name of ['联系人管理', 'EDM 邮件', '站内信', '客户收件箱', '懒人模式'])
+    for (const name of ['联系人管理', 'EDM 邮件', '站内信', '客户管理系统', '懒人模式'])
       await expect(navigation(page).getByRole('button', { name, exact: true })).toBeVisible();
     if (role === 'member') await screenshot(page, 'hidden-member-dashboard-desktop.png');
     if (['super_admin', 'admin', 'analyst'].includes(role)) {
@@ -148,8 +150,10 @@ try {
     else await expect(page.getByRole('heading', { name: '发送邮件', exact: true })).toBeVisible();
     await navigation(page).getByRole('button', { name: '站内信', exact: true }).click();
     await expect(page.getByRole('heading', { name: '网站留言', exact: true })).toBeVisible();
-    await navigation(page).getByRole('button', { name: '客户收件箱', exact: true }).click();
-    await expect(page.getByRole('heading', { name: '客户收件箱', exact: true })).toBeVisible();
+    await navigation(page).getByRole('button', { name: '客户管理系统', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '客户管理系统', exact: true })).toBeVisible();
+    await page.getByRole('tab', { name: '客户回复', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '客户回复', exact: true })).toBeVisible();
     await navigation(page).getByRole('button', { name: '懒人模式', exact: true }).click();
     await expect(page.getByRole('region', { name: '懒人模式', exact: true })).toBeVisible();
     await assertHidden(state);

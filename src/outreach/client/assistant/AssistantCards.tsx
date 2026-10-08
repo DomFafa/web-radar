@@ -76,7 +76,7 @@ export function DraftPreview({
               <dt>邮件回复</dt>
               <dd>
                 {session.draft.email.replyTracking && options?.replyTracking.email
-                  ? '本次回复将汇入客户收件箱'
+                  ? '本次回复将汇入客户管理系统的客户回复'
                   : `回复至 ${session.draft.email.replyTo || session.draft.sender.email || '待填写'}`}
               </dd>
             </>
@@ -86,7 +86,7 @@ export function DraftPreview({
               <dt>留言回复</dt>
               <dd>
                 {session.draft.site.replyTracking && options?.replyTracking.site
-                  ? '本次回复将汇入客户收件箱'
+                  ? '本次回复将汇入客户管理系统的客户回复'
                   : `回复至 ${session.draft.sender.email || '待填写'}`}
               </dd>
             </>

@@ -36,7 +36,7 @@ export default function Outreach({principal,section,contactsAction,onImportingCh
         {!writable&&<p className="notice">当前角色为只读，可查看数据，不能修改或发送。</p>}
         {section==='edm'&&<header className="outreach-heading"><h1>EDM 邮件</h1><p>选择客户，准备邮件，确认发送。随时查看进度、客户回复和发送明细。</p></header>}
         {section==='edm'&&<nav className="outreach-tabs" aria-label="EDM 邮件功能">{pages.filter(p=>(admin||!['providers','domains'].includes(p[0]))&&(writable||p[0]!=='send')).map(([id,label])=><button key={id} aria-current={page===id?'page':undefined} disabled={importing} onClick={()=>navigate(id)}>{label}</button>)}</nav>}
-        {section!=='contacts'&&<p className="muted">客户来信在 <a href={'/?view=inbox&inboxSource='+ (section==='edm'?'edm':'site')} aria-disabled={importing||undefined} onClick={event=>{if(importing)event.preventDefault()}}>客户收件箱</a> 查看。收信配置启用后，新邮件／任务可自动追踪回复；历史数据不自动补齐。</p>}
+        {section!=='contacts'&&<p className="muted">客户来信在 <a href={'/?view=crm&crmTab=replies&inboxSource='+ (section==='edm'?'edm':'site')} aria-disabled={importing||undefined} onClick={event=>{if(importing)event.preventDefault()}}>客户管理系统的客户回复</a> 查看。收信配置启用后，新邮件／任务可自动追踪回复；历史数据不自动补齐。</p>}
         {section==='contacts'?<ContactsPage initialAction={writable?contactsAction:undefined} onImportingChange={importingChanged} onContinue={onContinueContacts}/>:section==='site-messages'?<SiteMessagesPage/>:<>
           {page==='overview'&&<EmailOverviewPanel onOpen={()=>navigate('campaigns')}/>}
           {page==='send'&&<SendingCenterPage onNavigate={navigate}/>}

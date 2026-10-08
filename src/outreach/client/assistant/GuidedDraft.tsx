@@ -353,7 +353,7 @@ export function GuidedDraft({
             onChange={(event) => edit({ email: { replyTracking: event.target.checked } })}
           />
           <span>
-            邮件回复汇入客户收件箱{!options?.replyTracking.email ? '（配置已停用，请关闭）' : ''}
+            邮件回复汇入客户管理系统的客户回复{!options?.replyTracking.email ? '（配置已停用，请关闭）' : ''}
           </span>
         </label>
       )}
@@ -365,7 +365,7 @@ export function GuidedDraft({
             onChange={(event) => edit({ site: { replyTracking: event.target.checked } })}
           />
           <span>
-            网站留言回复汇入客户收件箱{!options?.replyTracking.site ? '（配置已停用，请关闭）' : ''}
+            网站留言回复汇入客户管理系统的客户回复{!options?.replyTracking.site ? '（配置已停用，请关闭）' : ''}
           </span>
         </label>
       )}

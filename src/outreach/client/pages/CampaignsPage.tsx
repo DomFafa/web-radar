@@ -406,7 +406,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                       </td>
                       <td>
                         <div className="flex gap-sm" style={{ flexWrap: "wrap" }}>
-                          <a className="btn btn-ghost btn-sm" href={'/?view=inbox&inboxSource=edm&inboxBusiness='+encodeURIComponent(c.id)}>客户回复</a>
+                          <a className="btn btn-ghost btn-sm" href={'/?view=crm&crmTab=replies&inboxSource=edm&inboxBusiness='+encodeURIComponent(c.id)}>客户回复</a>
                           <button className="btn btn-ghost btn-sm" onClick={() => loadDetail(c.id)} title="查看详情">
                             查看
                           </button>

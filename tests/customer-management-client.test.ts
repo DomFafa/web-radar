@@ -1,0 +1,82 @@
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { expect, test } from 'vitest';
+import type { Principal } from '../src/shared/model';
+import CustomerManagement, {
+  communicationStatus,
+  emailPreviewDocument,
+  auditActionLabel,
+  trackingStatus,
+} from '../src/client/CustomerManagement';
+
+const principal: Principal = {
+  userId: 'member',
+  authSubject: 'member',
+  email: 'member@example.test',
+  displayName: 'Member',
+  workspaceId: 'workspace',
+  workspaceName: 'Workspace',
+  workspaceRole: 'member',
+  appRole: 'member',
+  systemRole: 'user',
+};
+
+test('CRM shows the four distinct activities and direct contact management actions', () => {
+  const html = renderToStaticMarkup(
+    React.createElement(CustomerManagement, { principal, onManageContacts() {} }),
+  );
+  for (const text of [
+    '客户管理系统',
+    '客户名单',
+    '沟通记录',
+    '客户回复',
+    '员工汇总',
+    '导入客户',
+    '管理分组',
+  ])
+    expect(html).toContain(text);
+  expect(html).not.toContain('暂无客户');
+});
+
+test('customer audit uses readable actions without exposing raw identity or payload', () => {
+  expect(auditActionLabel('note.status', '{"after":"done","id":"internal-id"}')).toBe(
+    '完成客户跟进',
+  );
+  expect(auditActionLabel('message.classify', '{"kind":"human"}')).toBe('将来信分类为客户回复');
+  expect(auditActionLabel('customer.link', '{"contactId":"internal-id"}')).toBe(
+    '关联网站与客户资料',
+  );
+});
+
+test('read only accounts cannot add or import contacts from CRM', () => {
+  const html = renderToStaticMarkup(
+    React.createElement(CustomerManagement, {
+      principal: { ...principal, appRole: 'viewer' },
+      onManageContacts() {},
+    }),
+  );
+  expect(html).toContain('客户管理系统');
+  expect(html).not.toContain('导入客户');
+  expect(html).not.toContain('新增客户');
+});
+
+test('tracking does not turn absent or partial tracking into a confirmed no reply', () => {
+  expect(trackingStatus(0, 4)).toBe('未追踪');
+  expect(trackingStatus(2, 4)).toBe('部分追踪');
+  expect(trackingStatus(4, 4)).toBe('已追踪');
+  expect(trackingStatus(0, 0)).toBe('尚未发送');
+  expect(communicationStatus('submitted')).toBe('已提交');
+  expect(communicationStatus('unknown')).toBe('结果待确认');
+  expect(communicationStatus('uncertain')).toBe('待核实');
+  expect(communicationStatus('submitted_unconfirmed')).toBe('提交待核实');
+});
+
+test('email historical preview restricts network, scripts, navigation and forms with a CSP', () => {
+  const html = '<p>Hello</p><img src="https://tracking.test/pixel"><script>alert(1)</script>';
+  const document = emailPreviewDocument(html);
+  expect(document).toContain('default-src &#39;none&#39;');
+  expect(document).toContain('img-src data:');
+  expect(document).toContain('script-src &#39;none&#39;');
+  expect(document.indexOf('Content-Security-Policy')).toBeLessThan(document.indexOf('<body>'));
+  expect(document).not.toContain('<script>alert(1)</script>');
+});

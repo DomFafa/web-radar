@@ -35,6 +35,7 @@ const Dashboard = lazy(() => import('./Dashboard'));
 const Outreach = lazy(() => import('../outreach/client/App'));
 const OutreachAssistant = lazy(() => import('../outreach/client/assistant/AssistantPage'));
 const CustomerInbox = lazy(() => import('./CustomerInbox'));
+const CustomerManagement = lazy(() => import('./CustomerManagement'));
 const UserManagement = lazy(() => import('./UserManagement'));
 const Admin = lazy(() => import('./Admin'));
 import { ErrorBoundary } from './ErrorBoundary';
@@ -61,10 +62,10 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'lazy-mode' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages' | 'contacts'>(() => {
+  const [view, setView] = useState<'lazy-mode' | 'crm' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages' | 'contacts'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'lazy-mode' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages' || v === 'contacts') return v;
+        if (v === 'lazy-mode' || v === 'crm' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages' || v === 'contacts') return v;
       } catch {}
       return 'dashboard';
     }),
@@ -352,7 +353,7 @@ export default function App() {
                 <Icon name="globe" />
                 服务状态
               </button>
-              <button disabled={contactsBusy} className={view === 'inbox' ? 'active' : ''} onClick={() => setView('inbox')}><Icon name="mail"/>客户收件箱</button>
+              <button disabled={contactsBusy} className={view === 'crm' || view === 'inbox' ? 'active' : ''} aria-current={view === 'crm' || view === 'inbox' ? 'page' : undefined} onClick={() => setView('crm')}><Icon name="users"/>客户管理系统</button>
               {manageUsers(principal) && <button disabled={contactsBusy} className={view === 'users' ? 'active' : ''} onClick={() => setView('users')}><Icon name="users"/>用户管理</button>}
               {viewTeamData(principal) && <button disabled={contactsBusy} className={view === 'business' ? 'active' : ''} onClick={() => {setBusinessMember(null);setView('business')}}><Icon name="chart"/>业务数据</button>}
               {websitesVisible && principal.systemRole === 'super_admin' && (
@@ -400,6 +401,10 @@ export default function App() {
             ) : view === 'edm' || view === 'site-messages' || view === 'contacts' ? (
               <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回控制台。" onBack={()=>setView('dashboard')} backText="返回控制台">
                 <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}:${view==='contacts'?'contacts':'outreach'}`} principal={principal} section={view} contactsAction={contactsAction} onImportingChange={setContactsBusy} onContinueContacts={continueContacts}/></Suspense>
+              </ErrorBoundary>
+            ) : view === 'crm' ? (
+              <ErrorBoundary scope="section" title="客户管理系统加载异常" onBack={() => setView('dashboard')} backText="返回控制台">
+                <Suspense fallback={<ChunkFallback/>}><CustomerManagement key={`${principal.userId}:${principal.workspaceId}`} principal={principal} onManageContacts={manageContacts}/></Suspense>
               </ErrorBoundary>
             ) : view === 'inbox' ? (
               <Suspense fallback={<ChunkFallback/>}><CustomerInbox key={principal.userId+':'+principal.workspaceId} principal={principal}/></Suspense>

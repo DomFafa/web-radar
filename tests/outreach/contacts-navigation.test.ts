@@ -36,3 +36,11 @@ test('read-only users retain the standalone contacts view without a creation act
   expect(html).toContain('aria-label="联系人管理"');
   expect(html).not.toContain('data-initial-action="add"');
 });
+
+test('outreach replies open the customer management reply tab with the channel filter', () => {
+  const html = renderToStaticMarkup(React.createElement(Outreach, {
+    principal: { ...principal, appRole: 'viewer' }, section: 'edm',
+  }));
+  expect(html).toContain('/?view=crm&amp;crmTab=replies&amp;inboxSource=edm');
+  expect(html).toContain('客户管理系统的客户回复');
+});
