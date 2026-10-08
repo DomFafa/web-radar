@@ -48,13 +48,14 @@ export async function importContactsBatch(database: D1Database, userId: string,
     statements.push(database.prepare("INSERT INTO edm_contact_import_batches(job_id, batch_index) VALUES (?, ?)")
       .bind(job.id, job.batchIndex));
   }
+  // JSON correlation otherwise rescans the workspace for each email instead of using its lookup index.
   const reportSql = `SELECT json_extract(j.value, '$.row') AS row_number,
     json_extract(j.value, '$.email') AS email,
     CASE WHEN json_extract(j.value, '$.status') <> '' THEN json_extract(j.value, '$.status')
-      WHEN EXISTS(SELECT 1 FROM edm_contacts WHERE user_id = ? AND email = json_extract(j.value, '$.email'))
+      WHEN EXISTS(SELECT 1 FROM edm_contacts INDEXED BY edm_idx_contacts_email WHERE user_id = ? AND email = json_extract(j.value, '$.email'))
       THEN ? ELSE 'imported' END AS status,
     CASE WHEN json_extract(j.value, '$.reason') <> '' THEN json_extract(j.value, '$.reason')
-      WHEN EXISTS(SELECT 1 FROM edm_contacts WHERE user_id = ? AND email = json_extract(j.value, '$.email'))
+      WHEN EXISTS(SELECT 1 FROM edm_contacts INDEXED BY edm_idx_contacts_email WHERE user_id = ? AND email = json_extract(j.value, '$.email'))
       THEN ? ELSE '' END AS reason FROM json_each(?) j`;
   const reportParams = [userId, overwrite ? "updated" : "skipped", userId,
     overwrite ? "已覆盖；保留原订阅状态" : "邮箱已存在，未覆盖，保留原分组", JSON.stringify(report)];
@@ -81,7 +82,7 @@ export async function importContactsBatch(database: D1Database, userId: string,
       json_extract(j.value, '$.website'), json_extract(j.value, '$.industry'),
       json_extract(j.value, '$.region'), json_extract(j.value, '$.tags'), ?, 'csv_import', ?, ?
     FROM json_each(?) AS j WHERE NOT EXISTS
-      (SELECT 1 FROM edm_contacts WHERE user_id = ? AND email = json_extract(j.value, '$.email'))`)
+      (SELECT 1 FROM edm_contacts INDEXED BY edm_idx_contacts_email WHERE user_id = ? AND email = json_extract(j.value, '$.email'))`)
     .bind(userId, groupId || null, now, now, json, userId));
   if (groupId) {
     statements.push(database.prepare(`UPDATE edm_contact_groups SET contact_count =

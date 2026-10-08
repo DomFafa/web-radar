@@ -50,7 +50,7 @@ export function EmailGuidePage({ onNavigate }: { onNavigate: (page: string) => v
             <div><strong>联系人许可</strong><p>只向已获得许可的联系人发送邮件，退订联系人不会进入发送队列。</p></div>
             <div><strong>文件格式</strong><p>CSV 建议使用 UTF-8；Excel 使用 .xlsx。邮箱为必填列，其余信息可选。</p></div>
             <div><strong>图片与链接</strong><p>发送前确认图片能够公开访问，按钮和正文链接指向正确页面。</p></div>
-            <div><strong>客户回复</strong><p>自动追踪回复需要管理员启用收信配置；未启用时使用填写的固定回复邮箱。已启用的新任务可在客户收件箱查看回复，历史数据不会自动补齐。</p></div>
+            <div><strong>客户回复</strong><p>自动追踪回复需要管理员启用收信配置；未启用时使用填写的固定回复邮箱。已启用的新任务可在客户管理系统的客户回复查看回复，历史数据不会自动补齐。</p></div>
             <div><strong>结果延迟</strong><p>“处理完成”不代表全部送达。打开、点击和退信事件由服务商异步回传，统计取决于帐号和追踪配置。</p></div>
           </div>
         </section>

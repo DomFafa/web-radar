@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { AssistantDraft, AssistantDraftPatch, AssistantField, AssistantMessage, AssistantOperation, AssistantPreview, AssistantRecipient, AssistantSession } from '../../shared/assistant';
+import type { AssistantChannel, AssistantDraft, AssistantDraftingStatus, AssistantDraftPatch, AssistantField, AssistantMessage, AssistantOperation, AssistantPreview, AssistantRecipient, AssistantSession } from '../../shared/assistant';
+import { ASSISTANT_EMAIL_RECIPIENT_LIMIT } from '../../shared/assistant';
 import type { Bindings, Variables } from '../../shared/types';
 import { normalizeSiteTargets } from '../../shared/site-targets';
 import { sha256 } from '../../../worker/http';
@@ -17,7 +18,7 @@ export interface SessionRow {
 const text = (max = 1000) => z.string().max(max);
 const senderSchema = z.strictObject({ name: text(200), email: text(320), company: text(300), phone: text(100), address: text(), country: text(100), city: text(100) });
 const emailSchema = z.strictObject({ subject: text(500), bodyHtml: text(50000), bodyText: text(20000),
-  contactIds: z.array(text(100)).max(15000), groupId: text(100), tag: text(200), replyTo: text(320),
+  contactIds: z.array(text(100)).max(ASSISTANT_EMAIL_RECIPIENT_LIMIT), groupId: text(100), tag: text(200), replyTo: text(320),
   replyTracking: z.boolean(), sendRate: z.number().int().min(1).max(200) });
 const siteSchema = z.strictObject({ subject: text(500), message: text(5000), targets: z.array(text(2048)).max(1000), replyTracking: z.boolean() });
 export const draftPatchSchema = z.strictObject({ channels: z.array(z.enum(['email', 'site'])).max(2), brief: text(12000), language: z.enum(['en', 'zh']),
@@ -32,15 +33,34 @@ export function emptyDraft(channels: AssistantDraft['channels'] = []): Assistant
 export function mergeDraft(current: AssistantDraft, patch: AssistantDraftPatch): AssistantDraft {
   const parsed = draftPatchSchema.safeParse(patch);
   if (!parsed.success) throw new AssistantError(400, 'invalid_draft', '草稿字段或长度不正确，请检查输入。');
+  const changedChannels = parsed.data.channels
+    ? (['email', 'site'] as const).filter(channel => current.channels.includes(channel) !== parsed.data.channels!.includes(channel))
+    : [];
+  const defaults = emptyDraft();
+  // Changing channels starts its audience and content afresh; only explicitly supplied fields carry over.
+  const email = changedChannels.includes('email')
+    ? { ...defaults.email, replyTo: current.email.replyTo, replyTracking: current.email.replyTracking, sendRate: current.email.sendRate }
+    : current.email;
+  const site = changedChannels.includes('site')
+    ? { ...defaults.site, replyTracking: current.site.replyTracking }
+    : current.site;
   const draft = { ...current, ...parsed.data, sender: { ...current.sender, ...parsed.data.sender },
-    email: { ...current.email, ...parsed.data.email }, site: { ...current.site, ...parsed.data.site } };
+    email: { ...email, ...parsed.data.email }, site: { ...site, ...parsed.data.site } };
+  if (changedChannels.length && parsed.data.brief === undefined) draft.brief = '';
   draft.channels = [...new Set(draft.channels)];
   draft.email.contactIds = [...new Set(draft.email.contactIds)];
   // Switching recipient source replaces the previous selection instead of silently preferring it.
   if (parsed.data.email?.contactIds?.length) { draft.email.groupId = ''; draft.email.tag = ''; }
   else if (parsed.data.email?.groupId) { draft.email.contactIds = []; draft.email.tag = ''; }
   else if (parsed.data.email?.tag) { draft.email.contactIds = []; draft.email.groupId = ''; }
+  if (parsed.data.email && (['subject', 'bodyHtml', 'bodyText'] as const).some(key =>
+    parsed.data.email![key] !== undefined && parsed.data.email![key] !== current.email[key])) delete draft.email.templateId;
   return draft;
+}
+export function hasCompleteAssistantContent(draft: AssistantDraftPatch, channel: AssistantChannel): boolean {
+  if (channel === 'site') return !!draft.site?.message && draft.site.message.trim().length >= 10 && draft.site.message.length <= 5000;
+  const html = draft.email?.bodyHtml || '';
+  return !!draft.email?.subject?.trim() && !!html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;|&#x0*a0;/gi, ' ').trim();
 }
 export async function sessionRow(db: D1Database, user: AssistantUser, id: string): Promise<SessionRow> {
   const row = await db.prepare(`SELECT * FROM edm_assistant_sessions WHERE id=? AND user_id=? ${user.teamRead ? '' : 'AND created_by=?'}`)
@@ -61,11 +81,17 @@ export async function previewDraft(db: D1Database, user: AssistantUser, draft: A
         .bind(user.id, ...(filter.includes('?') ? [value] : [])).first<{ n: number }>();
       recipientCount = count?.n || 0;
     } else {
-      const rows = await db.prepare(`SELECT id,email,COALESCE(name,'') name,COALESCE(company,'') company,COALESCE(industry,'') industry FROM edm_contacts WHERE user_id=? AND subscription_status='subscribed' AND ${filter} ORDER BY id LIMIT 15001`)
+      const rows = await db.prepare(`SELECT id,email,COALESCE(name,'') name,COALESCE(company,'') company,COALESCE(industry,'') industry FROM edm_contacts WHERE user_id=? AND subscription_status='subscribed' AND ${filter} ORDER BY id LIMIT ${ASSISTANT_EMAIL_RECIPIENT_LIMIT + 1}`)
       .bind(user.id, ...(filter.includes('?') ? [value] : [])).all<AssistantRecipient>();
       recipients = rows.results;
       recipientCount = recipients.length;
-      if (recipients.length > 15000) throw new AssistantError(400, 'too_many_recipients', '一次最多选择 15000 位联系人，请缩小分组。');
+      if (recipients.length > ASSISTANT_EMAIL_RECIPIENT_LIMIT) {
+        // A selected group can grow later. Keep the session editable, with confirmation blocked by missingFields.
+        const count = await db.prepare(`SELECT count(*) n FROM edm_contacts WHERE user_id=? AND subscription_status='subscribed' AND ${filter}`)
+          .bind(user.id, ...(filter.includes('?') ? [value] : [])).first<{ n: number }>();
+        recipientCount = Math.max(recipients.length, count?.n || 0);
+        recipients = [];
+      }
     }
   }
   const sites = normalizeSiteTargets(draft.site.targets);
@@ -80,7 +106,7 @@ export function missingFields(draft: AssistantDraft, preview: AssistantPreview, 
     if (!z.email().safeParse(draft.sender.email).success) fields.push({ key: 'sender.email', label: '发件人邮箱', type: 'email' });
   }
   if (pendingChannels.includes('email')) {
-    if (!preview.email.count || preview.email.count > 15000) fields.push({ key: 'email.audience', label: '选择收件联系人（最多 15000 人）', type: 'contacts', channel: 'email' });
+    if (!preview.email.count || preview.email.count > ASSISTANT_EMAIL_RECIPIENT_LIMIT) fields.push({ key: 'email.audience', label: `选择收件联系人（最多 ${ASSISTANT_EMAIL_RECIPIENT_LIMIT} 人）`, type: 'contacts', channel: 'email' });
     if (!draft.email.subject.trim() || !draft.email.bodyHtml.trim()) fields.push({ key: 'email.content', label: '邮件主题与正文', type: 'content', channel: 'email' });
   }
   if (pendingChannels.includes('site')) {
@@ -91,15 +117,21 @@ export function missingFields(draft: AssistantDraft, preview: AssistantPreview, 
 }
 export async function presentSession(db: D1Database, user: AssistantUser, row: SessionRow, countOnly = false): Promise<AssistantSession> {
   const draft = JSON.parse(row.draft) as AssistantDraft, operations = JSON.parse(row.operations) as AssistantOperation[];
+  const messages = JSON.parse(row.messages) as AssistantMessage[];
+  const draftingStates: Partial<Record<AssistantChannel, AssistantDraftingStatus>> = {};
+  for (const item of messages) if (item.role === 'assistant' && item.draftingStatus)
+    for (const channel of item.draftingChannels || []) draftingStates[channel] = item.draftingStatus;
   const pendingChannels = draft.channels.filter(channel => !operations.some(op => op.channel === channel));
   const preview = await previewDraft(db, user, draft, countOnly), fields = missingFields(draft, preview, pendingChannels);
+  if (pendingChannels.some(channel => draftingStates[channel] === 'needs_facts'))
+    fields.push({ key: 'content.requirements', label: '补充本次内容所需的业务资料', type: 'content' });
   const confirmationToken = !countOnly && pendingChannels.length && !fields.length && !row.pending_request_id
     ? await sha256(JSON.stringify({ id: row.id, version: row.version, draft, preview, pendingChannels })) : null;
   const status = row.pending_request_id || operations.some(op => op.status === 'dispatching') ? 'dispatching'
     : operations.some(op => ['failed', 'uncertain'].includes(op.status)) ? 'needs_attention'
       : pendingChannels.length ? fields.length ? 'draft' : 'ready' : operations.length ? 'submitted' : 'draft';
   return { id: row.id, title: row.title, version: row.version, status, draft, operations,
-    messages: JSON.parse(row.messages), pendingChannels, missingFields: fields, preview, confirmationToken,
+    messages, draftingStates, pendingChannels, missingFields: fields, preview, confirmationToken,
     createdAt: row.created_at, updatedAt: row.updated_at };
 }
 export function ensureContent(draft: AssistantDraft) {

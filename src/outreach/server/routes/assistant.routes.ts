@@ -2,11 +2,12 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Bindings, Variables } from '../../shared/types';
 import type { AssistantDraft, AssistantMessage, AssistantOperation, AssistantOptions, AssistantSessionSummary } from '../../shared/assistant';
-import { requireAuth } from '../middleware/auth';
+import { ASSISTANT_EMAIL_RECIPIENT_LIMIT } from '../../shared/assistant';
+import { requireAuth, requirePermission } from '../middleware/auth';
 import { createDb } from '../../db';
 import { loadProviders } from '../lib/credentials';
 import { resolveSenderDomains } from '../lib/sender-domains';
-import { AssistantError, beginRequest, draftPatchSchema, emptyDraft, ensureContent, failRequest, finishRequest, mergeDraft, message, presentSession, requestHash, requestSchema, sessionRow, type AssistantUser, type SessionRow } from '../lib/assistant';
+import { AssistantError, beginRequest, draftPatchSchema, emptyDraft, ensureContent, failRequest, finishRequest, hasCompleteAssistantContent, mergeDraft, message, presentSession, previewDraft, requestHash, requestSchema, sessionRow, type AssistantUser, type SessionRow } from '../lib/assistant';
 import { assistantAiConfigured, generateAssistantDraft } from '../lib/assistant-ai';
 import { assistantEmailReport, assistantResults, dispatchOperations, ensureSendingConfigured, materializeOperations, verifyRetrySnapshot } from '../lib/assistant-execution';
 import { safeAssistantHtml } from '../lib/assistant-content';
@@ -21,6 +22,13 @@ assistantRoutes.use('*', async (c, next) => {
 assistantRoutes.onError((error, c) => error instanceof AssistantError
   ? c.json({ success: false, code: error.code, error: error.message }, error.status)
   : c.json({ success: false, code: 'assistant_unavailable', error: '会话操作未完成，请刷新查看已保存的状态后重试。' }, 503));
+
+async function ensureRecipientLimit(env: Bindings, user: AssistantUser, draft: AssistantDraft, operations: AssistantOperation[]) {
+  if (!draft.channels.includes('email') || operations.some(operation => operation.channel === 'email')) return;
+  const preview = await previewDraft(env.DB, user, draft, true);
+  if (preview.email.count > ASSISTANT_EMAIL_RECIPIENT_LIMIT)
+    throw new AssistantError(400, 'too_many_recipients', `一次最多选择 ${ASSISTANT_EMAIL_RECIPIENT_LIMIT} 位联系人，请缩小分组。`);
+}
 
 async function audienceOptions(env: Bindings, user: AssistantUser) {
   const groups = await env.DB.prepare("SELECT g.id,g.name,(SELECT count(*) FROM edm_contacts c WHERE c.group_id=g.id AND c.user_id=? AND c.subscription_status='subscribed') contactCount FROM edm_contact_groups g WHERE user_id=? ORDER BY name").bind(user.id, user.id).all<AssistantOptions['groups'][number]>();
@@ -69,7 +77,7 @@ assistantRoutes.post('/sessions', async c => {
   const createHash = await requestHash('create', { channels: draft.channels });
   await c.env.DB.batch([c.env.DB.prepare('INSERT OR IGNORE INTO edm_assistant_sessions(id,user_id,created_by,create_request_id,title,draft,messages,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)')
     .bind(id, user.id, actor, parsed.data.requestId, '新的外联会话', JSON.stringify(draft),
-      JSON.stringify([message('assistant', '告诉我这次想联系哪些客户、介绍什么产品或服务，以及希望对方如何回复。我会帮你准备邮件或网站留言，发送前请你预览确认。')]), now, now),
+      JSON.stringify([message('assistant', '我们一步一步准备。先选择要联系的客户或目标网站，资料和内容可以随时返回修改，最后由你确认发送。')]), now, now),
     c.env.DB.prepare("INSERT OR IGNORE INTO edm_assistant_requests(session_id,request_id,request_hash,kind,status,created_at) SELECT id,'__create__',?,'create','done',? FROM edm_assistant_sessions WHERE user_id=? AND created_by=? AND create_request_id=?")
       .bind(createHash, now, user.id, actor, parsed.data.requestId),
   ]);
@@ -117,8 +125,33 @@ function preserveConfirmedChannels(draft: AssistantDraft, previous: AssistantDra
   }
   return draft;
 }
+assistantRoutes.post('/sessions/:id/template', requirePermission('templates:read'), async c => {
+  const parsed = requestSchema.extend({ templateId: z.string().min(1).max(100) }).strict().safeParse(await c.req.json());
+  if (!parsed.success) throw new AssistantError(400, 'invalid_request', '请选择邮件模板。');
+  const body = parsed.data, user = c.get('user')!, row = await recoverStaleRequest(c.env, user, c.req.param('id'));
+  if (!await beginRequest(c.env.DB, row, body.requestId, body.expectedVersion, await requestHash('template', body), 'template'))
+    return c.json({ success: true, data: await presentSession(c.env.DB, user, row) });
+  try {
+    const previous = JSON.parse(row.draft) as AssistantDraft, operations = JSON.parse(row.operations) as AssistantOperation[];
+    if (!previous.channels.includes('email')) throw new AssistantError(400, 'email_channel_disabled', '请先选择邮件渠道，再选择邮件模板。');
+    if (operations.some(operation => operation.channel === 'email'))
+      throw new AssistantError(409, 'email_already_confirmed', '这封邮件已确认，不能替换其内容。请新建会话准备另一封邮件。');
+    const template = await c.env.DB.prepare('SELECT id,name,subject,body_html bodyHtml,COALESCE(body_text,\'\') bodyText FROM edm_templates WHERE id=? AND user_id=?')
+      .bind(body.templateId, user.id).first<{ id: string; name: string; subject: string; bodyHtml: string; bodyText: string }>();
+    if (!template) throw new AssistantError(404, 'template_not_found', '邮件模板不存在。');
+    // Saved templates use the same visual HTML as the workbench; model HTML is sanitized separately.
+    const draft = mergeDraft(previous, { email: { subject: template.subject, bodyHtml: template.bodyHtml, bodyText: template.bodyText } });
+    draft.email.templateId = template.id;
+    ensureContent(draft);
+    const selected: AssistantMessage = { ...message('assistant', `已选择邮件模板「${template.name}」。请查看邮件预览，确认内容后再发送。`),
+      draftingStatus: 'ready', draftingChannels: ['email'] };
+    await finishRequest(c.env.DB, row, body.requestId, draft, [...JSON.parse(row.messages), selected], operations);
+  } catch (error) { await failRequest(c.env.DB, row, body.requestId); throw error; }
+  return c.json({ success: true, data: await presentSession(c.env.DB, user, await sessionRow(c.env.DB, user, row.id)) });
+});
 assistantRoutes.patch('/sessions/:id/draft', async c => {
-  const parsed = requestSchema.extend({ draft: draftPatchSchema }).strict().safeParse(await c.req.json());
+  const parsed = requestSchema.extend({ draft: draftPatchSchema, contentSource: z.literal('manual').optional(),
+    contentChannel: z.enum(['email', 'site']).optional() }).strict().refine(body => !!body.contentSource === !!body.contentChannel).safeParse(await c.req.json());
   if (!parsed.success) throw new AssistantError(400, 'invalid_request', '草稿请求格式无效。');
   const body = parsed.data, user = c.get('user')!, row = await recoverStaleRequest(c.env, user, c.req.param('id'));
   const hash = await requestHash('draft', body);
@@ -126,24 +159,46 @@ assistantRoutes.patch('/sessions/:id/draft', async c => {
   try {
     const previous = JSON.parse(row.draft) as AssistantDraft, operations = JSON.parse(row.operations) as AssistantOperation[];
     let draft = mergeDraft(previous, body.draft);
-    if (body.draft.email?.bodyHtml) draft.email.bodyHtml = safeAssistantHtml(draft.email.bodyHtml);
+    if (body.draft.email?.bodyHtml && body.draft.email.bodyHtml !== previous.email.bodyHtml) draft.email.bodyHtml = safeAssistantHtml(draft.email.bodyHtml);
     draft = preserveConfirmedChannels(draft, previous, operations);
     ensureContent(draft);
-    await finishRequest(c.env.DB, row, body.requestId, draft, JSON.parse(row.messages), operations);
+    await ensureRecipientLimit(c.env, user, draft, operations);
+    const messages = JSON.parse(row.messages) as AssistantMessage[];
+    if (body.contentSource && body.contentChannel) {
+      const channel = body.contentChannel;
+      const unchangedTemplate = channel === 'email' && !!previous.email.templateId && body.draft.email?.bodyHtml === previous.email.bodyHtml
+        && !!body.draft.email.subject?.trim() && !!body.draft.email.bodyHtml.trim();
+      if (!draft.channels.includes(channel) || operations.some(operation => operation.channel === channel)
+        || !hasCompleteAssistantContent(body.draft, channel) && !unchangedTemplate || !hasCompleteAssistantContent(draft, channel) && !unchangedTemplate)
+        throw new AssistantError(400, 'invalid_manual_content', '请提交本渠道完整的主题和正文，再预览确认。');
+      messages.push({ ...message('assistant', channel === 'email' ? '邮件内容已保存，请预览确认。' : '网站留言已保存，请预览确认。'), draftingStatus: 'ready', draftingChannels: [channel] });
+    }
+    await finishRequest(c.env.DB, row, body.requestId, draft, messages, operations);
   } catch (error) { await failRequest(c.env.DB, row, body.requestId); throw error; }
   return c.json({ success: true, data: await presentSession(c.env.DB, user, await sessionRow(c.env.DB, user, row.id)) });
 });
 assistantRoutes.post('/sessions/:id/messages', async c => {
-  const parsed = requestSchema.extend({ message: z.string().trim().min(1).max(12000) }).strict().safeParse(await c.req.json());
+  const parsed = requestSchema.extend({ message: z.string().trim().min(1).max(12000), intent: z.literal('compose').optional(),
+    composeChannels: z.array(z.enum(['email', 'site'])).min(1).max(2).optional() }).strict()
+    .refine(body => !body.composeChannels || body.intent === 'compose').safeParse(await c.req.json());
   if (!parsed.success) throw new AssistantError(400, 'invalid_request', '请输入 1–12000 字的对话内容。');
   const body = parsed.data, user = c.get('user')!, row = await recoverStaleRequest(c.env, user, c.req.param('id'));
   if (!await beginRequest(c.env.DB, row, body.requestId, body.expectedVersion, await requestHash('message', body), 'message')) return c.json({ success: true, data: await presentSession(c.env.DB, user, row) });
   try {
     const previous = JSON.parse(row.draft) as AssistantDraft, messages = JSON.parse(row.messages) as AssistantMessage[], operations = JSON.parse(row.operations) as AssistantOperation[];
-    const result = await generateAssistantDraft(c.env, user.id, previous, messages, body.message, await audienceOptions(c.env, user));
+    const pendingChannels = previous.channels.filter(channel => !operations.some(operation => operation.channel === channel));
+    const composeChannels = body.intent === 'compose' ? [...new Set(body.composeChannels || pendingChannels)] : undefined;
+    if (composeChannels && (!composeChannels.length || composeChannels.some(channel => !pendingChannels.includes(channel))))
+      throw new AssistantError(400, 'invalid_compose_channels', '只能起草本次尚未发送的所选渠道。');
+    const result = await generateAssistantDraft(c.env, user.id, previous, messages, body.message, await audienceOptions(c.env, user), composeChannels);
     const draft = preserveConfirmedChannels(result.draft, previous, operations);
     ensureContent(draft);
-    await finishRequest(c.env.DB, row, body.requestId, draft, [...messages, message('user', body.message), message('assistant', result.content)], operations,
+    await ensureRecipientLimit(c.env, user, draft, operations);
+    let draftingChannels = result.draftingChannels.filter(channel => draft.channels.includes(channel) && !operations.some(operation => operation.channel === channel));
+    if (result.draftingStatus === 'needs_facts' && !draftingChannels.length)
+      draftingChannels = draft.channels.filter(channel => !operations.some(operation => operation.channel === channel));
+    const reply = { ...message('assistant', result.content), ...(result.draftingStatus && draftingChannels.length ? { draftingStatus: result.draftingStatus, draftingChannels } : {}) };
+    await finishRequest(c.env.DB, row, body.requestId, draft, [...messages, message('user', body.message), reply], operations,
       row.title === '新的外联会话' ? body.message.slice(0, 40) : row.title);
   } catch (error) { await failRequest(c.env.DB, row, body.requestId); throw error; }
   return c.json({ success: true, data: await presentSession(c.env.DB, user, await sessionRow(c.env.DB, user, row.id)) });

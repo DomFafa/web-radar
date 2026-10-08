@@ -10,7 +10,8 @@ let sqlite: DatabaseSync;
 let env: any;
 beforeEach(async () => {
   sqlite = new DatabaseSync(':memory:');
-  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
+  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
+  sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;');
   env = { DB: d1(sqlite), CREDENTIAL_KEY: 'test-key', BETTER_AUTH_SECRET: 'test-secret', BETTER_AUTH_URL: 'https://app.example.test' };
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('workspace','Test','test@example.com',0,0);
     INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at) VALUES ('smtp','workspace','smtp','SMTP gateway','placeholder',1,0,0);
@@ -22,8 +23,8 @@ beforeEach(async () => {
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); sqlite.close(); });
 
-const message = () => ({
-  body: { recipientId: 'recipient', campaignId: 'campaign', providerId: 'smtp', toEmail: 'customer@example.com', toName: 'Customer', fromEmail: 'sales@example.com', fromName: 'Sender', replyTo: null, subject: 'Hello {{name}}', bodyHtml: '<p>Hello {{name}}</p>', bodyText: null, variables: { name: 'Customer' } } satisfies EmailSendMessage,
+const message = (replyTo: string | null = null) => ({
+  body: { recipientId: 'recipient', campaignId: 'campaign', providerId: 'smtp', toEmail: 'customer@example.com', toName: 'Customer', fromEmail: 'sales@example.com', fromName: 'Sender', replyTo, subject: 'Hello {{name}}', bodyHtml: '<p>Hello {{name}}</p>', bodyText: null, variables: { name: 'Customer' } } satisfies EmailSendMessage,
   ack: vi.fn(), retry: vi.fn(),
 });
 const recipient = () => sqlite.prepare('SELECT status,ses_message_id,sent_at,error_message FROM edm_campaign_recipients').get();
@@ -63,4 +64,36 @@ test('SMTP records the provider acknowledgement once and preserves the complianc
   expect(recipient()).toMatchObject({ status: 'sent', ses_message_id: 'smtp-confirmed-message' });
   expect(sqlite.prepare('SELECT total_sent FROM edm_campaigns').get()?.total_sent).toBe(1);
   expect(queued.retry).not.toHaveBeenCalled();
+});
+
+test('Brevo receives the configured Reply-To as its documented email object', async () => {
+  sqlite.prepare("UPDATE edm_providers SET provider='brevo',api_key=?").run(await seal('unit-test-api-key', 'smtp', env));
+  const replyTo = 'reply+e-aaaaaaaaaaaa-' + 'a'.repeat(32) + '@reply.example.com';
+  const queued = message(replyTo);
+  const request = vi.fn(async (_url: any, init: any) => {
+    expect(JSON.parse(init.body).replyTo).toEqual({ email: replyTo });
+    return Response.json({ messageId: 'brevo-confirmed-message' });
+  });
+  vi.stubGlobal('fetch', request);
+  await handleEmailQueue({ messages: [queued] }, env);
+  expect(request).toHaveBeenCalledOnce();
+  expect(recipient()).toMatchObject({ status: 'sent', ses_message_id: 'brevo-confirmed-message' });
+  expect(sqlite.prepare('SELECT reply_to FROM wr_crm_outbound_snapshots').get()?.reply_to).toBe(replyTo);
+});
+
+test('SMTP keeps its actual relay payload unchanged without creating unsupported tracking or captured Reply-To', async () => {
+  sqlite.exec("UPDATE edm_campaigns SET reply_tracking=1 WHERE id='campaign'; INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,verified_at,created_at) VALUES('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','workspace','reply.example.com','sales@work.example','unit-test-only',1,'2026-10-09','2026-10-09')");
+  const queued = message('existing-reply@example.com');
+  const request = vi.fn(async (_url: any, init: any) => {
+    const payload = JSON.parse(init.body);
+    expect(Object.keys(payload).sort()).toEqual(['from', 'html', 'subject', 'to']);
+    return Response.json({ id: 'smtp-confirmed-message' });
+  });
+  vi.stubGlobal('fetch', request);
+  await handleEmailQueue({ messages: [queued] }, env);
+  await handleEmailQueue({ messages: [queued] }, env);
+  expect(request).toHaveBeenCalledOnce();
+  expect(recipient()).toMatchObject({ status: 'sent', ses_message_id: 'smtp-confirmed-message' });
+  expect(sqlite.prepare('SELECT COUNT(*) n FROM wr_inbox_routes').get()?.n).toBe(0);
+  expect(sqlite.prepare('SELECT reply_to FROM wr_crm_outbound_snapshots').get()?.reply_to).toBeNull();
 });

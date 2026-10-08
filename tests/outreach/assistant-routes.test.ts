@@ -8,6 +8,7 @@ import type { AppEnv } from '../../src/worker/env';
 import type { Principal } from '../../src/shared/model';
 import { seal } from '../../src/outreach/server/lib/credentials';
 import { outreachBindings } from '../../src/worker/outreach';
+import { emptyDraft, mergeDraft } from '../../src/outreach/server/lib/assistant';
 
 let sqlite: DatabaseSync;
 let env: AppEnv;
@@ -51,7 +52,123 @@ async function emailProvider() {
   const key = await seal('unit-test-provider-key', 'provider', outreachBindings(env));
   sqlite.prepare("INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at) VALUES('provider','w1','sendgrid','Unit test',?,1,0,0)").run(key);
 }
+function insertRecipientGroup(id: string, count: number) {
+  sqlite.prepare("INSERT INTO edm_contact_groups(id,user_id,name,created_at,updated_at) VALUES(?,'w1',?,0,0)").run(id, 'Bulk customers');
+  sqlite.exec('BEGIN');
+  const insert = sqlite.prepare("INSERT INTO edm_contacts(id,user_id,group_id,email,created_at,updated_at) VALUES(?,'w1',?,?,0,0)");
+  const ids = Array.from({ length: count }, (_, index) => id + '-' + index);
+  for (const contactId of ids) insert.run(contactId, id, contactId + '@example.com');
+  sqlite.exec('COMMIT');
+  return ids;
+}
 const confirmation = (session: any, requestId: string = crypto.randomUUID()) => ({ requestId, expectedVersion: session.version, confirmationToken: session.confirmationToken, siteAuthorized: true });
+const mockAiReply = (data: unknown) => {
+  env.TEXT_API_BASE_URL = 'https://text.example.com/v1'; env.TEXT_API_KEY = 'unit-test-text-key'; env.TEXT_MODEL = 'unit-test-model';
+  vi.stubGlobal('fetch', vi.fn(async (url: unknown) => String(url).includes('text.example.com')
+    ? Response.json({ choices: [{ message: { content: JSON.stringify(data) } }] })
+    : Response.json({ protocolVersion: 1, principal })));
+};
+
+test('compose clarification blocks the old email confirmation and drafting state stays channel-specific after data edits and reload', async () => {
+  let session = await ready(['email', 'site']);
+  const oldToken = session.confirmationToken;
+  mockAiReply({ message: '请补充具体产品与沟通目的。', draftingStatus: 'needs_facts', draft: {} });
+  const response = await request('/' + session.id + '/messages', 'POST', { requestId: 'compose-email', expectedVersion: session.version,
+    message: '请起草邮件', intent: 'compose', composeChannels: ['email'] });
+  expect(response.status).toBe(200); session = (await response.json() as any).data;
+  expect(session.draftingStates).toEqual({ email: 'needs_facts' }); expect(session.status).toBe('draft');
+  expect(session.confirmationToken).toBeNull();
+  expect(session.messages.at(-1)).toMatchObject({ draftingStatus: 'needs_facts', draftingChannels: ['email'] });
+  expect((await request('/' + session.id + '/confirm', 'POST', { ...confirmation(session), confirmationToken: oldToken })).status).toBe(409);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'identity-edit', expectedVersion: session.version,
+    draft: { sender: { name: 'Updated Seller' }, email: { groupId: 'null' } } })).json() as any).data;
+  expect(session.draftingStates).toEqual({ email: 'needs_facts' }); expect(session.confirmationToken).toBeNull();
+  const restored = (await (await request('/' + session.id)).json() as any).data;
+  expect(restored.draftingStates).toEqual({ email: 'needs_facts' }); expect(restored.confirmationToken).toBeNull();
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test('only explicit complete manual content ends the requested channel drafting clarification', async () => {
+  let session = await ready(['email', 'site']);
+  mockAiReply({ message: '请补充具体产品。', draftingStatus: 'needs_facts', draft: {} });
+  session = (await (await request('/' + session.id + '/messages', 'POST', { requestId: 'compose-both', expectedVersion: session.version,
+    message: '请起草邮件和留言', intent: 'compose', composeChannels: ['email', 'site'] })).json() as any).data;
+  expect(session.draftingStates).toEqual({ email: 'needs_facts', site: 'needs_facts' });
+  const partial = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'partial-manual', expectedVersion: session.version,
+    contentSource: 'manual', contentChannel: 'email', draft: { email: { subject: 'A manual proposal' } } });
+  expect(partial.status).toBe(400);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'ordinary-content-edit', expectedVersion: session.version,
+    draft: { email: { subject: 'Edited subject', bodyHtml: '<p>A revised proposal</p>' } } })).json() as any).data;
+  expect(session.draftingStates).toEqual({ email: 'needs_facts', site: 'needs_facts' });
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'manual-email', expectedVersion: session.version,
+    contentSource: 'manual', contentChannel: 'email', draft: { email: { subject: 'A manual proposal', bodyHtml: '<p>Would you like our catalog?</p>', bodyText: 'Would you like our catalog?' } } })).json() as any).data;
+  expect(session.draftingStates).toEqual({ email: 'ready', site: 'needs_facts' }); expect(session.confirmationToken).toBeNull();
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'manual-site', expectedVersion: session.version,
+    contentSource: 'manual', contentChannel: 'site', draft: { site: { message: 'Would your team like our catalog?' } } })).json() as any).data;
+  expect(session.draftingStates).toEqual({ email: 'ready', site: 'ready' }); expect(session.confirmationToken).toBeTruthy();
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test.each(['email', 'site'] as const)('compose partial clarification preserves the restorable complete draft (%s)', async channel => {
+  const session = await ready(['email', 'site']);
+  mockAiReply({ message: '请补充具体产品。', draftingStatus: 'needs_facts', draft: { [channel]: { subject: 'Partial subject' } } });
+  const response = await request('/' + session.id + '/messages', 'POST', { requestId: 'partial-clarification', expectedVersion: session.version,
+    message: '请帮我起草', intent: 'compose', composeChannels: [channel] });
+  expect(response.status).toBe(200);
+  const next = (await response.json() as any).data;
+  expect(next.draft).toEqual(session.draft); expect(next.draftingStates[channel]).toBe('needs_facts');
+  const restoredResponse = await request('/' + session.id);
+  expect(restoredResponse.status).toBe(200); expect((await restoredResponse.json() as any).data.draft).toEqual(session.draft);
+});
+
+test('ordinary chat scopes drafting clarification to email without invalidating a ready website message', async () => {
+  let session = await ready(['email', 'site']);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'ready-site', expectedVersion: session.version,
+    contentSource: 'manual', contentChannel: 'site', draft: { site: { message: session.draft.site.message } } })).json() as any).data;
+  expect(session.draftingStates).toEqual({ site: 'ready' });
+  mockAiReply({ message: '这封邮件要介绍什么产品？', draftingStatus: 'needs_facts', draftingChannels: ['email'], draft: {} });
+  const response = await request('/' + session.id + '/messages', 'POST', { requestId: 'email-question', expectedVersion: session.version,
+    message: 'Help me with the email content' });
+  expect(response.status).toBe(200); session = (await response.json() as any).data;
+  expect(session.draftingStates).toEqual({ site: 'ready', email: 'needs_facts' });
+  expect(session.messages.at(-1)).toMatchObject({ draftingStatus: 'needs_facts', draftingChannels: ['email'] });
+  expect(session.confirmationToken).toBeNull(); expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test('compose only accepts requested pending channels and leaves confirmed email snapshots untouched', async () => {
+  let session = await ready(['email']); await emailProvider();
+  session = (await (await request('/' + session.id + '/confirm', 'POST', confirmation(session))).json() as any).data;
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'new-site', expectedVersion: session.version,
+    draft: { channels: ['email', 'site'], site: { targets: ['https://buyer.example.com/contact'] } } })).json() as any).data;
+  const email = session.draft.email, operation = session.operations[0];
+  mockAiReply({ message: '网站留言已起草。', draftingStatus: 'ready', draft: {
+    email: { subject: 'Do not alter the email', bodyHtml: '<p>Do not replace the approved email</p>' },
+    site: { message: 'Would your team like our catalog?' } } });
+  expect((await request('/' + session.id + '/messages', 'POST', { requestId: 'confirmed-channel', expectedVersion: session.version,
+    message: '请重新起草已发邮件', intent: 'compose', composeChannels: ['email'] })).status).toBe(400);
+  const response = await request('/' + session.id + '/messages', 'POST', { requestId: 'pending-site', expectedVersion: session.version,
+    message: '请起草网站留言', intent: 'compose', composeChannels: ['site'] });
+  expect(response.status).toBe(200); session = (await response.json() as any).data;
+  expect(session.pendingChannels).toEqual(['site']); expect(session.draftingStates).toEqual({ site: 'ready' });
+  expect(session.draft.email).toEqual(email); expect(session.operations[0]).toEqual(operation);
+  expect(session.draft.site.targets).toEqual(['https://buyer.example.com/contact']);
+  expect(emailQueue).toHaveLength(1); expect(siteQueue).toEqual([]);
+});
+
+test('manual unchanged template content and subject edits preserve its visual HTML', async () => {
+  let session = await ready();
+  const html = '<style>.offer{color:purple}</style><table><tr><td class="offer" style="padding:20px"><img src="https://assets.example.com/banner.png"><p>Our catalog</p></td></tr></table>';
+  session.draft.email = { ...session.draft.email, subject: 'Catalog', bodyHtml: html, bodyText: 'Our catalog', templateId: 'verified-template' };
+  sqlite.prepare('UPDATE edm_assistant_sessions SET draft=? WHERE id=?').run(JSON.stringify(session.draft), session.id);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'keep-template', expectedVersion: session.version,
+    contentSource: 'manual', contentChannel: 'email', draft: { email: { subject: 'Catalog', bodyHtml: html, bodyText: 'Our catalog' } } })).json() as any).data;
+  expect(session.draft.email.bodyHtml).toBe(html); expect(session.draft.email.templateId).toBe('verified-template');
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'subject-only', expectedVersion: session.version,
+    draft: { email: { subject: 'Updated catalog', bodyHtml: html, bodyText: 'Our catalog' } } })).json() as any).data;
+  expect(session.draft.email.bodyHtml).toBe(html); expect(session.draft.email.templateId).toBeUndefined();
+  expect((await request('/' + session.id + '/draft', 'PATCH', { requestId: 'forged-template', expectedVersion: session.version,
+    draft: { email: { templateId: 'forged' } } })).status).toBe(400);
+});
 
 test('CAS rejects a stale edit and repeat request replays without incrementing twice', async () => {
   const session = await create();
@@ -116,10 +233,56 @@ test('adding a website channel after email submission preserves the original ema
   let session = await ready(); await emailProvider();
   session = (await (await request('/' + session.id + '/confirm', 'POST', confirmation(session))).json() as any).data;
   const emailTask = session.operations[0].taskId;
-  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'add-site', expectedVersion: session.version, draft: { channels: ['email', 'site'] } })).json() as any).data;
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'add-site', expectedVersion: session.version,
+    draft: { channels: ['email', 'site'], site: { targets: ['https://buyer.example.com/contact'], message: 'Hello, would your team like a product sample?' } } })).json() as any).data;
   expect(session.pendingChannels).toEqual(['site']);
   session = (await (await request('/' + session.id + '/confirm', 'POST', confirmation(session))).json() as any).data;
   expect(session.operations[0].taskId).toBe(emailTask); expect(emailQueue).toHaveLength(1); expect(siteQueue).toHaveLength(1);
+});
+
+test('removing and re-enabling a channel does not restore its old audience or content', async () => {
+  let session = await ready(['email', 'site']);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'settings', expectedVersion: session.version,
+    draft: { language: 'zh', email: { replyTo: 'reply@example.com', replyTracking: true, sendRate: 12 }, site: { replyTracking: true } } })).json() as any).data;
+  const email = session.draft.email;
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'email-only', expectedVersion: session.version,
+    draft: { channels: ['email'] } })).json() as any).data;
+  expect(session.draft.site).toEqual({ subject: '', message: '', targets: [], replyTracking: true });
+  expect(session.draft.email).toEqual(email);
+  expect(session.draft.sender).toMatchObject({ name: 'Seller', email: 'sales@example.com' });
+  expect(session.draft.language).toBe('zh'); expect(session.draft.brief).toBe('');
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'site-again', expectedVersion: session.version,
+    draft: { channels: ['email', 'site'] } })).json() as any).data;
+  expect(session.preview.site.count).toBe(0);
+  expect(session.draft.site.message).toBe('');
+  expect(session.confirmationToken).toBeNull();
+  expect(session.missingFields.map((field: any) => field.key)).toEqual(['site.targets', 'site.content']);
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test('newly selected channel uses only explicitly supplied content and targets', async () => {
+  let session = await ready(['email']);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'switch-site', expectedVersion: session.version,
+    draft: { channels: ['site'], brief: 'Ask about a new catalog', site: { message: 'May we send your team a catalog?' } } })).json() as any).data;
+  expect(session.draft.site).toEqual({ subject: '', message: 'May we send your team a catalog?', targets: [], replyTracking: false });
+  expect(session.draft.email).toMatchObject({ contactIds: [], groupId: '', tag: '', subject: '', bodyHtml: '', bodyText: '' });
+  expect(session.draft.brief).toBe('Ask about a new catalog');
+  expect(session.preview.site.count).toBe(0); expect(session.preview.email.count).toBe(0);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'switch-email', expectedVersion: session.version,
+    draft: { channels: ['email'], email: { subject: 'New request' } } })).json() as any).data;
+  expect(session.draft.email).toMatchObject({ subject: 'New request', bodyHtml: '', bodyText: '', contactIds: [] });
+  expect(session.draft.site.message).toBe(''); expect(session.draft.brief).toBe('');
+});
+
+test('restating the current channel preserves content and audience when changing sender details', async () => {
+  const session = await ready(['email', 'site']);
+  const response = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'same-channels', expectedVersion: session.version,
+    draft: { channels: ['site', 'email'], sender: { name: 'Updated Seller' } } });
+  expect(response.status).toBe(200);
+  const next = (await response.json() as any).data;
+  expect(next.draft.email).toEqual(session.draft.email); expect(next.draft.site).toEqual(session.draft.site);
+  expect(next.draft.brief).toBe(session.draft.brief); expect(next.draft.sender.name).toBe('Updated Seller');
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
 });
 
 test('partial queue failure stays uncertain and repeat confirmation only reads the original tasks', async () => {
@@ -224,19 +387,126 @@ test('reusing a create request with different channel choices is a conflict', as
   expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_sessions').get()!.n).toBe(1);
 });
 
-test('a large recipient snapshot stays below D1 row limits and queues every approved recipient once', async () => {
+test('imports 20000 contacts in 40 batches, selects the new group and queues its confirmed snapshot exactly once', async () => {
   let session = await ready(); await emailProvider();
-  sqlite.exec('BEGIN');
-  const insert = sqlite.prepare("INSERT INTO edm_contacts(id,user_id,email,name,company,industry,created_at,updated_at) VALUES(?,?,?,?,?,?,0,0)");
-  for (let index = 0; index < 15000; index++) insert.run('bulk-' + index, 'w1', 'buyer-' + index + '@example.com', 'Customer '.repeat(12), 'Company '.repeat(20), 'Industry '.repeat(12));
-  sqlite.exec("DELETE FROM edm_contacts WHERE id='contact'; COMMIT");
-  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'all', expectedVersion: session.version, draft: { email: { groupId: 'null', tag: '', contactIds: [] } } })).json() as any).data;
-  expect(session.preview.email.count).toBe(15000);
-  const response = await request('/' + session.id + '/confirm', 'POST', confirmation(session)); expect(response.status).toBe(200);
-  expect(emailQueue).toHaveLength(15000);
-  expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_recipients').get()!.n).toBe(15000);
+  const contacts = (path: string, method = 'GET', body?: unknown) => outreachFetch(new Request(
+    'https://wr.example.test/api/outreach/contacts' + path,
+    { method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }) },
+  ), env, {} as any);
+  const groupResponse = await contacts('/groups', 'POST', { name: 'Imported customers' });
+  expect(groupResponse.status).toBe(201);
+  const groupId = (await groupResponse.json() as any).data.id;
+  const importResponse = await contacts('/imports', 'POST', { name: 'customers.csv', groupId, total: 20000 });
+  expect(importResponse.status).toBe(201);
+  const importId = (await importResponse.json() as any).data.id;
+  for (let batchIndex = 0; batchIndex < 40; batchIndex++) {
+    const chunk = Array.from({ length: 500 }, (_, offset) => ({
+      email: `buyer-${batchIndex * 500 + offset}@example.com`, name: 'Customer '.repeat(12),
+      company: 'Company '.repeat(20), industry: 'Industry '.repeat(12),
+    }));
+    const response = await contacts(`/imports/${importId}/batches`, 'POST', { batchIndex, contacts: chunk });
+    expect(response.status).toBe(200);
+    expect((await response.json() as any).data).toEqual({ imported: 500, updated: 0, skipped: 0, failed: 0, total: 500 });
+    if (batchIndex === 0) {
+      const repeated = await contacts(`/imports/${importId}/batches`, 'POST', { batchIndex, contacts: chunk });
+      expect(repeated.status).toBe(200);
+      expect((await repeated.json() as any).data.imported).toBe(500);
+    }
+  }
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_contact_import_batches WHERE job_id=?').get(importId)!.n).toBe(40);
+  expect(sqlite.prepare('SELECT processed,imported,skipped,failed FROM edm_contact_import_jobs WHERE id=?').get(importId))
+    .toEqual({ processed: 20000, imported: 20000, skipped: 0, failed: 0 });
+  expect(sqlite.prepare('SELECT contact_count n FROM edm_contact_groups WHERE id=?').get(groupId)!.n).toBe(20000);
+  const groups = (await (await contacts('/groups')).json() as any).data;
+  expect(groups.find((group: any) => group.id === groupId).contactCount).toBe(20000);
+  const selected = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'all', expectedVersion: session.version,
+    draft: { email: { groupId, tag: '', contactIds: [] } } });
+  expect(selected.status).toBe(200);
+  session = (await selected.json() as any).data;
+  expect(session.preview.email.count).toBe(20000);
+  expect(session.missingFields).toEqual([]); expect(session.confirmationToken).toBeTruthy();
+  const queueBatchSizes: number[] = [];
+  const queue = env.EDM_EMAIL_QUEUE!;
+  env.EDM_EMAIL_QUEUE = { ...queue, sendBatch: async (batch: any[]) => {
+    queueBatchSizes.push(batch.length); return queue.sendBatch(batch);
+  } } as any;
+  const confirmed = confirmation(session, 'confirm-imported');
+  const response = await request('/' + session.id + '/confirm', 'POST', confirmed);
+  expect(response.status).toBe(200);
+  expect(emailQueue).toHaveLength(20000);
+  expect(queueBatchSizes).toHaveLength(200); expect(queueBatchSizes.every(size => size === 100)).toBe(true);
+  expect(new Set(emailQueue.map(item => item.toEmail)).size).toBe(20000);
+  expect(new Set(emailQueue.map(item => item.recipientId)).size).toBe(20000);
+  expect(emailQueue.every(item => /^buyer-\d+@example\.com$/.test(item.toEmail))).toBe(true);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_recipients').get()!.n).toBe(20000);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaign_recipients').get()!.n).toBe(20000);
   const saved = sqlite.prepare('SELECT max(length(snapshot)) n FROM edm_assistant_snapshots').get()!;
   expect(Number(saved.n)).toBeLessThan(2000000);
+  expect((await request('/' + session.id + '/confirm', 'POST', confirmed)).status).toBe(200);
+  expect(emailQueue).toHaveLength(20000);
+});
+
+test('accepts exactly 20000 explicit recipient IDs in the saved assistant draft', () => {
+  const contactIds = Array.from({ length: 20000 }, (_, index) => 'contact-' + index);
+  expect(mergeDraft(emptyDraft(['email']), { email: { contactIds } }).email.contactIds).toHaveLength(20000);
+});
+
+test('rejects 20001 recipients by group or explicit selection without dispatching or changing the saved audience', async () => {
+  const session = await ready();
+  const ids = insertRecipientGroup('oversized', 20001);
+  const groupResponse = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'oversized-group', expectedVersion: session.version,
+    draft: { email: { groupId: 'oversized', contactIds: [] } } });
+  expect(groupResponse.status).toBe(400);
+  expect((await groupResponse.json() as any).code).toBe('too_many_recipients');
+  const explicitResponse = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'oversized-explicit', expectedVersion: session.version,
+    draft: { email: { contactIds: ids } } });
+  expect(explicitResponse.status).toBe(400);
+  expect((await explicitResponse.json() as any).code).toBe('invalid_request');
+  const restored = (await (await request('/' + session.id)).json() as any).data;
+  expect(restored.draft.email.contactIds).toEqual(['contact']); expect(restored.version).toBe(session.version);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaigns').get()!.n).toBe(0);
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
+});
+
+test('a saved recipient group that grows to 20001 stays editable without a confirmation token', async () => {
+  let session = await ready();
+  insertRecipientGroup('growing', 0);
+  sqlite.exec("UPDATE edm_contacts SET group_id='growing' WHERE id='contact'");
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'select-growing', expectedVersion: session.version,
+    draft: { email: { groupId: 'growing', contactIds: [] } } })).json() as any).data;
+  expect(session.preview.email.count).toBe(1); expect(session.confirmationToken).toBeTruthy();
+  sqlite.exec('BEGIN');
+  const insert = sqlite.prepare("INSERT INTO edm_contacts(id,user_id,group_id,email,created_at,updated_at) VALUES(?,'w1','growing',?,0,0)");
+  for (let index = 0; index < 20000; index++) insert.run('added-' + index, `added-${index}@example.com`);
+  sqlite.exec('COMMIT');
+  const response = await request('/' + session.id);
+  expect(response.status).toBe(200);
+  const expanded = (await response.json() as any).data;
+  expect(expanded.status).toBe('draft'); expect(expanded.confirmationToken).toBeNull();
+  expect(expanded.preview.email.count).toBe(20001);
+  expect(expanded.missingFields.some((field: any) => field.key === 'email.audience')).toBe(true);
+  const repaired = await request('/' + session.id + '/draft', 'PATCH', { requestId: 'shrink-audience', expectedVersion: expanded.version,
+    draft: { email: { contactIds: ['contact'], groupId: '', tag: '' } } });
+  expect(repaired.status).toBe(200);
+  const small = (await repaired.json() as any).data;
+  expect(small.preview.email.count).toBe(1); expect(small.status).toBe('ready'); expect(small.confirmationToken).toBeTruthy();
+  expect(emailQueue).toEqual([]);
+});
+
+test('ordinary assistant chat rejects an oversized group before replacing the saved audience', async () => {
+  const session = await ready();
+  insertRecipientGroup('oversized', 20001);
+  mockAiReply({ message: '选择客户分组。', draft: {}, audience: { groupId: 'oversized' } });
+  const response = await request('/' + session.id + '/messages', 'POST', { requestId: 'oversized-chat', expectedVersion: session.version,
+    message: '选择 Bulk customers 分组发送邮件' });
+  expect(response.status).toBe(400); expect((await response.json() as any).code).toBe('too_many_recipients');
+  const restoredResponse = await request('/' + session.id);
+  expect(restoredResponse.status).toBe(200);
+  const restored = (await restoredResponse.json() as any).data;
+  expect(restored.draft.email).toEqual(session.draft.email); expect(restored.version).toBe(session.version);
+  expect(restored.messages).toEqual(session.messages); expect(restored.preview.email.count).toBe(1);
+  expect(emailQueue).toEqual([]); expect(siteQueue).toEqual([]);
 });
 
 test('saving a draft preserves the complete existing conversation instead of truncating old messages', async () => {

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { HonoEnv } from './env';
 import { authenticate } from './auth';
 import { ApiError, errorResponse, jsonBody } from './http';
-import { appRoles, manageUsers, viewTeamData, roleLabels, roleDescriptions } from '../shared/access';
+import { appRoles, manageUsers, viewTeamData, roleLabels, roleDescriptions, canBuildWebsites } from '../shared/access';
 
 export const userManagement = new Hono<HonoEnv>();
 userManagement.onError(errorResponse);
@@ -19,6 +19,7 @@ function pagination(url: URL) {
 }
 userManagement.get('/members',async c=>{
   const p=c.get('principal'),url=new URL(c.req.url),{page,size,offset}=pagination(url);
+  const websites=canBuildWebsites(p);
   const search=(url.searchParams.get('search')||'').trim().slice(0,200);
   const scope=p.systemRole==='super_admin'?'1=1':'m.workspace_id=?';
   const args:unknown[]=p.systemRole==='super_admin'?[]:[p.workspaceId];
@@ -26,10 +27,10 @@ userManagement.get('/members',async c=>{
   if(search)args.push(search,search,search);
   const [total,rows]=await Promise.all([
     c.env.DB.prepare(`SELECT COUNT(*) AS n FROM wr_members m WHERE ${where}`).bind(...args).first<{n:number}>(),
-    c.env.DB.prepare(`SELECT m.*,
+    c.env.DB.prepare(`SELECT m.*,${websites?`
       (SELECT COUNT(*) FROM projects p WHERE p.workspace_id=m.workspace_id AND p.owner_id=m.user_id) AS projects,
       (SELECT COUNT(*) FROM projects p WHERE p.workspace_id=m.workspace_id AND p.owner_id=m.user_id AND json_extract(p.data,'$.publishedReleaseId') IS NULL) AS drafts,
-      (SELECT COUNT(*) FROM projects p WHERE p.workspace_id=m.workspace_id AND p.owner_id=m.user_id AND json_extract(p.data,'$.publishedReleaseId') IS NOT NULL AND COALESCE(json_extract(p.data,'$.offline'),0)=0) AS published,
+      (SELECT COUNT(*) FROM projects p WHERE p.workspace_id=m.workspace_id AND p.owner_id=m.user_id AND json_extract(p.data,'$.publishedReleaseId') IS NOT NULL AND COALESCE(json_extract(p.data,'$.offline'),0)=0) AS published,`:''}
       (SELECT COUNT(*) FROM edm_campaigns e WHERE e.user_id=m.workspace_id AND e.created_by=m.user_id) AS campaigns,
       (SELECT COALESCE(SUM(e.total_sent),0) FROM edm_campaigns e WHERE e.user_id=m.workspace_id AND e.created_by=m.user_id) AS sent,
       (SELECT COALESCE(SUM(e.total_replied),0) FROM edm_campaigns e WHERE e.user_id=m.workspace_id AND e.created_by=m.user_id) AS replied,
@@ -59,8 +60,9 @@ userManagement.put('/members',async c=>{
 });
 userManagement.get('/records',async c=>{
   const p=c.get('principal'),url=new URL(c.req.url),{page,size,offset}=pagination(url);
-  const kind=url.searchParams.get('kind')||'projects';
+  const kind=url.searchParams.get('kind')||(canBuildWebsites(p)?'projects':'campaigns');
   if(!['projects','campaigns','messages'].includes(kind))throw new ApiError(400,'invalid_kind','数据类型无效。');
+  if(kind==='projects'&&!canBuildWebsites(p))throw new ApiError(403,'website_access_denied','当前账号未开放网站项目功能。');
   const workspace=url.searchParams.get('workspaceId')||'',owner=url.searchParams.get('userId')||'';
   const table=kind==='projects'?'projects':kind==='campaigns'?'edm_campaigns':'edm_site_message_jobs';
   const workspaceColumn=kind==='projects'?'r.workspace_id':'r.user_id',ownerColumn=kind==='projects'?'r.owner_id':'r.created_by';

@@ -11,7 +11,8 @@ import type {
   AssistantSessionSummary,
 } from '../../shared/assistant';
 import { assistantApi } from './api';
-import { DraftPreview, NecessaryInputs, ResultCards } from './AssistantCards';
+import { DraftPreview, ResultCards } from './AssistantCards';
+import { GuidedDraft, type ComposerContext } from './GuidedDraft';
 import './assistant.css';
 
 const statusLabel: Record<AssistantSession['status'], string> = {
@@ -43,10 +44,12 @@ export default function AssistantPage({
   principal,
   testMode,
   onWorkbench,
+  onManageContacts,
 }: {
   principal: Principal;
   testMode: boolean;
   onWorkbench: (channel: AssistantChannel, taskId?: string) => void;
+  onManageContacts?: (action: 'add' | 'import' | 'groups') => void;
 }) {
   const writable = writeBusiness(principal);
   const [activeId, setActiveId] = useState<string | null>(() =>
@@ -60,8 +63,8 @@ export default function AssistantPage({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [listOpen, setListOpen] = useState(false);
-  const [showInputs, setShowInputs] = useState(false);
   const [composer, setComposer] = useState('');
+  const [composerContext, setComposerContext] = useState<ComposerContext | null>(null);
   const activeRef = useRef(activeId);
   activeRef.current = activeId;
   const pending = useRef(false);
@@ -73,6 +76,7 @@ export default function AssistantPage({
     id: string;
     text: string;
     sessionId: string;
+    composeChannels?: AssistantChannel[];
   } | null>(null);
 
   useEffect(() => {
@@ -110,9 +114,9 @@ export default function AssistantPage({
     setSession(null);
     setResults(null);
     setError('');
-    setShowInputs(false);
     setListOpen(false);
     setPendingMessage(null);
+    setComposerContext(null);
     const url = new URL(location.href);
     if (id) url.searchParams.set('conversationId', id);
     else url.searchParams.delete('conversationId');
@@ -245,30 +249,37 @@ export default function AssistantPage({
       if (mounted.current) setBusy(false);
     }
   }
-  async function sendMessage(retry = false) {
-    const text = retry ? pendingMessage?.text : composer.trim();
-    if (!text || pending.current || !writable) return;
+  async function sendMessage(retry = false, content?: string): Promise<AssistantSession | null> {
+    const text = content ?? (retry ? pendingMessage?.text : composer.trim());
+    if (!text || pending.current || !writable) return null;
     if (!session) {
       await start([], text);
-      return;
+      return null;
     }
     const current = session;
     const request =
       retry && pendingMessage?.sessionId === current.id
         ? pendingMessage
-        : { id: crypto.randomUUID(), text, sessionId: current.id };
+        : {
+            id: crypto.randomUUID(),
+            text,
+            sessionId: current.id,
+            ...(composerContext?.channel && composerContext.source === 'ai'
+              ? { composeChannels: [composerContext.channel] }
+              : {}),
+          };
     setPendingMessage(request);
     pending.current = true;
     setBusy(true);
     setError('');
     try {
-      const next = await assistantApi.message(current, text, request.id);
+      const next = await assistantApi.message(current, text, request.id, request.composeChannels);
       remember(next);
       if (activeRef.current === current.id) {
         changeComposer('');
         setPendingMessage(null);
-        setShowInputs(false);
       }
+      return next;
     } catch (error) {
       if (activeRef.current === current.id) {
         setError(errorText(error));
@@ -286,22 +297,21 @@ export default function AssistantPage({
       pending.current = false;
       if (mounted.current) setBusy(false);
     }
+    return null;
   }
-  async function saveInputs(draft: AssistantDraftPatch) {
-    if (!session || pending.current || !writable) return;
+  async function saveInputs(
+    draft: AssistantDraftPatch,
+    contentChannel?: AssistantChannel,
+  ): Promise<AssistantSession | null> {
+    if (!session || pending.current || !writable) return null;
     pending.current = true;
     setBusy(true);
     setError('');
     const current = session;
     try {
-      const next = await assistantApi.patch(current, draft, crypto.randomUUID());
+      const next = await assistantApi.patch(current, draft, crypto.randomUUID(), contentChannel);
       remember(next);
-      try {
-        sessionStorage.removeItem(`${scope}:${current.id}:${current.version}:fields`);
-      } catch {
-        /* Server draft is saved. */
-      }
-      if (activeRef.current === current.id) setShowInputs(false);
+      return activeRef.current === current.id ? next : null;
     } catch (error) {
       if (activeRef.current === current.id) {
         setError(errorText(error));
@@ -315,6 +325,32 @@ export default function AssistantPage({
       pending.current = false;
       if (mounted.current) setBusy(false);
     }
+    return null;
+  }
+  async function applyTemplate(templateId: string): Promise<AssistantSession | null> {
+    if (!session || pending.current || !writable) return null;
+    const current = session;
+    pending.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const next = await assistantApi.selectTemplate(current, templateId, crypto.randomUUID());
+      remember(next);
+      return activeRef.current === current.id ? next : null;
+    } catch (error) {
+      if (activeRef.current === current.id) {
+        setError(errorText(error));
+        if (isConflict(error))
+          assistantApi
+            .get(current.id)
+            .then(remember)
+            .catch(() => {});
+      }
+    } finally {
+      pending.current = false;
+      if (mounted.current) setBusy(false);
+    }
+    return null;
   }
   async function confirm(siteAuthorized: boolean) {
     if (!session || !session.confirmationToken || pending.current || !writable) return;
@@ -365,15 +401,23 @@ export default function AssistantPage({
       if (mounted.current) setBusy(false);
     }
   }
-  const needsInputs = !!session?.missingFields.some(
-    (field) =>
-      ['contacts', 'websites', 'email'].includes(field.type) || field.key.startsWith('sender.'),
-  );
   const hasContent =
     !!session &&
     ((session.pendingChannels.includes('email') && !!session.draft.email.bodyHtml) ||
       (session.pendingChannels.includes('site') && !!session.draft.site.message));
   const processing = busy || session?.status === 'dispatching';
+  const composingChannel = composerContext?.source === 'ai' ? composerContext.channel : undefined;
+  const showComposer =
+    !session ||
+    !session.pendingChannels.length ||
+    composerContext?.step === 'review' ||
+    !!composingChannel;
+  const composerAction =
+    composingChannel === 'email'
+      ? '生成邮件'
+      : composingChannel === 'site'
+        ? '生成网站留言'
+        : '发给助手';
   return (
     <section className="wr-lazy" aria-label="懒人模式">
       <aside className={`wr-lazy-rail ${listOpen ? 'is-open' : ''}`} aria-label="会话列表">
@@ -452,7 +496,7 @@ export default function AssistantPage({
                   </span>
                   <span>
                     <strong>给客户发一封邮件</strong>
-                    <small>聊聊产品和沟通目的，准备邮件，选择客户并发送。</small>
+                    <small>选择客户，准备一封完整邮件，预览确认后批量发送。</small>
                   </span>
                   <Icon name="external" size={16} />
                 </button>
@@ -510,31 +554,26 @@ export default function AssistantPage({
               ))}
             </div>
           )}
-          {session && writable && !showInputs && needsInputs && !hasContent && (
-            <div className="wr-lazy-actions">
-              <Button kind="secondary" disabled={processing} onClick={() => setShowInputs(true)}>
-                补充名单和联系资料
-              </Button>
-              <span className="wr-lazy-muted">只需提供本次发送必需的信息</span>
-            </div>
-          )}
-          {session && showInputs && (
-            <NecessaryInputs
-              key={`${session.id}:${session.version}`}
+          {session && writable && session.pendingChannels.length > 0 && (
+            <GuidedDraft
+              key={`${session.id}:${session.pendingChannels.join(',')}`}
               session={session}
               options={options}
               busy={processing}
-              storageKey={`${scope}:${session.id}:${session.version}:fields`}
+              storageKey={`${scope}:${session.id}:${session.pendingChannels.join(',')}:guidance`}
               onRefreshOptions={async () => {
                 const next = await assistantApi.options();
                 setOptions(next);
                 return next;
               }}
-              onSave={(draft) => void saveInputs(draft)}
-              onCancel={() => setShowInputs(false)}
+              onSave={saveInputs}
+              onComposerContext={setComposerContext}
+              onTemplate={applyTemplate}
+              onConfirm={(authorized) => void confirm(authorized)}
+              onManageContacts={onManageContacts}
             />
           )}
-          {session && hasContent && !showInputs && (
+          {session && hasContent && !writable && (
             <DraftPreview
               key={`${session.id}:${session.version}`}
               session={session}
@@ -542,7 +581,7 @@ export default function AssistantPage({
               busy={processing}
               writable={writable}
               onConfirm={(authorized) => void confirm(authorized)}
-              onEdit={() => setShowInputs(true)}
+              onEdit={() => {}}
             />
           )}
           {results && results.channels.length > 0 && (
@@ -592,7 +631,7 @@ export default function AssistantPage({
             </p>
           )}
           <div ref={bottomRef} />
-          {writable && (
+          {writable && showComposer && (
             <form
               className="wr-lazy-composer"
               onSubmit={(event) => {
@@ -601,13 +640,21 @@ export default function AssistantPage({
               }}
             >
               <div className="wr-lazy-composer-box">
+                <label className="wr-lazy-composer-label" htmlFor="assistant-message">
+                  {composingChannel ? '和助手一起准备内容' : '给助手的消息'}
+                </label>
                 <textarea
                   ref={composerRef}
+                  id="assistant-message"
                   aria-label="给助手的消息"
                   placeholder={
-                    session?.operations.length
-                      ? '继续告诉我下一步想做什么…'
-                      : '例如：帮我给客户介绍我们的新品，语气自然一些…'
+                    composingChannel === 'email'
+                      ? '例如：向客户介绍我们的不锈钢水杯，邀请他们回复索取目录…'
+                      : composingChannel === 'site'
+                        ? '例如：向这些网站咨询采购不锈钢水杯，请对方提供报价和交期…'
+                        : session?.operations.length
+                          ? '继续告诉我下一步想做什么…'
+                          : '告诉助手你想完成什么，或需要怎样修改内容…'
                   }
                   value={composer}
                   onChange={(e) => changeComposer(e.target.value)}
@@ -625,12 +672,16 @@ export default function AssistantPage({
                   }}
                 />
                 <div className="wr-lazy-composer-footer">
-                  <small>Enter 发送 · Shift + Enter 换行</small>
+                  <small>
+                    {composingChannel
+                      ? '这里只生成草稿，预览确认后才会发给客户。'
+                      : 'Enter 发给助手 · Shift + Enter 换行'}
+                  </small>
                   <Button
                     type="submit"
                     disabled={processing || !composer.trim() || (!!activeId && !session)}
                   >
-                    发送
+                    {composerAction}
                     <Icon name="arrow" size={15} />
                   </Button>
                 </div>

@@ -76,7 +76,11 @@ const parseContactTags = (value: unknown): string[] => {
   }
 };
 
-export function ContactsPage() {
+export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
+  initialAction?: 'add' | 'import' | 'groups';
+  onImportingChange?: (busy: boolean) => void;
+  onContinue?: () => void;
+} = {}) {
   const { addToast } = useToast();
   const { user } = useAuth();
   const writable = !!user && ['admin', 'member'].includes(user.role);
@@ -89,9 +93,9 @@ export function ContactsPage() {
   const [selectedTag, setSelectedTag] = useState("");
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState<any>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showModal, setShowModal] = useState(initialAction === 'add');
+  const [showImportModal, setShowImportModal] = useState(initialAction === 'import');
+  const [showGroupModal, setShowGroupModal] = useState(initialAction === 'groups');
   const [editingGroup, setEditingGroup] = useState<any>(null);
   const [editingContact, setEditingContact] = useState<any>(null);
   const [groupForm, setGroupForm] = useState({ name: "", description: "" });
@@ -136,13 +140,17 @@ export function ContactsPage() {
   const clearSelection = () => { setSelected([]); setAllSelected(false); setExcludedIds([]); };
 
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    onImportingChange?.(importing || readingImportFile);
+  }, [importing, readingImportFile, onImportingChange]);
+  useEffect(() => () => onImportingChange?.(false), [onImportingChange]);
   useEffect(() => { clearSelection(); }, [search, selectedGroup, selectedTag]);
   useEffect(() => {
-    if (!importing) return;
+    if (!importing && !readingImportFile) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [importing]);
+  }, [importing, readingImportFile]);
 
   useEffect(() => {
     loadGroups();
@@ -260,6 +268,10 @@ export function ContactsPage() {
     const parsed = importContacts.length ? importContacts : rowsToContacts(parseCsvRows(importText));
     if (!parsed.length) {
       addToast("error", "请选择 CSV/Excel 文件或粘贴联系人数据");
+      return;
+    }
+    if (parsed.length > 100000) {
+      addToast("error", "单次最多导入 100,000 行，请拆分文件后导入");
       return;
     }
 
@@ -537,7 +549,7 @@ export function ContactsPage() {
         <div className="page-header-actions">
           <div>
             <h2>联系人管理</h2>
-            <p>管理你的邮件联系人列表</p>
+            <p>添加或导入客户，按分组整理，再选择名单发邮件。</p>
           </div>
           <div className="flex gap-sm" style={{ flexWrap: "wrap" }}>
             <button className="btn btn-secondary" onClick={() => setShowImportReports(true)}>导入进度与报告</button>
@@ -555,11 +567,16 @@ export function ContactsPage() {
             }}>
               ➕ 添加联系人
             </button></>}
+            {onContinue && <button className="btn btn-primary" disabled={importing || readingImportFile} onClick={onContinue}>
+              返回懒人模式
+            </button>}
           </div>
         </div>
       </div>
 
       <div className="page-body">
+        <p className="muted" style={{ marginBottom: 20 }}>少量客户可以逐个添加；2 万人等批量名单可上传 CSV 或 Excel，并直接导入到一个分组。发邮件时选择整个分组即可。</p>
+        {importing && <p role="status" className="notice">名单正在导入，请保持页面打开，完成后再返回懒人模式。{importProgress?.stage}</p>}
         {/* Filters */}
         <div className="flex gap-md items-center" style={{ marginBottom: 20, flexWrap: "wrap" }}>
           <div className="search-bar">
@@ -777,11 +794,13 @@ export function ContactsPage() {
                   <input
                     className="form-input"
                     type="email"
+                    readOnly={!!editingContact}
                     value={form.email}
                     onChange={(e) => setForm((p) => ({ ...p, email: (e.target as HTMLInputElement).value }))}
                     required
                     placeholder="contact@example.com"
                   />
+                  {editingContact && <p className="form-help">邮箱是联系人的标识；如需更换邮箱，请添加新联系人。</p>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div className="form-group">
@@ -875,21 +894,21 @@ export function ContactsPage() {
       {/* Import Modal */}
       {writable && showImportModal && (
         <div className="modal-overlay">
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" role="dialog" aria-modal="true" aria-label="批量导入联系人" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">批量导入联系人</h3>
               <button className="btn btn-ghost" aria-label="关闭导入窗口" onClick={() => setShowImportModal(false)}>✕</button>
             </div>
             <div className="modal-body">
               <div className="contact-import-heading">
-                <div><h4>上传联系人文件</h4><p>支持 CSV 和 Excel (.xlsx)，邮箱为必填列。</p></div>
+                <div><h4>1. 上传客户名单</h4><p>支持 CSV 和 Excel (.xlsx)，只有邮箱必填。可一次上传 2 万人名单，单次最多 100,000 行。</p></div>
                 <button type="button" className="btn btn-secondary btn-sm" disabled={importing} onClick={downloadImportTemplate}>⬇ 下载 CSV 导入模板</button>
               </div>
               <label className={`contact-import-dropzone ${importFileName ? "has-file" : ""}`}>
                 <input type="file" disabled={importInputsLocked} accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; handleImportFile(file); }} />
                 <span className="contact-import-icon">{importFileName ? "✅" : "📄"}</span>
                 <strong>{importFileName || "选择 CSV 或 Excel 文件"}</strong>
-                <small>{importFileName ? `已识别 ${importContacts.length} 位联系人` : "点击选择文件，单个文件建议不超过 1,000 位联系人"}</small>
+                <small>{importFileName ? `已识别 ${importContacts.length} 行联系人数据` : "下载模板填写后上传，也可直接选择符合下方列顺序的文件"}</small>
               </label>
               <div className="contact-import-divider"><span>或者粘贴 CSV 数据</span></div>
               <textarea
@@ -902,8 +921,9 @@ export function ContactsPage() {
               ></textarea>
               <div className="contact-import-format">列顺序：邮箱、名称、公司、网站、行业、地区、标签（多个标签用 | 分隔）</div>
               <div className="form-group contact-import-group">
-                <label className="form-label">导入到分组</label>
+                <label className="form-label">2. 导入到分组</label>
                 <select
+                  aria-label="导入到分组"
                   className="form-select"
                   disabled={importInputsLocked}
                   value={importGroupId}
@@ -947,6 +967,7 @@ export function ContactsPage() {
                   </div>
                 )}
               </div>
+              <p className="form-help">3. 点击“开始导入”，完成后核对成功、重复与失败数量，再返回懒人模式选择分组发送。导入期间请保持此页面打开。</p>
 
               <div className="form-group">
                 <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -985,6 +1006,7 @@ export function ContactsPage() {
                 关闭窗口
               </button>
               {activeImportId && <button className="btn btn-secondary" onClick={() => setShowImportReports(true)}>查看进度与报告</button>}
+              {importCompleted && onContinue && <button className="btn btn-primary" onClick={onContinue}>返回懒人模式</button>}
               {activeImportId && !importing && !importCompleted && <button className="btn btn-secondary" disabled={readingImportFile} onClick={continueImport}>新建导入</button>}
               <button className="btn btn-primary" disabled={importing || readingImportFile} onClick={importCompleted ? continueImport : handleContactsImport}>
                 {readingImportFile ? "读取文件中..." : importing ? "正在导入..." : importCompleted ? "继续导入" : activeImportId ? "重试未完成批次" : "开始导入"}
