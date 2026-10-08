@@ -395,7 +395,18 @@ try {
     await checkMobileTable('crm-communications-mobile-table.png');
     await page.getByRole('tab', { name: '员工汇总', exact: true }).click();
     await expect(page.getByRole('columnheader', { name: '联系客户数', exact: true })).toBeVisible();
-    await expect(page.locator('.crm-table tbody tr')).toHaveCount(2);
+    const employeeData = await getJson(admin, '/api/crm/employees');
+    assert.deepEqual(employeeData.employees.map((employee) => employee.userId).sort(), [
+      'test-admin',
+      'test-member',
+      'test-owner',
+    ]);
+    const inactiveEmployee = employeeData.employees.find(
+      (employee) => employee.userId === 'test-member',
+    );
+    assert.equal(inactiveEmployee.sent, 0);
+    assert.equal(inactiveEmployee.customers, 0);
+    await expect(page.locator('.crm-table tbody tr')).toHaveCount(employeeData.employees.length);
     await checkMobileTable('crm-employees-mobile-table.png');
     await page.getByRole('tab', { name: '客户名单', exact: true }).click();
     await page.getByLabel('搜索客户', { exact: true }).fill('CRM Buyer');
