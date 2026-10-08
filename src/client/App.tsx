@@ -33,6 +33,7 @@ import {
 const Editor = lazy(() => import('./Editor'));
 const Dashboard = lazy(() => import('./Dashboard'));
 const Outreach = lazy(() => import('../outreach/client/App'));
+const OutreachAssistant = lazy(() => import('../outreach/client/assistant/AssistantPage'));
 const CustomerInbox = lazy(() => import('./CustomerInbox'));
 const UserManagement = lazy(() => import('./UserManagement'));
 const Admin = lazy(() => import('./Admin'));
@@ -60,10 +61,10 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
+  const [view, setView] = useState<'lazy-mode' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
+        if (v === 'lazy-mode' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages') return v;
       } catch {}
       return 'dashboard';
     }),
@@ -287,7 +288,7 @@ export default function App() {
           </Suspense>
         </ErrorBoundary>
       ) : !needsLogin ? (
-        <div className={`app-shell ${embedded ? 'is-embedded' : ''}`}>
+        <div className={`app-shell ${embedded ? 'is-embedded' : ''} ${view === 'lazy-mode' ? 'is-assistant' : ''}`}>
           <aside className="sidebar">
             <a
               className="brand-link"
@@ -301,6 +302,7 @@ export default function App() {
             </a>
             <div className="workspace-label">工作台</div>
             <nav aria-label="工作台导航">
+              <button className={view === 'lazy-mode' ? 'active' : ''} aria-current={view === 'lazy-mode' ? 'page' : undefined} onClick={() => setView('lazy-mode')}><Icon name="globe" />懒人模式</button>
               <button className={view === 'dashboard' ? 'active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><Icon name="chart" />控制台</button>
               <button
                 className={view === 'projects' ? 'active' : ''}
@@ -354,7 +356,11 @@ export default function App() {
                 )}
               </div>
             </header>
-            {view === 'dashboard' ? (
+            {view === 'lazy-mode' ? (
+              <ErrorBoundary scope="section" title="会话暂时无法加载" onBack={() => setView('edm')} backText="返回邮件工作台">
+                <Suspense fallback={<ChunkFallback />}><OutreachAssistant key={`${principal.userId}:${principal.workspaceId}`} principal={principal} testMode={!!config?.testMode} onWorkbench={(channel,taskId)=>{const url=new URL(location.href);url.searchParams.set('edmTab','campaigns');url.searchParams.delete('campaignId');url.searchParams.delete('siteJobId');if(taskId)url.searchParams.set(channel==='email'?'campaignId':'siteJobId',taskId);history.replaceState({},'',url);setView(channel==='email'?'edm':'site-messages');}} /></Suspense>
+              </ErrorBoundary>
+            ) : view === 'dashboard' ? (
               <ErrorBoundary scope="section" title="控制台加载异常" onBack={() => setView('projects')} backText="返回网站项目">
                 <Suspense fallback={<ChunkFallback />}><Dashboard key={`${principal.userId}:${principal.workspaceId}`} onNavigate={setView} onOpenProject={setSelected} /></Suspense>
               </ErrorBoundary>

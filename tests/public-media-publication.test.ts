@@ -143,6 +143,7 @@ describe('resumable prepublication responsive media', () => {
     for (const asset of Object.values(assets)) await service.store.insert('assets', asset).run();
   });
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -174,9 +175,20 @@ describe('resumable prepublication responsive media', () => {
     }
     throw Error('did not finish');
   };
-  it('checkpoints bounded work before Pages, resumes an interrupted invocation, preserves originals and reuses the current policy', async () => {
+  const spendFirstWaveTimeBudget = () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const respond = transform.getMockImplementation()!;
+    let completed = 0;
+    transform.mockImplementation(async (url, options) => {
+      const response = await respond(url, options);
+      if (++completed === 4) vi.setSystemTime(Date.now() + 30_000);
+      return response;
+    });
+  };
+  it('checkpoints after the 30 second budget before Pages, resumes an interrupted invocation, preserves originals and reuses the current policy', async () => {
     const before = new Map([...objects].map(([k, v]) => [k, Buffer.from(v.bytes).toString('hex')]));
     const job = await start();
+    spendFirstWaveTimeBudget();
     await service.tick();
     expect((await service.store.one<Job>('jobs', job.id))?.error).toBeUndefined();
     expect(publish).not.toHaveBeenCalled();
@@ -257,6 +269,7 @@ describe('resumable prepublication responsive media', () => {
   });
   it('keeps a committed checkpoint queued when the old Durable Object cannot schedule the next alarm', async () => {
     const job = await start();
+    spendFirstWaveTimeBudget();
     const error = new Error('Connection closed: this Durable Object instance is no longer active. Reconnect or retry the request.');
     schedule.mockResolvedValueOnce(undefined).mockRejectedValueOnce(error);
     await expect(service.tick()).rejects.toBe(error);
@@ -399,7 +412,7 @@ describe('resumable prepublication responsive media', () => {
     expect((await finish(job)).status).toBe('succeeded');
   });
 
-  it('finishes 250 transforms across 63 batches including a busy retry without spending the Pages attempt budget', async () => {
+  it('processes at most twelve transforms per invocation in checkpointed waves of four without spending the Pages attempt budget', async () => {
     const job = await start(),
       release = (await service.store.one<Release>('releases', String(job.input.releaseId)))!;
     release.publicMedia = { policy: publicMedia.publicMediaPolicy, ready: false, assets: {} };
@@ -425,6 +438,8 @@ describe('resumable prepublication responsive media', () => {
     }
     await service.store.update('releases', release).run();
     const completed = new Set<string>();
+    const active = new Set<string>();
+    let peak = 0;
     let busy = true;
     vi.spyOn(publicMedia, 'preparePublicVariant').mockImplementation(
       async (_env, asset, _identity, width) => {
@@ -434,6 +449,16 @@ describe('resumable prepublication responsive media', () => {
         }
         const key = asset.key + '/' + width;
         expect(completed.has(key)).toBe(false);
+        expect(active.has(asset.id)).toBe(false);
+        const startsWave = active.size === 0, priorCompleted = completed.size;
+        active.add(asset.id);
+        peak = Math.max(peak, active.size);
+        if (startsWave) {
+          const checkpoint = (await service.store.one<Release>('releases', release.id))!;
+          expect(Object.values(checkpoint.publicMedia!.assets).flatMap(entry => entry.variants)).toHaveLength(priorCompleted);
+        }
+        await new Promise(resolve => setTimeout(resolve, 1));
+        active.delete(asset.id);
         completed.add(key);
         return {
           key,
@@ -450,7 +475,7 @@ describe('resumable prepublication responsive media', () => {
     for (; ticks < 80; ticks++) {
       const before = completed.size;
       await service.tick();
-      expect(completed.size - before).toBeLessThanOrEqual(4);
+      expect(completed.size - before).toBeLessThanOrEqual(12);
       const current = (await service.store.one<Job>('jobs', job.id))!;
       if (current.status === 'succeeded') break;
       expect(current.status).toBe('queued');
@@ -458,7 +483,8 @@ describe('resumable prepublication responsive media', () => {
       expect(current.input.publicationStarted).toBeUndefined();
       expect(publish).not.toHaveBeenCalled();
     }
-    expect(ticks + 1).toBe(63);
+    expect(ticks + 1).toBe(22);
+    expect(peak).toBe(4);
     expect(completed.size).toBe(250);
     expect(publish).toHaveBeenCalledTimes(1);
     expect((await service.store.one<Job>('jobs', job.id))?.attempts).toBe(1);

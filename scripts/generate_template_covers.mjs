@@ -11,6 +11,7 @@ import { verifyTemplateCovers } from './verify_template_covers.mjs';
 const output = resolve('artifacts/template-covers');
 const publicRoot = resolve('public');
 const selected = process.argv.find(arg => arg.startsWith('--templates='))?.slice('--templates='.length).split(',');
+const useMaterialsDemo = process.argv.includes('--materials-demo');
 let browser, server;
 try {
   await mkdir(output, { recursive: true });
@@ -21,22 +22,28 @@ try {
       "export { getMaterialsTemplate } from './src/templates/materials';",
       "export { renderSite } from './src/templates';",
       "export { defaultDraft } from './src/worker/domain';",
+      "export { materialsDemoDraft } from './src/worker/template-guides/materials-demo';",
     ].join('\n'), resolveDir: process.cwd(), loader: 'ts' },
     outfile: rendererPath, bundle: true, format: 'esm', platform: 'node', target: 'es2022', keepNames: true,
   });
-  const { TEMPLATES, getMaterialsTemplate, renderSite, defaultDraft } = await import(pathToFileURL(rendererPath).href);
+  const { TEMPLATES, getMaterialsTemplate, renderSite, defaultDraft, materialsDemoDraft } = await import(pathToFileURL(rendererPath).href);
   const ids = TEMPLATES.map(t => t.id).filter(id => !selected || selected.includes(id));
   if (!ids.length || selected?.some(id => !ids.includes(id))) throw Error('Unknown template selection');
   const templateMap = new Map(TEMPLATES.map(t => [t.id, t]));
   const profiles = new Map(ids.map(id => [id, getMaterialsTemplate(id)]));
   const pages = new Map(ids.map(id => {
     const tmpl = templateMap.get(id);
-    const draft = {
+    const profile = profiles.get(id);
+    if (useMaterialsDemo && !profile) throw Error(`Materials demo is unavailable: ${id}`);
+    const draft = useMaterialsDemo ? materialsDemoDraft(profile, 'en') : {
       ...defaultDraft(),
       template: tmpl.id,
       brandColor: tmpl.accentColor,
       languages: ['en'],
     };
+    if (useMaterialsDemo && draft.materials?.contractRevision !== profile.contractRevision) {
+      throw Error(`Materials demo does not bind the advertised contract: ${id}`);
+    }
     return [`/__cover/${id}`, renderSite(draft, {
       projectId: 'preview', lang: 'en', page: 'home',
       assetUrl: id => id, inquiryUrl: '/inquiry', preview: false,
@@ -95,8 +102,9 @@ try {
       console.log(`${id}: ${errors.length} script errors, ${metrics.brokenImages.length} broken visible images`);
     } finally { await page.close(); }
   }
-  const report = { scope: 'Rendered template homepage screenshots in headless Chrome matching live preview.', viewport: { width: 1440, height: 1000 }, results };
+  const report = { scope: useMaterialsDemo ? 'Rendered versioned materials demo homepages in headless Chrome, matching the materials preview route.' : 'Rendered template homepage screenshots in headless Chrome matching live preview.', viewport: { width: 1440, height: 1000 }, results };
   await writeFile(resolve(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(resolve(output, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
   if (results.some(result => result.errors.length || result.brokenImages.length || result.overflow || !result.headings.length)) {
     throw Error('Template cover rendering failed; inspect artifacts/template-covers/report.json. Manifest not published.');
   }

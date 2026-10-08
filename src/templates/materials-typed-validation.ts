@@ -14,7 +14,9 @@ export function validateTypedMaterials(m:PositionInput,profile:MaterialsTemplate
   }
   const identities=new Map<string,string>(),roles=new Map<string,string>(),banners=new Map<string,string>();
   const targets=new Set<string>();
-  const compositions=new Map<string,{slotId:string;distinct:boolean}>();
+  const compositions=new Map<string,{slotId:string;target:string;distinct:boolean;generated:boolean}>();
+  const retainedIds=new Set(m.products.flatMap(product=>[product.primaryMediaId,...product.galleryMediaIds]));
+  const retainedDigests=new Set(m.media.filter(media=>retainedIds.has(media.id)&&media.sha256).map(media=>media.sha256));
   for(const binding of m.imageBindings){
     const slot=profile.imageSlots.find(s=>s.id===binding.slotId);
     if(!slot)continue;
@@ -46,10 +48,12 @@ export function validateTypedMaterials(m:PositionInput,profile:MaterialsTemplate
     const identity=JSON.stringify([...(slot.role?depicted||[]:[binding.productId||''])].sort());
     for(const id of [binding.mediaId,binding.mobileMediaId].filter((id):id is string=>!!id)){
       const digest=m.media.find(media=>media.id===id)?.sha256;
+      const generated=slot.reusePolicy==='generate-new';
+      if(generated&&(retainedIds.has(id)||digest&&retainedDigests.has(digest)))add('generated_source_reused',binding.slotId);
       for(const key of [`id:${id}`,...(digest?[`sha:${digest}`]:[])]){
         const prior=compositions.get(key);
-        if(prior&&prior.slotId!==slot.id&&(prior.distinct||slot.reusePolicy==='distinct-slot'))add(slot.role==='collection'?'banner_composition_reused':'slot_composition_reused',binding.slotId);
-        compositions.set(key,{slotId:slot.id,distinct:slot.reusePolicy==='distinct-slot'});
+        if(prior&&((prior.target!==target&&(prior.generated||generated))||(prior.slotId!==slot.id&&(prior.distinct||slot.reusePolicy==='distinct-slot'))))add(slot.role==='collection'?'banner_composition_reused':'slot_composition_reused',binding.slotId);
+        compositions.set(key,{slotId:slot.id,target,distinct:slot.reusePolicy==='distinct-slot',generated});
         if(identities.has(key)&&identities.get(key)!==identity)add('image_role_identity_reused',binding.slotId);
         identities.set(key,identity);
         // Original main/gallery retention may reuse a classified image for the same product.

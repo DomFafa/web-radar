@@ -15,6 +15,7 @@ import { providersRoutes } from '../outreach/server/routes/providers.routes';
 import { siteMessageRoutes } from '../outreach/server/routes/site-message.routes';
 import { uploadRoutes } from '../outreach/server/routes/upload.routes';
 import { imagesRoutes } from '../outreach/server/routes/images.routes';
+import { assistantRoutes } from '../outreach/server/routes/assistant.routes';
 import publicRoutes from '../outreach/server/public';
 import { handleEmailQueue, type EmailSendMessage } from '../outreach/server/queues/email-send.queue';
 import { handleSiteMessageQueue, type SiteMessageQueueMessage } from '../outreach/server/queues/site-message.queue';
@@ -23,7 +24,8 @@ export function outreachBindings(env: AppEnv): Bindings {
   return { DB:env.DB,STORAGE:env.MEDIA,EMAIL_QUEUE:env.EDM_EMAIL_QUEUE!,SITE_MESSAGE_QUEUE:env.EDM_SITE_QUEUE!,BROWSER:env.BROWSER!,
     CREDENTIAL_KEY:env.ASSET_SIGNING_KEY || (testMode(env)?'local-outreach-test-key':''),TEST_MODE:testMode(env),
     BETTER_AUTH_SECRET:env.ASSET_SIGNING_KEY || (testMode(env)?'local-outreach-test-key':''),BETTER_AUTH_URL:env.APP_ORIGIN || 'https://web-radar.net',
-    SES_ACCESS_KEY_ID:'',SES_SECRET_ACCESS_KEY:'',SES_REGION:'us-east-1',DEEPSEEK_API_KEY:'',SERP_API_KEY:'' };
+    SES_ACCESS_KEY_ID:'',SES_SECRET_ACCESS_KEY:'',SES_REGION:'us-east-1',DEEPSEEK_API_KEY:'',SERP_API_KEY:'',
+    TEXT_API_BASE_URL:env.TEXT_API_BASE_URL,TEXT_API_KEY:env.TEXT_API_KEY,TEXT_MODEL:env.TEXT_MODEL };
 }
 const privateApi=new Hono<{Bindings:Bindings;Variables:Variables}>();
 privateApi.use('*',bodyLimit({maxSize:12*1024*1024,onError:c=>c.json({error:'请求内容超过 12 MB 限制'},413)}));
@@ -33,6 +35,7 @@ privateApi.route('/api/outreach/campaigns',campaignRoutes);
 privateApi.route('/api/outreach/providers',providersRoutes);
 privateApi.route('/api/outreach/site-messages',siteMessageRoutes);
 privateApi.route('/api/outreach/upload',uploadRoutes);
+privateApi.route('/api/outreach/assistant',assistantRoutes);
 privateApi.notFound(c=>c.json({error:'接口不存在'},404));
 
 export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<typeof privateApi.fetch>[2]) {

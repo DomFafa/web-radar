@@ -32,15 +32,34 @@ export async function renderWebsiteResult(project: Project, render: (options: Re
 export async function saveWebsiteResult(env: AppEnv, project: Project, pages: Record<string, string>, assets: Asset[]): Promise<string> {
   const key = resultBase(project.id, project.version) + '/result.json';
   const references = new Set(assetReferences(project.draft));
-  const archived: Asset[] = [];
-  for (const id of references) {
+  const pending = [...references].map(id => {
     const asset = assets.find(item => item.id === id);
     requireCondition(asset, 409, 'website_result_asset_missing', '网站素材尚未完整保存，请重试。');
-    const object = await env.MEDIA.get(asset.key);
-    requireCondition(object, 409, 'website_result_asset_missing', '网站素材尚未完整保存，请重试。');
-    const copy = {...asset, key: resultBase(project.id, project.version) + '/assets/' + asset.id};
-    await env.MEDIA.put(copy.key, await object.arrayBuffer(), {httpMetadata: {contentType: asset.contentType}});
-    archived.push(copy);
+    return asset;
+  });
+  const archived: Asset[] = [];
+  let offset = 0;
+  while (offset < pending.length) {
+    const batch: Asset[] = [];
+    let bytes = 0;
+    // Bound buffered media as well as concurrency; existing larger assets copy alone.
+    while (offset < pending.length && batch.length < 4) {
+      const asset = pending[offset];
+      if (batch.length && bytes + asset.size > 20 * 1024 * 1024) break;
+      batch.push(asset); bytes += asset.size; offset++;
+    }
+    const results = await Promise.allSettled(batch.map(async asset => {
+      const object = await env.MEDIA.get(asset.key);
+      requireCondition(object, 409, 'website_result_asset_missing', '网站素材尚未完整保存，请重试。');
+      const copy = {...asset, key: resultBase(project.id, project.version) + '/assets/' + asset.id};
+      await env.MEDIA.put(copy.key, await object.arrayBuffer(), {httpMetadata: {contentType: asset.contentType}});
+      return copy;
+    }));
+    // Settle every write before releasing the caller's lock or allowing a retry.
+    for (const result of results) {
+      if (result.status === 'rejected') throw result.reason;
+      archived.push(result.value);
+    }
   }
   await env.MEDIA.put(key, JSON.stringify({project, pages, assets: archived} satisfies WebsiteResult), {httpMetadata: {contentType: 'application/json'}});
   return key;

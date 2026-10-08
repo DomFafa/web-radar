@@ -10,9 +10,17 @@ import { sensengMaterialInventory } from '../../templates/materials-senseng';
 import { defaultDraft } from '../domain';
 import { junoDisplayRevision } from '../../templates/juno-display';
 import { typedMaterialsDemoDraft } from './materials-typed-demo';
+import { isProductNativeRevision } from '../../shared/product-native-materials';
 
 /** Public, explicitly labelled examples for the new materials preview only. */
 export function materialsDemoDraft(profile:MaterialsTemplateContract,lang:Language){
+  if(isProductNativeRevision(profile.templateId,profile.contractRevision)) {
+    const draft=typedMaterialsDemoDraft(profile,lang);
+    draft.materials!.visual.palette=profile.websitePalette!;
+    draft.brandColor=profile.websitePalette!.primary;
+    draft.materials!.textBindings=profile.textSlots.flatMap(slot=>(slot.repeat==='per-product'?draft.products.map(product=>({productId:product.id})):[{}]).flatMap(target=>draft.languages.map(locale=>({...draft.materials!.textBindings.find(binding=>binding.slotId===slot.id&&binding.locale===locale)!,...target}))));
+    return draft;
+  }
   if(profile.templateId==='auravell'){const draft=defaultDraft();draft.template='auravell';draft.company.name='Auravell';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#99582a';return draft;}
   if(profile.templateId==='careflow-healthcare'){const draft=defaultDraft();draft.template='careflow-healthcare';draft.company.name='Careflow';draft.languages=lang==='en'?['en']:['en',lang];draft.brandColor='#6197de';return draft;}
   if(profile.templateId==='toorun-early-learning') {

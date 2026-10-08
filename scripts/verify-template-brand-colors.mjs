@@ -74,6 +74,10 @@ try {
     for (const mode of modes) for (const pageName of pages) for (const presentation of presentations) {
       const source = structuredClone(customer);
       if (mode === 'native') delete source.materials;
+      // Product-materials Pawfect keeps the approved white form card; its
+      // buttons, navigation and focus indicators still follow the brand color.
+      const neutralContactCard = id === 'pawfect-groom' && mode === 'materials' &&
+        ['2026-10-02.pawfect-groom-materials.2', '2026-10-02.pawfect-groom-materials.3'].includes(source.materials?.contractRevision);
       for (const width of widths) for (const color of colors) {
         const label = `${id}/${mode}/${pageName}/${presentation}/${width}/${color}`;
         console.log(`Checking ${label}`);
@@ -171,14 +175,15 @@ try {
             assert(metrics.submit.text.length && metrics.submit.text.every(text => text.contrast >= 4.5), `${label}: contact submit text is unreadable: ${JSON.stringify(metrics.submit.text)}`);
             const card = await firstVisible(targets[id].card);
             assert(card, `${label}: contact card target is missing`);
-            metrics.contactCard = await card.evaluate((node, solid) => {
+            metrics.contactCard = await card.evaluate((node, { solid, neutral }) => {
               const style = getComputedStyle(node), probe = document.createElement('span');
-              probe.style.backgroundColor = getComputedStyle(document.body).getPropertyValue(solid ? '--wr-brand' : '--wr-brand-soft');
+              probe.style.backgroundColor = neutral ? '#ffffff' : getComputedStyle(document.body).getPropertyValue(solid ? '--wr-brand' : '--wr-brand-soft');
               document.body.append(probe); const expectedBackground = getComputedStyle(probe).backgroundColor; probe.remove();
               return { background: style.backgroundColor, border: style.borderTopColor, expectedBackground };
-            }, !!targets[id].solidCard);
-            assert.notEqual(metrics.contactCard.background, 'rgba(0, 0, 0, 0)', `${label}: contact card requires a visible brand surface`);
-            assert.equal(metrics.contactCard.background, metrics.contactCard.expectedBackground, `${label}: contact card does not use the selected brand surface`);
+            }, { solid: !!targets[id].solidCard, neutral: neutralContactCard });
+            assert.notEqual(metrics.contactCard.background, 'rgba(0, 0, 0, 0)', `${label}: contact card requires a visible surface`);
+            assert.equal(metrics.contactCard.background, metrics.contactCard.expectedBackground, `${label}: contact card does not use the ${neutralContactCard ? 'approved white' : 'selected brand'} surface`);
+            if (neutralContactCard) assert.equal(metrics.contactCard.border, 'rgb(226, 225, 215)', `${label}: white contact card must retain its neutral border`);
             const field = await firstVisible('form input[name="name"], form input[type="email"]');
             assert(field, `${label}: contact field for keyboard focus is missing`);
             await field.focus();
@@ -201,7 +206,12 @@ try {
           const previousDecoration = decorationBaselines.get(comparison);
           if (previousDecoration && previousDecoration.color !== color) {
             if (metrics.navigation) assert.notDeepEqual(metrics.navigation, previousDecoration.navigation, `${label}: navigation color did not respond to brand selection`);
-            if (metrics.contactCard) assert.notDeepEqual(metrics.contactCard, previousDecoration.contactCard, `${label}: contact card color did not respond to brand selection`);
+            if (metrics.contactCard) {
+              const currentSurface = [metrics.contactCard.background, metrics.contactCard.border];
+              const previousSurface = [previousDecoration.contactCard.background, previousDecoration.contactCard.border];
+              if (neutralContactCard) assert.deepEqual(currentSurface, previousSurface, `${label}: brand selection altered the neutral contact card`);
+              else assert.notDeepEqual(currentSurface, previousSurface, `${label}: contact card color did not respond to brand selection`);
+            }
           } else decorationBaselines.set(comparison, { color, navigation: metrics.navigation, contactCard: metrics.contactCard });
           assert.deepEqual(errors, [], `${label}: browser runtime errors`);
           assert.deepEqual(missing, [], `${label}: missing local assets`);

@@ -6,7 +6,7 @@ import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { createDb } from "../../db";
-import { campaignRecipients, campaigns, contacts, providers, templates } from "../../db/schema";
+import { campaignRecipients, campaigns, contacts, providers } from "../../db/schema";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { selectEmailProviderForSender } from "../lib/email-provider-selection";
 import { readAttempt, claimAttempt, saveAttempt } from "../lib/email-attempt";
@@ -415,7 +415,7 @@ async function sendViaMailchimpMarketingBatch(
   try { config = configStr ? JSON.parse(configStr) : {}; } catch {}
 
   const [campaign] = await db
-    .select({ id: campaigns.id, name: campaigns.name, status: campaigns.status, templateId: campaigns.templateId, senderEmail: campaigns.senderEmail, senderName: campaigns.senderName, replyTo: campaigns.replyTo, mailchimpCampaignId: campaigns.mailchimpCampaignId })
+    .select({ id: campaigns.id, name: campaigns.name, status: campaigns.status, mailchimpCampaignId: campaigns.mailchimpCampaignId })
     .from(campaigns)
     .where(eq(campaigns.id, messages[0].campaignId));
   if (!campaign) throw new Error("Campaign not found");
@@ -448,6 +448,21 @@ async function sendViaMailchimpMarketingBatch(
     }
   }
   if (!eligible.length) throw new Error("没有可发送的已订阅收件人");
+  // The queue payload is the approved send snapshot. A Marketing campaign has
+  // one shared body, so it cannot safely send different personalized snapshots.
+  const snapshots = eligible.map(message => ({
+    subject: replaceVariables(message.subject, message.variables),
+    bodyHtml: replaceVariables(message.bodyHtml, message.variables),
+    bodyText: message.bodyText ? replaceVariables(message.bodyText, message.variables) : undefined,
+    fromEmail: message.fromEmail,
+    fromName: message.fromName,
+    replyTo: message.replyTo,
+  }));
+  const snapshot = snapshots[0];
+  if (snapshots.some(item => JSON.stringify(item) !== JSON.stringify(snapshot))) {
+    throw new Error("Marketing 无法在同一批次发送不同的个性化邮件，请使用逐封发送通道");
+  }
+  assertEmailContentAllowed(snapshot.subject, snapshot.bodyHtml, snapshot.bodyText);
   const attemptId = eligible.map((message) => message.recipientId).sort()[0];
   if (!await claimAttempt(database, attemptId))
     throw new Error("待核实：Marketing 发送已开始，禁止重复提交活动");
@@ -487,27 +502,20 @@ async function sendViaMailchimpMarketingBatch(
     });
     if (!segment?.id) throw new Error("Mailchimp 未返回静态 Segment ID");
 
-    const templateRows = await db.select({ subject: templates.subject, bodyHtml: templates.bodyHtml, bodyText: templates.bodyText }).from(templates).where(eq(templates.id, campaign.templateId));
-    const template = templateRows[0];
-    if (!template) throw new Error("邮件模板不存在");
-    const subject = replaceVariables(template.subject, eligible[0].variables);
-    let html = replaceVariables(template.bodyHtml, eligible[0].variables);
-    const text = template.bodyText ? replaceVariables(template.bodyText, eligible[0].variables) : undefined;
-    assertEmailContentAllowed(subject, html, text);
-    html = appendComplianceFooter(html, betterAuthUrl, eligible[0].recipientId, campaign.id, campaign.senderName, "*|UNSUB|*", "*|UPDATE_PROFILE|*");
+    const html = appendComplianceFooter(snapshot.bodyHtml, betterAuthUrl, eligible[0].recipientId, campaign.id, snapshot.fromName, "*|UNSUB|*", "*|UPDATE_PROFILE|*");
     const remote: any = await mailchimpMarketingRequest(baseUrl, apiKey, "/campaigns", {
       method: "POST",
       body: JSON.stringify({
         type: "regular",
         recipients: { list_id: audience.id, segment_opts: { saved_segment_id: segment.id } },
-        settings: { subject_line: subject, title: campaign.name, from_name: campaign.senderName, reply_to: campaign.replyTo || campaign.senderEmail },
+        settings: { subject_line: snapshot.subject, title: campaign.name, from_name: snapshot.fromName, reply_to: snapshot.replyTo || snapshot.fromEmail },
       }),
     });
     remoteCampaignId = remote.id;
     await db.update(campaigns).set({ mailchimpCampaignId: remoteCampaignId, updatedAt: new Date() }).where(eq(campaigns.id, campaign.id));
     await mailchimpMarketingRequest(baseUrl, apiKey, `/campaigns/${remoteCampaignId}/content`, {
       method: "PUT",
-      body: JSON.stringify({ html, plain_text: text }),
+      body: JSON.stringify({ html, plain_text: snapshot.bodyText }),
     });
   }
 
@@ -689,14 +697,16 @@ async function sendViaSMTP(
       subject,
       html: bodyHtml,
     }),
-  }).catch(() => null);
+  });
 
-  if (response && response.ok) {
-    const resData: any = await response.json().catch(() => ({}));
-    return { messageId: resData.id || crypto.randomUUID() };
+  if (!response.ok) {
+    throw new Error(`SMTP gateway error (${response.status}): ${await response.text()}`);
   }
-
-  return { messageId: crypto.randomUUID() };
+  const resData: any = await response.json();
+  if (typeof resData.id !== 'string' || !resData.id.trim()) {
+    throw new Error('SMTP gateway returned no message ID; delivery requires reconciliation');
+  }
+  return { messageId: resData.id };
 }
 
 /**
