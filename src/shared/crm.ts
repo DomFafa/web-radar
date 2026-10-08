@@ -14,6 +14,11 @@ export type CrmCommunication = {
   captureStatus: CrmCaptureStatus; bodyText?: string | null; bodyHtml?: string | null;
   provider?: string | null; providerMessageId?: string | null; errorMessage?: string | null;
   senderEmail?: string | null; senderName?: string | null; replyTo?: string | null;
+  activityGroupId?: string; activityGroupName?: string; activityGroupBasis?: 'snapshot' | 'history_unknown' | 'ungrouped';
+  delivered?: number; opened?: number; clicked?: number;
+  deliveredAt?: string | null; openedAt?: string | null; clickedAt?: string | null; repliedAt?: string | null;
+  engagementCoverage?: 'full' | 'observed' | 'unknown' | 'overall_only' | 'not_applicable';
+  engagementSource?: string | null;
 };
 export type CrmNote = {
   id: string; customerKey: string; authorId: string; authorName: string | null;
@@ -40,3 +45,27 @@ export type CrmCommunicationDetail = { record: CrmCommunication; canBody: boolea
     status: string; provider: string | null; providerMessageId: string | null;
     subject: string; bodyText: string | null; bodyHtml: string | null; errorMessage: string | null;
     recipientEmail?: string | null; senderEmail?: string | null; senderName?: string | null; replyTo?: string | null }>; };
+
+export type CrmActivityMetric = {
+  value: number | null; tracked: number; eligible: number;
+  coverage: 'full' | 'partial' | 'unknown' | 'not_applicable' | 'overall_only';
+  sources: string[]; detailAvailable: boolean; rate: number | null;
+};
+export type CrmActivityStats = {
+  total: number; customers: number; batches: number; sent: number; failed: number; uncertain: number;
+  firstSentAt: string | null; lastSentAt: string | null;
+  delivered: CrmActivityMetric; opened: CrmActivityMetric; clicked: CrmActivityMetric; replied: CrmActivityMetric;
+};
+export type CrmActivityEmployee = CrmActivityStats & { userId: string | null; name: string; email: string | null; groups: number };
+export type CrmActivityGroup = CrmActivityStats & {
+  id: string; name: string; basis: 'snapshot' | 'history_unknown' | 'ungrouped';
+};
+export type CrmActivityBatch = CrmActivityStats & {
+  source: CrmChannel; businessId: string; name: string; ownerId: string | null; ownerName: string | null;
+  activityGroupId: string; activityGroupName: string; status: string | null;
+  createdAt: string | null;
+};
+export type CrmActivityEmployeePage = CrmPage<{ employees: CrmActivityEmployee[]; canViewTeam: boolean }>;
+export type CrmActivityGroupPage = CrmPage<{ groups: CrmActivityGroup[] }>;
+export type CrmActivityBatchPage = CrmPage<{ batches: CrmActivityBatch[] }>;
+export type CrmActivityBatchDetail = { batch: CrmActivityBatch };

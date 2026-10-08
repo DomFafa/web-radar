@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Principal } from '../shared/model';
 import type {
   CrmCaptureStatus,
@@ -20,14 +20,20 @@ import {
 } from './api';
 import { Button, Empty, Field, Icon, Notice, dateTime } from './components';
 import CustomerInbox from './CustomerInbox';
+import CrmActivity, {
+  activityUrl,
+  navigateCrm,
+  parseActivityRoute,
+  restoreCrmScroll,
+} from './CrmActivity';
 import './customer-management.css';
 
-type Tab = 'customers' | 'communications' | 'replies' | 'employees';
+type Tab = 'activity' | 'customers' | 'communications' | 'replies';
 const tabs: Array<[Tab, string]> = [
-  ['customers', '客户名单'],
-  ['communications', '沟通记录'],
+  ['activity', '员工活动'],
+  ['customers', '客户资料'],
   ['replies', '客户回复'],
-  ['employees', '员工汇总'],
+  ['communications', '全部沟通记录'],
 ];
 const kinds: Record<string, string> = {
   human: '客户回复',
@@ -278,10 +284,19 @@ function CustomerAudit({ customerKey, revision }: { customerKey: string; revisio
     </details>
   );
 }
+export function crmTabFromSearch(search: string): Tab {
+  const value = new URLSearchParams(search).get('crmTab');
+  return tabs.some(([key]) => key === value) ? (value as Tab) : 'activity';
+}
 function initialTab(): Tab {
-  if (typeof location === 'undefined') return 'customers';
-  const value = new URL(location.href).searchParams.get('crmTab');
-  return tabs.some(([key]) => key === value) ? (value as Tab) : 'customers';
+  return crmTabFromSearch(typeof location === 'undefined' ? '' : location.search);
+}
+function selectedRecordFromUrl(): { source: 'edm' | 'site'; targetId: string } | null {
+  if (typeof location === 'undefined') return null;
+  const params = new URLSearchParams(location.search),
+    source = params.get('crmRecordSource'),
+    targetId = params.get('crmRecordTarget');
+  return targetId && (source === 'edm' || source === 'site') ? { source, targetId } : null;
 }
 
 export default function CustomerManagement({
@@ -303,11 +318,15 @@ export default function CustomerManagement({
     [communications, setCommunications] = useState<CrmCommunicationPage | null>(null),
     [employees, setEmployees] = useState<CrmEmployee[] | null>(null),
     [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(''),
+  const [selectedCustomer, setSelectedCustomer] = useState(() =>
+      typeof location === 'undefined'
+        ? ''
+        : new URLSearchParams(location.search).get('crmCustomer') || '',
+    ),
     [selectedCommunication, setSelectedCommunication] = useState<{
       source: 'edm' | 'site';
       targetId: string;
-    } | null>(null),
+    } | null>(selectedRecordFromUrl),
     [busy, setBusy] = useState(true),
     [error, setError] = useState(''),
     [exporting, setExporting] = useState(false),
@@ -315,6 +334,19 @@ export default function CustomerManagement({
   const ownWorkspace = !scopedWorkspace() || scopedWorkspace() === principal.workspaceId;
   const writable = writeBusiness(principal) && ownWorkspace,
     team = viewTeamData(principal);
+  useEffect(() => {
+    const sync = () => {
+      setTab(initialTab());
+      setSelectedCustomer(new URLSearchParams(location.search).get('crmCustomer') || '');
+      setSelectedCommunication(selectedRecordFromUrl());
+    };
+    window.addEventListener('popstate', sync);
+    window.addEventListener('crm:navigate', sync);
+    return () => {
+      window.removeEventListener('popstate', sync);
+      window.removeEventListener('crm:navigate', sync);
+    };
+  }, []);
   useEffect(() => {
     if (principal.systemRole !== 'super_admin') return;
     const controller = new AbortController();
@@ -337,6 +369,7 @@ export default function CustomerManagement({
     }
   }, [tab]);
   useEffect(() => {
+    if (tab !== 'customers' && tab !== 'communications') return;
     const controller = new AbortController();
     api<{ employees: CrmEmployee[] }>('/api/crm/employees', { signal: controller.signal })
       .then((result) => {
@@ -356,7 +389,7 @@ export default function CustomerManagement({
           if (!controller.signal.aborted) setError(errorMessage(reason));
         });
     return () => controller.abort();
-  }, [revision]);
+  }, [revision, tab]);
   useEffect(() => {
     if (tab !== 'customers' && tab !== 'communications') {
       setBusy(false);
@@ -391,10 +424,57 @@ export default function CustomerManagement({
     return () => controller.abort();
   }, [tab, query, ownerId, channel, groupId, page, revision]);
   function changeTab(next: Tab) {
-    setTab(next);
+    const url = new URL(location.href);
+    url.searchParams.set('crmTab', next);
+    url.searchParams.delete('crmCustomer');
+    url.searchParams.delete('crmRecordSource');
+    url.searchParams.delete('crmRecordTarget');
+    navigateCrm(url);
     setPage(1);
-    setSelectedCustomer('');
-    setSelectedCommunication(null);
+  }
+  function selectCustomer(key: string) {
+    const url = new URL(location.href);
+    if (key) url.searchParams.set('crmCustomer', key);
+    else url.searchParams.delete('crmCustomer');
+    url.searchParams.delete('crmRecordSource');
+    url.searchParams.delete('crmRecordTarget');
+    navigateCrm(url);
+  }
+  function selectRecord(source?: 'edm' | 'site', targetId?: string) {
+    const url = new URL(location.href);
+    if (source && targetId) {
+      url.searchParams.set('crmRecordSource', source);
+      url.searchParams.set('crmRecordTarget', targetId);
+    } else {
+      url.searchParams.delete('crmRecordSource');
+      url.searchParams.delete('crmRecordTarget');
+    }
+    navigateCrm(url);
+  }
+  function returnToActivity(level: 'employees' | 'groups' | 'batches' | 'detail') {
+    const route = parseActivityRoute(location.search);
+    navigateCrm(
+      activityUrl(
+        {
+          ...route,
+          ...(level === 'employees'
+            ? {
+                owner: '',
+                group: '',
+                batch: '',
+                source: '' as const,
+                search: '',
+                metric: 'all' as const,
+              }
+            : level === 'groups'
+              ? { group: '', batch: '', source: '' as const, metric: 'all' as const }
+              : level === 'batches'
+                ? { batch: '', source: '' as const, metric: 'all' as const }
+                : {}),
+        },
+        location.href,
+      ),
+    );
   }
   function changeFilter(set: (value: string) => void, value: string) {
     set(value);
@@ -434,14 +514,14 @@ export default function CustomerManagement({
       <header className="crm-heading">
         <div className="page-heading">
           <h1>客户管理系统</h1>
-          <p>从客户名单到发送内容、客户回复与后续跟进，集中查看每一次沟通。</p>
+          <p>先选员工，再看分组与发送效果。</p>
         </div>
         <div className="crm-actions">
           <Button onClick={() => setRevision((value) => value + 1)} disabled={busy}>
             <Icon name="refresh" />
             刷新
           </Button>
-          {writable && (
+          {writable && tab === 'customers' && (
             <>
               <Button onClick={() => onManageContacts('import')}>
                 <Icon name="upload" />
@@ -463,6 +543,7 @@ export default function CustomerManagement({
             id={`crm-tab-${key}`}
             aria-controls={`crm-panel-${key}`}
             aria-selected={tab === key}
+            className={key === 'activity' ? 'crm-main-tab' : 'crm-aux-tab'}
             onClick={() => changeTab(key)}
           >
             {label}
@@ -479,6 +560,21 @@ export default function CustomerManagement({
               url.searchParams.set('crmWorkspace', event.target.value);
               url.searchParams.set('inboxWorkspace', event.target.value);
               url.searchParams.delete('inboxThread');
+              for (const key of [
+                'crmOwner',
+                'crmGroup',
+                'crmBatch',
+                'crmSource',
+                'crmCustomer',
+                'crmRecordSource',
+                'crmRecordTarget',
+                'crmMetric',
+                'crmStaffPage',
+                'crmGroupPage',
+                'crmBatchPage',
+                'crmPage',
+              ])
+                url.searchParams.delete(key);
               location.href = url.pathname + url.search;
             }}
           >
@@ -500,22 +596,57 @@ export default function CustomerManagement({
         </Notice>
       )}
       {error && <Notice tone="error">{error}</Notice>}
+      {tab === 'activity' && (selectedCustomer || selectedCommunication) && (
+        <nav className="crm-breadcrumbs" aria-label="员工活动层级">
+          <button onClick={() => returnToActivity('employees')}>员工活动</button>
+          <span>›</span>
+          <button onClick={() => returnToActivity('groups')}>客户分组</button>
+          <span>›</span>
+          <button onClick={() => returnToActivity('batches')}>发送活动</button>
+          <span>›</span>
+          <button onClick={() => returnToActivity('detail')}>效果与客户</button>
+          <span>›</span>
+          {selectedCustomer && selectedCommunication ? (
+            <>
+              <button onClick={() => selectRecord()}>客户资料</button>
+              <span>›</span>
+            </>
+          ) : null}
+          <span aria-current="page">{selectedCommunication ? '发送内容' : '客户资料'}</span>
+        </nav>
+      )}
       <section role="tabpanel" id={`crm-panel-${tab}`} aria-labelledby={`crm-tab-${tab}`}>
         {tab === 'replies' ? (
           <CustomerInbox principal={principal} embedded />
         ) : selectedCommunication ? (
           <CommunicationDetail
             selection={selectedCommunication}
-            onClose={() => setSelectedCommunication(null)}
+            onClose={() => selectRecord()}
+            backLabel={
+              tab === 'activity'
+                ? selectedCustomer
+                  ? '返回客户资料'
+                  : '返回效果与客户'
+                : undefined
+            }
           />
         ) : selectedCustomer ? (
           <CustomerProfile
             key={selectedCustomer}
             customerKey={selectedCustomer}
             principal={principal}
-            onBack={() => setSelectedCustomer('')}
-            onCustomer={setSelectedCustomer}
-            onRecord={(source, targetId) => setSelectedCommunication({ source, targetId })}
+            onBack={() => selectCustomer('')}
+            onCustomer={selectCustomer}
+            onRecord={selectRecord}
+            backLabel={tab === 'activity' ? '返回效果与客户' : undefined}
+          />
+        ) : tab === 'activity' ? (
+          <CrmActivity
+            request={api}
+            revision={revision}
+            onCustomer={selectCustomer}
+            onRecord={selectRecord}
+            statusLabel={communicationStatus}
           />
         ) : (
           <>
@@ -525,20 +656,7 @@ export default function CustomerManagement({
                 : '发送与回复记录按你的访问权限显示。联系人沿用工作区共享名单。'}
               确认回复仅统计已关联并确认的客户来信，未追踪不代表没有回复。
             </p>
-            {tab === 'employees' ? (
-              <EmployeeSummary
-                employees={employees}
-                team={team}
-                onEmployee={(userId) => {
-                  setOwnerId(userId);
-                  setChannel('');
-                  setGroupId('');
-                  setQuery('');
-                  setSearch('');
-                  changeTab('communications');
-                }}
-              />
-            ) : (
+            {
               <>
                 <form
                   className="crm-toolbar"
@@ -639,14 +757,12 @@ export default function CustomerManagement({
                     </p>
                   )}
                   {tab === 'customers' ? (
-                    <CustomerTable data={customers} onCustomer={setSelectedCustomer} />
+                    <CustomerTable data={customers} onCustomer={selectCustomer} />
                   ) : (
                     <CommunicationTable
                       data={communications}
-                      onCustomer={setSelectedCustomer}
-                      onRecord={(source, targetId) =>
-                        setSelectedCommunication({ source, targetId })
-                      }
+                      onCustomer={selectCustomer}
+                      onRecord={selectRecord}
                     />
                   )}
                   {list &&
@@ -663,7 +779,7 @@ export default function CustomerManagement({
                   <Pagination data={list} busy={busy} onPage={setPage} />
                 </div>
               </>
-            )}
+            }
           </>
         )}
       </section>
@@ -787,109 +903,22 @@ function CommunicationTable({
     </div>
   );
 }
-function EmployeeSummary({
-  employees,
-  team,
-  onEmployee,
-}: {
-  employees: CrmEmployee[] | null;
-  team: boolean;
-  onEmployee: (id: string) => void;
-}) {
-  const totals = employees?.reduce(
-    (value, employee) => ({
-      sent: value.sent + employee.sent,
-      replied: value.replied + employee.replied,
-      failed: value.failed + employee.failed,
-      uncertain: value.uncertain + employee.uncertain,
-    }),
-    { sent: 0, replied: 0, failed: 0, uncertain: 0 },
-  );
-  return (
-    <>
-      <div className="crm-summary">
-        {[
-          ['员工', employees?.length],
-          ['已发送 / 提交', totals?.sent],
-          ['确认回复', totals?.replied],
-          ['发送失败', totals?.failed],
-          ['结果待核实', totals?.uncertain],
-        ].map(([label, value]) => (
-          <div className="panel" key={String(label)}>
-            <span>{label}</span>
-            <strong>{value === undefined ? '—' : Number(value).toLocaleString()}</strong>
-          </div>
-        ))}
-      </div>
-      <p className="crm-scope">
-        客户数按每位员工实际沟通过的客户去重，同一客户由不同员工联系会分别计入。
-        {!team && '当前仅显示你可访问的记录。'}“确认回复”不包含自动回执、退信和待确认来信。
-      </p>
-      <div className="panel crm-table-panel">
-        <div className="crm-table-scroll">
-          <table className="crm-table">
-            <thead>
-              <tr>
-                <th>员工</th>
-                <th className="crm-number">联系客户数</th>
-                <th className="crm-number">已发送 / 提交</th>
-                <th className="crm-number">确认回复</th>
-                <th className="crm-number">失败</th>
-                <th className="crm-number">待核实</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees?.map((employee) => (
-                <tr key={employee.userId || 'legacy'}>
-                  <td>
-                    {employee.name}
-                    <small>{employee.email}</small>
-                  </td>
-                  <td className="crm-number">{employee.customers}</td>
-                  <td className="crm-number">{employee.sent}</td>
-                  <td className="crm-number">{employee.replied}</td>
-                  <td className="crm-number">{employee.failed}</td>
-                  <td className="crm-number">{employee.uncertain}</td>
-                  <td>
-                    {employee.userId ? (
-                      <button className="crm-link" onClick={() => onEmployee(employee.userId!)}>
-                        查看沟通记录 →
-                      </button>
-                    ) : (
-                      '负责人未记录'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {employees === null ? (
-          <p role="status" style={{ padding: 18 }}>
-            正在读取员工统计…
-          </p>
-        ) : (
-          !employees.length && <Empty title="暂无员工沟通记录" />
-        )}
-      </div>
-    </>
-  );
-}
-
 function CustomerProfile({
   customerKey,
   principal,
   onBack,
   onCustomer,
   onRecord,
+  backLabel = '返回列表',
 }: {
   customerKey: string;
   principal: Principal;
   onBack: () => void;
   onCustomer: (key: string) => void;
   onRecord: (source: 'edm' | 'site', targetId: string) => void;
+  backLabel?: string;
 }) {
+  const scrollRestored = useRef(false);
   const [data, setData] = useState<CrmCustomerProfile | null>(null),
     [page, setPage] = useState(1),
     [revision, setRevision] = useState(0),
@@ -911,6 +940,12 @@ function CustomerProfile({
       page: number;
       pageSize: number;
     } | null>(null);
+  useEffect(() => {
+    if (data && !busy && !scrollRestored.current) {
+      scrollRestored.current = true;
+      restoreCrmScroll();
+    }
+  }, [data, busy]);
   useEffect(() => {
     const controller = new AbortController();
     setBusy(true);
@@ -976,7 +1011,7 @@ function CustomerProfile({
       <div className="crm-profile">
         <Button kind="quiet" onClick={onBack}>
           <Icon name="back" />
-          返回列表
+          {backLabel}
         </Button>
         {error ? <Notice tone="error">{error}</Notice> : <p role="status">正在读取客户资料…</p>}
       </div>
@@ -993,7 +1028,7 @@ function CustomerProfile({
     <div className="crm-profile">
       <Button kind="quiet" onClick={onBack}>
         <Icon name="back" />
-        返回列表
+        {backLabel}
       </Button>
       <header className="crm-profile-heading">
         <div>
@@ -1263,9 +1298,11 @@ function TimelineEvent({
 function CommunicationDetail({
   selection,
   onClose,
+  backLabel = '返回上一页',
 }: {
   selection: { source: 'edm' | 'site'; targetId: string };
   onClose: () => void;
+  backLabel?: string;
 }) {
   const [data, setData] = useState<CrmCommunicationDetail | null>(null),
     [error, setError] = useState('');
@@ -1278,7 +1315,10 @@ function CommunicationDetail({
       { signal: controller.signal },
     )
       .then((result) => {
-        if (!controller.signal.aborted) setData(result);
+        if (!controller.signal.aborted) {
+          setData(result);
+          restoreCrmScroll();
+        }
       })
       .catch((reason) => {
         if (!controller.signal.aborted) setError(errorMessage(reason));
@@ -1293,7 +1333,7 @@ function CommunicationDetail({
         <h2>发送内容与结果</h2>
         <Button kind="quiet" onClick={onClose}>
           <Icon name="back" />
-          返回上一页
+          {backLabel}
         </Button>
       </div>
       {error && <Notice tone="error">{error}</Notice>}

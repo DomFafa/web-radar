@@ -14,6 +14,7 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
   sqlite.exec(readFileSync('migrations/0007_outreach.sql', 'utf8'));
   sqlite.exec(readFileSync('migrations/0011_customer_inbox.sql','utf8'));
   sqlite.exec(readFileSync('migrations/0013_customer_management.sql','utf8'));
+  sqlite.exec(readFileSync('migrations/0014_crm_activity_groups.sql','utf8'));
   sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;');
   sqlite.exec(`
     INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('workspace','Test','test@example.com',0,0);

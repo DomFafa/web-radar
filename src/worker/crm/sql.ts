@@ -26,14 +26,29 @@ export function communicationQuery(p: Principal) {
       CASE WHEN s.id IS NOT NULL THEN 'captured' WHEN ir.snapshot IS NOT NULL THEN 'legacy_partial' ELSE 'unavailable' END capture_status,
       s.provider,COALESCE(s.provider_message_id,ir.provider_message_id,${edm ? 'r.ses_message_id' : 'NULL'}) provider_message_id,
       COALESCE(s.error_message,${edm ? 'r.error_message' : 'r.result_message'}) error_message,
-      t.id thread_id,t.assignee_id,${body} can_body,s.sender_email,s.sender_name,s.reply_to
+      t.id thread_id,t.assignee_id,${body} can_body,s.sender_email,s.sender_name,s.reply_to,
+      b.status business_status,strftime('%Y-%m-%dT%H:%M:%SZ',b.created_at,'unixepoch') business_created_at,
+      CASE WHEN COALESCE(s.group_snapshot_available,0)=0 THEN '__history__' WHEN s.group_id_at_send IS NULL THEN '__ungrouped__' ELSE s.group_id_at_send END activity_group_id,
+      CASE WHEN COALESCE(s.group_snapshot_available,0)=0 THEN '历史分组未记录' WHEN s.group_id_at_send IS NULL THEN '发送时未分组' ELSE COALESCE(s.group_name_at_send,'分组名称未记录') END activity_group_name,
+      CASE WHEN COALESCE(s.group_snapshot_available,0)=0 THEN 'history_unknown' WHEN s.group_id_at_send IS NULL THEN 'ungrouped' ELSE 'snapshot' END activity_group_basis,
+      ${edm ? 'CASE WHEN r.delivered_at IS NOT NULL THEN 1 ELSE 0 END' : '0'} delivered,
+      ${edm ? 'CASE WHEN r.opened_at IS NOT NULL OR r.clicked_at IS NOT NULL THEN 1 ELSE 0 END' : '0'} opened,
+      ${edm ? 'CASE WHEN r.clicked_at IS NOT NULL THEN 1 ELSE 0 END' : '0'} clicked,
+      ${edm ? "strftime('%Y-%m-%dT%H:%M:%SZ',r.delivered_at,'unixepoch')" : 'NULL'} delivered_at,
+      ${edm ? "strftime('%Y-%m-%dT%H:%M:%SZ',COALESCE(r.opened_at,r.clicked_at),'unixepoch')" : 'NULL'} opened_at,
+      ${edm ? "strftime('%Y-%m-%dT%H:%M:%SZ',r.clicked_at,'unixepoch')" : 'NULL'} clicked_at,
+      (SELECT MIN(rm.received_at) FROM wr_inbox_messages rm WHERE rm.thread_id=t.id AND rm.kind='human') replied_at,
+      COALESCE(s.engagement_tracking_available,0) engagement_available,
+      CASE WHEN COALESCE(s.engagement_tracking_available,0)=1 THEN s.engagement_tracking_source WHEN ${edm ? 'r.delivered_at IS NOT NULL OR r.opened_at IS NOT NULL OR r.clicked_at IS NOT NULL' : '0'} THEN 'recorded_event' ELSE NULL END engagement_source,
+      ${edm ? "CASE WHEN b.mailchimp_campaign_id IS NOT NULL OR s.provider='mailchimp_marketing' THEN 1 ELSE 0 END" : '0'} overall_only,
+      0 missing_engagement,s.created_at attempted_at
       FROM ${edm ? 'edm_campaign_recipients r JOIN edm_campaigns b ON b.id=r.campaign_id JOIN edm_contacts c ON c.id=r.contact_id AND c.user_id=b.user_id' : 'edm_site_message_targets r JOIN edm_site_message_jobs b ON b.id=r.job_id LEFT JOIN wr_crm_customer_links l ON l.workspace_id=b.user_id AND l.site_url=r.website_url LEFT JOIN edm_contacts c ON c.id=l.contact_id AND c.user_id=b.user_id'}
       LEFT JOIN edm_contact_groups g ON g.id=c.group_id AND g.user_id=b.user_id
       LEFT JOIN wr_members m ON m.workspace_id=b.user_id AND m.user_id=b.created_by
       LEFT JOIN wr_inbox_routes ir ON ir.workspace_id=b.user_id AND ir.source='${channel}' AND ir.target_id=r.id
       LEFT JOIN wr_inbox_threads t ON t.route_id=ir.id AND t.workspace_id=b.user_id
       LEFT JOIN wr_inbox_configs cfg ON cfg.id=t.config_id AND cfg.workspace_id=b.user_id
-      LEFT JOIN wr_crm_outbound_snapshots s ON s.id=(SELECT cs.id FROM wr_crm_outbound_snapshots cs WHERE cs.workspace_id=b.user_id AND cs.source='${channel}' AND cs.target_id=r.id ORDER BY cs.created_at DESC,cs.id DESC LIMIT 1)
+      LEFT JOIN wr_crm_outbound_snapshots s ON s.id=(SELECT cs.id FROM wr_crm_outbound_snapshots cs WHERE cs.workspace_id=b.user_id AND cs.source='${channel}' AND cs.target_id=r.id ORDER BY CASE WHEN cs.status IN ('sent','submitted') THEN 0 ELSE 1 END,cs.created_at DESC,cs.id DESC LIMIT 1)
       WHERE b.user_id=?${visible}`;
   };
   const args: unknown[] = [];
@@ -56,7 +71,14 @@ export function communicationQuery(p: Principal) {
     CASE WHEN ir.id IS NOT NULL AND COALESCE(s.provider,'')!='mailchimp_marketing' THEN 1 ELSE 0 END tracked,
     s.created_at,CASE WHEN s.status IN ('sent','submitted') THEN s.completed_at ELSE NULL END sent_at,
     MAX(COALESCE(strftime('%Y-%m-%dT%H:%M:%SZ',t.last_received_at),''),COALESCE(strftime('%Y-%m-%dT%H:%M:%SZ',s.completed_at),''),COALESCE(strftime('%Y-%m-%dT%H:%M:%SZ',s.created_at),'')) last_activity_at,
-    s.subject,s.body_text,s.body_html,'captured' capture_status,s.provider,s.provider_message_id,s.error_message,t.id thread_id,t.assignee_id,${orphanBody} can_body,s.sender_email,s.sender_name,s.reply_to
+    s.subject,s.body_text,s.body_html,'captured' capture_status,s.provider,s.provider_message_id,s.error_message,t.id thread_id,t.assignee_id,${orphanBody} can_body,s.sender_email,s.sender_name,s.reply_to,
+    NULL business_status,NULL business_created_at,
+    CASE WHEN s.group_snapshot_available=0 THEN '__history__' WHEN s.group_id_at_send IS NULL THEN '__ungrouped__' ELSE s.group_id_at_send END activity_group_id,
+    CASE WHEN s.group_snapshot_available=0 THEN '历史分组未记录' WHEN s.group_id_at_send IS NULL THEN '发送时未分组' ELSE COALESCE(s.group_name_at_send,'分组名称未记录') END activity_group_name,
+    CASE WHEN s.group_snapshot_available=0 THEN 'history_unknown' WHEN s.group_id_at_send IS NULL THEN 'ungrouped' ELSE 'snapshot' END activity_group_basis,
+    0 delivered,0 opened,0 clicked,NULL delivered_at,NULL opened_at,NULL clicked_at,
+    (SELECT MIN(rm.received_at) FROM wr_inbox_messages rm WHERE rm.thread_id=t.id AND rm.kind='human') replied_at,
+    0 engagement_available,NULL engagement_source,CASE WHEN s.provider='mailchimp_marketing' THEN 1 ELSE 0 END overall_only,1 missing_engagement,s.created_at attempted_at
     FROM wr_crm_outbound_snapshots s
     LEFT JOIN wr_crm_customer_links l ON l.workspace_id=s.workspace_id AND l.site_url=s.website_url
     LEFT JOIN edm_contacts c ON c.user_id=s.workspace_id AND c.id=COALESCE(s.contact_id,l.contact_id)
@@ -66,7 +88,7 @@ export function communicationQuery(p: Principal) {
     LEFT JOIN wr_inbox_threads t ON t.route_id=ir.id AND t.workspace_id=s.workspace_id
     LEFT JOIN wr_inbox_configs cfg ON cfg.id=t.config_id AND cfg.workspace_id=s.workspace_id
     WHERE s.workspace_id=? ${orphanVisible}
-    AND s.id=(SELECT latest.id FROM wr_crm_outbound_snapshots latest WHERE latest.workspace_id=s.workspace_id AND latest.source=s.source AND latest.target_id=s.target_id ORDER BY latest.created_at DESC,latest.id DESC LIMIT 1)
+    AND s.id=(SELECT latest.id FROM wr_crm_outbound_snapshots latest WHERE latest.workspace_id=s.workspace_id AND latest.source=s.source AND latest.target_id=s.target_id ORDER BY CASE WHEN latest.status IN ('sent','submitted') THEN 0 ELSE 1 END,latest.created_at DESC,latest.id DESC LIMIT 1)
     AND NOT EXISTS(SELECT 1 FROM edm_campaign_recipients r JOIN edm_campaigns b ON b.id=r.campaign_id JOIN edm_contacts c ON c.id=r.contact_id AND c.user_id=b.user_id WHERE s.source='edm' AND b.user_id=s.workspace_id AND r.id=s.target_id)
     AND NOT EXISTS(SELECT 1 FROM edm_site_message_targets r JOIN edm_site_message_jobs b ON b.id=r.job_id WHERE s.source='site' AND b.user_id=s.workspace_id AND r.id=s.target_id)`;
   if (!manageUsers(p)) args.push(p.userId, p.userId);

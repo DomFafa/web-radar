@@ -7,6 +7,7 @@ import { authenticate } from '../auth';
 import { ApiError, errorResponse, jsonBody } from '../http';
 import { manageUsers, viewTeamData, writeBusiness } from '../../shared/access';
 import { communicationQuery, customerQuery } from './sql';
+import { activity, activityPaging as paging, communicationFilters as filters } from './activity';
 const crm = new Hono<HonoEnv>();
 crm.onError(errorResponse);
 const fail = (status: number, message: string) => new ApiError(status, 'customer_management_error', message);
@@ -19,29 +20,18 @@ crm.use('*', async (c, next) => {
   c.set('principal', workspace ? { ...principal, workspaceId: workspace } : principal);
   await next();
 });
-function paging(url: URL) {
-  const page = Number(url.searchParams.get('page') || 1), pageSize = Number(url.searchParams.get('pageSize') || 50);
-  if (!Number.isSafeInteger(page) || page < 1 || page > 100000 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 200)
-    throw fail(400, '分页参数无效，每页最多 200 条');
-  return { page, pageSize, offset: (page - 1) * pageSize };
-}
-function filters(url: URL, alias = 'q') {
-  let sql = '1=1'; const args: unknown[] = [];
-  const search = (url.searchParams.get('search') || '').trim().slice(0, 200), owner = url.searchParams.get('ownerId'), channel = url.searchParams.get('channel');
-  if (search) { sql += ` AND (instr(lower(COALESCE(${alias}.customer_label,'')),lower(?))>0 OR instr(lower(COALESCE(${alias}.email,'')),lower(?))>0 OR instr(lower(COALESCE(${alias}.website,'')),lower(?))>0 OR instr(lower(${alias}.business_name),lower(?))>0 OR instr(lower(COALESCE(${alias}.company,'')),lower(?))>0 OR instr(lower(COALESCE(${alias}.subject,'')),lower(?))>0)`; args.push(search, search, search, search, search, search); }
-  if (owner === '__legacy__') sql += ` AND ${alias}.owner_id IS NULL`;
-  else if (owner) { sql += ` AND ${alias}.owner_id=?`; args.push(owner); }
-  if (channel) { if (!['edm', 'site'].includes(channel)) throw fail(400, '渠道参数无效'); sql += ` AND ${alias}.source=?`; args.push(channel); }
-  const group = url.searchParams.get('groupId');
-  if (group) { sql += ` AND ${alias}.group_id=?`; args.push(group); }
-  return { sql, args };
-}
+crm.route('/activity', activity);
 function communication(r: any, withBody = false): CrmCommunication {
   return { id: `${r.source}:${r.target_id}`, source: r.source, targetId: r.target_id, businessId: r.business_id,
     businessName: r.business_name, customerKey: r.customer_key, customerLabel: r.customer_label,
     contactId: r.contact_id, email: r.email, website: r.website, ownerId: r.owner_id, ownerName: r.owner_name,
     subject: r.subject, status: r.status, sent: r.sent, replied: r.replied, failed: r.failed, uncertain: r.uncertain, tracked: !!r.tracked,
     createdAt: r.created_at, sentAt: r.sent_at, captureStatus: r.capture_status,
+    activityGroupId: r.activity_group_id, activityGroupName: r.activity_group_name, activityGroupBasis: r.activity_group_basis,
+    delivered: r.delivered, opened: r.opened, clicked: r.clicked,
+    deliveredAt: r.delivered_at, openedAt: r.opened_at, clickedAt: r.clicked_at, repliedAt: r.replied_at,
+    engagementCoverage: r.source === 'site' ? 'not_applicable' : r.overall_only ? 'overall_only' : r.engagement_available && !r.missing_engagement ? 'full' : r.opened || r.clicked || r.delivered ? 'observed' : 'unknown',
+    engagementSource: r.engagement_source,
     ...(withBody ? { bodyText: r.can_body ? r.body_text : null, bodyHtml: r.can_body ? r.body_html : null,
       provider: r.provider, providerMessageId: r.provider_message_id, errorMessage: r.error_message,
       senderEmail: r.sender_email, senderName: r.sender_name, replyTo: r.reply_to } : {}) };
@@ -86,7 +76,7 @@ crm.get('/communications', async c => {
   const q = communicationQuery(c.get('principal')), url = new URL(c.req.url), f = filters(url), pagination = paging(url);
   const [total, rows] = await Promise.all([
     c.env.DB.prepare(`${q.sql} SELECT COUNT(*) n FROM communication q WHERE ${f.sql}`).bind(...q.args, ...f.args).first<{ n: number }>(),
-    c.env.DB.prepare(`${q.sql} SELECT source,target_id,business_id,business_name,customer_key,customer_label,contact_id,email,website,owner_id,owner_name,subject,status,sent,replied,failed,uncertain,tracked,created_at,sent_at,capture_status FROM communication q WHERE ${f.sql} ORDER BY q.last_activity_at DESC,q.source,q.target_id LIMIT ? OFFSET ?`).bind(...q.args, ...f.args, pagination.pageSize, pagination.offset).all(),
+    c.env.DB.prepare(`${q.sql} SELECT source,target_id,business_id,business_name,customer_key,customer_label,contact_id,email,website,owner_id,owner_name,subject,status,sent,replied,failed,uncertain,tracked,created_at,sent_at,capture_status,activity_group_id,activity_group_name,activity_group_basis,delivered,opened,clicked,delivered_at,opened_at,clicked_at,replied_at,overall_only,engagement_available,missing_engagement,engagement_source FROM communication q WHERE ${f.sql} ORDER BY q.last_activity_at DESC,q.source,q.target_id LIMIT ? OFFSET ?`).bind(...q.args, ...f.args, pagination.pageSize, pagination.offset).all(),
   ]);
   return c.json({ records: rows.results.map(r => communication(r)), total: total?.n || 0, page: pagination.page, pageSize: pagination.pageSize });
 });
@@ -96,10 +86,10 @@ crm.get('/communications/export', async c => {
   const csv = (value: unknown) => { let s = String(value ?? ''); if (/^\s*[=+@-]|^[\t\r\n]/.test(s)) s = "'" + s; return '"' + s.replaceAll('"', '""') + '"'; };
   const stream = new ReadableStream({ async pull(controller) {
     try {
-      if (header) { controller.enqueue(encode.encode('\uFEFF渠道,客户,收件邮箱,目标网站,负责人,任务,主题,状态,已发送,人工回复,发送时间,内容记录\r\n')); header = false; }
-      const rows = await c.env.DB.prepare(`${q.sql} SELECT source,customer_label,email,website,owner_name,owner_id,business_name,subject,status,sent,replied,sent_at,capture_status FROM communication q WHERE ${f.sql} ORDER BY q.source,q.target_id LIMIT 200 OFFSET ?`).bind(...q.args, ...f.args, offset).all();
+      if (header) { controller.enqueue(encode.encode('\uFEFF渠道,客户,收件邮箱,目标网站,负责人,任务,主题,状态,已发送,人工回复,发送时间,内容记录,发送时分组,分组记录,已打开,已点击,打开时间,点击时间,回复时间\r\n')); header = false; }
+      const rows = await c.env.DB.prepare(`${q.sql} SELECT source,customer_label,email,website,owner_name,owner_id,business_name,subject,status,sent,replied,sent_at,capture_status,activity_group_name,activity_group_basis,opened,clicked,opened_at,clicked_at,replied_at FROM communication q WHERE ${f.sql} ORDER BY q.source,q.target_id LIMIT 200 OFFSET ?`).bind(...q.args, ...f.args, offset).all();
       if (!rows.results.length) { controller.close(); return; }
-      controller.enqueue(encode.encode(rows.results.map((r: any) => [r.source, r.customer_label, r.email, r.website, r.owner_name || r.owner_id, r.business_name, r.subject, r.status, r.sent, r.replied, r.sent_at, r.capture_status].map(csv).join(',')).join('\r\n') + '\r\n'));
+      controller.enqueue(encode.encode(rows.results.map((r: any) => [r.source, r.customer_label, r.email, r.website, r.owner_name || r.owner_id, r.business_name, r.subject, r.status, r.sent, r.replied, r.sent_at, r.capture_status, r.activity_group_name, r.activity_group_basis, r.opened, r.clicked, r.opened_at, r.clicked_at, r.replied_at].map(csv).join(',')).join('\r\n') + '\r\n'));
       offset += rows.results.length;
     } catch (error) { controller.error(error); }
   } });

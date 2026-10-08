@@ -10,7 +10,7 @@ let sqlite: DatabaseSync;
 let env: any;
 beforeEach(async () => {
   sqlite = new DatabaseSync(':memory:');
-  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0013_customer_management.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
+  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
   sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;');
   env = { DB: d1(sqlite), CREDENTIAL_KEY: 'test-key', BETTER_AUTH_SECRET: 'test-secret', BETTER_AUTH_URL: 'https://app.example.test' };
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('workspace','Test','test@example.com',0,0);

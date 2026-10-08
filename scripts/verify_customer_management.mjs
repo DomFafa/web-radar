@@ -19,14 +19,20 @@ const started = performance.now(),
   forbidden = [];
 const sourceInputs = [
   'src/client/CustomerManagement.tsx',
+  'src/client/CrmActivity.tsx',
   'src/client/customer-management.css',
   'src/client/App.tsx',
   'src/client/CustomerInbox.tsx',
   'src/shared/crm.ts',
   'src/worker/crm/api.ts',
   'src/worker/crm/sql.ts',
+  'src/worker/crm/activity.ts',
+  'src/worker/crm/capture.ts',
+  'migrations/0014_crm_activity_groups.sql',
   'src/outreach/client/pages/SendingCenterPage.tsx',
   'src/outreach/client/lib/crm-email-handoff.ts',
+  'src/outreach/server/queues/email-send.queue.ts',
+  'src/outreach/server/routes/campaign.routes.ts',
   'scripts/verify_customer_management.mjs',
 ];
 const hashes = async () =>
@@ -146,6 +152,13 @@ try {
     INSERT INTO edm_site_message_targets(id,job_id,website_url,normalized_host,status,completed_at,created_at,updated_at) VALUES('crm-target','crm-job','https://client.example/','client.example','submitted',${epoch},${epoch},${epoch});
     INSERT INTO wr_inbox_routes(id,config_id,workspace_id,owner_id,source,business_id,target_id,address,original_email,subject,snapshot,created_at) VALUES('crm-route',${quote(config.id)},'test-workspace','test-admin','edm','crm-campaign-admin','crm-recipient-admin',${quote(address)},'buyer@client.example','Legacy route subject','Legacy route partial content',${quote(now)});
     INSERT INTO wr_crm_outbound_snapshots(id,workspace_id,owner_id,source,business_id,target_id,attempt_id,contact_id,subject,body_html,body_text,provider,status,provider_message_id,created_at,completed_at,recipient_email,sender_email,sender_name,reply_to) VALUES('crm-snapshot','test-workspace','test-admin','edm','crm-campaign-admin','crm-recipient-admin','crm-attempt','crm-contact','ACTUAL FIRST OFFER',${quote(exactHtml)},'10 complete sets, price USD 20.','resend','sent','fixture-provider-receipt',${quote(now)},${quote(now)},'buyer@client.example','sales@work.example','Sales',${quote(address)});
+    INSERT INTO edm_contact_groups(id,user_id,name,contact_count,created_at,updated_at) VALUES('crm-group-two','test-workspace','CRM 第二分组',11,${epoch},${epoch});
+    UPDATE wr_crm_outbound_snapshots SET group_id_at_send='crm-group',group_name_at_send='CRM 验收分组',group_snapshot_available=1,engagement_tracking_available=1,engagement_tracking_source='resend' WHERE id='crm-snapshot';
+    WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<51)
+      INSERT INTO wr_crm_outbound_snapshots(id,workspace_id,owner_id,source,business_id,target_id,attempt_id,contact_id,subject,body_text,provider,status,created_at,completed_at,recipient_email,group_id_at_send,group_name_at_send,group_snapshot_available,engagement_tracking_available,engagement_tracking_source)
+      SELECT 'crm-fill-snapshot-'||x,'test-workspace','test-admin','edm','crm-campaign-admin','crm-rec-fill-'||printf('%03d',x),'fixture', 'crm-fill-'||printf('%03d',x),'Fixture customer offer','One shared offer','resend','sent',${quote(now)},${quote(now)},'filler'||x||'@client.example',CASE WHEN x<=50 THEN 'crm-group' ELSE 'crm-group-two' END,CASE WHEN x<=50 THEN 'CRM 验收分组' ELSE 'CRM 第二分组' END,1,1,'resend' FROM n;
+    UPDATE edm_campaign_recipients SET opened_at=${epoch},clicked_at=${epoch} WHERE id='crm-recipient-admin' OR id BETWEEN 'crm-rec-fill-001' AND 'crm-rec-fill-020';
+    UPDATE edm_campaign_recipients SET opened_at=${epoch} WHERE id BETWEEN 'crm-rec-fill-021' AND 'crm-rec-fill-040';
     UPDATE wr_members SET role='analyst' WHERE user_id='test-member';
   `;
   const seedFile = output + '/seed.sql';
@@ -249,8 +262,10 @@ try {
     await expect(
       navigation.getByRole('button', { name: '客户管理系统', exact: true }),
     ).toHaveAttribute('aria-current', 'page');
-    for (const tab of ['客户名单', '沟通记录', '客户回复', '员工汇总'])
+    for (const tab of ['员工活动', '客户资料', '全部沟通记录', '客户回复'])
       await expect(page.getByRole('tab', { name: tab, exact: true })).toBeVisible();
+    await expect(page.getByRole('tab', { name: '员工活动', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('tab', { name: '客户资料', exact: true }).click();
     await expect(page.locator('.crm-table tbody tr')).toHaveCount(50);
     await expect(page.getByText('共 54 条 · 第 1 / 2 页', { exact: true })).toBeVisible();
     await shot('crm-customers-desktop.png');
@@ -284,9 +299,7 @@ try {
       page.locator('.crm-note').filter({ hasText: 'Discuss the customer request tomorrow.' }),
     ).toContainText('已完成');
     await page.reload();
-    await page.getByLabel('搜索客户', { exact: true }).fill('CRM Buyer');
-    await page.getByRole('button', { name: '搜索', exact: true }).click();
-    await page.getByRole('button', { name: 'CRM Buyer', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '客户沟通时间线', exact: true })).toBeVisible();
     await expect(
       page.locator('.crm-note').filter({ hasText: 'Discuss the customer request tomorrow.' }),
     ).toContainText('已完成');
@@ -336,7 +349,7 @@ try {
       page.getByText('Please send the quotation for 200 units.', { exact: true }),
     ).toBeVisible();
     cases.push({ name: 'reply tab, direct thread and reload', passed: true });
-    await page.getByRole('tab', { name: '客户名单', exact: true }).click();
+    await page.getByRole('tab', { name: '客户资料', exact: true }).click();
     await page.getByLabel('搜索客户', { exact: true }).fill('client.example');
     await page.getByRole('button', { name: '搜索', exact: true }).click();
     await page.getByRole('button', { name: 'https://client.example/', exact: true }).click();
@@ -354,18 +367,15 @@ try {
     await page.getByRole('button', { name: '确认关联', exact: true }).click();
     assert.equal((await linkResponse).status(), 200);
     assert.equal(siteLinkPutCount, 1, 'Explicit confirmation must associate exactly once');
-    await page.getByRole('tab', { name: '客户名单', exact: true }).click();
+    await page.getByRole('tab', { name: '客户资料', exact: true }).click();
     await page.getByLabel('搜索客户', { exact: true }).fill('CRM Buyer');
     await page.getByRole('button', { name: '搜索', exact: true }).click();
     await page.getByRole('button', { name: 'CRM Buyer', exact: true }).click();
     await expect(page.locator('.crm-timeline')).toContainText('站内信发送');
     assert.equal((await getJson(admin, '/api/crm/customers')).total, 53);
     cases.push({ name: 'explicit site to contact association unifies two channels', passed: true });
-    await page.getByRole('tab', { name: '员工汇总', exact: true }).click();
-    await expect(page.getByRole('columnheader', { name: '联系客户数', exact: true })).toBeVisible();
-    const ownerRow = page.locator('.crm-table tbody tr').filter({ hasText: '项目创建者' });
-    await ownerRow.getByRole('button', { name: '查看沟通记录 →', exact: true }).click();
-    await expect(page.getByLabel('员工', { exact: true })).toHaveValue('test-owner');
+    await page.getByRole('tab', { name: '全部沟通记录', exact: true }).click();
+    await page.getByLabel('员工', { exact: true }).selectOption('test-owner');
     await expect(page.locator('.crm-table tbody tr')).toHaveCount(1);
     await page.getByLabel('员工', { exact: true }).selectOption('');
     await expect(page.locator('.crm-table tbody tr')).toHaveCount(50);
@@ -382,7 +392,7 @@ try {
       exportedRecords: 55,
     });
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('tab', { name: '客户名单', exact: true }).click();
+    await page.getByRole('tab', { name: '客户资料', exact: true }).click();
     await expect(page.getByRole('heading', { name: '客户管理系统', exact: true })).toBeVisible();
     await shot('crm-customers-mobile.png');
     assert.equal(
@@ -390,25 +400,21 @@ try {
       false,
     );
     await checkMobileTable('crm-customers-mobile-table.png');
-    await page.getByRole('tab', { name: '沟通记录', exact: true }).click();
+    await page.getByRole('tab', { name: '全部沟通记录', exact: true }).click();
     await expect(page.locator('.crm-table tbody tr')).toHaveCount(50);
     await checkMobileTable('crm-communications-mobile-table.png');
-    await page.getByRole('tab', { name: '员工汇总', exact: true }).click();
-    await expect(page.getByRole('columnheader', { name: '联系客户数', exact: true })).toBeVisible();
-    const employeeData = await getJson(admin, '/api/crm/employees');
+    await page.getByRole('tab', { name: '员工活动', exact: true }).click();
+    const employeeData = await getJson(admin, '/api/crm/activity/employees');
     assert.deepEqual(employeeData.employees.map((employee) => employee.userId).sort(), [
-      'test-admin',
-      'test-member',
-      'test-owner',
+      'test-admin', 'test-member', 'test-owner',
     ]);
-    const inactiveEmployee = employeeData.employees.find(
-      (employee) => employee.userId === 'test-member',
-    );
+    const inactiveEmployee = employeeData.employees.find(employee => employee.userId === 'test-member');
     assert.equal(inactiveEmployee.sent, 0);
     assert.equal(inactiveEmployee.customers, 0);
     await expect(page.locator('.crm-table tbody tr')).toHaveCount(employeeData.employees.length);
-    await checkMobileTable('crm-employees-mobile-table.png');
-    await page.getByRole('tab', { name: '客户名单', exact: true }).click();
+    await shot('crm-employees-mobile.png');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+    await page.getByRole('tab', { name: '客户资料', exact: true }).click();
     await page.getByLabel('搜索客户', { exact: true }).fill('CRM Buyer');
     await page.getByRole('button', { name: '搜索', exact: true }).click();
     await page.getByRole('button', { name: 'CRM Buyer', exact: true }).click();
@@ -475,6 +481,77 @@ try {
       passed: true,
     });
   });
+  await stage('activityBrowserMs', async () => {
+    await page.goto(origin + '/?view=crm');
+    await expect(page.getByRole('tab', { name: '员工活动', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('button', { name: '工作区管理员', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'CRM 验收分组', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'CRM 第二分组', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '历史分组未记录', exact: true })).toBeVisible();
+    await shot('crm-activity-groups-desktop.png');
+    await page.getByRole('button', { name: 'CRM 验收分组', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Admin customer offer', exact: true })).toBeVisible();
+    await shot('crm-activity-batches-desktop.png');
+    await page.getByRole('button', { name: 'Admin customer offer', exact: true }).click();
+    const scope = '/api/crm/activity/batches/edm/crm-campaign-admin?ownerId=test-admin&activityGroupId=crm-group';
+    const detail = await getJson(admin, scope);
+    assert.equal(detail.batch.sent, 51);
+    assert.equal(detail.batch.opened.value, 41);
+    assert.equal(detail.batch.clicked.value, 21);
+    assert.equal(detail.batch.replied.value, 1);
+    assert.equal(detail.batch.opened.coverage, 'full');
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(50);
+    await page.getByRole('button', { name: '下一页', exact: true }).click();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(1);
+    const secondPageUrl = page.url();
+    await page.reload();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(1);
+    assert.equal(page.url(), secondPageUrl);
+    await page.locator('[data-metric="opened"]').click();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(41);
+    await expect(page.locator('.crm-activity-records')).toContainText('CRM Buyer');
+    const openedUrl = page.url();
+    await page.locator('[data-metric="clicked"]').click();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(21);
+    await expect(page.locator('.crm-activity-records')).toContainText('CRM Buyer');
+    await page.goBack();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(41);
+    assert.equal(page.url(), openedUrl);
+    await page.reload();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(41);
+    await shot('crm-activity-opened-desktop.png');
+    await page.getByRole('button', { name: 'CRM Buyer', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '客户沟通时间线', exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('heading', { name: '客户沟通时间线', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: '返回效果与客户', exact: true }).click();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(41);
+    await page.locator('[data-metric="replied"]').click();
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(1);
+    await expect(page.locator('.crm-activity-records')).toContainText('CRM Buyer');
+    const downloadEvent = page.waitForEvent('download');
+    await page.getByRole('button', { name: /导出/ }).click();
+    const download = await downloadEvent;
+    const csvFile = output + '/activity-replied.csv';
+    await download.saveAs(csvFile);
+    const csv = await readFile(csvFile, 'utf8');
+    assert.equal(csv.trim().split('\r\n').length, 2);
+    assert.ok(csv.includes('buyer@client.example'));
+    assert.ok(!csv.includes('filler1@client.example'));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(1);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+    await shot('crm-activity-detail-mobile.png');
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(origin + '/?view=crm&crmTab=activity&crmOwner=test-admin&crmGroup=__history__&crmSource=site&crmBatch=crm-job');
+    await expect(page.locator('[data-metric="opened"]')).toBeDisabled();
+    await expect(page.locator('[data-metric="clicked"]')).toBeDisabled();
+    await expect(page.locator('[data-metric="opened"]')).toContainText('不适用');
+    await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(1);
+    await shot('crm-activity-site-desktop.png');
+    cases.push({ name: 'employee → send-time group → activity → independently filtered customer metrics', passed: true, groupRecipients: 51, openedRecipients: 41, clickedRecipients: 21, repliedRecipients: 1 });
+    cases.push({ name: 'scoped pagination, export, profile reload, browser back and mobile, site engagement inapplicable', passed: true });
+  });
   const ownerRecords = await getJson(owner, '/api/crm/communications');
   assert.equal(ownerRecords.total, 1);
   assert.equal(ownerRecords.records[0].targetId, 'crm-recipient-owner');
@@ -483,7 +560,7 @@ try {
     404,
   );
   const ownerPage = await owner.newPage();
-  await ownerPage.goto(origin + '/?view=crm');
+  await ownerPage.goto(origin + '/?view=crm&crmTab=customers');
   await ownerPage.getByLabel('搜索客户', { exact: true }).fill('Untouched Buyer');
   await ownerPage.getByRole('button', { name: '搜索', exact: true }).click();
   await ownerPage.getByRole('button', { name: 'Untouched Buyer', exact: true }).click();

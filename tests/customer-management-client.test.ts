@@ -8,6 +8,7 @@ import CustomerManagement, {
   auditActionLabel,
   trackingStatus,
   timelineParticipantLabel,
+  crmTabFromSearch,
 } from '../src/client/CustomerManagement';
 
 const principal: Principal = {
@@ -22,21 +23,22 @@ const principal: Principal = {
   systemRole: 'user',
 };
 
-test('CRM shows the four distinct activities and direct contact management actions', () => {
+test('CRM starts from staff activities and keeps customer data and replies as auxiliary entries', () => {
   const html = renderToStaticMarkup(
     React.createElement(CustomerManagement, { principal, onManageContacts() {} }),
   );
-  for (const text of [
-    '客户管理系统',
-    '客户名单',
-    '沟通记录',
-    '客户回复',
-    '员工汇总',
-    '导入客户',
-    '管理分组',
-  ])
+  for (const text of ['客户管理系统', '客户资料', '全部沟通记录', '客户回复', '员工活动'])
     expect(html).toContain(text);
   expect(html).not.toContain('暂无客户');
+  expect(html).not.toContain('导入客户');
+  expect(html).toContain('id="crm-tab-activity"');
+});
+
+test('legacy staff tab enters activities while explicit customer and reply deep links remain available', () => {
+  expect(crmTabFromSearch('')).toBe('activity');
+  expect(crmTabFromSearch('?crmTab=employees')).toBe('activity');
+  expect(crmTabFromSearch('?crmTab=customers')).toBe('customers');
+  expect(crmTabFromSearch('?crmTab=replies')).toBe('replies');
 });
 
 test('customer audit uses readable actions without exposing raw identity or payload', () => {

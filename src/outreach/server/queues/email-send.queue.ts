@@ -32,6 +32,7 @@ export interface EmailSendMessage {
   recipientId: string;
   campaignId: string;
   providerId?: string;
+  engagementTrackingSource?: 'resend';
   toEmail: string;
   toName: string | null;
   fromEmail: string;
@@ -946,6 +947,7 @@ export async function handleEmailQueue(
               businessId: message.campaignId, targetId: message.recipientId, attemptId: snapshotAttemptId,
               recipientEmail: message.toEmail, senderEmail: message.fromEmail, senderName: message.fromName, replyTo: message.replyTo,
               contactId: recipient.contactId, subject, bodyHtml, bodyText, provider: provider.provider,
+              engagementTrackingSource: provider.provider === 'resend' ? message.engagementTrackingSource : undefined,
             });
             dispatchStarted = true;
           };

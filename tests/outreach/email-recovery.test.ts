@@ -13,6 +13,7 @@ test("recovery skips sent mail, reconciles provider records, quarantines unknown
   sqlite.exec(readFileSync("migrations/0011_customer_inbox.sql","utf8"));
   for(const file of ['0008_resend_tracking.sql','0009_email_scheduling.sql']) sqlite.exec(readFileSync('migrations/'+file,'utf8'));
   sqlite.exec(readFileSync('migrations/0013_customer_management.sql','utf8'));
+  sqlite.exec(readFileSync('migrations/0014_crm_activity_groups.sql','utf8'));
   sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;');
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','test','u@example.com',0,0);
     INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at) VALUES ('p','u','mailchimp','test','fake-key',1,0,0);
