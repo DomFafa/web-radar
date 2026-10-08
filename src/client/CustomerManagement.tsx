@@ -480,11 +480,12 @@ export default function CustomerManagement({
     set(value);
     setPage(1);
   }
-  async function exportCommunications() {
+  async function exportCommunications(explicitParameters?: URLSearchParams) {
     setExporting(true);
     setError('');
     try {
-      const parameters = new URLSearchParams({ search: query, ownerId, channel, groupId });
+      const parameters =
+        explicitParameters || new URLSearchParams({ search: query, ownerId, channel, groupId });
       const response = await fetch(scoped('/api/crm/communications/export?' + parameters), {
         headers: sessionHeaders(),
         cache: 'no-store',
@@ -646,6 +647,8 @@ export default function CustomerManagement({
             revision={revision}
             onCustomer={selectCustomer}
             onRecord={selectRecord}
+            onExport={exportCommunications}
+            exporting={exporting}
             statusLabel={communicationStatus}
           />
         ) : (
@@ -744,7 +747,11 @@ export default function CustomerManagement({
                     <span className="muted">
                       点击主题查看发送当时的内容；导出包含当前筛选的全部记录。
                     </span>
-                    <Button disabled={exporting} busy={exporting} onClick={exportCommunications}>
+                    <Button
+                      disabled={exporting}
+                      busy={exporting}
+                      onClick={() => exportCommunications()}
+                    >
                       <Icon name="down" />
                       导出全部记录
                     </Button>

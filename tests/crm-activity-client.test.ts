@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import {
   activityLevel,
   activityMetricText,
+  activityRecordParams,
   activityUrl,
   parseActivityRoute,
   crmScrollKey,
@@ -93,4 +94,23 @@ test('staff lookup remains separate from activity search and survives entry and 
   expect(url.searchParams.get('crmStaffSearch')).toBe('Owner');
   expect(url.searchParams.has('crmSearch')).toBe(false);
   expect(group.staffPage).toBe(2);
+});
+
+test('activity download keeps the selected recipient scope without limiting it to one page', () => {
+  const route = parseActivityRoute(
+    '?crmOwner=staff-a&crmGroup=group-a&crmBatch=campaign-a&crmSource=edm&crmChannel=site&crmMetric=replied&crmSearch=invoice&crmStaffSearch=Other&crmFrom=2026-10-01&crmTo=2026-10-08&crmPage=3',
+  );
+  const parameters = activityRecordParams(route);
+  expect(Object.fromEntries(parameters)).toEqual({
+    ownerId: 'staff-a',
+    activityGroupId: 'group-a',
+    channel: 'edm',
+    search: 'invoice',
+    from: new Date('2026-10-01T00:00:00').toISOString(),
+    to: new Date('2026-10-08T23:59:59.999').toISOString(),
+    businessId: 'campaign-a',
+    metric: 'replied',
+  });
+  expect(parameters.has('page')).toBe(false);
+  expect(parameters.has('pageSize')).toBe(false);
 });

@@ -93,6 +93,24 @@ export function parseActivityRoute(search: string): ActivityRoute {
 export function activityLevel(route: ActivityRoute) {
   return !route.owner ? 'employees' : !route.group ? 'groups' : !route.batch ? 'batches' : 'detail';
 }
+function activityFilterParams(route: ActivityRoute) {
+  const parameters = new URLSearchParams({
+    ownerId: route.owner,
+    activityGroupId: route.group,
+    channel: route.channel,
+    search: route.search,
+  });
+  if (route.from) parameters.set('from', new Date(route.from + 'T00:00:00').toISOString());
+  if (route.to) parameters.set('to', new Date(route.to + 'T23:59:59.999').toISOString());
+  return parameters;
+}
+export function activityRecordParams(route: ActivityRoute) {
+  const parameters = activityFilterParams(route);
+  parameters.set('businessId', route.batch);
+  parameters.set('channel', route.source);
+  parameters.set('metric', route.metric);
+  return parameters;
+}
 export function activityUrl(route: ActivityRoute, href: string): URL {
   const url = new URL(href);
   url.searchParams.set('view', 'crm');
@@ -196,12 +214,16 @@ export default function CrmActivity({
   revision,
   onCustomer,
   onRecord,
+  onExport,
+  exporting,
   statusLabel,
 }: {
   request?: typeof api;
   revision: number;
   onCustomer: (key: string) => void;
   onRecord: (source: 'edm' | 'site', targetId: string) => void;
+  onExport: (parameters: URLSearchParams) => Promise<void>;
+  exporting: boolean;
   statusLabel: (status: string) => string;
 }) {
   const [route, setRoute] = useState(currentRoute),
@@ -255,15 +277,9 @@ export default function CrmActivity({
     const controller = new AbortController();
     setBusy(true);
     setError('');
-    const params = new URLSearchParams({
-      ownerId: route.owner,
-      activityGroupId: route.group,
-      channel: route.channel,
-      search: level === 'employees' ? route.staffSearch : route.search,
-      pageSize: '50',
-    });
-    if (route.from) params.set('from', new Date(route.from + 'T00:00:00').toISOString());
-    if (route.to) params.set('to', new Date(route.to + 'T23:59:59.999').toISOString());
+    const params = activityFilterParams(route);
+    if (level === 'employees') params.set('search', route.staffSearch);
+    params.set('pageSize', '50');
     const options = { signal: controller.signal };
     let task: Promise<void>;
     if (level === 'employees') {
@@ -289,17 +305,15 @@ export default function CrmActivity({
         },
       );
     } else {
-      const detailParams = new URLSearchParams(params);
-      params.set('businessId', route.batch);
-      params.set('channel', route.source);
-      params.set('metric', route.metric);
-      params.set('page', String(route.page));
+      const recordParams = activityRecordParams(route);
+      recordParams.set('page', String(route.page));
+      recordParams.set('pageSize', '50');
       task = Promise.all([
         request<CrmActivityBatchDetail>(
-          `/api/crm/activity/batches/${route.source}/${encodeURIComponent(route.batch)}?${detailParams}`,
+          `/api/crm/activity/batches/${route.source}/${encodeURIComponent(route.batch)}?${params}`,
           options,
         ),
-        request<CrmCommunicationPage>('/api/crm/communications?' + params, options),
+        request<CrmCommunicationPage>('/api/crm/communications?' + recordParams, options),
       ]).then(([nextDetail, nextRecords]) => {
         if (!controller.signal.aborted) {
           setDetail(nextDetail);
@@ -560,6 +574,19 @@ export default function CrmActivity({
         </>
       )}
       <div className={`panel crm-table-panel ${level === 'detail' ? 'crm-activity-records' : ''}`}>
+        {level === 'detail' && (
+          <div className="crm-section-heading" style={{ padding: 18 }}>
+            <h3>{metrics.find(([key]) => key === route.metric)?.[1]}名单</h3>
+            <Button
+              type="button"
+              disabled={!ready || exporting}
+              busy={exporting}
+              onClick={() => onExport(activityRecordParams(route))}
+            >
+              下载当前名单
+            </Button>
+          </div>
+        )}
         <div className="crm-table-scroll">
           <table className="crm-table">
             <thead>

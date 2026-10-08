@@ -376,6 +376,8 @@ try {
     assert.equal((await getJson(admin, '/api/crm/customers')).total, 53);
     cases.push({ name: 'explicit site to contact association unifies two channels', passed: true });
     await page.getByRole('tab', { name: '全部沟通记录', exact: true }).click();
+    await page.getByLabel('搜索沟通记录', { exact: true }).fill('');
+    await page.getByRole('button', { name: '搜索', exact: true }).click();
     await page.getByLabel('员工', { exact: true }).selectOption('test-owner');
     await expect(page.locator('.crm-table tbody tr')).toHaveCount(1);
     await page.getByLabel('员工', { exact: true }).selectOption('');
@@ -531,7 +533,7 @@ try {
     await expect(page.locator('.crm-activity-records tbody tr')).toHaveCount(1);
     await expect(page.locator('.crm-activity-records')).toContainText('CRM Buyer');
     const downloadEvent = page.waitForEvent('download');
-    await page.getByRole('button', { name: /导出/ }).click();
+    await page.getByRole('button', { name: '下载当前名单', exact: true }).click();
     const download = await downloadEvent;
     const csvFile = output + '/activity-replied.csv';
     await download.saveAs(csvFile);
