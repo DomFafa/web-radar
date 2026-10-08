@@ -106,7 +106,7 @@ export default {
         stage = 'fetch';
         const response = await fetch(t.endpoint, {
           method: 'POST',
-          redirect: 'error',
+          redirect: 'manual',
           headers: {
             'Content-Type': 'message/rfc822',
             'X-Inbox-To': to,

@@ -56,6 +56,7 @@ it('same-domain traffic goes only to its originating instance and is signed', as
     retry = vi.fn();
   await gateway.queue({ messages: [{ body: jobs[0], ack, retry, attempts: 1 }] } as any, env);
   expect(fetch.mock.calls[0][0]).toBe('https://server.example/api/inbox/receive/b');
+  expect(fetch.mock.calls[0][1]?.redirect).toBe('manual');
   expect((fetch.mock.calls[0][1]?.headers as any)['X-Inbox-Forward-To']).toBe('sales@example.com');
   expect((fetch.mock.calls[0][1]?.headers as any)['X-Inbox-Signature']).toHaveLength(64);
   expect(ack).toHaveBeenCalledOnce();
@@ -130,5 +131,17 @@ it('logs only the HTTP status for rejected ingestion without logging the respons
   await gateway.queue({ messages: [{ body: jobs[0], ack, retry, attempts: 1 }] } as any, env);
   expect(log).toHaveBeenCalledWith('Inbox delivery retry', { stage: 'fetch', name: 'Error', code: undefined, status: 401, attempt: 1 });
   expect(JSON.stringify(log.mock.calls)).not.toMatch(/key-a|customer@example\.org|private message/);
+  expect(ack).not.toHaveBeenCalled(); expect(retry).toHaveBeenCalledWith({ delaySeconds: 120 }); expect(objects.size).toBe(1);
+});
+it('does not follow an ingestion redirect or acknowledge the retained message', async () => {
+  const { env, jobs, objects } = fixture();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  await gateway.email(mail('sales@reply.example.com'), env);
+  const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 302, headers: { Location: 'https://untrusted.example/inbox' } }));
+  const ack = vi.fn(), retry = vi.fn();
+  await gateway.queue({ messages: [{ body: jobs[0], ack, retry, attempts: 1 }] } as any, env);
+  expect(fetch).toHaveBeenCalledOnce();
+  expect(fetch.mock.calls[0][0]).toBe('https://cloud.example/api/inbox/receive/a');
+  expect(fetch.mock.calls[0][1]?.redirect).toBe('manual');
   expect(ack).not.toHaveBeenCalled(); expect(retry).toHaveBeenCalledWith({ delaySeconds: 120 }); expect(objects.size).toBe(1);
 });
