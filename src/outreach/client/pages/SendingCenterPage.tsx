@@ -21,7 +21,7 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
   const { user } = useAuth();
   if (!user || !['admin', 'member'].includes(user.role)) return <p className="notice">当前角色为只读，可在发送记录中查看进度和下载报表。</p>;
   const key = draftStorageKey(user.id, user.actorId);
-  const crmContactId = new URL(location.href).searchParams.get('crmContactId') || '';
+  const crmContactId = typeof window === 'undefined' ? '' : new URL(window.location.href).searchParams.get('crmContactId') || '';
   const replyKey = crmContactId ? crmDraftKey(key, crmContactId) : key;
   return <SendingWizard key={replyKey} draftKey={replyKey} crmContactId={crmContactId} isAdmin={user.role === 'admin'} onNavigate={onNavigate} />;
 }

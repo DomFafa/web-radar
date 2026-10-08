@@ -35,7 +35,7 @@ test('configured inbox does not claim tracking for an opted-out draft, and the a
   const html = preview(readySession());
   expect(html).toContain('<dt>邮件回复</dt><dd>回复至 replies@example.com</dd>');
   expect(html).toContain('<dt>留言回复</dt><dd>回复至 seller@example.com</dd>');
-  expect(html).not.toContain('本次回复将汇入客户收件箱');
+  expect(html).not.toContain('本次回复将汇入客户管理系统的客户回复');
 });
 
 test('each channel needs both its own tracking choice and its own enabled inbox configuration', () => {
@@ -43,11 +43,11 @@ test('each channel needs both its own tracking choice and its own enabled inbox 
   session.draft.email.replyTracking = true;
   session.draft.site.replyTracking = true;
   const emailOnly = preview(session, { ...options, replyTracking: { enabled: true, email: true, site: false } });
-  expect(emailOnly).toContain('<dt>邮件回复</dt><dd>本次回复将汇入客户收件箱</dd>');
+  expect(emailOnly).toContain('<dt>邮件回复</dt><dd>本次回复将汇入客户管理系统的客户回复</dd>');
   expect(emailOnly).toContain('<dt>留言回复</dt><dd>回复至 seller@example.com</dd>');
   const siteOnly = preview(session, { ...options, replyTracking: { enabled: true, email: false, site: true } });
   expect(siteOnly).toContain('<dt>邮件回复</dt><dd>回复至 replies@example.com</dd>');
-  expect(siteOnly).toContain('<dt>留言回复</dt><dd>本次回复将汇入客户收件箱</dd>');
+  expect(siteOnly).toContain('<dt>留言回复</dt><dd>本次回复将汇入客户管理系统的客户回复</dd>');
 });
 
 test('without a custom reply address the email preview shows the sender address', () => {
