@@ -13,20 +13,24 @@ const outreachTemplates = new Set([
 describe('executable template materials contracts', () => {
   it.each(templateGuides)('$templateId declares executable source, scope, reuse and copy capabilities', ({ templateId }) => {
     const contract = getMaterialsTemplate(templateId)!;
-    expect(contract.contractRevision).toBe(isActiveTemplate(templateId) ? `2026-10-02.${templateId}-materials.1` : templateId === 'toorun-early-learning' ? '2026-10-01.toorun-early-learning-materials.3' : templateId === 'auravell' ? '2026-10-01.auravell-materials.3' : templateId === 'careflow-healthcare' ? '2026-10-01.careflow-healthcare-materials.3' : templateId === 'lumi-business' ? '2026-10-01.lumi-business-materials.2' : ['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(templateId)?`2026-09-20.${templateId}-materials.2`:`2026-09-23.${templateId}-materials.6`);
-    expect(contract.rendererRevision).toBe(templateId === 'toorun-early-learning' ? '2026-10-01.toorun-early-learning-native.2' : templateId === 'auravell' ? '2026-10-01.auravell-materials.2' : templateId === 'careflow-healthcare' ? '2026-10-01.careflow-healthcare-materials.2' : templateId === 'lumi-business' ? '2026-09-30.lumi-business-materials.1' : ['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(templateId)?`2026-09-30.${templateId}-native.1`:outreachTemplates.has(templateId) ? '2026-09-23.outreach-demo-repair.1' : '2026-09-23.demo-repair.1');
+    expect(contract.contractRevision).toBe(templateId === 'pawfect-groom' ? '2026-10-02.pawfect-groom-materials.3' : isActiveTemplate(templateId) ? `2026-10-02.${templateId}-materials.1` : templateId === 'toorun-early-learning' ? '2026-10-01.toorun-early-learning-materials.3' : templateId === 'auravell' ? '2026-10-01.auravell-materials.3' : templateId === 'careflow-healthcare' ? '2026-10-01.careflow-healthcare-materials.3' : templateId === 'lumi-business' ? '2026-10-01.lumi-business-materials.2' : ['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(templateId)?`2026-09-20.${templateId}-materials.2`:`2026-09-23.${templateId}-materials.6`);
+    expect(contract.rendererRevision).toBe(templateId === 'pawfect-groom' ? '2026-10-02.pawfect-groom-native.3' : templateId === 'toorun-early-learning' ? '2026-10-01.toorun-early-learning-native.2' : templateId === 'auravell' ? '2026-10-01.auravell-materials.2' : templateId === 'careflow-healthcare' ? '2026-10-01.careflow-healthcare-materials.2' : templateId === 'lumi-business' ? '2026-09-30.lumi-business-materials.1' : ['toorun-early-learning','good-boy-pals','mello-coffee','papernote','pawfect-groom'].includes(templateId)?`2026-09-30.${templateId}-native.1`:outreachTemplates.has(templateId) ? '2026-09-23.outreach-demo-repair.1' : '2026-09-23.demo-repair.1');
     expect(contract.requiredCapabilities).toContain('image.product-primary.v1');
     for (const slot of contract.imageSlots) {
       expect(['product-primary', 'product-gallery', 'slot-image']).toContain(slot.materialSource);
       expect(['all-products', 'single-product', 'none']).toContain(slot.productScope);
-      expect(['same-product', 'distinct-slot']).toContain(slot.reusePolicy);
+      expect(['same-product', 'distinct-slot', 'generate-new']).toContain(slot.reusePolicy);
+      if (slot.reusePolicy === 'generate-new') {
+        expect(contract.requiredCapabilities).toContain('image.generate-new.v1');
+        expect(slot.materialSource).toBe('slot-image');
+      }
       if (slot.role === 'collection') expect(slot).toMatchObject({ productScope: 'all-products', reusePolicy: 'distinct-slot' });
     }
     for (const slot of contract.textSlots) {
       expect(['plain-text', 'value-label-description-lines']).toContain(slot.format);
-      expect(slot.factSources).toEqual(['brand', 'product']);
+      expect(slot.factSources).toEqual(templateId === 'pawfect-groom' && slot.id === 'company-about' ? ['brand'] : ['brand', 'product']);
     }
-    if (templateId === 'auravell' || templateId === 'careflow-healthcare') expect(contract.textSlots.find(slot => slot.id === 'company-about')?.format).toBe('plain-text');
+    if (templateId === 'auravell' || templateId === 'careflow-healthcare' || templateId === 'pawfect-groom') expect(contract.textSlots.find(slot => slot.id === 'company-about')?.format).toBe('plain-text');
     else if (templateId === 'lumi-business') expect(contract.textSlots.find(slot => slot.id === 'about-story')?.format).toBe('plain-text');
     else expect(contract.textSlots.find(slot => slot.id === 'about-highlights')?.format).toBe('value-label-description-lines');
   });

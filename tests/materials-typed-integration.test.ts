@@ -37,7 +37,10 @@ describe('all-template confirmed materials handoff',()=>{
         expect(html).toContain('wr-materials-site');
         expect(html).not.toContain('data-wr-product-id="demo-');
         if(page==='catalog'||page==='detail')expect(html).toContain(`Actual toy ${count-1}`);
-        if(page==='detail')expect(html.includes(`stored-gallery-p${count-1}`),`${id}:${count}:original gallery`).toBe(true);
+        if(page==='detail'){
+          expect(html.includes(`stored-${m.products[count-1].primaryMediaId}`),`${id}:${count}:original main`).toBe(true);
+          expect(html.includes(`stored-gallery-p${count-1}`),`${id}:${count}:gallery follows contract`).toBe(profile.imageSlots.some(slot=>slot.materialSource==='product-gallery'));
+        }
       }
     }
   },30000);
