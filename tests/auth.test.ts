@@ -323,6 +323,31 @@ describe('authorization payload boundaries', () => {
   });
 });
 describe('test identities fail closed in production', () => {
+  it.each([
+    ['website-owner', 'user'],
+    ['website-platform', 'super_admin'],
+  ] as const)('restores the dedicated %s website identity only in local test mode', async (identity, systemRole) => {
+    const app = createAuthApp();
+    const login = (origin: string, bindings: AppEnv) => app.request(origin + '/test-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity }),
+    }, bindings);
+    const localEnv = { ...env, ENVIRONMENT: 'test', TEST_PROVIDERS: 'true' };
+    expect((await login('http://127.0.0.1', env)).status).toBe(404);
+    expect((await login('https://wr.example.test', localEnv)).status).toBe(404);
+    const response = await login('http://127.0.0.1', localEnv);
+    expect(response.status).toBe(200);
+    const session = await response.json() as { token: string };
+    const headers = { Authorization: `Bearer ${session.token}` };
+    const restored = await app.request('http://127.0.0.1/me', { headers }, localEnv);
+    expect(restored.status).toBe(200);
+    expect(await restored.json()).toMatchObject({ principal: {
+      email: 'vc.ddom@gmail.com', systemRole, workspaceRole: 'member', appRole: 'member',
+    } });
+    expect((await app.request('http://127.0.0.1/me', { headers }, env)).status).toBe(401);
+    expect((await app.request('https://wr.example.test/me', { headers }, localEnv)).status).toBe(401);
+  });
   it('rejects persisted test session tokens outside explicit test environment', async () => {
     const session = await mintSession(env, p, 'owner');
     const response = await createAuthApp().request(

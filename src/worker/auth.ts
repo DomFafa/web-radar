@@ -125,7 +125,7 @@ export function createAuthApp() {
     if (!testMode(c.env) || !isLoopback(new URL(c.req.url).hostname))
       throw new ApiError(404, 'not_found', '页面不存在。');
     const body = z
-      .object({ identity: z.enum(['owner', 'admin', 'member', 'outsider', 'platform']) })
+      .object({ identity: z.enum(['owner', 'admin', 'member', 'outsider', 'platform', 'website-owner', 'website-platform']) })
       .safeParse(await jsonBody(c.req.raw, 1024));
     if (!body.success) throw new ApiError(400, 'invalid_identity', '请选择测试身份。');
     sameOrigin(c.req.raw);

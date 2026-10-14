@@ -127,7 +127,7 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
   assert.equal(
     (
-      await context.request.post(origin + '/api/auth/test-login', { data: { identity: 'owner' } })
+      await context.request.post(origin + '/api/auth/test-login', { data: { identity: 'website-owner' } })
     ).status(),
     200,
   );
@@ -138,7 +138,9 @@ try {
       buildBranch: 'clone',
     },
   });
-  const { project } = await created.json();
+  const createdBody = await created.json();
+  assert.equal(created.status(), 200, JSON.stringify(createdBody));
+  const { project } = createdBody;
   assert.ok(project?.id);
   const page = await context.newPage();
   const errors = [];
@@ -420,7 +422,7 @@ try {
 
   // Real browser + worker checks for encrypted shared credentials and per-site connections.
   const adminContext=await browser.newContext({viewport:{width:1440,height:1100}});
-  assert.equal((await adminContext.request.post(origin+'/api/auth/test-login',{data:{identity:'platform'}})).status(),200);
+  assert.equal((await adminContext.request.post(origin+'/api/auth/test-login',{data:{identity:'website-platform'}})).status(),200);
   const adminPage=await adminContext.newPage();
   await adminPage.goto(origin+'/?view=admin');
   await adminPage.getByText('添加 Cloudflare / Resend 账号',{exact:true}).click();
