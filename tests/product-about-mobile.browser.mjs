@@ -85,7 +85,13 @@ try {
       assert.equal(mobile.headerOverlap, false, `${id}: fixed navigation must not hide the first product row`);
       if (id === 'auravell') assert.equal(mobile.overlay, 'none', 'Auravell: the collection must remain visible above its separate dark title area');
       assert.deepEqual(mobile.others, observations['390-4'].others, `${id}: secondary About images keep their native dimensions and fit`);
-      assert.deepEqual(observations['1440-5'], observations['1440-4'], `${id}: desktop layout remains unchanged`);
+      if (id === 'pawfect-groom') {
+        const { fit, ...desktop } = observations['1440-5'];
+        const { fit: previousFit, ...previousDesktop } = observations['1440-4'];
+        assert.equal(previousFit, 'cover', 'Pawfect: previous revision retains its historical crop');
+        assert.equal(fit, 'contain', 'Pawfect: desktop collection must show every product without cropping');
+        assert.deepEqual(desktop, previousDesktop, 'Pawfect: collection frame and every other desktop image stay unchanged');
+      } else assert.deepEqual(observations['1440-5'], observations['1440-4'], `${id}: desktop layout remains unchanged`);
     } catch (error) { failures.push(error.message); }
   }
   await writeFile(resolve(output, 'report.json'), JSON.stringify({ candidateSha256: createHash('sha256').update(image).digest('hex'), actualCandidate: !!candidate, results, failures }, null, 2) + '\n');

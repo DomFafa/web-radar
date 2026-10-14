@@ -1,3 +1,4 @@
+import { MAX_WEBSITE_PRODUCTS } from "../shared/website-limits";
 import { applyUserAccess } from './user-access';
 import { writeBusiness } from '../shared/access';
 import { ProductIdentitySchema } from '../shared/product-identity';
@@ -558,10 +559,10 @@ export class DomainService {
       requireCondition(
         project.draft.products.length +
           ids.filter((id) => !project.draft.products.some((p) => p.source?.id === id)).length <=
-          20,
+          MAX_WEBSITE_PRODUCTS,
         400,
         'product_limit',
-        '每个网站最多包含 20 个产品。',
+        '每个网站最多包含 24 个产品。',
       );
       const { products } = await prService<{ products: ProductSnapshot[] }>(
         this.env,
@@ -690,7 +691,7 @@ export class DomainService {
       requireCondition(project.ownerId === principal.userId, 403, 'read_only_role', '仅网站所有者可以确认制作费用。');
       if (!claim?.deferred || claim.state === 'charged') return json({project});
       const count = claim.resultKey ? claim.productCount! : project.draft.products.length;
-      requireCondition(count >= 1 && count <= 20, 400, 'invalid_products', '请选择 1–20 个产品后制作网站。');
+      requireCondition(count >= 1 && count <= MAX_WEBSITE_PRODUCTS, 400, 'invalid_products', '请选择 1–24 个产品后制作网站。');
       requireCondition(body.acceptedPoints === (count <= 10 ? 200 : 300), 409, 'website_price_changed', '制作费用已变化，请重新确认当前产品数量与点数。');
       if (!claim.resultKey) {
         const draft = project.draft;
@@ -951,12 +952,12 @@ export class DomainService {
     requireCondition(
       Array.isArray(value) &&
         value.length > 0 &&
-        value.length <= 20 &&
+        value.length <= MAX_WEBSITE_PRODUCTS &&
         value.every((v) => typeof v === 'string' && v.length > 0 && v.length <= 200) &&
         new Set(value).size === value.length,
       400,
       'invalid_products',
-      '请选择 1–20 个不重复的产品。',
+      '请选择 1–24 个不重复的产品。',
     );
     return value as string[];
   }
@@ -966,7 +967,7 @@ export class DomainService {
   ): asserts products is ProductSnapshot[] {
     requireCondition(
       Array.isArray(products) &&
-        products.length <= 20 &&
+        products.length <= MAX_WEBSITE_PRODUCTS &&
         products.every((p) => snapshotSchema.safeParse(p).success) &&
         new Set(products.map((p) => p.id)).size === products.length,
       502,
