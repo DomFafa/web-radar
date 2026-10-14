@@ -1,3 +1,4 @@
+import { MAX_WEBSITE_PRODUCTS } from "../shared/website-limits";
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { HonoEnv, AppEnv } from './env';
@@ -22,7 +23,7 @@ const handoffSchema = z
     projectId: z.string().min(1).max(200).optional(),
     parentOrigin: z.string().max(500),
     principal: principalSchema,
-    products: z.array(importProductSnapshotSchema).max(20),
+    products: z.array(importProductSnapshotSchema).max(MAX_WEBSITE_PRODUCTS),
   })
   .superRefine((v, ctx) => {
     if (v.intent === 'open' && (!v.projectId || v.products.length))

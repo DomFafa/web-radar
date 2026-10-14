@@ -201,7 +201,6 @@ export default function TemplateSelector({
           </div>
           <Button
             kind="primary"
-            style={{ background: '#4f46e5', fontSize: '13px', padding: '6px 16px' }}
           >
             立即开启克隆模式 →
           </Button>
@@ -358,7 +357,7 @@ export default function TemplateSelector({
               <div className="template-card-body" style={{ flex: 1 }}>
                 <div className="template-name-row">
                   <div>
-                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{tmpl.name}</h3>
+                    <h3>{tmpl.name}</h3>
                     <span className="template-en-name">{tmpl.englishName}</span>
                   </div>
                   {isSelected && (

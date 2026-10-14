@@ -91,9 +91,9 @@ describe('domain authorization and approval invariants', () => {
       canManage(p, { ...owner, userId: 'root', systemRole: 'super_admin', workspaceId: 'other' }),
     ).toBe(true);
   });
-  it('rejects over 20 products and duplicate product identities', () => {
+  it('rejects over 24 products and duplicate product identities', () => {
     const d = defaultDraft();
-    d.products = Array.from({ length: 21 }, (_, i) => ({
+    d.products = Array.from({ length: 25 }, (_, i) => ({
       id: String(i),
       name: 'Product',
       description: '',

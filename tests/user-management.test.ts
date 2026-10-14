@@ -64,4 +64,25 @@ describe('user administration and visibility',()=>{
   const r=await request('/members');expect((await r.json() as any).members.some((m:any)=>m.user_id==='outside')).toBe(true);
   actor=person('admin','w1','admin');expect((await request('/members','PUT',{workspaceId:'w1',userId:'root',role:'member',status:'disabled',version:1})).status).toBe(403);
  });
+ it('omits website counts and website permissions for every other account while preserving outreach reports',async()=>{
+  await applyUserAccess(env,person('member'));
+  sqlite.exec("INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES('w1','W','w@example.test',0,0)");
+  sqlite.prepare('INSERT INTO projects(id,owner_id,workspace_id,version,data) VALUES(?,?,?,?,?)').run('website','member','w1',1,JSON.stringify({name:'Website',createdAt:'2026-10-08',updatedAt:'2026-10-08'}));
+  sqlite.exec("INSERT INTO edm_campaigns(id,user_id,created_by,name,sender_email,sender_name,created_at,updated_at) VALUES('campaign','w1','member','Campaign','sender@example.test','Sender',0,0)");
+  sqlite.exec("INSERT INTO edm_site_message_jobs(id,user_id,created_by,name,sender_name,sender_email,message,created_at,updated_at) VALUES('message','w1','member','Message','Sender','sender@example.test','Hello',0,0)");
+  for(const role of ['admin','analyst','super_admin']){
+   actor={...person(role,'w1','admin'),systemRole:role==='super_admin'?'super_admin':'user'};
+   await applyUserAccess(env,actor);if(role==='analyst')sqlite.prepare("UPDATE wr_members SET role='analyst' WHERE user_id=?").run(actor.userId);
+   const directory=await(await request('/members')).json()as any;
+   for(const member of directory.members){expect(member).not.toHaveProperty('projects');expect(member).not.toHaveProperty('drafts');expect(member).not.toHaveProperty('published');}
+   expect(JSON.stringify(directory.roles)).not.toContain('网站');
+   expect((await request('/records?kind=projects')).status).toBe(403);
+   const defaults=await(await request('/records')).json()as any;expect(defaults.records[0].name).toBe('Campaign');
+   for(const kind of ['campaigns','messages'])expect((await(await request('/records?kind='+kind)).json()as any).total).toBe(1);
+  }
+  actor={...person('owner','w1','admin'),email:'vc.ddom@gmail.com',systemRole:'super_admin'};
+  const directory=await(await request('/members')).json()as any;
+  expect(directory.members.find((member:any)=>member.user_id==='member')).toMatchObject({projects:1,drafts:1,published:0});
+  const records=await(await request('/records?kind=projects')).json()as any;expect(records.total).toBe(1);expect(records.records[0].id).toBe('website');
+ });
 });

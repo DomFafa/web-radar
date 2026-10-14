@@ -1,0 +1,109 @@
+/* radar-ui-foundation-v1. One presentation owner for both existing control APIs.
+   Keep native elements, events and variant classes; output documents are excluded. */
+.button,
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button,
+.outreach .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--radar-space-2);
+  min-height: var(--radar-control-height);
+  padding: 8px var(--radar-control-padding);
+  border: 1px solid var(--radar-border-strong);
+  border-radius: var(--radar-radius-sm);
+  background: var(--radar-surface);
+  color: var(--radar-text);
+  font: var(--radar-weight-semibold) var(--radar-font-control)/1.4 var(--radar-font);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--radar-shadow-sm);
+  transition: background 150ms, border-color 150ms, box-shadow 150ms;
+}
+.button:hover:not(:disabled),
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button:hover:not(:disabled),
+.outreach .btn:hover:not(:disabled) {
+  background: var(--radar-surface-subtle);
+  border-color: var(--radar-action-border);
+  transform: none;
+}
+.button.primary,
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button.primary,
+.outreach .btn-primary {
+  background: var(--radar-action);
+  border-color: var(--radar-action);
+  color: #fff;
+}
+.button.primary:hover:not(:disabled),
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button.primary:hover:not(:disabled),
+.outreach .btn-primary:hover:not(:disabled) {
+  background: var(--radar-action-hover);
+  border-color: var(--radar-action-hover);
+  color: #fff;
+}
+.button.quiet,
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button.quiet,
+.outreach .btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.button.danger,
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button.danger,
+.outreach :is(.btn-danger, .btn-danger-outline) {
+  border-color: #edcaca;
+  background: #fff8f8;
+  color: var(--radar-danger);
+}
+.button.danger:hover:not(:disabled),
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-overlay, .wr-lazy) .button.danger:hover:not(:disabled),
+.outreach :is(.btn-danger, .btn-danger-outline):hover:not(:disabled) {
+  border-color: var(--radar-danger);
+  background: #fff1f1;
+  color: var(--radar-danger);
+}
+.button:disabled, .outreach .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.outreach .btn-icon { width: var(--radar-control-height); height: var(--radar-control-height); flex-shrink: 0; padding: 8px; }
+
+:is(button, a, input, textarea, select, summary):focus-visible {
+  outline: 3px solid var(--radar-focus);
+  outline-offset: 2px;
+}
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-toolbar, .outreach, .wr-lazy)
+  :is(input, select, textarea):not([type='checkbox'], [type='radio'], [type='color'], [type='file'], [type='hidden']):where(:not(.ql-editor *, .wr-lazy-composer textarea)),
+.outreach button.form-select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--radar-control-height);
+  padding: 8px var(--radar-control-padding);
+  border: 1px solid var(--radar-border-strong);
+  border-radius: var(--radar-radius-sm);
+  background-color: var(--radar-surface);
+  color: var(--radar-text);
+  font: var(--radar-font-control)/1.5 var(--radar-font);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.outreach :is(select.form-select, button.form-select) { padding-right: 32px; }
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-toolbar, .outreach, .wr-lazy)
+  :is(input, select, textarea):not(.ql-editor *, .wr-lazy-composer textarea):focus,
+.outreach button.form-select:focus-visible {
+  border-color: var(--radar-action);
+  box-shadow: 0 0 0 3px var(--radar-focus);
+}
+:is(.app-shell, .editor-shell, .login-page, .modal, .preview-toolbar, .outreach, .wr-lazy)
+  :is(input, select, textarea):not(.ql-editor *, .wr-lazy-composer textarea):focus-visible {
+  outline: 3px solid var(--radar-focus);
+  outline-offset: 2px;
+}
+input::placeholder, textarea::placeholder { color: var(--radar-text-muted); }
+.outreach :is(input.form-input, select.form-select, textarea.form-textarea):disabled { opacity: .55; cursor: not-allowed; }
+.outreach .form-label { display: block; margin-bottom: var(--radar-space-1); color: var(--radar-text-secondary); font: var(--radar-weight-semibold) var(--radar-font-meta)/1.5 var(--radar-font); }
+
+@media (max-width: 768px) {
+  :is(.app-shell, .editor-shell, .login-page, .modal, .preview-toolbar, .outreach, .wr-lazy)
+    :is(input, select, textarea):not([type='checkbox'], [type='radio'], [type='color'], [type='file'], [type='hidden']):where(:not(.ql-editor *, .wr-lazy-composer textarea)) { font-size: 16px; }
+  :is(.app-shell, .editor-shell, .login-page, .modal, .preview-toolbar, .outreach, .wr-lazy) input[type='date'] { font-size: var(--radar-font-control); }
+  .outreach button.form-select { font-size: var(--radar-font-control); }
+}

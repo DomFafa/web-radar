@@ -385,7 +385,7 @@ export function SiteMessagesPage() {
                   <td><div className="table-actions site-workbench-actions">
                     <button className="btn btn-secondary btn-sm" onClick={() => openDetail(job.id)}>{job.status === "draft" && canWrite ? "预览并确认" : "查看详情"}</button>
                     <button className="btn btn-ghost btn-sm" onClick={() => exportJob(job.id, job.name)}>导出结果</button>
-                    <a className="btn btn-ghost btn-sm" href={'/?view=inbox&inboxSource=site&inboxBusiness=' + encodeURIComponent(job.id)}>客户回复</a>
+                    <a className="btn btn-ghost btn-sm" href={'/?view=crm&crmTab=replies&inboxSource=site&inboxBusiness=' + encodeURIComponent(job.id)}>客户回复</a>
                     {canWrite && !active && <button className="btn btn-ghost btn-sm" disabled={saving} onClick={() => openEdit(job.id)}>编辑任务</button>}
                     {canWrite && active && <button className="btn btn-ghost btn-sm" onClick={() => pauseJob(job.id)}>暂停任务</button>}
                     {canDelete && !active && <button className="btn btn-ghost btn-sm" onClick={() => deleteJob(job.id)}>删除任务</button>}

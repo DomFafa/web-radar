@@ -1,3 +1,4 @@
+import { MAX_WEBSITE_PRODUCTS, MAX_WEBSITE_MATERIAL_IMAGES } from "./website-limits";
 import { ProductIdentitySchema } from "./product-identity";
 import { z } from 'zod';
 
@@ -18,7 +19,7 @@ const localizedText = z.partialRecord(locale, text);
 const facts = z.array(id).max(100);
 const point = z.strictObject({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) });
 export const materialsImageRoles=['scene','front','packaging','collection','main','detail','facility','logistics']as const;
-export const materialsDisplaySelectionSchema=z.strictObject({sceneProductIds:z.array(id).max(20),featuredProductIds:z.array(id).max(20)});
+export const materialsDisplaySelectionSchema=z.strictObject({sceneProductIds:z.array(id).max(MAX_WEBSITE_PRODUCTS),featuredProductIds:z.array(id).max(MAX_WEBSITE_PRODUCTS)});
 export type MaterialsDisplaySelection=z.infer<typeof materialsDisplaySelectionSchema>;
 export const materialsPrincipalSchema = z.strictObject({
   userId:id, authSubject:id, email:z.email(), displayName:z.string().max(200),
@@ -33,7 +34,7 @@ export const materialsVisualSchema = z.strictObject({
 export const materialsImageBindingSchema = z.strictObject({
   slotId:id,mediaId:id,mobileMediaId:id.optional(),productId:id.optional(),itemIndex:z.number().int().min(0).max(255).optional(),
   fit:z.enum(['cover','contain']),focalPoint:point,mobileFocalPoint:point.optional(),alt:localizedText,
-  role:z.enum(materialsImageRoles).optional(),depictedProductIds:z.array(id).max(20).optional(),evidenceMediaIds:z.array(id).min(1).max(11).optional(),
+  role:z.enum(materialsImageRoles).optional(),depictedProductIds:z.array(id).max(MAX_WEBSITE_PRODUCTS).optional(),evidenceMediaIds:z.array(id).min(1).max(11).optional(),
 });
 export const materialsTextBindingSchema = z.strictObject({
   slotId:id,locale,text,productId:id.optional(),itemIndex:z.number().int().min(0).max(255).optional(),factReferences:facts,
@@ -50,16 +51,16 @@ export const confirmedMaterialsSchema = z.strictObject({
     profileId:id,profileVersion:id,name:z.string().min(1).max(300),description:text,
     businessType:z.enum(['factory','trader']).optional(),slogan:z.string().max(300).optional(),address:text.optional(),establishedYear:z.string().max(300).optional(),certifications:text.optional(),capabilities:text.optional(),
     targetMarkets:text.optional(),customerTypes:text.optional(),cooperationProcess:text.optional(),
-    linkedin:z.string().max(300).optional(),facebook:z.string().max(300).optional(),instagram:z.string().max(300).optional(),x:z.string().max(300).optional(),logoMediaId:id.optional(),faviconMediaId:id.optional(),
+    linkedin:z.string().max(2048).optional(),facebook:z.string().max(2048).optional(),instagram:z.string().max(2048).optional(),x:z.string().max(2048).optional(),logoMediaId:id.optional(),faviconMediaId:id.optional(),
   }),
   contact:z.strictObject({cardId:id,cardVersion:id,name:z.string().min(1).max(300),email:z.email().max(254),phone:z.string().max(200).optional(),whatsapp:z.string().max(200).optional()}),
   products:z.array(z.strictObject({
     id,sourceVersion:id,productIdentity:ProductIdentitySchema.optional(),name:z.string().min(1).max(300),description:text,material:text,dimensions:z.string().max(300),
     primaryMediaId:id,galleryMediaIds:z.array(id).min(1).max(11),tagline:z.string().max(160).optional(),sellingPoints:z.array(z.string().max(180)).max(5).optional(),applications:z.array(z.string().max(180)).max(5).optional(),
     translations:z.partialRecord(locale,z.strictObject({name:z.string().min(1).max(300),description:text})).optional(),factReferences:facts,
-  })).min(1).max(20),
+  })).min(1).max(MAX_WEBSITE_PRODUCTS),
   facts:z.array(z.strictObject({id,text,source:text})).max(500),visual:materialsVisualSchema,
-  media:z.array(materialsMediaSchema).min(1).max(256),imageBindings:z.array(materialsImageBindingSchema).max(512),
+  media:z.array(materialsMediaSchema).min(1).max(MAX_WEBSITE_MATERIAL_IMAGES),imageBindings:z.array(materialsImageBindingSchema).max(512),
   textBindings:z.array(materialsTextBindingSchema).max(1500),omittedSectionIds:z.array(id).max(100),
   displaySelection:materialsDisplaySelectionSchema.optional(),
 }).superRefine((m,ctx)=>{

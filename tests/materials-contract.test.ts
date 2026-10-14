@@ -21,6 +21,30 @@ describe('confirmed materials wire contract', () => {
   it('accepts an explicit confirmed snapshot without changing legacy product types', () => {
     expect(materialsSubmissionSchema.safeParse(submission()).success).toBe(true);
   });
+  it.each(['linkedin','facebook','instagram','x'])('preserves %s social links through 2048 Unicode characters, including multibyte content', field => {
+    for(const length of [300,301,2048])for(const character of ['a','汉']){
+      const value:any=submission(),prefix='https://social.example/';
+      const link=prefix+character.repeat(length-prefix.length);
+      value.materials.brand[field]=link;
+      const parsed=materialsSubmissionSchema.safeParse(value);
+      expect(parsed.success,`${field}:${character}:${length}`).toBe(true);
+      if(parsed.success)expect(parsed.data.materials.brand[field as 'linkedin']).toBe(link);
+    }
+    const value:any=submission(),link='🧸'.repeat(2048);
+    expect([...link]).toHaveLength(2048);
+    value.materials.brand[field]=link;
+    const parsed=materialsSubmissionSchema.safeParse(value);
+    expect(parsed.success).toBe(true);
+    if(parsed.success)expect(parsed.data.materials.brand[field as 'linkedin']).toBe(link);
+  });
+  it.each(['linkedin','facebook','instagram','x'])('rejects %s above 2048 Unicode characters at its exact wire path', field => {
+    for(const link of ['a'.repeat(2049),'汉'.repeat(2049),'🧸'.repeat(2048)+'a']){
+      const value:any=submission();value.materials.brand[field]=link;
+      const parsed=materialsSubmissionSchema.safeParse(value);
+      expect(parsed.success).toBe(false);
+      if(!parsed.success)expect(parsed.error.issues.some(issue=>issue.code==='too_big'&&issue.path.join('.')===`materials.brand.${field}`)).toBe(true);
+    }
+  });
   it.each(['unknown media','duplicate product','unknown fact','missing locale','extra field','bad palette','unconfirmed','gallery order'])('rejects %s', (kind) => {
     const value:any = submission();
     if(kind==='unknown media') value.materials.imageBindings[0].mediaId='missing';

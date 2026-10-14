@@ -8,6 +8,7 @@ import { EmailPreview } from "../components/EmailPreview";
 import { CampaignProgress } from "../components/CampaignProgress";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { browserDraftStorage, draftStorageKey, readEdmDraft, writeEdmDraft, type AudienceMethod, type EdmDraft } from "../lib/edm-draft";
+import { crmDraftKey, crmContactSelection } from '../lib/crm-email-handoff';
 import "../styles/edm-workbench.css";
 
 const steps = ["选择客户", "准备邮件", "预览并确认"];
@@ -20,10 +21,12 @@ export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) 
   const { user } = useAuth();
   if (!user || !['admin', 'member'].includes(user.role)) return <p className="notice">当前角色为只读，可在发送记录中查看进度和下载报表。</p>;
   const key = draftStorageKey(user.id, user.actorId);
-  return <SendingWizard key={key} draftKey={key} isAdmin={user.role === 'admin'} onNavigate={onNavigate} />;
+  const crmContactId = typeof window === 'undefined' ? '' : new URL(window.location.href).searchParams.get('crmContactId') || '';
+  const replyKey = crmContactId ? crmDraftKey(key, crmContactId) : key;
+  return <SendingWizard key={replyKey} draftKey={replyKey} crmContactId={crmContactId} isAdmin={user.role === 'admin'} onNavigate={onNavigate} />;
 }
 
-function SendingWizard({ onNavigate, draftKey, isAdmin }: { onNavigate?: (page: string) => void; draftKey: string | null; isAdmin: boolean }) {
+function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavigate?: (page: string) => void; draftKey: string | null; isAdmin: boolean; crmContactId: string }) {
   const { addToast } = useToast();
   const [restoredDraft] = useState(() => readEdmDraft(browserDraftStorage(), draftKey));
   const [step, setStep] = useState(restoredDraft?.step || 0);
@@ -51,6 +54,21 @@ function SendingWizard({ onNavigate, draftKey, isAdmin }: { onNavigate?: (page: 
   const [sendProgress, setSendProgress] = useState<any>(null);
   const [progressError, setProgressError] = useState("");
   const sendLock = useRef(false);
+  const [crmCustomerError, setCrmCustomerError] = useState('');
+  const [crmCustomerLoading, setCrmCustomerLoading] = useState(!!crmContactId && !restoredDraft?.campaignId);
+
+  useEffect(() => {
+    if (!crmContactId || restoredDraft?.campaignId) return;
+    let active = true;
+    contactsApi.get(crmContactId).then(response => {
+      if (!active) return;
+      const selection = crmContactSelection(response.data, crmContactId);
+      setSelectedContacts(selection.selectedContacts); setSelectedContactRecords(selection.selectedContactRecords);
+      setSelectedGroups([]); setSelectedTags([]); setAudienceMethod('contact');
+    }).catch(error => { if (active) setCrmCustomerError(error.message || '无法读取客户信息'); })
+      .finally(() => { if (active) setCrmCustomerLoading(false); });
+    return () => { active = false; };
+  }, [crmContactId, restoredDraft]);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -227,6 +245,7 @@ function SendingWizard({ onNavigate, draftKey, isAdmin }: { onNavigate?: (page: 
   };
 
   const next = () => {
+    if (crmCustomerLoading || crmCustomerError) { addToast('error', crmCustomerError || '正在读取客户信息，请稍候'); return; }
     const hasAudience = audienceMethod === "group"
       ? selectedGroups.length > 0
       : audienceMethod === "tag"
@@ -259,6 +278,7 @@ function SendingWizard({ onNavigate, draftKey, isAdmin }: { onNavigate?: (page: 
 
   const send = async () => {
     if (sendLock.current || sending || submissionPending || editingTemplate || creatingTemplate || campaignId) return;
+    if (crmCustomerLoading || crmCustomerError) { addToast('error', crmCustomerError || '正在读取客户信息，请稍候'); return; }
     sendLock.current = true;
     setSending(true);
     let createdId: string | null = null;
@@ -316,6 +336,9 @@ function SendingWizard({ onNavigate, draftKey, isAdmin }: { onNavigate?: (page: 
   };
 
   return <>
+    {crmContactId && <p className="notice">从客户管理系统发起的邮件使用独立草稿。确认收件人、准备邮件并预览后才会发送。<a href="/?view=crm">返回客户管理系统</a></p>}
+    {crmCustomerLoading && <p role="status">正在读取客户信息…</p>}
+    {crmCustomerError && <p className="notice error" role="alert">{crmCustomerError}</p>}
     <div className="page-header">
       <div className="page-header-actions">
         <div>

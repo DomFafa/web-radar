@@ -406,7 +406,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                       </td>
                       <td>
                         <div className="flex gap-sm" style={{ flexWrap: "wrap" }}>
-                          <a className="btn btn-ghost btn-sm" href={'/?view=inbox&inboxSource=edm&inboxBusiness='+encodeURIComponent(c.id)}>客户回复</a>
+                          <a className="btn btn-ghost btn-sm" href={'/?view=crm&crmTab=replies&inboxSource=edm&inboxBusiness='+encodeURIComponent(c.id)}>客户回复</a>
                           <button className="btn btn-ghost btn-sm" onClick={() => loadDetail(c.id)} title="查看详情">
                             查看
                           </button>
@@ -479,7 +479,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     )}
                   </select>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="form-grid radar-form-grid">
                   <div className="form-group">
                     <label className="form-label">发件人邮箱 *</label>
                     <input
@@ -502,7 +502,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     />
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="form-grid radar-form-grid">
                   <div className="form-group">
                     <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>自动追踪回复（需启用收信配置）</label><label className="form-label">回复地址</label>
                     <input
@@ -584,7 +584,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                   <label style={{ fontWeight: 600, minWidth: 80, color: "var(--color-text-secondary)" }}>邮件模板 *</label>
                   <select
                     className="form-select"
-                    style={{ flex: 1, padding: "4px 8px", fontSize: 13 }}
+                    style={{ flex: 1 }}
                     value={detail.templateId || ""}
                     disabled={!writable || detail.status === "sending" || detail.status === 'completed'}
                     onChange={async (e) => {

@@ -1,43 +1,53 @@
 .customer-inbox {
   min-width: 0;
+  color: var(--radar-text);
+  font: var(--radar-font-body)/var(--radar-line-body) var(--radar-font);
 }
 .inbox-heading,
 .inbox-mail-heading {
   display: flex;
   justify-content: space-between;
   align-items: start;
-  gap: 16px;
+  gap: var(--radar-space-4);
+}
+.inbox-heading {
+  margin-bottom: var(--radar-space-6);
+}
+.inbox-heading .page-heading {
+  margin: 0;
 }
 .inbox-heading > div:last-child {
   display: flex;
-  gap: 8px;
+  gap: var(--radar-space-2);
   flex-wrap: wrap;
 }
 .inbox-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin: 24px 0;
+  gap: var(--radar-space-4);
+  margin: var(--radar-space-5) 0;
 }
 .inbox-metrics .panel {
   margin: 0;
-  padding: 20px;
+  padding: var(--radar-space-5);
 }
 .inbox-metrics strong {
   display: block;
+  font-weight: var(--radar-weight-semibold);
+  font-variant-numeric: tabular-nums;
   font-size: 24px;
-  margin-top: 8px;
+  margin-top: var(--radar-space-2);
 }
 .inbox-rates {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .inbox-rates strong {
-  font-size: 16px;
+  font-size: var(--radar-font-card-title);
 }
 .inbox-search {
   display: flex;
-  gap: 12px;
-  margin: 20px 0;
+  gap: var(--radar-space-3);
+  margin: var(--radar-space-5) 0;
 }
 .inbox-search input {
   flex: 1;
@@ -46,18 +56,18 @@
 .inbox-layout {
   display: grid;
   grid-template-columns: 200px minmax(260px, 0.8fr) minmax(320px, 1.4fr);
-  gap: 16px;
+  gap: var(--radar-space-4);
   align-items: start;
 }
 .inbox-layout .panel {
   margin: 0;
   min-width: 0;
-  padding: 18px;
+  padding: var(--radar-space-4);
 }
 .inbox-filters {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--radar-space-4);
 }
 .inbox-filters input,
 .inbox-filters select,
@@ -74,41 +84,48 @@
   flex-direction: column;
   align-items: start;
   text-align: left;
-  gap: 7px;
-  padding: 16px 12px;
+  gap: var(--radar-space-2);
+  padding: var(--radar-space-4) var(--radar-space-3);
   border: 1px solid transparent;
-  border-bottom-color: #e5e7eb;
-  border-radius: 8px;
+  border-bottom-color: var(--radar-border);
+  border-radius: var(--radar-radius-sm);
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
   overflow-wrap: anywhere;
 }
+.inbox-thread:hover {
+  background: var(--radar-surface-subtle);
+}
+.inbox-thread:focus-visible {
+  outline: 3px solid var(--radar-action-border);
+  outline-offset: 2px;
+}
 .inbox-thread.selected {
-  background: #f0edff;
-  border-color: #6558ff;
+  background: var(--radar-action-soft);
+  border-color: var(--radar-action);
 }
 .inbox-thread-meta,
 .inbox-thread small {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: var(--radar-font-meta);
+  color: var(--radar-text-secondary);
 }
 .inbox-pagination {
   display: flex;
-  gap: 8px;
+  gap: var(--radar-space-2);
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 18px;
+  margin-top: var(--radar-space-4);
 }
 .inbox-facts {
   display: grid;
   grid-template-columns: 135px minmax(0, 1fr);
-  gap: 10px;
-  font-size: 13px;
+  gap: var(--radar-space-3);
+  font-size: var(--radar-font-body);
 }
 .inbox-facts dt {
-  color: #6b7280;
+  color: var(--radar-text-secondary);
 }
 .inbox-facts dd {
   margin: 0;
@@ -116,10 +133,10 @@
 }
 .inbox-controls {
   display: flex;
-  gap: 12px;
+  gap: var(--radar-space-3);
   flex-wrap: wrap;
   align-items: end;
-  margin: 20px 0;
+  margin: var(--radar-space-5) 0;
 }
 .inbox-body {
   white-space: pre-wrap;
@@ -132,32 +149,36 @@
   border-radius: 8px;
 }
 .inbox-mail {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 20px;
-  margin-top: 24px;
+  border-top: 1px solid var(--radar-border);
+  padding-top: var(--radar-space-5);
+  margin-top: var(--radar-space-5);
   overflow-wrap: anywhere;
 }
 .inbox-mail p {
-  font-size: 13px;
+  font-size: var(--radar-font-body);
 }
 .inbox-mail-heading {
-  font-size: 13px;
+  font-size: var(--radar-font-body);
 }
 .inbox-config-options {
   display: flex;
-  gap: 16px;
+  gap: var(--radar-space-4);
   flex-wrap: wrap;
-  margin: 16px 0;
+  margin: var(--radar-space-4) 0;
 }
 .inbox-detail h2 {
-  font-size: 20px;
+  line-height: var(--radar-line-heading);
+  font-weight: var(--radar-weight-semibold);
+  font-size: var(--radar-font-section-title);
   overflow-wrap: anywhere;
 }
 .inbox-detail h3 {
-  font-size: 15px;
+  line-height: var(--radar-line-heading);
+  font-weight: var(--radar-weight-semibold);
+  font-size: var(--radar-font-card-title);
 }
 .inbox-layout details {
-  margin: 20px 0;
+  margin: var(--radar-space-5) 0;
 }
 .inbox-filters .field {
   margin: 0;
@@ -177,12 +198,12 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .inbox-layout {
     display: block;
   }
   .inbox-layout .panel {
-    margin-bottom: 16px;
+    margin-bottom: var(--radar-space-4);
   }
   .inbox-filters {
     display: grid;
@@ -190,10 +211,13 @@
   }
   .inbox-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    gap: var(--radar-space-3);
   }
   .inbox-heading {
     display: block;
+  }
+  .inbox-heading > div:last-child {
+    margin-top: var(--radar-space-4);
   }
   .inbox-mail-heading {
     display: block;
@@ -204,5 +228,11 @@
   .inbox-search {
     flex-wrap: wrap;
   }
+  .inbox-search input {
+    flex-basis: 100%;
+  }
+  .inbox-mail-heading > span {
+    display: block;
+    margin-top: var(--radar-space-2);
+  }
 }
-@media(max-width:700px){.inbox-mail-heading>span{display:block;margin-top:6px}}

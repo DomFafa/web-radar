@@ -7,6 +7,7 @@ import { guessCloneImageRole, normalizeCloneImages } from '../shared/clone';
 import type { CloneConfig, CloneUiImage, CloneUiImageRole, Draft, Project, Job, ProjectDetail } from '../shared/model';
 import { api, post, upload } from './api';
 import { AssetView, Button, Notice } from './components';
+import './clone-editor.css';
 
 interface CloneEditorProps {
   onActivityChange?: (active: boolean) => void;
@@ -244,6 +245,7 @@ export default function CloneEditor({
       {cloneConfig.referenceCapture && <div className="notice">已自动采集 {cloneConfig.referenceCapture.screenshotCount} 张截图、{cloneConfig.referenceCapture.assets.length} 个素材。{cloneConfig.referenceCapture.warnings.join('；')} 生成完成后请对照参考网站预览。</div>}
       {/* Mode Header */}
       <div
+        className="clone-editor-heading"
         style={{
           background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #2563eb 100%)',
           borderRadius: '16px',
@@ -291,7 +293,7 @@ export default function CloneEditor({
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <Button onClick={onBackToBasics} style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none' }}>
+          <Button onClick={onBackToBasics}>
             ← 返回基础资料
           </Button>
         </div>
@@ -346,16 +348,7 @@ export default function CloneEditor({
         <button
           type="button"
           onClick={onBackToBasics}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#4f46e5',
-            fontSize: '12px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            padding: 0,
-            textDecoration: 'underline',
-          }}
+          className="button quiet clone-editor-action"
         >
           修改资料与产品 →
         </button>
@@ -381,8 +374,9 @@ export default function CloneEditor({
           <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#64748b' }}>
             只需输入公开网址，系统自动采集电脑与手机截图、主要内页和可用素材，再由模型分析重建。也可直接上传设计图。
           </p>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="clone-editor-url-row">
             <input
+              className="clone-editor-control clone-editor-url"
               type="url"
               placeholder="例如: https://squishytoys.store 或 https://example.com"
               aria-label="参考网址"
@@ -391,14 +385,6 @@ export default function CloneEditor({
                 setTargetUrl(e.target.value);
                 setEnhancementMode('faithful');
                 syncConfig({ targetUrl: e.target.value, enhancementMode:'faithful' });
-              }}
-              style={{
-                flex: 1,
-                padding: '10px 14px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '14px',
-                outline: 'none',
               }}
             />
             <Button
@@ -438,13 +424,7 @@ export default function CloneEditor({
                     setScrapedData(undefined);
                     syncConfig({ scrapedData: undefined });
                   }}
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                  }}
+                  className="button quiet clone-editor-action"
                 >
                   清除重置
                 </button>
@@ -619,33 +599,20 @@ export default function CloneEditor({
                     </span>
                     <button
                       onClick={() => handleRemoveImage(img.id)}
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        color: '#ef4444',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                      }}
+                      className="button danger clone-editor-remove"
                       title="移除"
                     >
                       ✕
                     </button>
                   </div>
                   <div>
-                    <label style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '2px' }}>
+                    <label className="clone-editor-role-label">
                       页面角色标定:
                     </label>
                     <select
+                      className="clone-editor-control"
                       value={img.role}
                       onChange={(e) => handleRoleChange(img.id, e.target.value as CloneUiImageRole)}
-                      style={{
-                        width: '100%',
-                        padding: '4px 6px',
-                        borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        fontSize: '12px',
-                        background: '#fff',
-                      }}
                     >
                       {Object.entries(ROLE_LABELS).map(([key, label]) => (
                         <option key={key} value={key}>
@@ -670,11 +637,11 @@ export default function CloneEditor({
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}
         >
-          <label style={{ display: 'block', marginBottom: 16, color: '#334155', fontWeight: 600 }}>
+          <label className="clone-editor-field">
             页面完善方式
-            <select aria-label="页面完善方式" value={enhancementMode} onChange={event => {
+            <select className="clone-editor-control" aria-label="页面完善方式" value={enhancementMode} onChange={event => {
               const value = event.target.value as 'faithful' | 'smart'; setEnhancementMode(value); syncConfig({ enhancementMode: value });
-            }} style={{ display: 'block', width: '100%', marginTop: 8, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }}>
+            }}>
               <option value="smart">智能完善：保留风格，补足内容与页面层次</option>
               <option value="faithful">忠实还原：以设计图为准</option>
             </select>
@@ -693,6 +660,7 @@ export default function CloneEditor({
             可注明需要微调的品牌名、联系邮箱、特定区域文案或特殊交互（如保持顶部固定导航、展台一体化排版等）：
           </p>
           <textarea
+            className="clone-editor-control clone-editor-instructions"
             rows={4}
             value={instructions}
             onChange={(e) => {
@@ -700,17 +668,6 @@ export default function CloneEditor({
               syncConfig({ instructions: e.target.value });
             }}
             placeholder={`例如：\n保留参考设计稿的布局结构、配色与商品展台。\n将品牌名称设为「${draft.company.name || '我的品牌'}」，联系方式设为「${draft.company.email || 'contact@brand.com'}」。\n首页商品卡片保持紧凑纯净，点击后平滑跳转或展开商品详情。`}
-            style={{
-              width: '100%',
-              padding: '12px 14px',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              fontSize: '13px',
-              lineHeight: '1.6',
-              resize: 'vertical',
-              boxSizing: 'border-box',
-              outline: 'none',
-            }}
           />
         </div>
 
@@ -740,22 +697,11 @@ export default function CloneEditor({
               🤖 视觉分析与代码生成模型：
             </span>
             <select
+              className="clone-editor-control"
               value={selectedModel}
               onChange={(e) => {
                 setSelectedModel(e.target.value);
                 syncConfig({ model: e.target.value });
-              }}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
-                border: '1.5px solid #6366f1',
-                fontSize: '13px',
-                fontWeight: 700,
-                background: '#f8fafc',
-                color: '#4338ca',
-                cursor: 'pointer',
-                outline: 'none',
-                boxShadow: '0 1px 3px rgba(99, 102, 241, 0.1)',
               }}
             >
               <option value="gpt-6-astra">⚡ GPT-6 Astra (默认推荐 · 下一代多模态旗舰)</option>
@@ -838,25 +784,13 @@ export default function CloneEditor({
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div className="clone-editor-result-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 {deployedUrl && (
                   <a
                     href={deployedUrl}
                     target="_blank"
                     rel="noreferrer"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '8px 16px',
-                      background: '#059669',
-                      color: '#ffffff',
-                      fontWeight: 700,
-                      borderRadius: '8px',
-                      textDecoration: 'none',
-                      fontSize: '13px',
-                      boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
-                    }}
+                    className="button primary"
                   >
                     🌐 打开网站 ↗
                   </a>
@@ -864,7 +798,6 @@ export default function CloneEditor({
                 <Button
                   kind="primary"
                   onClick={onProceedToPublish}
-                  style={{ padding: '8px 20px', fontSize: '14px' }}
                 >
                   👀 预览与发布管理 →
                 </Button>
@@ -879,14 +812,7 @@ export default function CloneEditor({
               kind="primary"
               onClick={handleGenerate}
               disabled={(!targetUrl.trim() && uiImages.length === 0) || generating}
-              style={{
-                padding: '14px 36px',
-                fontSize: '16px',
-                fontWeight: 700,
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
-              }}
+              className="clone-editor-generate"
             >
               {isSuccess
                 ? (autoPublish ? '🔄 重新生成并发布' : '🔄 重新生成页面并预览')

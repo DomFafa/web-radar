@@ -760,6 +760,7 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
       subject: template.subject,
       bodyHtml: template.bodyHtml,
       bodyText: template.bodyText,
+      engagementTrackingSource: selectedProvider.provider === 'resend' ? 'resend' : undefined,
       variables: r.variables ? JSON.parse(r.variables) : {},
     },
   }));

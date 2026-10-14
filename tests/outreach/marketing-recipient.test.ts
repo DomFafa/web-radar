@@ -13,6 +13,9 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec(readFileSync('migrations/0007_outreach.sql', 'utf8'));
   sqlite.exec(readFileSync('migrations/0011_customer_inbox.sql','utf8'));
+  sqlite.exec(readFileSync('migrations/0013_customer_management.sql','utf8'));
+  sqlite.exec(readFileSync('migrations/0014_crm_activity_groups.sql','utf8'));
+  sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;');
   sqlite.exec(`
     INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('workspace','Test','test@example.com',0,0);
     INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at) VALUES ('provider','workspace','mailchimp','test','placeholder',1,0,0);
@@ -96,6 +99,10 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
     expect(content).toMatchObject({ plain_text: 'Hello' });
     expect(content.html).toContain('<p>Hello</p>');
     expect(content.html).not.toContain('Unapproved');
+    expect(sqlite.prepare('SELECT source,target_id,subject,body_html,body_text,provider,status,provider_message_id FROM wr_crm_outbound_snapshots').all()).toEqual([{
+      source: 'edm', target_id: 'recipient-subscribed', subject: 'Hello', body_html: content.html,
+      body_text: content.plain_text, provider: 'mailchimp_marketing', status: 'sent', provider_message_id: 'remote-campaign',
+    }]);
     expect(calls.filter((call) => call.path.endsWith('/actions/send'))).toHaveLength(1);
     expect(calls.find((call) => call.path.includes('/members/'))?.path).toBe('/3.0/lists/audience/members/a94f73601a146ec566e131c7fb06d251');
     const callsAfterSending = network.mock.calls.length;

@@ -11,7 +11,9 @@ import type { Principal } from '../shared/model';
 import { manageUsers } from '../shared/access';
 import './inbox.css';
 function scoped(path: string) {
-  const workspace = new URL(location.href).searchParams.get('inboxWorkspace');
+  const parameters = new URL(location.href).searchParams;
+  const workspace = parameters.get('view') === 'crm'
+    ? parameters.get('crmWorkspace') : parameters.get('inboxWorkspace');
   if (!workspace) return path;
   const u = new URL(path, location.origin);
   u.searchParams.set('workspaceId', workspace);
@@ -33,7 +35,7 @@ const methods: Record<string, string> = {
   manual: '人工关联',
   unmatched: '待关联',
 };
-export default function CustomerInbox({ principal }: { principal: Principal }) {
+export default function CustomerInbox({ principal, embedded = false }: { principal: Principal; embedded?: boolean }) {
   const url = new URL(location.href),
     [source, setSource] = useState(url.searchParams.get('inboxSource') || ''),
     [business, setBusiness] = useState(url.searchParams.get('inboxBusiness') || ''),
@@ -51,7 +53,7 @@ export default function CustomerInbox({ principal }: { principal: Principal }) {
     [revision, setRevision] = useState(0),
     [data, setData] = useState<any>(null),
     [detail, setDetail] = useState<any>(null),
-    [selected, setSelected] = useState(''),
+    [selected, setSelected] = useState(url.searchParams.get('inboxThread') || ''),
     [configs, setConfigs] = useState<any[]>([]),
     [members, setMembers] = useState<any[]>([]),
     [error, setError] = useState(''),
@@ -283,8 +285,8 @@ export default function CustomerInbox({ principal }: { principal: Principal }) {
     <div className="customer-inbox">
       <header className="inbox-heading">
         <div className="page-heading">
-          <h1>客户收件箱</h1>
-          <p>集中查看客户来信，追溯邮件活动和网站联系任务。</p>
+          {embedded ? <h2>客户回复</h2> : <h1>客户收件箱</h1>}
+          <p>查看客户回复、自动回执与退信，关联发送记录并跟进处理。</p>
         </div>
         <div>
           <Button onClick={() => setRevision((n) => n + 1)}>
@@ -294,12 +296,16 @@ export default function CustomerInbox({ principal }: { principal: Principal }) {
           {admin && <Button onClick={() => setSettings(true)}>收信配置</Button>}
         </div>
       </header>
-      {principal.systemRole === 'super_admin' && (
+      {!embedded && principal.systemRole === 'super_admin' && (
         <Field label="当前工作区">
           <select
             value={url.searchParams.get('inboxWorkspace') || principal.workspaceId}
             onChange={(e) => {
-              location.href = '/?view=inbox&inboxWorkspace=' + encodeURIComponent(e.target.value);
+              const destination = new URL(location.href);
+              destination.searchParams.set('view', embedded ? 'crm' : 'inbox');
+              if (embedded) destination.searchParams.set('crmTab', 'replies');
+              destination.searchParams.set('inboxWorkspace', e.target.value);
+              location.href = destination.pathname + destination.search;
             }}
           >
             {workspaces.map((w) => (

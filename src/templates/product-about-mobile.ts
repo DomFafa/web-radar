@@ -18,7 +18,8 @@ export function withProductAboutCollectionMobileImage(html: string, draft: Draft
   const scope = `body[data-wr-materials-revision="${draft.materials!.contractRevision}"]`;
   const frame = `${scope} ${selector}`;
   const auravellSpacing = draft.template === 'auravell' ? `${scope} .avp-about-hero{padding-top:110px}${frame}:after{background:none}${scope} .avp-about-heading{margin-top:0}` : '';
-  const style = `<style id="wr-about-collection-mobile-image">@media(max-width:${breakpoint}px){
+  const desktopCollection = draft.template === 'pawfect-groom' ? `${frame} img{object-fit:contain!important}` : '';
+  const style = `<style id="wr-about-collection-mobile-image">${desktopCollection}@media(max-width:${breakpoint}px){
 ${frame},${frame} picture{height:auto;min-height:0;max-height:none;aspect-ratio:auto}
 ${frame} img{display:block;width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:auto;object-fit:contain!important}
 ${auravellSpacing}

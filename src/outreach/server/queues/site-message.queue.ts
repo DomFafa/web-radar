@@ -1,4 +1,5 @@
 import { trackedAddress } from '../../../worker/inbox/core';
+import { captureOutbound, completeOutbound } from '../../../worker/crm/capture';
 import { assertPublicReference } from "../../../worker/reference-fetch";
 import { publicFetch as fetch } from "../lib/network";
 import puppeteer from "@cloudflare/puppeteer";
@@ -398,11 +399,12 @@ async function inspectContactForm(page: any): Promise<{ fields: DetectedField[];
   return { fields, formIndex: inspected.formIndex };
 }
 
-async function fillAndSubmit(
+export async function fillAndSubmit(
   page: any,
   form: { fields: DetectedField[]; formIndex: number },
   job: any,
   report?: (stage: string, percent: number, message: string, url?: string) => Promise<void>,
+  beforeSubmit?: (content: { subject: string; bodyText: string; senderEmail: string | null; senderName: string | null }) => Promise<void>,
 ) {
   const names = String(job.senderName || "").trim().split(/\s+/);
   const values: Record<FieldKind, string> = {
@@ -517,6 +519,19 @@ async function fillAndSubmit(
   if(hasCaptcha)return {ok:false,code:'captcha_detected',message:'页面需要验证码，请人工处理。'};
   {
     const beforeUrl = page.isClosed() ? "" : page.url();
+    if (beforeSubmit) {
+      const content = await safeEvaluate<{ subject: string; bodyText: string; senderEmail: string | null; senderName: string | null }>(page, (formIndex: number, fields: DetectedField[]) => {
+        const value = (field: DetectedField) => (document.querySelector(`[data-growthos-field="${formIndex}-${field.index}"]`) as HTMLInputElement | HTMLTextAreaElement | null)?.value || '';
+        return {
+          subject: fields.filter(field => field.kind === 'subject').map(value).join('\n'),
+          bodyText: fields.filter(field => field.kind === 'message' || field.tag === 'textarea').map(value).join('\n\n'),
+          senderEmail: fields.filter(field => field.kind === 'email').map(value).find(Boolean) || null,
+          senderName: fields.filter(field => field.kind === 'name' || field.kind === 'firstName' || field.kind === 'lastName').map(value).filter(Boolean).join(' ') || null,
+        };
+      }, form.formIndex, form.fields);
+      if (!content) throw new Error('无法记录实际填写的联系表单内容，未提交表单');
+      await beforeSubmit(content);
+    }
     await safeClick(page, submitSelector);
 
     try {
@@ -696,6 +711,8 @@ async function processTargetInPage(
   job: any,
   db: ReturnType<typeof createDb>,
   jobId: string,
+  database: D1Database,
+  submission: { started: boolean; snapshotId?: string },
 ): Promise<"completed" | "paused"> {
   let previousLogs: ProgressLog[] = [];
   try {
@@ -837,7 +854,15 @@ async function processTargetInPage(
   }).where(eq(siteMessageTargets.id, target.id));
 
   await report("submitting", 90, "字段校验完成，正在提交联系表单", contactPageUrl);
-  const result = await fillAndSubmit(page, form, job, report);
+  const result = await fillAndSubmit(page, form, job, report, async content => {
+    submission.snapshotId = await captureOutbound(database, {
+      workspaceId: job.userId, ownerId: job.createdBy, source: 'site', businessId: jobId,
+      targetId: target.id, attemptId: crypto.randomUUID(), websiteUrl: target.websiteUrl,
+      subject: content.subject, bodyText: content.bodyText, provider: 'browser',
+      senderEmail: content.senderEmail, senderName: content.senderName,
+    });
+    submission.started = true;
+  });
 
   await report(result.ok ? "submitted" : "skipped", 100, result.message, contactPageUrl);
   await db.update(siteMessageTargets).set({
@@ -847,6 +872,10 @@ async function processTargetInPage(
     completedAt: new Date(),
     updatedAt: new Date(),
   }).where(eq(siteMessageTargets.id, target.id));
+  if (submission.snapshotId) await completeOutbound(database, submission.snapshotId, {
+    status: result.ok ? result.code === 'confirmed' ? 'submitted' : 'submitted_unconfirmed' : 'failed',
+    errorMessage: result.code === 'confirmed' ? null : result.message,
+  }).catch(error => console.error('CRM receipt could not be saved:', error));
   return "completed";
 }
 
@@ -1043,6 +1072,7 @@ export async function runSiteMessageJob(jobId: string, env: Bindings) {
       const report = createProgressReporter(db, target.id, previousLogs);
 
       let page: any = null;
+      const submission: { started: boolean; snapshotId?: string } = { started: false };
 
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
@@ -1060,11 +1090,21 @@ export async function runSiteMessageJob(jobId: string, env: Bindings) {
           });
 
           const replyAddress = await trackedAddress(env.DB, 'site', target.id, job.message, job.subject || 'General inquiry');
-          await processTargetInPage(page, target, replyAddress ? {...job, originalSenderEmail: job.senderEmail, senderEmail: replyAddress} : job, db, jobId);
+          await processTargetInPage(page, target, replyAddress ? {...job, originalSenderEmail: job.senderEmail, senderEmail: replyAddress} : job, db, jobId, env.DB, submission);
           break;
         } catch (error: any) {
           const execErrorMsg = error?.message || "网页抓取与提交执行失败";
           console.warn(`Target ${target.websiteUrl} attempt ${attempt + 1} failed:`, execErrorMsg);
+
+          // A click may already have reached the website. CRM/storage/browser failures cannot justify another submission.
+          if (submission.started) {
+            if (submission.snapshotId) await completeOutbound(env.DB, submission.snapshotId, { status: 'uncertain', errorMessage: execErrorMsg }).catch(captureError => console.error('CRM receipt could not be saved:', captureError));
+            await db.update(siteMessageTargets).set({
+              status: 'skipped', resultCode: 'submission_uncertain', resultMessage: `提交结果无法确认，请人工核实。${execErrorMsg}`,
+              completedAt: new Date(), updatedAt: new Date(),
+            }).where(and(eq(siteMessageTargets.id, target.id), eq(siteMessageTargets.status, 'submitting'))).catch(saveError => console.error('Site submission outcome could not be saved:', saveError));
+            break;
+          }
 
           if (page) {
             await page.close().catch(() => undefined);
