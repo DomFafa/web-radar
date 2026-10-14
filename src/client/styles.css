@@ -57,17 +57,7 @@ a {
 button {
   color: inherit;
 }
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: 3px solid #a9bd78;
-  outline-offset: 3px;
-}
-input,
-textarea,
-select {
+input:is([type='checkbox'], [type='radio'], [type='color'], [type='file']) {
   width: 100%;
   border: 1px solid #dadfd3;
   background: #fffefa;
@@ -83,17 +73,6 @@ select {
 textarea {
   resize: vertical;
   min-height: 72px;
-}
-input::placeholder,
-textarea::placeholder {
-  color: #a2a69b;
-}
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: #809474;
-  box-shadow: 0 0 0 3px #83987114;
 }
 select {
   cursor: pointer;
@@ -146,56 +125,6 @@ small {
 .wrap {
   flex-wrap: wrap;
 }
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 9px 15px;
-  border: 1px solid #d8ddcf;
-  background: transparent;
-  border-radius: 6px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 550;
-  line-height: 1.5;
-  white-space: nowrap;
-  text-decoration: none;
-  transition:
-    background 0.15s,
-    transform 0.15s,
-    border 0.15s;
-}
-.button:hover:not(:disabled) {
-  background: #edf0e5;
-  border-color: #bfcbb5;
-}
-.button.primary {
-  background: var(--forest);
-  border-color: var(--forest);
-  color: #fffefa;
-}
-.button.primary:hover:not(:disabled) {
-  background: #396044;
-  border-color: #396044;
-  transform: translateY(-1px);
-}
-.button.quiet {
-  border-color: transparent;
-  background: transparent;
-  padding: 8px;
-  min-height: 32px;
-}
-.button.danger {
-  border-color: #ddc0b8;
-  color: #a45440;
-  background: #fcf3ec;
-}
-.button.danger:hover:not(:disabled) {
-  background: #f7e7df;
-}
-.button:disabled,
 .upload-button.disabled {
   opacity: 0.42;
   transform: none;
@@ -4574,9 +4503,7 @@ td > .pill {
     gap: 6px;
     margin-bottom: 15px;
   }
-  input,
-  textarea,
-  select {
+  input:is([type='checkbox'], [type='radio'], [type='color'], [type='file']) {
     font-size: 11px;
     padding: 9px 10px;
   }

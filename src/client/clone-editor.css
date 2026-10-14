@@ -1,0 +1,68 @@
+/* Clone application controls use the shared foundation. Uploaded designs and
+   generated website documents retain their own presentation. */
+.clone-editor-heading {
+  flex-wrap: wrap;
+  gap: var(--radar-space-4);
+}
+.clone-editor-heading > div {
+  min-width: 0;
+  max-width: 100%;
+}
+.clone-editor-url-row {
+  display: flex;
+  gap: var(--radar-space-3);
+}
+.clone-editor .clone-editor-control {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.clone-editor .clone-editor-url {
+  flex: 1;
+}
+.clone-editor .button.clone-editor-action {
+  color: var(--radar-action);
+  white-space: normal;
+}
+.clone-editor .button.clone-editor-remove {
+  width: var(--radar-control-height);
+  height: var(--radar-control-height);
+  flex-shrink: 0;
+  padding: 0;
+}
+.clone-editor-role-label {
+  display: block;
+  margin-bottom: var(--radar-space-1);
+  color: var(--radar-text-secondary);
+  font: var(--radar-font-meta)/var(--radar-line-body) var(--radar-font);
+}
+.clone-editor-field {
+  display: block;
+  margin-bottom: var(--radar-space-4);
+  color: var(--radar-text-secondary);
+  font-weight: var(--radar-weight-medium);
+}
+.clone-editor-field > select {
+  display: block;
+  margin-top: var(--radar-space-2);
+}
+.clone-editor .clone-editor-instructions {
+  resize: vertical;
+}
+.clone-editor-result-actions {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.clone-editor-result-actions .button,
+.clone-editor .button.clone-editor-generate {
+  max-width: 100%;
+  white-space: normal;
+}
+@media (max-width: 768px) {
+  .clone-editor-url-row {
+    flex-wrap: wrap;
+  }
+  .clone-editor .clone-editor-url {
+    flex-basis: 100%;
+  }
+}

@@ -72,8 +72,8 @@ export function ContactImportReports({ onClose }: { onClose: () => void }) {
           <h4 style={{ overflowWrap: "anywhere" }}>{detail.job.name} · {detail.job.group_name}</h4>
           <p>{jobStatus(detail.job)} · 已处理 {detail.job.processed} / {detail.job.total} · 未处理 {detail.job.total - detail.job.processed}</p>
           {detail.job.error && <p role="alert">{detail.job.error}</p>}
-          <div className="flex gap-sm" style={{ flexWrap: "wrap" }}>
-            <select className="form-select" aria-label="筛选导入结果" style={{ width: 170 }} value={rowStatus} onChange={(event) => { setRowStatus(event.target.value); setRowPage(1); }}>
+          <div className="radar-filter-toolbar">
+            <select className="form-select radar-filter-field" aria-label="筛选导入结果" value={rowStatus} onChange={(event) => { setRowStatus(event.target.value); setRowPage(1); }}>
               <option value="">全部结果</option>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
             <button className="btn btn-secondary btn-sm" disabled={downloading} onClick={() => download(selectedId)}>下载完整报告</button>

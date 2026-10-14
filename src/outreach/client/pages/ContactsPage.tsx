@@ -578,8 +578,8 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
         <p className="muted" style={{ marginBottom: 20 }}>少量客户可以逐个添加；2 万人等批量名单可上传 CSV 或 Excel，并直接导入到一个分组。发邮件时选择整个分组即可。</p>
         {importing && <p role="status" className="notice">名单正在导入，请保持页面打开，完成后再返回懒人模式。{importProgress?.stage}</p>}
         {/* Filters */}
-        <div className="flex gap-md items-center" style={{ marginBottom: 20, flexWrap: "wrap" }}>
-          <div className="search-bar">
+        <div className="radar-filter-toolbar">
+          <div className="search-bar radar-filter-search">
             <span className="search-icon">🔍</span>
             <input
               placeholder="搜索邮箱..."
@@ -588,8 +588,7 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
             />
           </div>
           <select
-            className="form-select"
-            style={{ width: 180 }}
+            className="form-select radar-filter-field"
             value={selectedGroup}
             onChange={(e) => { setSelectedGroup((e.target as HTMLSelectElement).value); setPage(1); }}
           >
@@ -602,8 +601,7 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
             ))}
           </select>
           <select
-            className="form-select"
-            style={{ width: 180 }}
+            className="form-select radar-filter-field"
             value={selectedTag}
             onChange={(e) => { setSelectedTag((e.target as HTMLSelectElement).value); setPage(1); }}
           >
@@ -616,10 +614,9 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
           {writable && selectedCount > 0 && <button className="btn btn-secondary btn-sm" disabled={bulkBusy} onClick={clearSelection}>取消选择</button>}
           {writable && <button className="btn btn-danger-outline btn-sm" disabled={bulkBusy || importing} onClick={() => setDeleteScope("all")}>清空联系人库</button>}
           {writable && selectedCount > 0 && (
-            <div className="flex gap-sm items-center" style={{ flexWrap: "wrap" }}>
+            <div className="radar-filter-actions">
               <select
-                className="form-select"
-                style={{ width: 150 }}
+                className="form-select radar-filter-field"
                 value={batchGroupSelect}
                 onChange={(e) => setBatchGroupSelect((e.target as HTMLSelectElement).value)}
               >
@@ -639,7 +636,7 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
               </button>
             </div>
           )}
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "var(--color-text-muted)" }}>
+          <span className="radar-filter-summary">
             共 {meta?.total || 0} 个联系人
           </span>
         </div>
@@ -802,7 +799,7 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
                   />
                   {editingContact && <p className="form-help">邮箱是联系人的标识；如需更换邮箱，请添加新联系人。</p>}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="form-grid radar-form-grid">
                   <div className="form-group">
                     <label className="form-label">名称</label>
                     <input
@@ -822,7 +819,7 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
                     />
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="form-grid radar-form-grid">
                   <div className="form-group">
                     <label className="form-label">网站</label>
                     <input
@@ -1027,7 +1024,7 @@ export function ContactsPage({ initialAction, onImportingChange, onContinue }: {
             <div className="modal-body">
               <form onSubmit={handleSaveGroup} style={{ marginBottom: 24, padding: 16, background: "var(--color-bg-input)", borderRadius: 8 }}>
                 <h4 style={{ marginBottom: 12, fontSize: 14, fontWeight: 600 }}>{editingGroup ? "编辑分组" : "新建分组"}</h4>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="form-grid radar-form-grid">
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <input
                       className="form-input"
