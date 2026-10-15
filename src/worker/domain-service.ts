@@ -46,7 +46,7 @@ import {
 } from './provider-contract';
 import { createProviders } from './providers';
 import { validatePageDesignInput } from './providers/image';
-import { privateAssetPreview, readOnlyImagePreview } from './asset-preview';
+import { privateAssetPreview } from './asset-preview';
 import { isTypedMaterials } from '../templates/materials-typed';
 import { preparePublicVariant, preparedImageVariants, publicMediaPolicy, typedRendererVersion } from './public-media';
 import { renderSite, renderSiteFiles } from '../templates';
@@ -278,28 +278,19 @@ export class DomainService {
       return json({ project: await this.project(path[2], principal) });
     if (path[0] !== 'api') throw new DomainError(404, 'not_found', '接口不存在。');
     if (path[1] === 'source-products' && method === 'GET') {
-      if (path[2]) {
-        const id = path[2], version = url.searchParams.get('expectedVersion');
-        requireCondition(path.length === 4 && path[3] === 'thumbnail' && id.length <= 200 && version && version.length <= 200, 400, 'invalid_source_image', '产品预览请求无效。');
-        const { products } = await prService<{ products: ProductSnapshot[] }>(this.env, principal, 'products', { productIds: [id] });
-        const current = products.find(product => product.id === id);
-        requireCondition(current, 404, 'source_unavailable', '来源产品暂不可用，请刷新后重试。');
-        requireCondition(current.version === version, 409, 'source_changed', '来源产品已更新，请重新选择。');
-        const original = await prImage(this.env, principal, id, current.version, 'original');
-        const bytes = await readOnlyImagePreview(this.env, original);
-        return new Response(bytes, { headers: { 'Content-Type': 'image/webp', 'Content-Length': String(bytes.byteLength), 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
-      }
-      const productIds = url.searchParams.getAll('productId');
-      const q = url.searchParams.get('q') ?? undefined;
-      requireCondition(productIds.length <= 24 && new Set(productIds).size === productIds.length && productIds.every(id => id.length >= 1 && id.length <= 200) && (q === undefined || q.length <= 200), 400, 'invalid_products', '请选择有效且不重复的来源产品。');
-      if (productIds.length) return json(await prService(this.env, principal, 'products', { productIds }));
       const offset = Number(url.searchParams.get('offset') ?? 0),
         limit = Number(url.searchParams.get('limit') ?? 20);
       requireCondition(
-        Number.isInteger(offset) && offset >= 0 && offset <= 100000 && Number.isInteger(limit) && limit >= 1 && limit <= 100,
-        400, 'invalid_pagination', '分页参数无效。',
+        Number.isInteger(offset) &&
+          offset >= 0 &&
+          Number.isInteger(limit) &&
+          limit >= 1 &&
+          limit <= 100,
+        400,
+        'invalid_pagination',
+        '分页参数无效。',
       );
-      return json(await prService(this.env, principal, 'products', { offset, limit, ...(q === undefined ? {} : { q }) }));
+      return json(await prService(this.env, principal, 'products', { offset, limit }));
     }
     if (path[1] === 'admin' && path[2] === 'provider-accounts') {
       requireCondition(principal.systemRole === 'super_admin', 403, 'admin_required', '仅平台管理员可以管理共享账号。');

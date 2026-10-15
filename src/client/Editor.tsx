@@ -1,4 +1,3 @@
-import { ProductImageSelectionFrameHost } from './ProductImageSelectionFrameHost';
 import { writeBusiness } from '../shared/access';
 import { blocksModeChange, withBuildMode } from '../shared/build-mode';
 import { CompanyFields } from './CompanyFields';
@@ -97,7 +96,6 @@ export default function Editor({
   services,
   testMode,
   embedded = false,
-  productRadarOrigin = null,
   onBack,
 }: {
   projectId: string;
@@ -105,7 +103,6 @@ export default function Editor({
   services: ServiceStatus[];
   testMode: boolean;
   embedded?: boolean;
-  productRadarOrigin?: string | null;
   onBack: () => void;
 }) {
   const [seoReport, setSeoReport] = useState<(SeoReport & {version:number; origin:string|null; needsPublish:boolean}) | null>(null);
@@ -158,8 +155,11 @@ export default function Editor({
   const [conflict, setConflict] = useState<Project | null>(null),
     [choices, setChoices] = useState<Record<string, 'mine' | 'theirs'>>({}),
     [leaveOpen, setLeaveOpen] = useState(false);
-  const [sourceOpen, setSourceOpen] = useState(false);
-  const [sourceSelectionSettings, setSourceSelectionSettings] = useState<{ limit: number; excludedIds: string[] } | null>(null);
+  const [sourceOpen, setSourceOpen] = useState(false),
+    [sourceProducts, setSourceProducts] = useState<ProductSnapshot[]>([]),
+    [sourceIds, setSourceIds] = useState<string[]>([]),
+    [sourceTotal, setSourceTotal] = useState(0),
+    [sourceOffset, setSourceOffset] = useState(0);
   const [sourceChanges, setSourceChanges] = useState<SourceChange[] | null>(null),
     [applyIds, setApplyIds] = useState<string[]>([]),
     [previewOpen, setPreviewOpen] = useState(false);
@@ -587,21 +587,27 @@ export default function Editor({
       } finally {setUploadState(null);uploadController.current=null;}
     }, '媒体已上传并加入 Banner，请保存草稿；已成功上传的文件会保留。');
   }
-  function getSources() {
-    if (!productRadarOrigin) { setError('Product Radar 产品选择尚未配置，请联系管理员。'); return; }
-    const products = projectRef.current?.draft.products ?? [];
-    if (products.length >= 20) return;
-    setSourceSelectionSettings({ limit: 20 - products.length, excludedIds: [...new Set(products.flatMap(product => product.source ? [product.source.id] : []))] });
-    setSourceOpen(true);
+  async function getSources(offset = 0) {
+    await action('sources', async () => {
+      const result = await api<{ products: ProductSnapshot[]; total: number }>(
+        `/api/source-products?offset=${offset}&limit=20`,
+      );
+      setSourceProducts(result.products);
+      setSourceTotal(result.total);
+      setSourceOffset(offset);
+      setSourceOpen(true);
+    });
   }
-  async function importSources(productIds: string[]) {
-    let imported = false, failure: unknown;
+  async function importSources() {
     await action(
       'import',
-      async () => { try { await command('import', { productIds }); imported = true; } catch (cause) { failure = cause; throw cause; } },
+      async () => {
+        await command('import', { productIds: sourceIds });
+        setSourceOpen(false);
+        setSourceIds([]);
+      },
       '所选产品和图片已复制为网站独立快照。',
     );
-    if (!imported) throw failure instanceof Error ? failure : new Error('请等待当前操作完成后重试导入。');
   }
   async function checkSources() {
     await action('source-check', async () => {
@@ -1932,7 +1938,81 @@ export default function Editor({
           )}
         </main>
       </div>
-      {sourceOpen && productRadarOrigin && sourceSelectionSettings && <ProductImageSelectionFrameHost productRadarOrigin={productRadarOrigin} limit={sourceSelectionSettings.limit} excludedIds={sourceSelectionSettings.excludedIds} onClose={() => setSourceOpen(false)} onChoose={importSources} onError={setError} />}
+      {sourceOpen && (
+        <Modal title="从 Product Radar 导入产品" onClose={() => setSourceOpen(false)} wide>
+          <p className="muted">
+            只显示当前账号有权限的产品。图片与设计条件将复制为独立快照，不影响原产品库。
+          </p>
+          <div className="source-select-list">
+            {sourceProducts.length === 0 ? (
+              <Empty title="暂无可导入的产品" />
+            ) : (
+              sourceProducts.map((p) => (
+                <label className="source-select-item" key={p.id}>
+                  <input
+                    type="checkbox"
+                    checked={sourceIds.includes(p.id)}
+                    disabled={
+                      draft.products.some((existing) => existing.source?.id === p.id) ||
+                      (!sourceIds.includes(p.id) && sourceIds.length + draft.products.length >= 20)
+                    }
+                    onChange={(e) =>
+                      setSourceIds((current) =>
+                        e.target.checked ? [...current, p.id] : current.filter((id) => id !== p.id),
+                      )
+                    }
+                  />
+                  <div>
+                    <strong>{p.name}</strong>
+                    <p>{p.description}</p>
+                    <small>
+                      {p.material} {p.dimensions} ·{' '}
+                      {p.factsOrigin === 'product-set' ? '产品套图，请核实产品事实' : '生成概念，请核实产品事实'}
+                    </small>
+                  </div>
+                  <span className="pill muted">
+                    {draft.products.some((existing) => existing.source?.id === p.id)
+                      ? '已导入'
+                      : p.workflow === 'build'
+                        ? 'Build'
+                        : 'Create'}
+                  </span>
+                </label>
+              ))
+            )}
+          </div>
+          <div className="source-pagination">
+            <Button
+              disabled={sourceOffset === 0 || !!busy}
+              onClick={() => getSources(Math.max(0, sourceOffset - 20))}
+            >
+              上一页
+            </Button>
+            <span>
+              {sourceOffset + 1}–{Math.min(sourceOffset + 20, sourceTotal)} / {sourceTotal}
+            </span>
+            <Button
+              disabled={sourceOffset + 20 >= sourceTotal || !!busy}
+              onClick={() => getSources(sourceOffset + 20)}
+            >
+              下一页
+            </Button>
+          </div>
+          <div className="modal-actions">
+            <span>
+              已选择 {sourceIds.length} 个 · 可再添加 {20 - draft.products.length} 个
+            </span>
+            <Button
+              kind="primary"
+              onClick={importSources}
+              busy={busy === 'import'}
+              disabled={!sourceIds.length || !!busy}
+            >
+              导入所选产品
+            </Button>
+          </div>
+        </Modal>
+      )}
       {sourceChanges && (
         <Modal title="检查来源更新" onClose={() => setSourceChanges(null)} wide>
           {sourceChanges.length === 0 ? (

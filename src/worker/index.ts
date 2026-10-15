@@ -53,9 +53,8 @@ app.get('/api/health', (c) =>
 app.get('/api/config', async (c) => {
   let configured = false,
     origins: string[] = [];
-  let productRadarOrigin: string | null = null;
   try {
-    productRadarOrigin = integrationConfig(c.env).origin;
+    integrationConfig(c.env);
     configured = true;
   } catch {}
   try {
@@ -63,7 +62,6 @@ app.get('/api/config', async (c) => {
   } catch {}
   return c.json({
     testMode: testMode(c.env),
-    productRadarOrigin,
     parentOrigins: origins,
     services: [
       {
