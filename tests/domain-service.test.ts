@@ -14,10 +14,9 @@ import {
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Principal, Job, Project } from '../src/shared/model';
 
-const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'product-set', gallery: false, failImage: '', materialsEmail:'other@example.com', imageRequests: [] as string[] }));
+const sourceState = vi.hoisted(() => ({ version: 'v1', revoked: false, failureStatus: 403, factsOrigin: 'product-set', gallery: false, failImage: '', materialsEmail:'other@example.com', sourceDenied: false, requests: [] as Array<{ path: string; body: unknown }>, imageRequests: [] as string[] }));
 vi.mock('../src/worker/product-radar', () => ({
-  prService: async (_e: unknown, p: Principal, path: string, body: { productIds?: string[] }) =>
-    path === 'context'
+  prService: async (_e: unknown, p: Principal, path: string, body: { productIds?: string[] }) => { sourceState.requests.push({ path, body }); if(path==='products'&&sourceState.sourceDenied)throw Object.assign(new Error('Permission denied'),{status:403,code:'source_denied'}); return path === 'context'
       ? sourceState.revoked
         ? Promise.reject(
             Object.assign(new Error('Permission revoked'), { status: sourceState.failureStatus }),
@@ -43,7 +42,7 @@ vi.mock('../src/worker/product-radar', () => ({
             images:[{id:'original',kind:'original',caption:'Original',contentType:null},...(sourceState.gallery ? [{id:'detail',kind:'detail',caption:'Detail',contentType:null},{id:'scene',kind:'scene',caption:'Scene',contentType:null}]:[])],
           })),
           total: body.productIds?.length ?? 0,
-        },
+        }; },
   prImage: async (_e:unknown,_p:Principal,_id:string,_version:string,imageId='original') => {
     sourceState.imageRequests.push(imageId);
     if (imageId === sourceState.failImage) throw Object.assign(new Error('Source image changed'),{status:409});
@@ -403,6 +402,8 @@ beforeEach(() => {
   sourceState.gallery = false;
   sourceState.failImage = '';
   sourceState.imageRequests = [];
+  sourceState.requests = [];
+  sourceState.sourceDenied = false;
   bucket = mediaBucket();
   env = {
     DB: database(),
@@ -956,6 +957,30 @@ describe('durable domain commands', () => {
     ]);
     expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
     expect((await get(p)).project.version).toBe(2);
+  });
+  it('forwards source selection search and bounded distinct IDs without changing imports', async () => {
+    expect((await request('/api/source-products?offset=24&limit=24&q=Bottle')).status).toBe(200);
+    expect(sourceState.requests.at(-1)).toEqual({path:'products',body:{offset:24,limit:24,q:'Bottle'}});
+    expect((await request('/api/source-products?productId=a&productId=b')).status).toBe(200);
+    expect(sourceState.requests.at(-1)).toEqual({path:'products',body:{productIds:['a','b']}});
+    expect((await request('/api/source-products?productId=a&productId=a')).status).toBe(400);
+    expect((await request('/api/source-products?'+Array.from({length:25},(_,i)=>'productId='+i).join('&'))).status).toBe(400);
+    expect((await request('/api/source-products?q='+('a'.repeat(201)))).status).toBe(400);
+  });
+  it('revalidates source scope and version before serving a read-only bounded preview', async () => {
+    env.SITE_BUILDER_URL='https://builder.example.test'; env.SITE_BUILDER_KEY='server-only';
+    const webp=new TextEncoder().encode('RIFF0000WEBPtest');
+    const fetcher=vi.fn(async()=>new Response(webp,{headers:{'Content-Type':'image/webp'}})); vi.stubGlobal('fetch',fetcher);
+    const response=await service.fetch(new Request('http://localhost/api/source-products/source-1/thumbnail?expectedVersion=v1',{headers:{'X-WR-Principal':JSON.stringify(owner)}}));
+    expect(response.status).toBe(200); expect(response.headers.get('Content-Type')).toBe('image/webp');
+    expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([...webp]);
+    expect(sourceState.requests.at(-1)).toEqual({path:'products',body:{productIds:['source-1']}});
+    expect(sourceState.imageRequests).toEqual(['original']); expect(bucket.objects.size).toBe(0);
+    const old=await request('/api/source-products/source-1/thumbnail?expectedVersion=old'); expect(old.status).toBe(409);
+    expect(fetcher).toHaveBeenCalledTimes(1); expect(sourceState.imageRequests).toHaveLength(1);
+    sourceState.sourceDenied=true; expect((await request('/api/source-products/source-1/thumbnail?expectedVersion=v1')).status).toBe(403);
+    expect(fetcher).toHaveBeenCalledTimes(1);expect(sourceState.imageRequests).toHaveLength(1);
+    vi.unstubAllGlobals();
   });
   it('copies source bytes before completing an imported draft and deduplicates internal handoff', async () => {
     const products = (await request('/api/source-products')).data.products;
