@@ -43,7 +43,7 @@ function ChunkFallback() {
   return <div className="chunk-loading"><span className="chunk-spinner" />正在加载…</div>;
 }
 
-type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: string[]; productRadarOrigin?: string | null };
+type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: string[] };
 const embedded = window.location.pathname === '/embed/product-radar';
 const embedOrigin = parentOrigin(new URLSearchParams(window.location.search).get('parentOrigin'));
 
@@ -282,7 +282,6 @@ export default function App() {
               services={config?.services || []}
               testMode={!!config?.testMode}
               embedded={embedded}
-              productRadarOrigin={config?.productRadarOrigin ?? null}
               onBack={() => setSelected(null)}
             />
           </Suspense>
