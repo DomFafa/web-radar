@@ -34,12 +34,16 @@ function target(env: Env, recipient: string): Target {
     routes = JSON.parse(env.TARGETS || '{}')[domain];
   const options: Target[] = Array.isArray(routes) ? routes : routes ? [routes] : [];
   if (options.filter((r) => r.default).length > 1) throw new Error('Multiple default inboxes');
+  const plus = local.includes('+'),
+    alias = plus ? local.slice('reply+'.length) : local;
+  if (plus && (!local.startsWith('reply+') || !/^[es]-[a-f0-9]{12}-[a-f0-9]{32}$/.test(alias)))
+    throw new Error('Invalid receiving alias');
   const t =
     options.find(
       (r) =>
-        local.startsWith('e-' + r.id.replaceAll('-', '').slice(0, 12) + '-') ||
-        local.startsWith('s-' + r.id.replaceAll('-', '').slice(0, 12) + '-'),
-    ) || (!/^[es]-/.test(local) ? options.find((r) => r.default) : undefined);
+        alias.startsWith('e-' + r.id.replaceAll('-', '').slice(0, 12) + '-') ||
+        alias.startsWith('s-' + r.id.replaceAll('-', '').slice(0, 12) + '-'),
+    ) || (!plus && !/^[es]-/.test(local) ? options.find((r) => r.default) : undefined);
   if (!t || !t.id || !t.secret || !t.forwardTo || !String(t.endpoint).startsWith('https://'))
     throw new Error('Receiving domain not provisioned');
   return t;

@@ -27,7 +27,7 @@ export async function typedMaterialsFixture(templateId:string,productCount=5,con
     }
   }
   const core:Record<string,string>={'about-headline':'Explore our collection','about-story':'Discuss product options and your assortment with our team.','about-highlights':'✓ | Product options | Discuss your assortment','hero-headline':'Confirmed wooden collection','hero-subtitle':'Explore these confirmed wooden products','primary-cta':'Request product details','company-about':m.brand.description};
-  m.textBindings=p.textSlots.map((slot,i)=>({slotId:slot.id,locale:'en',text:[...(core[slot.id]||`Approved collection copy ${i}`)].slice(0,slot.maxCodePoints).join(''),factReferences:['f1']}));
+  m.textBindings=p.textSlots.flatMap((slot,i)=>(slot.repeat==='per-product'?m.products.map(product=>({productId:product.id})):[{}]).map(target=>({slotId:slot.id,...target,locale:'en' as const,text:[...(core[slot.id]||`Approved collection copy ${i}`)].slice(0,slot.maxCodePoints).join(''),factReferences:['f1']})));
   m.omittedSectionIds=p.optionalSections.map(s=>s.id);
   input.confirmation.contentSha256=await sha256(canonical({source:input.source,materials:m}));return input;
 }

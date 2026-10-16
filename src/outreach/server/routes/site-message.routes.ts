@@ -1,3 +1,4 @@
+import { MAX_SITE_TARGETS, normalizeSiteTargets } from "../../shared/site-targets";
 import { actorScope, creatorFilter } from '../lib/actor-scope';
 import { siteOverview } from "../lib/overview";
 import { Hono } from "hono";
@@ -12,7 +13,7 @@ import { runSiteMessageJob, isAbnormalTarget, isNoContactTarget, isInaccessibleT
 type Env = { Bindings: Bindings; Variables: Variables };
 export const siteMessageRoutes = new Hono<Env>();
 
-const MAX_TARGETS_PER_JOB = 500;
+const MAX_TARGETS_PER_JOB = MAX_SITE_TARGETS;
 const MAX_TARGET_ID_BATCH_SIZE = 75;
 const MAX_D1_BATCH_SIZE = 100;
 
@@ -39,35 +40,6 @@ const insertSiteMessageTargets = async (database: D1Database, rows: TargetInsert
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
     ).bind(row.id, row.jobId, row.position, row.websiteUrl, row.normalizedHost, timestamp, timestamp)));
   }
-};
-
-const normalizeWebsite = (raw: string) => {
-  const value = raw.trim();
-  const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
-  if (!/^https?:$/.test(url.protocol)) throw new Error("仅支持 HTTP/HTTPS 网站");
-  url.hash = "";
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  const blockedIpv6 = host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80:");
-  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal") || blockedIpv6 || /^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) {
-    throw new Error("不允许访问本地或私有网络地址");
-  }
-  return { url: url.toString(), host: host.replace(/^www\./, "") };
-};
-
-const normalizeTargets = (input: unknown) => {
-  const rawTargets = Array.isArray(input) ? input : String(input || "").split(/[\n,;]+/);
-  const normalized = new Map<string, { url: string; host: string }>();
-  const invalid: string[] = [];
-  for (const raw of rawTargets) {
-    if (!String(raw).trim()) continue;
-    try {
-      const target = normalizeWebsite(String(raw));
-      if (!normalized.has(target.host)) normalized.set(target.host, target);
-    } catch {
-      invalid.push(String(raw).trim());
-    }
-  }
-  return { normalized, invalid };
 };
 
 siteMessageRoutes.use("/*", requireAuth);
@@ -284,7 +256,7 @@ siteMessageRoutes.post("/", requirePermission("site-messages:write"), async (c) 
   if (message.length < 10 || message.length > 5000) return c.json({ success: false, error: "留言内容应为 10-5000 个字符" }, 400);
   if (body.authorized !== true) return c.json({ success: false, error: "请确认这些网站允许你提交业务咨询，并遵守其使用条款" }, 400);
 
-  const { normalized, invalid } = normalizeTargets(body.targets);
+  const { normalized, invalid, duplicates } = normalizeSiteTargets(body.targets);
   if (!normalized.size) return c.json({ success: false, error: "请至少提供一个有效的公网网站地址" }, 400);
   if (normalized.size > MAX_TARGETS_PER_JOB) return c.json({ success: false, error: `单个任务最多支持 ${MAX_TARGETS_PER_JOB} 个不同域名` }, 400);
 
@@ -328,7 +300,7 @@ siteMessageRoutes.post("/", requirePermission("site-messages:write"), async (c) 
     return c.json({ success: false, error: "目标网站保存失败，请稍后重试" }, 500);
   }
   const [job] = await db.select().from(siteMessageJobs).where(eq(siteMessageJobs.id, id));
-  return c.json({ success: true, data: job, meta: { accepted: normalized.size, invalid } }, 201);
+  return c.json({ success: true, data: job, meta: { accepted: normalized.size, invalid, duplicates } }, 201);
 });
 
 siteMessageRoutes.patch("/:id", requirePermission("site-messages:write"), async (c) => {
@@ -351,10 +323,12 @@ siteMessageRoutes.patch("/:id", requirePermission("site-messages:write"), async 
 
   let normalized: Map<string, { url: string; host: string }> | null = null;
   let invalid: string[] = [];
+  let duplicates: string[] = [];
   if (job.status === "draft" && body.targets !== undefined) {
-    const result = normalizeTargets(body.targets);
+    const result = normalizeSiteTargets(body.targets);
     normalized = result.normalized;
     invalid = result.invalid;
+    duplicates = result.duplicates;
     if (!normalized.size) return c.json({ success: false, error: "请至少提供一个有效的公网网站地址" }, 400);
     if (normalized.size > MAX_TARGETS_PER_JOB) return c.json({ success: false, error: `单个任务最多支持 ${MAX_TARGETS_PER_JOB} 个不同域名` }, 400);
   }
@@ -387,7 +361,7 @@ siteMessageRoutes.patch("/:id", requirePermission("site-messages:write"), async 
     await insertSiteMessageTargets(c.env.DB, targetRows);
   }
   const [updated] = await db.select().from(siteMessageJobs).where(eq(siteMessageJobs.id, jobId));
-  return c.json({ success: true, data: updated, meta: { accepted: normalized?.size, invalid } });
+  return c.json({ success: true, data: updated, meta: { accepted: normalized?.size, invalid, duplicates } });
 });
 
 siteMessageRoutes.post("/:id/start", requirePermission("site-messages:send"), async (c) => {
@@ -422,6 +396,12 @@ siteMessageRoutes.post("/:id/start", requirePermission("site-messages:send"), as
     return c.json({ success: false, error: "没有可重试的目标；已提交或提交结果待核实的网站不会自动重发。" }, 400);
   }
 
+  // Claim before changing targets so simultaneous confirmations cannot enqueue twice.
+  const claimed = await db.update(siteMessageJobs).set({ status: "queued", startedAt: new Date(), completedAt: null, updatedAt: new Date() })
+    .where(and(eq(siteMessageJobs.id, jobId), sql`${siteMessageJobs.status} NOT IN ('queued', 'running')`))
+    .returning({ id: siteMessageJobs.id });
+  if (!claimed.length) return c.json({ error: "任务正在执行，请勿重复启动" }, 409);
+
   for (const batch of chunkItems(executableTargets, MAX_TARGET_ID_BATCH_SIZE)) {
     await db.update(siteMessageTargets).set({
       status: "queued",
@@ -435,8 +415,6 @@ siteMessageRoutes.post("/:id/start", requirePermission("site-messages:send"), as
       updatedAt: new Date(),
     }).where(inArray(siteMessageTargets.id, batch.map((target) => target.id)));
   }
-
-  await db.update(siteMessageJobs).set({ status: "queued", startedAt: new Date(), completedAt: null, updatedAt: new Date() }).where(eq(siteMessageJobs.id, jobId));
 
   try {
     await c.env.SITE_MESSAGE_QUEUE.send({ kind: "site-message-runner", jobId });

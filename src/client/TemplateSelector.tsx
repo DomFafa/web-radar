@@ -27,14 +27,14 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer', industries: ['瑜伽馆', '冥想中心', '身心疗愈', '颂钵调息', '高端美学生活'],
     features: ['1:1 还原静修首屏大图与浮动课程卡', '课程分类网格、时长与预约详情', '关于理念、导师团队与环境展示', '会员计划、折叠答疑与预约咨询表单'],
     accentColor: TEMPLATE_BRAND_COLORS.auravell, badge: 'Auravell · 瑜伽身心',
-    previewImg: '/templates/previews/auravell.2eaa361e7dfe8f0c.jpg',
+    previewImg: '/templates/previews/auravell.58199c6bf9c5ffbd.jpg',
   },
   {
     id: 'careflow-healthcare', name: 'Careflow 医疗健康', englishName: 'Careflow Healthcare',
     tagline: '还原 Careflow Home V1 的蓝白医疗视觉、宽幅走廊大图与柔光卡片；完整服务与预约咨询网站。',
     category: 'enterprise', industries: ['医疗机构', '健康服务', '诊所', '康复中心', '专业咨询'],
     features: ['原站响应式布局与本地字体', '设施介绍、团队轮播与折叠问答', '服务目录、详情、关于和联系页', '主副图切换与预约咨询表单'],
-    accentColor: TEMPLATE_BRAND_COLORS['careflow-healthcare'], badge: 'Careflow · 医疗健康', previewImg: '/templates/previews/careflow-healthcare.0ffe9b22bce61216.jpg',
+    accentColor: TEMPLATE_BRAND_COLORS['careflow-healthcare'], badge: 'Careflow · 医疗健康', previewImg: '/templates/previews/careflow-healthcare.7fbbf15fcc5616a1.jpg',
   },
   {
     id: 'toorun-early-learning', name: '童趣早教中心', englishName: 'Toorun Early Learning',
@@ -42,7 +42,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer', industries: ['早教中心', '托育机构', '幼儿园', '儿童课程', '亲子活动'],
     features: ['云朵渐变与四图拼贴首屏', '课程列表与独立课程详情', '关于、联系与常见问题页面', '移动菜单与现有询盘表单'],
     accentColor: TEMPLATE_BRAND_COLORS['toorun-early-learning'], badge: 'Toorun · 幼儿早教',
-    previewImg: '/templates/previews/toorun-early-learning.dfb78be0504ef868.jpg',
+    previewImg: '/templates/previews/toorun-early-learning.b24ff8a490656106.jpg',
   },
   {
     id: 'lumi-business', name: 'Lumi 智慧商业', englishName: 'Lumi Business & Strategy',
@@ -50,14 +50,14 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'enterprise', industries: ['企业咨询', '数字服务', '营销工作室', '商务服务', '软件服务'],
     features: ['参考原站桌面与移动布局', '视频首屏与服务轮播', '价格、博客、文章与招聘页面', '服务详情与现有询盘表单'],
     accentColor: TEMPLATE_BRAND_COLORS['lumi-business'], badge: 'Lumi · 企业服务', hasVideo: true,
-    previewImg: '/templates/previews/lumi-business.db0d249082becfa2.jpg',
+    previewImg: '/templates/previews/lumi-business.2a879a08ca1f3c86.jpg',
   },
   {
     id: 'pawfect-groom', name: '暖心宠物美容', englishName: 'Pawfect Groom',
     tagline: '暖白、青绿与琥珀色的宠物美容沙龙；有机轮廓首屏、服务菜单与预约咨询。',
     category: 'consumer', industries: ['宠物美容', '犬只护理', '本地服务', '宠物沙龙'],
     features: ['金毛肖像与有机浮动首屏', '服务列表与独立详情页', '图库、关于我们与常见问题', '预约咨询接入现有询盘'],
-    accentColor: TEMPLATE_BRAND_COLORS['pawfect-groom'], badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.ef266445c18ecf37.jpg',
+    accentColor: TEMPLATE_BRAND_COLORS['pawfect-groom'], badge: '宠物美容 · 温暖治愈', previewImg: '/templates/previews/pawfect-groom.4e3ef89afac2b6e1.jpg',
   },
   {
     id: 'mello-coffee', name: 'Mello 治愈咖啡烘焙', englishName: 'Mello Coffee & Bakery',
@@ -65,7 +65,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: 'consumer', industries: ['咖啡烘焙', '精品茶饮', '轻食甜品', '街角咖啡', '餐饮零售'],
     features: ['1:1 还原 Webflow 原站全套桌面与移动布局', '互动心情罗盘与时间轴日程选项卡', '手绘小票卡片与座位热点交互', '完整 6 大品类咖啡烘焙价目单与详情页'],
     accentColor: TEMPLATE_BRAND_COLORS['mello-coffee'], badge: 'Mello · 治愈咖啡烘焙',
-    previewImg: '/templates/previews/mello-coffee.f251cb4d1c141730.jpg',
+    previewImg: '/templates/previews/mello-coffee.b446e1c0ccaadec8.jpg',
   },
 
   {
@@ -78,7 +78,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['马卡龙糖果配色', '左右分栏萌趣舞台', '4大感官魔力标签', '立体糖果展台网格'],
     accentColor: TEMPLATE_BRAND_COLORS['senseng-candy'],
     badge: '童趣感官玩具 · 爆款首选',
-    previewImg: '/templates/previews/senseng-candy.9b0f0d6425301df8.jpg',
+    previewImg: '/templates/previews/senseng-candy.46157a2be925cb18.jpg',
   },
   {
     id: 'senseng-video',
@@ -91,7 +91,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     accentColor: TEMPLATE_BRAND_COLORS['senseng-video'],
     badge: '首屏动态视频 · 沉浸震撼',
     hasVideo: true,
-    previewImg: '/templates/previews/senseng-video.e34176ef503d3488.jpg',
+    previewImg: '/templates/previews/senseng-video.ce17b0fca9b33a0c.jpg',
   },
   {
     id: 'senseng-nature',
@@ -103,7 +103,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     features: ['柔和波浪弧线', '生态减碳进度条', '晨雾滑入动效', '植物标本瀑布流'],
     accentColor: TEMPLATE_BRAND_COLORS['senseng-nature'],
     badge: '零塑环保自然 · 动态减碳条',
-    previewImg: '/templates/previews/senseng-nature.833f84aa6cdbc38f.jpg',
+    previewImg: '/templates/previews/senseng-nature.c8787079dddb616c.jpg',
   },
 ];
 

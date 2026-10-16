@@ -1,6 +1,6 @@
 import { isActiveTemplate } from '../../shared/template-availability';
 import { availableMaterialsTemplateReleases } from '../../templates/materials-releases';
-import { getMaterialsTemplate } from '../../templates/materials';
+import { currentMaterialsTemplate } from './current-materials';
 import { materialsPages } from '../../shared/materials';
 import { sha256 } from '../http';
 import { templateGuides } from './catalog';
@@ -13,7 +13,7 @@ export async function materialsCatalog() {
     ...availableMaterialsTemplateReleases().map(r => ({ templateId: r.contract.templateId, name: r.name })),
   ];
   const templates = await Promise.all(entries.filter((entry, index, all) => isActiveTemplate(entry.templateId) && all.findIndex(other => other.templateId === entry.templateId) === index).map(async entry => {
-    const profile = getMaterialsTemplate(entry.templateId);
+    const profile = currentMaterialsTemplate(entry.templateId);
     const revision = profile?.contractRevision;
     const query = revision ? `?contractRevision=${encodeURIComponent(revision)}` : '';
     const candidateCover = templateCovers[entry.templateId];

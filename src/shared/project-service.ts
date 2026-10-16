@@ -41,6 +41,8 @@ export interface ProjectServicePreview {
   html: string;
   /** Fixed first-party interactions only; never extracted from submitted HTML. */
   runtime: string;
+  /** Optional trusted prepaint code for new motion releases; legacy responses omit it. */
+  prepareRuntime?: string;
   page: DesignPage;
   lang: Language;
   productId?: string;

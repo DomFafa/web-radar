@@ -1,0 +1,77 @@
+{
+  "auravell": {
+    "revision": "2026-10-02.auravell-materials.2",
+    "contractSha256": "4375252e7121edd17632df6ec8627aefefcbeac22e798c9211a91feb6f48656e",
+    "pages": {
+      "home": "09f52d6c58ea24aa871be4c0e323dea7f29eb8ea63ccb15964dda11a82b996ec",
+      "catalog": "24cd2f3e0f6c3d762f4bc0faa57894fd85fef0212de02810ec989cf336febdfc",
+      "about": "be353426ab66441e4b627eda9fb4e5f7edd770341023f2a9cb15126cc7d40437",
+      "contact": "e20e5a29d65fb1adbae6d1be0dfd64cb833d009873dbe6c024496d0a08e7d268",
+      "detail:p0": "8aca72eefc84a495e5fc470d6283cc0f19b8270709ec4cdd2c3a1b75aa2b564a",
+      "detail:p1": "1c8fd8bc9615bb661a08a87183e7392a022da386baba7fecd5ac4dc18657eb00",
+      "detail:p2": "6b5a97a81b8f6d3d81ef5f70b2dba4843b2c31f983ab1b505fe63cbcec881745"
+    },
+    "workerRuntimeSha256": "f8584a0e58e546e6dfd42ab9f853c15a86854ee59d56c1285f674eeada50898d",
+    "clientRuntimeSha256": "0db292257223fe617f3b2557bdc69adb48de28fa660a951082f9e1ec37332d30"
+  },
+  "careflow-healthcare": {
+    "revision": "2026-10-02.careflow-healthcare-materials.2",
+    "contractSha256": "5f62da14e19e7af4fd984a51628151c744d53803add2bfc0887add74b30ac2f0",
+    "pages": {
+      "home": "86065b9b9ff02e7e35af108b066534451259fa9fa62c6930d1841d12d190c4dc",
+      "catalog": "4665690694e6d3b42df5bd3428560d7ae507e21e9c25b18f7490446bd161c773",
+      "about": "1c1c82a0ebcaa4991d69084f68129f6345bd6b2b4b5c5eb7ec3b9fe92ea658d0",
+      "contact": "b204a59082b77a3266243c6e11075b82a5327ef6901a3263c63713217f188b42",
+      "detail:p0": "af5175a5f59ab33dfb70cd97257fd1b2fb9c0335a8f1b89630cf550d1a9ff74f",
+      "detail:p1": "a85868359e4d5adb8c676b90bd20972752e518bfb04f6f2764d4a5ca1c0fe4fb",
+      "detail:p2": "1341a6fd188825f92d337846238f9fc5836bd9c57f2691b4ed73b2463ea855d9"
+    },
+    "workerRuntimeSha256": "f8584a0e58e546e6dfd42ab9f853c15a86854ee59d56c1285f674eeada50898d",
+    "clientRuntimeSha256": "0db292257223fe617f3b2557bdc69adb48de28fa660a951082f9e1ec37332d30"
+  },
+  "toorun-early-learning": {
+    "revision": "2026-10-02.toorun-early-learning-materials.2",
+    "contractSha256": "f28f7bc9989405c19f1a745d1fe93c5de848fbb5003db7eb80b5e2f304164d7d",
+    "pages": {
+      "home": "001374b4bdc6e670ecd79da681e8c8978c70b01bee86df08c0580591214191a3",
+      "catalog": "e06dd60ba29142da4c097505a6ac27595806d58128fa49804fc7460466c29e7d",
+      "about": "c7e7accd6afdf119aa54692093a724ed9bcdc201866c9b9329def8da27d25cab",
+      "contact": "47d7d40fc89d71940861252261903a7b4404ccba82355600119d3d055efc7a47",
+      "detail:p0": "e19c9df268174fc1f3582a7277296a076583c49011498015f47a44a7d4306393",
+      "detail:p1": "6a79942514c3acc5d19552f3d48020651356efbf168110bbc9cec073b8421d58",
+      "detail:p2": "edc206259acdbe4238e2f166467789c9444f2dfff63365d124f3a914a4b1d245"
+    },
+    "workerRuntimeSha256": "f8584a0e58e546e6dfd42ab9f853c15a86854ee59d56c1285f674eeada50898d",
+    "clientRuntimeSha256": "0db292257223fe617f3b2557bdc69adb48de28fa660a951082f9e1ec37332d30"
+  },
+  "lumi-business": {
+    "revision": "2026-10-02.lumi-business-materials.2",
+    "contractSha256": "c359c3f1223ae4718e96a66e6c1bd1b108d8acc29d951d8763c15df37b6f85cd",
+    "pages": {
+      "home": "15dc108727a82ae69d4fbdd9055c522bda641f70e085075d9f3cb681f99667b4",
+      "catalog": "37a2df56b5cab0f02c5732f9c1c1e90bbb42561523c309a3567651dc88d4621d",
+      "about": "95fe311e6ecd15190cd5cd7435b1844151e8aa6d96f084b533d4339d3a51313b",
+      "contact": "46d51b0082af663de00595877f465ee62714ee4ad93272cefe6760507735c040",
+      "detail:p0": "48666964c2cb0c78ba76e447755fa0fbaf9da881c7350be751668f9cbe7f5dd5",
+      "detail:p1": "7652aa499a2ec856934dc23dae6a03b81d83fc897333bdedd014fd60fdcca912",
+      "detail:p2": "a49ea5a4c78cf0bdb77da5a5497e3a20a1f9ebb141b654bf8fe2043fd96da0a5"
+    },
+    "workerRuntimeSha256": "f8584a0e58e546e6dfd42ab9f853c15a86854ee59d56c1285f674eeada50898d",
+    "clientRuntimeSha256": "0db292257223fe617f3b2557bdc69adb48de28fa660a951082f9e1ec37332d30"
+  },
+  "mello-coffee": {
+    "revision": "2026-10-02.mello-coffee-materials.2",
+    "contractSha256": "b5709b69087889ef06dd73feb282f534de4866cd2b19bc32f92da3cbccbdf6f3",
+    "pages": {
+      "home": "96bdd0ee00343c29cd9f77771b608e1ee20c76792142cebdf687a353e56bd8fc",
+      "catalog": "a0d7f76e17606c7cb156a94ee0bb24774e48c910dc67b8f35a69960b79580bfd",
+      "about": "65e8286444731cdf7ad6d8ccaa391c8f38dd4c13a9479d1ae816122451d3fe17",
+      "contact": "0cc5545b29cca0b24e2e4970d73fa0db1f2ff4092ece8b60974c4cf5dd854ea3",
+      "detail:p0": "0495f297cc6759caf5dc89dc31ed4e4e8fdfd925864e8630f41f65d329438f5a",
+      "detail:p1": "eef840574cc91125e3f42375c627ced96a530de4e06e4a003bd0eda368f247b7",
+      "detail:p2": "f7fc4d8f2df8ade4324bce9abfcc508db2ac1b0b2be2851b62347e69451e3707"
+    },
+    "workerRuntimeSha256": "f8584a0e58e546e6dfd42ab9f853c15a86854ee59d56c1285f674eeada50898d",
+    "clientRuntimeSha256": "0db292257223fe617f3b2557bdc69adb48de28fa660a951082f9e1ec37332d30"
+  }
+}

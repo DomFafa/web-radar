@@ -5,6 +5,7 @@ import { renderSite, renderSiteFiles, type RenderOptions } from '../src/template
 import { defaultDraft, validateDraft } from '../src/worker/domain';
 import { getTemplateGuide } from '../src/worker/template-guides/catalog';
 import { materialsDemoDraft } from '../src/worker/template-guides/materials-demo';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 
 const customerDraft = () => ({
   ...defaultDraft(),
@@ -53,10 +54,12 @@ describe('Toorun early-learning integrated template', () => {
     });
     expect(validateDraft(customerDraft()).template).toBe('toorun-early-learning');
     const guide = getTemplateGuide('toorun-early-learning')!;
+    expect(currentMaterialsTemplate('toorun-early-learning')).toMatchObject({ contractRevision: '2026-10-03.toorun-early-learning-materials.5', guideRevision: guide.revision });
     const contract = getMaterialsTemplate('toorun-early-learning')!;
     expect(contract).toMatchObject({
       templateId: 'toorun-early-learning',
-      guideRevision: guide.revision,
+      contractRevision: '2026-10-02.toorun-early-learning-materials.1',
+      guideRevision: '2026-10-02.1',
       materialsReady: true,
     });
     expect(contract.imageSlots).toHaveLength(3);

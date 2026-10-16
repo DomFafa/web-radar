@@ -15,6 +15,9 @@ export type Bindings = {
   SES_REGION: string;
   DEEPSEEK_API_KEY: string;
   SERP_API_KEY: string;
+  TEXT_API_BASE_URL?: string;
+  TEXT_API_KEY?: string;
+  TEXT_MODEL?: string;
 };
 
 // Hono 应用变量类型

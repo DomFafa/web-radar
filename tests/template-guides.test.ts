@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { Hono } from 'hono';
 import { templateGuides } from '../src/worker/template-guides/catalog';
 import {
@@ -12,7 +12,7 @@ import { referenceLayouts } from '../src/templates/themes/referenceLayouts';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import { TEMPLATES } from '../src/client/TemplateSelector';
 import { isActiveTemplate } from '../src/shared/template-availability';
-import { getMaterialsTemplate } from '../src/templates/materials';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { authenticate, mintSession } from '../src/worker/auth';
 import { testPrincipal } from '../src/worker/product-radar';
 import { testDb } from './helpers/db';
@@ -36,6 +36,7 @@ beforeEach(() => {
     TEMPLATE_GUIDES_API_KEY: key,
   } as AppEnv;
 });
+afterEach(() => vi.unstubAllGlobals());
 
 describe('versioned internal template documents', () => {
   it('contains exactly one independent document for each current template', () => {
@@ -48,7 +49,7 @@ describe('versioned internal template documents', () => {
   it('requires a matching confirmed-materials contract for every registered template', () => {
     for (const template of TEMPLATES) {
       const guide = templateGuides.find(guide => guide.templateId === template.id)!;
-      expect(getMaterialsTemplate(template.id), template.id).toMatchObject({
+      expect(currentMaterialsTemplate(template.id), template.id).toMatchObject({
         templateId: template.id,
         guideRevision: guide.revision,
         materialsReady: true,
@@ -76,7 +77,7 @@ describe('versioned internal template documents', () => {
     (guide) => {
       expect(guideSchema.safeParse(guide).success).toBe(true);
       const summary = templateMediaRequirements[guide.templateId]!;
-      expect(guide.revision).toBe(isActiveTemplate(guide.templateId) ? '2026-10-02.1' : ['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.2':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
+      expect(guide.revision).toBe(isActiveTemplate(guide.templateId) ? '2026-10-03.3' : ['careflow-healthcare', 'auravell'].includes(guide.templateId)?'2026-10-01.2':['toorun-early-learning','pawfect-groom','lumi-business','good-boy-pals','mello-coffee','papernote'].includes(guide.templateId) ? '2026-09-30.1' : guide.templateId.startsWith('single-') ? '2026-09-26.1' : '2026-09-20.1');
       const [, width, height] = summary.bannerSize.match(/^(\d+)\s*×\s*(\d+)/)!;
       expect(guide.assets.find(asset => asset.id === (['careflow-healthcare', 'auravell'].includes(guide.templateId)?'home-hero':'hero-image'))!.dimensions).toEqual({ width: Number(width), height: Number(height) });
       expect(guide.inventory.bundledVideoCount).toBe(summary.videos);
@@ -154,11 +155,18 @@ describe('read-only guide API', () => {
     env.TEMPLATE_GUIDES_API_KEY = undefined;
     expect((await get()).status).toBe(401);
   });
-  it('allows platform administrators but denies normal users and workspace administrators', async () => {
+  it('does not grant human template access to other accounts through their platform or workspace role', async () => {
     for (const identity of ['owner', 'admin', 'member', 'outsider', 'platform']) {
       const session = await mintSession(env, testPrincipal(identity), identity);
-      expect((await get('', session.token)).status).toBe(identity === 'platform' ? 200 : 403);
+      expect((await get('', session.token)).status).toBe(403);
     }
+  });
+  it('preserves the designated owner human access to guides and material previews',async()=>{
+    const principal={...testPrincipal('platform'),email:'vc.ddom@gmail.com'};
+    env.ENVIRONMENT='production';env.TEST_PROVIDERS='false';env.PRODUCT_RADAR_BASE_URL='https://account.example.test';env.PRODUCT_RADAR_INTEGRATION_SECRET='test-secret-at-least-32-characters';
+    vi.stubGlobal('fetch',vi.fn(async()=>Response.json({protocolVersion:1,principal})));
+    const session=await mintSession(env,principal);
+    for(const path of ['', '/materials/catalog', '/materials/senseng-candy/preview'])expect((await get(path,session.token)).status).toBe(200);
   });
   it('does not turn the read-only key into a project/session credential', async () => {
     await expect(

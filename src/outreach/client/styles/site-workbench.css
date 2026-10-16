@@ -1,0 +1,70 @@
+.outreach .site-workbench-welcome {
+  padding: 28px;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 12px;
+  background: var(--soft-green, #f5f3ff);
+}
+.outreach .site-workbench-welcome h2 { margin: 10px 0; font-size: 23px; }
+.outreach .site-workbench-welcome p { color: var(--muted, #6b7280); line-height: 1.7; }
+.outreach .site-workbench-eyebrow { color: var(--forest, #7152e8); font-size: 12px; font-weight: 650; }
+.outreach .site-workbench-welcome ol { display: flex; gap: 28px; padding-left: 20px; margin: 22px 0; flex-wrap: wrap; }
+.outreach .site-workbench-draft-notice,
+.outreach .site-workbench-detail-status { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; border-radius: 8px; background: var(--soft-green, #f5f3ff); }
+.outreach .site-workbench-draft-notice p,
+.outreach .site-workbench-detail-status p { margin: 6px 0 0; color: var(--muted, #6b7280); font-size: 13px; line-height: 1.7; }
+.outreach .site-workbench-actions { display: flex; gap: 6px; flex-wrap: wrap; min-width: 200px; }
+.outreach .site-workbench-no-tasks { margin: 0; padding: 24px; color: var(--muted, #6b7280); }
+.outreach .site-workbench-statistics > summary,
+.outreach .site-workbench-detail-preview > summary,
+.outreach .site-workbench-reset > summary { cursor: pointer; padding: 15px 0; font-size: 14px; font-weight: 600; }
+.outreach .modal.site-workbench-form-modal { width: min(780px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); display: flex; flex-direction: column; }
+.outreach .site-workbench-form-modal .modal-header { flex-shrink: 0; }
+.outreach .site-workbench-form-modal form { display: flex; flex-direction: column; min-height: 0; }
+.outreach .site-workbench-form-body { overflow-y: auto; min-height: 0; }
+.outreach .site-workbench-form-body h4 { font-size: 18px; margin: 0 0 10px; }
+.outreach .site-workbench-form-body .muted { margin: 0 0 20px; line-height: 1.7; }
+.outreach .site-workbench-form-body .form-textarea { height: auto; min-height: 150px; }
+.outreach .site-workbench-form-body .site-message-consent { margin-top: 18px; }
+.outreach .site-workbench-steps { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px 24px; gap: 10px; margin: 0; border-bottom: 1px solid var(--line, #e5e7eb); flex-shrink: 0; }
+.outreach .site-workbench-steps li { color: var(--muted, #6b7280); display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.outreach .site-workbench-steps span { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: #f1f2f5; flex-shrink: 0; }
+.outreach .site-workbench-steps li[aria-current="step"] { color: var(--forest, #7152e8); font-weight: 650; }
+.outreach .site-workbench-steps li[aria-current="step"] span { background: var(--forest, #7152e8); color: white; }
+.outreach .site-workbench-steps .complete span { background: #eaf6ef; color: #287b4f; }
+.outreach .site-workbench-target-counts { display: flex; flex-wrap: wrap; gap: 20px; padding: 12px 0; font-size: 13px; }
+.outreach .site-workbench-validation-list { max-height: 140px; overflow: auto; overflow-wrap: anywhere; padding-left: 20px; font-size: 13px; }
+.outreach .site-workbench-invalid,
+.outreach .site-workbench-error { padding: 12px; border-radius: 8px; color: #9b3030; background: #fff2f2; font-size: 13px; line-height: 1.6; }
+.outreach .site-workbench-inline-notice { background: var(--soft-green, #f5f3ff); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.7; }
+.outreach .modal-footer.site-workbench-form-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.outreach .site-workbench-form-footer p { margin: 0; flex: 1; font-size: 12px; color: var(--muted, #6b7280); }
+.outreach .site-workbench-form-footer > div { display: flex; gap: 8px; }
+.outreach .site-workbench-preview { display: grid; gap: 18px; padding: 18px 0; overflow-wrap: anywhere; }
+.outreach .site-workbench-preview h4 { margin: 0 0 10px; }
+.outreach .site-workbench-preview p { margin: 5px 0; line-height: 1.7; }
+.outreach .site-workbench-preview-contact { padding-bottom: 15px; border-bottom: 1px solid var(--line, #e5e7eb); }
+.outreach .site-workbench-message { white-space: pre-wrap; }
+.outreach .site-workbench-target-preview summary { cursor: pointer; font-size: 13px; }
+.outreach .site-workbench-target-preview ul { max-height: 200px; overflow: auto; padding-left: 22px; font-size: 13px; line-height: 1.8; }
+.outreach .site-workbench-reset { margin-top: 18px; color: #9b3030; }
+.outreach .site-workbench-reset p { font-size: 13px; line-height: 1.7; }
+.outreach .modal.site-workbench-detail { max-height: calc(100dvh - 32px); display: flex; flex-direction: column; }
+.outreach .site-workbench-detail > .modal-body { overflow-y: auto; }
+.outreach .site-workbench-detail > .modal-header,
+.outreach .site-workbench-detail > .modal-footer { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .outreach .site-message-heading .page-header-actions { flex-wrap: wrap; gap: 16px; }
+  .outreach .site-workbench-welcome { padding: 20px; }
+  .outreach .site-workbench-welcome h2 { font-size: 20px; }
+  .outreach .site-workbench-welcome ol { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .outreach .site-workbench-steps { padding: 14px 12px; gap: 6px; }
+  .outreach .site-workbench-steps li { flex-direction: column; font-size: 12px; gap: 5px; }
+  .outreach .modal.site-workbench-form-modal,
+  .outreach .modal.site-workbench-detail { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .outreach .site-workbench-form-body .form-grid { grid-template-columns: 1fr; }
+  .outreach .site-workbench-draft-notice,
+  .outreach .site-workbench-detail-status { align-items: flex-start; flex-direction: column; }
+  .outreach .modal-footer.site-workbench-form-footer { flex-direction: column; align-items: stretch; }
+  .outreach .site-workbench-form-footer > div { justify-content: flex-end; }
+  .outreach .site-workbench-detail .modal-footer { flex-wrap: wrap; }
+}
