@@ -226,20 +226,21 @@ export async function signInAtPr(env: AppEnv, email: string, password: string): 
   return parsed.data.principal;
 }
 export function testPrincipal(identity: string): Principal {
-  if (!['owner', 'admin', 'member', 'outsider', 'platform'].includes(identity))
+  if (!['owner', 'admin', 'member', 'outsider', 'platform', 'website-owner', 'website-platform'].includes(identity))
     throw new ApiError(401, 'invalid_test_identity', '无效测试账号。');
+  const role = identity === 'website-owner' ? 'owner' : identity === 'website-platform' ? 'platform' : identity;
   return {
     userId: `test-${identity}`,
     authSubject: `test-${identity}`,
-    email: `${identity}@example.test`,
+    email: identity === role ? `${identity}@example.test` : 'vc.ddom@gmail.com',
     displayName: {
       owner: '项目创建者',
       admin: '工作区管理员',
       member: '普通成员',
       outsider: '其他公司成员',
       platform: '平台管理员',
-    }[identity]!,
-    systemRole: identity === 'platform' ? 'super_admin' : 'user',
+    }[role]!,
+    systemRole: role === 'platform' ? 'super_admin' : 'user',
     workspaceId: identity === 'outsider' ? 'test-other-workspace' : 'test-workspace',
     workspaceRole: identity === 'admin' ? 'admin' : 'member',
     workspaceName: identity === 'outsider' ? '其他测试公司' : 'Web Radar 测试公司',

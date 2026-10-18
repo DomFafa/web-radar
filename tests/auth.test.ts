@@ -323,6 +323,31 @@ describe('authorization payload boundaries', () => {
   });
 });
 describe('test identities fail closed in production', () => {
+  it.each([
+    ['website-owner', 'user'],
+    ['website-platform', 'super_admin'],
+  ] as const)('restores the dedicated %s website identity only in local test mode', async (identity, systemRole) => {
+    const app = createAuthApp();
+    const login = (origin: string, bindings: AppEnv) => app.request(origin + '/test-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identity }),
+    }, bindings);
+    const localEnv = { ...env, ENVIRONMENT: 'test', TEST_PROVIDERS: 'true' };
+    expect((await login('http://127.0.0.1', env)).status).toBe(404);
+    expect((await login('https://wr.example.test', localEnv)).status).toBe(404);
+    const response = await login('http://127.0.0.1', localEnv);
+    expect(response.status).toBe(200);
+    const session = await response.json() as { token: string };
+    const headers = { Authorization: `Bearer ${session.token}` };
+    const restored = await app.request('http://127.0.0.1/me', { headers }, localEnv);
+    expect(restored.status).toBe(200);
+    expect(await restored.json()).toMatchObject({ principal: {
+      email: 'vc.ddom@gmail.com', systemRole, workspaceRole: 'member', appRole: 'member',
+    } });
+    expect((await app.request('http://127.0.0.1/me', { headers }, env)).status).toBe(401);
+    expect((await app.request('https://wr.example.test/me', { headers }, localEnv)).status).toBe(401);
+  });
   it('rejects persisted test session tokens outside explicit test environment', async () => {
     const session = await mintSession(env, p, 'owner');
     const response = await createAuthApp().request(
@@ -387,4 +412,19 @@ it('accepts product-set snapshots from the authenticated upstream and rejects un
  expect(result.products[0].factsOrigin).toBe('product-set');
  vi.stubGlobal('fetch',vi.fn(async()=>Response.json({products:[{...product,factsOrigin:'unknown-source'}],total:1})));
  await expect(prService(env,p,'products',{productIds:[product.id]})).rejects.toMatchObject({code:'invalid_products'});
+});
+
+it.each([3,20,24])('preserves all %i website products through the one-time handoff',async count=>{
+ const app=createIntegrationApp(),products=Array.from({length:count},(_,i)=>({...testProduct(),id:`p${i}`,image:{sourceProductId:`p${i}`,contentType:null}}));
+ const body={...payload(),intent:'create',products};
+ const issued=await issue(app,body);expect(issued.status).toBe(200);const grant=await issued.json() as any;
+ const row=await env.DB.prepare('SELECT payload FROM handoffs WHERE request_id=?').bind(body.requestId).first<{payload:string}>();
+ expect(JSON.parse(row!.payload).products.map((p:any)=>p.id)).toEqual(products.map(p=>p.id));
+ const response=await exchange(app,{...grant,parentOrigin:body.parentOrigin});expect(response.status).toBe(200);expect(creates).toBe(1);
+});
+it('rejects a twenty-fifth handoff product without storing a grant or creating a project',async()=>{
+ const products=Array.from({length:25},(_,i)=>({...testProduct(),id:`p${i}`,image:{sourceProductId:`p${i}`,contentType:null}}));
+ expect((await issue(createIntegrationApp(),{...payload(),intent:'create',products})).status).toBe(400);
+ expect(creates).toBe(0);expect(fetch).not.toHaveBeenCalled();
+ expect((await env.DB.prepare('SELECT * FROM handoffs').all()).results).toHaveLength(0);
 });

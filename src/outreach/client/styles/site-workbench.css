@@ -1,0 +1,70 @@
+.outreach .site-workbench-welcome {
+  padding: 24px;
+  border: 1px solid var(--radar-border);
+  border-radius: var(--radar-radius-md);
+  background: var(--radar-action-soft);
+}
+.outreach .site-workbench-welcome h2 { margin: 8px 0; font-size: var(--radar-font-section-title); line-height: var(--radar-line-heading); }
+.outreach .site-workbench-welcome p { color: var(--radar-text-secondary); line-height: var(--radar-line-body); }
+.outreach .site-workbench-eyebrow { color: var(--radar-action); font-size: var(--radar-font-meta); font-weight: 650; }
+.outreach .site-workbench-welcome ol { display: flex; gap: 24px; padding-left: 20px; margin: 24px 0; flex-wrap: wrap; }
+.outreach .site-workbench-draft-notice,
+.outreach .site-workbench-detail-status { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px; border-radius: var(--radar-radius-sm); background: var(--radar-action-soft); }
+.outreach .site-workbench-draft-notice p,
+.outreach .site-workbench-detail-status p { margin: 6px 0 0; color: var(--radar-text-secondary); font-size: var(--radar-font-body); line-height: var(--radar-line-body); }
+.outreach .site-workbench-actions { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.outreach .site-workbench-no-tasks { margin: 0; padding: 24px; color: var(--radar-text-secondary); }
+.outreach .site-workbench-statistics > summary,
+.outreach .site-workbench-detail-preview > summary,
+.outreach .site-workbench-reset > summary { cursor: pointer; padding: 15px 0; font-size: var(--radar-font-control); font-weight: 650; }
+.outreach .modal.site-workbench-form-modal { width: min(780px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); display: flex; flex-direction: column; }
+.outreach .site-workbench-form-modal .modal-header { flex-shrink: 0; }
+.outreach .site-workbench-form-modal form { display: flex; flex-direction: column; min-height: 0; }
+.outreach .site-workbench-form-body { overflow-y: auto; min-height: 0; }
+.outreach .site-workbench-form-body h4 { font-size: var(--radar-font-card-title); line-height: var(--radar-line-heading); margin: 0 0 12px; }
+.outreach .site-workbench-form-body .muted { margin: 0 0 20px; line-height: 1.7; }
+.outreach .site-workbench-form-body .form-textarea { height: auto; min-height: 150px; }
+.outreach .site-workbench-form-body .site-message-consent { margin-top: 18px; }
+.outreach .site-workbench-steps { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px 24px; gap: 10px; margin: 0; border-bottom: 1px solid var(--radar-border); flex-shrink: 0; }
+.outreach .site-workbench-steps li { color: var(--radar-text-secondary); display: flex; align-items: center; gap: 6px; font-size: var(--radar-font-body); }
+.outreach .site-workbench-steps span { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: var(--radar-surface-subtle); flex-shrink: 0; }
+.outreach .site-workbench-steps li[aria-current="step"] { color: var(--radar-action); font-weight: 650; }
+.outreach .site-workbench-steps li[aria-current="step"] span { background: var(--radar-action); color: white; }
+.outreach .site-workbench-steps .complete span { background: #eaf6ef; color: var(--radar-success); }
+.outreach .site-workbench-target-counts { display: flex; flex-wrap: wrap; gap: 20px; padding: 12px 0; font-size: var(--radar-font-body); }
+.outreach .site-workbench-validation-list { max-height: 140px; overflow: auto; overflow-wrap: anywhere; padding-left: 20px; font-size: var(--radar-font-body); }
+.outreach .site-workbench-invalid,
+.outreach .site-workbench-error { padding: 12px; border-radius: var(--radar-radius-sm); color: var(--radar-danger); background: #fff2f2; font-size: var(--radar-font-body); line-height: var(--radar-line-body); }
+.outreach .site-workbench-inline-notice { background: var(--radar-action-soft); padding: 12px; border-radius: var(--radar-radius-sm); font-size: var(--radar-font-body); line-height: var(--radar-line-body); }
+.outreach .modal-footer.site-workbench-form-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.outreach .site-workbench-form-footer p { margin: 0; flex: 1; font-size: 12px; color: var(--radar-text-secondary); }
+.outreach .site-workbench-form-footer > div { display: flex; gap: 8px; }
+.outreach .site-workbench-preview { display: grid; gap: 18px; padding: 18px 0; overflow-wrap: anywhere; }
+.outreach .site-workbench-preview h4 { margin: 0 0 10px; }
+.outreach .site-workbench-preview p { margin: 5px 0; line-height: 1.7; }
+.outreach .site-workbench-preview-contact { padding-bottom: 15px; border-bottom: 1px solid var(--radar-border); }
+.outreach .site-workbench-message { white-space: pre-wrap; }
+.outreach .site-workbench-target-preview summary { cursor: pointer; font-size: var(--radar-font-body); }
+.outreach .site-workbench-target-preview ul { max-height: 200px; overflow: auto; padding-left: 22px; font-size: 13px; line-height: 1.8; }
+.outreach .site-workbench-reset { margin-top: 18px; color: var(--radar-danger); }
+.outreach .site-workbench-reset p { font-size: var(--radar-font-body); line-height: var(--radar-line-body); }
+.outreach .modal.site-workbench-detail { max-height: calc(100dvh - 32px); display: flex; flex-direction: column; }
+.outreach .site-workbench-detail > .modal-body { overflow-y: auto; }
+.outreach .site-workbench-detail > .modal-header,
+.outreach .site-workbench-detail > .modal-footer { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .outreach .site-message-heading .page-header-actions { flex-wrap: wrap; gap: 16px; }
+  .outreach .site-workbench-welcome { padding: 16px; }
+  .outreach .site-workbench-welcome h2 { font-size: var(--radar-font-section-title); }
+  .outreach .site-workbench-welcome ol { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .outreach .site-workbench-steps { padding: 14px 12px; gap: 6px; }
+  .outreach .site-workbench-steps li { flex-direction: column; font-size: 12px; gap: 5px; }
+  .outreach .modal.site-workbench-form-modal,
+  .outreach .modal.site-workbench-detail { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .outreach .site-workbench-form-body .form-grid { grid-template-columns: 1fr; }
+  .outreach .site-workbench-draft-notice,
+  .outreach .site-workbench-detail-status { align-items: flex-start; flex-direction: column; }
+  .outreach .modal-footer.site-workbench-form-footer { flex-direction: column; align-items: stretch; }
+  .outreach .site-workbench-form-footer > div { justify-content: flex-end; }
+  .outreach .site-workbench-detail .modal-footer { flex-wrap: wrap; }
+}

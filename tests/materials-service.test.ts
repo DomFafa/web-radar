@@ -53,7 +53,74 @@ describe('durable confirmed materials receiver',()=>{
   const imageResponse=()=>new Response(materialsPng,{headers:{'content-type':'image/png','content-length':String(materialsPng.length)}});
   const deferred=()=>{let resolve!:(response:Response)=>void;const promise=new Promise<Response>(r=>{resolve=r;});return{promise,resolve};};
   const progress=()=>service.status(fixture.principal,fixture.submissionId);
-  const finish=async()=>{for(let i=0;i<5;i++){await service.tick();const receipt=await service.status(fixture.principal,fixture.submissionId);if(receipt.state!=='receiving')return receipt;}throw Error('did not finish');};
+  const finish=async(limit=5)=>{for(let i=0;i<limit;i++){await service.tick();const receipt=await service.status(fixture.principal,fixture.submissionId);if(receipt.state!=='receiving')return receipt;}throw Error('did not finish');};
+  it.each([3,20,24])('receives and replays all %i products with the original quota count',async count=>{
+    fixture=await materialsFixture(count);
+    const receipt=await service.submit(fixture.principal,fixture);expect(receipt.state).toBe('receiving');
+    const accepted=await finish();expect(accepted.state).toBe('accepted');
+    const project=await store.one<Project>('projects',accepted.projectId!);
+    expect(project!.draft.products.map(p=>p.id)).toEqual(fixture.materials.products.map(p=>p.id));
+    expect(websiteBodies.find(call=>call.action==='reserve')!.body.productCount).toBe(count);
+    expect(websiteBodies.find(call=>call.action==='commit')!.body.productCount).toBe(count);
+    expect(await service.submit(fixture.principal,fixture)).toEqual(accepted);
+    expect(websiteCalls.filter(action=>action==='reserve')).toHaveLength(1);
+    expect(websiteCalls.filter(action=>action==='commit')).toHaveLength(1);
+  });
+  it('rejects twenty-five products before account checks, media transfer or quota reservation',async()=>{
+    fixture=await materialsFixture(25);
+    await expect(service.submit(fixture.principal,fixture)).rejects.toMatchObject({status:400,code:'invalid_materials'});
+    expect(fetches).toBe(0);expect(websiteCalls).toEqual([]);expect(objects.size).toBe(0);
+  });
+  it.each(ACTIVE_TEMPLATE_IDS.filter(id=>['auravell','careflow-healthcare','toorun-early-learning','lumi-business','pawfect-groom','mello-coffee'].includes(id)))('creates all 24 product pages for current .5 %s materials',async templateId=>{
+    fixture=await typedMaterialsFixture(templateId,24,`2026-10-03.${templateId}-materials.5`);
+    // Extend the existing synthetic fixture to the full eleven-image product gallery.
+    for (const product of fixture.materials.products) {
+      const originalBinding = fixture.materials.imageBindings.find(b => b.slotId === 'product-gallery' && b.productId === product.id)!;
+      for (let index = 2; index <= 10; index++) {
+        const id = `gallery-${product.id}-${index}`;
+        const bytes = Buffer.concat([materialsPng, Buffer.from(id)]);
+        fixture.materials.media.push({id,sourceAssetId:`test-${id}`,sourceVersion:'1',sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join(''),mimeType:'image/png',bytes:bytes.length,width:1,height:1});
+        product.galleryMediaIds.push(id);
+        fixture.materials.imageBindings.push({...originalBinding,mediaId:id,itemIndex:index});
+      }
+    }
+    for (const kind of ['logo','favicon'] as const) {
+      const id = `brand-${kind}`, bytes = Buffer.concat([materialsPng, Buffer.from(id)]);
+      fixture.materials.media.push({id,sourceAssetId:`test-${id}`,sourceVersion:'1',sha256:[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(v=>v.toString(16).padStart(2,'0')).join(''),mimeType:'image/png',bytes:bytes.length,width:1,height:1});
+      fixture.materials.brand[kind === 'logo' ? 'logoMediaId' : 'faviconMediaId'] = id;
+    }
+    expect(fixture.materials.media.length).toBeLessThanOrEqual(300);
+    // This receiver fixture serves actual 1x1 PNGs rather than render-only metadata.
+    for(const media of fixture.materials.media){media.width=1;media.height=1;}
+    fixture.confirmation.contentSha256=await sha256(canonical({source:fixture.source,materials:fixture.materials}));
+    respond=async assetId=>{
+      const media=fixture.materials.media.find(item=>item.sourceAssetId===assetId)!;
+      const bytes=Buffer.concat([materialsPng,Buffer.from(media.id)]);
+      return new Response(bytes,{headers:{'content-type':'image/png','content-length':String(bytes.length)}});
+    };
+    expect((await service.submit(fixture.principal,fixture)).state).toBe('receiving');
+    const receipt=await finish(20);expect(receipt.state,JSON.stringify(receipt)).toBe('accepted');
+    const saved=objects.get(`website-results/${receipt.projectId}/1/result.json`)!;
+    const result=JSON.parse(new TextDecoder().decode(saved.bytes));
+    expect(result.project.draft.materials.contractRevision).toBe(fixture.materials.template.contractRevision);
+    expect(result.project.draft.products.map((p:any)=>p.id)).toEqual(fixture.materials.products.map(p=>p.id));
+    expect(result.project.draft.products.every((p:any)=>p.gallery.length === 11)).toBe(true);
+    expect(Object.keys(result.pages)).toHaveLength(28);
+    for (const product of fixture.materials.products) { expect(result.pages[`en/products/${product.id}/index.html`]).toContain(product.name); }
+    expect(websiteBodies.find(call=>call.action==='reserve')!.body.productCount).toBe(24);
+    expect(websiteBodies.find(call=>call.action==='commit')!.body.productCount).toBe(24);
+    expect(result.assets).toHaveLength(fixture.materials.media.length);
+    for(const path of ['en/index.html','en/products/index.html','en/products/p1/index.html','en/about/index.html','en/contact/index.html']){
+      expect(result.pages[path],path).toContain('<html');
+    }
+    if(templateId==='toorun-early-learning'){
+      expect(result.pages['en/index.html']).toContain('class="tr-hero"');
+      expect(result.pages['en/index.html']).not.toContain('class="wr-confirmed-hero"');
+    }
+    expect(websiteCalls.filter(call=>call==='commit')).toHaveLength(1);
+    expect((await service.submit(fixture.principal,fixture)).projectId).toBe(receipt.projectId);
+    expect(websiteCalls.filter(call=>call==='commit')).toHaveLength(1);
+  });
   it.each(ACTIVE_TEMPLATE_IDS)('creates a durable five-page result for advertised %s materials',async templateId=>{
     fixture=await typedMaterialsFixture(templateId,2);
     // This receiver fixture serves actual 1x1 PNGs rather than render-only metadata.

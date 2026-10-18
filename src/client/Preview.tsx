@@ -11,9 +11,40 @@ import { api, post, errorMessage, privateAssetBlob, requestId } from './api';
 import { Button, Icon, Notice } from './components';
 import { labels } from '../templates/labels';
 import { referenceInteractions } from '../templates/themes/referenceInteractions';
-import { referenceTemplatePreviewRuntime } from './reference-template-preview';
+import { referenceTemplatePreviewPrepare, referenceTemplatePreviewRuntime } from './reference-template-preview';
 
 const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
+
+export function previewRequestQuery(page: DesignPage, lang: Language, productId?: string) {
+  return new URLSearchParams({lang,page,...((page === 'detail' || page === 'contact') && productId ? {productId} : {})});
+}
+
+/** Serialized into the sandbox; only declared page routes and bounded element IDs can navigate. */
+export function previewNavigationBridge(channel:string, parentOrigin:string, currentPage:string, productId:string) {
+  document.addEventListener('click', event => {
+    const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a');
+    if (!link) return;
+    event.preventDefault();
+    const href = link.getAttribute('href') || '';
+    const fragment = href.includes('#') ? href.slice(href.indexOf('#') + 1) : undefined;
+    const safeFragment = fragment && /^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(fragment) ? fragment : undefined;
+    if (href.startsWith('#')) { if (safeFragment) document.getElementById(safeFragment)?.scrollIntoView({block:'start'}); return; }
+    if (!link.dataset.wrPage && !link.dataset.wrLang) return;
+    const page = link.dataset.wrPage || currentPage;
+    if (safeFragment && page === currentPage && !link.dataset.wrLang && (!link.dataset.wrProductId || link.dataset.wrProductId === productId)) { document.getElementById(safeFragment)?.scrollIntoView({block:'start'}); return; }
+    parent.postMessage({type:'wr:preview-navigate',channel,page,lang:link.dataset.wrLang,productId:link.dataset.wrProductId || productId,...(safeFragment ? {fragment:safeFragment} : {})},parentOrigin);
+  });
+}
+
+/** Wait for the restored page's images and fonts before locating a cross-page section. */
+export async function restorePreviewFragment(fragment:unknown) {
+  if (typeof fragment !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(fragment)) return;
+  await Promise.all([...document.images].filter(image=>image.getAttribute('src')).map(image=>{
+    image.loading='eager';return image.decode().catch(()=>{});
+  }));
+  await document.fonts?.ready;
+  document.getElementById(fragment)?.scrollIntoView({block:'start'});
+}
 
 export function privateAssetId(value: string, projectId: string): string | null {
   if (!value.startsWith('/api/projects/')) return null;
@@ -101,6 +132,7 @@ export function SitePreview({
     [error, setError] = useState(''),
     [loading, setLoading] = useState(false),
     [retry, setRetry] = useState(0);
+  const [fragment, setFragment] = useState<string>();
   const frame = useRef<HTMLIFrameElement>(null),
     channel = useRef(requestId());
   const media = useRef<{ id: string; blob: Blob }[]>([]);
@@ -130,11 +162,7 @@ export function SitePreview({
     setHtml('');
     (async () => {
       const effectiveProductId = productId || project.draft.primaryProductId || project.draft.products[0]?.id || '';
-      const query = new URLSearchParams({
-        lang,
-        page,
-        ...(page === 'detail' && effectiveProductId ? { productId: effectiveProductId } : {}),
-      });
+      const query = previewRequestQuery(page, lang, effectiveProductId);
       const path = `/api/projects/${encodeURIComponent(project.id)}/preview?${query}`;
       const result = draftPreview
         ? await post<{ html: string }>(path, { draft: project.draft })
@@ -175,6 +203,13 @@ export function SitePreview({
       csp.content = `default-src 'none'; img-src blob: data: https: http: 'self'; media-src blob: data: https: http: 'self'; style-src 'unsafe-inline' ${window.location.origin}; script-src 'nonce-${nonce}'; font-src data: https: ${window.location.origin}; base-uri 'none'; form-action 'none'`;
       if (project.draft.template === 'careflow-healthcare') csp.content += '; frame-src https://www.youtube-nocookie.com';
       doc.head.insertBefore(csp, doc.head.firstChild);
+      const prepareSource = referenceTemplatePreviewPrepare(project.draft);
+      if (prepareSource) {
+        const prepare = doc.createElement('script');
+        prepare.setAttribute('nonce', nonce);
+        prepare.textContent = prepareSource;
+        doc.head.appendChild(prepare);
+      }
       const bridge = doc.createElement('script');
       bridge.setAttribute('nonce', nonce);
       bridge.textContent = `
@@ -239,19 +274,11 @@ export function SitePreview({
           document.dispatchEvent(new Event('wr:banner-media-ready'));
           if (video) video.load();
           respectMotion();
+          void (${restorePreviewFragment.toString()})(${scriptJson(fragment ?? null)});
         });
         window.addEventListener('pagehide', () => mediaUrls.forEach(url => URL.revokeObjectURL(url)));
         parent.postMessage({type:'wr:preview-ready', channel:${scriptJson(renderChannel)}}, ${scriptJson(window.location.origin)});
-        document.addEventListener('click', function(event) {
-          const link = event.target.closest('a');
-          if (!link) return;
-          event.preventDefault();
-          const page = link.dataset.wrPage || ${scriptJson(page)};
-          if (link.dataset.wrPage || link.dataset.wrLang) parent.postMessage({
-            type:'wr:preview-navigate', channel:${scriptJson(renderChannel)},
-            page, lang:link.dataset.wrLang, productId:link.dataset.wrProductId || ${scriptJson(productId)}
-          }, ${scriptJson(window.location.origin)});
-        });
+        (${previewNavigationBridge.toString()})(${scriptJson(renderChannel)},${scriptJson(window.location.origin)},${scriptJson(page)},${scriptJson(productId)});
       `;
       doc.body.appendChild(bridge);
       setHtml('<!doctype html>' + doc.documentElement.outerHTML);
@@ -266,7 +293,7 @@ export function SitePreview({
       active = false;
       media.current = [];
     };
-  }, [project.id, project.version, project.draft, draftPreview, lang, page, productId, retry]);
+  }, [project.id, project.version, project.draft, draftPreview, lang, page, productId, retry, fragment]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -285,6 +312,8 @@ export function SitePreview({
       if (event.data.type !== 'wr:preview-navigate') return;
       const next = event.data;
       if (!pages.includes(next.page)) return;
+      if (next.fragment !== undefined && (typeof next.fragment !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(next.fragment))) return;
+      setFragment(next.fragment);
       if (next.lang && project.draft.languages.includes(next.lang)) setLang(next.lang);
       if (next.productId && project.draft.products.some((product) => product.id === next.productId))
         setProductId(next.productId);
@@ -309,7 +338,7 @@ export function SitePreview({
           <select
             aria-label="预览语言"
             value={lang}
-            onChange={(e) => setLang(e.target.value as Language)}
+            onChange={(e) => { setFragment(undefined); setLang(e.target.value as Language); }}
           >
             {project.draft.languages.map((value) => (
               <option key={value} value={value}>
@@ -320,7 +349,7 @@ export function SitePreview({
           <select
             aria-label="预览页面"
             value={page}
-            onChange={(e) => setPage(e.target.value as DesignPage)}
+            onChange={(e) => { setFragment(undefined); setPage(e.target.value as DesignPage); }}
           >
             {pages.map((id) => (
               <option key={id} value={id}>
@@ -332,7 +361,7 @@ export function SitePreview({
             <select
               aria-label="预览产品"
               value={productId}
-              onChange={(e) => setProductId(e.target.value)}
+              onChange={(e) => { setFragment(undefined); setProductId(e.target.value); }}
             >
               {project.draft.products.map((product) => (
                 <option key={product.id} value={product.id}>

@@ -29,7 +29,7 @@ npm run dev:test
 
 ## 仓库同步与发布
 
-本地提交先推送到 [wuyueerhao/web-radar](https://github.com/wuyueerhao/web-radar)，再向 [DomFafa/web-radar](https://github.com/DomFafa/web-radar) 发起或更新 PR，后续由负责人手动合并。用户要求上线时，Cloudflare 使用项目 Token 直接发布，无需等待上游合并或运行 `production-release`。具体流程与验证要求见 [仓库同步与线上发布约定](docs/repository-and-publishing.md)。
+长期协作以 [DomFafa/web-radar](https://github.com/DomFafa/web-radar) 的 `codex/web-radar-v1` 为主线。每项任务从主线新建个人功能分支，推送后发起或更新以主线为目标的 PR，完成 CI 和负责人审核后合并。用户要求上线时，Cloudflare 使用项目 Token 直接发布，无需等待上游合并或运行 `production-release`。具体流程与验证要求见 [仓库同步与线上发布约定](docs/repository-and-publishing.md)。
 
 ## 校验
 

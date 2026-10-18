@@ -1,14 +1,17 @@
 # 仓库同步与线上发布约定
 
-2026-10-01，项目负责人确认以下常规流程。
+2026-10-18 更新长期协作约定；Cloudflare 常规发布规则沿用 2026-10-01 的确认内容。
 
 ## 仓库与合并
 
-1. 本地项目的提交先推送到 [wuyueerhao/web-radar](https://github.com/wuyueerhao/web-radar)。当前本地 remote 名称为 `fork`，默认 push 指向该仓库。
-2. 推送后，向原始仓库 [DomFafa/web-radar](https://github.com/DomFafa/web-radar) 发起 Pull Request。同一分支已有未合并的 PR 时更新该 PR，不重复创建。
-3. 上游仓库的合并由负责人后续手动完成。代理提交和维护 PR，不自动合并。
+1. 长期协作仓库为 [DomFafa/web-radar](https://github.com/DomFafa/web-radar)，日常集成主线为 `codex/web-radar-v1`，与仓库默认分支及 `.github/release-source.json` 保持一致。
+2. 每项任务从最新主线新建自己的功能分支，例如 `codex/larrybin-contact-search`。协作者在各自的功能分支提交；需要共同维护同一分支时先明确分工。
+3. 功能分支推送到 `DomFafa/web-radar`，Pull Request 的目标统一为 `codex/web-radar-v1`。同一任务已有未合并 PR 时更新该 PR。
+4. 合并前完成代码审查和当前提交的 CI 检查：`local`、`browser`、`template-browser`、`render-quality`、`web-radar-integration`。遵守分支保护；改变 PR 目标或提交后重新确认检查对应的源码和合并基线。
+5. 负责人审核后通过 PR 合并。代理可准备提交、维护 PR 和验证结果；执行合并须获得负责人当次明确授权。合并后的主线作为后续任务的起点。
+6. 历史任务分支保留追溯用途；尚有独立改动的分支另行评审。统一主线时保留已有撤销，不把旧实验改动自动混入。
 
-本约定确认时，开发分支为 `codex/10-industry-templates`，对应 [PR #17](https://github.com/DomFafa/web-radar/pull/17)，目标分支为 `DomFafa/web-radar:codex/web-radar-v1`。后续任务开始时核对实际分支和 PR 状态；本地 `origin` 当前仍是上游仓库，不能凭 remote 名称判断推送目标。
+每次开始任务先核对实际仓库、远端 URL、分支和工作区状态；本地 remote 名称可能不同，推送目标以 URL 为准。主线合并与线上发布分别记录，部署仍按下述规则执行并验证。
 
 ## Cloudflare 发布
 

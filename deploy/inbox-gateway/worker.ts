@@ -34,12 +34,16 @@ function target(env: Env, recipient: string): Target {
     routes = JSON.parse(env.TARGETS || '{}')[domain];
   const options: Target[] = Array.isArray(routes) ? routes : routes ? [routes] : [];
   if (options.filter((r) => r.default).length > 1) throw new Error('Multiple default inboxes');
+  const plus = local.includes('+'),
+    alias = plus ? local.slice('reply+'.length) : local;
+  if (plus && (!local.startsWith('reply+') || !/^[es]-[a-f0-9]{12}-[a-f0-9]{32}$/.test(alias)))
+    throw new Error('Invalid receiving alias');
   const t =
     options.find(
       (r) =>
-        local.startsWith('e-' + r.id.replaceAll('-', '').slice(0, 12) + '-') ||
-        local.startsWith('s-' + r.id.replaceAll('-', '').slice(0, 12) + '-'),
-    ) || (!/^[es]-/.test(local) ? options.find((r) => r.default) : undefined);
+        alias.startsWith('e-' + r.id.replaceAll('-', '').slice(0, 12) + '-') ||
+        alias.startsWith('s-' + r.id.replaceAll('-', '').slice(0, 12) + '-'),
+    ) || (!plus && !/^[es]-/.test(local) ? options.find((r) => r.default) : undefined);
   if (!t || !t.id || !t.secret || !t.forwardTo || !String(t.endpoint).startsWith('https://'))
     throw new Error('Receiving domain not provisioned');
   return t;
@@ -83,12 +87,14 @@ export default {
   },
   async queue(batch: MessageBatch<{ key: string }>, env: Env) {
     for (const m of batch.messages) {
+      let stage = 'read', status: number | undefined;
       try {
         const obj = await env.RAW.get(m.body.key);
         if (!obj) {
           m.ack();
           continue;
         }
+        stage = 'prepare';
         const { to, from, forward, forwardTo } = obj.customMetadata!,
           t = target(env, to),
           time = String(Date.now()),
@@ -97,9 +103,10 @@ export default {
           t.secret,
           [t.id, time, to, from, forward, forwardTo, await hash(raw)].join('\n'),
         );
+        stage = 'fetch';
         const response = await fetch(t.endpoint, {
           method: 'POST',
-          redirect: 'error',
+          redirect: 'manual',
           headers: {
             'Content-Type': 'message/rfc822',
             'X-Inbox-To': to,
@@ -112,10 +119,16 @@ export default {
           body: raw,
           signal: AbortSignal.timeout(25000),
         });
+        status = response.status;
         if (!response.ok) throw new Error('Inbox delivery failed: ' + response.status);
+        stage = 'delete';
         await env.RAW.delete(m.body.key);
         m.ack();
-      } catch {
+      } catch (error) {
+        // Log only coarse diagnostics: exception text can contain mail or target credentials.
+        const name = error instanceof Error && ['Error', 'TypeError', 'SyntaxError', 'AbortError', 'TimeoutError', 'OperationError'].includes(error.name) ? error.name : 'UnknownError';
+        const code = error instanceof Error ? error.message.match(/(?:\berror(?: code)?[: ]+|\bcode[: ]+|\()(\d{3,5})\b/i)?.[1] : undefined;
+        console.error('Inbox delivery retry', { stage, name, code, status, attempt: m.attempts });
         m.retry({ delaySeconds: Math.min(3600, 60 * 2 ** Math.min(m.attempts, 6)) });
       }
     }

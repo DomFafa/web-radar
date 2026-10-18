@@ -12,6 +12,7 @@ import {lumiPages} from '../src/shared/lumi-pages';
 import {getMaterialsTemplate} from '../src/templates/materials';
 import {getTemplateGuide} from '../src/worker/template-guides/catalog';
 import {materialsDemoDraft} from '../src/worker/template-guides/materials-demo';
+import {currentMaterialsTemplate} from '../src/worker/template-guides/current-materials';
 import {projectPreviewHtml,projectPreviewRuntimeForDraft} from '../src/worker/project-preview';
 import {lumiImageInventory,lumiTextInventory} from '../src/templates/themes/lumi/materials-map';
 const options={projectId:'customer',lang:'en' as const,page:'home',assetUrl:(id:string)=>`https://assets.example.test/${id}`,inquiryUrl:'https://app.example.test/api/inquiry'};
@@ -20,7 +21,8 @@ const nodes=(node:DefaultTreeAdapterMap['node']):DefaultTreeAdapterMap['element'
 describe('Lumi integrated reference template',()=>{
  it('registers every reference route and retains the exact reference demo identity',()=>{
   const d=validateDraft(draft());expect(plannedPages(d)).toEqual(lumiPages);
-  const profile=getMaterialsTemplate('lumi-business')!;expect(profile).toMatchObject({materialsReady:true,imagePolicy:'typed-regions-v1',guideRevision:getTemplateGuide('lumi-business')!.revision});
+  const profile=getMaterialsTemplate('lumi-business')!;expect(profile).toMatchObject({materialsReady:true,imagePolicy:'typed-regions-v1',contractRevision:'2026-10-02.lumi-business-materials.1',guideRevision:'2026-10-02.1'});
+  expect(currentMaterialsTemplate('lumi-business')).toMatchObject({contractRevision:'2026-10-03.lumi-business-materials.5',guideRevision:getTemplateGuide('lumi-business')!.revision});
   const demo=materialsDemoDraft(profile,'en');const html=renderSite(demo,{...options,projectId:'materials-demo',assetUrl:id=>id,preview:true});
   expect(html).toContain('Make');expect(html).toContain('strategy');expect(html).not.toContain('Example toy');expect(html).not.toContain('Use For Free');expect(html).not.toContain('framer.link');expect(html).not.toContain('framerusercontent.com');expect(html).not.toContain('__LUMI_');
   expect(profile.imageSlots.length).toBeGreaterThan(50);expect(profile.textSlots.length).toBeGreaterThan(500);

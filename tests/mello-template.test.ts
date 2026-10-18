@@ -5,6 +5,7 @@ import { TEMPLATES } from '../src/client/TemplateSelector';
 import { getTemplateGuide } from '../src/worker/template-guides/catalog';
 import { getMaterialsTemplate } from '../src/templates/materials';
 import { materialsDemoDraft } from '../src/worker/template-guides/materials-demo';
+import { currentMaterialsTemplate } from '../src/worker/template-guides/current-materials';
 import { newBanner } from '../src/shared/banner-config';
 import { parse, type DefaultTreeAdapterMap } from 'parse5';
 
@@ -57,10 +58,11 @@ describe('Mello Coffee integrated template', () => {
     const guide = getTemplateGuide('mello-coffee')!;
     expect(guide).toBeDefined();
     expect(guide.pagePlan.productDetail).not.toHaveLength(0);
-    expect(guide.revision).toBe('2026-10-02.1');
+    expect(guide.revision).toBe('2026-10-03.3');
+    expect(currentMaterialsTemplate('mello-coffee')).toMatchObject({ contractRevision: '2026-10-03.mello-coffee-materials.5', guideRevision: guide.revision });
 
     const contract = getMaterialsTemplate('mello-coffee')!;
-    expect(contract).toMatchObject({ materialsReady: true, guideRevision: guide.revision });
+    expect(contract).toMatchObject({ materialsReady: true, contractRevision: '2026-10-02.mello-coffee-materials.1', guideRevision: '2026-10-02.1' });
     expect(contract.requiredCapabilities).toContain('image.product-primary.v1');
     expect(contract.imageSlots.find((s) => s.id === 'hero-portrait')).toMatchObject({
       width: 1200,
