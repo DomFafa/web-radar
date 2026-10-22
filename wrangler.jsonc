@@ -59,6 +59,7 @@
   "observability": {
     "enabled": true
   },
+  "triggers": { "crons": ["* * * * *"] },
   "env": {
     "test": {
       "name": "web-radar-test",

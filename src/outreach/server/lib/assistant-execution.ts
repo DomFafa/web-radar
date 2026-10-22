@@ -48,19 +48,14 @@ export async function materializeOperations(env: Bindings, user: AssistantUser, 
 async function callTask(env: Bindings, user: AssistantUser, channel: AssistantChannel, taskId: string, action: boolean, snapshot?: Snapshot): Promise<Response> {
   let bindings = env;
   if (action && channel === 'email' && snapshot) {
-    const approved = new Map(snapshot.recipients.map(recipient => [recipient.recipientId, recipient]));
-    const email = snapshot.draft.email, sender = snapshot.draft.sender, original = env.EMAIL_QUEUE;
-    const seal = (body: any) => {
-      const recipient = approved.get(body.recipientId);
-      if (!recipient || body.campaignId !== taskId) throw new Error('Recipient does not match the confirmed snapshot');
-      return { ...body, toEmail: recipient.email, toName: recipient.name, fromEmail: sender.email, fromName: sender.name,
-        replyTo: email.replyTo || null, subject: email.subject, bodyHtml: email.bodyHtml, bodyText: email.bodyText || null,
-        variables: { name: recipient.name, company: recipient.company, industry: recipient.industry } };
-    };
-    bindings = { ...env, EMAIL_QUEUE: {
-      send: (body: any, options: any) => original.send(seal(body), options),
-      sendBatch: (batch: any[], options: any) => original.sendBatch(batch.map(item => ({ ...item, body: seal(item.body) })), options),
-    } as Queue };
+    const email = snapshot.draft.email, sender = snapshot.draft.sender;
+    // The campaign route freezes the approved content into R2 and reads the
+    // approved recipients from edm_assistant_recipients into its D1 outbox.
+    bindings = { ...env, APPROVED_EMAIL_CONTENT: { taskId, campaignId: taskId,
+      recipientCount: snapshot.recipients.length,
+      subject: email.subject, bodyHtml: email.bodyHtml, bodyText: email.bodyText || null,
+      senderEmail: sender.email, senderName: sender.name, replyTo: email.replyTo || null,
+    } } as Bindings;
   }
   const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
   app.use('*', async (c, next) => { c.set('user', user); await next(); });

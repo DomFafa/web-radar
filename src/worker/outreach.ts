@@ -17,7 +17,8 @@ import { uploadRoutes } from '../outreach/server/routes/upload.routes';
 import { imagesRoutes } from '../outreach/server/routes/images.routes';
 import { assistantRoutes } from '../outreach/server/routes/assistant.routes';
 import publicRoutes from '../outreach/server/public';
-import { handleEmailQueue, type EmailSendMessage } from '../outreach/server/queues/email-send.queue';
+import { handleEmailQueue } from '../outreach/server/queues/email-send.queue';
+import { publishEmailOutbox, type EmailQueueBody } from '../outreach/server/lib/email-outbox';
 import { handleSiteMessageQueue, type SiteMessageQueueMessage } from '../outreach/server/queues/site-message.queue';
 
 export function outreachBindings(env: AppEnv): Bindings {
@@ -59,18 +60,18 @@ export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<
   app.onError((error,c)=>{console.error('Outreach request failed',testMode(env)?error:error.name);return c.json({error:'操作失败，请检查输入或服务配置后重试。'},500)});
   return app.fetch(request,bindings,ctx);
 }
-export async function outreachQueue(batch:MessageBatch<EmailSendMessage|SiteMessageQueueMessage|ResendSyncMessage>,env:AppEnv) {
+export async function outreachQueue(batch:MessageBatch<EmailQueueBody|SiteMessageQueueMessage|ResendSyncMessage>,env:AppEnv) {
   const bindings=outreachBindings(env);
   if(testMode(env)) { for(const m of batch.messages)m.ack();return; }
   if(batch.queue.startsWith('web-radar-edm-email')) {
-    const groups=new Map<string,Message<EmailSendMessage>[]>();
+    const groups=new Map<string,Message<EmailQueueBody>[]>();
     for (const message of batch.messages) {
       if ('kind' in message.body && message.body.kind === 'resend-sync') {
         const delay=await handleResendSync(message.body,bindings);
         if(delay) await bindings.EMAIL_QUEUE.send(message.body,{delaySeconds:Math.min(86400,delay)});
         message.ack();
       } else {
-        const email = message as Message<EmailSendMessage>;
+        const email = message as Message<EmailQueueBody>;
         groups.set(email.body.campaignId,[...(groups.get(email.body.campaignId)||[]),email]);
       }
     }
@@ -79,4 +80,8 @@ export async function outreachQueue(batch:MessageBatch<EmailSendMessage|SiteMess
   }
   if(batch.queue==='web-radar-edm-sites') return handleSiteMessageQueue(batch as MessageBatch<SiteMessageQueueMessage>,bindings);
   throw new Error('Unknown outreach queue');
+}
+export async function publishPendingEmailJobs(env: AppEnv) {
+  if (testMode(env)) return;
+  await publishEmailOutbox(outreachBindings(env), 10);
 }

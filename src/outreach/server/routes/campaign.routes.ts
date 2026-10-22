@@ -17,7 +17,7 @@ import {
 } from "../../db/schema";
 import type { Bindings, Variables } from "../../shared/types";
 import { requireAuth, requirePermission } from "../middleware/auth";
-import { handleEmailQueue } from "../queues/email-send.queue";
+import { publishEmailOutbox, type EmailContentSnapshot } from "../lib/email-outbox";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { selectEmailProviderForSender } from "../lib/email-provider-selection";
 import { addCampaignRecipients } from "../lib/campaign-recipient-batch";
@@ -668,6 +668,10 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
     return c.json({ success: false, error: "请先选择邮件模板" }, 400);
   }
 
+  if (campaign.status === 'sending') {
+    return c.json({ success: false, error: '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
+  }
+
   const pendingStatuses = ["queued", "sending"];
 
   // 检查是否有待发送/发送中的收件人
@@ -685,6 +689,13 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
     return c.json({ success: false, error: "没有待发送的收件人" }, 400);
   }
 
+  // Never create a second send operation for a previously published recipient.
+  // Outbox rows remain durable even after Queue delivery is acknowledged.
+  const prior = await c.env.DB.prepare(`SELECT 1 FROM edm_email_outbox o
+    JOIN edm_campaign_recipients r ON r.id=o.recipient_id
+    WHERE r.campaign_id=? AND r.status IN ('queued','sending') LIMIT 1`).bind(campaignId).first();
+  if (prior) return c.json({ success: false, error: '已有收件人处于发送或待核实状态，请先检查发送记录，勿重复提交' }, 409);
+
   // 获取模板
   const [template] = await db
     .select()
@@ -695,14 +706,32 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
     return c.json({ success: false, error: "邮件模板不存在" }, 404);
   }
 
-  const blockedTerms = findBlockedEmailTerms(template.subject, template.bodyHtml, template.bodyText);
+  // Assistant confirmations carry an already-approved snapshot, independent of
+  // later contact/template edits. This binding is injected internally, never from HTTP.
+  const approved = (c.env as any).APPROVED_EMAIL_CONTENT as (EmailContentSnapshot & {
+    taskId: string; recipientCount: number; senderEmail: string; senderName: string; replyTo: string | null;
+  }) | undefined;
+  const trustedApproved = approved?.taskId === campaignId ? approved : undefined;
+  if (trustedApproved) {
+    const match = await c.env.DB.prepare(`SELECT COUNT(*) AS n FROM edm_campaign_recipients r
+      INNER JOIN edm_assistant_recipients a ON a.recipient_id=r.id AND a.task_id=r.campaign_id
+      WHERE r.campaign_id=? AND r.status IN ('queued','sending')`).bind(campaignId).first<{ n: number }>();
+    if (Number(match?.n) !== recipientCount.count || Number(match?.n) !== trustedApproved.recipientCount) {
+      return c.json({ success: false, error: '待发收件人与已确认名单不一致，请重新确认任务' }, 409);
+    }
+  }
+  const content = trustedApproved || template;
+  const senderEmail = trustedApproved?.senderEmail ?? campaign.senderEmail;
+  const senderName = trustedApproved?.senderName ?? campaign.senderName;
+  const replyTo = trustedApproved ? trustedApproved.replyTo : campaign.replyTo;
+  const blockedTerms = findBlockedEmailTerms(content.subject, content.bodyHtml, content.bodyText);
   if (blockedTerms.length) {
     return c.json({ success: false, error: blockedEmailMessage(blockedTerms), blockedTerms }, 400);
   }
 
   const emailProviders = (await loadProviders(db,c.env,user.id)).filter(p=>p.status==="active" && (EMAIL_PROVIDER_TYPES as readonly string[]).includes(p.provider));
   const senderAccounts = await resolveSenderDomains(emailProviders);
-  const senderSelection = selectEmailProviderForSender(senderAccounts.providers, user.id, campaign.senderEmail);
+  const senderSelection = selectEmailProviderForSender(senderAccounts.providers, user.id, senderEmail);
   // An unavailable Resend account must not silently fall back to another provider.
   const requiresDomainMatch = emailProviders.some(provider=>provider.provider==='resend');
   const selectedProvider = requiresDomainMatch && !senderSelection.matchedDomain ? undefined : senderSelection.provider;
@@ -711,94 +740,56 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   }
 
   if (selectedProvider.provider === 'resend') {
-    try { await prepareResendTracking(c.env, selectedProvider, campaign.senderEmail); }
+    try { await prepareResendTracking(c.env, selectedProvider, senderEmail); }
     catch (error) { return c.json({error:'Resend 数据追踪未准备好：'+(error as Error).message},400); }
   }
 
-  // 更新活动状态为发送中
-  const claimed = await db
-    .update(campaigns)
-    .set({
-      status: "sending",
-      startedAt: campaign.startedAt || new Date(),
-      updatedAt: new Date(),
-    })
-    .where(and(eq(campaigns.id, campaignId), sql`${campaigns.status} != 'sending'`))
-    .returning({ id: campaigns.id });
+  if (!c.env.STORAGE || !c.env.EMAIL_QUEUE) return c.json({ success: false, error: '邮件持久化存储或发送队列未配置' }, 503);
+  const snapshotKey = `outreach/email-snapshots/${campaignId}/${crypto.randomUUID()}.json`;
+  const snapshot: EmailContentSnapshot = { campaignId, subject: content.subject, bodyHtml: content.bodyHtml, bodyText: content.bodyText };
+  await c.env.STORAGE.put(snapshotKey, JSON.stringify(snapshot), { httpMetadata: { contentType: 'application/json' } });
 
-  if (!claimed.length) return c.json({ success: false, error: "活动已经在发送中，请查看发送进度，不要重复启动" }, 409);
-
-  // 获取待发送的收件人，推入发送队列
-  const recipients = await db
-    .select({
-      id: campaignRecipients.id,
-      contactId: campaignRecipients.contactId,
-      variables: campaignRecipients.variables,
-      contactEmail: contacts.email,
-      contactName: contacts.name,
-    })
-    .from(campaignRecipients)
-    .innerJoin(contacts, eq(campaignRecipients.contactId, contacts.id))
-    .where(
-      and(
-        eq(campaignRecipients.campaignId, campaignId),
-        inArray(campaignRecipients.status, pendingStatuses as any)
-      )
-    );
-
-  // 1. 构造发送批次消息
-  const batch = recipients.map((r) => ({
-    body: {
-      recipientId: r.id,
-      campaignId,
-      providerId: selectedProvider.id,
-      toEmail: r.contactEmail,
-      toName: r.contactName,
-      fromEmail: campaign.senderEmail,
-      fromName: campaign.senderName,
-      replyTo: campaign.replyTo,
-      subject: template.subject,
-      bodyHtml: template.bodyHtml,
-      bodyText: template.bodyText,
-      engagementTrackingSource: selectedProvider.provider === 'resend' ? 'resend' : undefined,
-      variables: r.variables ? JSON.parse(r.variables) : {},
-    },
-  }));
-
-  // 2. 先更新收件人状态为 sending
-  await db.update(campaignRecipients).set({ status: "sending" })
-    .where(and(eq(campaignRecipients.campaignId, campaignId),
-      inArray(campaignRecipients.status, pendingStatuses as any)));
-
-  // 3. 触发发送处理：若存在 EMAIL_QUEUE 绑定则入队由 Cloudflare Queue 消费，否则在 waitUntil 中后台并行处理
-  const queueMessages = batch.map((b) => ({ body: b.body }));
-
-  if (c.env.EMAIL_QUEUE) {
-    for (let i = 0; i < queueMessages.length; i += 100) {
-      await c.env.EMAIL_QUEUE.sendBatch(queueMessages.slice(i, i + 100));
-    }
-  } else {
-    const fakeBatch = {
-      messages: queueMessages.map((b) => ({
-        body: b.body,
-        ack: () => {},
-        retry: () => {},
-      })),
-    };
-
-    if (c.executionCtx?.waitUntil) {
-      c.executionCtx.waitUntil(handleEmailQueue(fakeBatch as any, c.env));
-    } else {
-      await handleEmailQueue(fakeBatch as any, c.env);
-    }
+  // Commit the campaign claim and all frozen per-recipient envelopes atomically.
+  // This single INSERT SELECT supports 20k recipients without materializing 20k HTML copies.
+  const now = Math.floor(Date.now() / 1000);
+  const results = await c.env.DB.batch([
+    c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',started_at=COALESCE(started_at,?),updated_at=?
+      WHERE id=? AND status!='sending'`).bind(now, now, campaignId),
+    c.env.DB.prepare(`INSERT INTO edm_email_outbox
+      (recipient_id,campaign_id,snapshot_key,provider_id,to_email,to_name,from_email,from_name,reply_to,variables,engagement_tracking_source,created_at)
+      SELECT r.id,r.campaign_id,?,?,COALESCE(a.email,c.email),COALESCE(a.name,c.name),?,?,?,
+        CASE WHEN a.recipient_id IS NULL THEN COALESCE(r.variables,'{}')
+          ELSE json_object('name',COALESCE(a.name,''),'company',COALESCE(a.company,''),'industry',COALESCE(a.industry,'')) END,
+        ?,? FROM edm_campaign_recipients r
+      JOIN edm_contacts c ON c.id=r.contact_id
+      LEFT JOIN edm_assistant_recipients a ON a.recipient_id=r.id AND a.task_id=r.campaign_id
+      WHERE r.campaign_id=? AND r.status IN ('queued','sending')`)
+      .bind(snapshotKey, selectedProvider.id, senderEmail, senderName, replyTo, selectedProvider.provider === 'resend' ? 'resend' : null, now, campaignId),
+    c.env.DB.prepare(`UPDATE edm_campaign_recipients SET status='sending'
+      WHERE campaign_id=? AND status IN ('queued','sending')`).bind(campaignId),
+  ]);
+  if (!results[0].meta.changes) {
+    await c.env.STORAGE.delete(snapshotKey).catch(() => {});
+    return c.json({ success: false, error: '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
   }
+
+  // Durable outbox lets cron finish publication after timeout, partial Queue
+  // acceptance or client disconnect; the original 99 emails are never retried here.
+  let publicationPending = false;
+  try {
+    await publishEmailOutbox(c.env, 10, campaignId);
+    publicationPending = !!await c.env.DB.prepare('SELECT 1 FROM edm_email_outbox WHERE campaign_id=? AND published_at IS NULL LIMIT 1')
+      .bind(campaignId).first();
+  }
+  catch { publicationPending = true; }
 
   return c.json({
     success: true,
     data: {
       campaignId,
       status: "sending",
-      recipientsQueued: recipients.length,
+      recipientsQueued: recipientCount.count,
+      publicationPending,
     },
   });
 });

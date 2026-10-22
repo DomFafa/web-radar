@@ -92,6 +92,10 @@ export function deploymentArguments(artifact, sourceCommit, digest) {
     '--tag', `git-${sourceCommit.slice(0, 12)}`, '--message', `source ${sourceCommit}; artifact ${digest}`];
 }
 
+export function productionMigrationArguments(root) {
+  return ['d1', 'migrations', 'apply', 'web-radar', '--remote', '--config', join(root, 'wrangler.jsonc')];
+}
+
 function run(command, args, cwd, { env = process.env, log } = {}) {
   const result = spawnSync(command, args, { cwd, env, stdio: log ? ['ignore', 'pipe', 'pipe'] : 'inherit', maxBuffer: 20 * 1024 * 1024 });
   if (log) writeFileSync(log, Buffer.concat([result.stdout ?? Buffer.alloc(0), result.stderr ?? Buffer.alloc(0)]), { mode: 0o600 });
@@ -224,6 +228,11 @@ async function deploy(root, pr, policy, artifact, sourceCommit, productRadarComm
     requireValue((await latest()).id === before.id && settingsFingerprint(await cfJson('/settings')) === beforeSettings,
       'Production changed during preflight; re-evaluate before another release.');
     verifyArtifact(artifact, digest, sourceCommit, productRadarCommit);
+    // Additive D1 migration must complete before the new Worker can publish
+    // outbox records. On migration failure, leave the old Worker serving traffic.
+    run(process.execPath, [join(root, 'node_modules/wrangler/bin/wrangler.js'), ...productionMigrationArguments(root)], root,
+      { log: join(dirname(evidence), 'wrangler-migration.private.log'), env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: config.account_id,
+        WRANGLER_SEND_METRICS: 'false' } });
     run(process.execPath, [join(root, 'node_modules/wrangler/bin/wrangler.js'), ...deploymentArguments(artifact, sourceCommit, digest)], artifact,
       { log: join(dirname(evidence), 'wrangler-production.private.log'), env: { ...process.env, CLOUDFLARE_ACCOUNT_ID: config.account_id,
         WRANGLER_SEND_METRICS: 'false', WRANGLER_LOG_PATH: join(dirname(evidence), 'wrangler-debug.private.log') } });
