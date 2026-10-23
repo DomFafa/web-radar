@@ -69,6 +69,7 @@ test('tracking does not turn absent or partial tracking into a confirmed no repl
   expect(trackingStatus(4, 4)).toBe('已追踪');
   expect(trackingStatus(0, 0)).toBe('尚未发送');
   expect(communicationStatus('submitted')).toBe('已提交');
+  expect(communicationStatus('sent')).toBe('已受理');
   expect(communicationStatus('unknown')).toBe('结果待确认');
   expect(communicationStatus('uncertain')).toBe('待核实');
   expect(communicationStatus('submitted_unconfirmed')).toBe('提交待核实');

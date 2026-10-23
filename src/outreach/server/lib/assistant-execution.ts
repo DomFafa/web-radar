@@ -150,8 +150,12 @@ export async function assistantEmailReport(env: Bindings, row: SessionRow): Prom
   const operation = (JSON.parse(row.operations) as AssistantOperation[]).find(op => op.channel === 'email');
   if (!operation) throw new AssistantError(404, 'report_not_found', '尚未创建邮件任务。');
   const rows = await env.DB.prepare(`SELECT a.email,a.name,COALESCE(r.status,'missing') status,r.error_message errorMessage,r.ses_message_id sesMessageId,
-    r.sent_at sentAt,r.delivered_at deliveredAt,r.opened_at openedAt,r.clicked_at clickedAt
-    FROM edm_assistant_recipients a LEFT JOIN edm_campaign_recipients r ON r.id=a.recipient_id AND r.campaign_id=a.task_id WHERE a.task_id=? ORDER BY a.recipient_id`)
+    r.sent_at sentAt,r.delivered_at deliveredAt,r.opened_at openedAt,r.clicked_at clickedAt,
+    CASE WHEN json_valid(receipt.result) THEN json_extract(receipt.result,'$.providerStatus') END providerStatus,
+    CASE WHEN json_valid(receipt.result) THEN json_extract(receipt.result,'$.queuedReason') END queuedReason
+    FROM edm_assistant_recipients a LEFT JOIN edm_campaign_recipients r ON r.id=a.recipient_id AND r.campaign_id=a.task_id
+    LEFT JOIN edm_email_send_attempts receipt ON receipt.recipient_id=r.id
+    WHERE a.task_id=? ORDER BY a.recipient_id`)
     .bind(operation.taskId).all<any>();
   const date = (value: number | null) => value === null ? null : new Date(value * 1000);
   return buildCampaignReport(operation.name, rows.results.map(item => ({ ...item,

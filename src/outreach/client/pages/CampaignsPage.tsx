@@ -4,13 +4,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { campaignsApi, templatesApi, contactsApi } from "../lib/api";
 import { useAuth, useToast } from "../App";
 import { TEMPLATE_NAME_LABELS } from "./TemplatesPage";
+import { deliverySuccessHelp, emailDeliveryPresentation } from '../../shared/email-delivery';
+import { percentage } from '../../../shared/outreach-stats';
 
 const statusLabels: Record<string, { label: string; badge: string }> = {
   draft: { label: "草稿", badge: "badge-default" },
   scheduled: { label: "已排期", badge: "badge-info" },
-  sending: { label: "发送中", badge: "badge-warning" },
+  sending: { label: "提交中", badge: "badge-warning" },
   paused: { label: "已暂停", badge: "badge-warning" },
-  completed: { label: "已完成", badge: "badge-success" },
+  completed: { label: "提交完成", badge: "badge-success" },
   failed: { label: "失败", badge: "badge-danger" },
   needs_review: { label: "待核实", badge: "badge-warning" },
 };
@@ -354,15 +356,16 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               <div className="stat-card">
                 <div className="stat-icon" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#10b981" }}>📨</div>
                 <div className="stat-value">{campaigns.reduce((sum, c) => sum + (c.totalSent || 0), 0)}</div>
-                <div className="stat-label">已成功发送</div>
+                <div className="stat-label">已受理</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{ background: "rgba(14, 165, 233, 0.12)", color: "#0ea5e9" }}>📦</div>
                 <div className="stat-value">
                   {(() => {
-                    const totalR = campaigns.reduce((sum, c) => sum + (c.totalRecipients || 0), 0);
                     const totalS = campaigns.reduce((sum, c) => sum + (c.totalSent || 0), 0);
-                    return totalR > 0 ? `${Math.round((totalS / totalR) * 100)}%` : "100%";
+                    const totalD = campaigns.reduce((sum, c) => sum + (c.totalDelivered || 0), 0);
+                    const rate = percentage(totalD, totalS);
+                    return rate === null ? '—' : `${rate}%`;
                   })()}
                 </div>
                 <div className="stat-label">总体送达率</div>
@@ -376,7 +379,8 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                   <th>任务名称</th>
                   <th>状态</th>
                   <th>收件人</th>
-                  <th>已发送</th>
+                  <th>已受理</th>
+                  <th>已送达</th>
                   <th>打开</th>
                   <th>点击</th>
                   <th>退信</th>
@@ -406,6 +410,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                       </td>
                       <td>{c.totalRecipients}</td>
                       <td>{c.totalSent}</td>
+                      <td>{c.totalDelivered || 0}</td>
                       <td><CampaignRate label="打开" value={c.totalOpened} totalSent={c.totalSent} /></td>
                       <td><CampaignRate label="点击" value={c.totalClicked} totalSent={c.totalSent} /></td>
                       <td><CampaignRate label="退信" value={c.totalBounced} totalSent={c.totalSent} /></td>
@@ -579,7 +584,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                       onClick={() => handleSend(detail.id)}
                       disabled={sending || isCampaignLocked(detail) || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
                     >
-                      {sending ? "正在提交..." : detail.status === "sending" ? "正在发送" : detail.status === "needs_review" ? "等待核实结果" : detail.status === "completed" ? "处理完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
+                      {sending ? "正在提交..." : detail.status === "sending" ? "正在提交" : detail.status === "needs_review" ? "等待核实结果" : detail.status === "completed" ? "提交完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
                     </button>}
                     {writable && detail.status === "sending" && (
                       <button className="btn btn-secondary btn-sm" onClick={() => handlePause(detail.id)}>
@@ -633,6 +638,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
 
               {/* Stats */}
               <CampaignProgress campaign={detail} />
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>{deliverySuccessHelp}</p>
               <div className="stats-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", marginBottom: 20 }}>
                 <div className="stat-card" style={{ padding: 12 }}>
                   <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalRecipients}</div>
@@ -640,7 +646,11 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                 </div>
                 <div className="stat-card" style={{ padding: 12 }}>
                   <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalSent}</div>
-                  <div className="stat-label" style={{ fontSize: 12 }}>已发送</div>
+                  <div className="stat-label" style={{ fontSize: 12 }}>已受理</div>
+                </div>
+                <div className="stat-card" style={{ padding: 12 }}>
+                  <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalDelivered || 0}</div>
+                  <div className="stat-label" style={{ fontSize: 12 }}>已送达</div>
                 </div>
                 <div className="stat-card" style={{ padding: 12 }}>
                   <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalOpened}</div>
@@ -731,23 +741,13 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                           <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "35%" }}>收件人邮箱</th>
                           <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "15%" }}>状态</th>
                           <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "30%" }}>详情 / 错误提示</th>
-                          <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "20%" }}>发送时间</th>
+                          <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "20%" }}>受理时间</th>
                         </tr>
                       </thead>
                       <tbody>
                         {recipientList.map((r) => {
-                          const rStatusMap: Record<string, { label: string; badge: string }> = {
-                            queued: { label: "待发送", badge: "badge-default" },
-                            sending: { label: "发送中...", badge: "badge-warning" },
-                            sent: { label: "已发送", badge: "badge-success" },
-                            delivered: { label: "已送达", badge: "badge-success" },
-                            opened: { label: "已打开", badge: "badge-info" },
-                            clicked: { label: "已点击", badge: "badge-info" },
-                            failed: { label: "发送失败", badge: "badge-danger" },
-                            bounced: { label: "已退信", badge: "badge-danger" },
-                          };
-                          const st = rStatusMap[r.status] || { label: r.status, badge: "badge-default" };
-                          const sentSuccessfully = ["sent", "delivered", "opened", "clicked"].includes(r.status);
+                          const st = emailDeliveryPresentation(r);
+                          const badge = { success: 'badge-success', warning: 'badge-warning', neutral: 'badge-default', danger: 'badge-danger' }[st.tone];
                           return (
                             <tr key={r.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
                               <td style={{ padding: "8px 12px", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 280 }}>
@@ -755,10 +755,10 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                                 {r.contactName ? <span style={{ color: "var(--color-text-muted)", marginLeft: 4 }}>({r.contactName})</span> : null}
                               </td>
                               <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}>
-                                <span className={`badge ${st.badge}`} style={{ fontSize: 12 }}>{st.label}</span>
+                                <span className={`badge ${badge}`} style={{ fontSize: 12 }}>{st.label}</span>
                               </td>
-                              <td style={{ padding: "8px 12px", color: !sentSuccessfully && r.errorMessage ? "var(--color-danger)" : "var(--color-text-muted)", fontSize: 12, wordBreak: "break-word" }}>
-                                {sentSuccessfully ? "✅ 发送成功" : r.errorMessage || "-"}
+                              <td style={{ padding: "8px 12px", color: st.tone === 'danger' ? "var(--color-danger)" : "var(--color-text-muted)", fontSize: 12, wordBreak: "break-word" }}>
+                                {st.detail}
                               </td>
                               <td style={{ padding: "8px 12px", fontSize: 12, color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>
                                 {r.sentAt ? new Date(r.sentAt).toLocaleTimeString("zh-CN") : "-"}

@@ -7,6 +7,22 @@ export async function claimAttempt(db: D1Database, id: string) {
   return Number(result.meta.changes) === 1;
 }
 
-export const saveAttempt = (db: D1Database, id: string, messageId: string) => db.prepare(
-  "UPDATE edm_email_send_attempts SET result = ? WHERE recipient_id = ?"
-).bind(JSON.stringify({ messageId, sentAt: Date.now() }), id).run();
+export interface ProviderReceiptMetadata {
+  providerStatus?: string;
+  queuedReason?: string;
+}
+
+export const saveAttempt = (db: D1Database, id: string, messageId: string, metadata: ProviderReceiptMetadata = {}) => {
+  const now = Date.now();
+  const result = JSON.stringify({ messageId, sentAt: now, ...metadata });
+  const patch = JSON.stringify({ messageId, sentAt: now, ...metadata,
+    ...(metadata.providerStatus !== undefined && metadata.queuedReason === undefined ? { queuedReason: null } : {}),
+  });
+  // An ID-only receipt replay must retain the original provider state and
+  // acceptance time. A different message ID starts its own receipt metadata.
+  return db.prepare(`UPDATE edm_email_send_attempts SET result = CASE
+    WHEN json_extract(result,'$.messageId')=? THEN
+      json_set(json_patch(result,?), '$.sentAt', COALESCE(json_extract(result,'$.sentAt'),?))
+    ELSE ? END WHERE recipient_id=?`)
+    .bind(messageId, patch, now, result, id).run();
+};

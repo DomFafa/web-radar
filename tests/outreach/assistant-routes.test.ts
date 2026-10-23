@@ -361,7 +361,12 @@ test('email CSV reports the approved address after a contact is edited and remai
   sqlite.prepare("UPDATE edm_campaign_recipients SET status='sent',sent_at=1,ses_message_id='recorded-provider-id' WHERE campaign_id=?").run(submitted.operations[0].taskId);
   const response = await request('/' + session.id + '/email/export'); expect(response.status).toBe(200);
   expect(response.headers.get('content-type')).toContain('text/csv');
-  const csv = await response.text(); expect(csv).toContain('buyer@example.com'); expect(csv).not.toContain('new-address@example.com'); expect(csv).toContain('发送成功');
+  const csv = await response.text(); expect(csv).toContain('buyer@example.com'); expect(csv).not.toContain('new-address@example.com'); expect(csv).toContain('已受理'); expect(csv).toContain('送达待确认');
+  sqlite.prepare(`INSERT INTO edm_email_send_attempts(recipient_id,started_at,result)
+    SELECT id,1,? FROM edm_campaign_recipients WHERE campaign_id=?`)
+    .run(JSON.stringify({messageId:'recorded-provider-id',sentAt:1,providerStatus:'queued',queuedReason:'user-paused'}),submitted.operations[0].taskId);
+  const queuedCsv = await (await request('/' + session.id + '/email/export')).text();
+  expect(queuedCsv).toContain('服务商排队中'); expect(queuedCsv).toContain('user-paused'); expect(queuedCsv).not.toContain('发送成功');
   principal = { ...principal, userId: 'other', authSubject: 'other' }; token = (await mintSession(env, principal)).token;
   expect((await request('/' + session.id + '/email/export')).status).toBe(404);
 });

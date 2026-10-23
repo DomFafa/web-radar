@@ -89,3 +89,42 @@ test.each([
   expect(html).not.toContain('已提交队列');
   expect(html).not.toContain('重试这个渠道');
 });
+
+test.each([
+  ['email', 'completed', '提交完成', '已受理'],
+  ['email', 'sent', '已受理', '已受理'],
+  ['site', 'completed', '处理完成', '已提交'],
+  ['site', 'sent', '发送完成', '已提交'],
+] as const)('%s result %s distinguishes submission from delivery without changing website results', (channel, status, label, countLabel) => {
+  const results: AssistantResults = {
+    sessionId: 'conversation',
+    channels: [{ channel, taskId: 'task', name: 'Sample outreach', status, operationStatus: 'submitted', total: 5, sent: 5, pending: 0, failed: 0, uncertain: 0, retryable: false, detailPath: '/task', exportPath: '/report' }],
+    summary: { total: 5, sent: 5, pending: 0, failed: 0, uncertain: 0 },
+  };
+  const html = renderToStaticMarkup(React.createElement(ResultCards, {
+    results, busy: false, writable: true, onRetry() {}, onRefresh() {}, onWorkbench() {}, onError() {},
+  }));
+  expect(html).toContain(`<span class="wr-lazy-status">${label}</span>`);
+  expect(html).toContain(`<strong>5</strong>${countLabel}`);
+  expect(html).not.toContain('已提交队列');
+  if (channel === 'email') {
+    expect(html).toContain('邮件已受理不代表已送达');
+    expect(html).not.toContain('<strong>5</strong>已发送');
+  } else {
+    expect(html).toContain('已提交留言不代表对方已阅读或回复');
+    expect(html).not.toContain('邮件已受理不代表已送达');
+  }
+});
+
+test('a submitted email operation does not claim all messages reached the provider queue', () => {
+  const results: AssistantResults = {
+    sessionId: 'conversation',
+    channels: [{ channel: 'email', taskId: 'task', name: 'Sample outreach', status: 'awaiting-status', operationStatus: 'submitted', total: 5, sent: 0, pending: 5, failed: 0, uncertain: 0, retryable: false, detailPath: '/task', exportPath: '/report' }],
+    summary: { total: 5, sent: 0, pending: 5, failed: 0, uncertain: 0 },
+  };
+  const html = renderToStaticMarkup(React.createElement(ResultCards, {
+    results, busy: false, writable: true, onRetry() {}, onRefresh() {}, onWorkbench() {}, onError() {},
+  }));
+  expect(html).toContain('<span class="wr-lazy-status">已提交</span>');
+  expect(html).not.toContain('已提交队列');
+});

@@ -48,6 +48,7 @@ try {
   let campaignReads = 0;
   let nextCampaignSendUncertain = false;
   let nextCampaignPublicationPending = false;
+  let campaignRecipientRows;
   await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -67,7 +68,7 @@ try {
     else if (path === '/campaigns' && request.method() === 'POST') { created++; campaign = { ...request.postDataJSON(), id: 'fixture-campaign', status: 'draft', totalRecipients: 1, totalSent: 0, totalFailed: 0 }; response = { data: campaign }; }
     else if (path === '/campaigns') { campaignReads++; response = { data: [campaign] }; }
     else if (path === '/campaigns/fixture-campaign/recipients' && request.method() === 'POST') { prepared = request.postDataJSON(); response = { data: { added: 1 } }; }
-    else if (path === '/campaigns/fixture-campaign/recipients') response = { data: [{ id: 'recipient-alice', contactId: 'alice', contactEmail: 'alice@example.com', status: campaign.progress.sending ? 'sending' : 'sent' }] };
+    else if (path === '/campaigns/fixture-campaign/recipients') response = { data: campaignRecipientRows || [{ id: 'recipient-alice', contactId: 'alice', contactEmail: 'alice@example.com', status: campaign.progress.sending ? 'sending' : 'sent' }] };
     else if (path === '/campaigns/fixture-campaign/send') {
       sent++;
       if (nextCampaignSendUncertain) {
@@ -188,14 +189,38 @@ try {
   page.once('dialog', dialog => dialog.accept());
   await page.getByRole('button', { name: '发送待发邮件', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.fixtureToasts?.at(-1)?.message)).toBe('邮件任务已保存，正在等待加入发送队列，请勿重复提交。');
-  await expect(page.getByRole('button', { name: '正在发送', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '正在提交', exact: true })).toBeDisabled();
   await page.clock.fastForward(60_001);
   expect(sent, 'durable publication must not automatically resubmit').toBe(4);
   await page.reload();
-  await expect(page.getByRole('button', { name: '正在发送', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '正在提交', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: '发送待发邮件', exact: true })).toHaveCount(0);
   expect(sent, 'refresh must not resubmit a saved task').toBe(4);
   console.log('PASS: durable publication pending reports saved state and prevents repeat submission before and after refresh');
+
+  campaign = { ...campaign, name: 'Provider accepted, delivery pending', status: 'completed', totalRecipients: 3, totalSent: 3, totalDelivered: 1, progress: { sending: 0, queued: 0, failed: 0, processed: 3, providerQueued: 1 } };
+  campaignRecipientRows = [
+    { id: 'queued', contactEmail: 'queued@example.com', status: 'sent', providerStatus: 'queued', queuedReason: 'hourly_quota' },
+    { id: 'legacy', contactEmail: 'legacy@example.com', status: 'sent' },
+    { id: 'delivered', contactEmail: 'delivered@example.com', status: 'delivered', providerStatus: 'queued' },
+  ];
+  await page.goto(`${address}?records=1&campaignId=fixture-campaign`);
+  await expect(page.getByRole('button', { name: '提交完成', exact: true })).toBeDisabled();
+  await expect(page.locator('.modal').getByText('已受理', { exact: true })).toHaveCount(2);
+  await expect(page.locator('.modal').getByText('已送达', { exact: true })).toHaveCount(2);
+  const queuedRow = page.getByRole('row').filter({ hasText: 'queued@example.com' });
+  await expect(queuedRow).toContainText('服务商排队中');
+  await expect(queuedRow).toContainText('尚未发出');
+  await expect(queuedRow).toContainText('hourly_quota');
+  await expect(page.getByRole('row').filter({ hasText: 'legacy@example.com' })).toContainText('送达待确认');
+  await expect(page.getByRole('row').filter({ hasText: 'delivered@example.com' })).toContainText('收件方邮件服务器已接收');
+  await expect(page.getByText('提交进度 3 / 3（100.0%）', { exact: true })).toBeVisible();
+  await expect(page.getByText('服务商排队/定时发送 1', { exact: false })).toBeVisible();
+  await expect(page.locator('.stat-card').filter({ hasText: '总体送达率' })).toContainText('33.3%');
+  await expect(page.getByText('✅ 发送成功', { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: join(screenshotDir, 'edm-provider-queue-status.png'), fullPage: true, animations: 'disabled' });
+  expect(sent, 'viewing provider delivery results must not resubmit').toBe(4);
+  console.log('PASS: accepted/provider-queued/delivered states stay distinct, submission completion does not imply delivery, and delivery rate uses confirmed receipts');
 } finally {
   await browser?.close();
   await server.close();
