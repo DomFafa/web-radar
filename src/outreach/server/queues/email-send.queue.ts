@@ -11,6 +11,7 @@ import { campaignRecipients, campaigns, contacts, providers } from "../../db/sch
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { selectEmailProviderForSender } from "../lib/email-provider-selection";
 import { readAttempt, claimAttempt, saveAttempt } from "../lib/email-attempt";
+import { hydrateEmailQueue, type EmailContentSnapshot, type EmailQueueBody } from '../lib/email-outbox';
 
 /**
  * 邮件发送队列消费者
@@ -749,10 +750,48 @@ async function sendViaSMTP(
  * 处理邮件发送队列消息批次
  */
 export async function handleEmailQueue(
-  batch: MessageBatch<EmailSendMessage>,
+  incoming: MessageBatch<EmailQueueBody>,
   env: any
 ): Promise<void> {
   const db = createDb(env.DB);
+  const cache = new Map<string, Promise<EmailContentSnapshot | null>>();
+  const hydrated: QueueMessage<EmailSendMessage>[] = [];
+  for (const item of incoming.messages) {
+    if (!('kind' in item.body) || item.body.kind !== 'email-job') {
+      hydrated.push(item as QueueMessage<EmailSendMessage>);
+      continue;
+    }
+    try {
+      const body = await hydrateEmailQueue(env, item.body, cache);
+      if (!body) {
+        // Never dispatch from current template if the immutable R2 object is lost.
+        await db.update(campaignRecipients).set({ status: 'failed', errorMessage: '待核实：发送前邮件快照缺失，已阻止发送' })
+          .where(and(eq(campaignRecipients.id, item.body.recipientId), inArray(campaignRecipients.status, ['queued','sending'])));
+        await db.update(campaigns).set({ status: 'needs_review', updatedAt: new Date() }).where(eq(campaigns.id, item.body.campaignId));
+        item.ack();
+        continue;
+      }
+      hydrated.push({ body, ack: () => item.ack(), retry: (options) => item.retry(options),
+        queueBody: item.body } as QueueMessage<EmailSendMessage>);
+    } catch (error) {
+      console.error('Email outbox hydration error:', error instanceof Error ? error.name : 'unknown');
+      if (!incoming.recovery) {
+        item.retry({ delaySeconds: 60 });
+        continue;
+      }
+      // The DLQ has no further dead-letter queue. Persist a reviewable state
+      // before acknowledging an unreadable frozen email; never send a replacement.
+      const affected = await db.update(campaignRecipients)
+        .set({ status: 'failed', errorMessage: '待核实：邮件快照读取失败，已阻止发送' })
+        .where(and(eq(campaignRecipients.id, item.body.recipientId), inArray(campaignRecipients.status, ['queued', 'sending'])))
+        .returning({ id: campaignRecipients.id });
+      if (affected.length) await db.update(campaigns).set({ status: 'needs_review', updatedAt: new Date() })
+        .where(eq(campaigns.id, item.body.campaignId));
+      item.ack();
+    }
+  }
+  if (!hydrated.length) return;
+  const batch: MessageBatch<EmailSendMessage> = { messages: hydrated, recovery: incoming.recovery };
 
   // Marketing API 的发送对象是整个 Campaign，必须在批次级别执行，不能逐收件人调用。
   const firstMessage = batch.messages[0]?.body;
@@ -767,7 +806,7 @@ export async function handleEmailQueue(
       const batchProvider = configuredProviders.find((provider) => provider.id === firstMessage.providerId) || selected.provider;
       if (batchProvider?.provider === "mailchimp" && getMailchimpApiType(batchProvider.apiKey, batchProvider.config) === "marketing") {
         if (campaignOwner.status === "paused") {
-          for (const message of batch.messages) message.retry({ delaySeconds: 300 });
+          for (const message of batch.messages) await deferEmail(env, message, 300000);
           return;
         }
         if (batch.recovery) {

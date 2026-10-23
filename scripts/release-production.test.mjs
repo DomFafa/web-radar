@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   assertWorkflowRun, assertDispatch, createManifest, verifyArtifact,
   deploymentArguments, verifyRequiredChecks, artifactConfig,
+  productionMigrationArguments,
 } from './release-production.mjs';
 import * as release from './release-production.mjs';
 
@@ -88,6 +89,12 @@ test('deployment consumes the built worker without rebundling and retains variab
   assert.equal(args[args.indexOf('--config') + 1], '/artifact/wrangler.json');
   assert.ok(args[args.indexOf('--message') + 1].includes(sha));
   assert.equal(args.includes('--dry-run'), false);
+});
+
+test('production D1 migration uses the verified repository config and the remote database', () => {
+  assert.deepEqual(productionMigrationArguments('/release/web-radar'), [
+    'd1', 'migrations', 'apply', 'web-radar', '--remote', '--config', '/release/web-radar/wrangler.jsonc',
+  ]);
 });
 
 test('artifact configuration retains production settings and refuses a second build hook', () => {

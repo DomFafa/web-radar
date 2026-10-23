@@ -81,9 +81,15 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
     }
     if (mode === 'paused') {
       sqlite.exec("UPDATE edm_campaigns SET status='paused'");
+      const send = vi.fn(async () => undefined);
+      env.EMAIL_QUEUE = { send };
+      const frozenRef = { kind: 'email-job', campaignId: 'campaign', recipientId: 'recipient-subscribed' };
+      (messages[0] as any).queueBody = frozenRef;
       await handleEmailQueue({ messages }, env);
       expect(network).not.toHaveBeenCalled();
-      expect(messages.every((message) => message.retry.mock.calls.length === 1 && !message.ack.mock.calls.length)).toBe(true);
+      expect(messages.every((message) => message.ack.mock.calls.length === 1 && !message.retry.mock.calls.length)).toBe(true);
+      expect(send).toHaveBeenCalledWith(frozenRef, { delaySeconds: 300 });
+      expect(send).toHaveBeenCalledWith(messages[1].body, { delaySeconds: 300 });
       return;
     }
     if (mode === 'concurrent duplicate') {

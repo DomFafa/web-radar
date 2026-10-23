@@ -1,7 +1,7 @@
 import inbox from './inbox/api';
 import crm from './crm/api';
 import { userManagement } from './user-management';
-import { outreachFetch, outreachQueue } from './outreach';
+import { outreachFetch, outreachQueue, publishPendingEmailJobs } from './outreach';
 import { withStoredEmailStatus } from './provider-settings';
 import { Hono } from 'hono';
 import type { HonoEnv } from './env';
@@ -114,4 +114,6 @@ app.all('/api/*', async (c) => {
   return c.env.COORDINATOR.getByName('global').fetch(new Request(c.req.raw, { headers }));
 });
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
-export default Object.assign(app,{queue:outreachQueue});
+export default Object.assign(app,{queue:outreachQueue,scheduled:(_event: ScheduledController,env: HonoEnv['Bindings'],ctx: ExecutionContext)=>{
+  ctx.waitUntil(publishPendingEmailJobs(env));
+}});
