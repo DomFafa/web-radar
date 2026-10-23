@@ -13,7 +13,7 @@ export async function addCampaignRecipients(database: D1Database, campaignId: st
       SELECT json_extract(j.value, '$.id'), ?, c.id, json_extract(j.value, '$.variables'), 'queued', ?
       FROM json_each(?) j CROSS JOIN edm_contacts c ON c.id = json_extract(j.value, '$.contactId')
       WHERE c.user_id = ? AND c.subscription_status = 'subscribed'
-      AND EXISTS (SELECT 1 FROM edm_campaigns WHERE id = ? AND user_id = ? AND status != 'sending')
+      AND EXISTS (SELECT 1 FROM edm_campaigns WHERE id = ? AND user_id = ? AND status NOT IN ('sending', 'needs_review'))
       AND c.id NOT IN (SELECT contact_id FROM edm_campaign_recipients WHERE campaign_id = ?)`)
       .bind(campaignId, now, JSON.stringify(rows.slice(offset, offset + 500)), userId, campaignId, userId, campaignId));
   }

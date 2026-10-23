@@ -53,7 +53,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (page: string) => vo
     },
     {
       icon: "📨",
-      label: "已发送",
+      label: "服务商已受理",
       value: stats?.totalSent || 0,
       color: "#10b981",
       bgColor: "rgba(16, 185, 129, 0.12)",
@@ -252,7 +252,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (page: string) => vo
                     </div>
                     <div className="dashboard-hero-value">{loading ? "-" : stats?.totalSent || 0}</div>
                   </div>
-                  <div className="dashboard-hero-label">已发送邮件</div>
+                  <div className="dashboard-hero-label">服务商已受理</div>
                 </div>
               </div>
 

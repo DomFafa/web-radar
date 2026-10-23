@@ -351,7 +351,7 @@ export default function CustomerInbox({ principal, embedded = false }: { princip
               {r.tracked === 0
                 ? '回复率 —'
                 : `回复率 ${r.sent ? ((100 * r.replied) / r.sent).toFixed(1) : '—'}${r.sent ? '%' : ''}`}{' '}
-              · 覆盖 {r.tracked} 个已发送／提交目标；人工确认后计数。
+              · 覆盖 {r.tracked} 个已受理／提交目标；人工确认后计数。
             </small>
           </div>
         ))}

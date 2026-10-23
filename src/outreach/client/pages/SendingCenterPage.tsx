@@ -6,6 +6,7 @@ import { useAuth, useToast } from "../App";
 import { TemplatesPage, TEMPLATE_NAME_LABELS } from "./TemplatesPage";
 import { EmailPreview } from "../components/EmailPreview";
 import { CampaignProgress } from "../components/CampaignProgress";
+import { deliverySuccessHelp } from '../../shared/email-delivery';
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { browserDraftStorage, draftStorageKey, readEdmDraft, writeEdmDraft, type AudienceMethod, type EdmDraft } from "../lib/edm-draft";
 import { crmDraftKey, crmContactSelection } from '../lib/crm-email-handoff';
@@ -476,8 +477,9 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
           {!sending && submissionPending && !campaignId && <button className="btn btn-secondary" type="button" onClick={newDraft}>已核实，重新准备</button>}
         </div>
         {submissionStage && <section aria-live="polite" style={{ paddingTop: 16 }}>
-          <strong>{!sending && sendProgress?.status === "completed" ? "发送处理已完成" : !sending && sendProgress?.status === "paused" ? "任务已暂停" : !sending && sendProgress?.status === "failed" ? "任务发送失败" : submissionStage}</strong>
+          <strong>{!sending && sendProgress?.status === "completed" ? "提交处理已完成" : !sending && sendProgress?.status === "paused" ? "任务已暂停" : !sending && sendProgress?.status === "failed" ? "任务发送失败" : submissionStage}</strong>
           {sendProgress?.totalRecipients > 0 && <CampaignProgress campaign={sendProgress} />}
+          {sendProgress?.totalRecipients > 0 && <p className="sending-review-note">{deliverySuccessHelp}</p>}
           {sending && !sendProgress?.totalRecipients && <p role="status">正在准备预计 {estimatedRecipientCount} 位收件人，完成后开始发送。</p>}
           {progressError && <p role="alert">{progressError}</p>}
           {!sending && submissionPending && <p role="status">正在核实上次提交。请先查看发送记录，勿重复发送。</p>}

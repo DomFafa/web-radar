@@ -10,7 +10,7 @@ import { createDb } from "../../db";
 import { campaignRecipients, campaigns, contacts, providers } from "../../db/schema";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { selectEmailProviderForSender } from "../lib/email-provider-selection";
-import { readAttempt, claimAttempt, saveAttempt } from "../lib/email-attempt";
+import { readAttempt, claimAttempt, saveAttempt, type ProviderReceiptMetadata } from "../lib/email-attempt";
 import { hydrateEmailQueue, type EmailContentSnapshot, type EmailQueueBody } from '../lib/email-outbox';
 
 /**
@@ -64,7 +64,7 @@ function clipMessage(message: string): string {
 
 type ProgressReporter = (message: string) => Promise<void>;
 type ContentCapture = (subject: string, bodyHtml: string, bodyText?: string) => Promise<void>;
-type ProviderResult = { messageId: string; providerMessageId?: string | null };
+type ProviderResult = { messageId: string; providerMessageId?: string | null } & ProviderReceiptMetadata;
 
 async function fetchWithTimeout(
   url: string,
@@ -368,7 +368,10 @@ async function sendViaMailchimp(
   }
 
   if (!Array.isArray(result) || !result[0]?._id) throw new Error("Mailchimp response has no message ID; delivery requires reconciliation");
-  return { messageId: result[0]._id };
+  return { messageId: result[0]._id,
+    ...(typeof result[0].status === 'string' ? { providerStatus: result[0].status } : {}),
+    ...(typeof result[0].queued_reason === 'string' ? { queuedReason: result[0].queued_reason } : {}),
+  };
 }
 
 function mailchimpMarketingBase(apiKey: string, configStr: string | null): string {
@@ -942,6 +945,11 @@ export async function handleEmailQueue(
               const matches = await reconciliation.get(lookupKey)!;
               const found = matches.find((item: any) => item.email?.toLowerCase() === message.toEmail.toLowerCase() && item._id && ["sent", "queued", "scheduled", "bounced", "soft-bounced", "rejected"].includes(item.state));
               if (found) {
+                if (!attempt) await claimAttempt(env.DB, message.recipientId);
+                await saveAttempt(env.DB, message.recipientId, found._id, {
+                  providerStatus: found.state,
+                  ...(typeof found.queued_reason === 'string' ? { queuedReason: found.queued_reason } : {}),
+                });
                 await db.update(campaignRecipients).set({
                   status: ["bounced", "soft-bounced", "rejected"].includes(found.state) ? "bounced" : "sent",
                   sesMessageId: found._id, sentAt: new Date(found.ts * 1000),
@@ -1033,7 +1041,9 @@ export async function handleEmailQueue(
 
           providerResult = result;
           if (snapshotId) await completeOutbound(env.DB, snapshotId, { status: 'sent', providerMessageId: result.providerMessageId === undefined ? result.messageId : result.providerMessageId }).catch(error => console.error('CRM receipt could not be saved:', error));
-          await saveAttempt(env.DB, message.recipientId, result.messageId);
+          await saveAttempt(env.DB, message.recipientId, result.messageId, {
+            providerStatus: result.providerStatus, queuedReason: result.queuedReason,
+          });
           await env.DB.prepare("UPDATE wr_inbox_routes SET provider_message_id=? WHERE source='edm' AND target_id=?").bind(result.messageId,message.recipientId).run();
           // 更新发送状态
           await db

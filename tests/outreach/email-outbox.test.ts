@@ -1,13 +1,39 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { Hono } from 'hono';
 import { d1 } from './sqlite';
 import { cleanupEmailSnapshots, deleteCampaignWithSnapshots, hydrateEmailQueue, publishEmailOutbox } from '../../src/outreach/server/lib/email-outbox';
 import { handleEmailQueue } from '../../src/outreach/server/queues/email-send.queue';
+import { campaignRoutes } from '../../src/outreach/server/routes/campaign.routes';
+import { seal } from '../../src/outreach/server/lib/credentials';
+import { addCampaignRecipients } from '../../src/outreach/server/lib/campaign-recipient-batch';
 
 let sqlite: DatabaseSync;
 let env: any;
 const objects = new Map<string, string>();
+
+function campaignApp() {
+  const app = new Hono<any>();
+  app.use('*', async (c, next) => { c.set('user', { id: 'u', role: 'admin', teamRead: true }); await next(); });
+  app.route('/campaigns', campaignRoutes);
+  return app;
+}
+
+async function draftCampaign(count: number, body: string) {
+  sqlite.prepare(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+    VALUES ('t','u','Template','Approved subject',?,0,0)`).run(body);
+  sqlite.prepare("UPDATE edm_campaigns SET status='draft',template_id='t',total_recipients=? WHERE id='c'").run(count);
+  env.CREDENTIAL_KEY = 'unit-test-key';
+  sqlite.prepare(`INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at)
+    VALUES ('p','u','sendgrid','Test',?,1,0,0)`).run(await seal('test-only-provider-key', 'p', env));
+  for (let i = 0; i < count; i++) {
+    sqlite.prepare(`INSERT INTO edm_contacts(id,user_id,email,created_at,updated_at) VALUES (?,'u',?,0,0)`)
+      .run(`customer-${i}`, `buyer-${i}@example.com`);
+    sqlite.prepare(`INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,created_at) VALUES (?,'c',?,'queued',0)`)
+      .run(`r${i}`, `customer-${i}`);
+  }
+}
 
 function seed(count: number, body: string) {
   const key = `outreach/email-snapshots/c/frozen.json`;
@@ -26,7 +52,7 @@ function seed(count: number, body: string) {
 
 beforeEach(() => {
   sqlite = new DatabaseSync(':memory:');
-  for (const file of ['0007_outreach.sql', '0012_outreach_assistant.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql']) {
+  for (const file of readdirSync('migrations').filter(file => file.endsWith('.sql')).sort()) {
     sqlite.exec(readFileSync(`migrations/${file}`, 'utf8'));
   }
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','Test','u@example.com',0,0);
@@ -34,8 +60,11 @@ beforeEach(() => {
     INSERT INTO edm_campaigns(id,user_id,name,sender_email,sender_name,status,created_at,updated_at)
     VALUES ('c','u','Campaign','sender@example.com','Sender','sending',0,0);`);
   objects.clear();
-  env = { DB: d1(sqlite), STORAGE: { get: async (key: string) => objects.has(key)
-    ? { json: async () => JSON.parse(objects.get(key)!) } : null } };
+  env = { DB: d1(sqlite), STORAGE: {
+    get: async (key: string) => objects.has(key) ? { json: async () => JSON.parse(objects.get(key)!) } : null,
+    put: async (key: string, value: string) => { objects.set(key, value); },
+    delete: async (key: string) => { objects.delete(key); },
+  } };
 });
 afterEach(() => { vi.restoreAllMocks(); sqlite.close(); });
 
@@ -53,6 +82,91 @@ test('99 recipients share one 512 KiB snapshot while Queue batches remain small'
   expect(message?.bodyHtml.length).toBeGreaterThan(512 * 1024);
   expect(message?.toEmail).toBe('customer0@example.com');
   expect(sqlite.prepare('SELECT count(*) as n FROM edm_email_outbox WHERE published_at IS NOT NULL').get()!.n).toBe(99);
+});
+
+test('five 58925-byte emails queue small references and retain the frozen approved content', async () => {
+  const html = `<p>${'A'.repeat(58918)}</p>`;
+  expect(new TextEncoder().encode(html).byteLength).toBe(58925);
+  await draftCampaign(5, html);
+  const sendBatch = vi.fn(async (_messages: any[]) => undefined);
+  env.EMAIL_QUEUE = { sendBatch };
+
+  const response = await campaignApp().request('/campaigns/c/send', { method: 'POST' }, env);
+  expect(response.status).toBe(200);
+  expect((await response.json() as any).data).toMatchObject({ status: 'sending', recipientsQueued: 5, publicationPending: false });
+  expect(sendBatch).toHaveBeenCalledTimes(1);
+  const messages = sendBatch.mock.calls[0][0];
+  expect(messages).toHaveLength(5);
+  expect(new TextEncoder().encode(JSON.stringify(messages)).byteLength).toBeLessThan(2000);
+  expect(objects.size).toBe(1);
+  sqlite.exec("UPDATE edm_templates SET subject='Edited',body_html='<p>Edited</p>' WHERE id='t'; UPDATE edm_contacts SET email='edited@example.com'");
+  for (const message of messages) {
+    expect(message.body).toEqual({ kind: 'email-job', campaignId: 'c', recipientId: expect.stringMatching(/^r[0-4]$/) });
+    const hydrated = await hydrateEmailQueue(env, message.body);
+    expect(hydrated).toMatchObject({ subject: 'Approved subject', bodyHtml: html,
+      toEmail: `buyer-${message.body.recipientId.slice(1)}@example.com` });
+  }
+});
+
+test.each([
+  ['POST', '/campaigns/c/send', undefined, 409],
+  ['PUT', '/campaigns/c', { name: 'Changed' }, 400],
+  ['DELETE', '/campaigns/c', undefined, 400],
+  ['POST', '/campaigns/c/recipients', { contactIds: ['contact'] }, 400],
+  ['DELETE', '/campaigns/c/recipients/customer-0', undefined, 400],
+] as const)('needs-review campaign rejects %s %s without losing its original evidence', async (method, path, body, status) => {
+  await draftCampaign(1, '<p>Approved</p>');
+  sqlite.exec("UPDATE edm_campaigns SET status='needs_review' WHERE id='c'");
+  const sendBatch = vi.fn(); env.EMAIL_QUEUE = { sendBatch };
+  const response = await campaignApp().request(path, {
+    method, ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } } : {}),
+  }, env);
+  expect(response.status).toBe(status);
+  expect(sqlite.prepare("SELECT status,name,total_recipients FROM edm_campaigns WHERE id='c'").get())
+    .toEqual({ status: 'needs_review', name: 'Campaign', total_recipients: 1 });
+  expect(sqlite.prepare("SELECT id,status FROM edm_campaign_recipients WHERE campaign_id='c'").all()).toEqual([{ id: 'r0', status: 'queued' }]);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_outbox').get()!.n).toBe(0);
+  expect(sendBatch).not.toHaveBeenCalled();
+});
+
+test('paused frozen campaign with an uncertain recipient cannot resume or republish', async () => {
+  seed(1, '<p>Frozen</p>');
+  sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+    VALUES ('t','u','Template','Hello','<p>Hello</p>',0,0);
+    UPDATE edm_campaigns SET status='paused',template_id='t' WHERE id='c';
+    UPDATE edm_campaign_recipients SET error_message='待核实：服务商结果未确认' WHERE id='r0';`);
+  const sendBatch = vi.fn(); env.EMAIL_QUEUE = { sendBatch };
+  const response = await campaignApp().request('/campaigns/c/send', { method: 'POST' }, env);
+  expect(response.status).toBe(409);
+  expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('paused');
+  expect(sqlite.prepare("SELECT published_at FROM edm_email_outbox WHERE recipient_id='r0'").get()!.published_at).toBeNull();
+  expect(sendBatch).not.toHaveBeenCalled();
+});
+
+test('recipient storage rejects additions after a campaign enters needs-review', async () => {
+  sqlite.exec("UPDATE edm_campaigns SET status='needs_review' WHERE id='c'");
+  const result = await addCampaignRecipients(env.DB, 'c', 'u', [{ id: 'contact', name: null, company: null, industry: null }]);
+  expect(result.added).toBe(0);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaign_recipients').get()!.n).toBe(0);
+  expect(sqlite.prepare("SELECT status,total_recipients FROM edm_campaigns WHERE id='c'").get())
+    .toEqual({ status: 'needs_review', total_recipients: 0 });
+});
+
+test('needs-review transition during snapshot upload prevents the send claim and all recipient writes', async () => {
+  await draftCampaign(1, '<p>Approved</p>');
+  env.STORAGE.put = async (key: string, value: string) => {
+    objects.set(key, value);
+    sqlite.exec("UPDATE edm_campaigns SET status='needs_review' WHERE id='c'");
+  };
+  const sendBatch = vi.fn(); env.EMAIL_QUEUE = { sendBatch };
+  const response = await campaignApp().request('/campaigns/c/send', { method: 'POST' }, env);
+  expect(response.status).toBe(409);
+  expect(sqlite.prepare("SELECT status,started_at FROM edm_campaigns WHERE id='c'").get())
+    .toEqual({ status: 'needs_review', started_at: null });
+  expect(sqlite.prepare("SELECT status FROM edm_campaign_recipients WHERE id='r0'").get()!.status).toBe('queued');
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_outbox').get()!.n).toBe(0);
+  expect(objects.size).toBe(0);
+  expect(sendBatch).not.toHaveBeenCalled();
 });
 
 test('campaign deletion keeps a durable R2 cleanup key across storage failure', async () => {

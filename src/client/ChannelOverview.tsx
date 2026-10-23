@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api, errorMessage } from './api';
 import { Button, Icon } from './components';
 import { percentage, type EmailOverview, type SiteOverview } from '../shared/outreach-stats';
+import { deliverySuccessHelp } from '../outreach/shared/email-delivery';
 import './dashboard.css';
 
 export function useOverview<T>(url: string, revision?: string) {
@@ -156,13 +157,13 @@ export function EmailSummary(props: SummaryProps<EmailOverview>) {
       <div className="channel-metrics">
         <Metric label="活动总数" value={d?.totalCampaigns} icon="play" />
         <Metric label="订阅联系人" value={d?.subscribedContacts} icon="users" />
-        <Metric label="已发送邮件" value={d?.totalSent} icon="mail" />
+        <Metric label="服务商已受理" value={d?.totalSent} icon="mail" />
       </div>
       {!!d?.resendSync?.length && (
         <div className="channel-sync">
           <div>
             <strong>Resend 数据追踪</strong>
-            <p>新邮件通过回调自动更新；历史同步读取已发送邮件的最新状态，不会重新发送邮件。</p>
+            <p>新邮件通过回调自动更新；历史同步读取已受理邮件的最新投递状态，不会重新发送邮件。</p>
             {d.resendSync.map((s) => (
               <p key={s.providerName} role="status">
                 {s.providerName}：
@@ -202,9 +203,10 @@ export function EmailSummary(props: SummaryProps<EmailOverview>) {
         ))}
       </div>
       <p className="channel-footnote">
-        各比率以已发送邮件为分母；无发送数据时显示「—」。总联系人 {count(d?.totalContacts)}
+        各比率以服务商已受理邮件为分母；无受理数据时显示「—」。总联系人 {count(d?.totalContacts)}
         。送达、退信依赖服务商回执；打开与点击受邮件客户端限制，未记录不代表未发生。
       </p>
+      <p className="channel-footnote">{deliverySuccessHelp}</p>
     </SummaryFrame>
   );
 }

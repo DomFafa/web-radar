@@ -65,7 +65,7 @@ export function communicationStatus(status: string): string {
         pending: '待发送',
         queued: '等待发送',
         sending: '发送中',
-        sent: '已发送',
+        sent: '已受理',
         delivered: '已送达',
         opened: '已打开',
         clicked: '已点击',
@@ -808,7 +808,7 @@ function CustomerTable({
           <tr>
             <th>客户</th>
             <th>分组</th>
-            <th className="crm-number">已发送 / 提交</th>
+            <th className="crm-number">已受理 / 提交</th>
             <th className="crm-number">确认回复</th>
             <th className="crm-number">失败</th>
             <th className="crm-number">待核实</th>
@@ -1057,7 +1057,7 @@ function CustomerProfile({
       {error && <Notice tone="error">{error}</Notice>}
       <div className="crm-summary">
         {[
-          ['已发送 / 提交', customer.sent],
+          ['已受理 / 提交', customer.sent],
           ['确认回复', customer.replied],
           ['失败', customer.failed],
           ['待核实', customer.uncertain],

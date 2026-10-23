@@ -203,7 +203,7 @@ const statuses: Record<string, string> = {
   draft: '草稿',
   prepared: '已准备',
   dispatching: '正在提交',
-  submitted: '已提交队列',
+  submitted: '已提交',
   queued: '排队中',
   sending: '发送中',
   running: '执行中',
@@ -216,6 +216,7 @@ const statuses: Record<string, string> = {
   needs_attention: '需要处理',
   unavailable: '暂时无法读取',
 };
+const emailStatuses: Record<string, string> = { completed: '提交完成', sent: '已受理' };
 export function ResultCards({
   results,
   busy,
@@ -243,13 +244,17 @@ export function ResultCards({
           刷新
         </Button>
       </div>
-      <p>结果来自实际发送任务；已发送邮件和已提交留言不代表对方已阅读或回复。</p>
+      <p>
+        结果来自实际发送任务；
+        {results.channels.some(result => result.channel === 'email') && '邮件已受理不代表已送达。'}
+        {results.channels.some(result => result.channel === 'site') && '已提交留言不代表对方已阅读或回复。'}
+      </p>
       {results.channels.map((result) => (
         <article key={result.taskId} className="wr-lazy-channel-result">
           <div className="wr-lazy-result-heading">
             <h3>{result.channel === 'email' ? 'EDM 邮件' : '网站留言'}</h3>
             <span className="wr-lazy-status">
-              {statuses[result.status] || statuses[result.operationStatus] || '查询中'}
+              {(result.channel === 'email' && emailStatuses[result.status]) || statuses[result.status] || statuses[result.operationStatus] || '查询中'}
             </span>
           </div>
           <div className="wr-lazy-summary">
@@ -258,7 +263,7 @@ export function ResultCards({
             </div>
             <div>
               <strong>{result.sent}</strong>
-              {result.channel === 'email' ? '已发送' : '已提交'}
+              {result.channel === 'email' ? '已受理' : '已提交'}
             </div>
             <div>
               <strong>{result.pending}</strong>待处理
