@@ -18,8 +18,10 @@ const stats=()=>sqlite.prepare("SELECT * FROM edm_campaigns WHERE id='c'").get()
 function signed(body:string){const time=String(Math.floor(Date.now()/1000)),id='msg_test';return {'svix-id':id,'svix-timestamp':time,'svix-signature':'v1,'+createHmac('sha256',Buffer.from(secret.slice(6),'base64')).update(`${id}.${time}.${body}`).digest('base64')};}
 const app=(role='admin',user='u')=>{const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:user,role});await next()});h.route('/providers',providersRoutes);return h;};
 beforeEach(async()=>{
- sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql','0011_customer_inbox.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
- env={DB:d1(sqlite),CREDENTIAL_KEY:'test-key',BETTER_AUTH_SECRET:'test-auth',BETTER_AUTH_URL:'https://app.example.com'};
+ sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql','0011_customer_inbox.sql','0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
+ const objects=new Map<string,string>();
+ env={DB:d1(sqlite),CREDENTIAL_KEY:'test-key',BETTER_AUTH_SECRET:'test-auth',BETTER_AUTH_URL:'https://app.example.com',
+   STORAGE:{put:async(k:string,v:string)=>{objects.set(k,v)},get:async(k:string)=>objects.has(k)?{json:async()=>JSON.parse(objects.get(k)!)}:null,delete:async(k:string)=>{objects.delete(k)}}};
  sqlite.exec("ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;");
  sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','Test','u@example.com',0,0),('other','Other','other@example.com',0,0);
  INSERT INTO edm_providers(id,user_id,provider,name,api_key,config,is_default,created_at,updated_at) VALUES ('p','u','resend','Test','unused','{}',1,0,0);
@@ -141,9 +143,89 @@ test('campaign submission selects the verified Resend account and blocks removed
  sqlite.prepare("UPDATE edm_providers SET api_key=?,config=? WHERE id='m'").run(await seal('test-mailchimp','m',env),await seal(JSON.stringify({mailchimpDomains:[{domain:'oilsfilter.org',status:'verified'}]}),'m:config',env));
  vi.stubGlobal('fetch',vi.fn(async(url:any)=>String(url).includes('/webhooks')?Response.json(String(url).includes('?')?{data:[]}:{id:'hook',signing_secret:secret}):Response.json({data:[{id:'domain',name:'acfilter.net',status:'verified',open_tracking:true,click_tracking:true}]})));
  const sendBatch=vi.fn();env.EMAIL_QUEUE={sendBatch};
- let response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(200);expect(sendBatch.mock.calls[0][0][0].body.providerId).toBe('p');
- sqlite.exec("UPDATE edm_campaigns SET status='draft'");sendBatch.mockClear();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'pending'}]})));
- response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(400);expect(sendBatch).not.toHaveBeenCalled();expect(stats().status).toBe('draft');
+ let response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(200);
+ expect(sendBatch.mock.calls[0][0][0].body.kind).toBe('email-job');
+ expect(sqlite.prepare("SELECT provider_id FROM edm_email_outbox WHERE recipient_id='r'").get()!.provider_id).toBe('p');
+ sendBatch.mockClear();vi.stubGlobal('fetch',vi.fn(async()=>Response.json({data:[{name:'acfilter.net',status:'pending'}]})));
+ response=await h.request('/campaigns/c/send',{method:'POST'},env);expect(response.status).toBe(409);expect(sendBatch).not.toHaveBeenCalled();
+ sqlite.exec(`INSERT INTO edm_campaigns(id,user_id,name,template_id,sender_email,sender_name,status,created_at,updated_at)
+   VALUES ('c2','u','New campaign','t','re@acfilter.net','Test','draft',0,0);
+   INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,created_at) VALUES ('r2','c2','contact','queued',0);`);
+ response=await h.request('/campaigns/c2/send',{method:'POST'},env);expect(response.status).toBe(400);expect(sendBatch).not.toHaveBeenCalled();
+});
+
+test('paused campaign resumes its frozen outbox without creating a new send operation',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+   VALUES ('t','u','Template','Changed after pause','<p>Changed</p>',0,0);
+   UPDATE edm_campaigns SET status='paused',template_id='t';
+   INSERT INTO edm_email_outbox(recipient_id,campaign_id,snapshot_key,provider_id,to_email,from_email,from_name,variables,created_at)
+   VALUES ('r','c','original-frozen-key','p','original@example.com','sales@example.com','Test','{}',0);`);
+ const sendBatch=vi.fn(async()=>undefined);
+ env.EMAIL_QUEUE={sendBatch};
+ const put=vi.spyOn(env.STORAGE,'put');
+ const response=await h.request('/campaigns/c/send',{method:'POST'},env);
+ expect(response.status).toBe(200);
+ expect((await response.json() as any).data.status).toBe('sending');
+ expect(stats().status).toBe('sending');
+ expect(sendBatch).toHaveBeenCalledWith([{body:{kind:'email-job',campaignId:'c',recipientId:'r'}}]);
+ expect(put).not.toHaveBeenCalled();
+ expect(sqlite.prepare("SELECT snapshot_key,to_email FROM edm_email_outbox WHERE recipient_id='r'").get()).toMatchObject({snapshot_key:'original-frozen-key',to_email:'original@example.com'});
+ expect((await h.request('/campaigns/c/send',{method:'POST'},env)).status).toBe(409);
+
+ sqlite.exec(`UPDATE edm_campaigns SET status='paused';
+   INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,created_at) VALUES ('r2','c','contact','queued',0);`);
+ expect((await h.request('/campaigns/c/send',{method:'POST'},env)).status).toBe(409);
+ expect(stats().status).toBe('paused');
+});
+
+test('simultaneous campaign starts keep one immutable outbox and clean up the losing snapshot',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+   VALUES ('t','u','Template','Original','<p>Original</p>',0,0);
+   UPDATE edm_campaigns SET status='draft',template_id='t',sender_email='re@acfilter.net';`);
+ vi.stubGlobal('fetch',vi.fn(async(url:any)=>String(url).includes('/webhooks')
+   ? Response.json(String(url).includes('?')?{data:[]}:{id:'hook',signing_secret:secret})
+   : Response.json({data:[{id:'domain',name:'acfilter.net',status:'verified',open_tracking:true,click_tracking:true}]})));
+ const sendBatch=vi.fn(async()=>undefined);env.EMAIL_QUEUE={sendBatch};
+ const put=env.STORAGE.put;
+ let arrived=0;
+ let release!:()=>void;
+ const barrier=new Promise<void>(resolve=>{release=resolve});
+ env.STORAGE.put=vi.fn(async(...args:any[])=>{
+   await put(...args);
+   if(++arrived===2)release();
+   await barrier;
+ });
+ const deleted=vi.spyOn(env.STORAGE,'delete');
+ const responses=await Promise.all([
+   h.request('/campaigns/c/send',{method:'POST'},env),
+   h.request('/campaigns/c/send',{method:'POST'},env),
+ ]);
+ expect(responses.map(r=>r.status).sort()).toEqual([200,409]);
+ expect(sendBatch).toHaveBeenCalledTimes(1);
+ expect(deleted).toHaveBeenCalledTimes(1);
+ expect(sqlite.prepare('SELECT COUNT(*) n FROM edm_email_outbox').get()!.n).toBe(1);
+ expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('sending');
+});
+
+test('campaign deletion removes its frozen R2 email snapshot after deleting the outbox',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`UPDATE edm_campaigns SET status='failed';
+   INSERT INTO edm_email_outbox(recipient_id,campaign_id,snapshot_key,provider_id,to_email,from_email,from_name,variables,created_at)
+   VALUES ('r','c','outreach/email-snapshots/c/frozen.json','p','customer@example.com','sales@example.com','Test','{}',0);`);
+ const key='outreach/email-snapshots/c/frozen.json';
+ await env.STORAGE.put(key,JSON.stringify({campaignId:'c',subject:'Frozen',bodyHtml:'<p>Frozen</p>'}));
+ const remove=vi.spyOn(env.STORAGE,'delete');
+ const response=await h.request('/campaigns/c',{method:'DELETE'},env);
+ expect(response.status).toBe(200);
+ expect(remove).toHaveBeenCalledOnce();
+ expect(remove).toHaveBeenCalledWith(key);
+ expect(await env.STORAGE.get(key)).toBeNull();
+ expect(sqlite.prepare('SELECT COUNT(*) n FROM edm_email_outbox').get()!.n).toBe(0);
 });
 
 test('rate rejection honors Retry-After using delayed publication; daily quota pauses',async()=>{

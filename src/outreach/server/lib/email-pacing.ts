@@ -115,6 +115,6 @@ export async function deferEmail(
   }
   // Publish first. If publishing fails the original remains unacknowledged.
   // Duplicate publications are safe because dispatch has a durable attempt lock.
-  await env.EMAIL_QUEUE.send(message.body, { delaySeconds });
+  await env.EMAIL_QUEUE.send((message as typeof message & { queueBody?: unknown }).queueBody ?? message.body, { delaySeconds });
   message.ack();
 }

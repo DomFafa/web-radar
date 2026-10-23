@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   assertWorkflowRun, assertDispatch, createManifest, verifyArtifact,
   deploymentArguments, verifyRequiredChecks, artifactConfig,
+  productionMigrationArguments,
 } from './release-production.mjs';
 import * as release from './release-production.mjs';
 
@@ -76,7 +77,9 @@ test('artifact verification binds every byte, added files and the source pair to
 test('extra files, deleted files, and symlink payloads fail closed', () => {
   for (const mutate of [root => writeFileSync(join(root, 'assets/extra.js'), 'extra'),
     root => rmSync(join(root, 'worker/index.js')),
-    root => symlinkSync(join(root, 'assets/index.html'), join(root, 'assets/link.html'))]) {
+    root => process.platform === 'win32'
+      ? symlinkSync(join(root, 'assets'), join(root, 'assets/junction'), 'junction')
+      : symlinkSync(join(root, 'assets/index.html'), join(root, 'assets/link.html'))]) {
     const root = fixture(); const { digest } = createManifest(root, { sourceCommit: sha, productRadarCommit: other });
     mutate(root); assert.throws(() => verifyArtifact(root, digest, sha, other));
   }
@@ -85,9 +88,15 @@ test('extra files, deleted files, and symlink payloads fail closed', () => {
 test('deployment consumes the built worker without rebundling and retains variables', () => {
   const args = deploymentArguments('/artifact', sha, 'f'.repeat(64));
   assert.ok(args.includes('--no-bundle')); assert.ok(args.includes('--keep-vars')); assert.ok(args.includes('--strict'));
-  assert.equal(args[args.indexOf('--config') + 1], '/artifact/wrangler.json');
+  assert.equal(args[args.indexOf('--config') + 1], join('/artifact', 'wrangler.json'));
   assert.ok(args[args.indexOf('--message') + 1].includes(sha));
   assert.equal(args.includes('--dry-run'), false);
+});
+
+test('production D1 migration uses the verified repository config and the remote database', () => {
+  assert.deepEqual(productionMigrationArguments('/release/web-radar'), [
+    'd1', 'migrations', 'apply', 'web-radar', '--remote', '--config', join('/release/web-radar', 'wrangler.jsonc'),
+  ]);
 });
 
 test('artifact configuration retains production settings and refuses a second build hook', () => {

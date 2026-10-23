@@ -8,6 +8,8 @@ import type { AppEnv } from '../../src/worker/env';
 import type { Principal } from '../../src/shared/model';
 import { seal } from '../../src/outreach/server/lib/credentials';
 import { outreachBindings } from '../../src/worker/outreach';
+import { publishPendingEmailJobs } from '../../src/worker/outreach';
+import { hydrateEmailQueue } from '../../src/outreach/server/lib/email-outbox';
 import { emptyDraft, mergeDraft } from '../../src/outreach/server/lib/assistant';
 
 let sqlite: DatabaseSync;
@@ -15,6 +17,7 @@ let env: AppEnv;
 let principal: Principal;
 let token: string;
 let emailQueue: any[], siteQueue: any[];
+let snapshots: Map<string, string>;
 const request = (path = '', method = 'GET', body?: unknown) => outreachFetch(new Request(
   'https://wr.example.test/api/outreach/assistant/sessions' + path,
   { method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -26,8 +29,11 @@ beforeEach(async () => {
   for (const file of readdirSync('migrations').filter(f => f.endsWith('.sql')).sort()) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
   principal = { userId: 'member', workspaceId: 'w1', workspaceRole: 'member', systemRole: 'user',
     authSubject: 'member', email: 'member@example.com', displayName: 'Member', workspaceName: 'Workspace' };
-  emailQueue = []; siteQueue = [];
+  emailQueue = []; siteQueue = []; snapshots = new Map();
   env = { DB: d1(sqlite), PRODUCT_RADAR_BASE_URL: 'https://account.example.test', ASSET_SIGNING_KEY: 'only-a-unit-test-key',
+    MEDIA: { put: async (key: string, value: string) => { snapshots.set(key, value); },
+      get: async (key: string) => snapshots.has(key) ? { json: async () => JSON.parse(snapshots.get(key)!) } : null,
+      delete: async (key: string) => { snapshots.delete(key); } },
     EDM_EMAIL_QUEUE: { send: async (body: any) => emailQueue.push(body), sendBatch: async (batch: any[]) => emailQueue.push(...batch.map(item => item.body)) },
     EDM_SITE_QUEUE: { send: async (body: any) => siteQueue.push(body) }, BROWSER: {},
     PRODUCT_RADAR_INTEGRATION_SECRET: 'test-integration-secret-at-least-32-characters' } as unknown as AppEnv;
@@ -203,7 +209,8 @@ test('both channels require one exact confirmation and duplicate confirmation do
   const latest = (await (await request('/' + session.id)).json() as any).data;
   expect(latest.operations.map((op: any) => op.status)).toEqual(['submitted', 'submitted']);
   expect(emailQueue).toHaveLength(1); expect(siteQueue).toHaveLength(1);
-  expect(emailQueue[0]).toMatchObject({ toEmail: 'buyer@example.com', fromEmail: 'sales@example.com', subject: 'Sample proposal' });
+  expect(emailQueue[0]).toMatchObject({ kind: 'email-job' });
+  expect(await hydrateEmailQueue(outreachBindings(env), emailQueue[0])).toMatchObject({ toEmail: 'buyer@example.com', fromEmail: 'sales@example.com', subject: 'Sample proposal' });
   expect((await request('/' + session.id + '/confirm', 'POST', body)).status).toBe(200);
   expect(emailQueue).toHaveLength(1); expect(siteQueue).toHaveLength(1);
   expect(sqlite.prepare('SELECT count(*) n FROM edm_campaigns').get()!.n).toBe(1);
@@ -324,7 +331,7 @@ test('only a known failed channel retries on its original task with the approved
   session = (await response.json() as any).data;
   expect(session.operations[0]).toMatchObject({ taskId, status: 'submitted', retryable: false });
   expect(emailQueue).toHaveLength(1); expect(siteQueue).toHaveLength(1);
-  expect(emailQueue[0]).toMatchObject({ toEmail: 'buyer@example.com', toName: 'Buyer' });
+  expect(await hydrateEmailQueue(outreachBindings(env), emailQueue[0])).toMatchObject({ toEmail: 'buyer@example.com', toName: 'Buyer' });
   expect((await request('/' + session.id + '/retry', 'POST', body)).status).toBe(200);
   expect(emailQueue).toHaveLength(1);
   expect(sqlite.prepare('SELECT count(*) n FROM edm_campaigns').get()!.n).toBe(1);
@@ -434,11 +441,13 @@ test('imports 20000 contacts in 40 batches, selects the new group and queues its
   const confirmed = confirmation(session, 'confirm-imported');
   const response = await request('/' + session.id + '/confirm', 'POST', confirmed);
   expect(response.status).toBe(200);
+  for (let i = 0; i < 19; i++) await publishPendingEmailJobs(env);
   expect(emailQueue).toHaveLength(20000);
   expect(queueBatchSizes).toHaveLength(200); expect(queueBatchSizes.every(size => size === 100)).toBe(true);
-  expect(new Set(emailQueue.map(item => item.toEmail)).size).toBe(20000);
+  expect(sqlite.prepare('SELECT count(DISTINCT to_email) n FROM edm_email_outbox').get()!.n).toBe(20000);
   expect(new Set(emailQueue.map(item => item.recipientId)).size).toBe(20000);
-  expect(emailQueue.every(item => /^buyer-\d+@example\.com$/.test(item.toEmail))).toBe(true);
+  expect(emailQueue.every(item => item.kind === 'email-job')).toBe(true);
+  expect((await hydrateEmailQueue(outreachBindings(env), emailQueue[0]))?.toEmail).toMatch(/^buyer-\d+@example\.com$/);
   expect(sqlite.prepare('SELECT count(*) n FROM edm_assistant_recipients').get()!.n).toBe(20000);
   expect(sqlite.prepare('SELECT count(*) n FROM edm_campaign_recipients').get()!.n).toBe(20000);
   const saved = sqlite.prepare('SELECT max(length(snapshot)) n FROM edm_assistant_snapshots').get()!;
