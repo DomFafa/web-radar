@@ -1,5 +1,6 @@
 import inbox from './inbox/api';
 import crm from './crm/api';
+import rpa, { sweepExpiredRpaJobs } from './rpa/api';
 import { userManagement } from './user-management';
 import { outreachFetch, outreachQueue } from './outreach';
 import { withStoredEmailStatus } from './provider-settings';
@@ -89,6 +90,7 @@ app.get('/api/config', async (c) => {
 app.route('/api/auth', createAuthApp());
 app.route('/api/inbox', inbox);
 app.route('/api/crm', crm);
+app.route('/api/rpa', rpa);
 app.route('/api/management', userManagement);
 app.route('/api/internal/template-guides', createTemplateGuidesApp());
 app.route('/api/integrations/product-radar', createIntegrationApp());
@@ -114,4 +116,9 @@ app.all('/api/*', async (c) => {
   return c.env.COORDINATOR.getByName('global').fetch(new Request(c.req.raw, { headers }));
 });
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
-export default Object.assign(app,{queue:outreachQueue});
+export default Object.assign(app,{
+  queue: outreachQueue,
+  scheduled: async (_event: ScheduledEvent, env: HonoEnv['Bindings']) => {
+    await sweepExpiredRpaJobs(env);
+  },
+});

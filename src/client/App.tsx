@@ -36,6 +36,7 @@ const Outreach = lazy(() => import('../outreach/client/App'));
 const OutreachAssistant = lazy(() => import('../outreach/client/assistant/AssistantPage'));
 const CustomerInbox = lazy(() => import('./CustomerInbox'));
 const CustomerManagement = lazy(() => import('./CustomerManagement'));
+const RpaTasks = lazy(() => import('./RpaTasks'));
 const UserManagement = lazy(() => import('./UserManagement'));
 const Admin = lazy(() => import('./Admin'));
 import { ErrorBoundary } from './ErrorBoundary';
@@ -62,10 +63,10 @@ export default function App() {
         return null;
       }
     });
-  const [view, setView] = useState<'lazy-mode' | 'crm' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages' | 'contacts'>(() => {
+  const [view, setView] = useState<'lazy-mode' | 'rpa' | 'crm' | 'inbox' | 'dashboard' | 'projects' | 'users' | 'business' | 'admin' | 'services' | 'edm' | 'site-messages' | 'contacts'>(() => {
       try {
         const v = new URL(window.location.href).searchParams.get('view');
-        if (v === 'lazy-mode' || v === 'crm' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages' || v === 'contacts') return v;
+        if (v === 'lazy-mode' || v === 'rpa' || v === 'crm' || v === 'inbox' || v === 'business' || v === 'users' || v === 'dashboard' || v === 'projects' || v === 'admin' || v === 'services' || v === 'edm' || v === 'site-messages' || v === 'contacts') return v;
       } catch {}
       return 'dashboard';
     }),
@@ -344,6 +345,7 @@ export default function App() {
               <button disabled={contactsBusy} className={view === 'contacts' ? 'active' : ''} aria-current={view === 'contacts' ? 'page' : undefined} onClick={() => {setContactsAction(undefined);setView('contacts')}}><Icon name="users" />联系人管理</button>
               <button disabled={contactsBusy} className={view === 'edm' ? 'active' : ''} aria-current={view === 'edm' ? 'page' : undefined} onClick={() => setView('edm')}><Icon name="mail" />EDM 邮件</button>
               <button disabled={contactsBusy} className={view === 'site-messages' ? 'active' : ''} aria-current={view === 'site-messages' ? 'page' : undefined} onClick={() => setView('site-messages')}><Icon name="message" />站内信</button>
+              <button disabled={contactsBusy} className={view === 'rpa' ? 'active' : ''} aria-current={view === 'rpa' ? 'page' : undefined} onClick={() => setView('rpa')}><Icon name="chart" />影刀 RPA 采集</button>
               <button
                 disabled={contactsBusy}
                 className={view === 'services' ? 'active' : ''}
@@ -401,6 +403,10 @@ export default function App() {
             ) : view === 'edm' || view === 'site-messages' || view === 'contacts' ? (
               <ErrorBoundary scope="section" title="营销功能加载异常" description="请重试或返回控制台。" onBack={()=>setView('dashboard')} backText="返回控制台">
                 <Suspense fallback={<ChunkFallback/>}><Outreach key={`${principal.userId}:${principal.workspaceId}:${view==='contacts'?'contacts':'outreach'}`} principal={principal} section={view} contactsAction={contactsAction} onImportingChange={setContactsBusy} onContinueContacts={continueContacts}/></Suspense>
+              </ErrorBoundary>
+            ) : view === 'rpa' ? (
+              <ErrorBoundary scope="section" title="影刀 RPA 任务页面加载异常" onBack={() => setView('dashboard')} backText="返回控制台">
+                <Suspense fallback={<ChunkFallback/>}><RpaTasks key={`${principal.userId}:${principal.workspaceId}`} principal={principal}/></Suspense>
               </ErrorBoundary>
             ) : view === 'crm' ? (
               <ErrorBoundary scope="section" title="客户管理系统加载异常" onBack={() => setView('dashboard')} backText="返回控制台">

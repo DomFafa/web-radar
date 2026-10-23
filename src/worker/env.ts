@@ -1,5 +1,7 @@
 import type { Principal } from '../shared/model';
 export interface Secrets {
+  RPA_AGENT_TOKEN?: string; // Server-to-server Windows Agent credential; never sent to browsers.
+  RPA_APPROVED_ROBOT_UUID?: string; // UUID of an audited ShadowBot original or copy.
   TEMPLATE_GUIDES_API_KEY?: string; // Read-only internal template specifications; not a project/session credential.
   PRODUCT_RADAR_BASE_URL?: string;
   PRODUCT_RADAR_INTEGRATION_SECRET?: string;
