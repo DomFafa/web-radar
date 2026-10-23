@@ -15,6 +15,10 @@ const statusLabels: Record<string, { label: string; badge: string }> = {
   needs_review: { label: "待核实", badge: "badge-warning" },
 };
 
+const isCampaignLocked = (campaign: any) => campaign?.status === "sending" || campaign?.status === "needs_review";
+const hasActiveSend = (campaign: any) => campaign?.status === "sending" ||
+  (campaign?.status === "needs_review" && Number(campaign?.progress?.sending || 0) > 0);
+
 function CampaignRate({ label, value, totalSent }: { label: string; value: unknown; totalSent: unknown }) {
   const count = Math.max(0, Number(value) || 0);
   const sent = Math.max(0, Number(totalSent) || 0);
@@ -96,21 +100,23 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     if (requestedId) void loadDetail(requestedId);
   }, []);
 
-  // Only active sends need polling; completed details refresh on demand.
+  const detailHasActiveSend = hasActiveSend(detail);
+
+  // Accepted messages can still finish while the campaign awaits review.
   useEffect(() => {
-    if (!campaigns.some((campaign) => campaign.status === "sending") && detail?.status !== "sending") return;
+    if (!campaigns.some(hasActiveSend) && !detailHasActiveSend) return;
     const interval = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      if (showDetailIdRef.current && detail?.status === "sending") {
+      if (showDetailIdRef.current && detailHasActiveSend) {
         loadDetail(showDetailIdRef.current, true);
       }
-      const hasSending = campaigns.some((c) => c.status === "sending");
+      const hasSending = campaigns.some(hasActiveSend);
       if (hasSending) {
         loadCampaigns(true);
       }
     }, 30000);
     return () => clearInterval(interval);
-  }, [campaigns, detail?.status]);
+  }, [campaigns, detailHasActiveSend]);
 
   const loadCampaigns = async (silent = false) => {
     if (listLoading.current) return;
@@ -270,13 +276,15 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     setSending(true);
     try {
       const res = await campaignsApi.send(campaignId);
-      addToast("success", `已开始发送，${res.data.recipientsQueued} 封邮件已加入队列`);
-      loadDetail(campaignId);
-      loadCampaigns();
+      addToast("success", res.data.publicationPending
+        ? "邮件任务已保存，正在等待加入发送队列，请勿重复提交。"
+        : `已开始发送，${res.data.recipientsQueued} 封邮件已加入队列`);
     } catch (err: any) {
       addToast("error", err.message);
     } finally {
       setSending(false);
+      loadDetail(campaignId);
+      loadCampaigns();
     }
   };
 
@@ -413,7 +421,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                           <button className="btn btn-ghost btn-sm" disabled={!!exporting} onClick={() => downloadReport(c)}>
                             {exporting === c.id ? "正在导出..." : "下载报表"}
                           </button>
-                          {writable && c.status !== "sending" && (
+                          {writable && !isCampaignLocked(c) && (
                             <>
                               <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(c)} title="编辑">
                                 编辑
@@ -569,9 +577,9 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     {writable && <button
                       className="btn btn-primary btn-sm"
                       onClick={() => handleSend(detail.id)}
-                      disabled={sending || detail.status === "sending" || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
+                      disabled={sending || isCampaignLocked(detail) || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
                     >
-                      {sending ? "正在提交..." : detail.status === "sending" ? "正在发送" : detail.status === "completed" ? "处理完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
+                      {sending ? "正在提交..." : detail.status === "sending" ? "正在发送" : detail.status === "needs_review" ? "等待核实结果" : detail.status === "completed" ? "处理完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
                     </button>}
                     {writable && detail.status === "sending" && (
                       <button className="btn btn-secondary btn-sm" onClick={() => handlePause(detail.id)}>
@@ -580,13 +588,18 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     )}
                   </div>
                 </div>
+                {detail.status === "needs_review" && (
+                  <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
+                    部分邮件的提交或发送结果尚未确认，已进入队列的邮件可能继续处理。请先核实结果，暂勿重发或修改任务。
+                  </p>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13 }}>
                   <label style={{ fontWeight: 600, minWidth: 80, color: "var(--color-text-secondary)" }}>邮件模板 *</label>
                   <select
                     className="form-select"
                     style={{ flex: 1 }}
                     value={detail.templateId || ""}
-                    disabled={!writable || detail.status === "sending" || detail.status === 'completed'}
+                    disabled={!writable || isCampaignLocked(detail) || detail.status === 'completed'}
                     onChange={async (e) => {
                       const newTplId = e.target.value;
                       try {
@@ -644,7 +657,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               </div>
 
               {/* Add Recipients */}
-              {writable && (detail.status !== "sending" && detail.status !== "completed") && (
+              {writable && !isCampaignLocked(detail) && detail.status !== "completed" && (
                 <div className="card" style={{ marginBottom: 16 }}>
                   <div className="card-header">
                     <h4 className="card-title">添加收件人</h4>
@@ -702,7 +715,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               <div className="card" style={{ marginBottom: 16 }}>
                 <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <h4 className="card-title" style={{ fontSize: 15 }}>📋 收件人发送明细</h4>
-                  {detail.status === "sending" && (
+                  {detailHasActiveSend && (
                     <span style={{ fontSize: 12, color: "var(--color-accent)", display: "flex", alignItems: "center", gap: 4 }}>
                       <span className="spinner" style={{ width: 12, height: 12 }}></span> 动态刷新中...
                     </span>

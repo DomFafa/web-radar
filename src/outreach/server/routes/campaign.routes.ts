@@ -382,9 +382,9 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (existing.status === "sending") {
+  if (existing.status === "sending" || existing.status === "needs_review") {
     return c.json(
-      { success: false, error: "发送中的活动无法编辑" },
+      { success: false, error: "发送中或待核实的活动无法编辑" },
       400
     );
   }
@@ -427,8 +427,8 @@ campaignRoutes.delete("/:id", requirePermission("campaigns:delete"), async (c) =
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (existing.status === "sending") {
-    return c.json({ success: false, error: "发送中的活动无法删除" }, 400);
+  if (existing.status === "sending" || existing.status === "needs_review") {
+    return c.json({ success: false, error: "发送中或待核实的活动无法删除" }, 400);
   }
 
   const frozen = await c.env.DB.prepare('SELECT DISTINCT snapshot_key FROM edm_email_outbox WHERE campaign_id=?')
@@ -524,8 +524,8 @@ campaignRoutes.post("/:id/recipients", requirePermission("campaigns:write"), asy
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (campaign.status === "sending") {
-    return c.json({ success: false, error: "发送中的活动无法添加收件人" }, 400);
+  if (campaign.status === "sending" || campaign.status === "needs_review") {
+    return c.json({ success: false, error: "发送中或待核实的活动无法添加收件人" }, 400);
   }
 
   let contactList: { id: string; email: string; name: string | null; company: string | null; industry: string | null }[] = [];
@@ -617,8 +617,8 @@ campaignRoutes.delete("/:id/recipients/:contactId", requirePermission("campaigns
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (campaign.status === "sending") {
-    return c.json({ success: false, error: "发送中的活动无法删除收件人" }, 400);
+  if (campaign.status === "sending" || campaign.status === "needs_review") {
+    return c.json({ success: false, error: "发送中或待核实的活动无法删除收件人" }, 400);
   }
 
   // Check if recipient exists and is queued/failed
@@ -677,9 +677,16 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
     return c.json({ success: false, error: "请先选择邮件模板" }, 400);
   }
 
-  if (campaign.status === 'sending') {
-    return c.json({ success: false, error: '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
+  if (campaign.status === 'sending' || campaign.status === 'needs_review') {
+    return c.json({ success: false, error: campaign.status === 'needs_review'
+      ? '活动发送结果待核实，请查看原任务；核实前不能重复启动。'
+      : '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
   }
+  // A paused campaign may still contain an unresolved provider result.
+  // Resuming its frozen outbox must not erase that uncertainty.
+  const unconfirmed = await c.env.DB.prepare(`SELECT 1 FROM edm_campaign_recipients
+    WHERE campaign_id=? AND error_message LIKE '%待核实%' LIMIT 1`).bind(campaignId).first();
+  if (unconfirmed) return c.json({ success: false, error: '活动存在发送结果待核实的邮件，核实前不能重复启动。' }, 409);
 
   const pendingStatuses = ["queued", "sending"];
 
@@ -714,7 +721,9 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
     // Resume the original frozen operation. Its published references are already
     // deferred by the consumer; cron can publish any remaining references.
     const resumed = await c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',updated_at=?
-      WHERE id=? AND status='paused'`).bind(Math.floor(Date.now() / 1000), campaignId).run();
+      WHERE id=? AND status='paused' AND NOT EXISTS
+        (SELECT 1 FROM edm_campaign_recipients WHERE campaign_id=edm_campaigns.id AND error_message LIKE '%待核实%')`)
+      .bind(Math.floor(Date.now() / 1000), campaignId).run();
     if (!resumed.meta.changes) return c.json({ success: false, error: '活动状态已变化，请刷新发送进度' }, 409);
     let publicationPending = false;
     try {
@@ -785,7 +794,9 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   try {
     results = await c.env.DB.batch([
     c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',started_at=COALESCE(started_at,?),updated_at=?
-      WHERE id=? AND status!='sending'`).bind(now, now, campaignId),
+      WHERE id=? AND status=? AND NOT EXISTS
+        (SELECT 1 FROM edm_campaign_recipients WHERE campaign_id=edm_campaigns.id AND error_message LIKE '%待核实%')`)
+      .bind(now, now, campaignId, campaign.status),
     c.env.DB.prepare(`INSERT INTO edm_email_outbox
       (recipient_id,campaign_id,snapshot_key,provider_id,to_email,to_name,from_email,from_name,reply_to,variables,engagement_tracking_source,created_at)
       SELECT r.id,r.campaign_id,?,?,COALESCE(a.email,c.email),COALESCE(a.name,c.name),?,?,?,
@@ -794,10 +805,14 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
         ?,? FROM edm_campaign_recipients r
       JOIN edm_contacts c ON c.id=r.contact_id
       LEFT JOIN edm_assistant_recipients a ON a.recipient_id=r.id AND a.task_id=r.campaign_id
-      WHERE r.campaign_id=? AND r.status IN ('queued','sending')`)
+      WHERE r.campaign_id=? AND r.status IN ('queued','sending') AND changes()>0`)
       .bind(snapshotKey, selectedProvider.id, senderEmail, senderName, replyTo, selectedProvider.provider === 'resend' ? 'resend' : null, now, campaignId),
+    // Only envelopes frozen by this transaction may advance recipient state.
+    // changes() above reads the immediately preceding campaign claim.
     c.env.DB.prepare(`UPDATE edm_campaign_recipients SET status='sending'
-      WHERE campaign_id=? AND status IN ('queued','sending')`).bind(campaignId),
+      WHERE campaign_id=? AND status IN ('queued','sending') AND EXISTS
+        (SELECT 1 FROM edm_email_outbox o WHERE o.recipient_id=edm_campaign_recipients.id AND o.snapshot_key=?)`)
+      .bind(campaignId, snapshotKey),
     ]);
   } catch (error) {
     await c.env.STORAGE.delete(snapshotKey).catch(() => {});

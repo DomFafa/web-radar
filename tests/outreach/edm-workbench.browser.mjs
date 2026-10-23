@@ -17,9 +17,10 @@ const fixturePlugin = {
 import React,{useState} from 'react'; import {createRoot} from 'react-dom/client';
 import {AuthContext} from 'edm-workbench-auth';
 import {SendingCenterPage} from '/src/outreach/client/pages/SendingCenterPage.tsx';
+import {CampaignsPage} from '/src/outreach/client/pages/CampaignsPage.tsx';
 import '/src/client/styles.css'; import '/src/client/radar-ui.css';
 import '/src/outreach/client/styles/index.css'; import '/src/outreach/client/styles/workbench.css'; import '/src/outreach/client/styles/quill.css';
-function Fixture(){const [user,setUser]=useState({id:'workspace',actorId:'actor',role:'admin'});window.changeEdmIdentity=setUser;return React.createElement(AuthContext.Provider,{value:{user}},React.createElement('div',{className:'outreach'},React.createElement(SendingCenterPage,{onNavigate:next=>{window.lastEdmNavigation=next}})));}createRoot(document.getElementById('root')).render(React.createElement(Fixture));`;
+function Fixture(){const [user,setUser]=useState({id:'workspace',actorId:'actor',role:'admin'});window.changeEdmIdentity=setUser;return React.createElement(AuthContext.Provider,{value:{user}},React.createElement('div',{className:'outreach'},React.createElement(new URLSearchParams(location.search).has('records')?CampaignsPage:SendingCenterPage,{onNavigate:next=>{window.lastEdmNavigation=next}})));}createRoot(document.getElementById('root')).render(React.createElement(Fixture));`;
   },
   configureServer(server) {
     server.middlewares.use('/__edm_workbench_test', (_request, response) => {
@@ -29,6 +30,7 @@ function Fixture(){const [user,setUser]=useState({id:'workspace',actorId:'actor'
   },
 };
 const cacheDir = mkdtempSync(join(tmpdir(), 'edm-workbench-vite-'));
+const screenshotDir = process.env.EDM_BROWSER_ARTIFACT_DIR || tmpdir();
 const server = await createServer({ cacheDir, configFile: false, plugins: [fixturePlugin], server: { host: '127.0.0.1', port: 0 }, optimizeDeps: { include: ['react', 'react-dom/client', 'react-quill-new'] } });
 let browser;
 try {
@@ -43,6 +45,9 @@ try {
   let sent = 0;
   let prepared;
   let campaign;
+  let campaignReads = 0;
+  let nextCampaignSendUncertain = false;
+  let nextCampaignPublicationPending = false;
   await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -60,9 +65,21 @@ try {
     } else if (path === '/templates') response = { data: templates, meta: { totalPages: 1 } };
     else if (path === '/templates/fixture-template') response = { data: templates[0] };
     else if (path === '/campaigns' && request.method() === 'POST') { created++; campaign = { ...request.postDataJSON(), id: 'fixture-campaign', status: 'draft', totalRecipients: 1, totalSent: 0, totalFailed: 0 }; response = { data: campaign }; }
-    else if (path === '/campaigns/fixture-campaign/recipients') { prepared = request.postDataJSON(); response = { data: { added: 1 } }; }
-    else if (path === '/campaigns/fixture-campaign/send') { sent++; campaign.status = 'sending'; response = { data: { queued: 1 } }; }
-    else if (path === '/campaigns/fixture-campaign') response = { data: campaign };
+    else if (path === '/campaigns') { campaignReads++; response = { data: [campaign] }; }
+    else if (path === '/campaigns/fixture-campaign/recipients' && request.method() === 'POST') { prepared = request.postDataJSON(); response = { data: { added: 1 } }; }
+    else if (path === '/campaigns/fixture-campaign/recipients') response = { data: [{ id: 'recipient-alice', contactId: 'alice', contactEmail: 'alice@example.com', status: campaign.progress.sending ? 'sending' : 'sent' }] };
+    else if (path === '/campaigns/fixture-campaign/send') {
+      sent++;
+      if (nextCampaignSendUncertain) {
+        nextCampaignSendUncertain = false;
+        campaign = { ...campaign, status: 'needs_review', progress: { sending: 1, queued: 1, failed: 0, processed: 0 } };
+        return route.fulfill({ status: 503, json: { success: false, error: '发送队列提交结果待核实' } });
+      }
+      campaign.status = 'sending';
+      response = { data: { recipientsQueued: campaign.totalRecipients, publicationPending: nextCampaignPublicationPending } };
+      nextCampaignPublicationPending = false;
+    }
+    else if (path === '/campaigns/fixture-campaign') { campaignReads++; response = { data: campaign }; }
     else return route.fulfill({ status: 404, json: { error: `Unexpected fixture request: ${path}` } });
     return route.fulfill({ json: { success: true, ...response } });
   });
@@ -95,11 +112,11 @@ try {
   await expect(page.locator('.sending-review')).toContainText('Product partnership discussion');
   expect(created).toBe(0);
   expect(sent).toBe(0);
-  await page.screenshot({ path: '/tmp/edm-workbench-desktop.png', fullPage: true });
+  await page.screenshot({ path: join(screenshotDir, 'edm-workbench-desktop.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.frameLocator('iframe[title="邮件内容预览"]').getByText('Hello, we would like to discuss your product requirements.')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.screenshot({ path: '/tmp/edm-workbench-mobile.png', fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path: join(screenshotDir, 'edm-workbench-mobile.png'), fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: '确认发送', exact: true }).click();
   await expect.poll(() => sent).toBe(1);
   expect(created).toBe(1);
@@ -138,6 +155,47 @@ try {
   await expect.poll(() => sent).toBe(2);
   expect(created).toBe(2);
   console.log('PASS: a template changed after preview cannot be sent with the earlier confirmation');
+
+  campaign = { ...campaign, name: 'Uncertain queue submission', status: 'draft', progress: { sending: 0, queued: 2, failed: 0, processed: 0 }, totalRecipients: 2, createdAt: new Date().toISOString() };
+  await page.clock.install();
+  await page.goto(`${address}?records=1&campaignId=fixture-campaign`);
+  await expect(page.getByRole('heading', { name: campaign.name, exact: true })).toBeVisible();
+  nextCampaignSendUncertain = true;
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: '发送待发邮件', exact: true }).click();
+  await expect(page.getByRole('button', { name: '等待核实结果', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '编辑', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '删除', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '添加收件人', exact: true })).toHaveCount(0);
+  await expect(page.locator('.modal select')).toBeDisabled();
+  await expect(page.getByText('部分邮件的提交或发送结果尚未确认，已进入队列的邮件可能继续处理。请先核实结果，暂勿重发或修改任务。', { exact: true })).toBeVisible();
+  await expect(page.getByText('动态刷新中...', { exact: true })).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, 'edm-campaign-needs-review.png'), fullPage: true, animations: 'disabled' });
+  const readsBeforeProgress = campaignReads;
+  campaign = { ...campaign, totalSent: 1, progress: { sending: 0, queued: 1, failed: 0, processed: 1 } };
+  await page.clock.fastForward(30_001);
+  await expect.poll(() => campaignReads).toBeGreaterThan(readsBeforeProgress);
+  await expect(page.getByText('动态刷新中...', { exact: true })).toHaveCount(0);
+  const readsAfterSettled = campaignReads;
+  await page.clock.fastForward(60_001);
+  expect(campaignReads, 'review with only unsubmitted recipients should not poll forever').toBe(readsAfterSettled);
+  expect(sent, 'review state must not cause another submission').toBe(3);
+  console.log('PASS: submission error refreshes review state, locks mutations, shows uncertainty, updates accepted work, and stops polling with only unsubmitted recipients');
+
+  campaign = { ...campaign, name: 'Durable mail awaiting queue', status: 'draft', totalSent: 0, progress: { sending: 0, queued: 2, failed: 0, processed: 0 } };
+  nextCampaignPublicationPending = true;
+  await page.goto(`${address}?records=1&campaignId=fixture-campaign`);
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: '发送待发邮件', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => window.fixtureToasts?.at(-1)?.message)).toBe('邮件任务已保存，正在等待加入发送队列，请勿重复提交。');
+  await expect(page.getByRole('button', { name: '正在发送', exact: true })).toBeDisabled();
+  await page.clock.fastForward(60_001);
+  expect(sent, 'durable publication must not automatically resubmit').toBe(4);
+  await page.reload();
+  await expect(page.getByRole('button', { name: '正在发送', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: '发送待发邮件', exact: true })).toHaveCount(0);
+  expect(sent, 'refresh must not resubmit a saved task').toBe(4);
+  console.log('PASS: durable publication pending reports saved state and prevents repeat submission before and after refresh');
 } finally {
   await browser?.close();
   await server.close();
