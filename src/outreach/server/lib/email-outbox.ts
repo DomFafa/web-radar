@@ -7,6 +7,36 @@ export type EmailContentSnapshot = Pick<EmailSendMessage, 'subject' | 'bodyHtml'
 
 const LEASE_MS = 120_000;
 
+/** Record cleanup intent in the same D1 transaction as the campaign deletion. */
+export async function deleteCampaignWithSnapshots(env: Bindings, campaignId: string): Promise<void> {
+  await env.DB.batch([
+    env.DB.prepare(`INSERT OR IGNORE INTO edm_email_snapshot_cleanup(snapshot_key,campaign_id,created_at)
+      SELECT DISTINCT snapshot_key,campaign_id,? FROM edm_email_outbox WHERE campaign_id=?`)
+      .bind(Math.floor(Date.now() / 1000), campaignId),
+    env.DB.prepare('DELETE FROM edm_campaign_recipients WHERE campaign_id=?').bind(campaignId),
+    env.DB.prepare('DELETE FROM edm_campaigns WHERE id=?').bind(campaignId),
+  ]);
+}
+
+/** R2 deletes are idempotent; only forget a key after deletion succeeds. */
+export async function cleanupEmailSnapshots(env: Bindings, limit = 20, campaignId?: string): Promise<number> {
+  if (!env.STORAGE) return 0;
+  const rows = await env.DB.prepare(`SELECT snapshot_key FROM edm_email_snapshot_cleanup
+    ${campaignId ? 'WHERE campaign_id=?' : ''} ORDER BY created_at,snapshot_key LIMIT ?`)
+    .bind(...(campaignId ? [campaignId, limit] : [limit])).all<{ snapshot_key: string }>();
+  let cleaned = 0;
+  for (const { snapshot_key } of rows.results) {
+    try {
+      await env.STORAGE.delete(snapshot_key);
+      await env.DB.prepare('DELETE FROM edm_email_snapshot_cleanup WHERE snapshot_key=?').bind(snapshot_key).run();
+      cleaned++;
+    } catch (error) {
+      console.error('Email snapshot cleanup deferred:', error instanceof Error ? error.name : 'unknown');
+    }
+  }
+  return cleaned;
+}
+
 /** Limit each invocation's Cloudflare Queue/D1 calls. The cron drains the rest. */
 export async function publishEmailOutbox(env: Bindings, maxBatches = 10, campaignId?: string): Promise<number> {
   if (!env.EMAIL_QUEUE) throw new Error('Email queue unavailable');

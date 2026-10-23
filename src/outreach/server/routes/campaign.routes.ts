@@ -17,7 +17,7 @@ import {
 } from "../../db/schema";
 import type { Bindings, Variables } from "../../shared/types";
 import { requireAuth, requirePermission } from "../middleware/auth";
-import { publishEmailOutbox, type EmailContentSnapshot } from "../lib/email-outbox";
+import { cleanupEmailSnapshots, deleteCampaignWithSnapshots, publishEmailOutbox, type EmailContentSnapshot } from "../lib/email-outbox";
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { selectEmailProviderForSender } from "../lib/email-provider-selection";
 import { addCampaignRecipients } from "../lib/campaign-recipient-batch";
@@ -437,10 +437,12 @@ campaignRoutes.delete("/:id", requirePermission("campaigns:delete"), async (c) =
     return c.json({ success: false, error: '邮件快照存储不可用，暂时无法彻底删除活动' }, 503);
   }
 
-  // 级联删除收件人
-  await db.delete(campaignRecipients).where(eq(campaignRecipients.campaignId, campaignId));
-  await db.delete(campaigns).where(eq(campaigns.id, campaignId));
-  for (const { snapshot_key } of frozen.results) await c.env.STORAGE!.delete(snapshot_key);
+  // Commit deletion and cleanup keys together; a transient R2 failure is
+  // retried by cron even after the campaign rows have disappeared.
+  await deleteCampaignWithSnapshots(c.env, campaignId);
+  await cleanupEmailSnapshots(c.env, 20, campaignId).catch(error => {
+    console.error('Email snapshot cleanup scheduled for retry:', error instanceof Error ? error.name : 'unknown');
+  });
 
   return c.json({ success: true, data: { deleted: true } });
 });

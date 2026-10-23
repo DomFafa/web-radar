@@ -18,7 +18,7 @@ import { imagesRoutes } from '../outreach/server/routes/images.routes';
 import { assistantRoutes } from '../outreach/server/routes/assistant.routes';
 import publicRoutes from '../outreach/server/public';
 import { handleEmailQueue } from '../outreach/server/queues/email-send.queue';
-import { publishEmailOutbox, type EmailQueueBody } from '../outreach/server/lib/email-outbox';
+import { cleanupEmailSnapshots, publishEmailOutbox, type EmailQueueBody } from '../outreach/server/lib/email-outbox';
 import { handleSiteMessageQueue, type SiteMessageQueueMessage } from '../outreach/server/queues/site-message.queue';
 
 export function outreachBindings(env: AppEnv): Bindings {
@@ -83,5 +83,6 @@ export async function outreachQueue(batch:MessageBatch<EmailQueueBody|SiteMessag
 }
 export async function publishPendingEmailJobs(env: AppEnv) {
   if (testMode(env)) return;
-  await publishEmailOutbox(outreachBindings(env), 10);
+  const bindings = outreachBindings(env);
+  await Promise.all([publishEmailOutbox(bindings, 10), cleanupEmailSnapshots(bindings, 20)]);
 }

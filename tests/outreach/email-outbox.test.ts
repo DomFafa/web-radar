@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import { d1 } from './sqlite';
-import { hydrateEmailQueue, publishEmailOutbox } from '../../src/outreach/server/lib/email-outbox';
+import { cleanupEmailSnapshots, deleteCampaignWithSnapshots, hydrateEmailQueue, publishEmailOutbox } from '../../src/outreach/server/lib/email-outbox';
 import { handleEmailQueue } from '../../src/outreach/server/queues/email-send.queue';
 
 let sqlite: DatabaseSync;
@@ -26,7 +26,7 @@ function seed(count: number, body: string) {
 
 beforeEach(() => {
   sqlite = new DatabaseSync(':memory:');
-  for (const file of ['0007_outreach.sql', '0012_outreach_assistant.sql', '0015_email_outbox.sql']) {
+  for (const file of ['0007_outreach.sql', '0012_outreach_assistant.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql']) {
     sqlite.exec(readFileSync(`migrations/${file}`, 'utf8'));
   }
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','Test','u@example.com',0,0);
@@ -53,6 +53,29 @@ test('99 recipients share one 512 KiB snapshot while Queue batches remain small'
   expect(message?.bodyHtml.length).toBeGreaterThan(512 * 1024);
   expect(message?.toEmail).toBe('customer0@example.com');
   expect(sqlite.prepare('SELECT count(*) as n FROM edm_email_outbox WHERE published_at IS NOT NULL').get()!.n).toBe(99);
+});
+
+test('campaign deletion keeps a durable R2 cleanup key across storage failure', async () => {
+  seed(2, '<p>Frozen campaign</p>');
+  const key = 'outreach/email-snapshots/c/frozen.json';
+  const remove = vi.fn()
+    .mockRejectedValueOnce(new Error('R2 temporarily unavailable'))
+    .mockImplementation(async (snapshotKey: string) => { objects.delete(snapshotKey); });
+  env.STORAGE.delete = remove;
+
+  await deleteCampaignWithSnapshots(env, 'c');
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaigns').get()!.n).toBe(0);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_outbox').get()!.n).toBe(0);
+  expect(sqlite.prepare('SELECT snapshot_key FROM edm_email_snapshot_cleanup').get()).toEqual({ snapshot_key: key });
+
+  expect(await cleanupEmailSnapshots(env, 20, 'c')).toBe(0);
+  expect(objects.has(key)).toBe(true);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_snapshot_cleanup').get()!.n).toBe(1);
+
+  expect(await cleanupEmailSnapshots(env)).toBe(1);
+  expect(objects.has(key)).toBe(false);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_snapshot_cleanup').get()!.n).toBe(0);
+  expect(remove).toHaveBeenCalledTimes(2);
 });
 
 test('an uncertain Queue acceptance republishes only the original references after lease expiry', async () => {
