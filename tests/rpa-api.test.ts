@@ -58,7 +58,7 @@ let app: Hono<HonoEnv>;
 let stored: Map<string, Uint8Array>;
 beforeEach(async () => {
   const db = testDb();
-  await db.exec(readFileSync('migrations/0015_rpa_jobs.sql', 'utf8'));
+  await db.exec(readFileSync('migrations/0017_rpa_jobs.sql', 'utf8'));
   stored = new Map();
   env = {
     DB: db, RPA_AGENT_TOKEN: 'agent-secret', RPA_APPROVED_ROBOT_UUID: uuid,
