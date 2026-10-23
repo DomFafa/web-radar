@@ -431,9 +431,16 @@ campaignRoutes.delete("/:id", requirePermission("campaigns:delete"), async (c) =
     return c.json({ success: false, error: "发送中的活动无法删除" }, 400);
   }
 
+  const frozen = await c.env.DB.prepare('SELECT DISTINCT snapshot_key FROM edm_email_outbox WHERE campaign_id=?')
+    .bind(campaignId).all<{ snapshot_key: string }>();
+  if (frozen.results.length && !c.env.STORAGE) {
+    return c.json({ success: false, error: '邮件快照存储不可用，暂时无法彻底删除活动' }, 503);
+  }
+
   // 级联删除收件人
   await db.delete(campaignRecipients).where(eq(campaignRecipients.campaignId, campaignId));
   await db.delete(campaigns).where(eq(campaigns.id, campaignId));
+  for (const { snapshot_key } of frozen.results) await c.env.STORAGE!.delete(snapshot_key);
 
   return c.json({ success: true, data: { deleted: true } });
 });

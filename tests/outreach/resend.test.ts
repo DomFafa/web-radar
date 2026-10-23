@@ -211,6 +211,23 @@ test('simultaneous campaign starts keep one immutable outbox and clean up the lo
  expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('sending');
 });
 
+test('campaign deletion removes its frozen R2 email snapshot after deleting the outbox',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`UPDATE edm_campaigns SET status='failed';
+   INSERT INTO edm_email_outbox(recipient_id,campaign_id,snapshot_key,provider_id,to_email,from_email,from_name,variables,created_at)
+   VALUES ('r','c','outreach/email-snapshots/c/frozen.json','p','customer@example.com','sales@example.com','Test','{}',0);`);
+ const key='outreach/email-snapshots/c/frozen.json';
+ await env.STORAGE.put(key,JSON.stringify({campaignId:'c',subject:'Frozen',bodyHtml:'<p>Frozen</p>'}));
+ const remove=vi.spyOn(env.STORAGE,'delete');
+ const response=await h.request('/campaigns/c',{method:'DELETE'},env);
+ expect(response.status).toBe(200);
+ expect(remove).toHaveBeenCalledOnce();
+ expect(remove).toHaveBeenCalledWith(key);
+ expect(await env.STORAGE.get(key)).toBeNull();
+ expect(sqlite.prepare('SELECT COUNT(*) n FROM edm_email_outbox').get()!.n).toBe(0);
+});
+
 test('rate rejection honors Retry-After using delayed publication; daily quota pauses',async()=>{
  const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:null,subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:null,variables:{}},ack:vi.fn(),retry:vi.fn()};
  const send=vi.fn();env.EMAIL_QUEUE={send};
