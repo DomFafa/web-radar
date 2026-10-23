@@ -2,7 +2,7 @@ import { trackedAddress, plain } from '../../../worker/inbox/core';
 import { captureOutbound, completeOutbound, readOutboundReceipt } from '../../../worker/crm/capture';
 import { emailSendDelay, deferEmail, resendCooldown } from '../lib/email-pacing';
 import { resendRequest, ResendApiError } from '../lib/resend';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
 import { eq, and, sql, inArray } from "drizzle-orm";
@@ -218,23 +218,19 @@ async function sendViaSES(
   betterAuthUrl: string,
   capture: ContentCapture
 ): Promise<ProviderResult> {
-  // Try to extract secret key and region from config, otherwise fallback to env config logic
-  let secretKey = "";
-  let region = "us-east-1";
-  
-  if (configStr) {
-    try {
-      const config = JSON.parse(configStr);
-      secretKey = config.secretKey || "";
-      region = config.region || region;
-    } catch (e) {}
+  const config = JSON.parse(configStr || '{}');
+  if (!config || typeof config !== 'object' || Array.isArray(config)) throw new Error('SES requires valid configuration');
+  // The provider form stores the secret in apiKey; older records store it in config.
+  const accessKeyId = config.accessKeyId !== undefined ? config.accessKeyId : apiKey;
+  const secretKey = config.accessKeyId !== undefined ? apiKey : config.secretKey;
+  if (typeof accessKeyId !== 'string' || !/^[A-Za-z0-9_-]+$/.test(accessKeyId) || typeof secretKey !== 'string' || !secretKey.trim()) {
+    throw new Error('SES requires an Access Key ID and Secret Access Key');
   }
-  
-  if (!secretKey) {
-    throw new Error("SES requires secretKey in config");
-  }
-
-  const endpoint = `https://email.${region}.amazonaws.com/v2/email/outbound-emails`;
+  const region = config.region || 'us-east-1';
+  if (typeof region !== 'string' || !/^[a-z]{2}(?:-[a-z0-9]+)+-\d+$/.test(region) || region.startsWith('cn-')) throw new Error('SES requires a supported region');
+  if (config.sessionToken !== undefined && typeof config.sessionToken !== 'string') throw new Error('SES requires a valid session token');
+  const host = `email.${region}.amazonaws.com`;
+  const endpoint = `https://${host}/v2/email/outbound-emails`;
 
   // 替换模板变量
   const subject = replaceVariables(message.subject, message.variables);
@@ -266,16 +262,24 @@ async function sendViaSES(
     ...(message.replyTo && { ReplyToAddresses: [message.replyTo] }),
   };
 
+  const body = JSON.stringify(requestBody);
+  const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const date = amzDate.slice(0, 8);
+  const headers = new Headers({ 'content-type': 'application/json', host, 'x-amz-date': amzDate });
+  if (config.sessionToken) headers.set('x-amz-security-token', config.sessionToken);
+  const names = [...headers.keys()].sort();
+  const signedHeaders = names.join(';');
+  const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+  const canonical = ['POST', '/v2/email/outbound-emails', '',
+    names.map(name => `${name}:${headers.get(name)!.trim().replace(/\s+/g, ' ')}\n`).join(''),
+    signedHeaders, hash(body)].join('\n');
+  const scope = `${date}/${region}/ses/aws4_request`;
+  let signingKey = createHmac('sha256', `AWS4${secretKey}`).update(date).digest();
+  for (const part of [region, 'ses', 'aws4_request']) signingKey = createHmac('sha256', signingKey).update(part).digest();
+  const signature = createHmac('sha256', signingKey).update(`AWS4-HMAC-SHA256\n${amzDate}\n${scope}\n${hash(canonical)}`).digest('hex');
+  headers.set('Authorization', `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`);
   await capture(subject, bodyHtml, bodyText);
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Amz-Date": new Date().toISOString().replace(/[:-]|\.\d{3}/g, ""),
-      Authorization: `AWS4-HMAC-SHA256 Credential=${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
+  const response = await fetch(endpoint, { method: 'POST', headers, body });
 
   if (!response.ok) {
     const errorText = await response.text();

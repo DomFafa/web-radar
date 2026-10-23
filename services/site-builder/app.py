@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import io
 import json
+import logging
 import os
 import re
 import sqlite3
@@ -22,6 +23,7 @@ MAX_BODY = 70 * 1024 * 1024
 MAX_OUTPUT = 8 * 1024 * 1024
 BUILD_TIMEOUT = 1200
 Build = Callable[[dict[str, Any]], Awaitable[dict[str, str]]]
+logger = logging.getLogger(__name__)
 
 
 def validate_request(value: Any) -> dict[str, Any]:
@@ -131,43 +133,76 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
             await initialize_vendor()
             generate = build_site
 
+        async def database_operation(operation: Callable[[], Any]):
+            for attempt in range(3):
+                try:
+                    return operation()
+                except sqlite3.OperationalError as error:
+                    code = getattr(error, 'sqlite_errorcode', 0) & 0xff
+                    if code not in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED) or attempt == 2:
+                        raise
+                    await asyncio.sleep(.25 * (2 ** attempt))
+
         async def consume():
             while True:
                 wake.clear()
-                payload = store.next()
+                payload = await database_operation(store.next)
                 if payload is None:
                     await wake.wait()
                     continue
+                job_id = payload['id']
+                files = None
+                message = None
                 try:
                     files = await asyncio.wait_for(generate(payload), timeout=BUILD_TIMEOUT)
                     if not isinstance(files, dict) or not files or any(not isinstance(k, str) or not isinstance(v, str) for k, v in files.items()):
                         raise ValueError("Invalid output")
                     if sum(len(k.encode()) + len(v.encode()) for k, v in files.items()) > MAX_OUTPUT:
-                        store.finish(payload["id"], None, "Build output exceeds the 8 MB limit.")
-                    else:
-                        store.finish(payload["id"], files)
+                        files = None
+                        message = "Build output exceeds the 8 MB limit."
                 except asyncio.CancelledError:
-                    store.finish(payload["id"], None, "Build interrupted by service shutdown; create a new build to retry.")
+                    await database_operation(lambda: store.finish(job_id, None, "Build interrupted by service shutdown; create a new build to retry."))
                     raise
                 except TimeoutError:
-                    store.finish(payload["id"], None, "Build timed out; create a new build to retry.")
+                    files = None
+                    message = "Build timed out; create a new build to retry."
                 except OutputValidationError as error:
-                    store.finish(payload["id"], None, str(error))
+                    files = None
+                    message = str(error)
                 except Exception:
                     # Provider exceptions may include credentials, request images or private data.
-                    store.finish(payload["id"], None, "Design conversion failed validation or provider execution; create a new build to retry.")
+                    files = None
+                    message = "Design conversion failed validation or provider execution; create a new build to retry."
+                # Retry this exact result, never the model invocation or a contradictory failure write.
+                await database_operation(lambda: store.finish(job_id, files, message))
 
         worker = asyncio.create_task(consume())
+        application.state.consumer = worker
+        def stopped(task):
+            if not task.cancelled():
+                error = task.exception()
+                # Raw storage/provider exceptions can contain secrets or private input.
+                logger.error('Build consumer stopped (%s).', type(error).__name__ if error else 'unexpected exit')
+        worker.add_done_callback(stopped)
         try:
             yield
         finally:
             worker.cancel()
-            with suppress(asyncio.CancelledError):
+            # Non-cancellation failures have already been logged and exposed through build HTTP.
+            with suppress(asyncio.CancelledError, Exception):
                 await worker
 
     application = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     preview_slots = asyncio.Semaphore(2)
     quality_slots = asyncio.Semaphore(1)
+
+    def require_consumer():
+        if application.state.consumer.done():
+            raise HTTPException(503, 'Build consumer unavailable; service recovery is required.')
+
+    @application.exception_handler(sqlite3.Error)
+    async def database_unavailable(request: Request, error: sqlite3.Error):
+        return JSONResponse({'message': 'Build storage unavailable; retry later.'}, status_code=503)
 
     @application.middleware("http")
     async def authenticate(request: Request, call_next):
@@ -235,6 +270,7 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
 
     @application.post("/v1/builds", status_code=202)
     async def submit(request: Request):
+        require_consumer()
         body = bytearray()
         async for chunk in request.stream():
             body.extend(chunk)
@@ -244,6 +280,7 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
             payload = validate_request(json.loads(body))
         except (ValueError, TypeError, KeyError):
             raise HTTPException(422, "Invalid build request or design images") from None
+        require_consumer()
         try:
             application.state.store.accept(payload)
         except ValueError:
@@ -256,6 +293,8 @@ def create_app(db_path: str | Path | None = None, key: str | None = None, build:
         result = application.state.store.get(job_id)
         if result is None:
             raise HTTPException(404, "Build not found")
+        if result['state'] == 'pending':
+            require_consumer()
         return result
 
     return application

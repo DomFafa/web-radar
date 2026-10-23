@@ -142,34 +142,56 @@ function mediaBucket() {
     });
     return { key, size: bytes.length };
   };
+  const sessions = new Map<string, { key: string; uploadId: string; uploadPart: (number: number, body: BodyInit) => Promise<{ partNumber: number; etag: string }>; complete: () => Promise<{ key: string; size: number }>; abort: () => Promise<void> }>();
   return {
     objects,
     async put(key: string, body: BodyInit, options?: Options) {
       return store(key, new Uint8Array(await new Response(body).arrayBuffer()), options);
     },
     async createMultipartUpload(key: string, options?: Options) {
-      const parts = new Map<number, Uint8Array>();
-      return {
+      const uploadId = crypto.randomUUID(), parts = new Map<number, Uint8Array>();
+      let state: 'open' | 'completed' | 'aborted' = 'open';
+      const requireOpen = () => { if (state !== 'open') throw new Error('NoSuchUpload'); };
+      const upload = {
+        key, uploadId,
         async uploadPart(number: number, body: BodyInit) {
-          parts.set(number, new Uint8Array(await new Response(body).arrayBuffer()));
+          requireOpen();
+          const bytes = new Uint8Array(await new Response(body).arrayBuffer());
+          requireOpen();
+          parts.set(number, bytes);
           return { partNumber: number, etag: String(number) };
         },
         async complete() {
+          requireOpen();
           const bytes = new Uint8Array([...parts.values()].reduce((n, p) => n + p.length, 0));
           let offset = 0;
           for (const p of parts.values()) {
             bytes.set(p, offset);
             offset += p.length;
           }
+          state = 'completed';
           return store(key, bytes, options);
         },
         async abort() {
-          parts.clear();
+          if (state === 'open') { state = 'aborted'; parts.clear(); }
         },
       };
+      sessions.set(uploadId, upload);
+      return upload;
     },
-    async delete(key: string) {
-      objects.delete(key);
+    resumeMultipartUpload(key: string, uploadId: string) {
+      const upload = sessions.get(uploadId);
+      if (!upload || upload.key !== key) throw new Error('NoSuchUpload');
+      return upload;
+    },
+    async list({ prefix = '', limit = 1000, cursor }: { prefix?: string; limit?: number; cursor?: string } = {}) {
+      const keys = [...objects.keys()].filter(key => key.startsWith(prefix) && (!cursor || key > cursor)).sort();
+      const selected = keys.slice(0, limit);
+      return { objects: selected.map(key => ({ key })), truncated: keys.length > selected.length,
+        ...(keys.length > selected.length ? { cursor: selected.at(-1) } : {}) };
+    },
+    async delete(key: string | string[]) {
+      for (const item of typeof key === 'string' ? [key] : key) objects.delete(item);
     },
     async head(key: string) {
       const o = objects.get(key);
@@ -813,6 +835,9 @@ describe('durable domain commands', () => {
     expect(publicResponse.status).toBe(200);
     const publicHtml = await publicResponse.text();
     expect(publicHtml).toContain('Studio');
+    expect((await env.DB.prepare("SELECT count(*) AS n FROM provider_attempts WHERE job_id=? AND outcome='pending'")
+      .bind(build.data.job.id).first<{n:number}>())!.n).toBeGreaterThan(0);
+    expect((await request(`/api/projects/${p.id}`, undefined, owner, 'DELETE')).status).toBe(200);
     expect(publicHtml).not.toContain('Changed draft');
     expect(publicHtml).toContain(`/public/sites/${p.id}/en/products/`);
   });
@@ -2282,6 +2307,655 @@ describe('account unlimited generation quota', () => {
   });
 });
 
+describe('project deletion task settlement', () => {
+  async function seed(project: Project, changes: Partial<Job> = {}) {
+    const job: Job = { id: crypto.randomUUID(), projectId: project.id, userId: owner.userId,
+      kind: 'video', status: 'unknown', requestId: crypto.randomUUID(), input: {},
+      inputVersion: project.version, createdAt: project.createdAt, updatedAt: project.updatedAt,
+      attempts: 1, testMode: true, ...changes };
+    await service.store.insert('jobs', job).run();
+    if (job.kind === 'image' || job.kind === 'video') {
+      await quota({ ...owner, userId: job.userId });
+      await env.DB.prepare(`UPDATE quotas SET ${job.kind}_reserved=${job.kind}_reserved+1 WHERE user_id=?`).bind(job.userId).run();
+      await env.DB.prepare('INSERT INTO quota_ledger VALUES(?,?,?,?,?)').bind(job.id, job.userId, job.kind, 'reserved', job.createdAt).run();
+    }
+    return job;
+  }
+
+  // Protect unresolved work and its billing evidence at the real DELETE boundary.
+  it.each([
+    { kind: 'image', status: 'running' },
+    { kind: 'video', status: 'unknown' },
+    { kind: 'clone', status: 'paused' },
+    { kind: 'email', status: 'unknown' },
+    { kind: 'site-build', status: 'queued', input: { buildSubmitted: true }, attempts: 0 },
+    { kind: 'publish', status: 'queued', input: { publicationStarted: true }, attempts: 0 },
+    { kind: 'publish', status: 'queued', input: { publishResult: { deploymentId: 'accepted' } }, attempts: 0 },
+    { kind: 'video', status: 'queued', input: { submissionStarted: true }, attempts: 0 },
+    { kind: 'email', status: 'queued', input: { attemptId: 'prior-attempt' }, attempts: 0 },
+    { kind: 'video', status: 'queued', upstreamId: 'accepted-upstream', attempts: 0 },
+    { kind: 'copy', status: 'queued', attempts: 1 },
+  ] as Partial<Job>[])('preserves unresolved $kind/$status on deletion', async changes => {
+    const project = await create();
+    const job = await seed(project, changes);
+    const before = await service.store.quota(job.userId);
+    const response = await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE');
+    expect(response).toMatchObject({ status: 409, data: { code: 'project_tasks_unresolved' } });
+    expect(await service.store.one('projects', project.id)).toBeDefined();
+    expect(await service.store.one('jobs', job.id)).toEqual(job);
+    expect(await service.store.quota(job.userId)).toEqual(before);
+  });
+
+  it('atomically releases never-started queued media from the original owner once', async () => {
+    const project = await create();
+    await seed(project, { kind: 'image', status: 'queued', attempts: 0, userId: admin.userId });
+    await seed(project, { kind: 'video', status: 'queued', attempts: 0, userId: admin.userId });
+    expect(await service.store.quota(admin.userId)).toMatchObject({ imageReserved: 1, videoReserved: 1 });
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(200);
+    expect(await service.store.quota(admin.userId)).toMatchObject({ imageUsed: 0, videoUsed: 0, imageReserved: 0, videoReserved: 0 });
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(404);
+    expect(await service.store.quota(admin.userId)).toMatchObject({ imageReserved: 0, videoReserved: 0 });
+  });
+
+  it('preserves an outstanding provider attempt even after a local terminal status', async () => {
+    const project = await create();
+    const job = await seed(project, { kind: 'publish', status: 'failed', input: { attemptId: 'in-flight-attempt' } });
+    await env.DB.prepare('INSERT INTO provider_attempts VALUES(?,?,?,?,?,?,?)')
+      .bind('in-flight-attempt', job.id, 'cloudflare-pages', 'publish', 'started', job.createdAt, null).run();
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(409);
+    expect(await env.DB.prepare('SELECT * FROM provider_attempts WHERE id=?').bind('in-flight-attempt').first()).not.toBeNull();
+    expect(await service.store.one('jobs', job.id)).toEqual(job);
+  });
+
+  it('keeps an inconsistent terminal reservation for reconciliation instead of guessing a refund', async () => {
+    const project = await create();
+    const job = await seed(project, { status: 'failed' });
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(409);
+    expect(await service.store.one('jobs', job.id)).toEqual(job);
+    expect(await service.store.quota(owner.userId)).toMatchObject({ videoReserved: 1, videoUsed: 0 });
+  });
+
+  it('lets a late image finish and settle once before deleting its project', async () => {
+    const project = await scriptReady();
+    await quota(owner, 1, 0);
+    let release!: () => void, entered!: () => void;
+    const wait = new Promise<void>(resolve => { release = resolve; });
+    const started = new Promise<void>(resolve => { entered = resolve; });
+    const original = providers.image;
+    providers.image = vi.fn(async (...args: Parameters<ProviderSet['image']>) => { entered(); await wait; return original(...args); });
+    const body = { expectedVersion: project.version, requestId: 'late-image-delete', kind: 'image', sceneId: 's1' };
+    const queued = await request(`/api/projects/${project.id}/jobs`, body);
+    expect(queued.status).toBe(200);
+    const tick = service.tick();
+    await started;
+    try {
+      expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(409);
+      expect(await service.store.quota(owner.userId)).toMatchObject({ imageReserved: 1, imageUsed: 0 });
+    } finally { release(); }
+    await tick;
+    expect((await service.store.one<Job>('jobs', queued.data.job.id))?.status).toBe('succeeded');
+    expect((await request(`/api/projects/${project.id}/jobs`, body)).data.job.id).toBe(queued.data.job.id);
+    expect(providers.image).toHaveBeenCalledTimes(1);
+    expect(await service.store.quota(owner.userId)).toMatchObject({ imageReserved: 0, imageUsed: 1 });
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(200);
+    expect(await service.store.quota(owner.userId)).toMatchObject({ imageReserved: 0, imageUsed: 1 });
+  });
+
+  it('keeps settled usage and durable create receipts after deleting a completed project', async () => {
+    const body = { name: 'Stable creation receipt', requestId: 'delete-replay-receipt' };
+    const project = (await request('/api/projects', body)).data.project as Project;
+    const job = await seed(project, { status: 'succeeded' });
+    await service.store.batch(await service.store.settlement(job, true));
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(200);
+    expect(await service.store.quota(owner.userId)).toMatchObject({ videoUsed: 1, videoReserved: 0 });
+    expect((await request('/api/projects', body)).status).toBe(404);
+    expect(await service.store.list('projects')).toHaveLength(0);
+    expect(await service.store.quota(owner.userId)).toMatchObject({ videoUsed: 1, videoReserved: 0 });
+  });
+
+  it('rolls back quota release together with deletion when the batch fails', async () => {
+    const project = await create();
+    const job = await seed(project, { status: 'queued', attempts: 0 });
+    const batch = env.DB.batch.bind(env.DB);
+    const failure = vi.spyOn(env.DB, 'batch').mockImplementation(statements =>
+      batch([...statements, env.DB.prepare('INSERT INTO table_that_does_not_exist VALUES(1)')]));
+    expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(500);
+    failure.mockRestore();
+    expect(await service.store.one('projects', project.id)).toBeDefined();
+    expect(await service.store.one('jobs', job.id)).toEqual(job);
+    expect(await service.store.quota(owner.userId)).toMatchObject({ videoReserved: 1 });
+    expect(await env.DB.prepare('SELECT state FROM quota_ledger WHERE job_id=?').bind(job.id).first()).toMatchObject({ state: 'reserved' });
+  });
+
+  it('keeps unknown video ownership across deletion attempts and coordinator restart', async () => {
+    const pending = await create();
+    const unknown = await seed(pending);
+    const queuedProject = await videoReady();
+    const queued = (await request(`/api/projects/${queuedProject.id}/jobs`, {
+      expectedVersion: queuedProject.version, requestId: 'blocked-by-unknown', kind: 'video',
+    })).data.job;
+    providers.submitVideo = vi.fn(async () => ({ videoId: 'must-not-submit' }));
+    expect((await request(`/api/projects/${pending.id}`, undefined, owner, 'DELETE')).status).toBe(409);
+    service = new DomainService(env, { schedule: async () => {} }, providers);
+    await service.tick();
+    expect(providers.submitVideo).not.toHaveBeenCalled();
+    expect((await service.store.one<Job>('jobs', unknown.id))?.status).toBe('unknown');
+    expect((await service.store.one<Job>('jobs', queued.id))?.status).toBe('queued');
+  });
+
+  it('keeps unresolved records while deleting other projects in a batch', async () => {
+    const pending = await create('Pending');
+    const removable = await create('Removable');
+    const job = await seed(pending);
+    const response = await request('/api/projects/batch-delete', { ids: [pending.id, removable.id, 'not-owned'] });
+    expect(response).toMatchObject({ status: 200, data: { ok: true, deletedCount: 1 } });
+    expect(await service.store.one('projects', removable.id)).toBeUndefined();
+    expect(await service.store.one('projects', pending.id)).toBeDefined();
+    expect(await service.store.one('jobs', job.id)).toEqual(job);
+  });
+});
+
+describe('project media cleanup', () => {
+  let clock: number;
+  beforeEach(() => {
+    clock = Date.now();
+    vi.spyOn(Date, 'now').mockImplementation(() => clock);
+  });
+  afterEach(() => vi.restoreAllMocks());
+  const scope = 'project-media-cleanup';
+  const row = (id: string) => env.DB.prepare('SELECT result FROM idempotency WHERE scope=? AND request_id=?').bind(scope, id).first<{ result: string }>();
+  const remove = (project: Project) => request(`/api/projects/${project.id}`, undefined, owner, 'DELETE');
+  async function objects(project: Project, count: number) {
+    for (let i = 0; i < count; i++) await bucket.put(`projects/${project.id}/assets/${String(i).padStart(5, '0')}`, 'private');
+  }
+  async function nextTick() { clock += 31_000; await service.tick(); }
+
+  it.each([1000, 1005])('durably drains %i objects in bounded pages and preserves adjacent prefixes and charged archives', async count => {
+    const project = await create();
+    await objects(project, count);
+    const retained = [`projects/${project.id}-other/assets/private`, `website-results/${project.id}/1/result.json`];
+    for (const key of retained) await bucket.put(key, 'keep');
+    const list = vi.spyOn(bucket, 'list');
+    const del = vi.spyOn(bucket, 'delete');
+    expect((await remove(project)).status).toBe(200);
+    expect(await row(project.id)).not.toBeNull();
+    expect(list).not.toHaveBeenCalled();
+    await service.tick();
+    expect(del.mock.calls[0][0]).toHaveLength(1000);
+    expect(await row(project.id)).not.toBeNull();
+    if (count > 1000) await nextTick();
+    await nextTick();
+    expect(await row(project.id)).toBeNull();
+    expect([...bucket.objects.keys()].sort()).toEqual(retained.sort());
+    expect(list.mock.calls.every(([options]) => options?.limit === 1000 && !options.cursor)).toBe(true);
+  });
+
+  it.each(['list', 'partial-delete', 'committed-delete'] as const)('retains durable intent across %s failure and coordinator restart', async failure => {
+    const project = await create();
+    await objects(project, 3);
+    expect((await remove(project)).status).toBe(200);
+    const list = bucket.list.bind(bucket), del = bucket.delete.bind(bucket);
+    if (failure === 'list') vi.spyOn(bucket, 'list').mockRejectedValueOnce(new Error('private storage failure'));
+    else vi.spyOn(bucket, 'delete').mockImplementationOnce(async keys => {
+      const selected = typeof keys === 'string' ? [keys] : keys;
+      await del(failure === 'partial-delete' ? selected.slice(0, 1) : selected);
+      throw new Error('private storage failure');
+    });
+    await service.tick();
+    expect(await row(project.id)).not.toBeNull();
+    expect(await service.store.one('projects', project.id)).toBeUndefined();
+    service = new DomainService(env, { schedule: async () => {} }, providers);
+    await nextTick();
+    await nextTick();
+    expect(await row(project.id)).toBeNull();
+    expect(bucket.objects.size).toBe(0);
+    expect(await list({ prefix: `projects/${project.id}/` })).toMatchObject({ truncated: false, objects: [] });
+  });
+
+  it('keeps the journal for an empty truncated page instead of claiming cleanup succeeded', async () => {
+    const project = await create();
+    expect((await remove(project)).status).toBe(200);
+    vi.spyOn(bucket, 'list').mockResolvedValueOnce({ objects: [], truncated: true, cursor: 'more' });
+    await service.tick();
+    expect(await row(project.id)).not.toBeNull();
+    await nextTick();
+    expect(await row(project.id)).toBeNull();
+  });
+
+  it('does not delete a project when its recovery alarm cannot be armed', async () => {
+    const project = await create();
+    await objects(project, 1);
+    service = new DomainService(env, { schedule: async () => { throw new Error('alarm unavailable'); } }, providers);
+    expect((await remove(project)).status).toBe(500);
+    expect(await service.store.one('projects', project.id)).toBeDefined();
+    expect(await row(project.id)).toBeNull();
+    expect(bucket.objects.size).toBe(1);
+  });
+
+  it('rolls back cleanup intent and project deletion together on a D1 batch failure', async () => {
+    const project = await create();
+    await objects(project, 1);
+    const batch = env.DB.batch.bind(env.DB);
+    vi.spyOn(env.DB, 'batch').mockImplementation(statements => batch([...statements, env.DB.prepare('INSERT INTO missing_cleanup_table VALUES(1)')]));
+    expect((await remove(project)).status).toBe(500);
+    expect(await service.store.one('projects', project.id)).toBeDefined();
+    expect(await row(project.id)).toBeNull();
+    expect(bucket.objects.size).toBe(1);
+  });
+
+  it('retries idempotently when deleting an already-clean journal fails', async () => {
+    const project = await create();
+    expect((await remove(project)).status).toBe(200);
+    const prepare = env.DB.prepare.bind(env.DB);
+    let fail = true;
+    vi.spyOn(env.DB, 'prepare').mockImplementation(sql => {
+      const statement = prepare(sql);
+      if (fail && /^DELETE FROM idempotency/i.test(sql.trim())) {
+        fail = false;
+        vi.spyOn(statement, 'run').mockRejectedValueOnce(new Error('journal checkpoint unavailable'));
+      }
+      return statement;
+    });
+    await service.tick();
+    expect(await row(project.id)).not.toBeNull();
+    await nextTick();
+    expect(await row(project.id)).toBeNull();
+  });
+
+  it('preserves cleanup intent when checkpoint persistence fails before touching R2', async () => {
+    const project = await create();
+    await objects(project, 1);
+    expect((await remove(project)).status).toBe(200);
+    const prepare = env.DB.prepare.bind(env.DB);
+    let fail = true;
+    vi.spyOn(env.DB, 'prepare').mockImplementation(sql => {
+      const statement = prepare(sql);
+      if (fail && /^UPDATE idempotency SET result=/i.test(sql.trim())) {
+        fail = false;
+        vi.spyOn(statement, 'run').mockRejectedValueOnce(new Error('checkpoint persistence unavailable'));
+      }
+      return statement;
+    });
+    const list = vi.spyOn(bucket, 'list');
+    await expect(service.tick()).rejects.toThrow('checkpoint persistence unavailable');
+    expect(list).not.toHaveBeenCalled();
+    expect(await row(project.id)).not.toBeNull();
+    await nextTick();
+    await nextTick();
+    expect(await row(project.id)).toBeNull();
+    expect(bucket.objects.size).toBe(0);
+  });
+
+  it('rotates past a failed cleanup and does not retry it in a hot loop', async () => {
+    const projects = [await create(), await create()].sort((a, b) => a.id.localeCompare(b.id));
+    for (const project of projects) { await objects(project, 1); expect((await remove(project)).status).toBe(200); }
+    const original = bucket.list.bind(bucket);
+    const list = vi.spyOn(bucket, 'list').mockImplementation(options => options?.prefix === `projects/${projects[0].id}/`
+      ? Promise.reject(new Error('storage unavailable')) : original(options));
+    await service.tick();
+    await service.tick();
+    await service.tick();
+    expect(list.mock.calls.filter(([options]) => options?.prefix === `projects/${projects[0].id}/`)).toHaveLength(1);
+    expect(bucket.objects.has(`projects/${projects[1].id}/assets/00000`)).toBe(false);
+    expect(await row(projects[0].id)).not.toBeNull();
+  });
+
+  it('waits for the deletion transaction when an alarm fires before its commit', async () => {
+    const project = await create();
+    await objects(project, 1);
+    let tick: Promise<void> | undefined;
+    service = new DomainService(env, { schedule: async () => { tick ??= service.tick(); } }, providers);
+    expect((await remove(project)).status).toBe(200);
+    await tick;
+    expect(bucket.objects.size).toBe(0);
+    expect(await row(project.id)).not.toBeNull();
+  });
+
+  it('keeps R2 waiting outside the mutation lock and shares one cleanup lane across overlapping ticks', async () => {
+    const project = await create(), other = await create();
+    expect((await remove(project)).status).toBe(200);
+    let entered!: () => void, release!: () => void;
+    const started = new Promise<void>(resolve => { entered = resolve; });
+    const wait = new Promise<void>(resolve => { release = resolve; });
+    const original = bucket.list.bind(bucket);
+    const list = vi.spyOn(bucket, 'list').mockImplementationOnce(async options => { entered(); await wait; return original(options); });
+    const first = service.tick();
+    await started;
+    const second = service.tick();
+    try {
+      expect((await request(`/api/projects/${other.id}`, { expectedVersion: other.version, draft: other.draft }, owner, 'PUT')).status).toBe(200);
+      expect(list).toHaveBeenCalledTimes(1);
+    } finally { release(); }
+    await Promise.all([first, second]);
+  });
+
+  it.each(['completed-cleanup', 'in-flight-cleanup', 'lost-completion', 'alarm-failure'] as const)(
+    'retains late-upload cleanup after %s and a failed compensating delete', async failure => {
+    const project = await create();
+    const schedule = vi.fn(async (_time: number) => {});
+    service = new DomainService(env, { schedule }, providers);
+    let entered!: () => void, release!: () => void;
+    const started = new Promise<void>(resolve => { entered = resolve; });
+    const wait = new Promise<void>(resolve => { release = resolve; });
+    const original = bucket.createMultipartUpload.bind(bucket);
+    vi.spyOn(bucket, 'createMultipartUpload').mockImplementationOnce(async (...args) => {
+      const upload = await original(...args), complete = upload.complete;
+      upload.complete = async () => {
+        entered(); await wait;
+        const result = await complete();
+        if (failure === 'lost-completion') throw new Error('Multipart completion response lost');
+        return result;
+      };
+      return upload;
+    });
+    const form = new FormData();
+    form.append('file', new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1])], 'late.png', { type: 'image/png' }));
+    const uploading = service.fetch(new Request(`http://localhost/api/projects/${project.id}/uploads`, {
+      method: 'POST', headers: { 'X-WR-Principal': JSON.stringify(owner) }, body: form,
+    }));
+    await started;
+    expect((await remove(project)).status).toBe(200);
+    let cleanup: Promise<void> | undefined, releaseCleanup = () => {};
+    if (failure === 'in-flight-cleanup') {
+      let listed!: () => void;
+      const ready = new Promise<void>(resolve => { listed = resolve; });
+      const paused = new Promise<void>(resolve => { releaseCleanup = resolve; });
+      const list = bucket.list.bind(bucket);
+      vi.spyOn(bucket, 'list').mockImplementationOnce(async options => {
+        const snapshot = await list(options);
+        listed(); await paused;
+        return snapshot;
+      });
+      cleanup = service.tick();
+      await ready;
+    } else {
+      await service.tick();
+      expect(await row(project.id)).toBeNull();
+    }
+    const del = vi.spyOn(bucket, 'delete').mockRejectedValueOnce(new Error('compensating delete failed'));
+    if (failure === 'lost-completion') del.mockRejectedValueOnce(new Error('second compensating delete failed'));
+    if (failure === 'alarm-failure') schedule.mockRejectedValueOnce(new Error('late recovery alarm unavailable'));
+    release();
+    try {
+      expect((await uploading).status).toBe(failure === 'lost-completion' ? 500 : 404);
+    } finally { releaseCleanup(); }
+    await cleanup;
+    expect(bucket.objects.size).toBe(1);
+    expect((await env.DB.prepare('SELECT request_id FROM idempotency WHERE scope=?').bind('asset-upload').all()).results).toHaveLength(1);
+    service = new DomainService(env, { schedule: async () => {} }, providers);
+    await service.tick();
+    await nextTick();
+    if (failure === 'alarm-failure') await nextTick(); // The first recovery consumes the still-pending delete failure.
+    expect(bucket.objects.size).toBe(0);
+    expect(await row(project.id)).toBeNull();
+    expect((await env.DB.prepare('SELECT request_id FROM idempotency WHERE scope=?').bind('asset-upload').all()).results).toEqual([]);
+  });
+});
+
+describe('upload crash recovery', () => {
+  const scope = 'asset-upload';
+  let clock: number;
+  beforeEach(() => { clock = Date.now(); vi.spyOn(Date, 'now').mockImplementation(() => clock); });
+  afterEach(() => vi.restoreAllMocks());
+  const intents = async () => (await env.DB.prepare('SELECT request_id,result FROM idempotency WHERE scope=?').bind(scope)
+    .all<{ request_id: string; result: string }>()).results;
+  function upload(project: Project) {
+    const form = new FormData();
+    form.append('file', new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1])], 'crash.png', { type: 'image/png' }));
+    return service.fetch(new Request(`http://localhost/api/projects/${project.id}/uploads`, {
+      method: 'POST', headers: { 'X-WR-Principal': JSON.stringify(owner) }, body: form,
+    }));
+  }
+  async function pause(project: Project, stage: 'create' | 'before-complete' | 'after-complete') {
+    let entered!: () => void, release!: () => void;
+    const started = new Promise<void>(resolve => { entered = resolve; });
+    const wait = new Promise<void>(resolve => { release = resolve; });
+    const createMultipart = bucket.createMultipartUpload.bind(bucket);
+    vi.spyOn(bucket, 'createMultipartUpload').mockImplementationOnce(async (...args) => {
+      const session = await createMultipart(...args);
+      if (stage === 'create') { entered(); await wait; }
+      else {
+        const complete = session.complete;
+        session.complete = async () => {
+          if (stage === 'before-complete') { entered(); await wait; }
+          const result = await complete();
+          if (stage === 'after-complete') { entered(); await wait; }
+          return result;
+        };
+      }
+      return session;
+    });
+    const response = upload(project);
+    await started;
+    return { response, release };
+  }
+  async function restart() {
+    service = new DomainService(env, { schedule: async () => {} }, providers);
+    clock += 31_000;
+    await service.tick();
+  }
+
+  it('persists intent before creating a multipart upload and uploadId before sending any part', async () => {
+    const project = await create();
+    const original = bucket.createMultipartUpload.bind(bucket);
+    vi.spyOn(bucket, 'createMultipartUpload').mockImplementationOnce(async (...args) => {
+      const [intent] = await intents();
+      expect(intent).toBeDefined();
+      expect(JSON.parse(intent.result)).toMatchObject({ projectId: project.id });
+      const session = await original(...args), part = session.uploadPart;
+      session.uploadPart = async (...partArgs) => {
+        expect(JSON.parse((await intents())[0].result)).toMatchObject({ uploadId: session.uploadId });
+        return part(...partArgs);
+      };
+      return session;
+    });
+    expect((await upload(project)).status).toBe(200);
+    expect(await intents()).toEqual([]);
+  });
+
+  it.each([false, true])('recovers a completed object without running the old catch (project deleted: %s)', async deleted => {
+    const project = await create(), other = await create();
+    const retained = `projects/${other.id}/assets/keep`;
+    await bucket.put(retained, 'keep');
+    const pending = await pause(project, 'after-complete');
+    try {
+      expect(bucket.objects.size).toBe(2);
+      expect(await intents()).toHaveLength(1);
+      if (deleted) expect((await request(`/api/projects/${project.id}`, undefined, owner, 'DELETE')).status).toBe(200);
+      await restart();
+      expect([...bucket.objects.keys()]).toEqual([retained]);
+      expect(await intents()).toEqual([]);
+    } finally { pending.release(); }
+    expect((await pending.response).status).toBe(deleted ? 404 : 409);
+    expect(await service.store.list('assets', 'project_id=?', [project.id])).toEqual([]);
+    expect([...bucket.objects.keys()]).toEqual([retained]);
+  });
+
+  it.each(['create', 'before-complete'] as const)('fences a late %s after recovery and never creates an orphan', async stage => {
+    const project = await create(), pending = await pause(project, stage);
+    try {
+      expect(await intents()).toHaveLength(1);
+      await restart();
+      expect(await intents()).toEqual([]);
+    } finally { pending.release(); }
+    expect((await pending.response).status).toBe(stage === 'create' ? 409 : 500);
+    expect(bucket.objects.size).toBe(0);
+    expect(await service.store.list('assets')).toEqual([]);
+  });
+
+  it('does not recover an upload still active in this instance, including overlapping ticks', async () => {
+    const project = await create(), pending = await pause(project, 'before-complete');
+    try {
+      clock += 61_000;
+      const abort = vi.spyOn(bucket, 'resumeMultipartUpload');
+      await Promise.all([service.tick(), service.tick()]);
+      expect(abort).not.toHaveBeenCalled();
+      expect(await intents()).toHaveLength(1);
+    } finally { pending.release(); }
+    const response = await pending.response;
+    expect(response.status).toBe(200);
+    const asset = ((await response.json()) as { asset: Asset }).asset;
+    expect(await service.store.one('assets', asset.id)).toEqual(asset);
+    expect(await bucket.head(asset.key)).not.toBeNull();
+    expect(await intents()).toEqual([]);
+  });
+
+  it.each(['abort', 'delete'] as const)('retains intent after recovery %s fails, then retries safely', async failure => {
+    const project = await create(), pending = await pause(project, 'after-complete');
+    try {
+      const [intent] = await intents();
+      expect(intent).toBeDefined();
+      const data = JSON.parse(intent.result);
+      if (failure === 'abort') vi.spyOn(bucket.resumeMultipartUpload(`projects/${project.id}/assets/${intent.request_id}`, data.uploadId), 'abort')
+        .mockRejectedValueOnce(new Error('storage unavailable'));
+      else vi.spyOn(bucket, 'delete').mockRejectedValueOnce(new Error('storage unavailable'));
+      await restart();
+      expect(await intents()).toHaveLength(1);
+      expect(bucket.objects.size).toBe(1);
+      clock += 31_000;
+      await service.tick();
+      expect(await intents()).toEqual([]);
+      expect(bucket.objects.size).toBe(0);
+    } finally { pending.release(); }
+    expect((await pending.response).status).toBe(409);
+  });
+
+  it('reads back an asset when the atomic metadata commit response is lost', async () => {
+    const project = await create(), batch = env.DB.batch.bind(env.DB);
+    vi.spyOn(env.DB, 'batch').mockImplementationOnce(async statements => {
+      await batch(statements);
+      throw new Error('commit response lost');
+    });
+    const response = await upload(project);
+    expect(response.status).toBe(200);
+    const asset = ((await response.json()) as { asset: Asset }).asset;
+    expect(await service.store.one('assets', asset.id)).toEqual(asset);
+    expect(await bucket.head(asset.key)).not.toBeNull();
+    expect(await intents()).toEqual([]);
+    await restart();
+    expect(await bucket.head(asset.key)).not.toBeNull();
+  });
+
+  it('does not send parts when uploadId checkpointing fails', async () => {
+    const project = await create(), prepare = env.DB.prepare.bind(env.DB);
+    let failed = false;
+    vi.spyOn(env.DB, 'prepare').mockImplementation(sql => {
+      const statement = prepare(sql);
+      if (!failed && /^UPDATE idempotency SET result=/i.test(sql)) {
+        failed = true;
+        vi.spyOn(statement, 'run').mockRejectedValueOnce(new Error('checkpoint unavailable'));
+      }
+      return statement;
+    });
+    const original = bucket.createMultipartUpload.bind(bucket);
+    const sent = vi.fn();
+    vi.spyOn(bucket, 'createMultipartUpload').mockImplementationOnce(async (...args) => {
+      const session = await original(...args), part = session.uploadPart;
+      session.uploadPart = async (...values) => { sent(); return part(...values); };
+      return session;
+    });
+    expect((await upload(project)).status).toBe(500);
+    expect(sent).not.toHaveBeenCalled();
+    expect(bucket.objects.size).toBe(0);
+    expect(await intents()).toEqual([]);
+  });
+
+  it('recovers the persisted uploadId when its checkpoint response is lost', async () => {
+    const project = await create(), prepare = env.DB.prepare.bind(env.DB);
+    let lost = false;
+    vi.spyOn(env.DB, 'prepare').mockImplementation(sql => {
+      const statement = prepare(sql);
+      if (!lost && /^UPDATE idempotency SET result=/i.test(sql)) {
+        lost = true;
+        const run = statement.run.bind(statement);
+        vi.spyOn(statement, 'run').mockImplementationOnce(async () => { await run(); throw new Error('checkpoint response lost'); });
+      }
+      return statement;
+    });
+    const resume = vi.spyOn(bucket, 'resumeMultipartUpload');
+    expect((await upload(project)).status).toBe(500);
+    expect(resume).toHaveBeenCalledTimes(1);
+    expect(bucket.objects.size).toBe(0);
+    expect(await intents()).toEqual([]);
+  });
+
+  it('retries a recovery claim whose D1 response was lost without permitting the old commit', async () => {
+    const project = await create(), pending = await pause(project, 'after-complete');
+    try {
+      const prepare = env.DB.prepare.bind(env.DB);
+      let lost = false;
+      vi.spyOn(env.DB, 'prepare').mockImplementation(sql => {
+        const statement = prepare(sql);
+        if (!lost && /^UPDATE idempotency SET result=/i.test(sql)) {
+          lost = true;
+          const run = statement.run.bind(statement);
+          vi.spyOn(statement, 'run').mockImplementationOnce(async () => { await run(); throw new Error('claim response lost'); });
+        }
+        return statement;
+      });
+      await expect(restart()).rejects.toThrow('claim response lost');
+      expect(await intents()).toHaveLength(1);
+      expect(bucket.objects.size).toBe(1);
+      clock += 31_000;
+      await service.tick();
+      expect(await intents()).toEqual([]);
+      expect(bucket.objects.size).toBe(0);
+    } finally { pending.release(); }
+    expect((await pending.response).status).toBe(409);
+  });
+
+  it('rolls back asset and intent removal together when metadata persistence fails', async () => {
+    const project = await create(), batch = env.DB.batch.bind(env.DB);
+    vi.spyOn(env.DB, 'batch').mockImplementationOnce(statements => batch([
+      ...statements, env.DB.prepare('INSERT INTO nonexistent_upload_table VALUES(1)'),
+    ]));
+    expect((await upload(project)).status).toBe(500);
+    expect(await service.store.one('projects', project.id)).toBeDefined();
+    expect(await service.store.list('assets')).toEqual([]);
+    expect(bucket.objects.size).toBe(0);
+    expect(await intents()).toEqual([]);
+  });
+
+  it('keeps recovery intent when its alarm cannot be armed and touches no R2 object', async () => {
+    const project = await create(), pending = await pause(project, 'after-complete');
+    try {
+      const abort = vi.spyOn(bucket, 'resumeMultipartUpload'), del = vi.spyOn(bucket, 'delete');
+      service = new DomainService(env, { schedule: async () => { throw new Error('alarm unavailable'); } }, providers);
+      clock += 31_000;
+      await expect(service.tick()).rejects.toThrow('alarm unavailable');
+      expect(abort).not.toHaveBeenCalled();
+      expect(del).not.toHaveBeenCalled();
+      expect(await intents()).toHaveLength(1);
+      await restart();
+      expect(await intents()).toEqual([]);
+      expect(bucket.objects.size).toBe(0);
+    } finally { pending.release(); }
+    expect((await pending.response).status).toBe(409);
+  });
+
+  it('does not write R2 when its initial recovery alarm is unavailable', async () => {
+    const project = await create();
+    service = new DomainService(env, { schedule: async () => { throw new Error('alarm unavailable'); } }, providers);
+    const write = vi.spyOn(bucket, 'createMultipartUpload');
+    expect((await upload(project)).status).toBe(500);
+    expect(write).not.toHaveBeenCalled();
+    expect(await intents()).toEqual([]);
+  });
+
+  it('does not touch R2 if the durable intent cannot be stored', async () => {
+    const project = await create(), prepare = env.DB.prepare.bind(env.DB);
+    vi.spyOn(env.DB, 'prepare').mockImplementation(sql => {
+      const statement = prepare(sql);
+      if (/INSERT INTO idempotency/i.test(sql)) vi.spyOn(statement, 'run').mockRejectedValueOnce(new Error('D1 unavailable'));
+      return statement;
+    });
+    const write = vi.spyOn(bucket, 'createMultipartUpload');
+    expect((await upload(project)).status).toBe(500);
+    expect(write).not.toHaveBeenCalled();
+    expect(bucket.objects.size).toBe(0);
+  });
+});
+
 describe('template tryout and clone version chain', () => {
   it('renders an unsaved template with product data without modifying the saved project', async () => {
     const p = await create();
@@ -2356,9 +3030,161 @@ it('keeps the last usable clone documents when regeneration fails', async () => 
   expect(saved.draft.cloneConfig.status).toBe('error');
   expect(saved.draft.cloneConfig.generatedFiles).toEqual(previous.draft.cloneConfig.generatedFiles);
   expect(saved.draft.cloneConfig.generatedHtml).toBe(previous.draft.cloneConfig.generatedHtml);
+  expect(saved.draft.cloneConfig.artifact).toEqual(previous.draft.cloneConfig.artifact);
   expect(saved.version).toBe(previous.version + 1);
 });
 
+
+describe('legacy clone concurrency', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const response = () => Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+    css: 'body{margin:0}', pages: { en: Object.fromEntries(['home','catalog','detail','about','contact'].map(key =>
+      [key, '<main><h1>Legacy reference</h1><p>A complete reference layout for the local concurrency regression.</p></main>'])) },
+  }) } }] });
+  async function visionProject() {
+    env.CLONE_TEST_FIXTURE = 'false'; env.OPENAI_API_KEY = 'test-only';
+    const p = await brandedClone(), asset = await uploadAsset(p);
+    p.draft.cloneConfig = { uiImages: [{ id: 'reference', assetId: asset.id, name: 'index.png', role: 'home' }] };
+    return (await request(`/api/projects/${p.id}`, { expectedVersion: p.version, draft: p.draft }, owner, 'PUT')).data.project as Project;
+  }
+  async function pending(p: Project) {
+    let release!: (value: Response) => void;
+    const upstream = new Promise<Response>(resolve => { release = resolve; });
+    const fetcher = vi.fn(() => upstream.then(value => value.clone()));
+    vi.stubGlobal('fetch', fetcher);
+    const result = request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version, cloneConfig: p.draft.cloneConfig });
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+    return { fetcher, result, release };
+  }
+  // Bounded observation detects a held lock; finally always releases the model before the next test.
+  async function completes<T>(operation: Promise<T>): Promise<T> {
+    let done = false;
+    void operation.then(() => { done = true; });
+    await vi.waitFor(() => expect(done).toBe(true), { timeout: 500 });
+    return operation;
+  }
+  it.each(['clone/generate/', '%63lone/%67enerate', 'clone/generate/extra'])('uses the same locking boundary for the accepted route spelling %s', async path => {
+    const p = await brandedClone();
+    const result = await completes(request(`/api/projects/${p.id}/${path}`, { expectedVersion: p.version, cloneConfig: { targetUrl: 'https://example.com' } }));
+    expect(result.status).toBe(200);
+    expect(result.data.project.version).toBe(p.version + 1);
+    expect((await completes(request('/api/projects', { name: 'Next operation', requestId: crypto.randomUUID() }))).status).toBe(200);
+  });
+  it('allows unrelated saves, inquiries and queue execution while the legacy model is pending', async () => {
+    const publicProject = await publishNow(await publishable()), other = await create(), p = await visionProject();
+    const call = await pending(p);
+    try {
+      const save = await completes(request(`/api/projects/${other.id}`, { expectedVersion: other.version, draft: other.draft, name: 'Saved during model wait' }, owner, 'PUT'));
+      expect(save.status).toBe(200);
+      const inquiry = await completes(request(`/api/public/sites/${publicProject.id}/inquiries`, {
+        requestId: 'legacy-wait-inquiry', name: 'Buyer', email: 'buyer@example.com', company: '', message: 'Local test only',
+      }));
+      expect(inquiry.status).toBe(200);
+      await completes(service.tick());
+      expect((await request(`/api/projects/${publicProject.id}/inquiries`)).data.inquiries[0].emailStatus).toBe('sent');
+      expect(call.fetcher).toHaveBeenCalledTimes(1);
+    } finally { call.release(response()); await call.result; }
+    const saved = (await get(p)).project;
+    expect(saved.version).toBe(p.version + 1);
+    expect(saved.draft.cloneConfig.status).toBe('ready');
+    expect((await get(other)).project.name).toBe('Saved during model wait');
+  });
+  it('persists admission across restart and blocks duplicate legacy, edit and delete while sharing the existing task with async start', async () => {
+    const p = await visionProject(), call = await pending(p);
+    try {
+      service = new DomainService(env, { schedule: async () => {} }, providers);
+      const duplicate = await completes(request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version }));
+      expect(duplicate.status).toBe(409);
+      expect(duplicate.data.code).toBe('clone_task_active');
+      const current = (await request(`/api/projects/${p.id}/clone/task`)).data.job;
+      expect(current.status).toBe('running');
+      expect(current.input).toEqual({});
+      const start = await request(`/api/projects/${p.id}/clone/start`, { expectedVersion: p.version, requestId: crypto.randomUUID(), cloneConfig: p.draft.cloneConfig });
+      expect(start.data.job.id).toBe(current.id);
+      expect((await request(`/api/projects/${p.id}`, { expectedVersion: p.version, draft: p.draft }, owner, 'PUT')).status).toBe(409);
+      expect((await request(`/api/projects/${p.id}`, undefined, owner, 'DELETE')).data.code).toBe('project_tasks_unresolved');
+      await service.tick();
+      expect((await request(`/api/projects/${p.id}/clone/task`)).data.job.status).toBe('running');
+      expect(call.fetcher).toHaveBeenCalledTimes(1);
+    } finally { call.release(response()); await call.result; }
+    expect((await get(p)).project.draft.cloneConfig.status).toBe('ready');
+  });
+  it.each(['success', 'failure'] as const)('does not overwrite a newer draft on late model %s', async outcome => {
+    const p = await visionProject(), video = await uploadAsset(p, 'video/mp4'), call = await pending(p);
+    let saved: Project | undefined;
+    try {
+      const edit = await completes(request(`/api/projects/${p.id}/accept-video`, { expectedVersion: p.version, assetId: video.id }));
+      expect(edit.status).toBe(200); saved = edit.data.project;
+    } finally { call.release(outcome === 'success' ? response() : new Response('failure', { status: 502 })); await call.result; }
+    expect((await call.result).status).toBeGreaterThanOrEqual(400);
+    expect((await get(p)).project).toEqual(saved);
+    expect([...bucket.objects.keys()].filter(key => key.includes('/sites/clone-'))).toHaveLength(0);
+  });
+  it.each(['deleted', 'scope-changed'] as const)('refuses late output when the project is %s', async change => {
+    const p = await visionProject(), call = await pending(p);
+    if (change === 'deleted') await service.store.batch(service.store.deleteProjectStatements(p.id));
+    else await env.DB.prepare('UPDATE projects SET workspace_id=?,data=? WHERE id=?')
+      .bind('other-workspace', JSON.stringify({ ...p, workspaceId: 'other-workspace' }), p.id).run();
+    call.release(response());
+    expect((await call.result).status).toBeGreaterThanOrEqual(400);
+    expect([...bucket.objects.keys()].filter(key => key.includes('/sites/clone-'))).toHaveLength(0);
+    const saved = await service.store.one<Project>('projects', p.id);
+    if (change === 'deleted') expect(saved).toBeUndefined();
+    else expect(saved).toEqual({ ...p, workspaceId: 'other-workspace' });
+  });
+  it('explicit stop fences a late response and does not automatically submit another model request', async () => {
+    const p = await visionProject(), call = await pending(p);
+    try {
+      const current = (await request(`/api/projects/${p.id}/clone/task`)).data.job;
+      expect(current?.status).toBe('running');
+      expect((await completes(request(`/api/projects/${p.id}/clone/pause`, { taskId: current.id }))).status).toBe(409);
+      const stop = await completes(request(`/api/projects/${p.id}/clone/stop`, { taskId: current.id }));
+      expect(stop.data.job.status).toBe('cancelled');
+      await completes(service.tick());
+    } finally { call.release(response()); await call.result; }
+    expect((await call.result).status).toBeGreaterThanOrEqual(400);
+    expect((await get(p)).project.draft.cloneConfig.artifact).toBeUndefined();
+    expect(call.fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('rejects foreign assets and callers before submitting a model request', async () => {
+    const p = await visionProject(), foreign = await create(), asset = await uploadAsset(foreign);
+    const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
+    expect((await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version }, { ...owner, userId: 'stranger' })).status).toBe(404);
+    const invalid = await request(`/api/projects/${p.id}/clone/generate`, { expectedVersion: p.version,
+      cloneConfig: { uiImages: [{ id: 'foreign', assetId: asset.id, name: 'foreign.png', role: 'home' }] } });
+    expect(invalid.status).toBeGreaterThanOrEqual(400);
+    expect(fetcher).not.toHaveBeenCalled();
+    expect((await get(p)).project).toEqual(p);
+  });
+  it('allows another project to finish an async clone without mixing its output with the pending legacy request', async () => {
+    const p = await visionProject(), other = await visionProject(), call = await pending(p);
+    try {
+      call.fetcher.mockImplementationOnce(async () => response());
+      const started = await request(`/api/projects/${other.id}/clone/start`, {
+        expectedVersion: other.version, requestId: crypto.randomUUID(), cloneConfig: other.draft.cloneConfig,
+      });
+      expect(started.status).toBe(202);
+      await completes(service.tick());
+      expect((await request(`/api/projects/${other.id}/clone/task`)).data.job.status).toBe('succeeded');
+      expect((await get(other)).project.draft.cloneConfig.artifact.key).toMatch(`projects/${other.id}/sites/`);
+      expect((await get(p)).project.draft.cloneConfig.artifact).toBeUndefined();
+      expect(call.fetcher).toHaveBeenCalledTimes(2);
+    } finally { call.release(response()); await call.result; }
+    expect((await get(p)).project.draft.cloneConfig.artifact.key).toMatch(`projects/${p.id}/sites/`);
+  });
+  it.each(['success', 'failure'] as const)('rechecks existing materials project access before late %s writes', async outcome => {
+    const p = await visionProject();
+    p.materials = { submissionId: crypto.randomUUID(), source: { materialsId: 'source', revision: 1 },
+      contentSha256: 'a'.repeat(64), snapshotKey: 'confirmed.json', acceptedAt: new Date().toISOString() };
+    await service.store.update('projects', p).run();
+    const call = await pending(p);
+    sourceState.revoked = true;
+    call.release(outcome === 'success' ? response() : new Response('failure', { status: 502 }));
+    expect((await call.result).status).toBeGreaterThanOrEqual(400);
+    expect(await service.store.one<Project>('projects', p.id)).toEqual(p);
+    expect([...bucket.objects.keys()].filter(key => key.includes('/sites/clone-'))).toHaveLength(0);
+  });
+});
 
 describe('persistent clone tasks', () => {
   afterEach(() => vi.unstubAllGlobals());

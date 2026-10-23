@@ -1,10 +1,13 @@
 import asyncio
 import copy
 import importlib.util
+import json
 import sqlite3
 import time
+from contextlib import suppress
 
 import pytest
+import httpx
 from bs4 import BeautifulSoup
 from fastapi.testclient import TestClient
 
@@ -138,6 +141,180 @@ def test_bounded_concurrency_and_output_limit(tmp_path, payload):
         assert wait_result(client)["state"] == "failed"
         assert wait_result(client, "second")["state"] == "failed"
         assert maximum == 1
+
+
+def storage_error(code):
+    error = sqlite3.OperationalError('private-storage-details-do-not-expose')
+    setattr(error, 'sqlite_errorcode', code)
+    return error
+
+
+async def settle(predicate):
+    for _ in range(1000):
+        if predicate():
+            return
+        await asyncio.sleep(0)
+    pytest.fail('Consumer did not reach the expected state')
+
+
+@pytest.mark.parametrize('operation', ['next', 'finish', 'committed-finish'])
+def test_consumer_retries_only_storage_without_rebuilding(tmp_path, payload, monkeypatch, operation):
+    _, service = modules()
+    db = tmp_path / 'retry.sqlite'
+    store = service.JobStore(db)
+    for job_id in ['test-job-1', 'second']:
+        store.accept({**payload, 'id': job_id})
+    calls, delays = [], []
+    original_sleep = asyncio.sleep
+    async def backoff(delay):
+        if delay:
+            delays.append(delay)
+        await original_sleep(0)
+    monkeypatch.setattr(asyncio, 'sleep', backoff)
+    name = 'next' if operation == 'next' else 'finish'
+    original = getattr(service.JobStore, name)
+    attempts = 0
+    def flaky(self, *args):
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            if operation == 'committed-finish':
+                original(self, *args)
+            raise storage_error(sqlite3.SQLITE_BUSY)
+        return original(self, *args)
+    monkeypatch.setattr(service.JobStore, name, flaky)
+    async def generate(request):
+        calls.append(request['id'])
+        return {'en/index.html': request['id']}
+    async def scenario():
+        application = service.create_app(db_path=db, key='shared-test-key', build=generate)
+        async with application.router.lifespan_context(application):
+            await settle(lambda: store.get('second')['state'] == 'succeeded')
+            assert store.get('test-job-1') == {'state': 'succeeded', 'files': {'en/index.html': 'test-job-1'}}
+    asyncio.run(scenario())
+    assert calls == ['test-job-1', 'second']
+    assert len(delays) == 1 and delays[0] > 0
+
+
+@pytest.mark.parametrize('operation,code', [('next', sqlite3.SQLITE_IOERR), ('next', sqlite3.SQLITE_BUSY), ('finish', sqlite3.SQLITE_READONLY)])
+def test_consumer_failure_is_visible_and_never_resubmits(tmp_path, payload, monkeypatch, caplog, operation, code):
+    _, service = modules()
+    db = tmp_path / 'failed.sqlite'
+    store = service.JobStore(db)
+    for job_id in ['test-job-1', 'second', 'completed']:
+        store.accept({**payload, 'id': job_id})
+    with sqlite3.connect(db) as connection:
+        connection.execute("UPDATE jobs SET state='succeeded',files=? WHERE id='completed'", ('{"en/index.html":"saved"}',))
+    calls, delays = [], []
+    original_sleep = asyncio.sleep
+    async def backoff(delay):
+        if delay:
+            delays.append(delay)
+        await original_sleep(0)
+    monkeypatch.setattr(asyncio, 'sleep', backoff)
+    original = getattr(service.JobStore, operation)
+    attempts = 0
+    def broken(self, *args):
+        nonlocal attempts
+        attempts += 1
+        raise storage_error(code)
+    monkeypatch.setattr(service.JobStore, operation, broken)
+    async def generate(request):
+        calls.append(request['id'])
+        return {'en/index.html': 'result'}
+    async def scenario():
+        application = service.create_app(db_path=db, key='shared-test-key', build=generate)
+        context = application.router.lifespan_context(application)
+        await context.__aenter__()
+        try:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=application), base_url='http://local.test',
+                    headers={'Authorization': 'Bearer shared-test-key'}) as client:
+                response = None
+                for _ in range(30):
+                    response = await client.get('/v1/builds/second')
+                    if response.status_code == 503:
+                        break
+                    await asyncio.sleep(0)
+                assert response is not None and response.status_code == 503
+                assert 'private-storage' not in response.text
+                assert (await client.get('/v1/builds/completed')).json()['state'] == 'succeeded'
+                assert (await client.post('/v1/builds', json={**payload, 'id': 'new'})).status_code == 503
+                assert store.get('new') is None
+        finally:
+            # The original bug raises only at shutdown; do not let it mask the HTTP assertion.
+            with suppress(sqlite3.Error):
+                await context.__aexit__(None, None, None)
+    asyncio.run(scenario())
+    assert attempts <= 3
+    assert all(delay > 0 for delay in delays)
+    assert len(delays) == (2 if code == sqlite3.SQLITE_BUSY else 0)
+    assert calls == (['test-job-1'] if operation == 'finish' else [])
+    assert 'consumer stopped' in caplog.text.lower()
+    assert 'private-storage' not in caplog.text
+    monkeypatch.setattr(service.JobStore, operation, original)
+    with TestClient(service.create_app(db_path=db, key='shared-test-key', build=generate)) as client:
+        assert wait_result(client, 'second')['state'] == 'succeeded'
+        if operation == 'finish':
+            assert wait_result(client)['state'] == 'failed'
+            assert calls.count('test-job-1') == 1
+
+
+@pytest.mark.parametrize('storage_failure', [False, True])
+def test_consumer_shutdown_cancels_once_and_restart_does_not_rebuild(tmp_path, payload, monkeypatch, storage_failure):
+    _, service = modules()
+    db = tmp_path / 'shutdown.sqlite'
+    store = service.JobStore(db)
+    store.accept(payload)
+    calls = []
+    async def blocked(request):
+        calls.append(request['id'])
+        await asyncio.Event().wait()
+        return {'en/index.html': 'unreachable'}
+    original = service.JobStore.finish
+    if storage_failure:
+        def broken(*args):
+            raise storage_error(sqlite3.SQLITE_IOERR)
+        monkeypatch.setattr(service.JobStore, 'finish', broken)
+    async def scenario():
+        application = service.create_app(db_path=db, key='shared-test-key', build=blocked)
+        async with application.router.lifespan_context(application):
+            await settle(lambda: bool(calls))
+    asyncio.run(scenario())
+    monkeypatch.setattr(service.JobStore, 'finish', original)
+    with TestClient(service.create_app(db_path=db, key='shared-test-key', build=blocked)) as client:
+        assert wait_result(client)['state'] == 'failed'
+    assert calls == ['test-job-1']
+
+
+def test_consumer_failure_during_streaming_body_does_not_admit_new_job(tmp_path, payload, monkeypatch):
+    _, service = modules()
+    db = tmp_path / 'streaming.sqlite'
+    store = service.JobStore(db)
+    original = service.JobStore.next
+    failed = False
+    def broken(self):
+        nonlocal failed
+        if store.get('wake-consumer'):
+            failed = True
+            raise storage_error(sqlite3.SQLITE_IOERR)
+        return original(self)
+    monkeypatch.setattr(service.JobStore, 'next', broken)
+    async def generate(request):
+        pytest.fail('No model request is allowed')
+    async def scenario():
+        application = service.create_app(db_path=db, key='shared-test-key', build=generate)
+        async with application.router.lifespan_context(application):
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=application), base_url='http://local.test',
+                    headers={'Authorization': 'Bearer shared-test-key'}) as client:
+                body = json.dumps({**payload, 'id': 'not-admitted'}).encode()
+                async def stream():
+                    yield body[:20]
+                    assert (await client.post('/v1/builds', json={**payload, 'id': 'wake-consumer'})).status_code == 202
+                    await settle(lambda: failed)
+                    yield body[20:]
+                assert (await client.post('/v1/builds', content=stream())).status_code == 503
+                assert store.get('not-admitted') is None
+    asyncio.run(scenario())
 
 
 def test_rejects_binding_into_css_or_nonleaf_nodes(draft, pages):

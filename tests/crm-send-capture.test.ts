@@ -23,7 +23,7 @@ beforeEach(async () => {
   sqlite.prepare('UPDATE edm_providers SET api_key=?,config=?').run(await seal('test-password', 'provider', env), await seal(JSON.stringify({ host: 'smtp-gateway.example.com', port: 443, username: 'test' }), 'provider:config', env));
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
-afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); sqlite.close(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); sqlite.close(); });
 
 const queued = () => ({
   body: { recipientId: 'recipient', campaignId: 'campaign', providerId: 'provider', toEmail: 'customer@example.com', toName: 'Customer', fromEmail: 'sales@example.com', fromName: 'Sender', replyTo: null, subject: 'Hello {{name}}', bodyHtml: '<p>Hello {{name}}</p>', bodyText: 'Hello {{name}}', variables: { name: 'Customer' } } satisfies EmailSendMessage,
@@ -171,6 +171,91 @@ test.each(['amazon_ses', 'sendgrid', 'mailgun', 'brevo', 'resend'])('%s snapshot
   await handleEmailQueue({ messages: [queued()] }, env);
   expect(request).toHaveBeenCalledTimes(1);
   expect(snapshots()[0]).toMatchObject({ status: 'sent', provider_message_id: 'provider-receipt' });
+});
+
+// Independent WebCrypto oracle for the complete SES HTTP request, without using
+// the sender's Node crypto implementation or any production signing helper.
+async function expectedSesAuthorization(body: string, region: string, host: string, sessionToken?: string) {
+  const encode = (value: string) => new TextEncoder().encode(value);
+  const hex = (value: ArrayBuffer) => [...new Uint8Array(value)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+  const hash = async (value: string) => hex(await crypto.subtle.digest('SHA-256', encode(value)));
+  const hmac = async (key: BufferSource, value: string) => crypto.subtle.sign('HMAC',
+    await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']), encode(value));
+  const signedHeaders = 'content-type;host;x-amz-date' + (sessionToken ? ';x-amz-security-token' : '');
+  const canonical = ['POST', '/v2/email/outbound-emails', '',
+    `content-type:application/json\nhost:${host}\nx-amz-date:20261024T040506Z\n${sessionToken ? `x-amz-security-token:${sessionToken}\n` : ''}`,
+    signedHeaders, await hash(body)].join('\n');
+  const scope = `20261024/${region}/ses/aws4_request`;
+  let key = await hmac(encode('AWS4ses-secret'), '20261024');
+  for (const part of [region, 'ses', 'aws4_request']) key = await hmac(key, part);
+  const signature = hex(await hmac(key, `AWS4-HMAC-SHA256\n20261024T040506Z\n${scope}\n${await hash(canonical)}`));
+  return `AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+}
+
+test.each([
+  { name: 'provider form credentials', apiKey: 'ses-secret', config: { accessKeyId: 'AKIDEXAMPLE', region: 'eu-west-1' }, region: 'eu-west-1', host: 'email.eu-west-1.amazonaws.com' },
+  { name: 'legacy credentials', apiKey: 'AKIDEXAMPLE', config: { secretKey: 'ses-secret', region: 'ap-southeast-2' }, region: 'ap-southeast-2', host: 'email.ap-southeast-2.amazonaws.com' },
+  { name: 'default region', apiKey: 'ses-secret', config: { accessKeyId: 'AKIDEXAMPLE' }, region: 'us-east-1', host: 'email.us-east-1.amazonaws.com' },
+  { name: 'temporary session credentials', apiKey: 'ses-secret', config: { accessKeyId: 'AKIDEXAMPLE', region: 'us-east-2', sessionToken: 'session+/=token' }, region: 'us-east-2', host: 'email.us-east-2.amazonaws.com' },
+])('SES signs the exact personalized HTTP payload using $name', async ({ apiKey, config, region, host }) => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-24T04:05:06Z'));
+  sqlite.prepare("UPDATE edm_providers SET provider='amazon_ses',api_key=?,config=?").run(
+    await seal(apiKey, 'provider', env), await seal(JSON.stringify(config), 'provider:config', env));
+  const request = vi.fn(async (_url: string, _init: RequestInit) => Response.json({ MessageId: 'ses-accepted-once' }));
+  vi.stubGlobal('fetch', request);
+  const message = queued();
+  message.body.subject = '你好 {{name}}';
+  await handleEmailQueue({ messages: [message] }, env);
+  expect(request).toHaveBeenCalledTimes(1);
+  const [url, init] = request.mock.calls[0];
+  const headers = new Headers(init.headers);
+  expect(url).toBe(`https://${host}/v2/email/outbound-emails`);
+  expect(init.method).toBe('POST');
+  expect(headers.get('content-type')).toBe('application/json');
+  expect(headers.get('host')).toBe(host);
+  expect(headers.get('x-amz-date')).toBe('20261024T040506Z');
+  expect(headers.get('x-amz-security-token')).toBe(config.sessionToken || null);
+  expect(headers.get('authorization')).toBe(await expectedSesAuthorization(String(init.body), region, host, config.sessionToken));
+  const payload = JSON.parse(String(init.body));
+  expect(payload.Content.Simple.Subject.Data).toBe('你好 Customer');
+  expect(snapshots()[0]).toMatchObject({ status: 'sent', provider_message_id: 'ses-accepted-once',
+    subject: payload.Content.Simple.Subject.Data, body_html: payload.Content.Simple.Body.Html.Data, body_text: payload.Content.Simple.Body.Text.Data });
+  expect(message.ack).toHaveBeenCalledOnce();
+  await handleEmailQueue({ messages: [message] }, env);
+  expect(request).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  { name: 'missing access key', apiKey: 'ses-secret', config: { accessKeyId: '' } },
+  { name: 'missing secret key', apiKey: '', config: { accessKeyId: 'AKIDEXAMPLE' } },
+  { name: 'invalid region', apiKey: 'AKIDEXAMPLE', config: { secretKey: 'ses-secret', region: 'us-east-1.example.test' } },
+  { name: 'unsupported China region', apiKey: 'AKIDEXAMPLE', config: { secretKey: 'ses-secret', region: 'cn-north-1' } },
+])('SES rejects $name before capture and leaves the send retryable', async ({ apiKey, config }) => {
+  sqlite.prepare("UPDATE edm_providers SET provider='amazon_ses',api_key=?,config=?").run(
+    await seal(apiKey, 'provider', env), await seal(JSON.stringify(config), 'provider:config', env));
+  const request = vi.fn(async () => Response.json({ MessageId: 'must-not-send' }));
+  vi.stubGlobal('fetch', request);
+  const message = queued();
+  await handleEmailQueue({ messages: [message] }, env);
+  expect(request).not.toHaveBeenCalled();
+  expect(snapshots()).toEqual([]);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()?.n).toBe(0);
+  expect(message.retry).toHaveBeenCalledWith({ delaySeconds: 60 });
+});
+
+test('SES request interruption keeps the durable attempt and cannot send again automatically', async () => {
+  sqlite.prepare("UPDATE edm_providers SET provider='amazon_ses',api_key=?,config=?").run(
+    await seal('ses-secret', 'provider', env), await seal(JSON.stringify({ accessKeyId: 'AKIDEXAMPLE' }), 'provider:config', env));
+  const request = vi.fn(async () => { throw new Error('SES connection interrupted'); });
+  vi.stubGlobal('fetch', request);
+  const message = queued();
+  await handleEmailQueue({ messages: [message] }, env);
+  expect(snapshots()[0]).toMatchObject({ status: 'uncertain', error_message: 'SES connection interrupted' });
+  sqlite.exec('UPDATE edm_email_send_attempts SET started_at=0');
+  await handleEmailQueue({ messages: [message] }, env);
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(sqlite.prepare('SELECT status,error_message FROM edm_campaign_recipients').get()).toMatchObject({ status: 'failed', error_message: expect.stringContaining('待核实') });
 });
 
 test('an explicit rate rejection remains a separate failed attempt before a safe successful retry', async () => {
