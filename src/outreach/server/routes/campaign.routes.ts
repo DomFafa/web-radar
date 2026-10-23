@@ -772,7 +772,9 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   // Commit the campaign claim and all frozen per-recipient envelopes atomically.
   // This single INSERT SELECT supports 20k recipients without materializing 20k HTML copies.
   const now = Math.floor(Date.now() / 1000);
-  const results = await c.env.DB.batch([
+  let results: D1Result[];
+  try {
+    results = await c.env.DB.batch([
     c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',started_at=COALESCE(started_at,?),updated_at=?
       WHERE id=? AND status!='sending'`).bind(now, now, campaignId),
     c.env.DB.prepare(`INSERT INTO edm_email_outbox
@@ -787,7 +789,17 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
       .bind(snapshotKey, selectedProvider.id, senderEmail, senderName, replyTo, selectedProvider.provider === 'resend' ? 'resend' : null, now, campaignId),
     c.env.DB.prepare(`UPDATE edm_campaign_recipients SET status='sending'
       WHERE campaign_id=? AND status IN ('queued','sending')`).bind(campaignId),
-  ]);
+    ]);
+  } catch (error) {
+    await c.env.STORAGE.delete(snapshotKey).catch(() => {});
+    const claimedByAnother = await c.env.DB.prepare(`SELECT 1 FROM edm_email_outbox o
+      JOIN edm_campaigns c ON c.id=o.campaign_id
+      JOIN edm_campaign_recipients r ON r.id=o.recipient_id
+      WHERE o.campaign_id=? AND c.status='sending' AND r.status IN ('queued','sending') LIMIT 1`)
+      .bind(campaignId).first().catch(() => null);
+    if (claimedByAnother) return c.json({ success: false, error: '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
+    throw error;
+  }
   if (!results[0].meta.changes) {
     await c.env.STORAGE.delete(snapshotKey).catch(() => {});
     return c.json({ success: false, error: '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);

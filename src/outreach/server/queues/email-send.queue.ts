@@ -806,7 +806,7 @@ export async function handleEmailQueue(
       const batchProvider = configuredProviders.find((provider) => provider.id === firstMessage.providerId) || selected.provider;
       if (batchProvider?.provider === "mailchimp" && getMailchimpApiType(batchProvider.apiKey, batchProvider.config) === "marketing") {
         if (campaignOwner.status === "paused") {
-          for (const message of batch.messages) message.retry({ delaySeconds: 300 });
+          for (const message of batch.messages) await deferEmail(env, message, 300000);
           return;
         }
         if (batch.recovery) {

@@ -180,6 +180,37 @@ test('paused campaign resumes its frozen outbox without creating a new send oper
  expect(stats().status).toBe('paused');
 });
 
+test('simultaneous campaign starts keep one immutable outbox and clean up the losing snapshot',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+   VALUES ('t','u','Template','Original','<p>Original</p>',0,0);
+   UPDATE edm_campaigns SET status='draft',template_id='t',sender_email='re@acfilter.net';`);
+ vi.stubGlobal('fetch',vi.fn(async(url:any)=>String(url).includes('/webhooks')
+   ? Response.json(String(url).includes('?')?{data:[]}:{id:'hook',signing_secret:secret})
+   : Response.json({data:[{id:'domain',name:'acfilter.net',status:'verified',open_tracking:true,click_tracking:true}]})));
+ const sendBatch=vi.fn(async()=>undefined);env.EMAIL_QUEUE={sendBatch};
+ const put=env.STORAGE.put;
+ let arrived=0;
+ let release!:()=>void;
+ const barrier=new Promise<void>(resolve=>{release=resolve});
+ env.STORAGE.put=vi.fn(async(...args:any[])=>{
+   await put(...args);
+   if(++arrived===2)release();
+   await barrier;
+ });
+ const deleted=vi.spyOn(env.STORAGE,'delete');
+ const responses=await Promise.all([
+   h.request('/campaigns/c/send',{method:'POST'},env),
+   h.request('/campaigns/c/send',{method:'POST'},env),
+ ]);
+ expect(responses.map(r=>r.status).sort()).toEqual([200,409]);
+ expect(sendBatch).toHaveBeenCalledTimes(1);
+ expect(deleted).toHaveBeenCalledTimes(1);
+ expect(sqlite.prepare('SELECT COUNT(*) n FROM edm_email_outbox').get()!.n).toBe(1);
+ expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('sending');
+});
+
 test('rate rejection honors Retry-After using delayed publication; daily quota pauses',async()=>{
  const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:null,subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:null,variables:{}},ack:vi.fn(),retry:vi.fn()};
  const send=vi.fn();env.EMAIL_QUEUE={send};
