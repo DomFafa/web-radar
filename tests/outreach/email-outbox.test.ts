@@ -86,3 +86,28 @@ test('missing frozen content quarantines the recipient without calling its provi
   expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('needs_review');
   vi.unstubAllGlobals();
 });
+
+test('malformed immutable snapshot retries on primary queue and is quarantined on DLQ', async () => {
+  seed(1, '<p>Frozen</p>');
+  const key = 'outreach/email-snapshots/c/frozen.json';
+  objects.set(key, '{malformed');
+  const message = { body: { kind: 'email-job', campaignId: 'c', recipientId: 'r0' }, ack: vi.fn(), retry: vi.fn() };
+  const providerSend = vi.fn();
+  vi.stubGlobal('fetch', providerSend);
+
+  await handleEmailQueue({ messages: [message] } as any, env);
+  expect(message.retry).toHaveBeenCalledWith({ delaySeconds: 60 });
+  expect(message.ack).not.toHaveBeenCalled();
+  expect(sqlite.prepare("SELECT status FROM edm_campaign_recipients WHERE id='r0'").get()!.status).toBe('sending');
+
+  message.retry.mockClear();
+  await handleEmailQueue({ messages: [message], recovery: true } as any, env);
+  expect(message.ack).toHaveBeenCalledOnce();
+  expect(message.retry).not.toHaveBeenCalled();
+  expect(providerSend).not.toHaveBeenCalled();
+  expect(sqlite.prepare("SELECT status,error_message FROM edm_campaign_recipients WHERE id='r0'").get()).toMatchObject({
+    status: 'failed', error_message: expect.stringContaining('待核实'),
+  });
+  expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('needs_review');
+  vi.unstubAllGlobals();
+});

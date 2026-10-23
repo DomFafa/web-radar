@@ -694,7 +694,27 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   const prior = await c.env.DB.prepare(`SELECT 1 FROM edm_email_outbox o
     JOIN edm_campaign_recipients r ON r.id=o.recipient_id
     WHERE r.campaign_id=? AND r.status IN ('queued','sending') LIMIT 1`).bind(campaignId).first();
-  if (prior) return c.json({ success: false, error: '已有收件人处于发送或待核实状态，请先检查发送记录，勿重复提交' }, 409);
+  if (prior) {
+    if (campaign.status !== 'paused') return c.json({ success: false, error: '已有收件人处于发送或待核实状态，请先检查发送记录，勿重复提交' }, 409);
+    if (!c.env.STORAGE || !c.env.EMAIL_QUEUE) return c.json({ success: false, error: '邮件持久化存储或发送队列未配置' }, 503);
+    const unmatched = await c.env.DB.prepare(`SELECT 1 FROM edm_campaign_recipients r
+      WHERE r.campaign_id=? AND r.status IN ('queued','sending')
+        AND NOT EXISTS (SELECT 1 FROM edm_email_outbox o WHERE o.recipient_id=r.id) LIMIT 1`)
+      .bind(campaignId).first();
+    if (unmatched) return c.json({ success: false, error: '暂停期间新增了未冻结的收件人，请核对任务后再发送' }, 409);
+    // Resume the original frozen operation. Its published references are already
+    // deferred by the consumer; cron can publish any remaining references.
+    const resumed = await c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',updated_at=?
+      WHERE id=? AND status='paused'`).bind(Math.floor(Date.now() / 1000), campaignId).run();
+    if (!resumed.meta.changes) return c.json({ success: false, error: '活动状态已变化，请刷新发送进度' }, 409);
+    let publicationPending = false;
+    try {
+      await publishEmailOutbox(c.env, 10, campaignId);
+      publicationPending = !!await c.env.DB.prepare('SELECT 1 FROM edm_email_outbox WHERE campaign_id=? AND published_at IS NULL LIMIT 1')
+        .bind(campaignId).first();
+    } catch { publicationPending = true; }
+    return c.json({ success: true, data: { campaignId, status: 'sending', recipientsQueued: recipientCount.count, publicationPending } });
+  }
 
   // 获取模板
   const [template] = await db

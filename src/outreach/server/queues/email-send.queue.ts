@@ -775,7 +775,19 @@ export async function handleEmailQueue(
         queueBody: item.body } as QueueMessage<EmailSendMessage>);
     } catch (error) {
       console.error('Email outbox hydration error:', error instanceof Error ? error.name : 'unknown');
-      item.retry({ delaySeconds: 60 });
+      if (!incoming.recovery) {
+        item.retry({ delaySeconds: 60 });
+        continue;
+      }
+      // The DLQ has no further dead-letter queue. Persist a reviewable state
+      // before acknowledging an unreadable frozen email; never send a replacement.
+      const affected = await db.update(campaignRecipients)
+        .set({ status: 'failed', errorMessage: '待核实：邮件快照读取失败，已阻止发送' })
+        .where(and(eq(campaignRecipients.id, item.body.recipientId), inArray(campaignRecipients.status, ['queued', 'sending'])))
+        .returning({ id: campaignRecipients.id });
+      if (affected.length) await db.update(campaigns).set({ status: 'needs_review', updatedAt: new Date() })
+        .where(eq(campaigns.id, item.body.campaignId));
+      item.ack();
     }
   }
   if (!hydrated.length) return;

@@ -154,6 +154,32 @@ test('campaign submission selects the verified Resend account and blocks removed
  response=await h.request('/campaigns/c2/send',{method:'POST'},env);expect(response.status).toBe(400);expect(sendBatch).not.toHaveBeenCalled();
 });
 
+test('paused campaign resumes its frozen outbox without creating a new send operation',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+   VALUES ('t','u','Template','Changed after pause','<p>Changed</p>',0,0);
+   UPDATE edm_campaigns SET status='paused',template_id='t';
+   INSERT INTO edm_email_outbox(recipient_id,campaign_id,snapshot_key,provider_id,to_email,from_email,from_name,variables,created_at)
+   VALUES ('r','c','original-frozen-key','p','original@example.com','sales@example.com','Test','{}',0);`);
+ const sendBatch=vi.fn(async()=>undefined);
+ env.EMAIL_QUEUE={sendBatch};
+ const put=vi.spyOn(env.STORAGE,'put');
+ const response=await h.request('/campaigns/c/send',{method:'POST'},env);
+ expect(response.status).toBe(200);
+ expect((await response.json() as any).data.status).toBe('sending');
+ expect(stats().status).toBe('sending');
+ expect(sendBatch).toHaveBeenCalledWith([{body:{kind:'email-job',campaignId:'c',recipientId:'r'}}]);
+ expect(put).not.toHaveBeenCalled();
+ expect(sqlite.prepare("SELECT snapshot_key,to_email FROM edm_email_outbox WHERE recipient_id='r'").get()).toMatchObject({snapshot_key:'original-frozen-key',to_email:'original@example.com'});
+ expect((await h.request('/campaigns/c/send',{method:'POST'},env)).status).toBe(409);
+
+ sqlite.exec(`UPDATE edm_campaigns SET status='paused';
+   INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,created_at) VALUES ('r2','c','contact','queued',0);`);
+ expect((await h.request('/campaigns/c/send',{method:'POST'},env)).status).toBe(409);
+ expect(stats().status).toBe('paused');
+});
+
 test('rate rejection honors Retry-After using delayed publication; daily quota pauses',async()=>{
  const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:null,subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:null,variables:{}},ack:vi.fn(),retry:vi.fn()};
  const send=vi.fn();env.EMAIL_QUEUE={send};
