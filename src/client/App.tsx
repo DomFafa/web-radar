@@ -48,6 +48,13 @@ function ChunkFallback() {
 type Config = { testMode: boolean; services: ServiceStatus[]; parentOrigins?: string[] };
 const embedded = window.location.pathname === '/embed/product-radar';
 const embedOrigin = parentOrigin(new URLSearchParams(window.location.search).get('parentOrigin'));
+// Inline test/preview servers can omit Vite's production build metadata.
+const builtAt = typeof __BUILD_TIME__ === 'string' ? __BUILD_TIME__ : '';
+const updatedBy = typeof __BUILD_UPDATED_BY__ === 'string' ? __BUILD_UPDATED_BY__ : '';
+const buildTimeLabel = builtAt ? new Date(builtAt).toLocaleString('zh-CN', {
+  timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+}) : '';
 
 
 export default function App() {
@@ -370,6 +377,11 @@ export default function App() {
             </nav>
             <div className="sidebar-bottom">
               <span className="muted">Web Radar · {websitesVisible ? '网站管理' : '客户沟通'}</span>
+              {builtAt && updatedBy && <>
+                <span className="muted">最近更新</span>
+                <time dateTime={builtAt} title="当前版本构建时间（北京时间）">{buildTimeLabel}</time>
+                <span className="muted" title="当前版本最近一次源码提交的作者">更新人：{updatedBy}</span>
+              </>}
             </div>
           </aside>
           <main className="workspace-main">
