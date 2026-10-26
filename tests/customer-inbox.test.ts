@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { d1 } from './outreach/sqlite';
 import inbox from '../src/worker/inbox/api';
-import { trackedAddress, digest, sign, plain, ingest } from '../src/worker/inbox/core';
+import { trackedAddress, digest, sign, plain, ingest, INBOX_RESOLVE_PURPOSE } from '../src/worker/inbox/core';
 vi.mock('../src/worker/auth', () => ({
   authenticate: async (req: Request) => {
     const name = req.headers.get('X-Test-User') || 'admin';
@@ -41,22 +41,21 @@ async function req(path: string, method = 'GET', body?: unknown, user = 'admin')
     env,
   );
 }
-async function receive(text: string, to: string, signature = true) {
+async function receive(text: string, to: string, signature = true, forwardTo = 'sales@work.example', forward = 'forwarded') {
   const raw = new TextEncoder().encode(text).buffer,
     time = String(Date.now()),
-    from = 'customer@client.example',
-    forward = 'forwarded';
+    from = 'customer@client.example';
   const headers = {
     'Content-Type': 'message/rfc822',
     'X-Inbox-To': to,
     'X-Inbox-From': from,
     'X-Inbox-Forward': forward,
-    'X-Inbox-Forward-To': 'sales@work.example',
+    'X-Inbox-Forward-To': forwardTo,
     'X-Inbox-Time': time,
     'X-Inbox-Signature': signature
       ? await sign(
           cfg.secret,
-          [cfg.id, time, to, from, forward, 'sales@work.example', await digest(raw)].join('\n'),
+          [cfg.id, time, to, from, forward, forwardTo, await digest(raw)].join('\n'),
         )
       : 'bad',
   };
@@ -65,6 +64,13 @@ async function receive(text: string, to: string, signature = true) {
     { method: 'POST', headers, body: raw },
     env,
   );
+}
+async function resolveRoute(to: string, options: { id?: string; secret?: string; time?: string; purpose?: string; signedTo?: string } = {}) {
+  const id = options.id || cfg.id, time = options.time || String(Date.now());
+  return inbox.request('https://app.example/resolve/' + id, { method: 'POST', headers: {
+    'X-Inbox-To': to, 'X-Inbox-Time': time,
+    'X-Inbox-Signature': await sign(options.secret || cfg.secret, [options.purpose || INBOX_RESOLVE_PURPOSE, id, time, options.signedTo || to].join('\n')),
+  } }, env);
 }
 const email = (id: string, extra = '', body = 'Please provide a quotation') =>
   `From: Customer <customer@client.example>\r\nTo: Sales <sales@reply.example.com>\r\nSubject: Re: Product enquiry\r\nMessage-ID: <${id}@client.example>\r\n${extra}Content-Type: text/plain; charset=utf-8\r\n\r\n${body}`;
@@ -143,7 +149,7 @@ describe('customer inbox', () => {
     await enable();
     const a = await trackedAddress(db, 'edm', 'recipient', 'original body', 'subject'),
       b = await trackedAddress(db, 'site', 'target', 'original form', 'subject');
-    expect(a).toMatch(new RegExp('^reply\\+e-' + cfg.id.replaceAll('-', '').slice(0, 12) + '-[a-f0-9]{32}@reply\\.example\\.com$'));
+    expect(a).toMatch(new RegExp('^reply\\+e2-' + cfg.id.replaceAll('-', '').slice(0, 12) + '-[a-f0-9]{32}@reply\\.example\\.com$'));
     expect(b).toMatch(/^reply\+s-[a-f0-9]{12}-[a-f0-9]{32}@reply\.example\.com$/);
     expect(await trackedAddress(db, 'edm', 'recipient', 'edited body', 'changed')).toBe(a);
     expect(
@@ -339,11 +345,89 @@ describe('customer inbox', () => {
       db.sqlite.prepare('SELECT status FROM wr_inbox_threads WHERE id=?').get(t.id).status,
     ).toBe('pending');
   });
-  it('legacy and opted-out records remain untracked', async () => {
+  it('legacy and opted-out records remain untracked, including previously allocated aliases', async () => {
     await enable();
+    await trackedAddress(db, 'edm', 'recipient', 'body', 'subject');
     db.sqlite.exec('UPDATE edm_campaigns SET reply_tracking=0');
     expect(await trackedAddress(db, 'edm', 'recipient', 'body', 'subject')).toBeNull();
-    const r: any = await (await req('/report?source=edm')).json();
-    expect(r.reports[0].tracked).toBe(0);
+  });
+  it('custom and empty reply destinations are tracked with immutable per-route forwarding snapshots', async () => {
+    await enable();
+    db.sqlite.exec("UPDATE edm_campaigns SET reply_to='codeisworld@gmail.com'");
+    const address = (await trackedAddress(db, 'edm', 'recipient', 'body', 'subject'))!;
+    expect(address).toContain('@reply.example.com');
+    expect(db.sqlite.prepare('SELECT forward_to FROM wr_inbox_routes WHERE address=?').get(address).forward_to).toBe('codeisworld@gmail.com');
+    expect(await (await resolveRoute(address)).json()).toEqual({ id: cfg.id, recipient: address, forwardTo: 'codeisworld@gmail.com' });
+    db.sqlite.exec("UPDATE edm_campaigns SET reply_to='changed@example.net'");
+    expect(await trackedAddress(db, 'edm', 'recipient', 'changed body', 'changed subject')).toBe(address);
+    expect((await (await resolveRoute(address)).json() as any).forwardTo).toBe('codeisworld@gmail.com');
+    const site = (await trackedAddress(db, 'site', 'target', 'form', 'subject'))!;
+    expect((await (await resolveRoute(site)).json() as any).forwardTo).toBe('sales@work.example');
+    db.sqlite.exec('DELETE FROM wr_inbox_routes; UPDATE edm_campaigns SET reply_to=NULL');
+    const empty = (await trackedAddress(db, 'edm', 'recipient', 'body', 'subject'))!;
+    expect((await (await resolveRoute(empty)).json() as any).forwardTo).toBe('sales@work.example');
+  });
+  it('allocates routes from confirmed outbox destinations instead of later campaign edits', async () => {
+    await enable();
+    db.sqlite.exec("UPDATE edm_campaigns SET reply_to='later-edit@example.net'");
+    const frozen = (await trackedAddress(db, 'edm', 'recipient', 'confirmed body', 'confirmed subject', 'confirmed@example.net'))!;
+    expect((await (await resolveRoute(frozen)).json() as any).forwardTo).toBe('confirmed@example.net');
+    db.sqlite.exec('DELETE FROM wr_inbox_routes');
+    const empty = (await trackedAddress(db, 'edm', 'recipient', 'confirmed body', 'confirmed subject', null))!;
+    expect((await (await resolveRoute(empty)).json() as any).forwardTo).toBe('sales@work.example');
+    db.sqlite.exec('UPDATE wr_inbox_configs SET enabled=0');
+    expect(await trackedAddress(db, 'edm', 'recipient', 'body', 'subject', null)).toBeNull();
+    // Stopping future tracking never prevents replies to a previously sent alias.
+    expect((await (await resolveRoute(empty)).json() as any).forwardTo).toBe('sales@work.example');
+  });
+  it('never reuses a conflicting route owned by another workspace', async () => {
+    await enable();
+    db.sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,created_at) VALUES('foreign-config','other','other.example.com','other@work.example','not-used','2026-10-09')");
+    db.sqlite.exec("INSERT INTO wr_inbox_routes(id,config_id,workspace_id,source,business_id,target_id,address,created_at) VALUES('foreign-route','foreign-config','other','edm','foreign-campaign','recipient','reply+e-foreign@other.example.com','2026-10-09')");
+    expect(await trackedAddress(db, 'edm', 'recipient', 'body', 'subject')).toBeNull();
+  });
+  it('route resolution is purpose-bound, time-limited and exact to receiving configuration and address', async () => {
+    await enable();
+    const address = (await trackedAddress(db, 'edm', 'recipient', 'body', 'subject'))!;
+    expect((await resolveRoute(address, { secret: 'wrong' })).status).toBe(401);
+    expect((await resolveRoute(address, { purpose: 'receive' })).status).toBe(401);
+    expect((await resolveRoute(address, { time: String(Date.now() - 600000) })).status).toBe(401);
+    expect((await resolveRoute(address, { signedTo: 'different@reply.example.com' })).status).toBe(401);
+    expect((await resolveRoute('unknown@reply.example.com')).status).toBe(404);
+    expect((await resolveRoute(address.replace('@reply.example.com', '@other.example.com'))).status).toBe(401);
+    const other: any = await (await req('/configs', 'POST', { domain: 'other.example.com', forwardTo: 'other@work.example', trackEdm: true, trackSites: true, teamBody: false })).json();
+    db.sqlite.prepare('UPDATE wr_inbox_configs SET workspace_id=? WHERE id=?').run('other', other.id);
+    expect((await resolveRoute(address, { id: other.id, secret: other.secret })).status).toBe(401);
+    db.sqlite.prepare('UPDATE wr_inbox_routes SET config_id=? WHERE address=?').run(other.id, address);
+    expect((await resolveRoute(address)).status).toBe(404);
+  });
+  it('legacy routes resolve through their configuration and reject receiving-domain loops', async () => {
+    await enable();
+    const address = (await trackedAddress(db, 'edm', 'recipient', 'body', 'subject'))!;
+    db.sqlite.prepare('UPDATE wr_inbox_routes SET forward_to=NULL WHERE address=?').run(address);
+    expect((await (await resolveRoute(address)).json() as any).forwardTo).toBe('sales@work.example');
+    db.sqlite.prepare('UPDATE wr_inbox_routes SET forward_to=? WHERE address=?').run('loop@reply.example.com', address);
+    expect((await resolveRoute(address)).status).toBe(409);
+    db.sqlite.exec("DELETE FROM wr_inbox_routes; UPDATE edm_campaigns SET reply_to='loop@reply.example.com'");
+    await expect(trackedAddress(db, 'edm', 'recipient', 'body', 'subject')).rejects.toThrow('循环');
+  });
+  it('receiving forwarding failures retains the message without claiming a destination or verification', async () => {
+    await enable();
+    const address = (await trackedAddress(db, 'edm', 'recipient', 'body', 'subject'))!;
+    expect((await receive(email('unresolved'), address, true, '', 'failed')).status).toBe(200);
+    expect(db.sqlite.prepare("SELECT forward_to,forward_status FROM wr_inbox_messages WHERE message_id='<unresolved@client.example>'").get()).toMatchObject({ forward_to: '', forward_status: 'failed' });
+    expect((await receive(email('bad-empty'), address, true, '', 'forwarded')).status).toBe(401);
+    expect((await receive(email('bad-disabled'), address, true, '', 'disabled')).status).toBe(401);
+    expect((await receive(email('custom-destination'), address, true, 'codeisworld@gmail.com')).status).toBe(200);
+    expect(db.sqlite.prepare("SELECT forward_to,forward_status FROM wr_inbox_messages WHERE message_id='<custom-destination@client.example>'").get()).toMatchObject({ forward_to: 'codeisworld@gmail.com', forward_status: 'forwarded' });
+  });
+  it('all authenticated members see only active verified reply defaults', async () => {
+    expect((await (await req('/configs', 'GET', undefined, 'owner')).json() as any).replyDefaults).toEqual({ trackingAvailable: false, forwardTo: null });
+    await enable();
+    expect((await (await req('/configs', 'GET', undefined, 'owner')).json() as any).replyDefaults).toEqual({ trackingAvailable: true, forwardTo: 'sales@work.example' });
+    db.sqlite.exec('UPDATE wr_inbox_configs SET track_edm=0');
+    expect((await (await req('/configs', 'GET', undefined, 'owner')).json() as any).replyDefaults).toEqual({ trackingAvailable: false, forwardTo: 'sales@work.example' });
+    db.sqlite.exec('UPDATE wr_inbox_configs SET enabled=0');
+    expect((await (await req('/configs', 'GET', undefined, 'owner')).json() as any).replyDefaults).toEqual({ trackingAvailable: false, forwardTo: null });
   });
 });

@@ -9,7 +9,7 @@ vi.mock('../../src/outreach/server/lib/network', () => ({
 }));
 import { handleEmailQueue, type EmailSendMessage } from '../../src/outreach/server/queues/email-send.queue';
 
-test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplicate', 'confirmed snapshot', 'different personalized content', 'different variable values'])('Marketing delivery preserves recipient safety: %s', async (mode) => {
+test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplicate', 'confirmed snapshot', 'fixed reply', 'custom reply', 'different personalized content', 'different variable values'])('Marketing delivery preserves recipient safety: %s', async (mode) => {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec(readFileSync('migrations/0007_outreach.sql', 'utf8'));
   sqlite.exec(readFileSync('migrations/0011_customer_inbox.sql','utf8'));
@@ -47,6 +47,10 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
       body: { recipientId: `recipient-${name}`, campaignId: 'campaign', providerId: 'provider', toEmail: `${name}@example.com`, toName: 'Test', fromEmail: 'from@example.com', fromName: 'Test', replyTo: null, subject: 'Hello', bodyHtml: '<p>Hello</p>', bodyText: 'Hello', variables: {} } satisfies EmailSendMessage,
       ack: vi.fn(), retry: vi.fn(),
     }));
+    if (mode === 'fixed reply' || mode === 'custom reply') {
+      sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,verified_at,created_at) VALUES('inbox','workspace','reply.example.com','fixed@example.net','unused',1,'2026-10-26','2026-10-26'); UPDATE edm_campaigns SET reply_tracking=1");
+      if (mode === 'custom reply') messages.forEach(message => { (message.body as EmailSendMessage).replyTo = 'chosen@example.net'; });
+    }
     if (mode === 'confirmed snapshot') {
       sqlite.exec("UPDATE edm_templates SET subject='Edited after confirmation',body_html='<p>Unapproved content</p>',body_text='Unapproved plain text'; UPDATE edm_campaigns SET sender_name='Changed sender',sender_email='changed@example.com',reply_to='changed-reply@example.com'");
     }
@@ -100,7 +104,8 @@ test.each(['complete', 'split', 'existing remote', 'paused', 'concurrent duplica
     expect(sqlite.prepare("SELECT status FROM edm_campaign_recipients WHERE id='recipient-subscribed'").get()?.status).toBe('sent');
     expect(sqlite.prepare("SELECT status,error_message FROM edm_campaign_recipients WHERE id='recipient-unsubscribed'").get()).toMatchObject({ status: 'failed', error_message: 'Contact unsubscribed' });
     expect(calls.find((call) => call.path.endsWith('/segments'))?.body.static_segment).toEqual(['subscribed@example.com']);
-    expect(calls.find((call) => call.path === '/3.0/campaigns')?.body.settings).toMatchObject({ subject_line: 'Hello', from_name: 'Test', reply_to: 'from@example.com' });
+    expect(calls.find((call) => call.path === '/3.0/campaigns')?.body.settings).toMatchObject({ subject_line: 'Hello', from_name: 'Test', reply_to: mode === 'fixed reply' ? 'fixed@example.net' : mode === 'custom reply' ? 'chosen@example.net' : 'from@example.com' });
+    expect(sqlite.prepare('SELECT COUNT(*) n FROM wr_inbox_routes').get()?.n).toBe(0);
     const content = calls.find((call) => call.path.endsWith('/content'))?.body;
     expect(content).toMatchObject({ plain_text: 'Hello' });
     expect(content.html).toContain('<p>Hello</p>');

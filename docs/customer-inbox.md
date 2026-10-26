@@ -4,7 +4,11 @@
 
 功能在 Cloudflare 与 Ubuntu 版本分别运行，复用身份、工作区与角色。应用发布本身不会接通收信；需单独配置接收入口和域名路由，也不自动导入历史邮箱。
 
-收信启用需要管理员在「客户收件箱 → 收信配置」填写域名和转发目的邮箱，部署统一接收 Worker，并通过一封实际测试来信验证。验证前不可启用新追踪。现有历史活动和任务的 reply_tracking 默认为关闭；新建表单默认勾选追踪，但只有工作区配置验证并启用后才替换回复地址。
+收信启用需要管理员在「客户收件箱 → 收信配置」填写域名和转发目的邮箱，部署统一接收 Worker，并通过一封实际测试来信验证。验证前不可启用新追踪。现有历史活动和任务的 reply_tracking 默认为关闭；新建邮件表单和邮件会话默认不勾选回复归集，已有活动/会话保留原选择；站内信默认规则不变。只有明确开启且工作区配置验证并启用后，支持的发信通道才使用独立回复地址。
+
+EDM 填写的「回复地址」是业务人员接收回复的目的邮箱。启用追踪时，发出的 Reply-To 仍是系统分配的唯一地址；网关先解析该地址对应的转发目的邮箱，再转发并记录到客户收件箱。填写指定邮箱时使用该邮箱，留空使用工作区已启用且验证通过的默认转发邮箱。未启用追踪或当前通道不支持时，不应宣称能在客户收件箱记录直达外部邮箱的回复。
+
+每个新 EDM 追踪地址保留分配时的转发目的地快照；发送中心已确认的邮件使用确认时冻结的指定邮箱。后续修改活动或默认邮箱不会改写已分配地址的快照。旧地址及站内信地址保留其网关中原有的默认转发路径，避免未升级的实例中断收信；管理 API 对没有快照的旧地址可返回其原收信配置默认邮箱。关闭追踪后不再将已分配地址用于新的发送，已有业务回复仍可以接收。禁止将转发目的地设为任一已配置收信域名或追踪地址，避免循环。
 
 Resend、SES、SendGrid、Mailgun、Brevo 与 Mailchimp Transactional 逐封发送使用每个活动收件人的 Reply-To；Mailchimp Marketing 整批活动不支持此逐收件人路径，继续使用原回复地址并标为未追踪。自定义 SMTP HTTP 中继尚无已验证的 Reply-To 合同，保持既有实际发送，不创建追踪地址，发送快照不记录未传出的 Reply-To。旧收信地址仍可接收。站内信仅在已有安全检查通过、进入浏览器提交前使用独立地址，不绕过原来的验证码/权限规则。
 
@@ -34,14 +38,17 @@ Resend、SES、SendGrid、Mailgun、Brevo 与 Mailchimp Transactional 逐封发�
 }
 ```
 
-4. 核对现有 MX 和转发规则。主域已使用 Google 或其他邮箱服务时，为独立收信子域配置 Email Routing，保留主域原 MX。验证转发目的邮箱，并将 literal 地址 `reply@收信域名` 路由到统一 Worker。开启 Email Routing Settings 中的 Subaddressing（`support_subaddress`）；官方说明加号标签匹配固定地址规则，并保留完整 `message.to`。子域不支持 catch-all，不得以第二套 MX 混装两个独立收信服务。参考 [子域配置](https://developers.cloudflare.com/email-service/configuration/subdomains/) 与 [加号地址](https://developers.cloudflare.com/email-service/configuration/email-routing-addresses/#subaddressing)。
-5. 新业务回复地址分别包含各自配置 ID 的前 12 个十六进制字符：`reply+e-实例标识-32位随机码@域名`、`reply+s-实例标识-32位随机码@域名`。Worker 仅在分流时解析加号标签，完整收件地址用于签名、存储、去重与业务关联。固定地址只归属于明确设置 default 的一个实例；最多一个 default。未知或畸形加号标签拒收，不能落到另一实例。旧 `e-`/`s-` 格式与已保存路由不改写；旧地址继续接收也须保留其原域名及接收规则。
+4. 核对现有 MX 和转发规则。主域已使用 Google 或其他邮箱服务时，为独立收信子域配置 Email Routing，保留主域原 MX。**默认邮箱和活动填写的每个指定转发邮箱，均须先在该 Cloudflare 账户的 Email Routing 目的地址中完成验证**；填写邮箱不会自动完成验证，未验证会导致转发失败，但回复原文仍保存到客户收件箱。将 literal 地址 `reply@收信域名` 路由到统一 Worker。开启 Email Routing Settings 中的 Subaddressing（`support_subaddress`）；官方说明加号标签匹配固定地址规则，并保留完整 `message.to`。子域不支持 catch-all，不得以第二套 MX 混装两个独立收信服务。参考 [子域配置](https://developers.cloudflare.com/email-service/configuration/subdomains/) 与 [加号地址](https://developers.cloudflare.com/email-service/configuration/email-routing-addresses/#subaddressing)。
+5. 新 EDM 回复地址包含版本标记及配置 ID 的前 12 个十六进制字符：`reply+e2-实例标识-32位随机码@域名`；站内信继续使用 `reply+s-实例标识-32位随机码@域名`。Worker 仅在分流时解析加号标签，完整收件地址用于签名、存储、去重与业务关联。仅 `e2` 地址调用逐路由解析，不得在解析失败时回退默认邮箱；旧 `reply+e-`、`reply+s-` 和不带加号的 `e-`/`s-` 地址继续使用原 TARGETS 默认目的地，兼容尚未升级的服务器实例。固定地址只归属于明确设置 default 的一个实例；最多一个 default。未知或畸形加号标签拒收，不能落到另一实例。已保存路由不改写；旧地址继续接收也须保留其原域名及接收规则。
 6. 发测试邮件验证两端接收/转发，再分别启用。旧配置停用只停止新地址分配，已有追踪地址继续接收。不得直接删除旧入口密钥。
-7. 更换应用访问域名时只更新 TARGETS 的 endpoint；收信地址与任务映射不变。
+7. 更换应用访问域名时只更新 TARGETS 的 endpoint；收信地址与任务映射不变。endpoint 必须为该配置完整的 HTTPS 接收地址，不带查询参数或片段；网关只把同源末尾的 `/receive/配置ID` 替换为 `/resolve/配置ID`，不接受来信或远程响应提供的 URL。
+8. 此更新先执行目标应用数据库的 `0017_inbox_route_forwarding.sql`，再更新接收 Worker，最后发布目标应用。接收 Worker 必须先支持新 `e2` 地址，应用才能开始分配；尚未更新的服务器仍使用旧地址，收信不受影响。保持现有 TARGETS、R2、队列、密钥与域名路由；此次更新不迁移业务邮件或覆盖已有收信配置。
 
 ## 接收、恢复与归属
 
-- 网关先保存原始 MIME 到私有 R2，投递队列使用 HMAC 签名（配置 ID、时间戳、原始收件人、envelope sender、转发状态、正文 hash）。目标应用验证时效和配置域名。
+- 网关先保存原始 MIME 到私有 R2。`e2` 地址的转发查询使用单独的 HMAC 用途标记 `inbox-route-resolve-v1`、配置 ID、时间戳和完整收件地址；应用只返回该配置与地址精确匹配的目的邮箱。固定测试地址、旧格式地址和站内信继续使用管理员配置的原有默认目的地。
+- 投递队列使用 HMAC 签名（配置 ID、时间戳、原始收件人、envelope sender、转发状态、**实际转发目的邮箱**、正文 hash）。目标应用验证时效和配置域名；转发日志不从可变活动资料推测目的地。
+- 无法解析地址、收到重定向或目的邮箱不合法时，网关不会静默转发到默认邮箱；原文保留并以转发失败状态入库。解析失败时目的地为空，仅 `failed` 状态允许为空。邮箱转发本身失败时保留已解析的目的邮箱。网关投递重试只重试客户收件箱入库，不再次发送或转发邮件。
 - 队列失败指数退避，20 次后进死信队列；原始文件保留。管理员检查失败原因后从死信队列重放 `{key}`，不要重新发送业务邮件。
 - 两个实例不广播写入同一封业务回复，不同步数据库。复制实例后不能沿用旧收信配置/路由表，需重新生成实例配置。
 - 同一配置下 Message-ID + envelope recipient 去重；没有 Message-ID 时用原始正文 hash。
@@ -52,6 +59,6 @@ Resend、SES、SendGrid、Mailgun、Brevo 与 Mailchimp Transactional 逐封发�
 
 ## 验收与延后事项
 
-`tests/customer-inbox.test.ts` 验证签名、去重、正文隔离、附件鉴权、固定/独立地址、关联更正、分类统计、并发版本、未读状态；`scripts/verify_customer_inbox.mjs` 验证实际本地 Worker + 浏览器页面。
+`tests/customer-inbox.test.ts` 验证签名、去重、正文隔离、附件鉴权、固定/独立地址、转发快照、解析用途/时效/实例隔离、循环阻止、失败记录、关联更正、分类统计、并发版本、未读状态。`tests/inbox-gateway.test.ts` 验证实际目的邮箱转发、完整加号地址、解析/转发失败保留、重定向阻止与脱敏日志；`scripts/verify_customer_inbox.mjs` 验证实际本地 Worker + 浏览器页面。
 
 域名接入必须通过真实来信验证接收与转发，再启用新追踪；本地测试不能替代这一步。历史 Gmail/Outlook/IMAP 导入、站内直接发送回复、AI 摘要、自动跟进提醒不属于现有收信链路。网关转发失败会在来信中标识，不能据此宣称业务员已阅读；转发重试需按原始邮件处理，不重复提交外部表单。

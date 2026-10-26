@@ -12,7 +12,7 @@ let sqlite: DatabaseSync;
 let env: any;
 beforeEach(async () => {
   sqlite = new DatabaseSync(':memory:');
-  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
+  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0017_inbox_route_forwarding.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
   sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT; ALTER TABLE edm_site_message_jobs ADD COLUMN created_by TEXT;');
   env = { DB: d1(sqlite), CREDENTIAL_KEY: 'test-key', BETTER_AUTH_SECRET: 'test-secret', BETTER_AUTH_URL: 'https://app.example.test' };
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('workspace','Test','test@example.com',0,0);
@@ -50,7 +50,7 @@ test('the real Resend request and CRM snapshot use the same complete per-custome
   const request = vi.fn(async (_url: any, init: any) => {
     sent = JSON.parse(init.body);
     const route = sqlite.prepare('SELECT address FROM wr_inbox_routes WHERE target_id=?').get('recipient');
-    expect(sent.reply_to).toMatch(/^reply\+e-123456781234-[a-f0-9]{32}@reply\.example\.com$/);
+    expect(sent.reply_to).toMatch(/^reply\+e2-123456781234-[a-f0-9]{32}@reply\.example\.com$/);
     expect(route?.address).toBe(sent.reply_to);
     expect(snapshots()[0]).toMatchObject({ reply_to: sent.reply_to, status: 'prepared' });
     return Response.json({ id: 'tracked-receipt' });

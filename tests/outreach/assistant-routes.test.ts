@@ -371,17 +371,49 @@ test('email CSV reports the approved address after a contact is edited and remai
   expect((await request('/' + session.id + '/email/export')).status).toBe(404);
 });
 
-test('new conversations default reply tracking only for verified enabled channel settings', async () => {
+test('new conversations require an explicit email collection choice and preserve site defaults', async () => {
   const initial = await create(['email', 'site']);
   expect(initial.draft.email.replyTracking).toBe(false); expect(initial.draft.site.replyTracking).toBe(false);
   sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,track_edm,track_sites,verified_at,created_at) VALUES('inbox','w1','reply.example.com','owner@example.com','unit-test',1,1,0,'2026-10-03','2026-10-03')");
   const session = await create(['email', 'site']);
-  expect(session.draft.email.replyTracking).toBe(true); expect(session.draft.site.replyTracking).toBe(false);
+  expect(session.draft.email.replyTracking).toBe(false); expect(session.draft.site.replyTracking).toBe(false);
   const response = await outreachFetch(new Request('https://wr.example.test/api/outreach/assistant/options', { headers: { Authorization: 'Bearer ' + token } }), env, {} as any);
   expect((await response.json() as any).data.replyTracking).toEqual({ enabled: true, email: true, site: false });
+  sqlite.exec('UPDATE wr_inbox_configs SET track_sites=1');
+  const siteEnabled = await create(['email', 'site']);
+  expect(siteEnabled.draft.email.replyTracking).toBe(false); expect(siteEnabled.draft.site.replyTracking).toBe(true);
   sqlite.exec('UPDATE wr_inbox_configs SET enabled=0');
   const disabled = await create(['email', 'site']);
   expect(disabled.draft.email.replyTracking).toBe(false); expect(disabled.draft.site.replyTracking).toBe(false);
+});
+
+test.each(['smtp', 'mailchimp'])('confirmation refuses unsupported %s reply collection before creating sending tasks', async provider => {
+  let session = await ready(); await emailProvider();
+  sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,track_edm,verified_at,created_at) VALUES('inbox','w1','reply.example.com','owner@example.com','unit-test',1,1,'2026-10-03','2026-10-03')");
+  const config = await seal(JSON.stringify({ apiType: 'marketing' }), 'provider:config', outreachBindings(env));
+  sqlite.prepare('UPDATE edm_providers SET provider=?,config=?').run(provider, config);
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'tracking', expectedVersion: session.version,
+    draft: { email: { replyTracking: true, replyTo: 'custom@example.com' } } })).json() as any).data;
+  const response = await request('/' + session.id + '/confirm', 'POST', confirmation(session));
+  expect(response.status).toBe(400);
+  expect((await response.json() as any).code).toBe('reply_tracking_provider_unsupported');
+  expect(emailQueue).toEqual([]);
+  expect(sqlite.prepare('SELECT count(*) n FROM edm_campaigns').get()!.n).toBe(0);
+});
+
+test('explicit email collection and custom mailbox remain together in the approved task and existing conversation', async () => {
+  let session = await ready(); await emailProvider();
+  sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,track_edm,verified_at,created_at) VALUES('inbox','w1','reply.example.com','owner@example.com','unit-test',1,1,'2026-10-03','2026-10-03')");
+  session = (await (await request('/' + session.id + '/draft', 'PATCH', { requestId: 'tracking', expectedVersion: session.version,
+    draft: { email: { replyTracking: true, replyTo: 'custom@example.com' } } })).json() as any).data;
+  expect((await create()).draft.email.replyTracking).toBe(false);
+  const existing = (await (await request('/' + session.id)).json() as any).data;
+  expect(existing.draft.email).toMatchObject({ replyTracking: true, replyTo: 'custom@example.com' });
+  const response = await request('/' + session.id + '/confirm', 'POST', confirmation(session));
+  expect(response.status).toBe(200);
+  expect(sqlite.prepare('SELECT reply_tracking,reply_to FROM edm_campaigns').get())
+    .toEqual({ reply_tracking: 1, reply_to: 'custom@example.com' });
+  expect(emailQueue).toHaveLength(1);
 });
 
 test('confirmation refuses claimed reply tracking after its verified configuration is disabled', async () => {

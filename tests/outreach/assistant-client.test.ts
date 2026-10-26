@@ -33,7 +33,7 @@ function preview(session: AssistantSession, config: AssistantOptions = options) 
 
 test('configured inbox does not claim tracking for an opted-out draft, and the actual reply addresses are visible', () => {
   const html = preview(readySession());
-  expect(html).toContain('<dt>邮件回复</dt><dd>回复至 replies@example.com</dd>');
+  expect(html).toContain('<dt>邮件回复</dt><dd>直接回复至 replies@example.com</dd>');
   expect(html).toContain('<dt>留言回复</dt><dd>回复至 seller@example.com</dd>');
   expect(html).not.toContain('本次回复将汇入客户管理系统的客户回复');
 });
@@ -43,17 +43,19 @@ test('each channel needs both its own tracking choice and its own enabled inbox 
   session.draft.email.replyTracking = true;
   session.draft.site.replyTracking = true;
   const emailOnly = preview(session, { ...options, replyTracking: { enabled: true, email: true, site: false } });
-  expect(emailOnly).toContain('<dt>邮件回复</dt><dd>本次回复将汇入客户管理系统的客户回复</dd>');
+  expect(emailOnly).toContain('<dt>邮件回复</dt><dd>归集客户回复并转发至 replies@example.com</dd>');
   expect(emailOnly).toContain('<dt>留言回复</dt><dd>回复至 seller@example.com</dd>');
   const siteOnly = preview(session, { ...options, replyTracking: { enabled: true, email: false, site: true } });
-  expect(siteOnly).toContain('<dt>邮件回复</dt><dd>回复至 replies@example.com</dd>');
+  expect(siteOnly).toContain('<dt>邮件回复</dt><dd>收信配置未启用，需关闭回复归集后发送</dd>');
   expect(siteOnly).toContain('<dt>留言回复</dt><dd>本次回复将汇入客户管理系统的客户回复</dd>');
 });
 
-test('without a custom reply address the email preview shows the sender address', () => {
+test('without a custom mailbox the preview describes the fixed mailbox and sender fallback', () => {
   const session = readySession();
   session.draft.email.replyTo = '';
-  expect(preview(session)).toContain('<dt>邮件回复</dt><dd>回复至 seller@example.com</dd>');
+  expect(preview(session)).toContain('<dt>邮件回复</dt><dd>直接回复至 固定工作邮箱（未配置时使用发件邮箱）</dd>');
+  session.draft.email.replyTracking = true;
+  expect(preview(session)).toContain('<dt>邮件回复</dt><dd>归集客户回复并转发至 固定工作邮箱</dd>');
 });
 
 test('a large audience previews only one page while preserving the full confirmation count and data', () => {

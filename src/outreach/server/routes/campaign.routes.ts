@@ -2,6 +2,7 @@ import { actorScope, creatorFilter } from '../lib/actor-scope';
 import { validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
 import {resolveSenderDomains} from '../lib/sender-domains';
+import { replyAddressSchema } from '../lib/reply-address';
 import { emailOverview } from "../lib/overview";
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
@@ -345,6 +346,8 @@ campaignRoutes.post("/", requirePermission("campaigns:write"), async (c) => {
   }>();
 
   if (body.replyTracking !== undefined && typeof body.replyTracking !== "boolean") return c.json({error:"回复追踪选项无效"},400);
+  const replyAddress = replyAddressSchema.safeParse(body.replyTo);
+  if (!replyAddress.success) return c.json({error:"请填写有效的回复邮箱"},400);
   if (body.sendRate !== undefined && !validSendRate(body.sendRate)) return c.json({error:'发送速率须为 1–200 封/分钟的整数'},400);
   if (!body.name?.trim() || !body.senderEmail?.trim() || !body.senderName?.trim()) {
     return c.json(
@@ -371,7 +374,7 @@ campaignRoutes.post("/", requirePermission("campaigns:write"), async (c) => {
     name: body.name.trim(),
     senderEmail: body.senderEmail.trim(),
     senderName: body.senderName.trim(),
-    replyTo: body.replyTo?.trim() || null,
+    replyTo: replyAddress.data || null,
     replyTracking: body.replyTracking === true,
     sendRate: body.sendRate || 50,
     scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null,
@@ -405,6 +408,8 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
   }
 
   if (body.replyTracking !== undefined && typeof body.replyTracking !== "boolean") return c.json({error:"回复追踪选项无效"},400);
+  const replyAddress = replyAddressSchema.safeParse(body.replyTo);
+  if (!replyAddress.success) return c.json({error:"请填写有效的回复邮箱"},400);
   if (body.sendRate !== undefined && !validSendRate(body.sendRate)) return c.json({error:'发送速率须为 1–200 封/分钟的整数'},400);
   const updateData: Record<string, any> = { updatedAt: new Date() };
   const allowedFields = [
@@ -417,6 +422,7 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
       updateData[field] = body[field];
     }
   }
+  if (body.replyTo !== undefined) updateData.replyTo = replyAddress.data || null;
   if (body.scheduledAt !== undefined) {
     updateData.scheduledAt = body.scheduledAt ? new Date(body.scheduledAt) : null;
   }

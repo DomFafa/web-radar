@@ -1,6 +1,6 @@
 import {listResendDomains} from './resend';
 import {parseProviderConfig} from './email-provider-selection';
-export type SenderDomain = {domain:string;providerId:string;providerName:string;providerType:string;isDefault:boolean};
+export type SenderDomain = {domain:string;providerId:string;providerName:string;providerType:string;isDefault:boolean;supportsReplyTracking:boolean};
 /** Read account-scoped verification state; never fabricate a fallback domain. */
 export async function resolveSenderDomains<T extends {id:string;name:string;provider:string;status:string;apiKey:string;config:string|null;isDefault:boolean}>(configured:T[]) {
   const domains:SenderDomain[]=[],errors:{providerId:string;providerName:string;message:string}[]=[],providers:T[]=[];
@@ -18,7 +18,7 @@ export async function resolveSenderDomains<T extends {id:string;name:string;prov
       if(provider.provider==='mailchimp')items=Array.isArray(config.mailchimpDomains)?config.mailchimpDomains.filter((d:any)=>d.status==='verified'||d.validSigning):[];
     }
     const seen=new Set<string>();
-    for(const item of items){const domain=String(item.domain||'').trim().toLowerCase();if(!domain||seen.has(domain))continue;seen.add(domain);domains.push({domain,providerId:provider.id,providerName:provider.name,providerType:provider.provider,isDefault:provider.isDefault});}
+    for(const item of items){const domain=String(item.domain||'').trim().toLowerCase();if(!domain||seen.has(domain))continue;seen.add(domain);domains.push({domain,providerId:provider.id,providerName:provider.name,providerType:provider.provider,isDefault:provider.isDefault,supportsReplyTracking:provider.provider!=='smtp' && !(provider.provider==='mailchimp' && (config.apiType === 'marketing' || (config.apiType !== 'transactional' && /-[a-z]{2}\d+$/i.test(provider.apiKey.trim()))))});}
   }
   return {domains,errors,providers};
 }

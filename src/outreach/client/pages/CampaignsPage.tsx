@@ -1,11 +1,12 @@
 /** @jsxImportSource react */
 import { CampaignProgress } from "../components/CampaignProgress";
 import React, { useState, useEffect, useRef } from "react";
-import { campaignsApi, templatesApi, contactsApi } from "../lib/api";
+import { campaignsApi, templatesApi, contactsApi, providersApi } from "../lib/api";
 import { useAuth, useToast } from "../App";
 import { TEMPLATE_NAME_LABELS } from "./TemplatesPage";
 import { deliverySuccessHelp, emailDeliveryPresentation } from '../../shared/email-delivery';
 import { percentage } from '../../../shared/outreach-stats';
+import { api } from "../../../client/api";
 
 const statusLabels: Record<string, { label: string; badge: string }> = {
   draft: { label: "草稿", badge: "badge-default" },
@@ -16,6 +17,7 @@ const statusLabels: Record<string, { label: string; badge: string }> = {
   failed: { label: "失败", badge: "badge-danger" },
   needs_review: { label: "待核实", badge: "badge-warning" },
 };
+type SenderAccount = { domain: string; isDefault: boolean; supportsReplyTracking?: boolean };
 
 const isCampaignLocked = (campaign: any) => campaign?.status === "sending" || campaign?.status === "needs_review";
 const hasActiveSend = (campaign: any) => campaign?.status === "sending" ||
@@ -58,6 +60,11 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
   const [recipientList, setRecipientList] = useState<any[]>([]);
   const [addedContactIds, setAddedContactIds] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [replyDefaults, setReplyDefaults] = useState<{ trackingAvailable: boolean; forwardTo: string | null } | null>(null);
+  const [replyDefaultsLoading, setReplyDefaultsLoading] = useState(true);
+  const [replyDefaultsError, setReplyDefaultsError] = useState(false);
+  const [senderAccounts, setSenderAccounts] = useState<SenderAccount[]>([]);
+  const [senderAccountsLoading, setSenderAccountsLoading] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
   const exportLock = useRef(false);
   const downloadReport = async (campaign: any) => {
@@ -86,8 +93,25 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     senderName: "",
     replyTo: "",
     sendRate: 50,
-    replyTracking: true,
+    replyTracking: false,
   });
+  const replyDestination = form.replyTo.trim() || replyDefaults?.forwardTo ||
+    (replyDefaults ? form.senderEmail.trim() || "发件人邮箱" : "固定工作邮箱（未配置则使用发件人邮箱）");
+  const matchingSenderAccounts = senderAccounts.filter(account => account.domain === form.senderEmail.trim().toLowerCase().split("@").pop());
+  const selectedSenderAccount = matchingSenderAccounts.find(account => account.isDefault) || matchingSenderAccounts[0];
+  const replySyncStatus = !form.replyTracking
+    ? "未开启；客户直接回复至上述邮箱"
+    : replyDefaultsLoading || senderAccountsLoading
+      ? "正在读取收信配置及发信通道，尚未确认能否归集"
+      : replyDefaultsError
+        ? "暂时无法读取收信配置，尚未确认能否归集"
+        : !replyDefaults?.trackingAvailable
+          ? "当前无可用收信配置，本次不归集，客户直接回复至上述邮箱"
+          : selectedSenderAccount?.supportsReplyTracking === false
+            ? "当前 Mailchimp Marketing 批量通道不支持归集，将直接使用上述回复邮箱"
+            : selectedSenderAccount?.supportsReplyTracking !== true
+              ? "收信配置可用，但尚未确认发信通道是否支持，不能视为已开启归集"
+              : "已申请归集并转发；转发目的邮箱须已完成验证";
 
   // State for Add Recipients in Detail view
   const [detailSelectedGroups, setDetailSelectedGroups] = useState<string[]>([]);
@@ -101,6 +125,30 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     const requestedId = new URLSearchParams(window.location.search).get("campaignId");
     if (requestedId) void loadDetail(requestedId);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    api<{ replyDefaults?: { trackingAvailable: boolean; forwardTo: string | null } }>("/api/inbox/configs")
+      .then(result => {
+        if (!active) return;
+        if (result.replyDefaults) setReplyDefaults(result.replyDefaults);
+        else setReplyDefaultsError(true);
+      })
+      .catch(() => { if (active) setReplyDefaultsError(true); })
+      .finally(() => { if (active) setReplyDefaultsLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!showModal) return;
+    let active = true;
+    setSenderAccountsLoading(true);
+    providersApi.senderDomains()
+      .then(result => { if (active) setSenderAccounts(result.data); })
+      .catch(() => { if (active) setSenderAccounts([]); })
+      .finally(() => { if (active) setSenderAccountsLoading(false); });
+    return () => { active = false; };
+  }, [showModal]);
 
   const detailHasActiveSend = hasActiveSend(detail);
 
@@ -517,14 +565,21 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                 </div>
                 <div className="form-grid radar-form-grid">
                   <div className="form-group">
-                    <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>自动追踪回复（需启用收信配置）</label><label className="form-label">回复地址</label>
+                    <label className="form-label" htmlFor="campaign-reply">回复地址</label>
                     <input
+                      id="campaign-reply"
                       className="form-input"
                       type="email"
                       value={form.replyTo}
                       onChange={(e) => setForm((p) => ({ ...p, replyTo: (e.target as HTMLInputElement).value }))}
-                      placeholder="reply@yourdomain.com"
+                      placeholder="留空使用固定工作邮箱，未配置则使用发件人邮箱"
+                      aria-describedby="campaign-reply-help campaign-reply-sync-status"
                     />
+                    <p id="campaign-reply-help" className="form-help">填写则接收到指定邮箱，留空使用已验证的固定工作邮箱；未配置时使用发件人邮箱。当前接收邮箱：{replyDestination}。</p>
+                    <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>将客户回复同步到客户收件箱</label>
+                    <p className="form-help">此选项只控制客户回复归集，不影响送达、打开和点击统计。</p>
+                    {form.replyTracking && <p className="form-help">收信配置可用时，系统记录客户回复并转发到{form.replyTo.trim() ? "填写的指定邮箱" : "固定工作邮箱"}。Mailchimp Marketing 批量通道不支持此归集，将直接使用回复地址。开启同步时，转发目的邮箱需先完成 Cloudflare Email Routing 验证。</p>}
+                    <p id="campaign-reply-sync-status" className="form-help" role="status">{replySyncStatus}</p>
                   </div>
                   <div className="form-group">
                     <label className="form-label">发送速率 (封/分钟)</label>

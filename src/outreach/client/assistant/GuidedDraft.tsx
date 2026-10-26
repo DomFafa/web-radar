@@ -340,7 +340,7 @@ export function GuidedDraft({
             aria-label="回复邮箱"
             type="email"
             value={draft.email.replyTo}
-            placeholder="不填写则回复至发件邮箱"
+            placeholder="填写指定邮箱；留空使用固定工作邮箱"
             onChange={(event) => edit({ email: { replyTo: event.target.value } })}
           />
         </label>
@@ -353,9 +353,16 @@ export function GuidedDraft({
             onChange={(event) => edit({ email: { replyTracking: event.target.checked } })}
           />
           <span>
-            邮件回复汇入客户管理系统的客户回复{!options?.replyTracking.email ? '（配置已停用，请关闭）' : ''}
+            将客户回复同步到客户收件箱{!options?.replyTracking.email ? '（配置已停用，请关闭）' : ''}
           </span>
         </label>
+      )}
+      {email && (
+        <p className="wr-lazy-note">
+          填写后，客户回复发往指定邮箱；留空使用固定工作邮箱，未配置时使用发件邮箱。
+          开启归集后，系统先记录回复，再转发到该邮箱。此项不影响送达、打开或点击统计。
+          {draft.email.replyTracking && ' 指定转发邮箱需完成 Cloudflare 目的地址验证；SMTP 与 Mailchimp Marketing 不支持回复归集。'}
+        </p>
       )}
       {site && (options?.replyTracking.site || draft.site.replyTracking) && (
         <label className="wr-lazy-check">

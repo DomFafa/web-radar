@@ -75,9 +75,11 @@ export function DraftPreview({
             <>
               <dt>邮件回复</dt>
               <dd>
-                {session.draft.email.replyTracking && options?.replyTracking.email
-                  ? '本次回复将汇入客户管理系统的客户回复'
-                  : `回复至 ${session.draft.email.replyTo || session.draft.sender.email || '待填写'}`}
+                {session.draft.email.replyTracking
+                  ? options?.replyTracking.email
+                    ? `归集客户回复并转发至 ${session.draft.email.replyTo || '固定工作邮箱'}`
+                    : '收信配置未启用，需关闭回复归集后发送'
+                  : `直接回复至 ${session.draft.email.replyTo || '固定工作邮箱（未配置时使用发件邮箱）'}`}
               </dd>
             </>
           )}

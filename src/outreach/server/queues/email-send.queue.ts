@@ -1,3 +1,4 @@
+import { directReplyAddress } from '../lib/reply-address';
 import { trackedAddress, plain } from '../../../worker/inbox/core';
 import { captureOutbound, completeOutbound, readOutboundReceipt } from '../../../worker/crm/capture';
 import { emailSendDelay, deferEmail, resendCooldown } from '../lib/email-pacing';
@@ -480,6 +481,7 @@ async function sendViaMailchimpMarketingBatch(
   if (snapshots.some(item => JSON.stringify(item) !== JSON.stringify(snapshot))) {
     throw new Error("Marketing 无法在同一批次发送不同的个性化邮件，请使用逐封发送通道");
   }
+  snapshot.replyTo = await directReplyAddress(database, campaign.userId, snapshot.replyTo, snapshot.fromEmail);
   assertEmailContentAllowed(snapshot.subject, snapshot.bodyHtml, snapshot.bodyText);
   const attemptId = eligible.map((message) => message.recipientId).sort()[0];
   if (!await claimAttempt(database, attemptId))
@@ -844,7 +846,8 @@ export async function handleEmailQueue(
     const chunk = batch.messages.slice(i, i + CONCURRENCY);
     await Promise.all(
       chunk.map(async (msg) => {
-        const message = msg.body;
+        // Keep the queue payload unchanged: retry must retain the requested destination.
+        const message = { ...msg.body };
         let dispatchStarted = false;
         let providerResult: ProviderResult | undefined;
         let attemptClaimed = false;
@@ -968,8 +971,8 @@ export async function handleEmailQueue(
 
           const delay = await emailSendDelay(env.DB, message.recipientId, message.campaignId, campaignState.sendRate, provider.provider === 'resend');
           if (delay > 0) { await deferEmail(env, msg, delay); return; }
-          const inboxReply = provider.provider === 'smtp' ? null : await trackedAddress(env.DB, 'edm', message.recipientId, plain(replaceVariables(message.bodyHtml, message.variables)), replaceVariables(message.subject, message.variables));
-          if (inboxReply) message.replyTo = inboxReply;
+          const inboxReply = provider.provider === 'smtp' ? null : await trackedAddress(env.DB, 'edm', message.recipientId, plain(replaceVariables(message.bodyHtml, message.variables)), replaceVariables(message.subject, message.variables), message.replyTo);
+          message.replyTo = inboxReply || await directReplyAddress(env.DB, campaign.userId, message.replyTo, message.fromEmail);
           if (!await claimAttempt(env.DB, message.recipientId)) { msg.retry({ delaySeconds: 120 }); return; }
           attemptClaimed = true;
 
