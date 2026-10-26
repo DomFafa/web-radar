@@ -88,6 +88,42 @@ test('a rate reset rolls back its schedule changes if the configuration update f
   expect(sqlite.prepare('SELECT * FROM edm_email_schedule').get()).toEqual({ recipient_id: 'r0', due_at: 900000 });
   expect(sqlite.prepare("SELECT status,send_rate FROM edm_campaigns WHERE id='c'").get()).toEqual({ status: 'paused', send_rate: 50 });
 });
+test('paused rate changes cannot advance the Resend clock to another provider future reservation', async () => {
+  sqlite.exec(`INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,created_at)
+    VALUES ('other-r0','other','contact',0),('other-r1','other','contact',0);
+    UPDATE edm_campaign_recipients SET status='sending' WHERE id='r0';`);
+  expect(await emailSendDelay(db, 'other-r0', 'other', 1, false, 100000)).toBe(0);
+  expect(await emailSendDelay(db, 'other-r1', 'other', 1, false, 100000)).toBe(60000);
+  expect(await emailSendDelay(db, 'r0', 'c', 50, true, 100000)).toBe(0);
+  const otherSchedule = sqlite.prepare("SELECT * FROM edm_email_schedule WHERE recipient_id LIKE 'other-%' ORDER BY recipient_id").all();
+  const otherClock = sqlite.prepare("SELECT next_at FROM edm_email_clocks WHERE id='reserve:account:campaign:other'").get();
+  sqlite.exec("UPDATE edm_campaigns SET status='paused',send_rate=50 WHERE id='c'");
+  await db.batch([...pausedCampaignPacingReset(db, 'c', 50, 100000),
+    db.prepare("UPDATE edm_campaigns SET send_rate=200 WHERE id='c' AND status='paused' AND send_rate=50")]);
+  expect(sqlite.prepare("SELECT next_at FROM edm_email_clocks WHERE id='reserve:account:resend'").get()!.next_at).toBe(100250);
+  // The previous campaign dispatch interval remains authoritative until it expires.
+  expect(await emailSendDelay(db, 'r1', 'c', 200, true, 100000)).toBe(1200);
+  expect(sqlite.prepare("SELECT * FROM edm_email_schedule WHERE recipient_id LIKE 'other-%' ORDER BY recipient_id").all()).toEqual(otherSchedule);
+  expect(sqlite.prepare("SELECT next_at FROM edm_email_clocks WHERE id='reserve:account:campaign:other'").get()).toEqual(otherClock);
+  expect(sqlite.prepare("SELECT status,send_rate FROM edm_campaigns WHERE id='c'").get()).toEqual({ status: 'paused', send_rate: 200 });
+});
+
+test('paused rate changes retain other Resend future slots while releasing their own pending tail', async () => {
+  sqlite.exec(`INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,created_at)
+    VALUES ('other-r0','other','contact',0),('other-r1','other','contact',0);
+    UPDATE edm_campaign_recipients SET status='sending' WHERE id='r0';`);
+  expect(await emailSendDelay(db, 'other-r0', 'other', 200, true, 100000)).toBe(0);
+  expect(await emailSendDelay(db, 'other-r1', 'other', 200, true, 100000)).toBe(300);
+  expect(await emailSendDelay(db, 'r0', 'c', 50, true, 100000)).toBe(550);
+  expect(sqlite.prepare("SELECT next_at FROM edm_email_clocks WHERE id='reserve:account:resend'").get()!.next_at).toBe(100800);
+  const otherSchedule = sqlite.prepare("SELECT * FROM edm_email_schedule WHERE recipient_id LIKE 'other-%' ORDER BY recipient_id").all();
+  sqlite.exec("UPDATE edm_campaigns SET status='paused',send_rate=50 WHERE id='c'");
+  await db.batch([...pausedCampaignPacingReset(db, 'c', 50, 100000),
+    db.prepare("UPDATE edm_campaigns SET send_rate=200 WHERE id='c' AND status='paused' AND send_rate=50")]);
+  expect(sqlite.prepare("SELECT next_at FROM edm_email_clocks WHERE id='reserve:account:resend'").get()!.next_at).toBe(100550);
+  expect(sqlite.prepare("SELECT * FROM edm_email_schedule WHERE recipient_id LIKE 'other-%' ORDER BY recipient_id").all()).toEqual(otherSchedule);
+  expect(await emailSendDelay(db, 'r1', 'c', 200, true, 100000)).toBe(550);
+});
 test('cooldown prevents future dispatch across campaigns and normal delay does not use failure retries', async () => {
   vi.spyOn(Date, 'now').mockReturnValue(100000);
   await resendCooldown(db, 37);
