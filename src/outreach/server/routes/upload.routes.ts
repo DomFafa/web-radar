@@ -32,10 +32,9 @@ uploadRoutes.post("/", async (c) => {
     httpMetadata: { contentType: file.type },
   });
 
-  // 返回可以通过 /api/images/:key 访问的 URL
-  // 由于我们是同源，可以只返回相对路径或完整的构造路径
+  // Email recipients use the existing public outreach image route.
   const url = new URL(c.req.url);
-  const imageUrl = `${url.origin}/api/images/${key.replace("outreach/uploads/", "")}`;
+  const imageUrl = `${url.origin}/api/outreach/images/${key.replace("outreach/uploads/", "")}`;
 
   return c.json({ success: true, url: imageUrl });
 });

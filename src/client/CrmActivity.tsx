@@ -30,7 +30,7 @@ export type ActivityRoute = {
 };
 const metrics: Array<[Metric, string]> = [
   ['all', '全部客户'],
-  ['sent', '已发送 / 提交'],
+  ['sent', '已受理 / 提交'],
   ['opened', '已打开'],
   ['clicked', '已点击'],
   ['replied', '确认回复'],
@@ -142,7 +142,7 @@ export function activityMetricText(metric: CrmActivityMetric) {
           ? '服务商总体报告，不提供具体客户名单'
           : metric.coverage === 'partial'
             ? `部分追踪：${metric.tracked.toLocaleString()} / ${metric.eligible.toLocaleString()}，名单仅显示已记录的客户`
-            : '按已发送客户统计';
+            : '按已受理客户统计';
   return { value, rate: metric.rate === null ? null : `${(metric.rate * 100).toFixed(1)}%`, note };
 }
 export function navigateCrm(url: URL) {

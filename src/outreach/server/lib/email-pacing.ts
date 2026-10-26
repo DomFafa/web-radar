@@ -2,6 +2,39 @@
 export const validSendRate = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 200;
 
+// Resend's documented default is 10 requests/sec/team. Reserve at most 4/sec
+// for sends so a 200/minute campaign fits while retaining headroom for reads.
+// Every API key still shares this clock; 429 Retry-After remains authoritative.
+const RESEND_INTERVAL = 250;
+
+/** Run these before a conditional paused-campaign rate update in the same batch.
+ * Existing attempts and other campaigns' reservations must remain untouched.
+ */
+export function pausedCampaignPacingReset(db: D1Database, campaignId: string, previousRate: number | null, now = Date.now()): D1PreparedStatement[] {
+  const guard = `EXISTS(SELECT 1 FROM edm_campaigns WHERE id=? AND status='paused' AND send_rate IS ?)`;
+  return [
+    db.prepare(`DELETE FROM edm_email_schedule WHERE recipient_id IN
+      (SELECT r.id FROM edm_campaign_recipients r WHERE r.campaign_id=? AND r.status IN ('queued','sending')
+        AND r.sent_at IS NULL AND r.ses_message_id IS NULL
+        AND NOT EXISTS(SELECT 1 FROM edm_email_send_attempts a WHERE a.recipient_id=r.id)) AND ${guard}`)
+      .bind(campaignId, campaignId, previousRate),
+    db.prepare(`UPDATE edm_email_clocks SET next_at=MAX(?,
+        COALESCE((SELECT next_at FROM edm_email_clocks WHERE id=?),0),
+        COALESCE((SELECT next_at FROM edm_email_clocks WHERE id=?),0))
+      WHERE id IN (?,?) AND ${guard}`)
+      .bind(now, `dispatch:campaign:${campaignId}`, `dispatch:account:campaign:${campaignId}`,
+        `reserve:campaign:${campaignId}`, `reserve:account:campaign:${campaignId}`, campaignId, previousRate),
+    // The dispatch clock retains any shared 429 cooldown, including clocks
+    // written by older releases. Remaining rows retain every other Resend slot,
+    // but other providers cannot advance this clock beyond its existing tail.
+    db.prepare(`UPDATE edm_email_clocks SET next_at=MAX(?,
+        COALESCE((SELECT next_at FROM edm_email_clocks WHERE id='dispatch:account:resend'),0),
+        MIN(next_at,COALESCE((SELECT MAX(due_at)+? FROM edm_email_schedule),0)))
+      WHERE id='reserve:account:resend' AND ${guard}`)
+      .bind(now, RESEND_INTERVAL, campaignId, previousRate),
+  ];
+}
+
 export async function emailSendDelay(
   db: D1Database,
   recipientId: string,
@@ -11,7 +44,7 @@ export async function emailSendDelay(
   now = Date.now(),
 ): Promise<number> {
   const interval = Math.ceil(60000 / (validSendRate(rate) ? rate : 50));
-  // All Resend sends in this installation share a conservative 2 requests/sec
+  // All Resend sends in this installation share a conservative 4 requests/sec
   // ceiling, including different keys for the same team. Other API clients may
   // still exhaust the team's allowance; Retry-After adds a shared cooldown.
   const account = resend ? 'resend' : `campaign:${campaignId}`;
@@ -19,7 +52,7 @@ export async function emailSendDelay(
   const reserveAccount = `reserve:account:${account}`;
   const dispatchCampaign = `dispatch:campaign:${campaignId}`;
   const dispatchAccount = `dispatch:account:${account}`;
-  const accountInterval = resend ? 500 : interval;
+  const accountInterval = resend ? RESEND_INTERVAL : interval;
   const statement = (sql: string, ...values: (string | number)[]) =>
     db.prepare(sql).bind(...values);
   await db.batch([

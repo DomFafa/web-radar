@@ -7,6 +7,7 @@ import { requireAuth, requirePermission } from '../middleware/auth';
 import { createDb } from '../../db';
 import { loadProviders } from '../lib/credentials';
 import { resolveSenderDomains } from '../lib/sender-domains';
+import { parseProviderConfig, selectEmailProviderForSender } from '../lib/email-provider-selection';
 import { AssistantError, beginRequest, draftPatchSchema, emptyDraft, ensureContent, failRequest, finishRequest, hasCompleteAssistantContent, mergeDraft, message, presentSession, previewDraft, requestHash, requestSchema, sessionRow, type AssistantUser, type SessionRow } from '../lib/assistant';
 import { assistantAiConfigured, generateAssistantDraft } from '../lib/assistant-ai';
 import { assistantEmailReport, assistantResults, dispatchOperations, ensureSendingConfigured, materializeOperations, verifyRetrySnapshot } from '../lib/assistant-execution';
@@ -44,6 +45,20 @@ async function ensureReplyTracking(env: Bindings, workspaceId: string, draft: As
   const tracking = await replyTrackingOptions(env, workspaceId);
   if (channels.some(channel => draft[channel].replyTracking && !tracking[channel]))
     throw new AssistantError(400, 'reply_tracking_unavailable', '所选渠道的回复追踪尚未启用或验证，请在资料卡关闭该选项，或请管理员完成配置。');
+  if (channels.includes('email') && draft.email.replyTracking) {
+    const configured = (await loadProviders(createDb(env.DB), env, workspaceId))
+      .filter(provider => provider.status === 'active' && ['resend', 'amazon_ses', 'mailchimp', 'mailgun', 'brevo', 'sendgrid', 'smtp'].includes(provider.provider));
+    const accounts = await resolveSenderDomains(configured);
+    const selection = selectEmailProviderForSender(accounts.providers, workspaceId, draft.sender.email);
+    const provider = configured.some(item => item.provider === 'resend') && !selection.matchedDomain ? undefined : selection.provider;
+    if (!provider)
+      throw new AssistantError(400, 'reply_tracking_provider_unavailable', '暂时无法确认发件邮箱对应的发信服务，请检查发信域名和服务商配置后重试。');
+    const config = parseProviderConfig(provider.config);
+    const marketing = provider.provider === 'mailchimp' &&
+      (config.apiType === 'marketing' || (config.apiType !== 'transactional' && /-[a-z]{2}\d+$/i.test(provider.apiKey.trim())));
+    if (provider.provider === 'smtp' || marketing)
+      throw new AssistantError(400, 'reply_tracking_provider_unsupported', '当前发信渠道不支持客户回复归集。请关闭该选项，或改用 Resend 等支持独立回复地址的渠道。');
+  }
 }
 assistantRoutes.get('/options', async c => {
   const user = c.get('user')!, audience = await audienceOptions(c.env, user);
@@ -73,7 +88,8 @@ assistantRoutes.post('/sessions', async c => {
   if (!parsed.success) throw new AssistantError(400, 'invalid_request', '会话请求格式无效。');
   const user = c.get('user')!, actor = user.actorId || user.id, now = new Date().toISOString(), id = crypto.randomUUID();
   const draft = emptyDraft(parsed.data.channels), tracking = await replyTrackingOptions(c.env, user.id);
-  draft.email.replyTracking = tracking.email; draft.site.replyTracking = tracking.site;
+  // Email reply collection changes the return path and is an explicit choice.
+  draft.site.replyTracking = tracking.site;
   const createHash = await requestHash('create', { channels: draft.channels });
   await c.env.DB.batch([c.env.DB.prepare('INSERT OR IGNORE INTO edm_assistant_sessions(id,user_id,created_by,create_request_id,title,draft,messages,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)')
     .bind(id, user.id, actor, parsed.data.requestId, '新的外联会话', JSON.stringify(draft),

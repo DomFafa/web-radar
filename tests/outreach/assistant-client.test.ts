@@ -33,7 +33,7 @@ function preview(session: AssistantSession, config: AssistantOptions = options) 
 
 test('configured inbox does not claim tracking for an opted-out draft, and the actual reply addresses are visible', () => {
   const html = preview(readySession());
-  expect(html).toContain('<dt>邮件回复</dt><dd>回复至 replies@example.com</dd>');
+  expect(html).toContain('<dt>邮件回复</dt><dd>直接回复至 replies@example.com</dd>');
   expect(html).toContain('<dt>留言回复</dt><dd>回复至 seller@example.com</dd>');
   expect(html).not.toContain('本次回复将汇入客户管理系统的客户回复');
 });
@@ -43,17 +43,19 @@ test('each channel needs both its own tracking choice and its own enabled inbox 
   session.draft.email.replyTracking = true;
   session.draft.site.replyTracking = true;
   const emailOnly = preview(session, { ...options, replyTracking: { enabled: true, email: true, site: false } });
-  expect(emailOnly).toContain('<dt>邮件回复</dt><dd>本次回复将汇入客户管理系统的客户回复</dd>');
+  expect(emailOnly).toContain('<dt>邮件回复</dt><dd>归集客户回复并转发至 replies@example.com</dd>');
   expect(emailOnly).toContain('<dt>留言回复</dt><dd>回复至 seller@example.com</dd>');
   const siteOnly = preview(session, { ...options, replyTracking: { enabled: true, email: false, site: true } });
-  expect(siteOnly).toContain('<dt>邮件回复</dt><dd>回复至 replies@example.com</dd>');
+  expect(siteOnly).toContain('<dt>邮件回复</dt><dd>收信配置未启用，需关闭回复归集后发送</dd>');
   expect(siteOnly).toContain('<dt>留言回复</dt><dd>本次回复将汇入客户管理系统的客户回复</dd>');
 });
 
-test('without a custom reply address the email preview shows the sender address', () => {
+test('without a custom mailbox the preview describes the fixed mailbox and sender fallback', () => {
   const session = readySession();
   session.draft.email.replyTo = '';
-  expect(preview(session)).toContain('<dt>邮件回复</dt><dd>回复至 seller@example.com</dd>');
+  expect(preview(session)).toContain('<dt>邮件回复</dt><dd>直接回复至 固定工作邮箱（未配置时使用发件邮箱）</dd>');
+  session.draft.email.replyTracking = true;
+  expect(preview(session)).toContain('<dt>邮件回复</dt><dd>归集客户回复并转发至 固定工作邮箱</dd>');
 });
 
 test('a large audience previews only one page while preserving the full confirmation count and data', () => {
@@ -88,4 +90,43 @@ test.each([
   expect(html).toContain(`<span class="wr-lazy-status">${label}</span>`);
   expect(html).not.toContain('已提交队列');
   expect(html).not.toContain('重试这个渠道');
+});
+
+test.each([
+  ['email', 'completed', '提交完成', '已受理'],
+  ['email', 'sent', '已受理', '已受理'],
+  ['site', 'completed', '处理完成', '已提交'],
+  ['site', 'sent', '发送完成', '已提交'],
+] as const)('%s result %s distinguishes submission from delivery without changing website results', (channel, status, label, countLabel) => {
+  const results: AssistantResults = {
+    sessionId: 'conversation',
+    channels: [{ channel, taskId: 'task', name: 'Sample outreach', status, operationStatus: 'submitted', total: 5, sent: 5, pending: 0, failed: 0, uncertain: 0, retryable: false, detailPath: '/task', exportPath: '/report' }],
+    summary: { total: 5, sent: 5, pending: 0, failed: 0, uncertain: 0 },
+  };
+  const html = renderToStaticMarkup(React.createElement(ResultCards, {
+    results, busy: false, writable: true, onRetry() {}, onRefresh() {}, onWorkbench() {}, onError() {},
+  }));
+  expect(html).toContain(`<span class="wr-lazy-status">${label}</span>`);
+  expect(html).toContain(`<strong>5</strong>${countLabel}`);
+  expect(html).not.toContain('已提交队列');
+  if (channel === 'email') {
+    expect(html).toContain('邮件已受理不代表已送达');
+    expect(html).not.toContain('<strong>5</strong>已发送');
+  } else {
+    expect(html).toContain('已提交留言不代表对方已阅读或回复');
+    expect(html).not.toContain('邮件已受理不代表已送达');
+  }
+});
+
+test('a submitted email operation does not claim all messages reached the provider queue', () => {
+  const results: AssistantResults = {
+    sessionId: 'conversation',
+    channels: [{ channel: 'email', taskId: 'task', name: 'Sample outreach', status: 'awaiting-status', operationStatus: 'submitted', total: 5, sent: 0, pending: 5, failed: 0, uncertain: 0, retryable: false, detailPath: '/task', exportPath: '/report' }],
+    summary: { total: 5, sent: 0, pending: 5, failed: 0, uncertain: 0 },
+  };
+  const html = renderToStaticMarkup(React.createElement(ResultCards, {
+    results, busy: false, writable: true, onRetry() {}, onRefresh() {}, onWorkbench() {}, onError() {},
+  }));
+  expect(html).toContain('<span class="wr-lazy-status">已提交</span>');
+  expect(html).not.toContain('已提交队列');
 });

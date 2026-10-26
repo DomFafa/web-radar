@@ -1,19 +1,27 @@
 /** @jsxImportSource react */
 import { CampaignProgress } from "../components/CampaignProgress";
 import React, { useState, useEffect, useRef } from "react";
-import { campaignsApi, templatesApi, contactsApi } from "../lib/api";
+import { campaignsApi, templatesApi, contactsApi, providersApi } from "../lib/api";
 import { useAuth, useToast } from "../App";
 import { TEMPLATE_NAME_LABELS } from "./TemplatesPage";
+import { deliverySuccessHelp, emailDeliveryPresentation } from '../../shared/email-delivery';
+import { percentage } from '../../../shared/outreach-stats';
+import { api } from "../../../client/api";
 
 const statusLabels: Record<string, { label: string; badge: string }> = {
   draft: { label: "草稿", badge: "badge-default" },
   scheduled: { label: "已排期", badge: "badge-info" },
-  sending: { label: "发送中", badge: "badge-warning" },
+  sending: { label: "提交中", badge: "badge-warning" },
   paused: { label: "已暂停", badge: "badge-warning" },
-  completed: { label: "已完成", badge: "badge-success" },
+  completed: { label: "提交完成", badge: "badge-success" },
   failed: { label: "失败", badge: "badge-danger" },
   needs_review: { label: "待核实", badge: "badge-warning" },
 };
+type SenderAccount = { domain: string; isDefault: boolean; supportsReplyTracking?: boolean };
+
+const isCampaignLocked = (campaign: any) => campaign?.status === "sending" || campaign?.status === "needs_review";
+const hasActiveSend = (campaign: any) => campaign?.status === "sending" ||
+  (campaign?.status === "needs_review" && Number(campaign?.progress?.sending || 0) > 0);
 
 function CampaignRate({ label, value, totalSent }: { label: string; value: unknown; totalSent: unknown }) {
   const count = Math.max(0, Number(value) || 0);
@@ -52,6 +60,11 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
   const [recipientList, setRecipientList] = useState<any[]>([]);
   const [addedContactIds, setAddedContactIds] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [replyDefaults, setReplyDefaults] = useState<{ trackingAvailable: boolean; forwardTo: string | null } | null>(null);
+  const [replyDefaultsLoading, setReplyDefaultsLoading] = useState(true);
+  const [replyDefaultsError, setReplyDefaultsError] = useState(false);
+  const [senderAccounts, setSenderAccounts] = useState<SenderAccount[]>([]);
+  const [senderAccountsLoading, setSenderAccountsLoading] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
   const exportLock = useRef(false);
   const downloadReport = async (campaign: any) => {
@@ -80,8 +93,25 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     senderName: "",
     replyTo: "",
     sendRate: 50,
-    replyTracking: true,
+    replyTracking: false,
   });
+  const replyDestination = form.replyTo.trim() || replyDefaults?.forwardTo ||
+    (replyDefaults ? form.senderEmail.trim() || "发件人邮箱" : "固定工作邮箱（未配置则使用发件人邮箱）");
+  const matchingSenderAccounts = senderAccounts.filter(account => account.domain === form.senderEmail.trim().toLowerCase().split("@").pop());
+  const selectedSenderAccount = matchingSenderAccounts.find(account => account.isDefault) || matchingSenderAccounts[0];
+  const replySyncStatus = !form.replyTracking
+    ? "未开启；客户直接回复至上述邮箱"
+    : replyDefaultsLoading || senderAccountsLoading
+      ? "正在读取收信配置及发信通道，尚未确认能否归集"
+      : replyDefaultsError
+        ? "暂时无法读取收信配置，尚未确认能否归集"
+        : !replyDefaults?.trackingAvailable
+          ? "当前无可用收信配置，本次不归集，客户直接回复至上述邮箱"
+          : selectedSenderAccount?.supportsReplyTracking === false
+            ? "当前 Mailchimp Marketing 批量通道不支持归集，将直接使用上述回复邮箱"
+            : selectedSenderAccount?.supportsReplyTracking !== true
+              ? "收信配置可用，但尚未确认发信通道是否支持，不能视为已开启归集"
+              : "已申请归集并转发；转发目的邮箱须已完成验证";
 
   // State for Add Recipients in Detail view
   const [detailSelectedGroups, setDetailSelectedGroups] = useState<string[]>([]);
@@ -96,21 +126,47 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     if (requestedId) void loadDetail(requestedId);
   }, []);
 
-  // Only active sends need polling; completed details refresh on demand.
   useEffect(() => {
-    if (!campaigns.some((campaign) => campaign.status === "sending") && detail?.status !== "sending") return;
+    let active = true;
+    api<{ replyDefaults?: { trackingAvailable: boolean; forwardTo: string | null } }>("/api/inbox/configs")
+      .then(result => {
+        if (!active) return;
+        if (result.replyDefaults) setReplyDefaults(result.replyDefaults);
+        else setReplyDefaultsError(true);
+      })
+      .catch(() => { if (active) setReplyDefaultsError(true); })
+      .finally(() => { if (active) setReplyDefaultsLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!showModal) return;
+    let active = true;
+    setSenderAccountsLoading(true);
+    providersApi.senderDomains()
+      .then(result => { if (active) setSenderAccounts(result.data); })
+      .catch(() => { if (active) setSenderAccounts([]); })
+      .finally(() => { if (active) setSenderAccountsLoading(false); });
+    return () => { active = false; };
+  }, [showModal]);
+
+  const detailHasActiveSend = hasActiveSend(detail);
+
+  // Accepted messages can still finish while the campaign awaits review.
+  useEffect(() => {
+    if (!campaigns.some(hasActiveSend) && !detailHasActiveSend) return;
     const interval = setInterval(() => {
       if (document.visibilityState !== "visible") return;
-      if (showDetailIdRef.current && detail?.status === "sending") {
+      if (showDetailIdRef.current && detailHasActiveSend) {
         loadDetail(showDetailIdRef.current, true);
       }
-      const hasSending = campaigns.some((c) => c.status === "sending");
+      const hasSending = campaigns.some(hasActiveSend);
       if (hasSending) {
         loadCampaigns(true);
       }
     }, 30000);
     return () => clearInterval(interval);
-  }, [campaigns, detail?.status]);
+  }, [campaigns, detailHasActiveSend]);
 
   const loadCampaigns = async (silent = false) => {
     if (listLoading.current) return;
@@ -270,13 +326,15 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
     setSending(true);
     try {
       const res = await campaignsApi.send(campaignId);
-      addToast("success", `已开始发送，${res.data.recipientsQueued} 封邮件已加入队列`);
-      loadDetail(campaignId);
-      loadCampaigns();
+      addToast("success", res.data.publicationPending
+        ? "邮件任务已保存，正在等待加入发送队列，请勿重复提交。"
+        : `已开始发送，${res.data.recipientsQueued} 封邮件已加入队列`);
     } catch (err: any) {
       addToast("error", err.message);
     } finally {
       setSending(false);
+      loadDetail(campaignId);
+      loadCampaigns();
     }
   };
 
@@ -346,15 +404,16 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               <div className="stat-card">
                 <div className="stat-icon" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#10b981" }}>📨</div>
                 <div className="stat-value">{campaigns.reduce((sum, c) => sum + (c.totalSent || 0), 0)}</div>
-                <div className="stat-label">已成功发送</div>
+                <div className="stat-label">已受理</div>
               </div>
               <div className="stat-card">
                 <div className="stat-icon" style={{ background: "rgba(14, 165, 233, 0.12)", color: "#0ea5e9" }}>📦</div>
                 <div className="stat-value">
                   {(() => {
-                    const totalR = campaigns.reduce((sum, c) => sum + (c.totalRecipients || 0), 0);
                     const totalS = campaigns.reduce((sum, c) => sum + (c.totalSent || 0), 0);
-                    return totalR > 0 ? `${Math.round((totalS / totalR) * 100)}%` : "100%";
+                    const totalD = campaigns.reduce((sum, c) => sum + (c.totalDelivered || 0), 0);
+                    const rate = percentage(totalD, totalS);
+                    return rate === null ? '—' : `${rate}%`;
                   })()}
                 </div>
                 <div className="stat-label">总体送达率</div>
@@ -368,7 +427,8 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                   <th>任务名称</th>
                   <th>状态</th>
                   <th>收件人</th>
-                  <th>已发送</th>
+                  <th>已受理</th>
+                  <th>已送达</th>
                   <th>打开</th>
                   <th>点击</th>
                   <th>退信</th>
@@ -398,6 +458,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                       </td>
                       <td>{c.totalRecipients}</td>
                       <td>{c.totalSent}</td>
+                      <td>{c.totalDelivered || 0}</td>
                       <td><CampaignRate label="打开" value={c.totalOpened} totalSent={c.totalSent} /></td>
                       <td><CampaignRate label="点击" value={c.totalClicked} totalSent={c.totalSent} /></td>
                       <td><CampaignRate label="退信" value={c.totalBounced} totalSent={c.totalSent} /></td>
@@ -413,7 +474,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                           <button className="btn btn-ghost btn-sm" disabled={!!exporting} onClick={() => downloadReport(c)}>
                             {exporting === c.id ? "正在导出..." : "下载报表"}
                           </button>
-                          {writable && c.status !== "sending" && (
+                          {writable && !isCampaignLocked(c) && (
                             <>
                               <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(c)} title="编辑">
                                 编辑
@@ -504,14 +565,21 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                 </div>
                 <div className="form-grid radar-form-grid">
                   <div className="form-group">
-                    <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>自动追踪回复（需启用收信配置）</label><label className="form-label">回复地址</label>
+                    <label className="form-label" htmlFor="campaign-reply">回复地址</label>
                     <input
+                      id="campaign-reply"
                       className="form-input"
                       type="email"
                       value={form.replyTo}
                       onChange={(e) => setForm((p) => ({ ...p, replyTo: (e.target as HTMLInputElement).value }))}
-                      placeholder="reply@yourdomain.com"
+                      placeholder="留空使用固定工作邮箱，未配置则使用发件人邮箱"
+                      aria-describedby="campaign-reply-help campaign-reply-sync-status"
                     />
+                    <p id="campaign-reply-help" className="form-help">填写则接收到指定邮箱，留空使用已验证的固定工作邮箱；未配置时使用发件人邮箱。当前接收邮箱：{replyDestination}。</p>
+                    <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>将客户回复同步到客户收件箱</label>
+                    <p className="form-help">此选项只控制客户回复归集，不影响送达、打开和点击统计。</p>
+                    {form.replyTracking && <p className="form-help">收信配置可用时，系统记录客户回复并转发到{form.replyTo.trim() ? "填写的指定邮箱" : "固定工作邮箱"}。Mailchimp Marketing 批量通道不支持此归集，将直接使用回复地址。开启同步时，转发目的邮箱需先完成 Cloudflare Email Routing 验证。</p>}
+                    <p id="campaign-reply-sync-status" className="form-help" role="status">{replySyncStatus}</p>
                   </div>
                   <div className="form-group">
                     <label className="form-label">发送速率 (封/分钟)</label>
@@ -569,9 +637,9 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     {writable && <button
                       className="btn btn-primary btn-sm"
                       onClick={() => handleSend(detail.id)}
-                      disabled={sending || detail.status === "sending" || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
+                      disabled={sending || isCampaignLocked(detail) || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
                     >
-                      {sending ? "正在提交..." : detail.status === "sending" ? "正在发送" : detail.status === "completed" ? "处理完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
+                      {sending ? "正在提交..." : detail.status === "sending" ? "正在提交" : detail.status === "needs_review" ? "等待核实结果" : detail.status === "completed" ? "提交完成" : detail.status === 'paused' ? '继续待发邮件' : "发送待发邮件"}
                     </button>}
                     {writable && detail.status === "sending" && (
                       <button className="btn btn-secondary btn-sm" onClick={() => handlePause(detail.id)}>
@@ -580,13 +648,18 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     )}
                   </div>
                 </div>
+                {detail.status === "needs_review" && (
+                  <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
+                    部分邮件的提交或发送结果尚未确认，已进入队列的邮件可能继续处理。请先核实结果，暂勿重发或修改任务。
+                  </p>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13 }}>
                   <label style={{ fontWeight: 600, minWidth: 80, color: "var(--color-text-secondary)" }}>邮件模板 *</label>
                   <select
                     className="form-select"
                     style={{ flex: 1 }}
                     value={detail.templateId || ""}
-                    disabled={!writable || detail.status === "sending" || detail.status === 'completed'}
+                    disabled={!writable || isCampaignLocked(detail) || detail.status === 'completed'}
                     onChange={async (e) => {
                       const newTplId = e.target.value;
                       try {
@@ -620,6 +693,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
 
               {/* Stats */}
               <CampaignProgress campaign={detail} />
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>{deliverySuccessHelp}</p>
               <div className="stats-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", marginBottom: 20 }}>
                 <div className="stat-card" style={{ padding: 12 }}>
                   <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalRecipients}</div>
@@ -627,7 +701,11 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                 </div>
                 <div className="stat-card" style={{ padding: 12 }}>
                   <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalSent}</div>
-                  <div className="stat-label" style={{ fontSize: 12 }}>已发送</div>
+                  <div className="stat-label" style={{ fontSize: 12 }}>已受理</div>
+                </div>
+                <div className="stat-card" style={{ padding: 12 }}>
+                  <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalDelivered || 0}</div>
+                  <div className="stat-label" style={{ fontSize: 12 }}>已送达</div>
                 </div>
                 <div className="stat-card" style={{ padding: 12 }}>
                   <div className="stat-value" style={{ fontSize: 20 }}>{detail.totalOpened}</div>
@@ -644,7 +722,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               </div>
 
               {/* Add Recipients */}
-              {writable && (detail.status !== "sending" && detail.status !== "completed") && (
+              {writable && !isCampaignLocked(detail) && detail.status !== "completed" && (
                 <div className="card" style={{ marginBottom: 16 }}>
                   <div className="card-header">
                     <h4 className="card-title">添加收件人</h4>
@@ -702,7 +780,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               <div className="card" style={{ marginBottom: 16 }}>
                 <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <h4 className="card-title" style={{ fontSize: 15 }}>📋 收件人发送明细</h4>
-                  {detail.status === "sending" && (
+                  {detailHasActiveSend && (
                     <span style={{ fontSize: 12, color: "var(--color-accent)", display: "flex", alignItems: "center", gap: 4 }}>
                       <span className="spinner" style={{ width: 12, height: 12 }}></span> 动态刷新中...
                     </span>
@@ -718,23 +796,13 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                           <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "35%" }}>收件人邮箱</th>
                           <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "15%" }}>状态</th>
                           <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "30%" }}>详情 / 错误提示</th>
-                          <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "20%" }}>发送时间</th>
+                          <th style={{ padding: "8px 12px", whiteSpace: "nowrap", width: "20%" }}>受理时间</th>
                         </tr>
                       </thead>
                       <tbody>
                         {recipientList.map((r) => {
-                          const rStatusMap: Record<string, { label: string; badge: string }> = {
-                            queued: { label: "待发送", badge: "badge-default" },
-                            sending: { label: "发送中...", badge: "badge-warning" },
-                            sent: { label: "已发送", badge: "badge-success" },
-                            delivered: { label: "已送达", badge: "badge-success" },
-                            opened: { label: "已打开", badge: "badge-info" },
-                            clicked: { label: "已点击", badge: "badge-info" },
-                            failed: { label: "发送失败", badge: "badge-danger" },
-                            bounced: { label: "已退信", badge: "badge-danger" },
-                          };
-                          const st = rStatusMap[r.status] || { label: r.status, badge: "badge-default" };
-                          const sentSuccessfully = ["sent", "delivered", "opened", "clicked"].includes(r.status);
+                          const st = emailDeliveryPresentation(r);
+                          const badge = { success: 'badge-success', warning: 'badge-warning', neutral: 'badge-default', danger: 'badge-danger' }[st.tone];
                           return (
                             <tr key={r.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
                               <td style={{ padding: "8px 12px", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 280 }}>
@@ -742,10 +810,10 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                                 {r.contactName ? <span style={{ color: "var(--color-text-muted)", marginLeft: 4 }}>({r.contactName})</span> : null}
                               </td>
                               <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}>
-                                <span className={`badge ${st.badge}`} style={{ fontSize: 12 }}>{st.label}</span>
+                                <span className={`badge ${badge}`} style={{ fontSize: 12 }}>{st.label}</span>
                               </td>
-                              <td style={{ padding: "8px 12px", color: !sentSuccessfully && r.errorMessage ? "var(--color-danger)" : "var(--color-text-muted)", fontSize: 12, wordBreak: "break-word" }}>
-                                {sentSuccessfully ? "✅ 发送成功" : r.errorMessage || "-"}
+                              <td style={{ padding: "8px 12px", color: st.tone === 'danger' ? "var(--color-danger)" : "var(--color-text-muted)", fontSize: 12, wordBreak: "break-word" }}>
+                                {st.detail}
                               </td>
                               <td style={{ padding: "8px 12px", fontSize: 12, color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>
                                 {r.sentAt ? new Date(r.sentAt).toLocaleTimeString("zh-CN") : "-"}

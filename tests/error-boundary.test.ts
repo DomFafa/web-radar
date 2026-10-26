@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { ErrorBoundary } from '../src/client/ErrorBoundary';
+import { ErrorBoundary, isChunkLoadError } from '../src/client/ErrorBoundary';
+
+afterEach(() => { vi.unstubAllGlobals(); });
 
 describe('ErrorBoundary', () => {
   it('updates state via getDerivedStateFromError', () => {
@@ -107,5 +109,58 @@ describe('ErrorBoundary', () => {
 
     expect(html).toContain('custom-fallback');
     expect(html).toContain('Custom error trigger');
+  });
+
+  it.each([
+    'Failed to fetch dynamically imported module: https://web-radar.net/assets/Dashboard-old.js',
+    'error loading dynamically imported module: https://web-radar.net/assets/Dashboard-old.js',
+    'Importing a module script failed.',
+    'Loading chunk 12 failed.',
+    'Loading CSS chunk 12 failed.',
+    'Unable to preload CSS for /assets/Dashboard-old.css',
+  ])('offers a current-version refresh for module loading failure: %s', message => {
+    const boundary = new ErrorBoundary({ title: '控制台加载异常', description: '请重试或返回上一步。' });
+    boundary.state = { hasError: true, error: new TypeError(message), errorInfo: null };
+    const html = renderToString(boundary.render());
+    expect(html).toContain('页面资源未能加载');
+    expect(html).toContain('刷新加载当前版本');
+    expect(html).toContain('已保存的草稿会保留');
+    expect(html).not.toContain('请重试或返回上一步。');
+  });
+
+  it('reloads only on an explicit recovery action and preserves persisted drafts and the current URL', () => {
+    const reload = vi.fn(), onReset = vi.fn();
+    const session = new Map([['edm-draft:v1:workspace:actor', '{"draft":"saved"}']]);
+    const local = new Map([['site-draft', '{"draft":"saved"}']]);
+    vi.stubGlobal('window', { location: { href: 'https://web-radar.net/?view=dashboard', reload } });
+    vi.stubGlobal('sessionStorage', { clear: vi.fn(() => session.clear()), removeItem: vi.fn((key: string) => session.delete(key)) });
+    vi.stubGlobal('localStorage', { clear: vi.fn(() => local.clear()), removeItem: vi.fn((key: string) => local.delete(key)) });
+    const boundary = new ErrorBoundary({ scope: 'app', onReset });
+    boundary.setState = vi.fn() as any;
+    const error = new TypeError('Failed to fetch dynamically imported module: /assets/Dashboard-old.js');
+    boundary.state = { hasError: true, error, errorInfo: null };
+
+    // Deriving/rendering the fallback must never trigger an automatic reload loop.
+    ErrorBoundary.getDerivedStateFromError(error);
+    const html = renderToString(boundary.render());
+    expect(reload).not.toHaveBeenCalled();
+    expect(html).not.toContain('重新加载页面');
+    boundary.reset();
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(boundary.setState).not.toHaveBeenCalled();
+    expect(onReset).not.toHaveBeenCalled();
+    expect(window.location.href).toBe('https://web-radar.net/?view=dashboard');
+    expect(session.get('edm-draft:v1:workspace:actor')).toBe('{"draft":"saved"}');
+    expect(local.get('site-draft')).toBe('{"draft":"saved"}');
+  });
+
+  it('recognizes named chunk failures without treating ordinary API/network/render errors as version errors', () => {
+    const chunk = new Error('Resource unavailable');
+    chunk.name = 'ChunkLoadError';
+    expect(isChunkLoadError(chunk)).toBe(true);
+    for (const error of [null, new TypeError('Failed to fetch'), new Error('Cannot read properties of undefined'), new Error('请求失败（500）')]) {
+      expect(isChunkLoadError(error)).toBe(false);
+    }
   });
 });

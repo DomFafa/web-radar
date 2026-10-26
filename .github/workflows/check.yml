@@ -92,4 +92,4 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen --group dev --python 3.12
       - run: uv run playwright install --with-deps chromium
-      - run: uv run pytest tests/test_clone_quality.py tests/test_service.py -q
+      - run: uv run --frozen pytest -q

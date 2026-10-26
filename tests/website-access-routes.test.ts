@@ -98,3 +98,43 @@ it('keeps public site and public inquiry forwarding separate from customer websi
   expect(forwarded).toHaveBeenCalledTimes(2);
   for (const [incoming] of forwarded.mock.calls) expect(incoming.headers.has('X-WR-Principal')).toBe(false);
 });
+
+it('returns an uploaded email image URL that an anonymous recipient can read', async () => {
+  const objects = new Map<string, { bytes: ArrayBuffer; contentType: string }>();
+  const put = vi.fn(async (key: string, bytes: ArrayBuffer, options: any) => {
+    objects.set(key, { bytes, contentType: options.httpMetadata.contentType });
+  });
+  env.MEDIA = { put, get: vi.fn(async (key: string) => {
+    const value = objects.get(key);
+    return value ? { body: value.bytes, httpEtag: 'test-image',
+      writeHttpMetadata: (headers: Headers) => headers.set('Content-Type', value.contentType) } : null;
+  }) } as unknown as R2Bucket;
+  const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  const form = new FormData(); form.set('image', new File([bytes], 'email.png', { type: 'image/png' }));
+  const { token } = await mintSession(env, actor);
+  const uploaded = await app.fetch(new Request('https://web-radar.net/api/outreach/upload', {
+    method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: form,
+  }), env, context);
+  expect(uploaded.status).toBe(200);
+  const { url } = await uploaded.json() as { url: string };
+  expect(url).toMatch(/^https:\/\/web-radar.net\/api\/outreach\/images\/[a-f0-9-]+\.png$/);
+  const publicImage = await app.fetch(new Request(url), env, context);
+  expect(publicImage.status).toBe(200);
+  expect(publicImage.headers.get('Content-Type')).toBe('image/png');
+  expect(new Uint8Array(await publicImage.arrayBuffer())).toEqual(bytes);
+  expect(put).toHaveBeenCalledOnce();
+  expect([...objects.keys()][0]).toMatch(/^outreach\/uploads\/[a-f0-9-]+\.png$/);
+});
+
+it.each([
+  ['/api/outreach/upload', 'POST'], ['/api/outreach/contacts', 'GET'],
+  ['/api/images/00000000-0000-4000-8000-000000000001.png', 'GET'],
+  ['/api/outreach/images/projects%2Fprivate%2Fsecret.png', 'GET'],
+  ['/api/projects/private/assets/secret', 'GET'],
+])('preserves anonymous authentication boundaries at %s', async (path, method) => {
+  const get = vi.fn(); env.MEDIA = { get } as unknown as R2Bucket;
+  const response = await app.fetch(new Request('https://web-radar.net' + path, { method }), env, context);
+  expect(response.status).toBe(401);
+  expect(get).not.toHaveBeenCalled();
+  expect(forwarded).not.toHaveBeenCalled();
+});

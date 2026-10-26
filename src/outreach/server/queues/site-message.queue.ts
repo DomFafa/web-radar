@@ -1172,14 +1172,11 @@ export async function runSiteMessageJob(jobId: string, env: Bindings) {
     .limit(1);
 
   if (nextTarget) {
-    try {
-      await env.SITE_MESSAGE_QUEUE.send(
-        { kind: "site-message-runner", jobId },
-        { delaySeconds: 10 },
-      );
-    } catch (queueErr) {
-      console.error("Queue send error for next target batch", queueErr);
-    }
+    // Keep the current delivery retryable until the remaining targets have a wake-up.
+    await env.SITE_MESSAGE_QUEUE.send(
+      { kind: "site-message-runner", jobId },
+      { delaySeconds: 10 },
+    );
   }
 }
 

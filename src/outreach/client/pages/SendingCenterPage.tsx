@@ -6,10 +6,12 @@ import { useAuth, useToast } from "../App";
 import { TemplatesPage, TEMPLATE_NAME_LABELS } from "./TemplatesPage";
 import { EmailPreview } from "../components/EmailPreview";
 import { CampaignProgress } from "../components/CampaignProgress";
+import { deliverySuccessHelp } from '../../shared/email-delivery';
 import { blockedEmailMessage, findBlockedEmailTerms } from "../../shared/email-content-policy";
 import { browserDraftStorage, draftStorageKey, readEdmDraft, writeEdmDraft, type AudienceMethod, type EdmDraft } from "../lib/edm-draft";
 import { crmDraftKey, crmContactSelection } from '../lib/crm-email-handoff';
 import "../styles/edm-workbench.css";
+import { api } from "../../../client/api";
 
 const steps = ["选择客户", "准备邮件", "预览并确认"];
 
@@ -17,6 +19,8 @@ const defaultTaskName = () => {
   const now = new Date();
   return `邮件发送 ${now.toLocaleDateString("zh-CN")} ${now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}`;
 };
+type SenderAccount = { domain: string; isDefault: boolean; supportsReplyTracking?: boolean };
+
 export function SendingCenterPage({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { user } = useAuth();
   if (!user || !['admin', 'member'].includes(user.role)) return <p className="notice">当前角色为只读，可在发送记录中查看进度和下载报表。</p>;
@@ -38,6 +42,7 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [creatingTemplate, setCreatingTemplate] = useState(false);
   const [verifiedSenderDomains, setVerifiedSenderDomains] = useState<string[]>([]);
+  const [senderAccounts, setSenderAccounts] = useState<SenderAccount[]>([]);
   const [senderDomainLoading,setSenderDomainLoading]=useState(true);
   const [senderDomainError,setSenderDomainError]=useState('');
   const [selectedContacts, setSelectedContacts] = useState<string[]>(restoredDraft?.selectedContacts || []);
@@ -69,6 +74,22 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
       .finally(() => { if (active) setCrmCustomerLoading(false); });
     return () => { active = false; };
   }, [crmContactId, restoredDraft]);
+  const [replyDefaults, setReplyDefaults] = useState<{ trackingAvailable: boolean; forwardTo: string | null } | null>(null);
+  const [replyDefaultsLoading, setReplyDefaultsLoading] = useState(true);
+  const [replyDefaultsError, setReplyDefaultsError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    api<{ replyDefaults?: { trackingAvailable: boolean; forwardTo: string | null } }>("/api/inbox/configs")
+      .then(result => {
+        if (!active) return;
+        if (result.replyDefaults) setReplyDefaults(result.replyDefaults);
+        else setReplyDefaultsError(true);
+      })
+      .catch(() => { if (active) setReplyDefaultsError(true); })
+      .finally(() => { if (active) setReplyDefaultsLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -102,7 +123,7 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
     senderName: "",
     replyTo: "",
     sendRate: 50,
-    replyTracking: true,
+    replyTracking: false,
   });
   const currentDraft: EdmDraft = { step, form, audienceMethod, selectedContacts, selectedContactRecords, selectedGroups, selectedTags, campaignId, submissionStage, submissionPending };
   useEffect(() => { writeEdmDraft(browserDraftStorage(), draftKey, currentDraft); }, [draftKey, step, form, audienceMethod, selectedContacts, selectedContactRecords, selectedGroups, selectedTags, campaignId, submissionStage, submissionPending]);
@@ -120,23 +141,41 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
     window.history.replaceState({}, '', url);
     onNavigate?.('campaigns');
   };
+  const replyDestination = form.replyTo.trim() || replyDefaults?.forwardTo ||
+    (replyDefaults ? form.senderEmail.trim() || "发件人邮箱" : "固定工作邮箱（未配置则使用发件人邮箱）");
+  const matchingSenderAccounts = senderAccounts.filter(account => account.domain === form.senderEmail.trim().toLowerCase().split("@").pop());
+  const selectedSenderAccount = matchingSenderAccounts.find(account => account.isDefault) || matchingSenderAccounts[0];
+  const replySyncStatus = !form.replyTracking
+    ? "未开启；直接回复至上述邮箱"
+    : replyDefaultsLoading || senderDomainLoading
+      ? "正在读取收信配置及发信通道，尚未确认能否归集"
+      : replyDefaultsError
+        ? "暂时无法读取收信配置，尚未确认能否归集"
+        : !replyDefaults?.trackingAvailable
+          ? "当前无可用收信配置，本次不归集，直接回复至上述邮箱"
+          : selectedSenderAccount?.supportsReplyTracking === false
+            ? "当前 Mailchimp Marketing 批量通道不支持归集，将直接使用上述回复邮箱"
+            : selectedSenderAccount?.supportsReplyTracking !== true
+              ? "收信配置可用，但尚未确认发信通道是否支持，不能视为已开启归集"
+              : "已申请归集并转发；转发目的邮箱须已完成验证";
 
   const refreshSenderDomains = async (active:()=>boolean=()=>true) => {
     setSenderDomainLoading(true);setSenderDomainError('');
     try {
       const result=await providersApi.senderDomains();if(!active())return;
       const domains=Array.from(new Set(result.data.map(d=>d.domain)));
+      setSenderAccounts(result.data);
       setVerifiedSenderDomains(domains);
       setSenderDomainError(result.errors.map(e=>`${e.providerName}：${e.message}`).join('；'));
-      setForm(current=>current.senderEmail||!domains.length?current:{...current,senderEmail:`sales@${domains[0]}`,replyTo:current.replyTo||`sales@${domains[0]}`});
-    }catch(error:any){if(active()){setVerifiedSenderDomains([]);setSenderDomainError(error.message||'无法读取发信域名，请重试');}}
+      setForm(current=>current.senderEmail||!domains.length?current:{...current,senderEmail:`sales@${domains[0]}`});
+    }catch(error:any){if(active()){setVerifiedSenderDomains([]);setSenderAccounts([]);setSenderDomainError(error.message||'无法读取发信域名，请重试');}}
     finally{if(active())setSenderDomainLoading(false);}
   };
   const changeSenderDomain = (domain:string) => {
     if(!domain)return;
     setForm(current=>{
       const local=current.senderEmail.split('@')[0].trim()||'sales';const email=`${local}@${domain}`;
-      return {...current,senderEmail:email,replyTo:!current.replyTo||current.replyTo===current.senderEmail?email:current.replyTo};
+      return {...current,senderEmail:email};
     });
   };
 
@@ -261,6 +300,7 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
     }
     if(step===1 && senderDomainLoading){addToast('error','正在读取已验证发信域名，请稍候');return;}
     if(step===1 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.senderEmail.trim())){addToast('error','请填写有效的发件人邮箱');return;}
+    if(step===1 && form.replyTo.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.replyTo.trim())){addToast('error','请填写有效的回复邮箱');return;}
     const senderDomain = form.senderEmail.trim().toLowerCase().split("@").pop() || "";
     if (step === 1 && !verifiedSenderDomains.includes(senderDomain)) {
       addToast("error", verifiedSenderDomains.length ? `发件人邮箱必须使用已验证域名：${verifiedSenderDomains.map((domain) => `@${domain}`).join("、")}` : "暂无可用的已验证发信域名，请检查帐号权限和域名验证状态后刷新");
@@ -443,7 +483,12 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="sender-reply">回复地址</label>
-                <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>自动追踪客户回复</label><p className="form-help">收信配置启用后使用独立回复地址；未启用时使用下面的固定回复地址。</p><input id="sender-reply" className="form-input" type="email" value={form.replyTo} placeholder="reply@yourdomain.com" onChange={e=>setForm({...form,replyTo:e.target.value})} />
+                <input id="sender-reply" className="form-input" type="email" value={form.replyTo} placeholder="留空使用固定工作邮箱，未配置则使用发件人邮箱" aria-describedby="sender-reply-help sender-reply-sync-status" onChange={e=>setForm({...form,replyTo:e.target.value})} />
+                <p id="sender-reply-help" className="form-help">填写则接收到指定邮箱，留空使用已验证的固定工作邮箱；未配置时使用发件人邮箱。当前接收邮箱：{replyDestination}。</p>
+                <label><input type="checkbox" checked={form.replyTracking} onChange={e=>setForm({...form,replyTracking:e.target.checked})}/>将客户回复同步到客户收件箱</label>
+                <p className="form-help">此选项只控制客户回复归集，不影响送达、打开和点击统计。</p>
+                {form.replyTracking && <p className="form-help">收信配置可用时，系统记录客户回复并转发到{form.replyTo.trim() ? "填写的指定邮箱" : "固定工作邮箱"}。Mailchimp Marketing 批量通道不支持此归集，将直接使用回复地址。开启同步时，转发目的邮箱需先完成 Cloudflare Email Routing 验证。</p>}
+                <p id="sender-reply-sync-status" className="form-help" role="status">{replySyncStatus}</p>
               </div>
             </div>
           </section>
@@ -463,7 +508,7 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
         {step === 2 && <div>
           <h3>预览并确认</h3>
           <div className="sending-review">
-            <dl><div><dt>发送任务</dt><dd>{form.name}</dd></div><div><dt>邮件主题</dt><dd>{selectedTemplate?.subject || "-"}</dd></div><div><dt>发件人</dt><dd>{form.senderName} &lt;{form.senderEmail}&gt;</dd></div><div><dt>收件人</dt><dd>{audienceSelectionLabel}，预计 {estimatedRecipientCount} 位<br/>{audienceDetails}</dd></div><div><dt>统计</dt><dd>统计取决于所选发信帐号的回调及域名追踪设置</dd></div></dl>
+            <dl><div><dt>发送任务</dt><dd>{form.name}</dd></div><div><dt>邮件主题</dt><dd>{selectedTemplate?.subject || "-"}</dd></div><div><dt>发件人</dt><dd>{form.senderName} &lt;{form.senderEmail}&gt;</dd></div><div><dt>回复接收邮箱</dt><dd>{replyDestination}</dd></div><div><dt>客户回复归集</dt><dd>{replySyncStatus}</dd></div><div><dt>收件人</dt><dd>{audienceSelectionLabel}，预计 {estimatedRecipientCount} 位<br/>{audienceDetails}</dd></div><div><dt>统计</dt><dd>统计取决于所选发信帐号的回调及域名追踪设置</dd></div></dl>
           </div>
           <EmailPreview html={selectedTemplate?.bodyHtml || '<p>正在读取邮件内容…</p>'} height={360} />
           <p className="sending-review-note">确认后将向以上客户发送邮件。系统会去重并排除已退订联系人，实际人数以发送记录为准；邮件发出后无法撤回。</p>
@@ -476,8 +521,9 @@ function SendingWizard({ onNavigate, draftKey, isAdmin, crmContactId }: { onNavi
           {!sending && submissionPending && !campaignId && <button className="btn btn-secondary" type="button" onClick={newDraft}>已核实，重新准备</button>}
         </div>
         {submissionStage && <section aria-live="polite" style={{ paddingTop: 16 }}>
-          <strong>{!sending && sendProgress?.status === "completed" ? "发送处理已完成" : !sending && sendProgress?.status === "paused" ? "任务已暂停" : !sending && sendProgress?.status === "failed" ? "任务发送失败" : submissionStage}</strong>
+          <strong>{!sending && sendProgress?.status === "completed" ? "提交处理已完成" : !sending && sendProgress?.status === "paused" ? "任务已暂停" : !sending && sendProgress?.status === "failed" ? "任务发送失败" : submissionStage}</strong>
           {sendProgress?.totalRecipients > 0 && <CampaignProgress campaign={sendProgress} />}
+          {sendProgress?.totalRecipients > 0 && <p className="sending-review-note">{deliverySuccessHelp}</p>}
           {sending && !sendProgress?.totalRecipients && <p role="status">正在准备预计 {estimatedRecipientCount} 位收件人，完成后开始发送。</p>}
           {progressError && <p role="alert">{progressError}</p>}
           {!sending && submissionPending && <p role="status">正在核实上次提交。请先查看发送记录，勿重复发送。</p>}

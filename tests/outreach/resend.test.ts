@@ -18,7 +18,7 @@ const stats=()=>sqlite.prepare("SELECT * FROM edm_campaigns WHERE id='c'").get()
 function signed(body:string){const time=String(Math.floor(Date.now()/1000)),id='msg_test';return {'svix-id':id,'svix-timestamp':time,'svix-signature':'v1,'+createHmac('sha256',Buffer.from(secret.slice(6),'base64')).update(`${id}.${time}.${body}`).digest('base64')};}
 const app=(role='admin',user='u')=>{const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:user,role});await next()});h.route('/providers',providersRoutes);return h;};
 beforeEach(async()=>{
- sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql','0011_customer_inbox.sql','0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
+ sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql','0011_customer_inbox.sql','0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql','0017_inbox_route_forwarding.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
  const objects=new Map<string,string>();
  env={DB:d1(sqlite),CREDENTIAL_KEY:'test-key',BETTER_AUTH_SECRET:'test-auth',BETTER_AUTH_URL:'https://app.example.com',
    STORAGE:{put:async(k:string,v:string)=>{objects.set(k,v)},get:async(k:string)=>objects.has(k)?{json:async()=>JSON.parse(objects.get(k)!)}:null,delete:async(k:string)=>{objects.delete(k)}}};
@@ -280,4 +280,45 @@ test('send preflight refuses dispatch when tracking configuration cannot be conn
  const invalid=await h.request(method==='POST'?'/campaigns':'/campaigns/c',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({sendRate:0})},env);
  expect(invalid.status).toBe(400);
  }
+});
+
+for (const tracking of [false, true]) for (const custom of [null, 'chosen@example.net']) test(`reply routing keeps engagement independent: tracking=${tracking} custom=${custom}`, async () => {
+ sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,verified_at,created_at) VALUES('inbox','u','reply.example.com','fixed@example.net','unused',1,'2026-10-26','2026-10-26')");
+ sqlite.prepare('UPDATE edm_campaigns SET reply_tracking=?,reply_to=?').run(Number(tracking), 'changed-after-confirmation@example.net');
+ const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:custom,subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:null,variables:{}},ack:vi.fn(),retry:vi.fn()};
+ let sentReplyTo='';
+ vi.stubGlobal('fetch', vi.fn(async (_url:any,init:any)=>{sentReplyTo=JSON.parse(init.body).reply_to;return Response.json({id:'email1'})}));
+ await handleEmailQueue({messages:[msg]} as any,env);
+ expect(msg.ack).toHaveBeenCalled();expect(msg.retry).not.toHaveBeenCalled();
+ expect(msg.body.replyTo).toBe(custom);
+ const route=sqlite.prepare('SELECT address,forward_to FROM wr_inbox_routes').get();
+ if(tracking){expect(sentReplyTo).toBe(route!.address);expect(route!.forward_to).toBe(custom||'fixed@example.net');}
+ else{expect(route).toBeUndefined();expect(sentReplyTo).toBe(custom||'fixed@example.net');}
+ for(const type of ['delivered','opened','clicked'])await applyResendEvent(env.DB,'p',event(type));
+ expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:1,total_clicked:1});
+});
+
+test('rate-limited tracked mail retries the same route without replacing the queued custom destination',async()=>{
+ sqlite.exec("INSERT INTO wr_inbox_configs(id,workspace_id,domain,forward_to,secret,enabled,verified_at,created_at) VALUES('inbox','u','reply.example.com','fixed@example.net','unused',1,'2026-10-26','2026-10-26');UPDATE edm_campaigns SET reply_tracking=1");
+ const msg={body:{recipientId:'r',campaignId:'c',providerId:'p',toEmail:'customer@example.com',toName:'Sam',fromEmail:'sales@example.com',fromName:'Test',replyTo:'chosen@example.net',subject:'Hello',bodyHtml:'<p>Hello</p>',bodyText:null,variables:{}},ack:vi.fn(),retry:vi.fn()};
+ const replies:string[]=[];let reject=true;env.EMAIL_QUEUE={send:vi.fn()};
+ vi.stubGlobal('fetch',vi.fn(async (_url:any,init:any)=>{replies.push(JSON.parse(init.body).reply_to);return reject?Response.json({name:'rate_limit_exceeded'},{status:429,headers:{'retry-after':'1'}}):Response.json({id:'email1'})}));
+ await handleEmailQueue({messages:[msg]} as any,env);
+ expect(env.EMAIL_QUEUE.send.mock.calls[0][0].replyTo).toBe('chosen@example.net');
+ sqlite.exec('UPDATE edm_email_clocks SET next_at=0; DELETE FROM edm_email_schedule');reject=false;
+ await handleEmailQueue({messages:[msg]} as any,env);
+ expect(replies).toHaveLength(2);expect(replies[1]).toBe(replies[0]);
+ expect(sqlite.prepare('SELECT forward_to FROM wr_inbox_routes').get()!.forward_to).toBe('chosen@example.net');
+ expect(row().status).toBe('sent');
+});
+
+test('campaign reply addresses validate type, header injection and normalize blank or padded values',async()=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ const create=(replyTo:any)=>h.request('/campaigns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Reply test',senderEmail:'sales@example.com',senderName:'Test',replyTo})},env);
+ for(const bad of [42,{},'not-an-email','x@example.com\r\nBcc: hidden@example.com'])expect((await create(bad)).status).toBe(400);
+ const created:any=await (await create(' chosen@example.net ')).json();expect(created.data.replyTo).toBe('chosen@example.net');
+ const update=(replyTo:any)=>h.request('/campaigns/'+created.data.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({replyTo})},env);
+ expect((await update(['wrong@example.com'])).status).toBe(400);
+ expect((await (await update('   ')).json() as any).data.replyTo).toBeNull();
 });

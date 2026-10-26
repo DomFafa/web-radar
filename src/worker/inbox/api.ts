@@ -7,7 +7,7 @@ import { authenticate } from '../auth';
 import { ApiError, errorResponse, jsonBody } from '../http';
 import { manageUsers, viewTeamData, writeBusiness } from '../../shared/access';
 import { seal, unseal } from '../../outreach/server/lib/credentials';
-import { digest, sign, equal, ingest, now, refreshReplyStats, type InboxConfig } from './core';
+import { digest, sign, equal, ingest, now, refreshReplyStats, forwardingAddress, INBOX_RESOLVE_PURPOSE, type InboxConfig } from './core';
 const failure = (status: number, message: string) => new ApiError(status, 'inbox_error', message);
 const credentials = (env: HonoEnv['Bindings']) =>
   ({
@@ -39,7 +39,7 @@ inbox.post('/receive/:id', async (c) => {
     recipient.split('@')[1] !== config.domain ||
     recipient.length > 254 ||
     from.length > 500 ||
-    !z.email().max(254).safeParse(forwardTo).success ||
+    !(z.email().max(254).safeParse(forwardTo).success || (forward === 'failed' && forwardTo === '')) ||
     !['forwarded', 'failed', 'disabled'].includes(forward)
   )
     throw failure(401, '接收签名无效或过期');
@@ -67,6 +67,27 @@ inbox.post('/receive/:id', async (c) => {
       forwardTo === config.forward_to && forward === 'forwarded',
     ),
   );
+});
+// The ingress signs a purpose-bound lookup; this endpoint is never an open
+// redirect or a caller-supplied destination lookup.
+inbox.post('/resolve/:id', async (c) => {
+  const config = await c.env.DB.prepare('SELECT * FROM wr_inbox_configs WHERE id=?')
+    .bind(c.req.param('id')).first<InboxConfig>();
+  const timestamp = c.req.header('X-Inbox-Time') || '';
+  const recipient = (c.req.header('X-Inbox-To') || '').toLowerCase();
+  if (!config || !/^\d{13}$/.test(timestamp) || Math.abs(Date.now() - Number(timestamp)) > 300000 ||
+      !z.email().max(254).safeParse(recipient).success || recipient.split('@')[1] !== config.domain)
+    throw failure(401, '路由解析签名无效或过期');
+  const secret = await unseal(config.secret, 'inbox:' + config.id, credentials(c.env));
+  if (!equal(await sign(secret, [INBOX_RESOLVE_PURPOSE, config.id, timestamp, recipient].join('\n')), c.req.header('X-Inbox-Signature') || ''))
+    throw failure(401, '路由解析签名无效');
+  const route = await c.env.DB.prepare('SELECT forward_to FROM wr_inbox_routes WHERE config_id=? AND workspace_id=? AND address=?')
+    .bind(config.id, config.workspace_id, recipient).first<{ forward_to: string | null }>();
+  if (!route) throw failure(404, '追踪收信地址不存在');
+  let forwardTo: string;
+  try { forwardTo = await forwardingAddress(c.env.DB, route.forward_to ?? config.forward_to); }
+  catch { throw failure(409, '追踪地址的转发邮箱无效，请联系管理员'); }
+  return c.json({ id: config.id, recipient, forwardTo }, 200, { 'Cache-Control': 'no-store' });
 });
 inbox.use('*', async (c, next) => {
   const { principal } = await authenticate(c.req.raw, c.env);
@@ -125,6 +146,7 @@ inbox.get('/configs', async (c) => {
   )
     .bind(p.workspaceId)
     .all();
+  const active = rows.results.find((r: any) => r.enabled && r.verified_at) as any;
   return c.json({
     configs: manageUsers(p)
       ? rows.results
@@ -135,6 +157,7 @@ inbox.get('/configs', async (c) => {
         })),
     canManage: manageUsers(p),
     instance: new URL(c.req.url).origin,
+    replyDefaults: { trackingAvailable: !!active?.track_edm, forwardTo: active?.forward_to || null },
   });
 });
 const configSchema = z.strictObject({
@@ -156,6 +179,8 @@ inbox.post('/configs', async (c) => {
   const b = parsed.data;
   if (b.forwardTo.toLowerCase().endsWith('@' + b.domain))
     throw failure(400, '转发目的邮箱不能属于当前收信域名，避免循环转发');
+  try { await forwardingAddress(c.env.DB, b.forwardTo); }
+  catch { throw failure(400, '转发邮箱无效或属于收信域名'); }
   const exists = await c.env.DB.prepare('SELECT id FROM wr_inbox_configs WHERE domain=?')
     .bind(b.domain)
     .first();
@@ -237,6 +262,8 @@ inbox.put('/configs/:id/forward', async (c) => {
   if (!cfg) throw failure(404, '配置不存在');
   if (b.data.forwardTo.toLowerCase().endsWith('@' + cfg.domain))
     throw failure(400, '不能转发至相同收信域名');
+  try { await forwardingAddress(c.env.DB, b.data.forwardTo); }
+  catch { throw failure(400, '转发邮箱无效或属于收信域名'); }
   await c.env.DB.prepare(
     'UPDATE wr_inbox_configs SET forward_to=?,enabled=0,verified_at=NULL WHERE id=?',
   )

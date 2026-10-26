@@ -1,7 +1,8 @@
 import { actorScope, creatorFilter } from '../lib/actor-scope';
-import { validSendRate } from '../lib/email-pacing';
+import { pausedCampaignPacingReset, validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
 import {resolveSenderDomains} from '../lib/sender-domains';
+import { replyAddressSchema } from '../lib/reply-address';
 import { emailOverview } from "../lib/overview";
 import { publicFetch as fetch } from "../lib/network";
 import { loadProviders } from "../lib/credentials";
@@ -31,6 +32,11 @@ campaignRoutes.use("/*", requireAuth);
 
 const MAILCHIMP_MARKETING_KEY_SUFFIX = /-[a-z]{2}\d+$/i;
 const EMAIL_PROVIDER_TYPES = ["resend", "amazon_ses", "mailchimp", "mailgun", "brevo", "sendgrid", "smtp"] as const;
+// The durable attempt receipt owns provider acknowledgement metadata. Legacy
+// receipts may be plain text; never infer a provider queue state from them.
+const recipientProviderStatus = sql<string | null>`(SELECT CASE WHEN json_valid(a.result) THEN json_extract(a.result, '$.providerStatus') END FROM edm_email_send_attempts a WHERE a.recipient_id=${campaignRecipients.id})`;
+const recipientQueuedReason = sql<string | null>`(SELECT CASE WHEN json_valid(a.result) THEN json_extract(a.result, '$.queuedReason') END FROM edm_email_send_attempts a WHERE a.recipient_id=${campaignRecipients.id})`;
+const providerQueuedCount = sql<number>`SUM(CASE WHEN ${campaignRecipients.status}='sent' AND ${recipientProviderStatus} IN ('queued','scheduled') THEN 1 ELSE 0 END)`;
 
 function getMailchimpApiType(provider: any): "marketing" | "transactional" {
   let config: any = {};
@@ -82,16 +88,19 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
   if (!transactionalProviders.length) return;
 
   const pendingMessages = await db
-    .select({ recipientId: campaignRecipients.id, campaignId: campaignRecipients.campaignId, messageId: campaignRecipients.sesMessageId, openedAt: campaignRecipients.openedAt, clickedAt: campaignRecipients.clickedAt, status: campaignRecipients.status, senderEmail: campaigns.senderEmail })
+    .select({ recipientId: campaignRecipients.id, campaignId: campaignRecipients.campaignId, messageId: campaignRecipients.sesMessageId, deliveredAt: campaignRecipients.deliveredAt, openedAt: campaignRecipients.openedAt, clickedAt: campaignRecipients.clickedAt, status: campaignRecipients.status, senderEmail: campaigns.senderEmail,
+      frozenProviderId: sql<string | null>`(SELECT provider_id FROM edm_email_outbox WHERE recipient_id=${campaignRecipients.id})` })
     .from(campaignRecipients)
     .innerJoin(campaigns, eq(campaignRecipients.campaignId, campaigns.id))
     .where(and(eq(campaigns.userId, userId), sql`${campaignRecipients.sesMessageId} IS NOT NULL`, sql`NOT EXISTS (SELECT 1 FROM edm_resend_deliveries d WHERE d.recipient_id=${campaignRecipients.id})`));
 
-  const campaignStats = new Map<string, { sent: number; delivered: number; opened: number; clicked: number; bounced: number }>();
+  const updatedCampaigns = new Set<string>();
 
   await Promise.all(pendingMessages.map(async (item: any) => {
     try {
-      const provider = selectEmailProviderForSender(transactionalProviders, userId, item.senderEmail).provider;
+      const provider = item.frozenProviderId
+        ? transactionalProviders.find(provider => provider.id === item.frozenProviderId)
+        : selectEmailProviderForSender(transactionalProviders, userId, item.senderEmail).provider;
       if (!provider) return;
       const response = await fetch("https://mandrillapp.com/api/1.0/messages/info", {
         method: "POST",
@@ -100,25 +109,32 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
       });
       if (!response.ok) return;
       const info: any = await response.json();
+      if (info._id && info._id !== item.messageId) return;
+      const providerStatus = String(info.state || '').trim().toLowerCase();
       const hasOpen = Number(info.opens || 0) > 0;
       const hasClick = Number(info.clicks || 0) > 0;
-      const isBounce = ["bounced", "rejected", "soft-bounced"].includes(String(info.state || "").toLowerCase());
-      const isDelivered = ["sent", "delivered"].includes(String(info.state || "").toLowerCase()) && !isBounce;
-      const previous = campaignStats.get(item.campaignId) || { sent: 0, delivered: 0, opened: 0, clicked: 0, bounced: 0 };
-      previous.sent += 1;
-      previous.delivered += isDelivered ? 1 : 0;
-      // Keep first-party tracking events even when Mandrill's report is
-      // delayed or unavailable for this message.
-      previous.opened += hasOpen || Boolean(item.openedAt) ? 1 : 0;
-      previous.clicked += hasClick || Boolean(item.clickedAt) ? 1 : 0;
-      previous.bounced += isBounce ? 1 : 0;
-      campaignStats.set(item.campaignId, previous);
+      const isBounce = ["bounced", "rejected", "soft-bounced"].includes(providerStatus);
+      // Mandrill's smtp_events.diag may also describe internal processing.
+      // Require a successful external SMTP response, not state="sent" alone.
+      const smtpDelivered = Array.isArray(info.smtp_events) && info.smtp_events.some((event: any) =>
+        ['sent', 'delivered'].includes(event?.type) && typeof event.destination_ip === 'string' && event.destination_ip.trim() &&
+        typeof event.diag === 'string' && /^\s*2\d\d(?:[ -]|$)/.test(event.diag));
+      const isDelivered = smtpDelivered || hasOpen || hasClick;
+      if (providerStatus) {
+        const queuedReason = typeof info.queued_reason === 'string' ? info.queued_reason : null;
+        await env.DB.prepare(`UPDATE edm_email_send_attempts SET result=json_set(result,'$.providerStatus',?,
+          '$.queuedReason',CASE WHEN ? IN ('queued','scheduled') THEN COALESCE(?,json_extract(result,'$.queuedReason')) ELSE NULL END)
+          WHERE recipient_id=? AND CASE WHEN json_valid(result) THEN json_extract(result,'$.messageId') END=?`)
+          .bind(providerStatus, providerStatus, queuedReason, item.recipientId, item.messageId).run();
+      }
+      updatedCampaigns.add(item.campaignId);
 
       // A click is also an engagement/open. Keep both timestamps so changing
       // the recipient status from opened to clicked cannot lose open data.
       const recipientUpdate: Record<string, any> = {};
-      if (hasOpen && !item.openedAt) recipientUpdate.openedAt = new Date();
+      if ((hasOpen || hasClick) && !item.openedAt) recipientUpdate.openedAt = new Date();
       if (hasClick && !item.clickedAt) recipientUpdate.clickedAt = new Date();
+      if (isDelivered && !isBounce && !item.deliveredAt) recipientUpdate.deliveredAt = new Date();
       if (isBounce) {
         recipientUpdate.status = "bounced";
         recipientUpdate.errorMessage = `Mailchimp message state: ${info.state}`;
@@ -137,18 +153,14 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
     }
   }));
 
-  // Rebuild totals from the provider's current message info. This is
-  // idempotent and corrects totals after delayed events or repeated refreshes.
-  await Promise.all(Array.from(campaignStats.entries()).map(([campaignId, stats]) =>
-    db.update(campaigns).set({
-      totalSent: stats.sent,
-      totalDelivered: stats.delivered,
-      totalOpened: stats.opened,
-      totalClicked: stats.clicked,
-      totalBounced: stats.bounced,
-      updatedAt: new Date(),
-    }).where(eq(campaigns.id, campaignId))
-  ));
+  // Partial/Unknown_Message responses must not erase existing accepted or
+  // engagement totals. Reconcile new evidence from persisted recipient rows.
+  await Promise.all(Array.from(updatedCampaigns).map(campaignId => env.DB.prepare(`UPDATE edm_campaigns SET
+    total_delivered=MAX(total_delivered,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (delivered_at IS NOT NULL OR status IN ('delivered','opened','clicked')))),
+    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status IN ('opened','clicked')))),
+    total_clicked=MAX(total_clicked,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (clicked_at IS NOT NULL OR status='clicked'))),
+    total_bounced=MAX(total_bounced,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND status='bounced')),
+    updated_at=? WHERE id=?`).bind(campaignId, campaignId, campaignId, campaignId, Math.floor(Date.now() / 1000), campaignId).run()));
 }
 
 async function syncProviderStats(db: any, userId: string, env: Bindings) {
@@ -190,7 +202,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
     .offset((page - 1) * pageSize);
 
   const campaignIds = campaignsList.map((c) => c.id);
-  const statsMap: Record<string, { total: number; sent: number; opened: number; clicked: number; bounced: number; queued: number; sending: number; failed: number }> = {};
+  const statsMap: Record<string, { total: number; sent: number; opened: number; clicked: number; bounced: number; queued: number; sending: number; failed: number; providerQueued: number }> = {};
 
   if (campaignIds.length > 0) {
     const recipientStats = await db
@@ -199,6 +211,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         total: count(),
         queued: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'queued' THEN 1 ELSE 0 END)`,
         sending: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'sending' THEN 1 ELSE 0 END)`,
+        providerQueued: providerQueuedCount,
         failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' THEN 1 ELSE 0 END)`,
         sent: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('sent', 'delivered', 'opened', 'clicked') THEN 1 ELSE 0 END)`,
         opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('opened', 'clicked') THEN 1 ELSE 0 END)`,
@@ -214,6 +227,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         total: Number(stat.total || 0),
         queued: Number(stat.queued || 0),
         sending: Number(stat.sending || 0),
+        providerQueued: Number(stat.providerQueued || 0),
         failed: Number(stat.failed || 0),
         sent: Number(stat.sent || 0),
         opened: Number(stat.opened || 0),
@@ -225,7 +239,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
 
   const data = campaignsList.map((c) => ({
     ...c,
-    progress: { queued: statsMap[c.id]?.queued || 0, sending: statsMap[c.id]?.sending || 0, failed: statsMap[c.id]?.failed || 0,
+    progress: { queued: statsMap[c.id]?.queued || 0, sending: statsMap[c.id]?.sending || 0, failed: statsMap[c.id]?.failed || 0, providerQueued: statsMap[c.id]?.providerQueued || 0,
       processed: (statsMap[c.id]?.total || 0) - (statsMap[c.id]?.queued || 0) - (statsMap[c.id]?.sending || 0) },
     totalRecipients: Math.max(Number(c.totalRecipients || 0), Number(statsMap[c.id]?.total || 0)),
     totalSent: Math.max(Number(c.totalSent || 0), Number(statsMap[c.id]?.sent || 0)),
@@ -254,6 +268,7 @@ campaignRoutes.get("/:id/export", requirePermission("campaigns:read"), async (c)
     errorMessage: campaignRecipients.errorMessage, sesMessageId: campaignRecipients.sesMessageId,
     sentAt: campaignRecipients.sentAt, deliveredAt: campaignRecipients.deliveredAt,
     openedAt: campaignRecipients.openedAt, clickedAt: campaignRecipients.clickedAt,
+    providerStatus: recipientProviderStatus, queuedReason: recipientQueuedReason,
   }).from(campaignRecipients)
     .leftJoin(contacts, eq(contacts.id, campaignRecipients.contactId))
     .where(eq(campaignRecipients.campaignId, id))
@@ -285,6 +300,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     .select({
       status: campaignRecipients.status,
       total: count(),
+      providerQueued: providerQueuedCount,
     })
     .from(campaignRecipients)
     .where(eq(campaignRecipients.campaignId, campaignId))
@@ -303,7 +319,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     success: true,
     data: {
       ...campaign,
-      progress: { queued: counts.queued || 0, sending: counts.sending || 0, failed: counts.failed || 0,
+      progress: { queued: counts.queued || 0, sending: counts.sending || 0, failed: counts.failed || 0, providerQueued: recipients.reduce((sum, row) => sum + Number(row.providerQueued || 0), 0),
         processed: totalRecipients - (counts.queued || 0) - (counts.sending || 0) },
       totalRecipients,
       totalSent,
@@ -330,6 +346,8 @@ campaignRoutes.post("/", requirePermission("campaigns:write"), async (c) => {
   }>();
 
   if (body.replyTracking !== undefined && typeof body.replyTracking !== "boolean") return c.json({error:"回复追踪选项无效"},400);
+  const replyAddress = replyAddressSchema.safeParse(body.replyTo);
+  if (!replyAddress.success) return c.json({error:"请填写有效的回复邮箱"},400);
   if (body.sendRate !== undefined && !validSendRate(body.sendRate)) return c.json({error:'发送速率须为 1–200 封/分钟的整数'},400);
   if (!body.name?.trim() || !body.senderEmail?.trim() || !body.senderName?.trim()) {
     return c.json(
@@ -356,7 +374,7 @@ campaignRoutes.post("/", requirePermission("campaigns:write"), async (c) => {
     name: body.name.trim(),
     senderEmail: body.senderEmail.trim(),
     senderName: body.senderName.trim(),
-    replyTo: body.replyTo?.trim() || null,
+    replyTo: replyAddress.data || null,
     replyTracking: body.replyTracking === true,
     sendRate: body.sendRate || 50,
     scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null,
@@ -382,14 +400,16 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (existing.status === "sending") {
+  if (existing.status === "sending" || existing.status === "needs_review") {
     return c.json(
-      { success: false, error: "发送中的活动无法编辑" },
+      { success: false, error: "发送中或待核实的活动无法编辑" },
       400
     );
   }
 
   if (body.replyTracking !== undefined && typeof body.replyTracking !== "boolean") return c.json({error:"回复追踪选项无效"},400);
+  const replyAddress = replyAddressSchema.safeParse(body.replyTo);
+  if (!replyAddress.success) return c.json({error:"请填写有效的回复邮箱"},400);
   if (body.sendRate !== undefined && !validSendRate(body.sendRate)) return c.json({error:'发送速率须为 1–200 封/分钟的整数'},400);
   const updateData: Record<string, any> = { updatedAt: new Date() };
   const allowedFields = [
@@ -402,11 +422,22 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
       updateData[field] = body[field];
     }
   }
+  if (body.replyTo !== undefined) updateData.replyTo = replyAddress.data || null;
   if (body.scheduledAt !== undefined) {
     updateData.scheduledAt = body.scheduledAt ? new Date(body.scheduledAt) : null;
   }
 
-  await db.update(campaigns).set(updateData).where(eq(campaigns.id, campaignId));
+  if (existing.status === 'paused' && body.sendRate !== undefined && body.sendRate !== existing.sendRate) {
+    const update = db.update(campaigns).set(updateData).where(and(eq(campaigns.id, campaignId),
+      eq(campaigns.status, 'paused'), sql`${campaigns.sendRate} IS ${existing.sendRate}`)).toSQL();
+    const result = await c.env.DB.batch([
+      ...pausedCampaignPacingReset(c.env.DB, campaignId, existing.sendRate),
+      c.env.DB.prepare(update.sql).bind(...update.params),
+    ]);
+    if (!result[result.length - 1].meta.changes) return c.json({ success: false, error: '活动状态或速率已变化，请刷新后再修改' }, 409);
+  } else {
+    await db.update(campaigns).set(updateData).where(eq(campaigns.id, campaignId));
+  }
 
   const [updated] = await db.select().from(campaigns).where(eq(campaigns.id, campaignId));
   return c.json({ success: true, data: updated });
@@ -427,8 +458,8 @@ campaignRoutes.delete("/:id", requirePermission("campaigns:delete"), async (c) =
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (existing.status === "sending") {
-    return c.json({ success: false, error: "发送中的活动无法删除" }, 400);
+  if (existing.status === "sending" || existing.status === "needs_review") {
+    return c.json({ success: false, error: "发送中或待核实的活动无法删除" }, 400);
   }
 
   const frozen = await c.env.DB.prepare('SELECT DISTINCT snapshot_key FROM edm_email_outbox WHERE campaign_id=?')
@@ -481,7 +512,11 @@ campaignRoutes.get("/:id/recipients", requirePermission("campaigns:read"), async
       id: campaignRecipients.id,
       contactId: campaignRecipients.contactId,
       status: campaignRecipients.status,
+      sesMessageId: campaignRecipients.sesMessageId,
+      providerStatus: recipientProviderStatus,
+      queuedReason: recipientQueuedReason,
       sentAt: campaignRecipients.sentAt,
+      deliveredAt: campaignRecipients.deliveredAt,
       openedAt: campaignRecipients.openedAt,
       clickedAt: campaignRecipients.clickedAt,
       errorMessage: campaignRecipients.errorMessage,
@@ -524,8 +559,8 @@ campaignRoutes.post("/:id/recipients", requirePermission("campaigns:write"), asy
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (campaign.status === "sending") {
-    return c.json({ success: false, error: "发送中的活动无法添加收件人" }, 400);
+  if (campaign.status === "sending" || campaign.status === "needs_review") {
+    return c.json({ success: false, error: "发送中或待核实的活动无法添加收件人" }, 400);
   }
 
   let contactList: { id: string; email: string; name: string | null; company: string | null; industry: string | null }[] = [];
@@ -617,8 +652,8 @@ campaignRoutes.delete("/:id/recipients/:contactId", requirePermission("campaigns
     return c.json({ success: false, error: "活动不存在" }, 404);
   }
 
-  if (campaign.status === "sending") {
-    return c.json({ success: false, error: "发送中的活动无法删除收件人" }, 400);
+  if (campaign.status === "sending" || campaign.status === "needs_review") {
+    return c.json({ success: false, error: "发送中或待核实的活动无法删除收件人" }, 400);
   }
 
   // Check if recipient exists and is queued/failed
@@ -677,9 +712,16 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
     return c.json({ success: false, error: "请先选择邮件模板" }, 400);
   }
 
-  if (campaign.status === 'sending') {
-    return c.json({ success: false, error: '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
+  if (campaign.status === 'sending' || campaign.status === 'needs_review') {
+    return c.json({ success: false, error: campaign.status === 'needs_review'
+      ? '活动发送结果待核实，请查看原任务；核实前不能重复启动。'
+      : '活动已经在发送中，请查看发送进度，不要重复启动' }, 409);
   }
+  // A paused campaign may still contain an unresolved provider result.
+  // Resuming its frozen outbox must not erase that uncertainty.
+  const unconfirmed = await c.env.DB.prepare(`SELECT 1 FROM edm_campaign_recipients
+    WHERE campaign_id=? AND error_message LIKE '%待核实%' LIMIT 1`).bind(campaignId).first();
+  if (unconfirmed) return c.json({ success: false, error: '活动存在发送结果待核实的邮件，核实前不能重复启动。' }, 409);
 
   const pendingStatuses = ["queued", "sending"];
 
@@ -711,10 +753,24 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
         AND NOT EXISTS (SELECT 1 FROM edm_email_outbox o WHERE o.recipient_id=r.id) LIMIT 1`)
       .bind(campaignId).first();
     if (unmatched) return c.json({ success: false, error: '暂停期间新增了未冻结的收件人，请核对任务后再发送' }, 409);
-    // Resume the original frozen operation. Its published references are already
-    // deferred by the consumer; cron can publish any remaining references.
-    const resumed = await c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',updated_at=?
-      WHERE id=? AND status='paused'`).bind(Math.floor(Date.now() / 1000), campaignId).run();
+    // Wake the same frozen operation: old Queue references may be delayed for
+    // hours at the previous rate. Never reset an attempt or rebuild its content.
+    // Atomic status guards stop a concurrent resume from publishing twice.
+    const resumeGuard = `EXISTS(SELECT 1 FROM edm_campaigns c WHERE c.id=? AND c.status='paused' AND NOT EXISTS
+      (SELECT 1 FROM edm_campaign_recipients r WHERE r.campaign_id=c.id AND r.error_message LIKE '%待核实%'))`;
+    const resumedBatch = await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE edm_email_outbox SET published_at=NULL,publish_claimed_at=0
+        WHERE campaign_id=? AND recipient_id IN
+          (SELECT r.id FROM edm_campaign_recipients r WHERE r.campaign_id=? AND r.status IN ('queued','sending')
+            AND r.sent_at IS NULL AND r.ses_message_id IS NULL
+            AND NOT EXISTS(SELECT 1 FROM edm_email_send_attempts a WHERE a.recipient_id=r.id))
+        AND ${resumeGuard}`).bind(campaignId, campaignId, campaignId),
+      c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',updated_at=?
+        WHERE id=? AND status='paused' AND NOT EXISTS
+          (SELECT 1 FROM edm_campaign_recipients WHERE campaign_id=edm_campaigns.id AND error_message LIKE '%待核实%')`)
+        .bind(Math.floor(Date.now() / 1000), campaignId),
+    ]);
+    const resumed = resumedBatch[1];
     if (!resumed.meta.changes) return c.json({ success: false, error: '活动状态已变化，请刷新发送进度' }, 409);
     let publicationPending = false;
     try {
@@ -785,7 +841,9 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
   try {
     results = await c.env.DB.batch([
     c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',started_at=COALESCE(started_at,?),updated_at=?
-      WHERE id=? AND status!='sending'`).bind(now, now, campaignId),
+      WHERE id=? AND status=? AND NOT EXISTS
+        (SELECT 1 FROM edm_campaign_recipients WHERE campaign_id=edm_campaigns.id AND error_message LIKE '%待核实%')`)
+      .bind(now, now, campaignId, campaign.status),
     c.env.DB.prepare(`INSERT INTO edm_email_outbox
       (recipient_id,campaign_id,snapshot_key,provider_id,to_email,to_name,from_email,from_name,reply_to,variables,engagement_tracking_source,created_at)
       SELECT r.id,r.campaign_id,?,?,COALESCE(a.email,c.email),COALESCE(a.name,c.name),?,?,?,
@@ -794,10 +852,14 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
         ?,? FROM edm_campaign_recipients r
       JOIN edm_contacts c ON c.id=r.contact_id
       LEFT JOIN edm_assistant_recipients a ON a.recipient_id=r.id AND a.task_id=r.campaign_id
-      WHERE r.campaign_id=? AND r.status IN ('queued','sending')`)
+      WHERE r.campaign_id=? AND r.status IN ('queued','sending') AND changes()>0`)
       .bind(snapshotKey, selectedProvider.id, senderEmail, senderName, replyTo, selectedProvider.provider === 'resend' ? 'resend' : null, now, campaignId),
+    // Only envelopes frozen by this transaction may advance recipient state.
+    // changes() above reads the immediately preceding campaign claim.
     c.env.DB.prepare(`UPDATE edm_campaign_recipients SET status='sending'
-      WHERE campaign_id=? AND status IN ('queued','sending')`).bind(campaignId),
+      WHERE campaign_id=? AND status IN ('queued','sending') AND EXISTS
+        (SELECT 1 FROM edm_email_outbox o WHERE o.recipient_id=edm_campaign_recipients.id AND o.snapshot_key=?)`)
+      .bind(campaignId, snapshotKey),
     ]);
   } catch (error) {
     await c.env.STORAGE.delete(snapshotKey).catch(() => {});

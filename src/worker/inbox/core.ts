@@ -1,5 +1,6 @@
 import PostalMime from 'postal-mime';
 import { parse } from 'parse5';
+import { z } from 'zod';
 export type InboxStore = { DB: D1Database; MEDIA: R2Bucket };
 export type InboxConfig = {
   id: string;
@@ -15,6 +16,17 @@ export type InboxConfig = {
 };
 const enc = new TextEncoder();
 export const now = () => new Date().toISOString();
+export const INBOX_RESOLVE_PURPOSE = 'inbox-route-resolve-v1';
+export async function forwardingAddress(db: D1Database, value: unknown): Promise<string> {
+  const address = typeof value === 'string' ? value.trim() : '';
+  if (!z.email().max(254).safeParse(address).success) throw new Error('转发邮箱无效');
+  const domain = address.toLowerCase().split('@')[1];
+  if (
+    await db.prepare('SELECT 1 FROM wr_inbox_configs WHERE lower(domain)=? LIMIT 1').bind(domain).first() ||
+    await db.prepare('SELECT 1 FROM wr_inbox_routes WHERE lower(address)=? LIMIT 1').bind(address.toLowerCase()).first()
+  ) throw new Error('不能转发到收信域名或追踪地址，避免循环转发');
+  return address;
+}
 export async function digest(value: string | ArrayBuffer) {
   return Array.from(
     new Uint8Array(
@@ -85,23 +97,13 @@ export async function trackedAddress(
   targetId: string,
   snapshot: string,
   subject: string,
+  requestedForwardTo?: string | null,
 ) {
-  const existing = await db
-    .prepare('SELECT address FROM wr_inbox_routes WHERE source=? AND target_id=?')
-    .bind(source, targetId)
-    .first<{ address: string }>();
-  if (existing) return existing.address;
-  if (
-    !(await db
-      .prepare('SELECT 1 FROM wr_inbox_configs WHERE enabled=1 AND verified_at IS NOT NULL LIMIT 1')
-      .first())
-  )
-    return null;
   const target =
     source === 'edm'
       ? await db
           .prepare(
-            `SELECT c.reply_tracking,c.id business_id,c.user_id workspace_id,c.created_by owner_id,t.email original_email,NULL website_url FROM edm_campaign_recipients r JOIN edm_campaigns c ON c.id=r.campaign_id JOIN edm_contacts t ON t.id=r.contact_id AND t.user_id=c.user_id WHERE r.id=?`,
+            `SELECT c.reply_tracking,c.reply_to,c.id business_id,c.user_id workspace_id,c.created_by owner_id,t.email original_email,NULL website_url FROM edm_campaign_recipients r JOIN edm_campaigns c ON c.id=r.campaign_id JOIN edm_contacts t ON t.id=r.contact_id AND t.user_id=c.user_id WHERE r.id=?`,
           )
           .bind(targetId)
           .first<any>()
@@ -112,6 +114,13 @@ export async function trackedAddress(
           .bind(targetId)
           .first<any>();
   if (!target || !target.reply_tracking) return null;
+  const existing = await db
+    .prepare(`SELECT r.address,c.enabled,c.verified_at,c.track_edm,c.track_sites FROM wr_inbox_routes r JOIN wr_inbox_configs c ON c.id=r.config_id
+      WHERE r.source=? AND r.target_id=? AND r.workspace_id=?`)
+    .bind(source, targetId, target.workspace_id)
+    .first<{ address: string; enabled: number; verified_at: string | null; track_edm: number; track_sites: number }>();
+  // Already allocated routes keep the destination captured before the send.
+  if (existing) return existing.enabled && existing.verified_at && (source === 'edm' ? existing.track_edm : existing.track_sites) ? existing.address : null;
   const config = await db
     .prepare(
       `SELECT * FROM wr_inbox_configs WHERE workspace_id=? AND enabled=1 AND verified_at IS NOT NULL AND ${source === 'edm' ? 'track_edm' : 'track_sites'}=1`,
@@ -119,11 +128,13 @@ export async function trackedAddress(
     .bind(target.workspace_id)
     .first<InboxConfig>();
   if (!config) return null;
+  const requested = requestedForwardTo === undefined ? target.reply_to : requestedForwardTo;
+  const forwardTo = await forwardingAddress(db, source === 'edm' && requested?.trim() ? requested : config.forward_to);
   const id = crypto.randomUUID(),
-    address = `reply+${source === 'edm' ? 'e' : 's'}-${config.id.replaceAll('-', '').slice(0, 12)}-${crypto.randomUUID().replaceAll('-', '')}@${config.domain}`;
+    address = `reply+${source === 'edm' ? 'e2' : 's'}-${config.id.replaceAll('-', '').slice(0, 12)}-${crypto.randomUUID().replaceAll('-', '')}@${config.domain}`;
   await db
     .prepare(
-      `INSERT OR IGNORE INTO wr_inbox_routes(id,config_id,workspace_id,owner_id,source,business_id,target_id,address,original_email,website_url,subject,snapshot,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      `INSERT OR IGNORE INTO wr_inbox_routes(id,config_id,workspace_id,owner_id,source,business_id,target_id,address,original_email,website_url,subject,snapshot,forward_to,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     )
     .bind(
       id,
@@ -138,13 +149,14 @@ export async function trackedAddress(
       target.website_url,
       subject.slice(0, 1000),
       snapshot.slice(0, 500000),
+      forwardTo,
       now(),
     )
     .run();
   return (await db
-    .prepare('SELECT address FROM wr_inbox_routes WHERE source=? AND target_id=?')
-    .bind(source, targetId)
-    .first<{ address: string }>())!.address;
+    .prepare('SELECT address FROM wr_inbox_routes WHERE source=? AND target_id=? AND workspace_id=? AND config_id=?')
+    .bind(source, targetId, target.workspace_id, config.id)
+    .first<{ address: string }>())?.address || null;
 }
 export async function refreshReplyStats(db: D1Database, workspace: string) {
   // Aggregate independent reply facts without overwriting delivery/open/click status.

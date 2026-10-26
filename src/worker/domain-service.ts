@@ -19,10 +19,8 @@ import { storeCloneOutput, loadCloneOutput } from './clone-artifacts';
 import { samePublishedDraft } from '../shared/publication';
 import { CloneTasks } from './clone-tasks';
 import { ApiError } from './http';
-import { normalizeCloneImages } from '../shared/clone';
 import type {
   Asset,
-  CloneConfig,
   Draft,
   DesignPage,
   Inquiry,
@@ -36,7 +34,7 @@ import type {
   Release,
   Scene,
 } from '../shared/model';
-import { scrapeTargetUrl, generateCloneBundle, renderCloneFiles } from './clone-service';
+import { scrapeTargetUrl, renderCloneFiles } from './clone-service';
 import type { AppEnv } from './env';
 import { testMode } from './env';
 import {
@@ -108,6 +106,16 @@ const now = () => new Date().toISOString();
 const json = (value: unknown, status = 200) =>
   Response.json(value, { status, headers: { 'Cache-Control': 'no-store' } });
 const maxUpload = 80 * 1024 * 1024;
+const projectMediaCleanupScope = 'project-media-cleanup';
+const assetUploadScope = 'asset-upload';
+interface AssetUploadIntent {
+  projectId: string;
+  uploadId?: string;
+  token: string;
+  state: 'uploading' | 'cleanup';
+  nextAttemptAt: number;
+}
+const mediaCleanupRetryMs = 30_000;
 const supportedImages = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
 const supportedIcons = new Set(['image/x-icon', 'image/vnd.microsoft.icon']);
 const supportedVideos = new Set(['video/mp4', 'video/webm']);
@@ -138,6 +146,7 @@ export class DomainService {
   private readonly websiteQuota: WebsiteQuota;
   private serial: Promise<unknown> = Promise.resolve();
   private readonly activeLanes = new Map<string, Promise<void>>();
+  private readonly activeUploads = new Set<string>();
   constructor(
     readonly env: AppEnv,
     readonly scheduler: DomainScheduler,
@@ -148,6 +157,7 @@ export class DomainService {
     this.materials=new MaterialsService(env,this.store,{lock:operation=>this.lock(operation),schedule:time=>this.scheduler.schedule(time)},this.websiteQuota);
     this.clones = new CloneTasks(env, this.store, {
       lock: operation => this.lock(operation), wake: () => this.wake(),
+      project: (id, principal) => this.project(id, principal),
       validate: project => this.validateAssets(project.id, project.draft),
       image: async (projectId, assetId) => {
         const asset = await this.projectAsset(projectId, assetId);
@@ -165,9 +175,12 @@ export class DomainService {
   async fetch(request: Request): Promise<Response> {
     try {
       const pathname = new URL(request.url).pathname;
+      const path = pathname.split('/').filter(Boolean).map(s => decodeURIComponent(s));
       const consistentExport = pathname === '/api/admin/export';
-      const streamingUpload = request.method === 'POST' && /^\/api\/projects\/[^/]+\/(uploads|clone\/scrape)$/.test(pathname);
-      return !consistentExport && (streamingUpload || request.method === 'GET' || request.method === 'HEAD')
+      // Match the router's decoded segments, including accepted trailing slashes/segments.
+      const unlockedIO = request.method === 'POST' && path[0] === 'api' && path[1] === 'projects' && path[2] &&
+        (path[3] === 'uploads' || (path[3] === 'clone' && ['scrape', 'generate'].includes(path[4])));
+      return !consistentExport && (unlockedIO || request.method === 'GET' || request.method === 'HEAD')
         ? await this.route(request)
         : await this.lock(() => this.route(request));
     } catch (e) {
@@ -478,69 +491,8 @@ export class DomainService {
       const scraped = await scrapeTargetUrl(b.url.trim());
       return json({ scraped });
     }
-    if (command === 'clone' && path[4] === 'generate' && method === 'POST') {
-      await this.clones.assertEditable(project);
-      const b = await this.body(request);
-      expectedVersion(project, b.expectedVersion);
-      const cloneConfig = validateDraft({ ...project.draft, cloneConfig: { ...project.draft.cloneConfig, ...(b.cloneConfig as CloneConfig | undefined) } }).cloneConfig as CloneConfig;
-      cloneConfig.uiImages = normalizeCloneImages(cloneConfig.uiImages);
-      await this.validateAssets(project.id, { ...project.draft, cloneConfig });
-      requireCondition(
-        Boolean(
-          cloneConfig?.targetUrl?.trim() ||
-            (cloneConfig?.uiImages && cloneConfig.uiImages.length > 0),
-        ),
-        400,
-        'missing_clone_source',
-        '请提供目标网站 URL 或上传至少一张设计稿。',
-      );
-      project.draft.buildBranch = 'clone';
-      project.draft.cloneConfig = {
-        ...cloneConfig,
-        status: 'generating',
-      };
-      const getImageBase64 = async (assetId: string) => {
-        try {
-          const asset = await this.projectAsset(project.id, assetId);
-          const obj = await this.env.MEDIA.get(asset.key);
-          if (!obj) return null;
-          const ab = await obj.arrayBuffer();
-          const b64 = Buffer.from(ab).toString('base64');
-          return `data:${asset.contentType};base64,${b64}`;
-        } catch {
-          return null;
-        }
-      };
-
-      try {
-        const generated = await generateCloneBundle(
-          this.env,
-          project,
-          cloneConfig,
-          getImageBase64,
-        );
-        project.draft.cloneConfig = await storeCloneOutput(this.env, project.id, {
-          ...cloneConfig,
-          status: 'ready',
-          ...generated,
-          generatedAt: new Date().toISOString(),
-          error: undefined,
-        });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        project.draft.cloneConfig = {
-          ...cloneConfig,
-          status: 'error',
-          error: msg,
-        };
-        const next = this.changed(project);
-        await this.store.update('projects', next).run();
-        throw err;
-      }
-      const next = this.changed(project);
-      await this.store.update('projects', next).run();
-      return json({ project: next, generatedHtml: project.draft.cloneConfig.generatedHtml });
-    }
+    if (command === 'clone' && path[4] === 'generate' && method === 'POST')
+      return json(await this.clones.generate(project.id, principal, await this.body(request)));
     if (command === 'assets' && path[4] && (method === 'GET' || method === 'HEAD')) {
       const asset = await this.projectAsset(project.id, path[4]);
       if (new URL(request.url).searchParams.get('variant') === 'preview') {
@@ -914,25 +866,83 @@ export class DomainService {
     }) };
   }
   private async deleteProject(id: string, principal: Principal): Promise<void> {
-    const p = await this.project(id, principal);
+    await this.project(id, principal);
     const domains = await this.env.DB.prepare('SELECT count(*) AS n FROM project_domains WHERE project_id=?').bind(id).first<{n:number}>();
     requireCondition(!domains?.n, 409, 'domains_bound', '请先解除该网站的自定义域名，再删除网站。');
+    const jobs = await this.store.list<Job>('jobs', "project_id=? AND status IN ('queued','running','unknown','paused')", [id]);
+    // Queued can also mean an accepted remote build or publication awaiting recovery.
+    const unresolved = jobs.some(job => ['running', 'unknown', 'paused'].includes(job.status) ||
+      (job.status === 'queued' && (job.attempts !== 0 || job.upstreamId || job.input.attemptId ||
+        job.input.submissionStarted || job.input.publicationStarted || job.input.buildSubmitted || job.input.publishResult)));
+    // Polling can leave historical attempts pending after the current attempt has completed.
+    const attempts = await this.env.DB.prepare(`SELECT count(*) AS n FROM provider_attempts a
+      JOIN jobs j ON j.id=a.job_id WHERE j.project_id=?
+      AND a.id=json_extract(j.data,'$.input.attemptId') AND a.outcome IN ('started','pending','unknown')`).bind(id).first<{n:number}>();
+    const unsettled = await this.env.DB.prepare(`SELECT count(*) AS n FROM quota_ledger l
+      JOIN jobs j ON j.id=l.job_id WHERE j.project_id=? AND l.state='reserved' AND j.status!='queued'`)
+      .bind(id).first<{n:number}>();
+    requireCondition(!unresolved && !attempts?.n && !unsettled?.n,
+      409, 'project_tasks_unresolved', '项目仍有执行中、暂停或结果待核实的任务，请先完成、停止或核实原任务后再删除；任务记录与预留额度已保留。');
+    const settlements: D1PreparedStatement[] = [];
+    for (const job of jobs) if (job.status === 'queued')
+      settlements.push(...await this.store.settlement(job, false));
+    await this.wake();
     await this.store.batch([
+      ...settlements,
+      this.projectMediaCleanupIntent(id),
       this.env.DB.prepare('DELETE FROM project_delivery_settings WHERE project_id=?').bind(id),
       ...this.store.deleteProjectStatements(id),
       this.env.DB.prepare('DELETE FROM provider_accounts WHERE scope=?').bind(id),
     ]);
-    if (this.env.MEDIA) {
-      try {
-        const listed = await this.env.MEDIA.list({ prefix: `projects/${id}/` });
-        const keys = listed.objects.map((o) => o.key);
-        if (keys.length > 0) {
-          await this.env.MEDIA.delete(keys);
-        }
-      } catch {
-        // Storage cleanup is non-blocking
+  }
+  private projectMediaCleanupIntent(id: string): D1PreparedStatement {
+    return this.env.DB.prepare(`INSERT INTO idempotency(scope,request_id,fingerprint,result) VALUES(?,?,?,?)
+      ON CONFLICT(scope,request_id) DO UPDATE SET result=excluded.result`)
+      .bind(projectMediaCleanupScope, id, id, JSON.stringify({ nextAttemptAt: Date.now(), token: crypto.randomUUID() }));
+  }
+  private async cleanupProjectMedia(): Promise<void> {
+    const selected = await this.lock(async () => {
+      // Reading behind the mutation lock cannot miss a deletion whose alarm fired before its D1 commit.
+      const row = await this.env.DB.prepare(`SELECT request_id,result FROM idempotency WHERE scope=?
+        ORDER BY coalesce(json_extract(result,'$.nextAttemptAt'),0),request_id LIMIT 1`)
+        .bind(projectMediaCleanupScope).first<{ request_id: string; result: string }>();
+      if (!row) return;
+      const saved = JSON.parse(row.result) as { nextAttemptAt: number; token: string };
+      if (saved.nextAttemptAt > Date.now()) {
+        await this.scheduler.schedule(saved.nextAttemptAt);
+        return;
       }
+      const nextAttemptAt = Date.now() + mediaCleanupRetryMs;
+      // Arm recovery before checkpointing or touching R2, including an uncertain checkpoint response.
+      await this.scheduler.schedule(nextAttemptAt);
+      const result = JSON.stringify({ ...saved, nextAttemptAt });
+      await this.env.DB.prepare('UPDATE idempotency SET result=? WHERE scope=? AND request_id=?')
+        .bind(result, projectMediaCleanupScope, row.request_id).run();
+      return { id: row.request_id, result, projectExists: !!await this.store.one<Project>('projects', row.request_id) };
+    });
+    if (!selected) return;
+    try {
+      requireCondition(!selected.projectExists, 409, 'project_cleanup_conflict', '项目仍存在，保留媒体清理记录。');
+      const prefix = `projects/${selected.id}/`;
+      // Re-list the first page after every delete; a crash or an invalidated cursor cannot skip keys.
+      const listed = await this.env.MEDIA.list({ prefix, limit: 1000 });
+      const keys = listed.objects.map(object => object.key);
+      requireCondition(keys.every(key => key.startsWith(prefix)), 502, 'project_cleanup_prefix', '媒体清理返回了其他项目的对象。');
+      if (keys.length) await this.env.MEDIA.delete(keys);
+      else if (!listed.truncated) await this.lock(async () => {
+        // A late upload can requeue this prefix while R2 is in flight; keep that newer intent.
+        await this.env.DB.prepare('DELETE FROM idempotency WHERE scope=? AND request_id=? AND result=?')
+          .bind(projectMediaCleanupScope, selected.id, selected.result).run();
+      });
+    } catch (error) {
+      console.error('Project media cleanup deferred:', error instanceof Error ? error.name : 'unknown');
     }
+    await this.lock(async () => {
+      const next = await this.env.DB.prepare(`SELECT min(coalesce(json_extract(result,'$.nextAttemptAt'),0)) AS at
+        FROM idempotency WHERE scope=?`).bind(projectMediaCleanupScope).first<{ at: number | null }>();
+      if (next?.at !== null && next?.at !== undefined)
+        await this.scheduler.schedule(Math.max(Date.now() + 1000, next.at));
+    });
   }
   private async batchDeleteProjects(ids: string[], principal: Principal): Promise<number> {
     requireCondition(Array.isArray(ids) && ids.length > 0, 400, 'invalid_ids', '请提供要删除的项目 ID 列表。');
@@ -1290,6 +1300,7 @@ export class DomainService {
     media: MediaResult,
     origin: Asset['origin'],
     assetId: string = crypto.randomUUID(),
+    multipartCreated?: (uploadId: string) => Promise<void>,
   ): Promise<Asset> {
     requireCondition(
       supportedImages.has(media.contentType) || supportedIcons.has(media.contentType) || supportedVideos.has(media.contentType),
@@ -1333,7 +1344,7 @@ export class DomainService {
           '文件超过允许大小。',
         );
         result = await this.env.MEDIA.put(asset.key, media.body, options);
-      } else result = await this.multipart(asset.key, media.body, maximum, options, media.size);
+      } else result = await this.multipart(asset.key, media.body, maximum, options, media.size, multipartCreated);
       requireCondition(result && result.size > 0, 502, 'empty_media', '没有收到可用的媒体文件。');
       asset.size = result.size;
       return asset;
@@ -1348,6 +1359,7 @@ export class DomainService {
     maximum: number,
     options: R2MultipartOptions,
     expectedSize?: number,
+    created?: (uploadId: string) => Promise<void>,
   ): Promise<R2Object> {
     // R2.put rejects unknown-length streams. Multipart bounds memory and supports provider chunking.
     const upload = await this.env.MEDIA.createMultipartUpload(key, options),
@@ -1358,6 +1370,8 @@ export class DomainService {
       used = 0,
       total = 0;
     try {
+      // No part or complete can escape before recovery knows the exact session to abort.
+      await created?.(upload.uploadId);
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -1430,27 +1444,106 @@ export class DomainService {
       'invalid_media_bytes',
       '文件内容与声明格式不一致。',
     );
-    const asset = await this.saveAsset(
-      project.id,
-      {
-        body: file.stream(),
-        contentType: type,
-        filename: file.name,
-        size: file.size,
-        testMode: false,
-      },
-      'upload',
-    );
+    const assetId = crypto.randomUUID();
+    let intent: AssetUploadIntent = { projectId: project.id, token: crypto.randomUUID(), state: 'uploading', nextAttemptAt: Date.now() + mediaCleanupRetryMs };
+    let checkpoint = JSON.stringify(intent);
+    this.activeUploads.add(assetId);
     try {
       await this.lock(async () => {
         requireCondition(await this.store.one<Project>('projects', project.id), 404, 'project_not_found', '项目已删除。');
-        await this.store.insert('assets', asset).run();
+        // Persist recovery before R2; arm its alarm first, including uncertain D1 responses.
+        await this.scheduler.schedule(intent.nextAttemptAt);
+        await this.store.remember(assetUploadScope, assetId, project.id, intent).run();
       });
-    } catch (e) {
-      await this.env.MEDIA.delete(asset.key);
-      throw e;
+      const asset = await this.saveAsset(
+        project.id,
+        {
+          body: file.stream(),
+          contentType: type,
+          filename: file.name,
+          size: file.size,
+          testMode: false,
+        },
+        'upload', assetId,
+        uploadId => this.lock(async () => {
+          const next = { ...intent, uploadId }, result = JSON.stringify(next);
+          const changed = await this.env.DB.prepare('UPDATE idempotency SET result=? WHERE scope=? AND request_id=? AND result=?')
+            .bind(result, assetUploadScope, assetId, checkpoint).run();
+          requireCondition(changed.meta.changes === 1, 409, 'upload_interrupted', '上传已中断，请重新上传。');
+          intent = next; checkpoint = result;
+        }),
+      );
+      return await this.lock(async () => {
+        requireCondition(await this.store.one<Project>('projects', project.id), 404, 'project_not_found', '项目已删除。');
+        // Conditional insert fences an old invocation after restart recovery has claimed its intent.
+        await this.store.batch([
+          this.env.DB.prepare(`INSERT INTO assets(id,project_id,data) SELECT ?,?,?
+            WHERE EXISTS(SELECT 1 FROM idempotency WHERE scope=? AND request_id=? AND result=?)
+            AND EXISTS(SELECT 1 FROM projects WHERE id=?)`)
+            .bind(asset.id, asset.projectId, JSON.stringify(asset), assetUploadScope, assetId, checkpoint, project.id),
+          this.env.DB.prepare(`DELETE FROM idempotency WHERE scope=? AND request_id=? AND result=?
+            AND EXISTS(SELECT 1 FROM assets WHERE id=? AND project_id=?)`)
+            .bind(assetUploadScope, assetId, checkpoint, assetId, project.id),
+        ]);
+        const saved = await this.store.one<Asset>('assets', assetId);
+        requireCondition(saved?.key === asset.key, 409, 'upload_interrupted', '上传已中断，请重新上传。');
+        return saved;
+      });
+    } catch (error) {
+      // The atomic commit may have succeeded even if its response was lost. Never delete that asset.
+      const saved = await this.store.one<Asset>('assets', assetId);
+      if (saved?.projectId === project.id && saved.key === `projects/${project.id}/assets/${assetId}`) return saved;
+      this.activeUploads.delete(assetId);
+      await this.cleanupAssetUpload(assetId).catch(cleanupError => {
+        console.error('Asset upload cleanup deferred:', cleanupError instanceof Error ? cleanupError.name : 'unknown');
+      });
+      throw error;
+    } finally {
+      this.activeUploads.delete(assetId);
     }
-    return asset;
+  }
+  private async cleanupAssetUpload(assetId?: string): Promise<void> {
+    const selected = await this.lock(async () => {
+      const row = await this.env.DB.prepare(`SELECT request_id,result FROM idempotency WHERE scope=?
+        AND request_id NOT IN (SELECT value FROM json_each(?)) ${assetId ? 'AND request_id=?' : ''}
+        ORDER BY json_extract(result,'$.nextAttemptAt'),request_id LIMIT 1`)
+        .bind(assetUploadScope, JSON.stringify([...this.activeUploads]), ...(assetId ? [assetId] : []))
+        .first<{ request_id: string; result: string }>();
+      if (!row) return;
+      const saved = JSON.parse(row.result) as AssetUploadIntent;
+      if (!assetId && saved.nextAttemptAt > Date.now()) return;
+      await this.scheduler.schedule(Date.now() + mediaCleanupRetryMs);
+      const intent: AssetUploadIntent = { ...saved, state: 'cleanup', token: crypto.randomUUID(), nextAttemptAt: Date.now() + mediaCleanupRetryMs };
+      const result = JSON.stringify(intent);
+      const changed = await this.env.DB.prepare('UPDATE idempotency SET result=? WHERE scope=? AND request_id=? AND result=?')
+        .bind(result, assetUploadScope, row.request_id, row.result).run();
+      if (changed.meta.changes !== 1) return;
+      const key = `projects/${intent.projectId}/assets/${row.request_id}`;
+      const asset = await this.store.one<Asset>('assets', row.request_id);
+      return { id: row.request_id, result, intent, key, committed: asset?.key === key };
+    });
+    try {
+      if (selected) {
+        if (!selected.committed) {
+          // Abort closes late complete requests. A completed/aborted session is safe to abort again.
+          if (selected.intent.uploadId) await this.env.MEDIA.resumeMultipartUpload(selected.key, selected.intent.uploadId).abort();
+          await this.env.MEDIA.delete(selected.key);
+        }
+        await this.lock(async () => {
+          await this.env.DB.prepare('DELETE FROM idempotency WHERE scope=? AND request_id=? AND result=?')
+            .bind(assetUploadScope, selected.id, selected.result).run();
+        });
+      }
+    } catch (error) {
+      console.error('Asset upload cleanup deferred:', error instanceof Error ? error.name : 'unknown');
+    }
+    await this.lock(async () => {
+      const next = await this.env.DB.prepare(`SELECT min(json_extract(result,'$.nextAttemptAt')) AS at FROM idempotency
+        WHERE scope=? AND request_id NOT IN (SELECT value FROM json_each(?))`)
+        .bind(assetUploadScope, JSON.stringify([...this.activeUploads])).first<{ at: number | null }>();
+      const at = Math.min(next?.at ?? Infinity, this.activeUploads.size ? Date.now() + mediaCleanupRetryMs : Infinity);
+      if (Number.isFinite(at)) await this.scheduler.schedule(Math.max(Date.now() + 1000, at));
+    });
   }
   private matchesMagic(type: string, b: Uint8Array): boolean {
     if (supportedIcons.has(type)) return b.length >= 22 && b[0] === 0 && b[1] === 0 && b[2] === 1 && b[3] === 0 && (b[4] > 0 || b[5] > 0);
@@ -2516,11 +2609,11 @@ export class DomainService {
   }
   async tick(): Promise<void> {
     // Independent upstream calls can overlap; claims and quota changes still share the short lock.
-    const lanes = ['clone', 'publish', 'email', 'other', 'materials', 'website-quota'] as const;
+    const lanes = ['clone', 'publish', 'email', 'other', 'materials', 'website-quota', 'project-media-cleanup', 'asset-upload'] as const;
     await Promise.all(lanes.map(lane => {
       const active = this.activeLanes.get(lane);
       if (active) return active;
-      const task = (lane === 'website-quota' ? this.websiteQuota.reconcile(operation => this.lock(operation)) : lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
+      const task = (lane === 'asset-upload' ? this.cleanupAssetUpload() : lane === 'project-media-cleanup' ? this.cleanupProjectMedia() : lane === 'website-quota' ? this.websiteQuota.reconcile(operation => this.lock(operation)) : lane === 'materials' ? this.materials.tick() : lane === 'clone' ? this.clones.tick() : this.runTick(lane))
         .finally(() => { this.activeLanes.delete(lane); });
       this.activeLanes.set(lane, task);
       return task;

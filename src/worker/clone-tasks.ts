@@ -18,6 +18,7 @@ class PauseBoundary extends ReferencePaused {}
 interface Hooks {
   lock<T>(run: () => Promise<T>): Promise<T>;
   wake(): Promise<void>;
+  project(id: string, principal: Principal): Promise<Project>;
   validate(project: Project): Promise<void>;
   image(projectId: string, assetId: string): Promise<string | null>;
   publish(project: Project, principal: Principal, requestId: string): Promise<Job>;
@@ -34,7 +35,12 @@ export class CloneTasks {
     const job = project.draft.cloneConfig?.taskId
       ? await this.store.one<Job>('jobs', project.draft.cloneConfig.taskId)
       : undefined;
-    return job?.kind === 'clone' && job.projectId === project.id ? job : undefined;
+    const current = job?.kind === 'clone' && job.projectId === project.id ? job : undefined;
+    if (active(current)) return current;
+    // Legacy synchronous requests have a durable claim without changing the draft/version.
+    return (await this.store.list<Job>('jobs',
+      "project_id=? AND kind='clone' AND status='running' AND json_extract(data,'$.input.executionMode')='synchronous'",
+      [project.id], 'created_at ASC', 1))[0] ?? current;
   }
   async assertEditable(project: Project) {
     requireCondition(
@@ -133,6 +139,83 @@ export class CloneTasks {
     ]);
     return { project, job: this.publicJob(job) };
   }
+  /** Keep the legacy completed-response contract; only admission and commit hold the shared lock. */
+  async generate(projectId: string, principal: Principal, body: Record<string, unknown>) {
+    const { project: snapshot, job } = await this.hooks.lock(async () => {
+      const project = await this.hooks.project(projectId, principal);
+      await this.assertEditable(project);
+      expectedVersion(project, body.expectedVersion);
+      const cloneConfig = validateDraft({ ...project.draft, cloneConfig: {
+        ...project.draft.cloneConfig, ...(body.cloneConfig as CloneConfig | undefined),
+      } }).cloneConfig!;
+      cloneConfig.uiImages = normalizeCloneImages(cloneConfig.uiImages);
+      requireCondition(cloneConfig.targetUrl?.trim() || cloneConfig.uiImages?.length,
+        400, 'missing_clone_source', '请提供目标网站 URL 或上传至少一张设计稿。');
+      project.draft = { ...project.draft, buildBranch: 'clone', cloneConfig };
+      await this.hooks.validate(project);
+      const job: Job = {
+        id: crypto.randomUUID(), projectId, userId: principal.userId, kind: 'clone', status: 'running',
+        requestId: crypto.randomUUID(), inputVersion: project.version,
+        input: { project, executionMode: 'synchronous' }, attempts: 1, testMode: testMode(this.env),
+        createdAt: now(), updatedAt: now(),
+        cloneProgress: { autoPublish: false, phase: 'model', imagesRead: 0,
+          imageCount: cloneConfig.uiImages?.length ?? 0, outputCharacters: 0,
+          elapsedMs: 0, estimatedSeconds: 600, activeSince: now() },
+      };
+      await this.store.insert('jobs', job).run();
+      return { project, job };
+    });
+    const controller = new AbortController();
+    this.controllers.set(job.id, controller);
+    const matches = (project: Project) => project.ownerId === snapshot.ownerId &&
+      project.workspaceId === snapshot.workspaceId && project.version === job.inputVersion;
+    try {
+      const generated = await generateCloneBundle(this.env, snapshot, snapshot.draft.cloneConfig!,
+        id => this.hooks.image(projectId, id), { signal: controller.signal, progress: async () => {} });
+      return await this.hooks.lock(async () => {
+        const current = await this.store.one<Job>('jobs', job.id);
+        requireCondition(current?.projectId === projectId && current.status === 'running',
+          409, 'clone_task_changed', '任务已停止或变化，未写入生成结果。');
+        const project = await this.hooks.project(projectId, principal);
+        requireCondition(matches(project), 409, 'clone_input_changed', '任务执行期间项目已更新，未覆盖当前草稿。');
+        project.draft = { ...project.draft, buildBranch: 'clone', cloneConfig: await storeCloneOutput(this.env, projectId, {
+          ...snapshot.draft.cloneConfig, ...generated, taskId: job.id, status: 'ready', generatedAt: now(), error: undefined,
+        }) };
+        project.version++;
+        project.updatedAt = now();
+        current.status = 'succeeded';
+        current.updatedAt = now();
+        current.cloneProgress!.phase = 'done';
+        this.stopClock(current);
+        await this.store.batch([this.store.update('projects', project), this.store.update('jobs', current)]);
+        return { project, generatedHtml: project.draft.cloneConfig?.generatedHtml };
+      });
+    } catch (error) {
+      await this.hooks.lock(async () => {
+        const current = await this.store.one<Job>('jobs', job.id);
+        if (!current || current.projectId !== projectId || current.status !== 'running') return;
+        current.status = 'failed';
+        current.error = error instanceof Error ? error.message : String(error);
+        current.updatedAt = now();
+        this.stopClock(current);
+        const statements = [this.store.update('jobs', current)];
+        // A failed permission recheck must also prevent the failure path from writing an old draft.
+        const project = await this.hooks.project(projectId, principal).catch(() => undefined);
+        if (project && matches(project)) {
+          project.draft = { ...project.draft, buildBranch: 'clone', cloneConfig: {
+            ...snapshot.draft.cloneConfig, taskId: job.id, status: 'error', error: current.error,
+          } };
+          project.version++;
+          project.updatedAt = now();
+          statements.push(this.store.update('projects', project));
+        }
+        await this.store.batch(statements);
+      });
+      throw error;
+    } finally {
+      this.controllers.delete(job.id);
+    }
+  }
   publicJob(job: Job) {
     return { ...job, input: {} };
   }
@@ -170,6 +253,8 @@ export class CloneTasks {
       'clone_already_publishing',
       '生成已完成且发布已提交，请在发布页查看结果。',
     );
+    requireCondition(job.input.executionMode !== 'synchronous' || action === 'stop',
+      409, 'clone_sync_control', '旧版同步生成不能暂停或恢复，请等待完成或明确停止任务。');
     if (action === 'pause' && ['queued', 'running'].includes(job.status)) {
       if (job.status === 'queued') {
         job.status = 'paused';
@@ -204,7 +289,7 @@ export class CloneTasks {
     const selected = await this.hooks.lock(async () => {
       const jobs = await this.store.list<Job>(
         'jobs',
-        "kind='clone' AND status IN ('queued','running')",
+        "kind='clone' AND status IN ('queued','running') AND coalesce(json_extract(data,'$.input.executionMode'),'')!='synchronous'",
         [],
         'created_at ASC',
       );
