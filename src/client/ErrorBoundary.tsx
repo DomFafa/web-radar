@@ -1,6 +1,12 @@
 import { Component, useState, type ErrorInfo, type ReactNode } from 'react';
 import { Button, Icon } from './components';
 
+/** A rejected lazy import stays cached by React until the document is reloaded. */
+export function isChunkLoadError(error: Error | null): boolean {
+  return !!error && (error.name === 'ChunkLoadError' ||
+    /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|loading (?:css )?chunk \S+ failed|unable to preload css for/i.test(error.message));
+}
+
 export interface ErrorBoundaryProps {
   children?: ReactNode;
   fallback?: ReactNode | ((error: Error, reset: () => void) => ReactNode);
@@ -40,6 +46,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   reset = (): void => {
+    if (isChunkLoadError(this.state.error)) {
+      // Manual recovery only: retain the current URL and browser-persisted drafts.
+      // Clearing boundary state would retry the same cached import rejection.
+      window.location.reload();
+      return;
+    }
     this.setState({
       hasError: false,
       error: null,
@@ -76,12 +88,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       scope === 'app'
         ? '页面发生未能处理的运行时错误。您可以尝试重新加载页面，或重试恢复。'
         : '当前组件渲染出错，您可以尝试重试，或返回上一步操作。';
+    const chunkLoadFailed = isChunkLoadError(error);
 
     return (
       <ErrorFallbackUI
         scope={scope}
-        title={title || defaultTitle}
-        description={description || defaultDesc}
+        title={chunkLoadFailed ? '页面资源未能加载' : title || defaultTitle}
+        description={chunkLoadFailed
+          ? '网站更新或网络问题导致页面资源加载失败。请刷新页面，加载当前版本；已保存的草稿会保留。'
+          : description || defaultDesc}
         error={error}
         errorInfo={errorInfo}
         onReset={this.reset}
@@ -116,6 +131,7 @@ export function ErrorFallbackUI({
 
   const errorMessage = error?.message || (error ? String(error) : '未知异常');
   const componentStack = errorInfo?.componentStack || '';
+  const chunkLoadFailed = isChunkLoadError(error);
 
   const handleCopy = async () => {
     const details = [
@@ -158,14 +174,14 @@ export function ErrorFallbackUI({
 
         <div className="error-boundary-actions">
           <Button kind="primary" onClick={onReset}>
-            <Icon name="refresh" size={16} /> 重试
+            <Icon name="refresh" size={16} /> {chunkLoadFailed ? '刷新加载当前版本' : '重试'}
           </Button>
           {onBack && (
             <Button kind="secondary" onClick={onBack}>
               <Icon name="back" size={16} /> {backText}
             </Button>
           )}
-          {scope === 'app' && (
+          {scope === 'app' && !chunkLoadFailed && (
             <Button kind="secondary" onClick={() => window.location.reload()}>
               重新加载页面
             </Button>

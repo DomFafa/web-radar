@@ -8,6 +8,7 @@ import { handleEmailQueue } from '../../src/outreach/server/queues/email-send.qu
 import { campaignRoutes } from '../../src/outreach/server/routes/campaign.routes';
 import { seal } from '../../src/outreach/server/lib/credentials';
 import { addCampaignRecipients } from '../../src/outreach/server/lib/campaign-recipient-batch';
+vi.mock('../../src/outreach/server/lib/network', () => ({ publicFetch: (...args: any[]) => globalThis.fetch(args[0], args[1]) }));
 
 let sqlite: DatabaseSync;
 let env: any;
@@ -66,7 +67,7 @@ beforeEach(() => {
     delete: async (key: string) => { objects.delete(key); },
   } };
 });
-afterEach(() => { vi.restoreAllMocks(); sqlite.close(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); sqlite.close(); });
 
 test('99 recipients share one 512 KiB snapshot while Queue batches remain small', async () => {
   seed(99, `<p>${'A'.repeat(512 * 1024)}</p>`);
@@ -141,6 +142,81 @@ test('paused frozen campaign with an uncertain recipient cannot resume or republ
   expect(sqlite.prepare("SELECT status FROM edm_campaigns WHERE id='c'").get()!.status).toBe('paused');
   expect(sqlite.prepare("SELECT published_at FROM edm_email_outbox WHERE recipient_id='r0'").get()!.published_at).toBeNull();
   expect(sendBatch).not.toHaveBeenCalled();
+});
+
+test('paused rate change clears only untouched reservations and does not publish or resume anything', async () => {
+  seed(3, '<p>Frozen</p>');
+  sqlite.exec(`UPDATE edm_campaigns SET status='paused',send_rate=50 WHERE id='c';
+    UPDATE edm_email_outbox SET published_at=1;
+    UPDATE edm_campaign_recipients SET status='sent',sent_at=1,ses_message_id='accepted' WHERE id='r0';
+    INSERT INTO edm_email_send_attempts(recipient_id,started_at) VALUES ('r1',1);
+    INSERT INTO edm_email_schedule VALUES ('r0',1),('r1',500000),('r2',900000);
+    INSERT INTO edm_email_clocks(id,next_at) VALUES ('reserve:campaign:c',901200);`);
+  const sendBatch = vi.fn(); env.EMAIL_QUEUE = { sendBatch };
+  const response = await campaignApp().request('/campaigns/c', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sendRate: 200 }),
+  }, env);
+  expect(response.status).toBe(200);
+  expect((await response.json() as any).data).toMatchObject({ status: 'paused', sendRate: 200 });
+  expect(sqlite.prepare('SELECT * FROM edm_email_schedule ORDER BY recipient_id').all()).toEqual([
+    { recipient_id: 'r0', due_at: 1 }, { recipient_id: 'r1', due_at: 500000 },
+  ]);
+  expect(sqlite.prepare('SELECT COUNT(*) n FROM edm_email_outbox WHERE published_at=1').get()!.n).toBe(3);
+  expect(sqlite.prepare('SELECT COUNT(*) n FROM edm_email_send_attempts').get()!.n).toBe(1);
+  expect(objects.size).toBe(1);
+  expect(sendBatch).not.toHaveBeenCalled();
+});
+
+test('a concurrent state change aborts the paused rate update without clearing existing reservations', async () => {
+  seed(1, '<p>Frozen</p>');
+  sqlite.exec(`UPDATE edm_campaigns SET status='paused',send_rate=50 WHERE id='c';
+    INSERT INTO edm_email_schedule VALUES ('r0',900000);`);
+  const batch = env.DB.batch.bind(env.DB);
+  env.DB.batch = async (statements: D1PreparedStatement[]) => {
+    sqlite.exec("UPDATE edm_campaigns SET status='sending' WHERE id='c'");
+    return batch(statements);
+  };
+  const response = await campaignApp().request('/campaigns/c', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sendRate: 200 }),
+  }, env);
+  expect(response.status).toBe(409);
+  expect(sqlite.prepare("SELECT status,send_rate FROM edm_campaigns WHERE id='c'").get()).toEqual({ status: 'sending', send_rate: 50 });
+  expect(sqlite.prepare('SELECT * FROM edm_email_schedule').get()).toEqual({ recipient_id: 'r0', due_at: 900000 });
+});
+
+test('explicit concurrent resume wakes only untouched original snapshots; old delayed references cannot resend accepted mail', async () => {
+  seed(3, '<p>Original frozen content</p>');
+  sqlite.exec(`INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at)
+    VALUES ('t','u','Template','Changed live subject','<p>Changed live content</p>',0,0);
+    UPDATE edm_campaigns SET status='paused',template_id='t',send_rate=200 WHERE id='c';
+    UPDATE edm_email_outbox SET published_at=1;
+    UPDATE edm_campaign_recipients SET status='sent',sent_at=1,ses_message_id='accepted' WHERE id='r0';
+    INSERT INTO edm_email_send_attempts(recipient_id,started_at,result) VALUES ('r1',1,'{"messageId":"prior-receipt","sentAt":1}');`);
+  env.CREDENTIAL_KEY = 'unit-test-key';
+  env.BETTER_AUTH_SECRET = 'unit-test-auth-secret';
+  sqlite.prepare(`INSERT INTO edm_providers(id,user_id,provider,name,api_key,is_default,created_at,updated_at)
+    VALUES ('p','u','resend','Test',?,1,0,0)`).run(await seal('test-only-key', 'p', env));
+  const sendBatch = vi.fn(async (_messages: any[]) => undefined);
+  env.EMAIL_QUEUE = { sendBatch, send: vi.fn(async () => undefined) };
+  const responses = await Promise.all([0, 1].map(() => campaignApp().request('/campaigns/c/send', { method: 'POST' }, env)));
+  expect(responses.map(response => response.status).sort()).toEqual([200, 409]);
+  expect(sendBatch).toHaveBeenCalledTimes(1);
+  const refs = sendBatch.mock.calls[0][0] as any[];
+  expect(refs).toEqual([{ body: { kind: 'email-job', campaignId: 'c', recipientId: 'r2' } }]);
+  expect(await hydrateEmailQueue(env, refs[0].body)).toMatchObject({ subject: 'Large send', bodyHtml: '<p>Original frozen content</p>', toEmail: 'customer2@example.com' });
+  const request = vi.fn(async (_url: any, init: any) => {
+    expect(JSON.parse(init.body).html).toContain('Original frozen content');
+    return Response.json({ id: 'new-receipt' });
+  });
+  vi.stubGlobal('fetch', request);
+  const message = () => ({ ...refs[0], ack: vi.fn(), retry: vi.fn() });
+  // The freshly published reference can race the original delayed reference.
+  await Promise.all([0, 1].map(() => handleEmailQueue({ messages: [message()] } as any, env)));
+  // Later duplicate deliveries must see the original accepted receipt.
+  await handleEmailQueue({ messages: [message(), message()] } as any, env);
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(sqlite.prepare("SELECT status,ses_message_id FROM edm_campaign_recipients WHERE id='r2'").get()).toEqual({ status: 'sent', ses_message_id: 'new-receipt' });
+  expect(objects.size).toBe(1);
 });
 
 test('recipient storage rejects additions after a campaign enters needs-review', async () => {

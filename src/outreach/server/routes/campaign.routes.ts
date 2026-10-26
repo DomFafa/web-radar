@@ -1,5 +1,5 @@
 import { actorScope, creatorFilter } from '../lib/actor-scope';
-import { validSendRate } from '../lib/email-pacing';
+import { pausedCampaignPacingReset, validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
 import {resolveSenderDomains} from '../lib/sender-domains';
 import { replyAddressSchema } from '../lib/reply-address';
@@ -427,7 +427,17 @@ campaignRoutes.put("/:id", requirePermission("campaigns:write"), async (c) => {
     updateData.scheduledAt = body.scheduledAt ? new Date(body.scheduledAt) : null;
   }
 
-  await db.update(campaigns).set(updateData).where(eq(campaigns.id, campaignId));
+  if (existing.status === 'paused' && body.sendRate !== undefined && body.sendRate !== existing.sendRate) {
+    const update = db.update(campaigns).set(updateData).where(and(eq(campaigns.id, campaignId),
+      eq(campaigns.status, 'paused'), sql`${campaigns.sendRate} IS ${existing.sendRate}`)).toSQL();
+    const result = await c.env.DB.batch([
+      ...pausedCampaignPacingReset(c.env.DB, campaignId, existing.sendRate),
+      c.env.DB.prepare(update.sql).bind(...update.params),
+    ]);
+    if (!result[result.length - 1].meta.changes) return c.json({ success: false, error: '活动状态或速率已变化，请刷新后再修改' }, 409);
+  } else {
+    await db.update(campaigns).set(updateData).where(eq(campaigns.id, campaignId));
+  }
 
   const [updated] = await db.select().from(campaigns).where(eq(campaigns.id, campaignId));
   return c.json({ success: true, data: updated });
@@ -743,12 +753,24 @@ campaignRoutes.post("/:id/send", requirePermission("campaigns:send"), async (c) 
         AND NOT EXISTS (SELECT 1 FROM edm_email_outbox o WHERE o.recipient_id=r.id) LIMIT 1`)
       .bind(campaignId).first();
     if (unmatched) return c.json({ success: false, error: '暂停期间新增了未冻结的收件人，请核对任务后再发送' }, 409);
-    // Resume the original frozen operation. Its published references are already
-    // deferred by the consumer; cron can publish any remaining references.
-    const resumed = await c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',updated_at=?
-      WHERE id=? AND status='paused' AND NOT EXISTS
-        (SELECT 1 FROM edm_campaign_recipients WHERE campaign_id=edm_campaigns.id AND error_message LIKE '%待核实%')`)
-      .bind(Math.floor(Date.now() / 1000), campaignId).run();
+    // Wake the same frozen operation: old Queue references may be delayed for
+    // hours at the previous rate. Never reset an attempt or rebuild its content.
+    // Atomic status guards stop a concurrent resume from publishing twice.
+    const resumeGuard = `EXISTS(SELECT 1 FROM edm_campaigns c WHERE c.id=? AND c.status='paused' AND NOT EXISTS
+      (SELECT 1 FROM edm_campaign_recipients r WHERE r.campaign_id=c.id AND r.error_message LIKE '%待核实%'))`;
+    const resumedBatch = await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE edm_email_outbox SET published_at=NULL,publish_claimed_at=0
+        WHERE campaign_id=? AND recipient_id IN
+          (SELECT r.id FROM edm_campaign_recipients r WHERE r.campaign_id=? AND r.status IN ('queued','sending')
+            AND r.sent_at IS NULL AND r.ses_message_id IS NULL
+            AND NOT EXISTS(SELECT 1 FROM edm_email_send_attempts a WHERE a.recipient_id=r.id))
+        AND ${resumeGuard}`).bind(campaignId, campaignId, campaignId),
+      c.env.DB.prepare(`UPDATE edm_campaigns SET status='sending',updated_at=?
+        WHERE id=? AND status='paused' AND NOT EXISTS
+          (SELECT 1 FROM edm_campaign_recipients WHERE campaign_id=edm_campaigns.id AND error_message LIKE '%待核实%')`)
+        .bind(Math.floor(Date.now() / 1000), campaignId),
+    ]);
+    const resumed = resumedBatch[1];
     if (!resumed.meta.changes) return c.json({ success: false, error: '活动状态已变化，请刷新发送进度' }, 409);
     let publicationPending = false;
     try {
