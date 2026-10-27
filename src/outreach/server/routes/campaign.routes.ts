@@ -129,10 +129,9 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
       }
       updatedCampaigns.add(item.campaignId);
 
-      // A click is also an engagement/open. Keep both timestamps so changing
-      // the recipient status from opened to clicked cannot lose open data.
+      // Keep open and click evidence independent of later status changes.
       const recipientUpdate: Record<string, any> = {};
-      if ((hasOpen || hasClick) && !item.openedAt) recipientUpdate.openedAt = new Date();
+      if (hasOpen && !item.openedAt) recipientUpdate.openedAt = new Date();
       if (hasClick && !item.clickedAt) recipientUpdate.clickedAt = new Date();
       if (isDelivered && !isBounce && !item.deliveredAt) recipientUpdate.deliveredAt = new Date();
       if (isBounce) {
@@ -157,7 +156,7 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
   // engagement totals. Reconcile new evidence from persisted recipient rows.
   await Promise.all(Array.from(updatedCampaigns).map(campaignId => env.DB.prepare(`UPDATE edm_campaigns SET
     total_delivered=MAX(total_delivered,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (delivered_at IS NOT NULL OR status IN ('delivered','opened','clicked')))),
-    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status IN ('opened','clicked')))),
+    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status='opened'))),
     total_clicked=MAX(total_clicked,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (clicked_at IS NOT NULL OR status='clicked'))),
     total_bounced=MAX(total_bounced,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND status='bounced')),
     updated_at=? WHERE id=?`).bind(campaignId, campaignId, campaignId, campaignId, Math.floor(Date.now() / 1000), campaignId).run()));

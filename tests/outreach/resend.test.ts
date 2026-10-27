@@ -67,6 +67,24 @@ test.each([
  const body:any=await response.json();
  expect(body.data[0]).toMatchObject({totalSent:1,totalOpened,totalClicked:1});
 });
+test.each([{opens:0,clicks:0},{opens:0,clicks:1},{opens:1,clicks:1}])('Mailchimp sync keeps mixed-campaign opens independent for %j',async({opens,clicks})=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.exec(`UPDATE edm_campaign_recipients SET status='clicked',sent_at=1,delivered_at=1,clicked_at=1,ses_message_id='email1' WHERE id='r';
+ UPDATE edm_resend_deliveries SET email_id='email1';
+ UPDATE edm_campaigns SET total_sent=2,total_delivered=2,total_clicked=1;
+ INSERT INTO edm_contacts(id,user_id,email,created_at,updated_at) VALUES ('mandrill-contact','u','second@example.com',0,0);
+ INSERT INTO edm_campaign_recipients(id,campaign_id,contact_id,status,sent_at,ses_message_id,created_at) VALUES ('mandrill-recipient','c','mandrill-contact','sent',1,'mandrill1',0);
+ INSERT INTO edm_providers(id,user_id,provider,name,api_key,config,is_default,created_at,updated_at) VALUES ('m','u','mailchimp','Transactional','unused','{}',0,0,0);`);
+ sqlite.prepare("UPDATE edm_providers SET api_key=?,config=? WHERE id='m'").run(await seal('test-mailchimp','m',env),await seal(JSON.stringify({apiType:'transactional',mailchimpDomains:[{domain:'example.com',validSigning:true}]}),'m:config',env));
+ const send=vi.fn();env.EMAIL_QUEUE={send};
+ vi.stubGlobal('fetch',vi.fn(async(url:any)=>{expect(url).toBe('https://mandrillapp.com/api/1.0/messages/info');return Response.json({_id:'mandrill1',state:'sent',opens,clicks})}));
+ const response=await h.request('/campaigns/c?sync=1',{},env);expect(response.status).toBe(200);
+ expect(stats()).toMatchObject({total_sent:2,total_opened:opens,total_clicked:1+clicks});
+ expect(Boolean(sqlite.prepare("SELECT opened_at FROM edm_campaign_recipients WHERE id='mandrill-recipient'").get()!.opened_at)).toBe(opens>0);
+ expect(row().opened_at).toBeNull();
+ expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()!.n).toBe(0);
+});
 test('account and workspace isolation; mismatched email ids cannot claim a mapped recipient',async()=>{
  expect(await applyResendEvent(env.DB,'foreign',event('opened'))).toBe(false);
  await applyResendEvent(env.DB,'p',event('sent'));
