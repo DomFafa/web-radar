@@ -25,10 +25,11 @@ export function pausedCampaignPacingReset(db: D1Database, campaignId: string, pr
       .bind(now, `dispatch:campaign:${campaignId}`, `dispatch:account:campaign:${campaignId}`,
         `reserve:campaign:${campaignId}`, `reserve:account:campaign:${campaignId}`, campaignId, previousRate),
     // The dispatch clock retains any shared 429 cooldown, including clocks
-    // written by older releases. Remaining due_at rows retain every other send.
+    // written by older releases. Remaining rows retain every other Resend slot,
+    // but other providers cannot advance this clock beyond its existing tail.
     db.prepare(`UPDATE edm_email_clocks SET next_at=MAX(?,
         COALESCE((SELECT next_at FROM edm_email_clocks WHERE id='dispatch:account:resend'),0),
-        COALESCE((SELECT MAX(due_at)+? FROM edm_email_schedule),0))
+        MIN(next_at,COALESCE((SELECT MAX(due_at)+? FROM edm_email_schedule),0)))
       WHERE id='reserve:account:resend' AND ${guard}`)
       .bind(now, RESEND_INTERVAL, campaignId, previousRate),
   ];
