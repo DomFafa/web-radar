@@ -1,3 +1,4 @@
+import { getCampaignReview, startCampaignReview } from '../lib/campaign-review';
 import { actorScope, creatorFilter } from '../lib/actor-scope';
 import { pausedCampaignPacingReset, validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
@@ -129,10 +130,9 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
       }
       updatedCampaigns.add(item.campaignId);
 
-      // A click is also an engagement/open. Keep both timestamps so changing
-      // the recipient status from opened to clicked cannot lose open data.
+      // Keep open and click evidence independent of later status changes.
       const recipientUpdate: Record<string, any> = {};
-      if ((hasOpen || hasClick) && !item.openedAt) recipientUpdate.openedAt = new Date();
+      if (hasOpen && !item.openedAt) recipientUpdate.openedAt = new Date();
       if (hasClick && !item.clickedAt) recipientUpdate.clickedAt = new Date();
       if (isDelivered && !isBounce && !item.deliveredAt) recipientUpdate.deliveredAt = new Date();
       if (isBounce) {
@@ -157,7 +157,7 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
   // engagement totals. Reconcile new evidence from persisted recipient rows.
   await Promise.all(Array.from(updatedCampaigns).map(campaignId => env.DB.prepare(`UPDATE edm_campaigns SET
     total_delivered=MAX(total_delivered,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (delivered_at IS NOT NULL OR status IN ('delivered','opened','clicked')))),
-    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status IN ('opened','clicked')))),
+    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status='opened'))),
     total_clicked=MAX(total_clicked,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (clicked_at IS NOT NULL OR status='clicked'))),
     total_bounced=MAX(total_bounced,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND status='bounced')),
     updated_at=? WHERE id=?`).bind(campaignId, campaignId, campaignId, campaignId, Math.floor(Date.now() / 1000), campaignId).run()));
@@ -214,7 +214,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         providerQueued: providerQueuedCount,
         failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' THEN 1 ELSE 0 END)`,
         sent: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('sent', 'delivered', 'opened', 'clicked') THEN 1 ELSE 0 END)`,
-        opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('opened', 'clicked') THEN 1 ELSE 0 END)`,
+        opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.openedAt} IS NOT NULL OR ${campaignRecipients.status} = 'opened' THEN 1 ELSE 0 END)`,
         clicked: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'clicked' THEN 1 ELSE 0 END)`,
         bounced: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('failed', 'bounced') THEN 1 ELSE 0 END)`,
       })
@@ -278,6 +278,17 @@ campaignRoutes.get("/:id/export", requirePermission("campaigns:read"), async (c)
   c.header("Cache-Control", "no-store");
   return c.body(buildCampaignReport(campaign.name, rows));
 });
+
+// Verification is a read from the provider, never another send.
+for (const method of ['get', 'post'] as const) {
+  campaignRoutes[method]('/:id/reconcile', requirePermission(method === 'post' ? 'campaigns:write' : 'campaigns:read'), async c => {
+    const db=createDb(c.env.DB), user=c.get('user')!, id=c.req.param('id');
+    const [campaign]=await db.select().from(campaigns).where(and(eq(campaigns.id,id),actorScope(campaigns,user)));
+    if(!campaign) return c.json({error:'活动不存在'},404);
+    if(method==='post' && campaign.status!=='needs_review') return c.json({error:'只有待核实任务需要核实，请刷新任务状态'},409);
+    return c.json({success:true,data:method==='post'?await startCampaignReview(c.env,id):await getCampaignReview(c.env.DB,id)});
+  });
+}
 
 // 获取单个活动详情
 campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {

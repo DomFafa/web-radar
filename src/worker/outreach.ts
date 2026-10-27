@@ -1,3 +1,4 @@
+import { handleCampaignReview, type CampaignReviewMessage } from '../outreach/server/lib/campaign-review';
 import { effectiveRole, viewTeamData, writeBusiness } from '../shared/access';
 import { handleResendSync, type ResendSyncMessage } from '../outreach/server/lib/resend-tracking';
 import { resendWebhookRoutes } from '../outreach/server/routes/resend.routes';
@@ -60,13 +61,17 @@ export async function outreachFetch(request:Request, env:AppEnv, ctx:Parameters<
   app.onError((error,c)=>{console.error('Outreach request failed',testMode(env)?error:error.name);return c.json({error:'操作失败，请检查输入或服务配置后重试。'},500)});
   return app.fetch(request,bindings,ctx);
 }
-export async function outreachQueue(batch:MessageBatch<EmailQueueBody|SiteMessageQueueMessage|ResendSyncMessage>,env:AppEnv) {
+export async function outreachQueue(batch:MessageBatch<EmailQueueBody|SiteMessageQueueMessage|ResendSyncMessage|CampaignReviewMessage>,env:AppEnv) {
   const bindings=outreachBindings(env);
   if(testMode(env)) { for(const m of batch.messages)m.ack();return; }
   if(batch.queue.startsWith('web-radar-edm-email')) {
     const groups=new Map<string,Message<EmailQueueBody>[]>();
     for (const message of batch.messages) {
-      if ('kind' in message.body && message.body.kind === 'resend-sync') {
+      if ('kind' in message.body && message.body.kind === 'campaign-review') {
+        const delay=await handleCampaignReview(message.body,bindings);
+        if(delay) await bindings.EMAIL_QUEUE.send(message.body,{delaySeconds:Math.min(86400,delay)});
+        message.ack();
+      } else if ('kind' in message.body && message.body.kind === 'resend-sync') {
         const delay=await handleResendSync(message.body,bindings);
         if(delay) await bindings.EMAIL_QUEUE.send(message.body,{delaySeconds:Math.min(86400,delay)});
         message.ack();
