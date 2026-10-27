@@ -49,6 +49,8 @@ try {
   let nextCampaignSendUncertain = false;
   let nextCampaignPublicationPending = false;
   let campaignRecipientRows;
+  let review = null;
+  let reviewStarts = 0;
   await page.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -79,6 +81,10 @@ try {
       campaign.status = 'sending';
       response = { data: { recipientsQueued: campaign.totalRecipients, publicationPending: nextCampaignPublicationPending } };
       nextCampaignPublicationPending = false;
+    }
+    else if (path === '/campaigns/fixture-campaign/reconcile') {
+      if (request.method() === 'POST') { reviewStarts++; review = {status:'running',checked:0,resolved:0,remaining:1,updated_at:Date.now()}; }
+      response = {data:review};
     }
     else if (path === '/campaigns/fixture-campaign') { campaignReads++; response = { data: campaign }; }
     else return route.fulfill({ status: 404, json: { error: `Unexpected fixture request: ${path}` } });
@@ -169,7 +175,7 @@ try {
   await expect(page.getByRole('button', { name: '删除', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '添加收件人', exact: true })).toHaveCount(0);
   await expect(page.locator('.modal select')).toBeDisabled();
-  await expect(page.getByText('部分邮件的提交或发送结果尚未确认，已进入队列的邮件可能继续处理。请先核实结果，暂勿重发或修改任务。', { exact: true })).toBeVisible();
+  await expect(page.getByText('部分发送结果尚未确认。可点击「立即核实」查询服务商记录，不会重发邮件；没有确切回执时将继续保留待核实。', { exact: true })).toBeVisible();
   await expect(page.getByText('动态刷新中...', { exact: true })).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, 'edm-campaign-needs-review.png'), fullPage: true, animations: 'disabled' });
   const readsBeforeProgress = campaignReads;
@@ -182,6 +188,17 @@ try {
   expect(campaignReads, 'review with only unsubmitted recipients should not poll forever').toBe(readsAfterSettled);
   expect(sent, 'review state must not cause another submission').toBe(3);
   console.log('PASS: submission error refreshes review state, locks mutations, shows uncertainty, updates accepted work, and stops polling with only unsubmitted recipients');
+  await page.getByRole('button', {name:'立即核实',exact:true}).click();
+  await expect.poll(()=>reviewStarts).toBe(1);
+  await expect(page.getByRole('button',{name:'正在核实…',exact:true})).toBeDisabled();
+  review={...review,status:'completed',checked:19667,error:'未找到匹配记录，仍待核实'};
+  await page.clock.fastForward(5001);
+  await expect(page.getByText(/本次核实完成：已查询 19667/)).toBeVisible();
+  await expect(page.getByRole('button',{name:'立即核实',exact:true})).toBeEnabled();
+  expect(sent,'manual review must never send mail').toBe(3);
+  await page.screenshot({path:join(screenshotDir,'edm-manual-review.png'),fullPage:true,animations:'disabled'});
+  review=null;
+
 
   campaign = { ...campaign, name: 'Durable mail awaiting queue', status: 'draft', totalSent: 0, progress: { sending: 0, queued: 2, failed: 0, processed: 0 } };
   nextCampaignPublicationPending = true;

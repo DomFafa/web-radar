@@ -1,3 +1,4 @@
+import { getCampaignReview, startCampaignReview } from '../lib/campaign-review';
 import { actorScope, creatorFilter } from '../lib/actor-scope';
 import { pausedCampaignPacingReset, validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
@@ -277,6 +278,17 @@ campaignRoutes.get("/:id/export", requirePermission("campaigns:read"), async (c)
   c.header("Cache-Control", "no-store");
   return c.body(buildCampaignReport(campaign.name, rows));
 });
+
+// Verification is a read from the provider, never another send.
+for (const method of ['get', 'post'] as const) {
+  campaignRoutes[method]('/:id/reconcile', requirePermission(method === 'post' ? 'campaigns:write' : 'campaigns:read'), async c => {
+    const db=createDb(c.env.DB), user=c.get('user')!, id=c.req.param('id');
+    const [campaign]=await db.select().from(campaigns).where(and(eq(campaigns.id,id),actorScope(campaigns,user)));
+    if(!campaign) return c.json({error:'活动不存在'},404);
+    if(method==='post' && campaign.status!=='needs_review') return c.json({error:'只有待核实任务需要核实，请刷新任务状态'},409);
+    return c.json({success:true,data:method==='post'?await startCampaignReview(c.env,id):await getCampaignReview(c.env.DB,id)});
+  });
+}
 
 // 获取单个活动详情
 campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
