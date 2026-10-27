@@ -77,6 +77,7 @@ describe('CRM employee group activity hierarchy', () => {
     for (const metric of ['opened', 'clicked']) {
       const records: any = await (await req('/communications?ownerId=owner&activityGroupId=g1&businessId=campaign&channel=edm&metric=' + metric)).json();
       expect(records.records.map((r: any) => r.targetId)).toEqual(['r1']);
+      expect(records.records[0]).toMatchObject({ opened: 1, clicked: 1, openedAt: '2026-10-08T08:01:40Z', clickedAt: '2026-10-08T08:03:20Z' });
     }
     expect((await req('/communications?metric=unsafe')).status).toBe(400);
     expect((await req('/activity/batches/edm/campaign?ownerId=owner')).status).toBe(400);
@@ -95,10 +96,24 @@ describe('CRM employee group activity hierarchy', () => {
     expect(noTracking.batch.opened).toMatchObject({ value: null, coverage: 'unknown', rate: null });
     expect(trackedZero.batch.delivered).toMatchObject({ value: null, coverage: 'unknown', tracked: 0, rate: null });
   });
-  it('derives open and click independently, including a click when the separate open timestamp is absent', async () => {
+  it('keeps click-only messages out of open metrics, filters, details and exports', async () => {
     sqlite.exec("UPDATE edm_campaign_recipients SET opened_at=NULL WHERE id='r1'");
-    const details: any = await (await req('/communications?businessId=campaign&activityGroupId=g1&metric=opened')).json();
-    expect(details.records[0]).toMatchObject({ targetId: 'r1', opened: 1, clicked: 1, openedAt: '2026-10-08T08:03:20Z', clickedAt: '2026-10-08T08:03:20Z', engagementCoverage: 'full', engagementSource: 'mailchimp_first_party' });
+    const scope = 'ownerId=owner&businessId=campaign&activityGroupId=g1&channel=edm';
+    const opened: any = await (await req('/communications?' + scope + '&metric=opened')).json();
+    expect(opened).toMatchObject({ total: 0, records: [] });
+    const clicked: any = await (await req('/communications?' + scope + '&metric=clicked')).json();
+    expect(clicked.total).toBe(1);
+    expect(clicked.records[0]).toMatchObject({ targetId: 'r1', opened: 0, clicked: 1, openedAt: null, clickedAt: '2026-10-08T08:03:20Z', engagementCoverage: 'full', engagementSource: 'mailchimp_first_party' });
+    const detail: any = await (await req('/communications/edm/r1')).json();
+    expect(detail.record).toMatchObject({ opened: 0, clicked: 1, openedAt: null });
+    const batch: any = await (await req('/activity/batches/edm/campaign?' + scope)).json();
+    expect(batch.batch.opened).toMatchObject({ value: 0, coverage: 'full', rate: 0 });
+    expect(batch.batch.clicked).toMatchObject({ value: 1, coverage: 'full', rate: 1 });
+    const openedCsv = await (await req('/communications/export?' + scope + '&metric=opened')).text();
+    expect(openedCsv.trim().split('\r\n')).toHaveLength(1);
+    const clickedCsv = await (await req('/communications/export?' + scope + '&metric=clicked')).text();
+    expect(clickedCsv.trim().split('\r\n')).toHaveLength(2);
+    expect(clickedCsv).toContain(',"0","1","","2026-10-08T08:03:20Z",""');
   });
   it('keeps whole Mailchimp Marketing reports separate from group recipient metrics and marks site engagement inapplicable', async () => {
     sqlite.exec("UPDATE edm_campaigns SET mailchimp_campaign_id='marketing-remote' WHERE id='second-campaign'; INSERT INTO edm_site_message_jobs(id,user_id,created_by,name,sender_name,sender_email,message,created_at,updated_at) VALUES('site-job','w','owner','Site job','Sales','sales@example.com','Hello',1791446400,1791446400); INSERT INTO edm_site_message_targets(id,job_id,website_url,normalized_host,status,completed_at,created_at,updated_at) VALUES('site-target','site-job','https://client.example/','client.example','submitted',1791446400,1791446400,1791446400)");

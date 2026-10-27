@@ -109,6 +109,21 @@ test('durable pagination finds exact tag, restores receipt once and settles camp
     true,
   );
 });
+test.each([false, true])('manual review of a clicked message preserves independent open evidence: %s', async (existingOpen) => {
+  if (existingOpen) {
+    sqlite.exec("UPDATE edm_campaign_recipients SET sent_at=1,delivered_at=1,opened_at=2,ses_message_id='e'; UPDATE edm_resend_deliveries SET email_id='e'; UPDATE edm_campaigns SET total_sent=1,total_delivered=1,total_opened=1");
+  }
+  vi.stubGlobal('fetch', vi.fn(async (url: any, init: any) => {
+    expect(init.method || 'GET').toBe('GET');
+    const clicked = { ...email(), last_event: 'clicked' };
+    return Response.json(String(url).includes('/emails/e') ? clicked : { data: [clicked], has_more: false });
+  }));
+  const run = await startCampaignReview(env, 'c');
+  for (let i = 0; i < 4; i++) await step(run);
+  expect(recipient()).toMatchObject({ status: 'clicked', ses_message_id: 'e', opened_at: existingOpen ? 2 : null });
+  expect(campaign()).toMatchObject({ total_sent: 1, total_delivered: 1, total_opened: existingOpen ? 1 : 0, total_clicked: 1 });
+  expect(await getCampaignReview(env.DB, 'c')).toMatchObject({ status: 'completed', remaining: 0, resolved: 1 });
+});
 for (const mode of ['wrong-tag', 'wrong-address', 'ambiguous', 'empty'])
   test(`${mode} evidence never confirms or resends an uncertain email`, async () => {
     vi.stubGlobal(

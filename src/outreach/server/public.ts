@@ -98,7 +98,7 @@ api.get("/api/outreach/tracking/open", async (c) => {
     const { and, eq, isNull, sql } = await import("drizzle-orm");
     const db = createDb(c.env.DB);
     const result: any = await db.update(campaignRecipients)
-      .set({ status: "opened", openedAt: new Date() })
+      .set({ status: sql`case when ${campaignRecipients.clickedAt} is null then 'opened' else ${campaignRecipients.status} end`, openedAt: new Date() })
       .where(and(eq(campaignRecipients.id, recipientId), isNull(campaignRecipients.openedAt)))
       .run();
     if (Number(result?.meta?.changes || 0) > 0) {
@@ -140,15 +140,6 @@ api.get("/api/outreach/tracking/click", async (c) => {
       .run();
     if (Number(clickResult?.meta?.changes || 0) > 0) {
       await db.update(campaigns).set({ totalClicked: sql`${campaigns.totalClicked} + 1`, updatedAt: now }).where(eq(campaigns.id, recipient.campaignId));
-    }
-    if (!recipient.openedAt) {
-      const openResult: any = await db.update(campaignRecipients)
-        .set({ openedAt: now })
-        .where(and(eq(campaignRecipients.id, recipientId), isNull(campaignRecipients.openedAt)))
-        .run();
-      if (Number(openResult?.meta?.changes || 0) > 0) {
-        await db.update(campaigns).set({ totalOpened: sql`${campaigns.totalOpened} + 1`, updatedAt: now }).where(eq(campaigns.id, recipient.campaignId));
-      }
     }
   }
   return c.redirect(target.toString(), 302);
