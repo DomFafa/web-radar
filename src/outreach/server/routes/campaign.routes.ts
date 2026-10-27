@@ -1,3 +1,4 @@
+import { getCampaignReview, getCampaignReviews, startCampaignReview } from '../lib/campaign-review';
 import { actorScope, creatorFilter } from '../lib/actor-scope';
 import { pausedCampaignPacingReset, validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
@@ -129,10 +130,9 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
       }
       updatedCampaigns.add(item.campaignId);
 
-      // A click is also an engagement/open. Keep both timestamps so changing
-      // the recipient status from opened to clicked cannot lose open data.
+      // Keep open and click evidence independent of later status changes.
       const recipientUpdate: Record<string, any> = {};
-      if ((hasOpen || hasClick) && !item.openedAt) recipientUpdate.openedAt = new Date();
+      if (hasOpen && !item.openedAt) recipientUpdate.openedAt = new Date();
       if (hasClick && !item.clickedAt) recipientUpdate.clickedAt = new Date();
       if (isDelivered && !isBounce && !item.deliveredAt) recipientUpdate.deliveredAt = new Date();
       if (isBounce) {
@@ -157,7 +157,7 @@ async function syncMailchimpTransactionalMessages(db: any, userId: string, env: 
   // engagement totals. Reconcile new evidence from persisted recipient rows.
   await Promise.all(Array.from(updatedCampaigns).map(campaignId => env.DB.prepare(`UPDATE edm_campaigns SET
     total_delivered=MAX(total_delivered,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (delivered_at IS NOT NULL OR status IN ('delivered','opened','clicked')))),
-    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status IN ('opened','clicked')))),
+    total_opened=MAX(total_opened,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (opened_at IS NOT NULL OR status='opened'))),
     total_clicked=MAX(total_clicked,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND (clicked_at IS NOT NULL OR status='clicked'))),
     total_bounced=MAX(total_bounced,(SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND status='bounced')),
     updated_at=? WHERE id=?`).bind(campaignId, campaignId, campaignId, campaignId, Math.floor(Date.now() / 1000), campaignId).run()));
@@ -202,7 +202,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
     .offset((page - 1) * pageSize);
 
   const campaignIds = campaignsList.map((c) => c.id);
-  const statsMap: Record<string, { total: number; sent: number; opened: number; clicked: number; bounced: number; queued: number; sending: number; failed: number; providerQueued: number }> = {};
+  const statsMap: Record<string, { total: number; sent: number; opened: number; clicked: number; bounced: number; queued: number; sending: number; failed: number; unconfirmed: number; providerQueued: number }> = {};
 
   if (campaignIds.length > 0) {
     const recipientStats = await db
@@ -212,9 +212,10 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         queued: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'queued' THEN 1 ELSE 0 END)`,
         sending: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'sending' THEN 1 ELSE 0 END)`,
         providerQueued: providerQueuedCount,
-        failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' THEN 1 ELSE 0 END)`,
+        unconfirmed: sql<number>`SUM(CASE WHEN ${campaignRecipients.errorMessage} LIKE '待核实%' THEN 1 ELSE 0 END)`,
+        failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' AND COALESCE(${campaignRecipients.errorMessage}, '') NOT LIKE '待核实%' THEN 1 ELSE 0 END)`,
         sent: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('sent', 'delivered', 'opened', 'clicked') THEN 1 ELSE 0 END)`,
-        opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('opened', 'clicked') THEN 1 ELSE 0 END)`,
+        opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.openedAt} IS NOT NULL OR ${campaignRecipients.status} = 'opened' THEN 1 ELSE 0 END)`,
         clicked: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'clicked' THEN 1 ELSE 0 END)`,
         bounced: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('failed', 'bounced') THEN 1 ELSE 0 END)`,
       })
@@ -229,6 +230,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         sending: Number(stat.sending || 0),
         providerQueued: Number(stat.providerQueued || 0),
         failed: Number(stat.failed || 0),
+        unconfirmed: Number(stat.unconfirmed || 0),
         sent: Number(stat.sent || 0),
         opened: Number(stat.opened || 0),
         clicked: Number(stat.clicked || 0),
@@ -237,9 +239,11 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
     }
   }
 
+  const reviews = await getCampaignReviews(c.env.DB, campaignIds);
   const data = campaignsList.map((c) => ({
     ...c,
-    progress: { queued: statsMap[c.id]?.queued || 0, sending: statsMap[c.id]?.sending || 0, failed: statsMap[c.id]?.failed || 0, providerQueued: statsMap[c.id]?.providerQueued || 0,
+    verification: reviews[c.id] || null,
+    progress: { queued: statsMap[c.id]?.queued || 0, sending: statsMap[c.id]?.sending || 0, failed: statsMap[c.id]?.failed || 0, unconfirmed: statsMap[c.id]?.unconfirmed || 0, providerQueued: statsMap[c.id]?.providerQueued || 0,
       processed: (statsMap[c.id]?.total || 0) - (statsMap[c.id]?.queued || 0) - (statsMap[c.id]?.sending || 0) },
     totalRecipients: Math.max(Number(c.totalRecipients || 0), Number(statsMap[c.id]?.total || 0)),
     totalSent: Math.max(Number(c.totalSent || 0), Number(statsMap[c.id]?.sent || 0)),
@@ -279,6 +283,17 @@ campaignRoutes.get("/:id/export", requirePermission("campaigns:read"), async (c)
   return c.body(buildCampaignReport(campaign.name, rows));
 });
 
+// Verification is a read from the provider, never another send.
+for (const method of ['get', 'post'] as const) {
+  campaignRoutes[method]('/:id/reconcile', requirePermission(method === 'post' ? 'campaigns:write' : 'campaigns:read'), async c => {
+    const db=createDb(c.env.DB), user=c.get('user')!, id=c.req.param('id');
+    const [campaign]=await db.select().from(campaigns).where(and(eq(campaigns.id,id),actorScope(campaigns,user)));
+    if(!campaign) return c.json({error:'活动不存在'},404);
+    if(method==='post' && campaign.status!=='needs_review') return c.json({error:'只有待核实任务需要核实，请刷新任务状态'},409);
+    return c.json({success:true,data:method==='post'?await startCampaignReview(c.env,id):await getCampaignReview(c.env.DB,id)});
+  });
+}
+
 // 获取单个活动详情
 campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
   const db = createDb(c.env.DB);
@@ -300,6 +315,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     .select({
       status: campaignRecipients.status,
       total: count(),
+      unconfirmed: sql<number>`SUM(CASE WHEN ${campaignRecipients.errorMessage} LIKE '待核实%' THEN 1 ELSE 0 END)`,
       providerQueued: providerQueuedCount,
     })
     .from(campaignRecipients)
@@ -307,6 +323,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     .groupBy(campaignRecipients.status);
 
   const counts = Object.fromEntries(recipients.map((r) => [r.status, Number(r.total)]));
+  const unconfirmed = recipients.reduce((sum, row) => sum + Number(row.unconfirmed || 0), 0);
   let totalRecipients = recipients.reduce((sum, r) => sum + Number(r.total), 0);
   let totalSent = campaign.totalSent;
   let totalOpened = campaign.totalOpened;
@@ -319,7 +336,8 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     success: true,
     data: {
       ...campaign,
-      progress: { queued: counts.queued || 0, sending: counts.sending || 0, failed: counts.failed || 0, providerQueued: recipients.reduce((sum, row) => sum + Number(row.providerQueued || 0), 0),
+      verification: await getCampaignReview(c.env.DB, campaignId),
+      progress: { queued: counts.queued || 0, sending: counts.sending || 0, failed: Math.max(0, (counts.failed || 0) - Number(recipients.find(row => row.status === 'failed')?.unconfirmed || 0)), unconfirmed, providerQueued: recipients.reduce((sum, row) => sum + Number(row.providerQueued || 0), 0),
         processed: totalRecipients - (counts.queued || 0) - (counts.sending || 0) },
       totalRecipients,
       totalSent,
