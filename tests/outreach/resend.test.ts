@@ -18,7 +18,7 @@ const stats=()=>sqlite.prepare("SELECT * FROM edm_campaigns WHERE id='c'").get()
 function signed(body:string){const time=String(Math.floor(Date.now()/1000)),id='msg_test';return {'svix-id':id,'svix-timestamp':time,'svix-signature':'v1,'+createHmac('sha256',Buffer.from(secret.slice(6),'base64')).update(`${id}.${time}.${body}`).digest('base64')};}
 const app=(role='admin',user='u')=>{const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:user,role});await next()});h.route('/providers',providersRoutes);return h;};
 beforeEach(async()=>{
- sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql','0011_customer_inbox.sql','0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql','0017_inbox_route_forwarding.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
+ sqlite=new DatabaseSync(':memory:');for(const file of ['0007_outreach.sql','0008_resend_tracking.sql','0009_email_scheduling.sql','0011_customer_inbox.sql','0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql','0017_inbox_route_forwarding.sql','0018_campaign_review.sql'])sqlite.exec(readFileSync('migrations/'+file,'utf8'));
  const objects=new Map<string,string>();
  env={DB:d1(sqlite),CREDENTIAL_KEY:'test-key',BETTER_AUTH_SECRET:'test-auth',BETTER_AUTH_URL:'https://app.example.com',
    STORAGE:{put:async(k:string,v:string)=>{objects.set(k,v)},get:async(k:string)=>objects.has(k)?{json:async()=>JSON.parse(objects.get(k)!)}:null,delete:async(k:string)=>{objects.delete(k)}}};
