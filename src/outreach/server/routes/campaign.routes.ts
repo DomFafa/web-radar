@@ -214,7 +214,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         providerQueued: providerQueuedCount,
         failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' THEN 1 ELSE 0 END)`,
         sent: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('sent', 'delivered', 'opened', 'clicked') THEN 1 ELSE 0 END)`,
-        opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('opened', 'clicked') THEN 1 ELSE 0 END)`,
+        opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.openedAt} IS NOT NULL OR ${campaignRecipients.status} = 'opened' THEN 1 ELSE 0 END)`,
         clicked: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'clicked' THEN 1 ELSE 0 END)`,
         bounced: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('failed', 'bounced') THEN 1 ELSE 0 END)`,
       })

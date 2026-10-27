@@ -44,6 +44,29 @@ test('duplicate/out-of-order callbacks count unique engagement and preserve term
  expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:1,total_clicked:1,total_bounced:1,total_complained:1});
  expect(row().status).toBe('bounced');expect(sqlite.prepare('SELECT subscription_status FROM edm_contacts').get()!.subscription_status).toBe('unsubscribed');
 });
+test('click-only callbacks do not fabricate opens and a later real open is counted once',async()=>{
+ for(const type of ['clicked','clicked','sent','delivered'])await applyResendEvent(env.DB,'p',event(type));
+ expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:0,total_clicked:1});
+ expect(row()).toMatchObject({status:'clicked',opened_at:null,ses_message_id:'email1'});
+ expect(row().clicked_at).not.toBeNull();
+ for(const type of ['opened','opened','clicked'])await applyResendEvent(env.DB,'p',event(type));
+ expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:1,total_clicked:1});
+ expect(row().status).toBe('clicked');expect(row().opened_at).not.toBeNull();
+});
+test.each([
+ ['clicked',null,0],
+ ['clicked',2,1],
+ ['bounced',2,1],
+ ['opened',null,1],
+])('campaign list uses independent open evidence for status %s and opened_at %s',async(status,openedAt,totalOpened)=>{
+ const {campaignRoutes}=await import('../../src/outreach/server/routes/campaign.routes');
+ const h=new Hono<any>();h.use('*',async(c,next)=>{c.set('user',{id:'u',role:'admin',teamRead:true});await next()});h.route('/campaigns',campaignRoutes);
+ sqlite.prepare("UPDATE edm_campaign_recipients SET status=?,sent_at=1,delivered_at=1,clicked_at=3,opened_at=? WHERE id='r'").run(status,openedAt);
+ sqlite.exec('UPDATE edm_campaigns SET total_sent=1,total_delivered=1,total_clicked=1');
+ const response=await h.request('/campaigns',{},env);expect(response.status).toBe(200);
+ const body:any=await response.json();
+ expect(body.data[0]).toMatchObject({totalSent:1,totalOpened,totalClicked:1});
+});
 test('account and workspace isolation; mismatched email ids cannot claim a mapped recipient',async()=>{
  expect(await applyResendEvent(env.DB,'foreign',event('opened'))).toBe(false);
  await applyResendEvent(env.DB,'p',event('sent'));
@@ -248,7 +271,8 @@ test('Resend history sync is read-only, idempotent, workspace bound, and never r
  await startResendSync(env,'p');const message=send.mock.calls[0][0];
  const request=vi.fn(async(url:any,options:any)=>{expect(url).toBe('https://api.resend.com/emails/email1');expect(options.method || 'GET').toBe('GET');return Response.json({id:'email1',last_event:'clicked'})});vi.stubGlobal('fetch',request);
  await handleResendSync(message,env);await handleResendSync(message,env);await handleResendSync(message,env);
- expect(request).toHaveBeenCalledOnce();expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:1,total_clicked:1});
+ expect(request).toHaveBeenCalledOnce();expect(stats()).toMatchObject({total_sent:1,total_delivered:1,total_opened:0,total_clicked:1});
+ expect(row().opened_at).toBeNull();
  expect((await emailOverview(env.DB,'u')).resendSync).toMatchObject([{status:'completed',checked:1,failed:0}]);
  expect((await emailOverview(env.DB,'other')).resendSync).toEqual([]);
  expect(sqlite.prepare('SELECT count(*) n FROM edm_email_send_attempts').get()!.n).toBe(0);
