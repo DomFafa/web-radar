@@ -60,6 +60,39 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
   const [recipientList, setRecipientList] = useState<any[]>([]);
   const [addedContactIds, setAddedContactIds] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
+  const [review, setReview] = useState<any>(null);
+  const [reviewStarting, setReviewStarting] = useState(false);
+  const [reviewEpoch, setReviewEpoch] = useState(0);
+  useEffect(() => {
+    setReview(null);
+    if (!showDetailId) return;
+    let active = true;
+    const poll = async () => {
+      try {
+        const res = await campaignsApi.review(showDetailId);
+        if (!active) return;
+        setReview(res.data);
+        if (!res.data || res.data.status !== 'running') clearInterval(timer);
+        if (res.data && res.data.status !== 'running') {
+          void loadDetail(showDetailId, true);
+          void loadCampaigns(true);
+        }
+      } catch { /* Existing detail remains usable if verification status is unavailable. */ }
+    };
+    const timer = setInterval(poll, 5000);
+    void poll();
+    return () => { active = false; clearInterval(timer); };
+  }, [showDetailId, reviewEpoch]);
+  const reconcile = async (id: string) => {
+    if (reviewStarting) return;
+    setReviewStarting(true);
+    try {
+      const res = await campaignsApi.reconcile(id);
+      if (showDetailIdRef.current === id) { setReview(res.data); setReviewEpoch(value => value + 1); }
+      addToast('success', '已开始核实服务商记录，不会重发邮件');
+    } catch (error: any) { addToast('error', error.message); }
+    finally { setReviewStarting(false); }
+  };
   const [replyDefaults, setReplyDefaults] = useState<{ trackingAvailable: boolean; forwardTo: string | null } | null>(null);
   const [replyDefaultsLoading, setReplyDefaultsLoading] = useState(true);
   const [replyDefaultsError, setReplyDefaultsError] = useState(false);
@@ -634,6 +667,9 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     </button>
                     <button className="btn btn-secondary btn-sm" disabled={detailLoading}
                       onClick={() => loadDetail(detail.id, false, true)}>同步服务商数据</button>
+                    {writable && detail.status === 'needs_review' && <button className="btn btn-secondary btn-sm"
+                      disabled={reviewStarting || (review?.status === 'running' && Date.now() - review.updated_at < 600000)}
+                      onClick={() => reconcile(detail.id)}>{reviewStarting || (review?.status === 'running' && Date.now() - review.updated_at < 600000) ? '正在核实…' : '立即核实'}</button>}
                     {writable && <button
                       className="btn btn-primary btn-sm"
                       onClick={() => handleSend(detail.id)}
@@ -650,9 +686,13 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                 </div>
                 {detail.status === "needs_review" && (
                   <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
-                    部分邮件的提交或发送结果尚未确认，已进入队列的邮件可能继续处理。请先核实结果，暂勿重发或修改任务。
+                    部分发送结果尚未确认。可点击「立即核实」查询服务商记录，不会重发邮件；没有确切回执时将继续保留待核实。
                   </p>
                 )}
+                {review && <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
+                  {review.status === 'running' ? '正在核实' : review.status === 'failed' ? '核实未完成' : '本次核实完成'}：已查询 {review.checked} 条服务商记录，已确认 {review.resolved} 封，仍待核实 {review.remaining} 封。
+                  {review.error && <span> {review.error}</span>}
+                </p>}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13 }}>
                   <label style={{ fontWeight: 600, minWidth: 80, color: "var(--color-text-secondary)" }}>邮件模板 *</label>
                   <select
