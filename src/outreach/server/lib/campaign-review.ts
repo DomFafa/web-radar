@@ -2,21 +2,26 @@ import type { Bindings } from '../../shared/types';
 import { unseal } from './credentials';
 import { applyResendEvent, RESEND_EVENTS, resendRequest, ResendApiError } from './resend';
 import { saveAttempt } from './email-attempt';
+import { REVIEW_STALE_MS, REVIEW_TIMEOUT_MS, type CampaignVerification } from '../../shared/campaign-verification';
 
 export type CampaignReviewMessage = { kind: 'campaign-review'; campaignId: string; runId: string };
 const uncertain = "error_message LIKE '待核实%'";
 
 import { settleReviewedCampaign } from './campaign-review-state';
 export async function getCampaignReview(db: D1Database, campaignId: string) {
-  const run = await db
+  return (await getCampaignReviews(db, [campaignId]))[campaignId] || null;
+}
+export async function getCampaignReviews(db: D1Database, campaignIds: string[]) {
+  if (!campaignIds.length) return {};
+  const runs = await db
     .prepare(
-      `SELECT run_id,status,started_at,updated_at,checked,resolved,error,
-    (SELECT COUNT(*) FROM edm_campaign_recipients WHERE campaign_id=? AND ${uncertain}) remaining
-    FROM edm_campaign_reviews WHERE campaign_id=?`,
+      `SELECT campaign_id,run_id,status,started_at,updated_at,checked,resolved,error,
+    (SELECT COUNT(*) FROM edm_campaign_recipients r WHERE r.campaign_id=v.campaign_id AND ${uncertain}) remaining
+    FROM edm_campaign_reviews v WHERE campaign_id IN (${campaignIds.map(() => '?').join(',')})`,
     )
-    .bind(campaignId, campaignId)
-    .first<any>();
-  return run;
+    .bind(...campaignIds)
+    .all<CampaignVerification & { campaign_id: string; run_id: string }>();
+  return Object.fromEntries(runs.results.map(run => [run.campaign_id, run]));
 }
 export async function startCampaignReview(env: Bindings, campaignId: string) {
   if (!env.EMAIL_QUEUE) throw new Error('核实队列尚未配置');
@@ -26,11 +31,12 @@ export async function startCampaignReview(env: Bindings, campaignId: string) {
     VALUES (?,?,'running',?,?) ON CONFLICT(campaign_id) DO UPDATE SET run_id=excluded.run_id,
     status='running',started_at=excluded.started_at,updated_at=excluded.updated_at,checked=0,resolved=0,
     recipient_after='',cursor='',candidates='[]',pages=0,error=NULL,lease_until=0,lease_token=NULL
-    WHERE status!='running' OR (updated_at<? AND lease_until<=?)`,
+    WHERE status!='running' OR ((updated_at<? OR started_at<?) AND lease_until<=?)`,
   )
-    .bind(campaignId, crypto.randomUUID(), now, now, now - 600000, now)
+    .bind(campaignId, crypto.randomUUID(), now, now, now - REVIEW_STALE_MS, now - REVIEW_TIMEOUT_MS, now)
     .run();
   const run = await getCampaignReview(env.DB, campaignId);
+  if (!run) throw new Error('核实任务创建失败，请重试');
   try {
     await env.EMAIL_QUEUE.send({
       kind: 'campaign-review',
@@ -100,6 +106,10 @@ export async function handleCampaignReview(message: CampaignReviewMessage, env: 
       .prepare('SELECT * FROM edm_campaign_reviews WHERE campaign_id=?')
       .bind(message.campaignId)
       .first<any>();
+    if (Date.now() - run.started_at >= REVIEW_TIMEOUT_MS) {
+      await update("status='failed',error=?", '本次核实已超时，请重试；原发送记录保持不变');
+      return;
+    }
     const recipient = await db
       .prepare(
         `SELECT r.id,r.ses_message_id,d.email_id,o.from_email,o.to_email,
@@ -128,8 +138,8 @@ export async function handleCampaignReview(message: CampaignReviewMessage, env: 
       !recipient.from_email ||
       !recipient.to_email
     ) {
-      await next('部分记录缺少原始 Resend 通道或发信快照，仍需人工核实');
-      return delay;
+      await update("status='failed',error=?", '缺少原始 Resend 通道或发信快照，无法完成核实');
+      return;
     }
     const key = await unseal(recipient.api_key, recipient.provider_id, env);
     const get = async (path: string) => {
@@ -183,8 +193,8 @@ export async function handleCampaignReview(message: CampaignReviewMessage, env: 
       return delay;
     }
     if (run.pages >= 1000) {
-      await next('已达到本次查询上限，结果仍待核实');
-      return delay;
+      await update("status='failed',error=?", '已达到本次查询上限，核实未完成，请联系管理员');
+      return;
     }
     const list = await get(
       '/emails?limit=100' + (run.cursor ? '&after=' + encodeURIComponent(run.cursor) : ''),
@@ -218,7 +228,7 @@ export async function handleCampaignReview(message: CampaignReviewMessage, env: 
         await next(
           candidates.size
             ? '发现多个匹配记录，请人工核对；未重发邮件'
-            : '未找到带有原始收件人标识的记录，仍待核实；未重发邮件',
+            : '未找到对应服务商回执，该邮件的发送结果未确认；未重发邮件',
         );
     }
   } catch (error) {
@@ -235,6 +245,19 @@ export async function handleCampaignReview(message: CampaignReviewMessage, env: 
       )
       .bind(message.campaignId, token)
       .run();
+  }
+  return delay;
+}
+
+// Amortize queue scheduling: scan a bounded burst, saving each page durably.
+// Keep the same shared provider budget, and yield after at most 8 steps / 8 seconds.
+export async function handleCampaignReviewBatch(message: CampaignReviewMessage, env: Bindings) {
+  const started = Date.now();
+  let delay: number | undefined;
+  for (let step = 0; step < 8; step++) {
+    delay = await handleCampaignReview(message, env);
+    if (delay !== 1 || Date.now() - started >= 8000 || step === 7) return delay;
+    await new Promise(resolve => setTimeout(resolve, 210));
   }
   return delay;
 }

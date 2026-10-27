@@ -1,4 +1,4 @@
-import { getCampaignReview, startCampaignReview } from '../lib/campaign-review';
+import { getCampaignReview, getCampaignReviews, startCampaignReview } from '../lib/campaign-review';
 import { actorScope, creatorFilter } from '../lib/actor-scope';
 import { pausedCampaignPacingReset, validSendRate } from '../lib/email-pacing';
 import { prepareResendTracking, startResendSync } from '../lib/resend-tracking';
@@ -203,7 +203,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
     .offset((page - 1) * pageSize);
 
   const campaignIds = campaignsList.map((c) => c.id);
-  const statsMap: Record<string, { total: number; sent: number; opened: number; clicked: number; bounced: number; queued: number; sending: number; failed: number; providerQueued: number }> = {};
+  const statsMap: Record<string, { total: number; sent: number; opened: number; clicked: number; bounced: number; queued: number; sending: number; failed: number; unconfirmed: number; providerQueued: number }> = {};
 
   if (campaignIds.length > 0) {
     const recipientStats = await db
@@ -213,7 +213,8 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         queued: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'queued' THEN 1 ELSE 0 END)`,
         sending: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'sending' THEN 1 ELSE 0 END)`,
         providerQueued: providerQueuedCount,
-        failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' THEN 1 ELSE 0 END)`,
+        unconfirmed: sql<number>`SUM(CASE WHEN ${campaignRecipients.errorMessage} LIKE '待核实%' THEN 1 ELSE 0 END)`,
+        failed: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'failed' AND COALESCE(${campaignRecipients.errorMessage}, '') NOT LIKE '待核实%' THEN 1 ELSE 0 END)`,
         sent: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('sent', 'delivered', 'opened', 'clicked') THEN 1 ELSE 0 END)`,
         opened: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} IN ('opened', 'clicked') THEN 1 ELSE 0 END)`,
         clicked: sql<number>`SUM(CASE WHEN ${campaignRecipients.status} = 'clicked' THEN 1 ELSE 0 END)`,
@@ -230,6 +231,7 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
         sending: Number(stat.sending || 0),
         providerQueued: Number(stat.providerQueued || 0),
         failed: Number(stat.failed || 0),
+        unconfirmed: Number(stat.unconfirmed || 0),
         sent: Number(stat.sent || 0),
         opened: Number(stat.opened || 0),
         clicked: Number(stat.clicked || 0),
@@ -238,9 +240,11 @@ campaignRoutes.get("/", requirePermission("campaigns:read"), async (c) => {
     }
   }
 
+  const reviews = await getCampaignReviews(c.env.DB, campaignIds);
   const data = campaignsList.map((c) => ({
     ...c,
-    progress: { queued: statsMap[c.id]?.queued || 0, sending: statsMap[c.id]?.sending || 0, failed: statsMap[c.id]?.failed || 0, providerQueued: statsMap[c.id]?.providerQueued || 0,
+    verification: reviews[c.id] || null,
+    progress: { queued: statsMap[c.id]?.queued || 0, sending: statsMap[c.id]?.sending || 0, failed: statsMap[c.id]?.failed || 0, unconfirmed: statsMap[c.id]?.unconfirmed || 0, providerQueued: statsMap[c.id]?.providerQueued || 0,
       processed: (statsMap[c.id]?.total || 0) - (statsMap[c.id]?.queued || 0) - (statsMap[c.id]?.sending || 0) },
     totalRecipients: Math.max(Number(c.totalRecipients || 0), Number(statsMap[c.id]?.total || 0)),
     totalSent: Math.max(Number(c.totalSent || 0), Number(statsMap[c.id]?.sent || 0)),
@@ -312,6 +316,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     .select({
       status: campaignRecipients.status,
       total: count(),
+      unconfirmed: sql<number>`SUM(CASE WHEN ${campaignRecipients.errorMessage} LIKE '待核实%' THEN 1 ELSE 0 END)`,
       providerQueued: providerQueuedCount,
     })
     .from(campaignRecipients)
@@ -319,6 +324,7 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     .groupBy(campaignRecipients.status);
 
   const counts = Object.fromEntries(recipients.map((r) => [r.status, Number(r.total)]));
+  const unconfirmed = recipients.reduce((sum, row) => sum + Number(row.unconfirmed || 0), 0);
   let totalRecipients = recipients.reduce((sum, r) => sum + Number(r.total), 0);
   let totalSent = campaign.totalSent;
   let totalOpened = campaign.totalOpened;
@@ -331,7 +337,8 @@ campaignRoutes.get("/:id", requirePermission("campaigns:read"), async (c) => {
     success: true,
     data: {
       ...campaign,
-      progress: { queued: counts.queued || 0, sending: counts.sending || 0, failed: counts.failed || 0, providerQueued: recipients.reduce((sum, row) => sum + Number(row.providerQueued || 0), 0),
+      verification: await getCampaignReview(c.env.DB, campaignId),
+      progress: { queued: counts.queued || 0, sending: counts.sending || 0, failed: Math.max(0, (counts.failed || 0) - Number(recipients.find(row => row.status === 'failed')?.unconfirmed || 0)), unconfirmed, providerQueued: recipients.reduce((sum, row) => sum + Number(row.providerQueued || 0), 0),
         processed: totalRecipients - (counts.queued || 0) - (counts.sending || 0) },
       totalRecipients,
       totalSent,

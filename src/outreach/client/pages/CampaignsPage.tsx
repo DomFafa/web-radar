@@ -7,6 +7,7 @@ import { TEMPLATE_NAME_LABELS } from "./TemplatesPage";
 import { deliverySuccessHelp, emailDeliveryPresentation } from '../../shared/email-delivery';
 import { percentage } from '../../../shared/outreach-stats';
 import { api } from "../../../client/api";
+import { verificationBadge, verificationState } from '../../shared/campaign-verification';
 
 const statusLabels: Record<string, { label: string; badge: string }> = {
   draft: { label: "草稿", badge: "badge-default" },
@@ -20,6 +21,10 @@ const statusLabels: Record<string, { label: string; badge: string }> = {
 type SenderAccount = { domain: string; isDefault: boolean; supportsReplyTracking?: boolean };
 
 const isCampaignLocked = (campaign: any) => campaign?.status === "sending" || campaign?.status === "needs_review";
+const campaignBadge = (campaign: any, review = campaign?.verification) =>
+  campaign?.status === 'needs_review' || (review && ['completed', 'failed'].includes(campaign?.status))
+    ? verificationBadge(review)
+    : statusLabels[campaign?.status] || statusLabels.draft;
 const hasActiveSend = (campaign: any) => campaign?.status === "sending" ||
   (campaign?.status === "needs_review" && Number(campaign?.progress?.sending || 0) > 0);
 
@@ -72,8 +77,8 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
         const res = await campaignsApi.review(showDetailId);
         if (!active) return;
         setReview(res.data);
-        if (!res.data || res.data.status !== 'running') clearInterval(timer);
-        if (res.data && res.data.status !== 'running') {
+        if (!res.data || verificationState(res.data) !== 'running') clearInterval(timer);
+        if (res.data && verificationState(res.data) !== 'running') {
           void loadDetail(showDetailId, true);
           void loadCampaigns(true);
         }
@@ -184,17 +189,21 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
   }, [showModal]);
 
   const detailHasActiveSend = hasActiveSend(detail);
+  const detailReview = review || detail?.verification;
+  const reviewState = reviewStarting ? 'running' : verificationState(detailReview);
+  const detailBadge = reviewStarting ? verificationBadge({ ...detailReview, status: 'running', started_at: Date.now(), updated_at: Date.now() }) : campaignBadge(detail, detailReview);
 
   // Accepted messages can still finish while the campaign awaits review.
   useEffect(() => {
-    if (!campaigns.some(hasActiveSend) && !detailHasActiveSend) return;
+    const hasReview = campaigns.some(c => c.verification && verificationState(c.verification) === 'running');
+    if (!campaigns.some(hasActiveSend) && !detailHasActiveSend && !hasReview) return;
     const interval = setInterval(() => {
       if (document.visibilityState !== "visible") return;
       if (showDetailIdRef.current && detailHasActiveSend) {
         loadDetail(showDetailIdRef.current, true);
       }
       const hasSending = campaigns.some(hasActiveSend);
-      if (hasSending) {
+      if (hasSending || hasReview) {
         loadCampaigns(true);
       }
     }, 30000);
@@ -471,7 +480,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               </thead>
               <tbody>
                 {campaigns.map((c) => {
-                  const st = statusLabels[c.status] || statusLabels.draft;
+                  const st = campaignBadge(c);
                   return (
                     <tr key={c.id}>
                       <td
@@ -487,6 +496,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                           )}
                           {st.label}
                         </span>
+                        {c.verification?.status === 'completed' && c.verification.remaining > 0 && <div style={{ fontSize: 12, marginTop: 6, color: 'var(--color-text-secondary)' }}>结果未确认 {c.verification.remaining} 封</div>}
                         {c.status === "sending" && <CampaignProgress campaign={c} />}
                       </td>
                       <td>{c.totalRecipients}</td>
@@ -652,8 +662,8 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
               <div style={{ marginBottom: 16, padding: 12, border: "1px solid var(--color-border)", borderRadius: 8, background: "var(--color-bg-subtle)" }}>
                 <div className="flex items-center justify-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 12 }}>
                   <div className="flex items-center gap-sm">
-                    <span className={`badge ${(statusLabels[detail.status] || statusLabels.draft).badge}`} style={{ fontSize: 14, padding: "5px 14px" }}>
-                      {(statusLabels[detail.status] || statusLabels.draft).label}
+                    <span className={`badge ${detailBadge.badge}`} style={{ fontSize: 14, padding: "5px 14px" }}>
+                      {detailBadge.label}
                     </span>
                     {!detail.templateId && (
                       <span style={{ color: "var(--color-danger)", fontSize: 12, fontWeight: 500 }}>⚠️ 请关联邮件模板后启动发送</span>
@@ -668,9 +678,9 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                     <button className="btn btn-secondary btn-sm" disabled={detailLoading}
                       onClick={() => loadDetail(detail.id, false, true)}>同步服务商数据</button>
                     {writable && detail.status === 'needs_review' && <button className="btn btn-secondary btn-sm"
-                      disabled={reviewStarting || (review?.status === 'running' && Date.now() - review.updated_at < 600000)}
-                      onClick={() => reconcile(detail.id)}>{reviewStarting || (review?.status === 'running' && Date.now() - review.updated_at < 600000) ? '正在核实…' : '立即核实'}</button>}
-                    {writable && <button
+                      disabled={reviewState === 'running'}
+                      onClick={() => reconcile(detail.id)}>{reviewState === 'running' ? '正在核实…' : reviewState === 'completed' ? '重新核实' : reviewState === 'pending' ? '立即核实' : '重试核实'}</button>}
+                    {writable && detail.status !== 'needs_review' && <button
                       className="btn btn-primary btn-sm"
                       onClick={() => handleSend(detail.id)}
                       disabled={sending || isCampaignLocked(detail) || detail.status === "completed" || Number(detail.totalRecipients || 0) === 0 || !detail.templateId}
@@ -686,12 +696,17 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                 </div>
                 {detail.status === "needs_review" && (
                   <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
-                    部分发送结果尚未确认。可点击「立即核实」查询服务商记录，不会重发邮件；没有确切回执时将继续保留待核实。
+                    {reviewState === 'completed'
+                      ? '本次核实已完成。“已核实”表示已查证服务商记录，不代表所有邮件发送成功；缺少回执的邮件单独标为“结果未确认”，不会自动重发。'
+                      : reviewState === 'running'
+                        ? '正在查询服务商记录，完成后自动显示“已核实”。关闭此窗口不影响后台核实。'
+                        : '可点击核实按钮查询服务商记录。查询完成后显示“已核实”，并单独列出未确认结果；此操作不会重发邮件。'}
                   </p>
                 )}
-                {review && <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
-                  {review.status === 'running' ? '正在核实' : review.status === 'failed' ? '核实未完成' : '本次核实完成'}：已查询 {review.checked} 条服务商记录，已确认 {review.resolved} 封，仍待核实 {review.remaining} 封。
-                  {review.error && <span> {review.error}</span>}
+                {detailReview && <p role="status" style={{ marginBottom: 12, fontSize: 13 }}>
+                  {verificationBadge(detailReview).label}：已查询 {detailReview.checked} 条服务商记录，本次补齐回执 {detailReview.resolved} 封，结果未确认 {detailReview.remaining} 封。
+                  {reviewState === 'completed' && <span> 核实完成时间：{new Date(detailReview.updated_at).toLocaleString('zh-CN')}。</span>}
+                  {reviewState === 'interrupted' ? <span> 核实超时或长时间没有进展，请点击“重试核实”。</span> : detailReview.error && <span> {detailReview.error}</span>}
                 </p>}
                 <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13 }}>
                   <label style={{ fontWeight: 600, minWidth: 80, color: "var(--color-text-secondary)" }}>邮件模板 *</label>
@@ -841,7 +856,7 @@ export function CampaignsPage({ onCreate }: { onCreate?: () => void } = {}) {
                       </thead>
                       <tbody>
                         {recipientList.map((r) => {
-                          const st = emailDeliveryPresentation(r);
+                          const st = emailDeliveryPresentation({ ...r, verificationCompleted: reviewState === 'completed' });
                           const badge = { success: 'badge-success', warning: 'badge-warning', neutral: 'badge-default', danger: 'badge-danger' }[st.tone];
                           return (
                             <tr key={r.id} style={{ borderBottom: "1px solid var(--color-border)" }}>

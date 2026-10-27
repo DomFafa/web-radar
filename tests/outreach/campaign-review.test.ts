@@ -8,7 +8,10 @@ import {
   startCampaignReview,
   handleCampaignReview,
   getCampaignReview,
+  handleCampaignReviewBatch,
 } from '../../src/outreach/server/lib/campaign-review';
+import { REVIEW_TIMEOUT_MS, verificationBadge, verificationState } from '../../src/outreach/shared/campaign-verification';
+import { emailDeliveryPresentation } from '../../src/outreach/shared/email-delivery';
 import { campaignRoutes } from '../../src/outreach/server/routes/campaign.routes';
 import { applyResendEvent } from '../../src/outreach/server/lib/resend';
 vi.mock('../../src/outreach/server/lib/network', () => ({
@@ -189,4 +192,56 @@ test('verified callback settles needs_review automatically but preserves paused 
   sqlite.exec("UPDATE edm_campaigns SET status='paused'");
   await applyResendEvent(env.DB, 'p', { type: 'email.clicked', data: { email_id: 'e' } });
   expect(campaign().status).toBe('paused');
+});
+
+test('completed verification is persisted in list/detail while unresolved sends remain protected', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({data:[],has_more:false})));
+  const run = await startCampaignReview(env, 'c');
+  await step(run);
+  await step(run);
+  const detail = await (await app().request('/campaigns/c', {}, env)).json() as any;
+  const list = await (await app().request('/campaigns', {}, env)).json() as any;
+  for (const data of [detail.data, list.data[0]]) {
+    expect(data.verification).toMatchObject({status:'completed',remaining:1});
+    expect(verificationBadge(data.verification).label).toBe('已核实');
+    expect(data.progress).toMatchObject({failed:0,unconfirmed:1});
+    expect(data.totalSent).toBe(0);
+  }
+  expect(emailDeliveryPresentation({status:'failed',errorMessage:'待核实：timeout',verificationCompleted:true}).label).toBe('结果未确认');
+  sqlite.exec("INSERT INTO edm_templates(id,user_id,name,subject,body_html,created_at,updated_at) VALUES ('t','u','test','test','test',0,0); UPDATE edm_campaigns SET template_id='t' WHERE id='c'");
+  expect((await app().request('/campaigns/c/send', {method:'POST'}, env)).status).toBe(409);
+  expect((await app('admin','foreign').request('/campaigns', {}, env)).status).toBe(200);
+  const foreign = await (await app('admin','foreign').request('/campaigns', {}, env)).json() as any;
+  expect(foreign.data).toEqual([]);
+  expect(recipient().ses_message_id).toBeNull();
+  expect(campaign().status).toBe('needs_review');
+});
+
+test('stalled and timed-out reviews are retryable and never reported as verified', async () => {
+  const run = await startCampaignReview(env, 'c');
+  const now = Date.now();
+  expect(verificationState({...run, updated_at:now-600001},now)).toBe('interrupted');
+  sqlite.prepare('UPDATE edm_campaign_reviews SET started_at=?').run(now-REVIEW_TIMEOUT_MS-1);
+  await step(run);
+  expect(await getCampaignReview(env.DB,'c')).toMatchObject({status:'failed',remaining:1});
+  expect(fetch).not.toHaveBeenCalled();
+  expect((await startCampaignReview(env,'c')).run_id).not.toBe(run.run_id);
+  expect(recipient().ses_message_id).toBeNull();
+});
+
+test('bounded worker burst scans multiple pages and finishes without another queue message', async () => {
+  const paths:string[]=[];
+  vi.stubGlobal('fetch',vi.fn(async(url:any,init:any)=>{
+    expect(init.method || 'GET').toBe('GET');
+    paths.push(String(url));
+    return Response.json(paths.length===1
+      ? {data:[{id:'older',from:'other@example.com',to:['other@example.com']}],has_more:true}
+      : {data:[],has_more:false});
+  }));
+  const run=await startCampaignReview(env,'c');
+  expect(await handleCampaignReviewBatch({kind:'campaign-review',campaignId:'c',runId:run.run_id},env)).toBeUndefined();
+  expect(paths).toHaveLength(2);
+  expect(paths[1]).toContain('after=older');
+  expect(await getCampaignReview(env.DB,'c')).toMatchObject({status:'completed',checked:1,remaining:1});
+  expect(recipient().ses_message_id).toBeNull();
 });

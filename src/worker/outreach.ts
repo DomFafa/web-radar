@@ -1,4 +1,4 @@
-import { handleCampaignReview, type CampaignReviewMessage } from '../outreach/server/lib/campaign-review';
+import { handleCampaignReviewBatch, type CampaignReviewMessage } from '../outreach/server/lib/campaign-review';
 import { effectiveRole, viewTeamData, writeBusiness } from '../shared/access';
 import { handleResendSync, type ResendSyncMessage } from '../outreach/server/lib/resend-tracking';
 import { resendWebhookRoutes } from '../outreach/server/routes/resend.routes';
@@ -68,7 +68,7 @@ export async function outreachQueue(batch:MessageBatch<EmailQueueBody|SiteMessag
     const groups=new Map<string,Message<EmailQueueBody>[]>();
     for (const message of batch.messages) {
       if ('kind' in message.body && message.body.kind === 'campaign-review') {
-        const delay=await handleCampaignReview(message.body,bindings);
+        const delay=await handleCampaignReviewBatch(message.body,bindings);
         if(delay) await bindings.EMAIL_QUEUE.send(message.body,{delaySeconds:Math.min(86400,delay)});
         message.ack();
       } else if ('kind' in message.body && message.body.kind === 'resend-sync') {
