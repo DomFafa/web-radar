@@ -1,4 +1,4 @@
-import type { Principal } from './model';
+import type { Principal, Project } from './model';
 export const appRoles = ['admin', 'analyst', 'member', 'viewer'] as const;
 export type AppRole = typeof appRoles[number];
 export const roleLabels: Record<AppRole | 'super_admin', string> = {
@@ -17,6 +17,13 @@ export const manageUsers = (p: Principal) => ['super_admin', 'admin'].includes(e
 export const viewTeamData = (p: Principal) => ['super_admin', 'admin', 'analyst'].includes(effectiveRole(p));
 export const writeBusiness = (p: Principal) => ['super_admin', 'admin', 'member'].includes(effectiveRole(p));
 export const manageSettings = manageUsers;
+export function canManage(project: Project, principal: Principal): boolean {
+  return (
+    principal.systemRole === 'super_admin' ||
+    (principal.workspaceId === project.workspaceId &&
+      (project.ownerId === principal.userId || viewTeamData(principal)))
+  );
+}
 export function canBuildWebsites(p: Pick<Principal, 'email'> | null | undefined): boolean {
   return p?.email.trim().toLowerCase() === 'vc.ddom@gmail.com';
 }

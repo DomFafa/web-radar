@@ -1,6 +1,6 @@
 import { MAX_WEBSITE_PRODUCTS } from "../shared/website-limits";
 import { DEFAULT_TEMPLATE } from '../shared/template-availability';
-import { viewTeamData } from '../shared/access';
+export { canManage } from '../shared/access';
 import { ProductIdentitySchema } from "../shared/product-identity";
 import type { BannerTarget } from '../shared/model';
 import { bannerAssets, pageBanners } from '../shared/banner-config';
@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { retainedProductDisplayGroups, validProductDisplayGroups } from '../shared/product-display';
 import { appliedMaterialsSchema } from '../shared/materials';
 import { preserveMaterialsEdit } from './materials-draft';
-import type { Draft, Principal, Project } from '../shared/model';
+import type { Draft, Project } from '../shared/model';
 import {
   consultationSchema,
   designPageSchema,
@@ -396,13 +396,6 @@ export function validateDraft(input: unknown): Draft {
       }
     }
   return d;
-}
-export function canManage(project: Project, principal: Principal): boolean {
-  return (
-    principal.systemRole === 'super_admin' ||
-    (principal.workspaceId === project.workspaceId &&
-      (project.ownerId === principal.userId || viewTeamData(principal)))
-  );
 }
 export function videoInputKey(d: Draft): string {
   return JSON.stringify({

@@ -160,6 +160,7 @@ describe('Product Radar private project service', () => {
     expect(queued.headers.get('Server-Timing')).not.toContain('wr-status-');
     const records = { project: await store.one('projects', p.id), jobs: await store.list('jobs'), releases: await store.list('releases') };
     vi.mocked(providers.resolveHostingTarget).mockClear();
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
     let clock = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => clock);
     const context = vi.mocked(fetch).getMockImplementation()!;
@@ -181,6 +182,7 @@ describe('Product Radar private project service', () => {
     });
     const response = await call(p.id, action);
     expect(response.status).toBe(200); expect(await response.json()).toEqual(expected);
+    expect(coordinator).not.toHaveBeenCalled();
     const header = response.headers.get('Server-Timing')!;
     expect(header).toMatch(/^[a-z-]+;dur=\d+\.\d(?:,\s*[a-z-]+;dur=\d+\.\d)*$/);
     const timings = Object.fromEntries(header.split(/,\s*/).map(value => {
@@ -188,7 +190,7 @@ describe('Product Radar private project service', () => {
     }));
     expect(timings).toEqual({ 'wr-status-principal': 19, 'wr-status-project': 23,
       'wr-status-jobs': 31, 'wr-status-releases': 41, 'wr-status-assemble': 0,
-      'wr-status-serialize': 0, 'wr-status-total': 114, 'wr-auth': 19, 'wr-coordinator': 114 });
+      'wr-status-serialize': 0, 'wr-status-total': 114, 'wr-auth': 19, 'wr-status-direct': 114 });
     expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(2);
     expect(one.mock.calls.map(([table]) => table)).toEqual(['projects', 'releases']);
     expect(list.mock.calls.map(([table]) => table)).toEqual(['jobs']);
@@ -199,14 +201,46 @@ describe('Product Radar private project service', () => {
   it('measures archived status without reading the live project or publication', async () => {
     const p = await accepted(), originalName = p.name;
     p.name = 'Changed live name'; p.version++; await store.update('projects', p).run();
-    const one = vi.spyOn(DomainStore.prototype, 'one'), list = vi.spyOn(DomainStore.prototype, 'list');
+    const one = vi.spyOn(DomainStore.prototype, 'one'), list = vi.spyOn(DomainStore.prototype, 'list'), coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
     const response = await call(p.id, 'status', { expectedVersion: 1 });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ projectVersion: 1, name: originalName, publication: { status: 'idle' } });
     expect(response.headers.get('Server-Timing')).toMatch(/wr-status-project;dur=[\d.]+/);
     expect(response.headers.get('Server-Timing')).toMatch(/wr-status-total;dur=[\d.]+/);
     expect(one).not.toHaveBeenCalled(); expect(list).not.toHaveBeenCalled();
+    expect(coordinator).not.toHaveBeenCalled();
     expect(providers.publish).not.toHaveBeenCalled();
+  });
+  it.each(['status', 'publication-status'])('keeps the second live identity check for direct %s reads', async action => {
+    const p = await accepted(), records = { jobs: await store.list('jobs'), releases: await store.list('releases') };
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName'), one = vi.spyOn(DomainStore.prototype, 'one');
+    vi.mocked(fetch).mockReset().mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: current })).mockResolvedValueOnce(Response.json({}, { status: 403 }));
+    const response = await call(p.id, action);
+    expect(response.status).toBe(403);
+    expect(await response.text()).toBe(JSON.stringify({ message: '当前账号或工作区权限已失效。', code: 'product_radar_unavailable' }));
+    expect(fetch).toHaveBeenCalledTimes(2); expect(one).not.toHaveBeenCalled(); expect(coordinator).not.toHaveBeenCalled();
+    expect({ jobs: await store.list('jobs'), releases: await store.list('releases') }).toEqual(records);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it('preserves status bodies and errors across direct and internal reads without publication side effects', async () => {
+    const p = await accepted();
+    const cases = [
+      { action: 'status', options: {}, status: 200 },
+      { action: 'status', options: { expectedVersion: 1 }, status: 200 },
+      { action: 'status', options: { expectedVersion: 2 }, status: 409 },
+      { action: 'publication-status', options: { jobId: crypto.randomUUID() }, status: 404 },
+    ];
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
+    for (const item of cases) {
+      const url = new URL(`https://coordinator.internal/internal/product-radar-projects/${p.id}/${item.action}`);
+      for (const [name, value] of Object.entries(item.options)) url.searchParams.set(name, String(value));
+      const internal = await domain.fetch(new Request(url, { headers: { 'X-WR-Principal': encodeURIComponent(JSON.stringify(current)) } }));
+      const response = await call(p.id, item.action, item.options);
+      expect(response.status).toBe(item.status); expect(await response.text()).toBe(await internal.text());
+    }
+    expect(coordinator).not.toHaveBeenCalled();
+    expect(await store.list('jobs')).toEqual([]); expect(await store.list('releases')).toEqual([]);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
   it('returns a fixed trusted runtime independent of customer content or page scripts', async () => {
     const p = await accepted();

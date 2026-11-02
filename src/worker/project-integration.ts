@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { HonoEnv } from './env';
 import { currentMaterialsPrincipal, verifyMaterialsSecret } from './materials-auth';
 import { ApiError, jsonBody } from './http';
+import { readProjectServiceStatus } from './project-service-status';
 
 const identity = z.object({ userId: z.string().min(1).max(200), workspaceId: z.string().min(1).max(200) });
 const base = z.strictObject({ principal: identity });
@@ -41,12 +42,14 @@ export function registerProjectIntegration(app: Hono<HonoEnv>) {
       // Read operations stay GET internally, so preview/status never start background work.
       const mutating = action === 'publish' || action === 'refresh-publication';
       if (!mutating) for (const [key, value] of Object.entries(options)) url.searchParams.set(key, String(value));
-      const response = await c.env.COORDINATOR.getByName('global').fetch(new Request(url, {
+      const statusRead = action === 'status' || action === 'publication-status';
+      const response = statusRead ? await readProjectServiceStatus(c.env, principal, projectId, action, url.searchParams)
+        : await c.env.COORDINATOR.getByName('global').fetch(new Request(url, {
         method: mutating ? 'POST' : 'GET', headers,
         body: mutating ? JSON.stringify(options) : undefined,
       }));
       const result = new Response(response.body, response);
-      result.headers.append('Server-Timing', `wr-auth;dur=${(coordinatorStarted - authStarted).toFixed(1)}, wr-coordinator;dur=${(performance.now() - coordinatorStarted).toFixed(1)}`);
+      result.headers.append('Server-Timing', `wr-auth;dur=${(coordinatorStarted - authStarted).toFixed(1)}, ${statusRead ? 'wr-status-direct' : 'wr-coordinator'};dur=${(performance.now() - coordinatorStarted).toFixed(1)}`);
       result.headers.set('Cache-Control', 'no-store');
       result.headers.set('X-Robots-Tag', 'noindex, nofollow');
       return result;
