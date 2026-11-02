@@ -752,12 +752,18 @@ export class DomainService {
     throw new DomainError(404, 'not_found', '接口不存在。');
   }
   private async productRadarProject(request: Request, identity: Principal, path: string[]): Promise<Response> {
+    const statusRead = request.method === 'GET' && ['status', 'publication-status'].includes(path[1]);
+    const timings: string[] = [];
+    const statusStarted = statusRead ? performance.now() : 0;
     const principal = await currentMaterialsPrincipal(this.env, identity);
+    const projectStarted = statusRead ? performance.now() : 0;
     // This handler has just refreshed the principal at the durable boundary.
     const action = path[1], url = new URL(request.url);
     const archived = request.method === 'GET' && ['preview','assets','status'].includes(action) && url.searchParams.has('expectedVersion')
       ? await loadWebsiteResult(this.env, path[0], Number(url.searchParams.get('expectedVersion'))) : undefined;
     const project = archived?.project || await this.store.one<Project>('projects', path[0]);
+    if (statusRead) timings.push(`wr-status-principal;dur=${(projectStarted - statusStarted).toFixed(1)}`,
+      `wr-status-project;dur=${(performance.now() - projectStarted).toFixed(1)}`);
     requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
     if (action === 'refresh-publication' && request.method === 'POST') {
       const job = await this.publish(project, principal, await this.body(request), false, true);
@@ -795,17 +801,26 @@ export class DomainService {
       const job = await this.publish(project, principal, await this.body(request), false);
       return json(await this.projectServiceStatus(project, job.id));
     }
-    if (['status', 'publication-status'].includes(action) && request.method === 'GET')
-      return json(await this.projectServiceStatus(project, url.searchParams.get('jobId') || undefined, Boolean(archived)));
+    if (statusRead) {
+      const status = await this.projectServiceStatus(project, url.searchParams.get('jobId') || undefined, Boolean(archived), timings);
+      const serializeStarted = performance.now(), result = json(status), finished = performance.now();
+      timings.push(`wr-status-serialize;dur=${(finished - serializeStarted).toFixed(1)}`,
+        `wr-status-total;dur=${(finished - statusStarted).toFixed(1)}`);
+      result.headers.set('Server-Timing', timings.join(', '));
+      return result;
+    }
     throw new DomainError(404, 'not_found', '接口不存在。');
   }
-  private async projectServiceStatus(project: Project, jobId?: string, archived = false): Promise<ProjectServiceStatus> {
+  private async projectServiceStatus(project: Project, jobId?: string, archived = false, timings?: string[]): Promise<ProjectServiceStatus> {
+    const jobsStarted = timings ? performance.now() : 0;
     const job = archived ? undefined : jobId ? await this.store.one<Job>('jobs', jobId)
       : (await this.store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC'))[0];
     if (jobId) requireCondition(job?.projectId === project.id && job.kind === 'publish', 404, 'job_not_found', '发布任务不存在。');
+    const releasesStarted = timings ? performance.now() : 0;
     const release = job?.input.releaseId ? await this.store.one<Release>('releases', String(job.input.releaseId)) : undefined;
     const activeRelease = archived ? undefined : project.publishedReleaseId === release?.id ? release
       : project.publishedReleaseId ? await this.store.one<Release>('releases', project.publishedReleaseId) : undefined;
+    const assembleStarted = timings ? performance.now() : 0;
     const published = activeRelease?.status === 'succeeded' ? activeRelease : undefined;
     let completed = 0, total = 0;
     for (const asset of Object.values(release?.publicMedia?.assets ?? {})) {
@@ -814,7 +829,7 @@ export class DomainService {
       for (const width of widths) if (prepared.has(width)) completed++;
     }
     const base = `/api/integrations/product-radar/projects/${project.id}`;
-    return { schemaVersion: 'wr-project-service-v1', projectId: project.id, projectVersion: project.version,
+    const result: ProjectServiceStatus = { schemaVersion: 'wr-project-service-v1', projectId: project.id, projectVersion: project.version,
       hasUnpublishedChanges: !published || !samePublishedDraft(project.draft, published.draft),
       ...(published ? { publishedVersion: published.draftVersion } : {}),
       name: project.name, template: project.draft.template, languages: project.draft.languages,
@@ -833,6 +848,10 @@ export class DomainService {
       ...(!project.offline && project.publishedReleaseId && project.siteUrl ? {publishedUrl: project.siteUrl} : {}),
       previewEndpoint: base + '/preview', publishEndpoint: base + '/publish', statusEndpoint: base + '/publication-status',
     };
+    if (timings) timings.push(`wr-status-jobs;dur=${(releasesStarted - jobsStarted).toFixed(1)}`,
+      `wr-status-releases;dur=${(assembleStarted - releasesStarted).toFixed(1)}`,
+      `wr-status-assemble;dur=${(performance.now() - assembleStarted).toFixed(1)}`);
+    return result;
   }
   private publicHistoryJob(job: Job): Job {
     if (job.kind === 'clone') return this.clones.publicJob(job);

@@ -153,6 +153,61 @@ describe('Product Radar private project service', () => {
     expect(response.headers.get('Server-Timing')).toMatch(/wr-render;dur=[\d.]+/);
     expect(response.headers.get('Server-Timing')).toMatch(/wr-html;dur=[\d.]+/);
   });
+  it.each(['status', 'publication-status'])('measures %s reads without changing the response, permissions or publication', async action => {
+    const p = await accepted();
+    const queued = await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version });
+    const expected = await queued.json() as any;
+    expect(queued.headers.get('Server-Timing')).not.toContain('wr-status-');
+    const records = { project: await store.one('projects', p.id), jobs: await store.list('jobs'), releases: await store.list('releases') };
+    vi.mocked(providers.resolveHostingTarget).mockClear();
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    const context = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockClear().mockImplementation(async (...args) => {
+      const response = await context(...args);
+      if (String(args[0]).endsWith('/context')) clock += 19;
+      return response;
+    });
+    const originalOne = DomainStore.prototype.one, originalList = DomainStore.prototype.list;
+    const one = vi.spyOn(DomainStore.prototype, 'one').mockImplementation(async function(this: DomainStore, table, id) {
+      const result = await originalOne.call(this, table, id);
+      clock += table === 'projects' ? 23 : table === 'releases' ? 41 : 0;
+      return result;
+    });
+    const list = vi.spyOn(DomainStore.prototype, 'list').mockImplementation(async function(this: DomainStore, ...args) {
+      const result = await originalList.apply(this, args);
+      if (args[0] === 'jobs') clock += 31;
+      return result;
+    });
+    const response = await call(p.id, action);
+    expect(response.status).toBe(200); expect(await response.json()).toEqual(expected);
+    const header = response.headers.get('Server-Timing')!;
+    expect(header).toMatch(/^[a-z-]+;dur=\d+\.\d(?:,\s*[a-z-]+;dur=\d+\.\d)*$/);
+    const timings = Object.fromEntries(header.split(/,\s*/).map(value => {
+      const [name, duration] = value.split(';dur='); return [name, Number(duration)];
+    }));
+    expect(timings).toEqual({ 'wr-status-principal': 19, 'wr-status-project': 23,
+      'wr-status-jobs': 31, 'wr-status-releases': 41, 'wr-status-assemble': 0,
+      'wr-status-serialize': 0, 'wr-status-total': 114, 'wr-auth': 19, 'wr-coordinator': 114 });
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(2);
+    expect(one.mock.calls.map(([table]) => table)).toEqual(['projects', 'releases']);
+    expect(list.mock.calls.map(([table]) => table)).toEqual(['jobs']);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect({ project: await store.one('projects', p.id), jobs: await store.list('jobs'), releases: await store.list('releases') }).toEqual(records);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it('measures archived status without reading the live project or publication', async () => {
+    const p = await accepted(), originalName = p.name;
+    p.name = 'Changed live name'; p.version++; await store.update('projects', p).run();
+    const one = vi.spyOn(DomainStore.prototype, 'one'), list = vi.spyOn(DomainStore.prototype, 'list');
+    const response = await call(p.id, 'status', { expectedVersion: 1 });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ projectVersion: 1, name: originalName, publication: { status: 'idle' } });
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-status-project;dur=[\d.]+/);
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-status-total;dur=[\d.]+/);
+    expect(one).not.toHaveBeenCalled(); expect(list).not.toHaveBeenCalled();
+    expect(providers.publish).not.toHaveBeenCalled();
+  });
   it('returns a fixed trusted runtime independent of customer content or page scripts', async () => {
     const p = await accepted();
     const first: any = await (await call(p.id, 'preview')).json();
