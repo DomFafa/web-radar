@@ -243,7 +243,7 @@ describe('Product Radar private project service', () => {
     expect(await store.list('jobs')).toEqual([]); expect(await store.list('releases')).toEqual([]);
     expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
-  it('reads 24 current statuses with exactly two live principal checks and unchanged business records', async () => {
+  it('reads 24 current statuses with one live principal check at the status owner and unchanged business records', async () => {
     const p = await accepted();
     await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version });
     const projects = [p];
@@ -258,7 +258,7 @@ describe('Product Radar private project service', () => {
     const response = await post('/projects/status-batch', { projectIds: projects.map(project => project.id) });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ schemaVersion: 'wr-project-status-batch-v1', items: projects.map((project, index) => ({ projectId: project.id, status: 200, value: expected[index] })) });
-    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(2);
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(1);
     expect(coordinator).not.toHaveBeenCalled(); expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
     expect({ projects: await store.list('projects'), jobs: await store.list('jobs'), releases: await store.list('releases') }).toEqual(records);
   });
@@ -285,25 +285,37 @@ describe('Product Radar private project service', () => {
     expect(await store.list('jobs')).toEqual([]); expect(await store.list('releases')).toEqual([]);
     expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
-  it.each(['outer', 'inner'] as const)('fails the whole batch when the %s live identity check is revoked', async stage => {
+  it('fails the whole batch when its live owner identity check is revoked', async () => {
     const p = await accepted(), one = vi.spyOn(DomainStore.prototype, 'one');
-    vi.mocked(fetch).mockReset();
-    if (stage === 'inner') vi.mocked(fetch).mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: current }));
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({}, { status: 403 }));
+    vi.mocked(fetch).mockReset().mockResolvedValueOnce(Response.json({}, { status: 403 }));
     const response = await post('/projects/status-batch', { projectIds: [p.id, crypto.randomUUID()] });
     expect(response.status).toBe(403); expect(await response.json()).toMatchObject({ code: 'product_radar_unavailable' });
-    expect(fetch).toHaveBeenCalledTimes(stage === 'inner' ? 2 : 1); expect(one).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(1); expect(one).not.toHaveBeenCalled();
     expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
-  it('uses the batch inner principal for every item and preserves super-admin cross-workspace access', async () => {
+  it('uses the current owner principal for every item and preserves super-admin cross-workspace access', async () => {
     const p = await accepted();
     const foreign = { ...p, id: crypto.randomUUID(), workspaceId: 'foreign-workspace' }; await store.insert('projects', foreign).run();
     const request = () => post('/projects/status-batch', { projectIds: [p.id, foreign.id] });
-    const outer = { ...current, systemRole: 'super_admin' }, inner = { ...current, systemRole: 'user', workspaceRole: 'member' };
-    vi.mocked(fetch).mockReset().mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: outer })).mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: inner }));
+    current = { ...current, systemRole: 'user', workspaceRole: 'member' };
     expect((await (await request()).json() as any).items.map((item: any) => item.status)).toEqual([200, 404]);
-    vi.mocked(fetch).mockReset().mockImplementation(async () => Response.json({ protocolVersion: 1, principal: outer }));
+    current = { ...current, systemRole: 'super_admin' };
     expect((await (await request()).json() as any).items.map((item: any) => item.status)).toEqual([200, 200]);
+  });
+  it('reads only the latest publication job and keeps a newer failure ahead of an older success', async () => {
+    const p = await accepted();
+    const initial: any = await (await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version })).json();
+    const first = (await store.one<Job>('jobs', initial.publication.jobId))!;
+    await store.update('jobs', { ...first, status: 'succeeded' }).run();
+    const latest: Job = { ...first, id: crypto.randomUUID(), status: 'failed', error: 'Latest publication failed' };
+    await store.insert('jobs', latest).run();
+    const list = vi.spyOn(DomainStore.prototype, 'list');
+    const response = await post('/projects/status-batch', { projectIds: [p.id] });
+    const body: any = await response.json();
+    expect(body.items[0].value.publication).toMatchObject({ jobId: latest.id, status: 'failed', phase: 'failed', retryable: true, error: latest.error });
+    const jobReads = list.mock.results.filter((_, index) => list.mock.calls[index][0] === 'jobs');
+    expect(jobReads).toHaveLength(1);
+    expect(await jobReads[0].value).toHaveLength(1);
   });
   it('bounds batch project read concurrency to six and keeps input order', async () => {
     const p = await accepted(), ids = Array.from({ length: 12 }, () => crypto.randomUUID());

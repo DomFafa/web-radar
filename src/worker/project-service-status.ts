@@ -26,8 +26,8 @@ export async function readProjectServiceStatus(env: AppEnv, identity: Principal,
   } catch (error) { return domainErrorResponse(error); }
 }
 
-/** A batch retains a second live check, shared only by this request's fixed identity. */
-export async function readProjectServiceStatusBatch(env: AppEnv, identity: Principal, projectIds: readonly string[], store = new DomainStore(env.DB)): Promise<Response> {
+/** The direct batch owns one live check, shared only by this request's fixed identity. */
+export async function readProjectServiceStatusBatch(env: AppEnv, identity: Pick<Principal, 'userId' | 'workspaceId'>, projectIds: readonly string[], store = new DomainStore(env.DB)): Promise<Response> {
   try {
     const started = performance.now();
     const principal = await currentMaterialsPrincipal(env, identity), itemsStarted = performance.now();
@@ -68,7 +68,7 @@ async function authorizedProjectStatus(env: AppEnv, store: DomainStore, principa
 export async function projectServiceStatus(store: Pick<DomainStore, 'one' | 'list'>, project: Project, jobId?: string, archived = false, timings?: string[]): Promise<ProjectServiceStatus> {
   const jobsStarted = timings ? performance.now() : 0;
   const job = archived ? undefined : jobId ? await store.one<Job>('jobs', jobId)
-    : (await store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC'))[0];
+    : (await store.list<Job>('jobs', "project_id=? AND kind='publish'", [project.id], 'created_at DESC, rowid DESC', 1))[0];
   if (jobId) requireCondition(job?.projectId === project.id && job.kind === 'publish', 404, 'job_not_found', '发布任务不存在。');
   const releasesStarted = timings ? performance.now() : 0;
   const release = job?.input.releaseId ? await store.one<Release>('releases', String(job.input.releaseId)) : undefined;

@@ -46,14 +46,14 @@ it('keeps current unversioned asset reads compatible',async()=>{
 });
 const batch=(body:Record<string,unknown>)=>app.request('https://web.example/projects/status-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({principal:{userId:'owner',workspaceId:'workspace'},...body})},env);
 const batchIds=['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222'];
-it('dispatches a bounded status batch once with one outer principal and no coordinator call',async()=>{
+it('dispatches a bounded status batch to its live identity owner without a duplicate outer lookup',async()=>{
   const response=await batch({projectIds:batchIds});
   expect(response.status).toBe(200);
-  expect(readProjectServiceStatusBatch).toHaveBeenCalledExactlyOnceWith(env,{userId:'owner',workspaceId:'workspace',systemRole:'user',workspaceRole:'member'},batchIds);
-  expect(verifyMaterialsSecret).toHaveBeenCalledTimes(1);expect(currentMaterialsPrincipal).toHaveBeenCalledTimes(1);
+  expect(readProjectServiceStatusBatch).toHaveBeenCalledExactlyOnceWith(env,{userId:'owner',workspaceId:'workspace'},batchIds);
+  expect(verifyMaterialsSecret).toHaveBeenCalledTimes(1);expect(currentMaterialsPrincipal).not.toHaveBeenCalled();
   expect(forwarded).toEqual([]);expect(readProjectServiceStatus).not.toHaveBeenCalled();
   expect(response.headers.get('Cache-Control')).toBe('no-store');expect(response.headers.get('X-Robots-Tag')).toBe('noindex, nofollow');
-  expect(response.headers.get('Server-Timing')).toMatch(/wr-auth;dur=[\d.]+, wr-status-direct;dur=[\d.]+/);
+  expect(response.headers.get('Server-Timing')).toMatch(/wr-status-direct;dur=[\d.]+/);
 });
 it.each([
   {projectIds:[]}, {projectIds:Array.from({length:25},()=>crypto.randomUUID())}, {projectIds:[batchIds[0],batchIds[0]]},
