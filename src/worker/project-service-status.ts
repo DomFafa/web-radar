@@ -1,6 +1,6 @@
 import { canManage } from '../shared/access';
 import type { Job, Principal, Project, Release } from '../shared/model';
-import type { ProjectServiceStatus } from '../shared/project-service';
+import type { ProjectServiceStatus, ProjectServiceStatusBatch, ProjectServiceStatusBatchItem } from '../shared/project-service';
 import { samePublishedDraft } from '../shared/publication';
 import { plannedPages } from '../shared/site-brief';
 import { expectedVersion, requireCondition } from './domain';
@@ -14,16 +14,9 @@ import { loadWebsiteResult } from './website-results';
 export async function readProjectServiceStatus(env: AppEnv, identity: Principal, projectId: string, action: 'status' | 'publication-status', query: URLSearchParams, store = new DomainStore(env.DB)): Promise<Response> {
   try {
     const timings: string[] = [], statusStarted = performance.now();
-    const principal = await currentMaterialsPrincipal(env, identity), projectStarted = performance.now();
-    const archived = action === 'status' && query.has('expectedVersion')
-      ? await loadWebsiteResult(env, projectId, Number(query.get('expectedVersion'))) : undefined;
-    const project = archived?.project || await store.one<Project>('projects', projectId);
-    timings.push(`wr-status-principal;dur=${(projectStarted - statusStarted).toFixed(1)}`,
-      `wr-status-project;dur=${(performance.now() - projectStarted).toFixed(1)}`);
-    requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
-    requireCondition(archived || (project.materials && project.draft.materials), 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
-    if (query.has('expectedVersion')) expectedVersion(project, Number(query.get('expectedVersion')));
-    const status = await projectServiceStatus(store, project, query.get('jobId') || undefined, Boolean(archived), timings);
+    const principal = await currentMaterialsPrincipal(env, identity);
+    timings.push(`wr-status-principal;dur=${(performance.now() - statusStarted).toFixed(1)}`);
+    const status = await authorizedProjectStatus(env, store, principal, projectId, action, query, timings);
     const serializeStarted = performance.now();
     const result = Response.json(status, { headers: { 'Cache-Control': 'no-store' } }), finished = performance.now();
     timings.push(`wr-status-serialize;dur=${(finished - serializeStarted).toFixed(1)}`,
@@ -31,6 +24,45 @@ export async function readProjectServiceStatus(env: AppEnv, identity: Principal,
     result.headers.set('Server-Timing', timings.join(', '));
     return result;
   } catch (error) { return domainErrorResponse(error); }
+}
+
+/** A batch retains a second live check, shared only by this request's fixed identity. */
+export async function readProjectServiceStatusBatch(env: AppEnv, identity: Principal, projectIds: readonly string[], store = new DomainStore(env.DB)): Promise<Response> {
+  try {
+    const started = performance.now();
+    const principal = await currentMaterialsPrincipal(env, identity), itemsStarted = performance.now();
+    const items: ProjectServiceStatusBatchItem[] = new Array(projectIds.length);
+    const query = new URLSearchParams();
+    let next = 0;
+    await Promise.all(Array.from({ length: Math.min(6, projectIds.length) }, async () => {
+      while (next < projectIds.length) {
+        const index = next++, projectId = projectIds[index];
+        try {
+          items[index] = { projectId, status: 200, value: await authorizedProjectStatus(env, store, principal, projectId, 'status', query) };
+        } catch (error) {
+          const response = domainErrorResponse(error);
+          items[index] = { projectId, status: response.status, error: await response.json() as { code: string; message: string } };
+        }
+      }
+    }));
+    const serializeStarted = performance.now();
+    const body: ProjectServiceStatusBatch = { schemaVersion: 'wr-project-status-batch-v1', items };
+    const result = Response.json(body, { headers: { 'Cache-Control': 'no-store' } }), finished = performance.now();
+    result.headers.set('Server-Timing', `wr-status-principal;dur=${(itemsStarted - started).toFixed(1)}, wr-status-items;dur=${(serializeStarted - itemsStarted).toFixed(1)}, wr-status-serialize;dur=${(finished - serializeStarted).toFixed(1)}, wr-status-total;dur=${(finished - started).toFixed(1)}`);
+    return result;
+  } catch (error) { return domainErrorResponse(error); }
+}
+
+async function authorizedProjectStatus(env: AppEnv, store: DomainStore, principal: Principal, projectId: string, action: 'status' | 'publication-status', query: URLSearchParams, timings?: string[]): Promise<ProjectServiceStatus> {
+  const projectStarted = timings ? performance.now() : 0;
+  const archived = action === 'status' && query.has('expectedVersion')
+    ? await loadWebsiteResult(env, projectId, Number(query.get('expectedVersion'))) : undefined;
+  const project = archived?.project || await store.one<Project>('projects', projectId);
+  timings?.push(`wr-status-project;dur=${(performance.now() - projectStarted).toFixed(1)}`);
+  requireCondition(project && canManage(project, principal), 404, 'project_not_found', '项目不存在或没有访问权限。');
+  requireCondition(archived || (project.materials && project.draft.materials), 409, 'materials_receipt_required', '此接口需要已接收的确认资料项目。');
+  if (query.has('expectedVersion')) expectedVersion(project, Number(query.get('expectedVersion')));
+  return projectServiceStatus(store, project, query.get('jobId') || undefined, Boolean(archived), timings);
 }
 
 export async function projectServiceStatus(store: Pick<DomainStore, 'one' | 'list'>, project: Project, jobId?: string, archived = false, timings?: string[]): Promise<ProjectServiceStatus> {

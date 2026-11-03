@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { HonoEnv } from './env';
 import { currentMaterialsPrincipal, verifyMaterialsSecret } from './materials-auth';
 import { ApiError, jsonBody } from './http';
-import { readProjectServiceStatus } from './project-service-status';
+import { readProjectServiceStatus, readProjectServiceStatusBatch } from './project-service-status';
 
 const identity = z.object({ userId: z.string().min(1).max(200), workspaceId: z.string().min(1).max(200) });
 const base = z.strictObject({ principal: identity });
@@ -20,8 +20,26 @@ const publish = base.extend({ requestId: z.string().min(4).max(120).regex(/^[\w-
 const refresh = publish.extend({ expectedPublishedReleaseId: z.uuid() });
 const versionedRead = base.extend({expectedVersion: version.optional()});
 const publication = base.extend({ jobId: z.uuid().optional() });
+const statusBatch = z.strictObject({
+  principal: z.strictObject(identity.shape),
+  projectIds: z.array(z.uuid()).min(1).max(24).refine(ids => new Set(ids).size === ids.length),
+});
 
 export function registerProjectIntegration(app: Hono<HonoEnv>) {
+  app.post('/projects/status-batch', async c => {
+    await verifyMaterialsSecret(c.req.raw, c.env);
+    const parsed = statusBatch.safeParse(await jsonBody(c.req.raw, 4096));
+    if (!parsed.success) throw new ApiError(400, 'invalid_project_service', '项目服务参数无效。');
+    const authStarted = performance.now();
+    const principal = await currentMaterialsPrincipal(c.env, parsed.data.principal);
+    const readStarted = performance.now();
+    const response = await readProjectServiceStatusBatch(c.env, principal, parsed.data.projectIds);
+    const result = new Response(response.body, response);
+    result.headers.append('Server-Timing', `wr-auth;dur=${(readStarted - authStarted).toFixed(1)}, wr-status-direct;dur=${(performance.now() - readStarted).toFixed(1)}`);
+    result.headers.set('Cache-Control', 'no-store');
+    result.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return result;
+  });
   for (const action of ['status', 'preview', 'publish', 'refresh-publication', 'publication-status', 'assets/:assetId'] as const) {
     app.post('/projects/:projectId/' + action, async c => {
       await verifyMaterialsSecret(c.req.raw, c.env);
