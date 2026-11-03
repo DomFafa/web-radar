@@ -69,3 +69,15 @@ it('retains the 4 KiB body limit for status batches',async()=>{
   expect((await batch({projectIds:batchIds,extra:'x'.repeat(4096)})).status).toBe(413);
   expect(currentMaterialsPrincipal).not.toHaveBeenCalled();expect(readProjectServiceStatusBatch).not.toHaveBeenCalled();
 });
+
+it('accounts for entry validation separately from the direct status read using numeric-only timings', async () => {
+  let now = 0;
+  const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+  vi.mocked(verifyMaterialsSecret).mockImplementationOnce(async () => { now += 5; });
+  vi.mocked(readProjectServiceStatusBatch).mockImplementationOnce(async () => { now += 11; return Response.json({ schemaVersion: 'wr-project-status-batch-v1', items: [] }); });
+  try {
+    const response = await batch({ projectIds: batchIds });
+    expect(response.headers.get('Server-Timing')).toBe('wr-status-pre;dur=5.0, wr-status-direct;dur=11.0, wr-status-entry;dur=16.0');
+    expect(await response.json()).toEqual({ schemaVersion: 'wr-project-status-batch-v1', items: [] });
+  } finally { clock.mockRestore(); }
+});

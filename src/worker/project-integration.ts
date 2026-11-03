@@ -27,6 +27,7 @@ const statusBatch = z.strictObject({
 
 export function registerProjectIntegration(app: Hono<HonoEnv>) {
   app.post('/projects/status-batch', async c => {
+    const entryStarted = performance.now();
     await verifyMaterialsSecret(c.req.raw, c.env);
     const parsed = statusBatch.safeParse(await jsonBody(c.req.raw, 4096));
     if (!parsed.success) throw new ApiError(400, 'invalid_project_service', '项目服务参数无效。');
@@ -35,7 +36,8 @@ export function registerProjectIntegration(app: Hono<HonoEnv>) {
     // separates this validated input from its per-project access checks.
     const response = await readProjectServiceStatusBatch(c.env, parsed.data.principal, parsed.data.projectIds);
     const result = new Response(response.body, response);
-    result.headers.append('Server-Timing', `wr-status-direct;dur=${(performance.now() - readStarted).toFixed(1)}`);
+    const finished = performance.now();
+    result.headers.append('Server-Timing', `wr-status-pre;dur=${(readStarted - entryStarted).toFixed(1)}, wr-status-direct;dur=${(finished - readStarted).toFixed(1)}, wr-status-entry;dur=${(finished - entryStarted).toFixed(1)}`);
     result.headers.set('Cache-Control', 'no-store');
     result.headers.set('X-Robots-Tag', 'noindex, nofollow');
     return result;

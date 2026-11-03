@@ -3,8 +3,32 @@ import { DomainError } from './domain';
 
 type Table = 'projects' | 'assets' | 'jobs' | 'releases' | 'inquiries';
 type Entity = Project | Asset | Job | Release | Inquiry;
+export type StatusReadResult<T> = { value: T } | { error: unknown };
 export class DomainStore {
   constructor(readonly db: D1Database) {}
+  /** Fixed status-read stages; malformed rows fail only their requested item. */
+  private async statusRows<T>(ids: readonly string[], sql: string, values: readonly string[]): Promise<Map<string, StatusReadResult<T>>> {
+    const result = new Map<string, StatusReadResult<T>>();
+    if (!ids.length) return result;
+    try {
+      const rows = await this.db.prepare(sql).bind(...values).all<{ id: string; data: string }>();
+      for (const row of rows.results) {
+        try { result.set(row.id, { value: JSON.parse(row.data) as T }); }
+        catch (error) { result.set(row.id, { error }); }
+      }
+    } catch (error) { for (const id of ids) result.set(id, { error }); }
+    return result;
+  }
+  statusProjects(ids: readonly string[]): Promise<Map<string, StatusReadResult<Project>>> {
+    return this.statusRows(ids, `SELECT id,data FROM projects WHERE id IN (${ids.map(() => '?').join(',')})`, ids);
+  }
+  statusLatestJobs(projectIds: readonly string[]): Promise<Map<string, StatusReadResult<Job>>> {
+    const latest = "(SELECT rowid FROM jobs WHERE project_id=? AND kind='publish' ORDER BY created_at DESC,rowid DESC LIMIT 1)";
+    return this.statusRows(projectIds, `SELECT project_id AS id,data FROM jobs WHERE rowid IN (${projectIds.map(() => latest).join(',')})`, projectIds);
+  }
+  statusReleases(ids: readonly string[]): Promise<Map<string, StatusReadResult<Release>>> {
+    return this.statusRows(ids, `SELECT id,data FROM releases WHERE id IN (${ids.map(() => '?').join(',')})`, ids);
+  }
   private serialize(value: Entity): string {
     const body = JSON.stringify(value);
     if (new TextEncoder().encode(body).length > 1_900_000) throw new DomainError(413, 'record_too_large', '资料超过数据库单条容量，请减少重复产品资料；生成页面应保存到对象存储。');
