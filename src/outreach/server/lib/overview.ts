@@ -11,7 +11,7 @@ export async function emailOverview(db: D1Database, workspaceId: string, creator
       SELECT r.campaign_id,
         SUM(CASE WHEN r.sent_at IS NOT NULL OR r.ses_message_id IS NOT NULL OR r.status IN ('sent','delivered','opened','clicked','bounced') THEN 1 ELSE 0 END) AS sent,
         SUM(CASE WHEN r.delivered_at IS NOT NULL OR r.opened_at IS NOT NULL OR r.clicked_at IS NOT NULL OR r.status IN ('delivered','opened','clicked') THEN 1 ELSE 0 END) AS delivered,
-        SUM(CASE WHEN r.opened_at IS NOT NULL OR r.clicked_at IS NOT NULL OR r.status IN ('opened','clicked') THEN 1 ELSE 0 END) AS opened,
+        SUM(CASE WHEN r.opened_at IS NOT NULL OR r.status = 'opened' THEN 1 ELSE 0 END) AS opened,
         SUM(CASE WHEN r.clicked_at IS NOT NULL OR r.status = 'clicked' THEN 1 ELSE 0 END) AS clicked,
         SUM(CASE WHEN r.status = 'bounced' THEN 1 ELSE 0 END) AS bounced
       FROM edm_campaign_recipients r JOIN owned c ON c.id = r.campaign_id GROUP BY r.campaign_id

@@ -3,11 +3,13 @@ import { afterEach, expect, it, vi } from 'vitest';
 import type { AppEnv } from '../src/worker/env';
 import { materialsFixture } from './fixtures/materials';
 vi.mock('../src/worker/coordinator', () => ({ Coordinator: class {} }));
+vi.mock('../src/worker/project-service-status', () => ({ readProjectServiceStatus: vi.fn(async () => Response.json({ reachedProjectService: true })) }));
 import app from '../src/worker/index';
+import { readProjectServiceStatus } from '../src/worker/project-service-status';
 
 const projectId = '015c4cb4-1622-481f-8de4-03316dc09a2b';
 const secret = 's'.repeat(40);
-afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 async function fixture() {
   const principal = { ...(await materialsFixture()).principal, email: 'member@example.test', systemRole: 'user' as const, workspaceRole: 'member' as const };
   const upstream = vi.fn(async () => Response.json({ protocolVersion: 1, principal }));
@@ -23,11 +25,17 @@ it.each(['status', 'preview', 'publication-status', 'assets/image-1', 'publish',
   const response = await f.request(action, secret, extra);
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual({ reachedProjectService: true });
-  expect(f.forwarded).toHaveBeenCalledOnce();
-  const request = (f.forwarded.mock.calls[0] as unknown as [Request])[0];
-  expect(new URL(request.url).pathname).toBe(`/internal/product-radar-projects/${projectId}/${action}`);
-  expect(JSON.parse(decodeURIComponent(request.headers.get('X-WR-Principal')!))).toEqual({...f.principal,appRole:'member'});
-  expect(request.method).toBe(['publish', 'refresh-publication'].includes(action) ? 'POST' : 'GET');
+  if (action === 'status' || action === 'publication-status') {
+    expect(f.forwarded).not.toHaveBeenCalled(); expect(readProjectServiceStatus).toHaveBeenCalledOnce();
+    const [, principal, id, readAction] = vi.mocked(readProjectServiceStatus).mock.calls[0];
+    expect(principal).toEqual({...f.principal,appRole:'member'}); expect(id).toBe(projectId); expect(readAction).toBe(action);
+  } else {
+    expect(f.forwarded).toHaveBeenCalledOnce(); expect(readProjectServiceStatus).not.toHaveBeenCalled();
+    const request = (f.forwarded.mock.calls[0] as unknown as [Request])[0];
+    expect(new URL(request.url).pathname).toBe(`/internal/product-radar-projects/${projectId}/${action}`);
+    expect(JSON.parse(decodeURIComponent(request.headers.get('X-WR-Principal')!))).toEqual({...f.principal,appRole:'member'});
+    expect(request.method).toBe(['publish', 'refresh-publication'].includes(action) ? 'POST' : 'GET');
+  }
   expect(response.headers.get('Cache-Control')).toBe('no-store');
 });
 it('rejects an invalid service key before reaching a customer project', async () => {

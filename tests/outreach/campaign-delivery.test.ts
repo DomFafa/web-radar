@@ -15,7 +15,7 @@ const attempt = () => JSON.parse(String(sqlite.prepare("SELECT result FROM edm_e
 
 beforeEach(async () => {
   sqlite = new DatabaseSync(':memory:');
-  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
+  for (const file of ['0007_outreach.sql', '0008_resend_tracking.sql', '0009_email_scheduling.sql', '0011_customer_inbox.sql', '0012_outreach_assistant.sql', '0013_customer_management.sql', '0014_crm_activity_groups.sql', '0015_email_outbox.sql', '0016_email_snapshot_cleanup.sql', '0018_campaign_review.sql']) sqlite.exec(readFileSync('migrations/' + file, 'utf8'));
   sqlite.exec('ALTER TABLE edm_campaigns ADD COLUMN created_by TEXT');
   env = { DB: d1(sqlite), CREDENTIAL_KEY: 'test-key' };
   sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES ('u','User','user@example.com',0,0);

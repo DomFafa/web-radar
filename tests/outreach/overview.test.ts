@@ -128,15 +128,23 @@ describe('workspace overview aggregation', () => {
       subscribedContacts: 1,
       totalSent: 12,
       totalDelivered: 9,
-      totalOpened: 5,
+      totalOpened: 4,
       totalClicked: 2,
       totalBounced: 3,
       deliveryRate: 75,
-      openRate: 41.7,
+      openRate: 33.3,
       clickRate: 16.7,
       bounceRate: 25,
       resendSync: [],
     });
+  });
+  it('retains actual opens after clicks or bounces without deriving opens from clicks', async () => {
+    insert('edm_contacts', { id: 'c', user_id: 'a', email: 'c@example.com', created_at: 1, updated_at: 1 });
+    campaign('events');
+    for (const [id, status, openedAt] of [['click-only', 'clicked', 0], ['opened-clicked', 'clicked', 2], ['opened-bounced', 'bounced', 2]]) {
+      insert('edm_campaign_recipients', { id, campaign_id: 'events', contact_id: 'c', status, sent_at: 1, clicked_at: 3, ...(openedAt ? { opened_at: openedAt } : {}), created_at: 1 });
+    }
+    expect(await emailOverview(d1(sqlite) as any, 'a')).toMatchObject({ totalSent: 3, totalOpened: 2, totalClicked: 3 });
   });
   it('classifies actual target rows into mutually exclusive results without trusting stale job counters', async () => {
     job('j');

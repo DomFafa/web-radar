@@ -34,6 +34,13 @@ export interface ProjectServiceStatus {
   publishEndpoint: string;
   statusEndpoint: string;
 }
+export type ProjectServiceStatusBatchItem =
+  | { projectId: string; status: 200; value: ProjectServiceStatus }
+  | { projectId: string; status: number; error: { code: string; message: string } };
+export interface ProjectServiceStatusBatch {
+  schemaVersion: 'wr-project-status-batch-v1';
+  items: ProjectServiceStatusBatchItem[];
+}
 export interface ProjectServicePreview {
   schemaVersion: 'wr-project-service-v1';
   projectId: string;

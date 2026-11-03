@@ -4,6 +4,7 @@ export type EmailDeliveryFacts = {
   providerStatus?: string | null;
   queuedReason?: string | null;
   errorMessage?: string | null;
+  verificationCompleted?: boolean;
 };
 
 export const deliverySuccessHelp = '已受理表示服务商接收了请求，可能仍在排队。服务商已发出仍需等待投递回执；已送达表示收件方邮件服务器已接收，不保证进入收件箱或已被阅读。';
@@ -13,7 +14,9 @@ export function emailDeliveryPresentation(facts: EmailDeliveryFacts): {
   label: string; detail: string; tone: 'success' | 'warning' | 'neutral' | 'danger';
 } {
   const { status, errorMessage, providerStatus, queuedReason } = facts;
-  if (errorMessage?.startsWith('待核实')) return { label: '待核实', detail: errorMessage, tone: 'warning' };
+  if (errorMessage?.startsWith('待核实')) return facts.verificationCompleted
+    ? { label: '结果未确认', detail: '已查询服务商记录，但未取得可信发送回执。未计入发送成功，也不会自动重发。', tone: 'warning' }
+    : { label: '待核实', detail: errorMessage, tone: 'warning' };
   if (status === 'bounced') return { label: '退信', detail: errorMessage || '收件方未接受邮件，请查看退信原因。', tone: 'danger' };
   if (status === 'failed') return { label: '失败', detail: errorMessage || '发送未完成，请核实结果后处理。', tone: 'danger' };
   if (status === 'delivered') return { label: '已送达', detail: '收件方邮件服务器已接收；不保证进入收件箱或已被阅读。', tone: 'success' };

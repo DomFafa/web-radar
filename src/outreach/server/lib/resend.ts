@@ -1,3 +1,4 @@
+import { settleReviewedCampaign } from './campaign-review-state';
 import { publicFetch } from './network';
 export const RESEND_EVENTS = [
   'email.sent',
@@ -132,7 +133,7 @@ export async function applyResendEvent(db: D1Database, providerId: string, event
   const kind = event.type.slice(6),
     now = Math.floor(Date.now() / 1000);
   const delivered = ['delivered', 'opened', 'clicked'].includes(kind),
-    opened = ['opened', 'clicked'].includes(kind),
+    opened = kind === 'opened',
     clicked = kind === 'clicked';
   const increments = [
     ['totalSent', 'sent_at', true],
@@ -200,5 +201,6 @@ export async function applyResendEvent(db: D1Database, providerId: string, event
         .bind(now, now, row.contact_id),
     );
   await db.batch(batch);
+  await settleReviewedCampaign(db, row.campaign_id);
   return true;
 }

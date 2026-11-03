@@ -13,6 +13,7 @@ import { draftFromMaterials } from '../src/worker/materials-service';
 import { templateMediaRequirements } from '../src/shared/template-media';
 import { frozenMaterialsPreviewRuntime } from '../src/templates/releases/baseline-preview-20260922';
 import { productMotionPrepareSource, productMotionSource } from '../src/templates/themes/product-motion-source';
+import { ApiError } from '../src/worker/http';
 import type { AppEnv } from '../src/worker/env';
 import type { Asset, Job, Principal, Project, PublicMediaManifest, Release } from '../src/shared/model';
 
@@ -152,6 +153,173 @@ describe('Product Radar private project service', () => {
     expect(response.headers.get('Server-Timing')).toMatch(/wr-coordinator;dur=[\d.]+/);
     expect(response.headers.get('Server-Timing')).toMatch(/wr-render;dur=[\d.]+/);
     expect(response.headers.get('Server-Timing')).toMatch(/wr-html;dur=[\d.]+/);
+  });
+  it.each(['status', 'publication-status'])('measures %s reads without changing the response, permissions or publication', async action => {
+    const p = await accepted();
+    const queued = await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version });
+    const expected = await queued.json() as any;
+    expect(queued.headers.get('Server-Timing')).not.toContain('wr-status-');
+    const records = { project: await store.one('projects', p.id), jobs: await store.list('jobs'), releases: await store.list('releases') };
+    vi.mocked(providers.resolveHostingTarget).mockClear();
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    const context = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockClear().mockImplementation(async (...args) => {
+      const response = await context(...args);
+      if (String(args[0]).endsWith('/context')) clock += 19;
+      return response;
+    });
+    const originalOne = DomainStore.prototype.one, originalList = DomainStore.prototype.list;
+    const one = vi.spyOn(DomainStore.prototype, 'one').mockImplementation(async function(this: DomainStore, table, id) {
+      const result = await originalOne.call(this, table, id);
+      clock += table === 'projects' ? 23 : table === 'releases' ? 41 : 0;
+      return result;
+    });
+    const list = vi.spyOn(DomainStore.prototype, 'list').mockImplementation(async function(this: DomainStore, ...args) {
+      const result = await originalList.apply(this, args);
+      if (args[0] === 'jobs') clock += 31;
+      return result;
+    });
+    const response = await call(p.id, action);
+    expect(response.status).toBe(200); expect(await response.json()).toEqual(expected);
+    expect(coordinator).not.toHaveBeenCalled();
+    const header = response.headers.get('Server-Timing')!;
+    expect(header).toMatch(/^[a-z-]+;dur=\d+\.\d(?:,\s*[a-z-]+;dur=\d+\.\d)*$/);
+    const timings = Object.fromEntries(header.split(/,\s*/).map(value => {
+      const [name, duration] = value.split(';dur='); return [name, Number(duration)];
+    }));
+    expect(timings).toEqual({ 'wr-status-principal': 19, 'wr-status-project': 23,
+      'wr-status-jobs': 31, 'wr-status-releases': 41, 'wr-status-assemble': 0,
+      'wr-status-serialize': 0, 'wr-status-total': 114, 'wr-auth': 19, 'wr-status-direct': 114 });
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(2);
+    expect(one.mock.calls.map(([table]) => table)).toEqual(['projects', 'releases']);
+    expect(list.mock.calls.map(([table]) => table)).toEqual(['jobs']);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect({ project: await store.one('projects', p.id), jobs: await store.list('jobs'), releases: await store.list('releases') }).toEqual(records);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it('measures archived status without reading the live project or publication', async () => {
+    const p = await accepted(), originalName = p.name;
+    p.name = 'Changed live name'; p.version++; await store.update('projects', p).run();
+    const one = vi.spyOn(DomainStore.prototype, 'one'), list = vi.spyOn(DomainStore.prototype, 'list'), coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
+    const response = await call(p.id, 'status', { expectedVersion: 1 });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ projectVersion: 1, name: originalName, publication: { status: 'idle' } });
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-status-project;dur=[\d.]+/);
+    expect(response.headers.get('Server-Timing')).toMatch(/wr-status-total;dur=[\d.]+/);
+    expect(one).not.toHaveBeenCalled(); expect(list).not.toHaveBeenCalled();
+    expect(coordinator).not.toHaveBeenCalled();
+    expect(providers.publish).not.toHaveBeenCalled();
+  });
+  it.each(['status', 'publication-status'])('keeps the second live identity check for direct %s reads', async action => {
+    const p = await accepted(), records = { jobs: await store.list('jobs'), releases: await store.list('releases') };
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName'), one = vi.spyOn(DomainStore.prototype, 'one');
+    vi.mocked(fetch).mockReset().mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: current })).mockResolvedValueOnce(Response.json({}, { status: 403 }));
+    const response = await call(p.id, action);
+    expect(response.status).toBe(403);
+    expect(await response.text()).toBe(JSON.stringify({ message: '当前账号或工作区权限已失效。', code: 'product_radar_unavailable' }));
+    expect(fetch).toHaveBeenCalledTimes(2); expect(one).not.toHaveBeenCalled(); expect(coordinator).not.toHaveBeenCalled();
+    expect({ jobs: await store.list('jobs'), releases: await store.list('releases') }).toEqual(records);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it('preserves status bodies and errors across direct and internal reads without publication side effects', async () => {
+    const p = await accepted();
+    const cases = [
+      { action: 'status', options: {}, status: 200 },
+      { action: 'status', options: { expectedVersion: 1 }, status: 200 },
+      { action: 'status', options: { expectedVersion: 2 }, status: 409 },
+      { action: 'publication-status', options: { jobId: crypto.randomUUID() }, status: 404 },
+    ];
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
+    for (const item of cases) {
+      const url = new URL(`https://coordinator.internal/internal/product-radar-projects/${p.id}/${item.action}`);
+      for (const [name, value] of Object.entries(item.options)) url.searchParams.set(name, String(value));
+      const internal = await domain.fetch(new Request(url, { headers: { 'X-WR-Principal': encodeURIComponent(JSON.stringify(current)) } }));
+      const response = await call(p.id, item.action, item.options);
+      expect(response.status).toBe(item.status); expect(await response.text()).toBe(await internal.text());
+    }
+    expect(coordinator).not.toHaveBeenCalled();
+    expect(await store.list('jobs')).toEqual([]); expect(await store.list('releases')).toEqual([]);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it('reads 24 current statuses with exactly two live principal checks and unchanged business records', async () => {
+    const p = await accepted();
+    await call(p.id, 'publish', { requestId: crypto.randomUUID(), expectedVersion: p.version });
+    const projects = [p];
+    for (let i = 1; i < 24; i++) {
+      const next = { ...p, id: crypto.randomUUID(), name: `Project ${i}` };
+      await store.insert('projects', next).run(); projects.push(next);
+    }
+    const expected = await Promise.all(projects.map(async project => (await call(project.id, 'status')).json()));
+    const records = { projects: await store.list('projects'), jobs: await store.list('jobs'), releases: await store.list('releases') };
+    const coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
+    vi.mocked(fetch).mockClear(); vi.mocked(providers.resolveHostingTarget).mockClear();
+    const response = await post('/projects/status-batch', { projectIds: projects.map(project => project.id) });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ schemaVersion: 'wr-project-status-batch-v1', items: projects.map((project, index) => ({ projectId: project.id, status: 200, value: expected[index] })) });
+    expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(2);
+    expect(coordinator).not.toHaveBeenCalled(); expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+    expect({ projects: await store.list('projects'), jobs: await store.list('jobs'), releases: await store.list('releases') }).toEqual(records);
+  });
+  it('keeps batch project ACL, materials and read failures per item without dropping successful peers', async () => {
+    const p = await accepted(); current.workspaceRole = 'member';
+    const foreign = { ...p, id: crypto.randomUUID(), workspaceId: 'foreign-workspace' };
+    const colleague = { ...p, id: crypto.randomUUID(), ownerId: 'colleague' };
+    const unconfirmed = { ...p, id: crypto.randomUUID(), materials: undefined, draft: { ...p.draft, materials: undefined } };
+    for (const project of [foreign, colleague, unconfirmed]) await store.insert('projects', project).run();
+    const missing = crypto.randomUUID(), failed = crypto.randomUUID(), ids = [foreign.id, p.id, unconfirmed.id, failed, colleague.id, missing];
+    const expected = await (await call(p.id, 'status')).json();
+    const original = DomainStore.prototype.one;
+    vi.spyOn(DomainStore.prototype, 'one').mockImplementation(async function(this: DomainStore, table, id) {
+      if (table === 'projects' && id === failed) throw new ApiError(503, 'read_unavailable', 'Temporary read failure');
+      return original.call(this, table, id);
+    });
+    const response = await post('/projects/status-batch', { projectIds: ids });
+    expect(response.status).toBe(200);
+    const body: any = await response.json();
+    expect(body.items.map((item: any) => [item.projectId, item.status])).toEqual(ids.map((id, i) => [id, [404, 200, 409, 503, 404, 404][i]]));
+    expect(body.items[1]).toEqual({ projectId: p.id, status: 200, value: expected });
+    expect(body.items[0].error).toEqual({ code: 'project_not_found', message: '项目不存在或没有访问权限。' });
+    expect(body.items[2].error.code).toBe('materials_receipt_required'); expect(body.items[3].error.code).toBe('read_unavailable');
+    expect(await store.list('jobs')).toEqual([]); expect(await store.list('releases')).toEqual([]);
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it.each(['outer', 'inner'] as const)('fails the whole batch when the %s live identity check is revoked', async stage => {
+    const p = await accepted(), one = vi.spyOn(DomainStore.prototype, 'one');
+    vi.mocked(fetch).mockReset();
+    if (stage === 'inner') vi.mocked(fetch).mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: current }));
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({}, { status: 403 }));
+    const response = await post('/projects/status-batch', { projectIds: [p.id, crypto.randomUUID()] });
+    expect(response.status).toBe(403); expect(await response.json()).toMatchObject({ code: 'product_radar_unavailable' });
+    expect(fetch).toHaveBeenCalledTimes(stage === 'inner' ? 2 : 1); expect(one).not.toHaveBeenCalled();
+    expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
+  });
+  it('uses the batch inner principal for every item and preserves super-admin cross-workspace access', async () => {
+    const p = await accepted();
+    const foreign = { ...p, id: crypto.randomUUID(), workspaceId: 'foreign-workspace' }; await store.insert('projects', foreign).run();
+    const request = () => post('/projects/status-batch', { projectIds: [p.id, foreign.id] });
+    const outer = { ...current, systemRole: 'super_admin' }, inner = { ...current, systemRole: 'user', workspaceRole: 'member' };
+    vi.mocked(fetch).mockReset().mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: outer })).mockResolvedValueOnce(Response.json({ protocolVersion: 1, principal: inner }));
+    expect((await (await request()).json() as any).items.map((item: any) => item.status)).toEqual([200, 404]);
+    vi.mocked(fetch).mockReset().mockImplementation(async () => Response.json({ protocolVersion: 1, principal: outer }));
+    expect((await (await request()).json() as any).items.map((item: any) => item.status)).toEqual([200, 200]);
+  });
+  it('bounds batch project read concurrency to six and keeps input order', async () => {
+    const p = await accepted(), ids = Array.from({ length: 12 }, () => crypto.randomUUID());
+    for (const id of ids) await store.insert('projects', { ...p, id }).run();
+    let release!: () => void, active = 0, peak = 0, started = 0;
+    const gate = new Promise<void>(resolve => { release = resolve; }), original = DomainStore.prototype.one;
+    vi.spyOn(DomainStore.prototype, 'one').mockImplementation(async function(this: DomainStore, table, id) {
+      if (table !== 'projects') return original.call(this, table, id);
+      active++; started++; peak = Math.max(peak, active);
+      try { await gate; return await original.call(this, table, id); } finally { active--; }
+    });
+    const pending = post('/projects/status-batch', { projectIds: ids });
+    await vi.waitFor(() => expect(started).toBe(6)); release();
+    const response = await pending; expect(response.status).toBe(200);
+    expect((await response.json() as any).items.map((item: any) => item.projectId)).toEqual(ids);
+    expect(peak).toBe(6); expect(started).toBe(12);
   });
   it('returns a fixed trusted runtime independent of customer content or page scripts', async () => {
     const p = await accepted();

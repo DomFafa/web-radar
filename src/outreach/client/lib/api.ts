@@ -126,6 +126,8 @@ export const templatesApi = {
 
 // ====== Campaigns API ======
 export const campaignsApi = {
+  review: (id: string) => fetchApi(`/campaigns/${encodeURIComponent(id)}/reconcile`),
+  reconcile: (id: string) => fetchApi(`/campaigns/${encodeURIComponent(id)}/reconcile`, { method: 'POST' }),
   exportReport: async (id: string, name: string) => {
     const response = await fetch(`/api/outreach/campaigns/${encodeURIComponent(id)}/export`, { credentials: "include", headers:sessionHeaders() });
     if (!response.ok || !response.headers.get("content-type")?.includes("text/csv")) {
