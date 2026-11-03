@@ -255,7 +255,12 @@ describe('Product Radar private project service', () => {
     const records = { projects: await store.list('projects'), jobs: await store.list('jobs'), releases: await store.list('releases') };
     const coordinator = vi.spyOn(env.COORDINATOR, 'getByName');
     vi.mocked(fetch).mockClear(); vi.mocked(providers.resolveHostingTarget).mockClear();
+    const reads = vi.spyOn(env.DB, 'prepare');
     const response = await post('/projects/status-batch', { projectIds: projects.map(project => project.id) });
+    const statusSql = reads.mock.calls.map(([sql]) => sql).filter(sql => /SELECT .*FROM (projects|jobs|releases)\b/s.test(sql));
+    expect(statusSql.filter(sql => /FROM projects\b/.test(sql))).toHaveLength(1);
+    expect(statusSql.filter(sql => /FROM jobs\b/.test(sql))).toHaveLength(1);
+    expect(statusSql.filter(sql => /FROM releases\b/.test(sql)).length).toBeLessThanOrEqual(1);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ schemaVersion: 'wr-project-status-batch-v1', items: projects.map((project, index) => ({ projectId: project.id, status: 200, value: expected[index] })) });
     expect(vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith('/context'))).toHaveLength(1);
@@ -270,11 +275,13 @@ describe('Product Radar private project service', () => {
     for (const project of [foreign, colleague, unconfirmed]) await store.insert('projects', project).run();
     const missing = crypto.randomUUID(), failed = crypto.randomUUID(), ids = [foreign.id, p.id, unconfirmed.id, failed, colleague.id, missing];
     const expected = await (await call(p.id, 'status')).json();
-    const original = DomainStore.prototype.one;
-    vi.spyOn(DomainStore.prototype, 'one').mockImplementation(async function(this: DomainStore, table, id) {
-      if (table === 'projects' && id === failed) throw new ApiError(503, 'read_unavailable', 'Temporary read failure');
-      return original.call(this, table, id);
+    const original = DomainStore.prototype.statusProjects;
+    vi.spyOn(DomainStore.prototype, 'statusProjects').mockImplementation(async function(this: DomainStore, ids) {
+      const rows = await original.call(this, ids);
+      rows.set(failed, { error: new ApiError(503, 'read_unavailable', 'Temporary read failure') });
+      return rows;
     });
+    const jobs = vi.spyOn(DomainStore.prototype, 'statusLatestJobs');
     const response = await post('/projects/status-batch', { projectIds: ids });
     expect(response.status).toBe(200);
     const body: any = await response.json();
@@ -282,11 +289,12 @@ describe('Product Radar private project service', () => {
     expect(body.items[1]).toEqual({ projectId: p.id, status: 200, value: expected });
     expect(body.items[0].error).toEqual({ code: 'project_not_found', message: '项目不存在或没有访问权限。' });
     expect(body.items[2].error.code).toBe('materials_receipt_required'); expect(body.items[3].error.code).toBe('read_unavailable');
+    expect(jobs).toHaveBeenCalledExactlyOnceWith([p.id]);
     expect(await store.list('jobs')).toEqual([]); expect(await store.list('releases')).toEqual([]);
     expect(providers.publish).not.toHaveBeenCalled(); expect(providers.resolveHostingTarget).not.toHaveBeenCalled();
   });
   it('fails the whole batch when its live owner identity check is revoked', async () => {
-    const p = await accepted(), one = vi.spyOn(DomainStore.prototype, 'one');
+    const p = await accepted(), one = vi.spyOn(DomainStore.prototype, 'statusProjects');
     vi.mocked(fetch).mockReset().mockResolvedValueOnce(Response.json({}, { status: 403 }));
     const response = await post('/projects/status-batch', { projectIds: [p.id, crypto.randomUUID()] });
     expect(response.status).toBe(403); expect(await response.json()).toMatchObject({ code: 'product_radar_unavailable' });
@@ -309,29 +317,43 @@ describe('Product Radar private project service', () => {
     await store.update('jobs', { ...first, status: 'succeeded' }).run();
     const latest: Job = { ...first, id: crypto.randomUUID(), status: 'failed', error: 'Latest publication failed' };
     await store.insert('jobs', latest).run();
-    const list = vi.spyOn(DomainStore.prototype, 'list');
+    const list = vi.spyOn(DomainStore.prototype, 'statusLatestJobs');
     const response = await post('/projects/status-batch', { projectIds: [p.id] });
     const body: any = await response.json();
     expect(body.items[0].value.publication).toMatchObject({ jobId: latest.id, status: 'failed', phase: 'failed', retryable: true, error: latest.error });
-    const jobReads = list.mock.results.filter((_, index) => list.mock.calls[index][0] === 'jobs');
-    expect(jobReads).toHaveLength(1);
-    expect(await jobReads[0].value).toHaveLength(1);
+    expect(list).toHaveBeenCalledExactlyOnceWith([p.id]);
+    const read = await list.mock.results[0].value;
+    expect(read.size).toBe(1); expect(read.get(p.id)).toMatchObject({ value: { id: latest.id } });
   });
-  it('bounds batch project read concurrency to six and keeps input order', async () => {
-    const p = await accepted(), ids = Array.from({ length: 12 }, () => crypto.randomUUID());
+  it('reads a bounded project cohort in one read without increasing concurrent storage requests', async () => {
+    const p = await accepted(), ids = Array.from({ length: 24 }, () => crypto.randomUUID());
     for (const id of ids) await store.insert('projects', { ...p, id }).run();
-    let release!: () => void, active = 0, peak = 0, started = 0;
-    const gate = new Promise<void>(resolve => { release = resolve; }), original = DomainStore.prototype.one;
-    vi.spyOn(DomainStore.prototype, 'one').mockImplementation(async function(this: DomainStore, table, id) {
-      if (table !== 'projects') return original.call(this, table, id);
-      active++; started++; peak = Math.max(peak, active);
-      try { await gate; return await original.call(this, table, id); } finally { active--; }
+    let release!: () => void, active = 0, peak = 0;
+    const gate = new Promise<void>(resolve => { release = resolve; }), original = DomainStore.prototype.statusProjects;
+    const projects = vi.spyOn(DomainStore.prototype, 'statusProjects').mockImplementation(async function(this: DomainStore, input) {
+      active++; peak = Math.max(peak, active);
+      try { await gate; return await original.call(this, input); } finally { active--; }
     });
+    const jobs = vi.spyOn(DomainStore.prototype, 'statusLatestJobs');
     const pending = post('/projects/status-batch', { projectIds: ids });
-    await vi.waitFor(() => expect(started).toBe(6)); release();
+    await vi.waitFor(() => expect(projects).toHaveBeenCalledExactlyOnceWith(ids));
+    expect(jobs).not.toHaveBeenCalled(); release();
     const response = await pending; expect(response.status).toBe(200);
     expect((await response.json() as any).items.map((item: any) => item.projectId)).toEqual(ids);
-    expect(peak).toBe(6); expect(started).toBe(12);
+    expect(peak).toBe(1); expect(jobs).toHaveBeenCalledExactlyOnceWith(ids);
+  });
+  it('isolates malformed persisted project data before reading jobs for authorized peers', async () => {
+    const p = await accepted(), broken = { ...p, id: crypto.randomUUID() };
+    await store.insert('projects', broken).run();
+    await env.DB.prepare('UPDATE projects SET data=? WHERE id=?').bind(JSON.stringify({ ...broken, draft: undefined }), broken.id).run();
+    const jobs = vi.spyOn(DomainStore.prototype, 'statusLatestJobs');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const response = await post('/projects/status-batch', { projectIds: [broken.id, p.id] });
+    expect(response.status).toBe(200);
+    const body: any = await response.json();
+    expect(body.items.map((item: any) => item.status)).toEqual([500, 200]);
+    expect(body.items[0].error.code).toBe('internal_error');
+    expect(jobs).toHaveBeenCalledExactlyOnceWith([p.id]);
   });
   it('returns a fixed trusted runtime independent of customer content or page scripts', async () => {
     const p = await accepted();
@@ -478,6 +500,12 @@ describe('Product Radar private project service', () => {
     current.draft.company.description = 'A real draft edit'; current.version++;
     await store.update('projects', current).run();
     expect(await (await call(p.id, 'status')).json()).toMatchObject({ projectVersion: 3, publishedVersion: 1, hasUnpublishedChanges: true });
+    for (const offline of [false, true]) {
+      current.offline = offline; await store.update('projects', current).run();
+      const expected = await (await call(p.id, 'status')).json();
+      const response: any = await (await post('/projects/status-batch', { projectIds: [p.id] })).json();
+      expect(response.items).toEqual([{ projectId: p.id, status: 200, value: expected }]);
+    }
   });
   const publishedProject = async () => {
     const p = await accepted();
