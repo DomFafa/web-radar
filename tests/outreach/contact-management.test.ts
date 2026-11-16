@@ -6,6 +6,79 @@ import { readFileSync } from "node:fs";
 import { Hono } from "hono";
 import { contactRoutes } from "../../src/outreach/server/routes/contact.routes";
 
+test("overwrite import uses email lookups in a large workspace and remains atomic and retryable", async () => {
+  const sqlite = new DatabaseSync(":memory:");
+  sqlite.exec(readFileSync("migrations/0007_outreach.sql", "utf8"));
+  sqlite.exec(`INSERT INTO edm_users(id,name,email,created_at,updated_at) VALUES
+    ('u','test','u@example.com',0,0),('v','other','v@example.com',0,0);
+    INSERT INTO edm_contact_groups(id,user_id,name,created_at,updated_at) VALUES
+    ('old','u','Old',0,0),('new','u','New',0,0);
+    WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i<37305)
+    INSERT INTO edm_contacts(id,user_id,email,name,group_id,subscription_status,created_at,updated_at)
+    SELECT 'contact-'||i,'u','person'||i||'@example.com','Original','old',
+      CASE WHEN i=0 THEN 'unsubscribed' ELSE 'subscribed' END,0,0 FROM n;
+    INSERT INTO edm_contacts(id,user_id,email,name,created_at,updated_at)
+    VALUES('private','v','person0@example.com','Private',0,0);`);
+  const db = d1(sqlite);
+  const executeBatch = db.batch.bind(db);
+  let checkedPlans = 0;
+  db.batch = async (statements: any[]) => {
+    for (const statement of statements.filter(s => /UPDATE edm_contacts[\s\S]*FROM json_each/.test(s.sql))) {
+      const plan = sqlite.prepare("EXPLAIN QUERY PLAN " + statement.sql).all(...statement.params) as { detail: string }[];
+      // Catch the production failure without relying on wall-clock speed: the
+      // old plan scans the entire uploaded JSON once for each workspace contact.
+      const upload = plan.findIndex(row => /SCAN j VIRTUAL TABLE/.test(row.detail));
+      const lookup = plan.findIndex(row => /SEARCH edm_contacts.*\(email=\?\)/.test(row.detail));
+      assert.ok(upload >= 0 && lookup > upload, JSON.stringify(plan));
+      checkedPlans++;
+    }
+    return executeBatch(statements);
+  };
+  const app = new Hono<any>();
+  app.use("*", async (c, next) => { c.set("user", { id: "u", role: "owner" }); await next(); });
+  app.route("/contacts", contactRoutes);
+  const req = (path: string, body: unknown) => app.request("/contacts" + path, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  }, { DB: db });
+  try {
+    const job = await (await req("/imports", { name: "large.csv", total: 500, groupId: "new", overwrite: true })).json() as any;
+    const id = job.data.id;
+    const contacts = [
+      ...Array.from({ length: 250 }, (_, i) => ({ email: `person${i}@example.com`, name: "Updated" })),
+      ...Array.from({ length: 248 }, (_, i) => ({ email: `new${i}@example.com`, name: "New" })),
+      { email: "PERSON0@example.com", name: "Last row" }, { email: "invalid" },
+    ];
+    const first = await req(`/imports/${id}/batches`, { batchIndex: 0, contacts });
+    assert.equal(first.status, 200);
+    assert.deepEqual((await first.json() as any).data, { imported: 248, updated: 250, skipped: 1, failed: 1, total: 500 });
+    const own = sqlite.prepare("SELECT name,group_id,subscription_status FROM edm_contacts WHERE id='contact-0'").get()!;
+    assert.equal(own.name, "Last row");
+    assert.equal(own.group_id, "new");
+    assert.equal(own.subscription_status, "unsubscribed");
+    assert.equal(sqlite.prepare("SELECT name FROM edm_contacts WHERE id='private'").get()!.name, "Private");
+    assert.equal(sqlite.prepare("SELECT contact_count FROM edm_contact_groups WHERE id='new'").get()!.contact_count, 498);
+    assert.equal(sqlite.prepare("SELECT contact_count FROM edm_contact_groups WHERE id='old'").get()!.contact_count, 37056);
+    const retry = await req(`/imports/${id}/batches`, { batchIndex: 0, contacts });
+    assert.equal(retry.status, 200);
+    assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM edm_contact_import_rows WHERE job_id=?").get(id)!.n, 500);
+    assert.equal(checkedPlans, 1);
+
+    const second = await (await req("/imports", { total: 1, overwrite: true })).json() as any;
+    const retryId = second.data.id;
+    sqlite.exec("CREATE TRIGGER force_import_failure BEFORE UPDATE ON edm_contacts BEGIN SELECT RAISE(ABORT,'fixture rollback'); END");
+    const body = { batchIndex: 0, contacts: [{ email: "person0@example.com", name: "Retried" }] };
+    assert.equal((await req(`/imports/${retryId}/batches`, body)).status, 500);
+    for (const table of ["edm_contact_import_batches", "edm_contact_import_rows"])
+      assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM ${table} WHERE job_id=?`).get(retryId)!.n, 0);
+    assert.equal(sqlite.prepare("SELECT processed FROM edm_contact_import_jobs WHERE id=?").get(retryId)!.processed, 0);
+    assert.equal(sqlite.prepare("SELECT name FROM edm_contacts WHERE id='contact-0'").get()!.name, "Last row");
+    sqlite.exec("DROP TRIGGER force_import_failure");
+    assert.equal((await req(`/imports/${retryId}/batches`, body)).status, 200);
+    assert.equal(sqlite.prepare("SELECT name FROM edm_contacts WHERE id='contact-0'").get()!.name, "Retried");
+    assert.equal(sqlite.prepare("SELECT group_id FROM edm_contacts WHERE id='contact-0'").get()!.group_id, "new");
+  } finally { sqlite.close(); }
+});
+
 test("import reports, retries, ownership, bulk selection and group deletion", async () => {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(readFileSync("migrations/0007_outreach.sql","utf8"));

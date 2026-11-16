@@ -66,7 +66,9 @@ export async function importContactsBatch(database: D1Database, userId: string,
   const reportIndex = statements.length;
   statements.push(database.prepare(reportSql).bind(...reportParams));
   if (overwrite) {
-    statements.push(database.prepare(`UPDATE edm_contacts SET
+    // Keep the uploaded rows as the outer loop. The user index otherwise makes
+    // SQLite parse all 500 JSON rows again for every contact in the workspace.
+    statements.push(database.prepare(`UPDATE edm_contacts INDEXED BY edm_idx_contacts_email SET
       name = json_extract(j.value, '$.name'), company = json_extract(j.value, '$.company'),
       website = json_extract(j.value, '$.website'), industry = json_extract(j.value, '$.industry'),
       region = json_extract(j.value, '$.region'), tags = json_extract(j.value, '$.tags'),
